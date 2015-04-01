@@ -10,6 +10,9 @@
 #include "script/interpreter.h"
 #include "script/standard.h"
 
+#include <map>
+#include <string>
+
 class CFeeRate;
 
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
@@ -42,5 +45,32 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 
 extern bool fIsBareMultisigStd;
 extern CFeeRate minRelayTxFee;
+
+/** Abstract interface for Policy */
+class CPolicy
+{
+public:
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const = 0;
+    virtual void InitFromArgs(const std::map<std::string, std::string>&) = 0;
+};
+
+/** Return a CPolicy of the type described in the parameter string */
+CPolicy& Policy(std::string);
+/** Returns the current CPolicy. Requires calling SelectPolicy() or InitPolicyFromArgs() first */
+const CPolicy& Policy();
+/** Selects the current CPolicy of the type described in the parameter string */
+void SelectPolicy(std::string);
+/**
+ * Returns a HelpMessage string with policy options
+ *
+ * @param selectedPolicy select a policy to show its options
+ * @return the formatted string
+ */
+std::string GetPolicyUsageStr(std::string selectedPolicy);
+/**
+ * Selects the current CPolicy of the type described in the string on key "-policy" mapArgs
+ * and calls CPolicy::InitFromArgs() with mapArgs.
+ */
+void InitPolicyFromArgs(const std::map<std::string, std::string>& mapArgs, std::string defaultPolicy);
 
 #endif // BITCOIN_POLICY_H
