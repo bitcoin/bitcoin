@@ -2,20 +2,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/transaction.h"
+#include "chainparams.h"
 #include "main.h"
 
 #include "test/test_bitcoin.h"
 
+#include <boost/signals2/signal.hpp>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
+    const Consensus::Params& params = Params(CBaseChainParams::MAIN).GetConsensus();
     CAmount nSum = 0;
     for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        CAmount nSubsidy = GetBlockValue(nHeight, 0);
+        CAmount nSubsidy = GetBlockSubsidy(nHeight, params);
         BOOST_CHECK(nSubsidy <= 50 * COIN);
         nSum += nSubsidy * 1000;
         BOOST_CHECK(MoneyRange(nSum));
