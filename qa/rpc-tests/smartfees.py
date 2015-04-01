@@ -51,7 +51,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Mine blocks with node2 until the memory pool clears:
         count_start = self.nodes[2].getblockcount()
         while len(self.nodes[2].getrawmempool()) > 0:
-            self.nodes[2].setgenerate(True, 1)
+            self.nodes[2].generate(1)
             self.sync_all()
 
         all_estimates = [ self.nodes[0].estimatefee(i) for i in range(1,20) ]
@@ -70,7 +70,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                                                         Decimal("0.0"), min_fee, 20)
                 tx_kbytes = (len(txhex)/2)/1000.0
                 fees_per_kb.append(float(fee)/tx_kbytes)
-            self.nodes[1].setgenerate(True, 1)
+            self.nodes[1].generate(1)
             self.sync_all()
 
         all_estimates = [ self.nodes[0].estimatefee(i) for i in range(1,20) ]
@@ -81,7 +81,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Finish by mining a normal-sized block:
         while len(self.nodes[0].getrawmempool()) > 0:
-            self.nodes[0].setgenerate(True, 1)
+            self.nodes[0].generate(1)
             self.sync_all()
 
         final_estimates = [ self.nodes[0].estimatefee(i) for i in range(1,20) ]
