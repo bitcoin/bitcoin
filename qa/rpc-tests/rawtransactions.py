@@ -3,11 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#
-# Test re-org scenarios with a mempool that contains transactions
-# that spend (directly or indirectly) coinbase transactions.
-#
-
 from test_framework import BitcoinTestFramework
 from util import *
 from pprint import pprint
@@ -15,20 +10,14 @@ from time import sleep
 
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
-    
+
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 3)
-
+        
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir)
 
-        # connect to a local machine for debugging
-        # url = "http://bitcoinrpc:DP6DvqZtqXarpeNWyN3LZTFchCCyCUuHwNF7E8pX99x1@%s:%d" % ('127.0.0.1', 18332)
-        # proxy = AuthServiceProxy(url)
-        # proxy.url = url # store URL on proxy for info
-        # self.nodes.append(proxy)
-        
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
@@ -36,7 +25,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
     
-    def run_test(self):
+    def run_test(self):        
+        print "Mining blocks..."
+        feeTolerance = 2 #if the fee's positive delta is higher than this value tests will fail, neg. delta always fail the tests
         
         self.nodes[2].setgenerate(True, 1)
         self.nodes[0].setgenerate(True, 101)
@@ -282,6 +273,237 @@ class RawTransactionsTest(BitcoinTestFramework):
         
         assert_equal("Insufficient" in errorString, True);
         
+        
 
+        ############################################################
+        #compare fee of a standard pubkeyhash transaction
+        inputs = []
+        outputs = {self.nodes[1].getnewaddress():1.1}
+        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        
+        #create same transaction over sendtoaddress
+        txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1.1);
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        
+        #compare fee
+        feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
+        assert(feeDelta >= 0 and feeDelta <= feeTolerance)
+        ############################################################
+        
+        ############################################################
+        #compare fee of a standard pubkeyhash transaction with multiple outputs
+        inputs = []
+        outputs = {self.nodes[1].getnewaddress():1.1,self.nodes[1].getnewaddress():1.2,self.nodes[1].getnewaddress():0.1,self.nodes[1].getnewaddress():1.3,self.nodes[1].getnewaddress():0.2,self.nodes[1].getnewaddress():0.3}
+        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        #create same transaction over sendtoaddress
+        txId = self.nodes[0].sendmany("", outputs);
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        
+        #compare fee
+        feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
+        assert(feeDelta >= 0 and feeDelta <= feeTolerance)
+        ############################################################
+        
+        
+        ############################################################
+        #compare fee of a 2of2 multisig p2sh transaction
+        
+        # create 2of2 addr
+        addr1 = self.nodes[1].getnewaddress()
+        addr2 = self.nodes[1].getnewaddress()
+        
+        addr1Obj = self.nodes[1].validateaddress(addr1)
+        addr2Obj = self.nodes[1].validateaddress(addr2)
+        
+        mSigObj = self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        
+        inputs = []
+        outputs = {mSigObj:1.1}
+        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        
+        #create same transaction over sendtoaddress
+        txId = self.nodes[0].sendtoaddress(mSigObj, 1.1);
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        
+        #compare fee
+        feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
+        assert(feeDelta >= 0 and feeDelta <= feeTolerance)
+        ############################################################
+        
+        
+        ############################################################
+        #compare fee of a standard pubkeyhash transaction
+        
+        # create 4of5 addr
+        addr1 = self.nodes[1].getnewaddress()
+        addr2 = self.nodes[1].getnewaddress()
+        addr3 = self.nodes[1].getnewaddress()
+        addr4 = self.nodes[1].getnewaddress()
+        addr5 = self.nodes[1].getnewaddress()
+        
+        addr1Obj = self.nodes[1].validateaddress(addr1)
+        addr2Obj = self.nodes[1].validateaddress(addr2)
+        addr3Obj = self.nodes[1].validateaddress(addr3)
+        addr4Obj = self.nodes[1].validateaddress(addr4)
+        addr5Obj = self.nodes[1].validateaddress(addr5)
+        
+        mSigObj = self.nodes[1].addmultisigaddress(4, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
+        
+        inputs = []
+        outputs = {mSigObj:1.1}
+        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        
+        #create same transaction over sendtoaddress
+        txId = self.nodes[0].sendtoaddress(mSigObj, 1.1);
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        
+        #compare fee
+        feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
+        assert(feeDelta >= 0 and feeDelta <= feeTolerance)
+        ############################################################
+        
+        
+        ############################################################
+        # spend a 2of2 multisig transaction over fundraw
+        
+        # create 2of2 addr
+        addr1 = self.nodes[2].getnewaddress()
+        addr2 = self.nodes[2].getnewaddress()
+        
+        addr1Obj = self.nodes[2].validateaddress(addr1)
+        addr2Obj = self.nodes[2].validateaddress(addr2)
+        
+        mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        
+        
+        # send 1.2 BTC to msig addr
+        txId = self.nodes[0].sendtoaddress(mSigObj, 1.2);
+        self.sync_all()
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
+        
+        oldBalance = self.nodes[1].getbalance()
+        inputs = []
+        outputs = {self.nodes[1].getnewaddress():1.1}
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[2].fundrawtransaction(rawTx)
+        
+        signedTx = self.nodes[2].signrawtransaction(fundedTx['hex'])
+        txId = self.nodes[2].sendrawtransaction(signedTx['hex'])
+        self.sync_all()
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
+        
+        # make sure funds are received at node1
+        assert_equal(oldBalance+Decimal('1.10000000'), self.nodes[1].getbalance())
+        
+        ############################################################
+        # locked wallet test
+        self.nodes[1].encryptwallet("test")
+        self.nodes.pop(1)
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        
+        self.nodes = start_nodes(3, self.options.tmpdir)
+        
+        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes_bi(self.nodes,1,2)
+        connect_nodes_bi(self.nodes,0,2)
+        self.is_network_split=False
+        self.sync_all()
+        
+        error = False
+        try:
+            self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.2);
+        except:
+            error = True
+        assert(error)
+        
+        oldBalance = self.nodes[0].getbalance()
+        
+        inputs = []
+        outputs = {self.nodes[0].getnewaddress():1.1}
+        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+
+        #now we need to unlock
+        self.nodes[1].walletpassphrase("test", 100)
+        signedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
+        txId = self.nodes[1].sendrawtransaction(signedTx['hex'])
+        self.sync_all()
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
+        
+        # make sure funds are received at node1
+        assert_equal(oldBalance+Decimal('51.10000000'), self.nodes[0].getbalance())
+        
+        
+        
+        ###############################################
+        # multiple (~19) inputs tx test | Compare fee #
+        ###############################################
+        
+        #empty node1, send some small coins from node0 to node1
+        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True);
+        self.sync_all()
+        self.nodes[0].setgenerate(True, 1)
+        self.sync_all()
+        
+        for i in range(0,20):
+            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01);
+        self.sync_all()
+        self.nodes[0].setgenerate(True, 1)
+        self.sync_all()
+        
+        #fund a tx with ~20 small inputs
+        inputs = []
+        outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
+        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+        
+        #create same transaction over sendtoaddress
+        txId = self.nodes[1].sendmany("", outputs);
+        signedFee = self.nodes[1].getrawmempool(True)[txId]['fee']*100000000
+        
+        #compare fee
+        feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
+        assert(feeDelta >= 0 and feeDelta <= feeTolerance*19) #~19 inputs
+        
+        
+        #############################################
+        # multiple (~19) inputs tx test | sign/send #
+        #############################################
+        
+        #again, empty node1, send some small coins from node0 to node1
+        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True);
+        self.sync_all()
+        self.nodes[0].setgenerate(True, 1)
+        self.sync_all()
+        
+        for i in range(0,20):
+            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01);
+        self.sync_all()
+        self.nodes[0].setgenerate(True, 1)
+        self.sync_all()
+        
+        #fund a tx with ~20 small inputs
+        oldBalance = self.nodes[0].getbalance()
+        
+        inputs = []
+        outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
+        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+        fundedAndSignedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
+        txId = self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
+        self.sync_all()
+        self.nodes[0].setgenerate(True, 1)
+        self.sync_all()
+        assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
+        
+        
 if __name__ == '__main__':
     RawTransactionsTest().main()

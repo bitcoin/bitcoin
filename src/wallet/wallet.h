@@ -443,7 +443,7 @@ public:
 class CWallet : public CCryptoKeyStore, public CValidationInterface
 {
 private:
-    bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const std::vector<CTxIn> vPresetVINs, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const std::vector<CTxIn> vPresetInputs, const CCoinControl *coinControl = NULL) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -625,7 +625,7 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
     bool FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason);
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend ,const std::vector<CTxIn> vins,
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend ,const std::vector<CTxIn> vInputs,
                            CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CreateTransaction(const std::vector<CRecipient>& vecSend,
                            CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);

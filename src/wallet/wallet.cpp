@@ -1663,14 +1663,14 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     return true;
 }
 
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, vector<CTxIn> vPresetVINs, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, vector<CTxIn> vPresetInputs, const CCoinControl* coinControl) const
 {
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
     
-    // create a empty set to store possible VINS
+    // create a empty set to store possible inputs
     set<pair<const CWalletTx*,unsigned int> > setTempCoins;
-    CAmount nValueTroughVINs = 0;
+    CAmount nValueTroughInputs = 0;
     
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected())
@@ -1685,8 +1685,8 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
         return (nValueRet >= nTargetValue);
     }
     
-    // fill up the tx with possible predefined VINs
-    BOOST_FOREACH(const CTxIn& txin, vPresetVINs)
+    // fill up the tx with possible predefined inputs
+    BOOST_FOREACH(const CTxIn& txin, vPresetInputs)
     {
         bool vinOk = false;
         // search for VIN in available coins
@@ -1698,7 +1698,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                 if (!out.fSpendable)
                     continue;
                 
-                nValueTroughVINs    += out.tx->vout[out.i].nValue;
+                nValueTroughInputs    += out.tx->vout[out.i].nValue;
                 
                 // temporarily keep the coin to add them later after SelectCoinsMinConf has added some
                 setTempCoins.insert(make_pair(out.tx, out.i));
@@ -1718,16 +1718,16 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
     bool state = true;
     
     // only select further coins if we need to
-    if (nTargetValue-nValueTroughVINs > 0)
-        state = (SelectCoinsMinConf(nTargetValue-nValueTroughVINs, 1, 6, vCoins, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue-nValueTroughVINs, 1, 1, vCoins, setCoinsRet, nValueRet) ||
-            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue-nValueTroughVINs, 0, 1, vCoins, setCoinsRet, nValueRet)));
+    if (nTargetValue-nValueTroughInputs > 0)
+        state = (SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 0, 1, vCoins, setCoinsRet, nValueRet)));
     
-    // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible VINs to the coinset
+    // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setTempCoins.begin(), setTempCoins.end());
     
-    // increase return value due of possible vins
-    nValueRet+=nValueTroughVINs;
+    // increase return value due of possible inputs
+    nValueRet+=nValueTroughInputs;
     
     return state;
 }
@@ -1757,7 +1757,7 @@ bool CWallet::FundTransaction(const CTransaction& txToFund, CMutableTransaction&
     return CreateTransaction(vecSend, vin, wtx, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, NULL, false);
 }
 
-bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<CTxIn> vINs,
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<CTxIn> vInputs,
                                 CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
 {
     CAmount nValue = 0;
@@ -1856,7 +1856,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, vINs, coinControl))
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn, vInputs, coinControl))
                 {
                     strFailReason = _("Insufficient funds");
                     return false;
@@ -1961,7 +1961,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<
                 // Sign
                 int nIn = 0;
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-                    if (!SignSignature(*this, *coin.first, txNew, nIn++))
+                    if (!SignSignature(*this, *coin.first, txNew, nIn++, SIGHASH_ALL, !sign))
                     {
                         strFailReason = _("Signing transaction failed");
                         return false;
@@ -1982,7 +1982,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<
                 if(!sign)
                 {
                     BOOST_FOREACH (CTxIn& vin, txNew.vin)
-                        vin.scriptSig = CScript();
+                    vin.scriptSig = CScript();
                 }
                 
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);
@@ -2027,8 +2027,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                                 CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
 {
     CMutableTransaction txNew;
-    vector<CTxIn> vINs;
-    return CreateTransaction(vecSend, vINs, wtxNew, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, coinControl, sign);
+    vector<CTxIn> vInputs;
+    return CreateTransaction(vecSend, vInputs, wtxNew, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, coinControl, sign);
 }
 
 /**
