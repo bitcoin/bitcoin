@@ -1,7 +1,7 @@
 #include <stdlib.h>
+#include <openssl/evp.h>
 
 #include "scrypt.h"
-#include "pbkdf2.h"
 
 #include "util.h"
 #include "net.h"
@@ -24,7 +24,6 @@ extern  uint256 scrypt_blockhash__sse2(const uint8_t* input);
    scratchpad size needs to be at least 63 + (128 * r * p) + (256 * r + 64) + (128 * r * N) bytes
    r = 1, p = 1, N = 1024
  */
-
 uint256 scrypt_blockhash_generic(const uint8_t* input)
 {
     uint8_t scratchpad[SCRYPT_BUFFER_SIZE];
@@ -33,9 +32,9 @@ uint256 scrypt_blockhash_generic(const uint8_t* input)
 
     uint32_t *V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
 
-    PBKDF2_SHA256(input, 80, input, 80, 1, (uint8_t *)X, 128);
+    PKCS5_PBKDF2_HMAC((const char*)input, 80, input, 80, 1, EVP_sha256(), 128, (unsigned char *)X);
     scrypt_core(X, V);
-    PBKDF2_SHA256(input, 80, (uint8_t *)X, 128, 1, (uint8_t*)&result, 32);
+    PKCS5_PBKDF2_HMAC((const char*)input, 80, (const unsigned char*)X, 128, 1, EVP_sha256(), 32, (unsigned char*)&result);
 
     return result;
 }

@@ -8,10 +8,13 @@
 #include "txdb.h"
 #include "init.h"
 #include "miner.h"
+#include "kernel.h"
 #include "bitcoinrpc.h"
 
 using namespace json_spirit;
 using namespace std;
+
+extern uint256 nPoWBase;
 
 Value getsubsidy(const Array& params, bool fHelp)
 {
@@ -68,6 +71,55 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("stakeinterest",    (uint64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
+}
+
+Value scaninput(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 4 || params.size() < 2)
+        throw runtime_error(
+            "scaninput <txid> <nout> [difficulty] [days]\n"
+            "Scan specified input for suitable kernel solutions.\n"
+            "    [difficulty] - upper limit for difficulty, current difficulty by default;\n"
+            "    [days] - time window, 365 days by default.\n"
+        );
+
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    uint32_t nOut = params[1].get_int(), nBits = GetNextTargetRequired(pindexBest, true), nDays = 365;
+
+    if (params.size() > 2)
+    {
+        CBigNum bnTarget(nPoWBase);
+        bnTarget *= 1000;
+        bnTarget /= (int) (params[2].get_real() * 1000);
+        nBits = bnTarget.GetCompact();
+    }
+
+    if (params.size() > 3)
+    {
+        nDays = params[3].get_int();
+    }
+
+    CTransaction tx;
+    uint256 hashBlock = 0;
+    if (GetTransaction(hash, tx, hashBlock))
+    {
+        std::pair<uint256, uint32_t> solution;
+        if (ScanInputForStakeKernelHash(tx, nOut, nBits, nDays * 86400, solution))
+        {
+            Object r;
+            r.push_back(Pair("hash", solution.first.GetHex()));
+            r.push_back(Pair("time", DateTimeStrFormat(solution.second)));
+
+            return r;
+        }
+    }
+    else
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+
+    return Value::null;
 }
 
 Value getworkex(const Array& params, bool fHelp)

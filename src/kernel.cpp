@@ -469,7 +469,7 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, ui
         bnTargetPerCoinDay.SetCompact(nBits);
         int64_t nValueIn = pcoin.first->vout[pcoin.second].nValue;
 
-        // Search backward in time from the given timestamp 
+        // Search backward in time from the given timestamp
         // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
         // Stopping search in case of shutting down or cache invalidation
         for (unsigned int n=0; n<nCurrentSearchInterval && fCoinsDataActual && !fShutdown; n++)
@@ -503,6 +503,91 @@ bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, ui
             if (fDebug)
                 printf("nStakeModifier=0x%016" PRIx64 ", nBlockTime=%u nTxOffset=%u nTxPrevTime=%u nTxNumber=%u nTimeTx=%u hashProofOfStake=%s Success=false\n",
                     nStakeModifier, nBlockTime, nTxOffset, pcoin.first->nTime, pcoin.second, nTimeTx, hashProofOfStake.GetHex().c_str());
+        }
+    }
+
+    return false;
+}
+
+// Scan given input for kernel solution
+bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits, uint32_t nSearchInterval, std::pair<uint256, uint32_t> &solution)
+{
+    CTxDB txdb("r");
+
+    CBlock block;
+    CTxIndex txindex;
+
+    // Load transaction index item
+    if (!txdb.ReadTxIndex(tx.GetHash(), txindex))
+        return false;
+
+    // Read block header
+    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+        return false;
+
+    uint64_t nStakeModifier = 0;
+    if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
+        return false;
+
+    uint32_t nTime = GetTime();
+    // Only count coins meeting min age requirement
+    if (nStakeMinAge + block.nTime > nTime)
+        nTime += (nStakeMinAge + block.nTime - nTime);
+
+    // Transaction offset inside block
+    uint32_t nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
+    int64_t nValueIn = tx.vout[nOut].nValue;
+
+    CBigNum bnTargetPerCoinDay;
+    bnTargetPerCoinDay.SetCompact(nBits);
+
+    // Get maximum possible target to filter out the majority of obviously insufficient hashes
+    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
+    uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
+
+
+    // Build static part of kernel
+    CDataStream ssKernel(SER_GETHASH, 0);
+    ssKernel << nStakeModifier;
+    ssKernel << block.nTime << nTxOffset << tx.nTime << nOut;
+    CDataStream::const_iterator it = ssKernel.begin();
+
+    // Init sha256 context and update it 
+    //   with first 16 bytes of kernel
+    SHA256_CTX ctxCurrent;
+    SHA256_Init(&ctxCurrent);
+    SHA256_Update(&ctxCurrent, (unsigned char*)&it[0], 8 + 16);
+    SHA256_CTX ctxCopy = ctxCurrent;
+
+    // Search forward in time from the given timestamp
+    // Stopping search in case of shutting down
+    for (uint32_t nTimeTx=nTime; nTimeTx<nTime+nSearchInterval && !fShutdown; nTimeTx++)
+    {
+        // Complete first hashing iteration
+        uint256 hash1;
+        SHA256_Update(&ctxCurrent, (unsigned char*)&nTimeTx, 4);
+        SHA256_Final((unsigned char*)&hash1, &ctxCurrent);
+
+        // Restore old context
+        ctxCurrent = ctxCopy;
+
+        // Finally, calculate kernel hash
+        uint256 hashProofOfStake;
+        SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
+
+        // Skip if hash doesn't satisfy the maximum target
+        if (hashProofOfStake > maxTarget)
+            continue;
+
+        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)tx.nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+        if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
+        {
+            solution.first = hashProofOfStake;
+            solution.second = nTimeTx;
+
+            return true;
         }
     }
 
