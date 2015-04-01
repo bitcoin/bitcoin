@@ -95,7 +95,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        node.setgenerate(True, 1) # Mine a block to leave initial block download
+        node.generate(1) # Mine a block to leave initial block download
         tmpl = node.getblocktemplate()
         if 'coinbasetxn' not in tmpl:
             rawcoinbase = encodeUNum(tmpl['height'])
