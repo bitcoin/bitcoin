@@ -561,10 +561,8 @@ bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits
 
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
-    for (unsigned int n=0; n<nSearchInterval && !fShutdown; n++)
+    for (uint32_t nTimeTx=nTime; nTimeTx<nTime+nSearchInterval && !fShutdown; nTimeTx++)
     {
-        uint32_t nTimeTx = nTime + n;
-
         // Complete first hashing iteration
         uint256 hash1;
         SHA256_Update(&ctxCurrent, (unsigned char*)&nTimeTx, 4);
