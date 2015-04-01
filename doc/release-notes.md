@@ -64,6 +64,7 @@ Block (database) and transaction handling:
 - `1d2cdd2` Fix InvalidateBlock to add chainActive.Tip to setBlockIndexCandidates
 - `c91c660` fix InvalidateBlock to repopulate setBlockIndexCandidates
 - `002c8a2` fix possible block db breakage during re-index
+- `a1f425b` Add (optional) consistency check for the block chain data structures
 
 P2P protocol and network code:
 - `78f64ef` don't trickle for whitelisted nodes
