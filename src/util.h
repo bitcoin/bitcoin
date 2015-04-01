@@ -125,6 +125,7 @@ inline bool IsSwitchChar(char c)
  * @return command-line argument or default value
  */
 std::string GetArg(const std::string& strArg, const std::string& strDefault);
+std::string GetArg(const std::string& strArg, const std::string& strDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Return integer argument or default value
@@ -134,6 +135,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault);
  * @return command-line argument (0 if invalid number) or default value
  */
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
+int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Return boolean argument or default value
@@ -143,6 +145,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault);
  * @return command-line argument or default value
  */
 bool GetBoolArg(const std::string& strArg, bool fDefault);
+bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Set an argument if it doesn't already have a value
@@ -178,6 +181,12 @@ std::string HelpMessageGroup(const std::string& message);
  * @return the formatted string
  */
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
+
+/**
+ * @param optionsHelp a vector of string pairs to iteratively call HelpMessageOpt
+ * @return the formatted string with all pairs
+ */
+std::string HelpMessagesOpt(std::vector<std::pair<std::string, std::string> > optionsHelp);
 
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
