@@ -145,6 +145,7 @@ Value setgenerate(const Array& params, bool fHelp)
     if (pwalletMain == NULL)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     bool fGenerate = true;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
@@ -184,13 +185,13 @@ Value setgenerate(const Array& params, bool fHelp)
                 LOCK(cs_main);
                 IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
             }
-            while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+            while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, consensusParams)) {
                 // Yes, there is a chance every nonce could fail to satisfy the -regtest
                 // target -- 1 in 2^(2^32). That ain't gonna happen.
                 ++pblock->nNonce;
             }
             CValidationState state;
-            if (!ProcessNewBlock(state, NULL, pblock))
+            if (!ProcessNewBlock(state, consensusParams, NULL, pblock))
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
             ++nHeight;
             blockHashes.push_back(pblock->GetHash().GetHex());
@@ -368,6 +369,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
          );
 
     LOCK(cs_main);
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     std::string strMode = "template";
     Value lpval = Value::null;
@@ -495,7 +497,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(scriptDummy);
+        pblocktemplate = CreateNewBlock(consensusParams, scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -505,7 +507,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
-    UpdateTime(pblock, pindexPrev);
+    UpdateTime(pblock, consensusParams, pindexPrev);
     pblock->nNonce = 0;
 
     static const Array aCaps = boost::assign::list_of("proposal");
@@ -614,6 +616,7 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleCli("submitblock", "\"mydata\"")
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     CBlock block;
     if (!DecodeHexBlk(block, params[0].get_str()))
@@ -633,7 +636,7 @@ Value submitblock(const Array& params, bool fHelp)
     CValidationState state;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, NULL, &block);
+    bool fAccepted = ProcessNewBlock(state, consensusParams, NULL, &block);
     UnregisterValidationInterface(&sc);
     if (mi != mapBlockIndex.end())
     {
