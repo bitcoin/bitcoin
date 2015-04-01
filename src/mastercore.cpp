@@ -1177,7 +1177,8 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
           GetScriptPushes(wtx.vout[i].scriptPubKey, temp_op_return_script_data);
           if (temp_op_return_script_data.size() > 0) {
               if (temp_op_return_script_data[0].size() > 8) {
-                  if ("6f6d6e69" == temp_op_return_script_data[0].substr(0,8)) {
+                  if(("6f6d0000" == temp_op_return_script_data[0].substr(0,8)) ||
+                     ("6f6d0001" == temp_op_return_script_data[0].substr(0,8))) { // only v0/v1 txs are live, add 6f6d0002 to parse a v2 tx when one goes live
                       hasOmniBytes = true;
                   }
               }
@@ -2615,7 +2616,7 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
 {
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
-    if(data.size()>nMaxDatacarrierBytes-4) omniTxClass = OMNI_CLASS_B;
+    if(data.size()>nMaxDatacarrierBytes-2) omniTxClass = OMNI_CLASS_B;
 
     // Prepare the transaction - first setup some vars
     CWallet *wallet = pwalletMain;

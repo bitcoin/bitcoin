@@ -70,8 +70,8 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
 
 bool OmniCore_Encode_ClassC(const std::vector<unsigned char>& vecPayload, std::vector<std::pair <CScript,int64_t> >& vecOutputs)
 {
-    if (vecPayload.size() > nMaxDatacarrierBytes-4) { return false; } // we shouldn't see this since classAgnostic_send handles size vs class, but include check here for safety
-    const unsigned char bytes[] = {0x6f,0x6d,0x6e,0x69}; // define Omni marker bytes
+    const unsigned char bytes[] = {0x6f,0x6d}; // define Omni marker bytes
+    if (vecPayload.size() > nMaxDatacarrierBytes-sizeof(bytes)/sizeof(bytes[0])) { return false; } // we shouldn't see this since classAgnostic_send handles size vs class, but include check here for safety
     std::vector<unsigned char> omniBytesPlusData(bytes, bytes+sizeof(bytes)/sizeof(bytes[0]));
     omniBytesPlusData.insert(omniBytesPlusData.end(), vecPayload.begin(), vecPayload.end());
     CScript script;
