@@ -38,6 +38,7 @@ using namespace std;
  */
 Value GetNetworkHashPS(int lookup, int height) {
     CBlockIndex *pb = chainActive.Tip();
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     if (height >= 0 && height < chainActive.Height())
         pb = chainActive[height];
@@ -47,7 +48,7 @@ Value GetNetworkHashPS(int lookup, int height) {
 
     // If lookup is -1, then use blocks since last difficulty change.
     if (lookup <= 0)
-        lookup = pb->nHeight % Params().DifficultyAdjustmentInterval() + 1;
+        lookup = pb->nHeight % consensusParams.DifficultyAdjustmentInterval() + 1;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)

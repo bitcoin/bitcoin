@@ -82,10 +82,11 @@ public:
 
 void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
 {
+    const Consensus::Params& params = Params().GetConsensus();
     pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
+    if (params.fPowAllowMinDifficultyBlocks)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
 }
 
@@ -443,6 +444,7 @@ void static BitcoinMiner(CWallet *pwallet)
     LogPrintf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
+    const Consensus::Params& params = Params().GetConsensus();
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
@@ -520,7 +522,7 @@ void static BitcoinMiner(CWallet *pwallet)
 
                 // Update nTime every few seconds
                 UpdateTime(pblock, pindexPrev);
-                if (Params().AllowMinDifficultyBlocks())
+                if (params.fPowAllowMinDifficultyBlocks)
                 {
                     // Changing pblock->nTime can change work required on testnet:
                     hashTarget.SetCompact(pblock->nBits);
