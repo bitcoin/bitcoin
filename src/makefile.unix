@@ -135,7 +135,6 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/kernel.o \
-    obj/pbkdf2.o \
     obj/scrypt.o
 
 all: novacoind

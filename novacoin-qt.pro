@@ -212,7 +212,6 @@ HEADERS += src/qt/bitcoingui.h \
     src/uint256.h \
     src/kernel.h \
     src/scrypt.h \
-    src/pbkdf2.h \
     src/serialize.h \
     src/strlcpy.h \
     src/main.h \
@@ -343,7 +342,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/noui.cpp \
     src/kernel.cpp \
     src/scrypt.cpp \
-    src/pbkdf2.cpp \
     src/qt/multisigaddressentry.cpp \
     src/qt/multisiginputentry.cpp \
     src/qt/multisigdialog.cpp
