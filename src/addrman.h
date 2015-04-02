@@ -231,7 +231,6 @@ protected:
     void Attempt_(const CService &addr, int64_t nTime);
 
     //! Select an address to connect to.
-    //! nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
     CAddrInfo Select_();
 
 #ifdef DEBUG_ADDRMAN
@@ -532,7 +531,6 @@ public:
 
     /**
      * Choose an address to connect to.
-     * nUnkBias determines how much "new" entries are favored over "tried" ones (0-100).
      */
     CAddrInfo Select()
     {
