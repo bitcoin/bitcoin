@@ -22,6 +22,7 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     dateTo(MAX_DATE),
     addrPrefix(),
     typeFilter(ALL_TYPES),
+    watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
     limitRows(-1),
     showInactive(true)
@@ -34,6 +35,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
 
     int type = index.data(TransactionTableModel::TypeRole).toInt();
     QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
+    bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
@@ -42,6 +44,10 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     if(!showInactive && status == TransactionStatus::Conflicted)
         return false;
     if(!(TYPE(type) & typeFilter))
+        return false;
+    if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
+        return false;
+    if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
         return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
@@ -72,9 +78,15 @@ void TransactionFilterProxy::setTypeFilter(quint32 modes)
     invalidateFilter();
 }
 
-void TransactionFilterProxy::setMinAmount(qint64 minimum)
+void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 {
     this->minAmount = minimum;
+    invalidateFilter();
+}
+
+void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
+{
+    this->watchOnlyFilter = filter;
     invalidateFilter();
 }
 

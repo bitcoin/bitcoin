@@ -5,16 +5,14 @@
 #ifndef MASTERNODE_H
 #define MASTERNODE_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 #include "masternode-pos.h"
+#include "timedata.h"
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
 #define MASTERNODE_IS_CAPABLE                  1
@@ -137,38 +135,33 @@ public:
 
     uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
 
-    IMPLEMENT_SERIALIZE
-    (
-        // serialized format:
-        // * version byte (currently 0)
-        // * all fields (?)
-        {
-                LOCK(cs);
-                unsigned char nVersion = 0;
-                READWRITE(nVersion);
-                READWRITE(vin);
-                READWRITE(addr);
-                READWRITE(pubkey);
-                READWRITE(pubkey2);
-                READWRITE(sig);
-                READWRITE(activeState);
-                READWRITE(sigTime);
-                READWRITE(lastDseep);
-                READWRITE(lastTimeSeen);
-                READWRITE(cacheInputAge);
-                READWRITE(cacheInputAgeBlock);
-                READWRITE(unitTest);
-                READWRITE(allowFreeTx);
-                READWRITE(protocolVersion);
-                READWRITE(nLastDsq);
-                READWRITE(donationAddress);
-                READWRITE(donationPercentage);
-                READWRITE(nVote);
-                READWRITE(lastVote);
-                READWRITE(nScanningErrorCount);
-                READWRITE(nLastScanningErrorBlockHeight);
-        }
-    )
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            LOCK(cs);
+            READWRITE(vin);
+            READWRITE(addr);
+            READWRITE(pubkey);
+            READWRITE(pubkey2);
+            READWRITE(sig);
+            READWRITE(activeState);
+            READWRITE(sigTime);
+            READWRITE(lastDseep);
+            READWRITE(lastTimeSeen);
+            READWRITE(cacheInputAge);
+            READWRITE(cacheInputAgeBlock);
+            READWRITE(unitTest);
+            READWRITE(allowFreeTx);
+            READWRITE(protocolVersion);
+            READWRITE(nLastDsq);
+            READWRITE(donationAddress);
+            READWRITE(donationPercentage);
+            READWRITE(nVote);
+            READWRITE(lastVote);
+            READWRITE(nScanningErrorCount);
+            READWRITE(nLastScanningErrorBlockHeight);
+    }
 
     void UpdateLastSeen(int64_t override=0)
     {
@@ -259,13 +252,16 @@ public:
         return n3;
     }
 
-    IMPLEMENT_SERIALIZE(
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nBlockHeight);
         READWRITE(payee);
         READWRITE(vin);
         READWRITE(score);
         READWRITE(vchSig);
-     )
+     }
 };
 
 //
@@ -279,16 +275,12 @@ private:
     std::vector<CMasternodePaymentWinner> vWinning;
     int nSyncedFromPeer;
     std::string strMasterPrivKey;
-    std::string strTestPubKey;
-    std::string strMainPubKey;
     bool enabled;
     int nLastBlockHeight;
 
 public:
 
     CMasternodePayments() {
-        strMainPubKey = "04549ac134f694c0243f503e8c8a9a986f5de6610049c40b07816809b0d1d06a21b07be27b9bb555931773f62ba6cf35a25fd52f694d4e1106ccd237a7bb899fdd";
-        strTestPubKey = "046f78dcf911fbd61910136f7f0f8d90578f68d0b3ac973b5040fb7afb501b5939f39b108b0569dca71488f5bbf498d92e4d1194f6f941307ffd95f75e76869f0e";
         enabled = false;
     }
 

@@ -1,12 +1,10 @@
 
 
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "protocol.h"
 #include "activemasternode.h"
@@ -194,7 +192,7 @@ bool CMasternodeScanningError::SignatureValid()
     }
 
     CScript pubkey;
-    pubkey.SetDestination(pmn->pubkey2.GetID());
+    pubkey = GetScriptForDestination(pmn->pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
     CBitcoinAddress address2(address1);
@@ -223,7 +221,7 @@ bool CMasternodeScanningError::Sign()
     }
 
     CScript pubkey;
-    pubkey.SetDestination(pubkey2.GetID());
+    pubkey = GetScriptForDestination(pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
     CBitcoinAddress address2(address1);

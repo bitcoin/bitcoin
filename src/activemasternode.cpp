@@ -1,5 +1,4 @@
 
-#include "core.h"
 #include "protocol.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
@@ -42,7 +41,7 @@ void CActiveMasternode::ManageStatus()
 
         LogPrintf("CActiveMasternode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString().c_str());
 
-        if(Params().NetworkID() == CChainParams::MAIN){
+        if(Params().NetworkID() == CBaseChainParams::MAIN) {
             if(service.GetPort() != 9999) {
                 notCapableReason = "Invalid port: " + boost::lexical_cast<string>(service.GetPort()) + " - only 9999 is supported on mainnet.";
                 status = MASTERNODE_NOT_CAPABLE;
@@ -216,7 +215,7 @@ bool CActiveMasternode::Dseep(CTxIn vin, CService service, CKey keyMasternode, C
     else
     {
         // Seems like we are trying to send a ping while the Masternode is not registered in the network
-        retErrorMessage = "Darksend Masternode List doesn't include our Masternode, Shutting down Masternode pinging service! " + vin.ToString();
+        retErrorMessage = "Darksend Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin.ToString();
         LogPrintf("CActiveMasternode::Dseep() - Error: %s\n", retErrorMessage.c_str());
         status = MASTERNODE_NOT_CAPABLE;
         notCapableReason = retErrorMessage;
@@ -259,7 +258,7 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
             LogPrintf("CActiveMasternode::Register - Invalid Donation Address\n");
             return false;
         }
-        donationAddress.SetDestination(address.Get());
+        donationAddress = GetScriptForDestination(address.Get());
 
         try {
             donationPercentage = boost::lexical_cast<int>( strDonationPercentage );

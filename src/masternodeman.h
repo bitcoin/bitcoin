@@ -5,13 +5,10 @@
 #ifndef MASTERNODEMAN_H
 #define MASTERNODEMAN_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
@@ -68,22 +65,17 @@ public:
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
-    IMPLEMENT_SERIALIZE
-    (
-        // serialized format:
-        // * version byte (currently 0)
-        // * masternodes vector
-        {
-                LOCK(cs);
-                unsigned char nVersion = 0;
-                READWRITE(nVersion);
-                READWRITE(vMasternodes);
-                READWRITE(mAskedUsForMasternodeList);
-                READWRITE(mWeAskedForMasternodeList);
-                READWRITE(mWeAskedForMasternodeListEntry);
-                READWRITE(nDsqCount);
-        }
-    )
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            LOCK(cs);
+            READWRITE(vMasternodes);
+            READWRITE(mAskedUsForMasternodeList);
+            READWRITE(mWeAskedForMasternodeList);
+            READWRITE(mWeAskedForMasternodeListEntry);
+            READWRITE(nDsqCount);
+    }
 
     CMasternodeMan();
     CMasternodeMan(CMasternodeMan& other);

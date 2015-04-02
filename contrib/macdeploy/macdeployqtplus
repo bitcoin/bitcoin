@@ -17,9 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import subprocess, sys, re, os, shutil, stat, os.path
+import subprocess, sys, re, os, shutil, stat, os.path, time
 from string import Template
-from time import sleep
 from argparse import ArgumentParser
 
 # This is ported from the original macdeployqt with modifications
@@ -332,7 +331,7 @@ def deployFrameworks(frameworks, bundlePath, binaryPath, strip, verbose, deploym
         # Get the Qt path from one of the Qt frameworks
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
-
+        
         if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
             if verbose >= 2:
                 print framework.frameworkName, "already deployed, skipping."
@@ -394,13 +393,29 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
             # Deploy the script plugins only if QtScript is in use
             if not deploymentInfo.usesFramework("QtScript"):
                 continue
-        elif pluginDirectory == "qmltooling":
+        elif pluginDirectory == "qmltooling" or pluginDirectory == "qml1tooling":
             # Deploy the qml plugins only if QtDeclarative is in use
             if not deploymentInfo.usesFramework("QtDeclarative"):
                 continue
         elif pluginDirectory == "bearer":
             # Deploy the bearer plugins only if QtNetwork is in use
             if not deploymentInfo.usesFramework("QtNetwork"):
+                continue
+        elif pluginDirectory == "position":
+            # Deploy the position plugins only if QtPositioning is in use
+            if not deploymentInfo.usesFramework("QtPositioning"):
+                continue
+        elif pluginDirectory == "sensors" or pluginDirectory == "sensorgestures":
+            # Deploy the sensor plugins only if QtSensors is in use
+            if not deploymentInfo.usesFramework("QtSensors"):
+                continue
+        elif pluginDirectory == "audio" or pluginDirectory == "playlistformats":
+            # Deploy the audio plugins only if QtMultimedia is in use
+            if not deploymentInfo.usesFramework("QtMultimedia"):
+                continue
+        elif pluginDirectory == "mediaservice":
+            # Deploy the mediaservice plugins only if QtMultimediaWidgets is in use
+            if not deploymentInfo.usesFramework("QtMultimediaWidgets"):
                 continue
 
         for pluginName in filenames:
@@ -419,6 +434,10 @@ def deployPlugins(appBundleInfo, deploymentInfo, strip, verbose):
             elif pluginPath == "graphicssystems/libqglgraphicssystem.dylib":
                 # Deploy the opengl graphicssystem plugin only if QtOpenGL is in use
                 if not deploymentInfo.usesFramework("QtOpenGL"):
+                    continue
+            elif pluginPath == "accessible/libqtaccessiblequick.dylib":
+                # Deploy the accessible qtquick plugin only if QtQuick is in use
+                if not deploymentInfo.usesFramework("QtQuick"):
                     continue
 
             plugins.append((pluginDirectory, pluginName))
@@ -474,6 +493,7 @@ ap.add_argument("-sign", dest="sign", action="store_true", default=False, help="
 ap.add_argument("-dmg", nargs="?", const="", metavar="basename", help="create a .dmg disk image; if basename is not specified, a camel-cased version of the app name is used")
 ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fancy looking disk image using the given plist file with instructions; requires -dmg to work")
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's ressources; the language list must be separated with commas, not with whitespace")
+ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
 
 config = ap.parse_args()
@@ -491,6 +511,15 @@ if not os.path.exists(app_bundle):
 
 app_bundle_name = os.path.splitext(os.path.basename(app_bundle))[0]
 
+# ------------------------------------------------
+translations_dir = None
+if config.translations_dir and config.translations_dir[0]:
+    if os.path.exists(config.translations_dir[0]):
+        translations_dir = config.translations_dir[0]
+    else:
+        if verbose >= 1:
+            sys.stderr.write("Error: Could not find translation dir \"%s\"\n" % (translations_dir))
+        sys.exit(1)
 # ------------------------------------------------
 
 for p in config.add_resources:
@@ -512,17 +541,7 @@ if len(config.fancy) == 1:
         if verbose >= 1:
             sys.stderr.write("Error: Could not import plistlib which is required for fancy disk images.\n")
         sys.exit(1)
-
-    if verbose >= 3:
-        print "Fancy: Importing appscript..."
-    try:
-        import appscript
-    except ImportError:
-        if verbose >= 1:
-            sys.stderr.write("Error: Could not import appscript which is required for fancy disk images.\n")
-            sys.stderr.write("Please install it e.g. with \"sudo easy_install appscript\".\n")
-        sys.exit(1)
-
+    
     p = config.fancy[0]
     if verbose >= 3:
         print "Fancy: Loading \"%s\"..." % p
@@ -625,7 +644,14 @@ if config.plugins:
 if len(config.add_qt_tr) == 0:
     add_qt_tr = []
 else:
-    qt_tr_dir = os.path.join(deploymentInfo.qtPath, "translations")
+    if translations_dir is not None:
+        qt_tr_dir = translations_dir
+    else:
+        if deploymentInfo.qtPath is not None:
+            qt_tr_dir = os.path.join(deploymentInfo.qtPath, "translations")
+        else:
+            sys.stderr.write("Error: Could not find Qt translation path\n")
+            sys.exit(1)
     add_qt_tr = ["qt_%s.qm" % lng for lng in config.add_qt_tr[0].split(",")]
     for lng_file in add_qt_tr:
         p = os.path.join(qt_tr_dir, lng_file)
@@ -839,7 +865,8 @@ if config.dmg is not None:
 
         if verbose >= 2:
             print "+ Finalizing .dmg disk image +"
-
+            time.sleep(5)
+        
         try:
             runHDIUtil("convert", dmg_name + ".temp", format="UDBZ", o=dmg_name + ".dmg", ov=True)
         except subprocess.CalledProcessError as e:

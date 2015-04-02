@@ -10,13 +10,21 @@
 #include <boost/foreach.hpp>
 //#include <boost/asio.hpp>
 
-#include "util.h"
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_reader_template.h"
-#include "rpcprotocol.h"
-#include "script.h" // Necessary to prevent compile errors due to forward declaration of
-//CScript in serialize.h (included from crypter.h)
+
 #include "crypter.h"
+#include "clientversion.h"
+#include "random.h"
+#include "rpcprotocol.h"
+
+// Necessary to prevent compile errors due to forward declaration of
+//CScript in serialize.h (included from crypter.h)
+#include "script/script.h"
+#include "script/standard.h"
+
+#include "util.h"
+#include "utilstrencodings.h"
 
 using boost::asio::ip::tcp;
 
@@ -261,7 +269,7 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
 
     // Receive HTTP reply message headers and body
     std::map<std::string, std::string> mapHeaders;
-    ReadHTTPMessage(response_stream, mapHeaders, sResponse, nProto);
+    ReadHTTPMessage(response_stream, mapHeaders, sResponse, nProto, std::numeric_limits<size_t>::max());
     if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - Processed body\n");
 }
 

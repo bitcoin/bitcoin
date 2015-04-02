@@ -1,13 +1,14 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
-#include "main.h"
-#include "sync.h"
 #include "checkpoints.h"
+#include "main.h"
+#include "rpcserver.h"
+#include "sync.h"
+#include "util.h"
 
 #include <stdint.h>
 
@@ -16,6 +17,7 @@
 using namespace json_spirit;
 using namespace std;
 
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry);
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
 
 double GetDifficulty(const CBlockIndex* blockindex)
@@ -50,24 +52,35 @@ double GetDifficulty(const CBlockIndex* blockindex)
 }
 
 
-Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
+Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false)
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
-    CMerkleTx txGen(block.vtx[0]);
-    txGen.SetMerkleBranch(&block);
-    result.push_back(Pair("confirmations", (int)txGen.GetDepthInMainChain()));
+    int confirmations = -1;
+    // Only report confirmations if the block is on the main chain
+    if (chainActive.Contains(blockindex))
+        confirmations = chainActive.Height() - blockindex->nHeight + 1;
+    result.push_back(Pair("confirmations", confirmations));
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     Array txs;
     BOOST_FOREACH(const CTransaction&tx, block.vtx)
-        txs.push_back(tx.GetHash().GetHex());
+    {
+        if(txDetails)
+        {
+            Object objTx;
+            TxToJSON(tx, uint256(0), objTx);
+            txs.push_back(objTx);
+        }
+        else
+            txs.push_back(tx.GetHash().GetHex());
+    }
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.GetBlockTime()));
     result.push_back(Pair("nonce", (uint64_t)block.nNonce));
-    result.push_back(Pair("bits", HexBits(block.nBits)));
+    result.push_back(Pair("bits", strprintf("%08x", block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
 
@@ -88,7 +101,7 @@ Object blockHeaderToJSON(const CBlock& block, const CBlockIndex* blockindex)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     result.push_back(Pair("time", block.GetBlockTime()));
-    result.push_back(Pair("bits", HexBits(block.nBits)));
+    result.push_back(Pair("bits", strprintf("%08x", block.nBits)));
     result.push_back(Pair("nonce", (uint64_t)block.nNonce));
     return result;
 }
@@ -237,7 +250,7 @@ Value getblockhash(const Array& params, bool fHelp)
 
     int nHeight = params[0].get_int();
     if (nHeight < 0 || nHeight > chainActive.Height())
-        throw runtime_error("Block number out of range.");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
 
     CBlockIndex* pblockindex = chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
@@ -256,7 +269,7 @@ Value getblock(const Array& params, bool fHelp)
             "\nResult (for verbose = true):\n"
             "{\n"
             "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
-            "  \"confirmations\" : n,   (numeric) The number of confirmations\n"
+            "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
             "  \"size\" : n,            (numeric) The block size\n"
             "  \"height\" : n,          (numeric) The block height or index\n"
             "  \"version\" : n,         (numeric) The block version\n"
@@ -384,6 +397,7 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
     Object ret;
 
     CCoinsStats stats;
+    FlushStateToDisk();
     if (pcoinsTip->GetStats(stats)) {
         ret.push_back(Pair("height", (int64_t)stats.nHeight));
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
@@ -446,7 +460,7 @@ Value gettxout(const Array& params, bool fHelp)
     CCoins coins;
     if (fMempool) {
         LOCK(mempool.cs);
-        CCoinsViewMemPool view(*pcoinsTip, mempool);
+        CCoinsViewMemPool view(pcoinsTip, mempool);
         if (!view.GetCoins(hash, coins))
             return Value::null;
         mempool.pruneSpent(hash, coins); // TODO: this should be done by the CCoinsViewMemPool
@@ -457,7 +471,7 @@ Value gettxout(const Array& params, bool fHelp)
     if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
         return Value::null;
 
-    std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
+    BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
     if ((unsigned int)coins.nHeight == MEMPOOL_HEIGHT)
@@ -497,7 +511,7 @@ Value verifychain(const Array& params, bool fHelp)
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
 
-    return VerifyDB(nCheckLevel, nCheckDepth);
+    return CVerifyDB().VerifyDB(pcoinsTip, nCheckLevel, nCheckDepth);
 }
 
 Value getblockchaininfo(const Array& params, bool fHelp)
@@ -508,8 +522,9 @@ Value getblockchaininfo(const Array& params, bool fHelp)
             "Returns an object containing various state info regarding block chain processing.\n"
             "\nResult:\n"
             "{\n"
-            "  \"chain\": \"xxxx\",        (string) current chain (main, testnet3, regtest)\n"
+            "  \"chain\": \"xxxx\",        (string) current network name as defined in BIP70 (main, test, regtest)\n"
             "  \"blocks\": xxxxxx,         (numeric) the current number of blocks processed in the server\n"
+            "  \"headers\": xxxxxx,        (numeric) the current number of headers we have validated\n"
             "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
@@ -520,18 +535,216 @@ Value getblockchaininfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getblockchaininfo", "")
         );
 
-    proxyType proxy;
-    GetProxy(NET_IPV4, proxy);
-
     Object obj;
-    std::string chain = Params().DataDir();
-    if(chain.empty())
-        chain = "main";
-    obj.push_back(Pair("chain",         chain));
-    obj.push_back(Pair("blocks",        (int)chainActive.Height()));
-    obj.push_back(Pair("bestblockhash", chainActive.Tip()->GetBlockHash().GetHex()));
-    obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("verificationprogress", Checkpoints::GuessVerificationProgress(chainActive.Tip())));
-    obj.push_back(Pair("chainwork",     chainActive.Tip()->nChainWork.GetHex()));
+    obj.push_back(Pair("chain",                 Params().NetworkIDString()));
+    obj.push_back(Pair("blocks",                (int)chainActive.Height()));
+    obj.push_back(Pair("headers",               pindexBestHeader ? pindexBestHeader->nHeight : -1));
+    obj.push_back(Pair("bestblockhash",         chainActive.Tip()->GetBlockHash().GetHex()));
+    obj.push_back(Pair("difficulty",            (double)GetDifficulty()));
+    obj.push_back(Pair("verificationprogress",  Checkpoints::GuessVerificationProgress(chainActive.Tip())));
+    obj.push_back(Pair("chainwork",             chainActive.Tip()->nChainWork.GetHex()));
     return obj;
+}
+
+/** Comparison function for sorting the getchaintips heads.  */
+struct CompareBlocksByHeight
+{
+    bool operator()(const CBlockIndex* a, const CBlockIndex* b) const
+    {
+        /* Make sure that unequal blocks with the same height do not compare
+           equal. Use the pointers themselves to make a distinction. */
+
+        if (a->nHeight != b->nHeight)
+          return (a->nHeight > b->nHeight);
+
+        return a < b;
+    }
+};
+
+Value getchaintips(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getchaintips\n"
+            "Return information about all known tips in the block tree,"
+            " including the main chain as well as orphaned branches.\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"height\": xxxx,         (numeric) height of the chain tip\n"
+            "    \"hash\": \"xxxx\",         (string) block hash of the tip\n"
+            "    \"branchlen\": 0          (numeric) zero for main chain\n"
+            "    \"status\": \"active\"      (string) \"active\" for the main chain\n"
+            "  },\n"
+            "  {\n"
+            "    \"height\": xxxx,\n"
+            "    \"hash\": \"xxxx\",\n"
+            "    \"branchlen\": 1          (numeric) length of branch connecting the tip to the main chain\n"
+            "    \"status\": \"xxxx\"        (string) status of the chain (active, valid-fork, valid-headers, headers-only, invalid)\n"
+            "  }\n"
+            "]\n"
+            "Possible values for status:\n"
+            "1.  \"invalid\"               This branch contains at least one invalid block\n"
+            "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
+            "3.  \"valid-headers\"         All blocks are available for this branch, but they were never fully validated\n"
+            "4.  \"valid-fork\"            This branch is not part of the active chain, but is fully validated\n"
+            "5.  \"active\"                This is the tip of the active main chain, which is certainly valid\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getchaintips", "")
+            + HelpExampleRpc("getchaintips", "")
+        );
+
+    /* Build up a list of chain tips.  We start with the list of all
+       known blocks, and successively remove blocks that appear as pprev
+       of another block.  */
+    std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
+    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
+        setTips.insert(item.second);
+    BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex)
+    {
+        const CBlockIndex* pprev = item.second->pprev;
+        if (pprev)
+            setTips.erase(pprev);
+    }
+
+    // Always report the currently active tip.
+    setTips.insert(chainActive.Tip());
+
+    /* Construct the output array.  */
+    Array res;
+    BOOST_FOREACH(const CBlockIndex* block, setTips)
+    {
+        Object obj;
+        obj.push_back(Pair("height", block->nHeight));
+        obj.push_back(Pair("hash", block->phashBlock->GetHex()));
+
+        const int branchLen = block->nHeight - chainActive.FindFork(block)->nHeight;
+        obj.push_back(Pair("branchlen", branchLen));
+
+        string status;
+        if (chainActive.Contains(block)) {
+            // This block is part of the currently active chain.
+            status = "active";
+        } else if (block->nStatus & BLOCK_FAILED_MASK) {
+            // This block or one of its ancestors is invalid.
+            status = "invalid";
+        } else if (block->nChainTx == 0) {
+            // This block cannot be connected because full block data for it or one of its parents is missing.
+            status = "headers-only";
+        } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
+            // This block is fully validated, but no longer part of the active chain. It was probably the active block once, but was reorganized.
+            status = "valid-fork";
+        } else if (block->IsValid(BLOCK_VALID_TREE)) {
+            // The headers for this block are valid, but it has not been validated. It was probably never part of the most-work chain.
+            status = "valid-headers";
+        } else {
+            // No clue.
+            status = "unknown";
+        }
+        obj.push_back(Pair("status", status));
+
+        res.push_back(obj);
+    }
+
+    return res;
+}
+
+Value getmempoolinfo(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getmempoolinfo\n"
+            "\nReturns details on the active state of the TX memory pool.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"size\": xxxxx                (numeric) Current tx count\n"
+            "  \"bytes\": xxxxx               (numeric) Sum of all tx sizes\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getmempoolinfo", "")
+            + HelpExampleRpc("getmempoolinfo", "")
+        );
+
+    Object ret;
+    ret.push_back(Pair("size", (int64_t) mempool.size()));
+    ret.push_back(Pair("bytes", (int64_t) mempool.GetTotalTxSize()));
+
+    return ret;
+}
+
+Value invalidateblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "invalidateblock \"hash\"\n"
+            "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n"
+            "\nArguments:\n"
+            "1. hash   (string, required) the hash of the block to mark as invalid\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("invalidateblock", "\"blockhash\"")
+            + HelpExampleRpc("invalidateblock", "\"blockhash\"")
+        );
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+    CValidationState state;
+
+    {
+        LOCK(cs_main);
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+        CBlockIndex* pblockindex = mapBlockIndex[hash];
+        InvalidateBlock(state, pblockindex);
+    }
+
+    if (state.IsValid()) {
+        ActivateBestChain(state);
+    }
+
+    if (!state.IsValid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, state.GetRejectReason());
+    }
+
+    return Value::null;
+}
+
+Value reconsiderblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "reconsiderblock \"hash\"\n"
+            "\nRemoves invalidity status of a block and its descendants, reconsider them for activation.\n"
+            "This can be used to undo the effects of invalidateblock.\n"
+            "\nArguments:\n"
+            "1. hash   (string, required) the hash of the block to reconsider\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("reconsiderblock", "\"blockhash\"")
+            + HelpExampleRpc("reconsiderblock", "\"blockhash\"")
+        );
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+    CValidationState state;
+
+    {
+        LOCK(cs_main);
+        if (mapBlockIndex.count(hash) == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+        CBlockIndex* pblockindex = mapBlockIndex[hash];
+        ReconsiderBlock(state, pblockindex);
+    }
+
+    if (state.IsValid()) {
+        ActivateBestChain(state);
+    }
+
+    if (!state.IsValid()) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, state.GetRejectReason());
+    }
+
+    return Value::null;
 }
