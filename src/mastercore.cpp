@@ -1478,8 +1478,8 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       // ### CLASS C SPECIFIC PARSING ###
       if (omniClass == OMNI_CLASS_C) {
           if (op_return_script_data.size() > 0) {
-              if (op_return_script_data[0].size() > 8) {
-                  std::string payload = op_return_script_data[0].substr(8,op_return_script_data[0].size()-8); // strip out marker
+              if (op_return_script_data[0].size() > 4) {
+                  std::string payload = op_return_script_data[0].substr(4,op_return_script_data[0].size()-4); // strip out marker
                   packet_size=(payload.size())/2; // get packet byte size - hex so always a multiple of 2
                   if(packet_size < MIN_PAYLOAD_SIZE) return -111;
                   memcpy(single_pkt, &ParseHex(payload)[0], packet_size); // load the packet ready to set mp tx info
