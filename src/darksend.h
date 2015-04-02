@@ -5,7 +5,6 @@
 #ifndef DARKSEND_H
 #define DARKSEND_H
 
-#include "core.h"
 #include "main.h"
 #include "sync.h"
 #include "activemasternode.h"
@@ -22,8 +21,6 @@ class CDarksendBroadcastTx;
 class CActiveMasternode;
 
 // pool states for mixing
-#define POOL_MAX_TRANSACTIONS                  3 // wait for X transactions to merge and publish
-#define POOL_MAX_TRANSACTIONS_TESTNET          2 // wait for X transactions to merge and publish
 #define POOL_STATUS_UNKNOWN                    0 // waiting for update
 #define POOL_STATUS_IDLE                       1 // waiting for update
 #define POOL_STATUS_QUEUE                      2 // waiting in a queue
@@ -47,6 +44,9 @@ class CActiveMasternode;
 #define DARKSEND_RELAY_IN                 1
 #define DARKSEND_RELAY_OUT                2
 #define DARKSEND_RELAY_SIG                3
+
+static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
+static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
@@ -169,8 +169,10 @@ public:
         ready = false;
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nDenom);
         READWRITE(vin);
         READWRITE(time);
@@ -182,7 +184,7 @@ public:
             READWRITE(nBlockHeight);
             READWRITE(strSharedKey);
         }
-    )
+    }
 
     bool GetAddress(CService &addr)
     {
@@ -292,7 +294,7 @@ public:
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
     std::vector<CDarkSendEntry> entries; // Masternode entries
-    CTransaction finalTransaction; // the finalized transaction ready for signing
+    CMutableTransaction finalTransaction; // the finalized transaction ready for signing
     CDSAnonTx anonTx; // anonymous inputs/outputs
     bool fSubmitAnonymousFailed; // initally false, will change to true if when attempts > 5
     int nCountAttempts; // number of submitted attempts
@@ -327,7 +329,7 @@ public:
     int cachedLastSuccess;
     int cachedNumBlocks; //used for the overview screen
     int minBlockSpacing; //required blocks between mixes
-    CTransaction txCollateral;
+    CMutableTransaction txCollateral;
 
     int64_t lastNewBlock;
 
@@ -348,7 +350,7 @@ public:
         cachedLastSuccess = 0;
         cachedNumBlocks = 0;
         unitTest = false;
-        txCollateral = CTransaction();
+        txCollateral = CMutableTransaction();
         minBlockSpacing = 1;
         lastNewBlock = 0;
         strMasternodeSharedKey = "";
@@ -375,13 +377,7 @@ public:
     void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void InitCollateralAddress(){
-        std::string strAddress = "";
-        if(Params().NetworkID() == CChainParams::MAIN) {
-            strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
-        } else {
-            strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
-        }
-        SetCollateralAddress(strAddress);
+        SetCollateralAddress(Params().DarksendPoolDummyAddress());
     }
 
     void SetMinBlockSpacing(int minBlockSpacingIn){
@@ -455,11 +451,7 @@ public:
     /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions()
     {
-        //if we're on testnet, just use two transactions per merge
-        if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return POOL_MAX_TRANSACTIONS_TESTNET;
-
-        //use the production amount
-        return POOL_MAX_TRANSACTIONS;
+        return Params().PoolMaxTransactions();
     }
 
     /// Do we have enough users to take entries?

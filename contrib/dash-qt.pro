@@ -132,7 +132,6 @@ SOURCES += \
     ../src/chainparams.cpp \
     ../src/checkpoints.cpp \
     ../src/coins.cpp \
-    ../src/core.cpp \
     ../src/crypter.cpp \
     ../src/cubehash.c \
     ../src/dash-cli.cpp \
@@ -178,7 +177,6 @@ SOURCES += \
     ../src/txdb.cpp \
     ../src/txmempool.cpp \
     ../src/util.cpp \
-    ../src/version.cpp \
     ../src/wallet.cpp \
     ../src/walletdb.cpp \
     ../src/test/Checkpoints_tests.cpp \

@@ -7,6 +7,7 @@
 #include "init.h"
 #include "util.h"
 #include "masternodeman.h"
+#include "script/sign.h"
 #include "instantx.h"
 #include "ui_interface.h"
 #include <boost/algorithm/string/replace.hpp>
@@ -16,6 +17,7 @@
 
 #include <algorithm>
 #include <boost/assign/list_of.hpp>
+#include <openssl/rand.h>
 
 using namespace std;
 using namespace boost;
@@ -337,7 +339,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             bool missingTx = false;
 
             CValidationState state;
-            CTransaction tx;
+            CMutableTransaction tx;
 
             BOOST_FOREACH(const CTxOut o, out){
                 nValueOut += o.nValue;
@@ -394,7 +396,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            if(!AcceptableInputs(mempool, state, tx)){
+            if(!AcceptableInputs(mempool, state, tx, false, NULL)) {
                 LogPrintf("dsi -- transaction not valid! \n");
                 error = _("Transaction not valid.");
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -517,7 +519,7 @@ int randomizeList (int i) { return std::rand()%i;}
 // Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
 int GetInputDarksendRounds(CTxIn in, int rounds)
 {
-    static std::map<uint256, CWalletTx> mDenomWtxes;
+    static std::map<uint256, CMutableTransaction> mDenomWtxes;
 
     if(rounds >= 17) return rounds;
 
@@ -527,12 +529,12 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
     CWalletTx wtx;
     if(pwalletMain->GetTransaction(hash, wtx))
     {
-        std::map<uint256, CWalletTx>::const_iterator mdwi = mDenomWtxes.find(hash);
+        std::map<uint256, CMutableTransaction>::const_iterator mdwi = mDenomWtxes.find(hash);
         // not known yet, let's add it
         if(mdwi == mDenomWtxes.end())
         {
             if(fDebug) LogPrintf("GetInputDarksendRounds INSERTING %s\n", hash.ToString());
-            mDenomWtxes[hash] = wtx;
+            mDenomWtxes[hash] = CMutableTransaction(wtx);
         }
         // found and it's not an initial value, just return it
         else if(mDenomWtxes[hash].vout[nout].nRounds != -10)
@@ -544,12 +546,11 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
         // bounds check
         if(nout >= wtx.vout.size())
         {
-            mDenomWtxes[hash].vout[nout].nRounds = -4;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
+            // should never actually hit this
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, -4);
+            return -4;
         }
 
-        mDenomWtxes[hash].vout[nout].nRounds = -3;
         if(pwalletMain->IsCollateralAmount(wtx.vout[nout].nValue))
         {
             mDenomWtxes[hash].vout[nout].nRounds = -3;
@@ -558,7 +559,6 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
         }
 
         //make sure the final output is non-denominate
-        mDenomWtxes[hash].vout[nout].nRounds = -2;
         if(/*rounds == 0 && */!pwalletMain->IsDenominatedAmount(wtx.vout[nout].nValue)) //NOT DENOM
         {
             mDenomWtxes[hash].vout[nout].nRounds = -2;
@@ -635,7 +635,7 @@ void CDarksendPool::SetNull(bool clearEverything){
     sessionDenom = 0;
     sessionFoundMasternode = false;
     vecSessionCollateral.clear();
-    txCollateral = CTransaction();
+    txCollateral = CMutableTransaction();
 
     vchMasternodeRelaySig.clear();
     nMasternodeBlockHeight = 0;
@@ -662,7 +662,7 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
         LogPrintf("CDarksendPool::SetCollateralAddress - Invalid Darksend collateral address\n");
         return false;
     }
-    collateralPubKey.SetDestination(address.Get());
+    collateralPubKey = GetScriptForDestination(address.Get());
     return true;
 }
 
@@ -702,7 +702,7 @@ void CDarksendPool::Check()
         UpdateState(POOL_STATUS_SIGNING);
 
         if (fMasterNode) {
-            CTransaction txNew;
+            CMutableTransaction txNew;
 
             // make our new transaction
             if((int)entries.size() >= GetMaxPoolTransactions()) {
@@ -887,10 +887,10 @@ void CDarksendPool::ChargeFees(){
         int target = 0;
 
         //mostly offending?
-        if(offences >= POOL_MAX_TRANSACTIONS-1 && r > 33) return;
+        if(offences >= Params().PoolMaxTransactions()-1 && r > 33) return;
 
         //everyone is an offender? That's not right
-        if(offences >= POOL_MAX_TRANSACTIONS) return;
+        if(offences >= Params().PoolMaxTransactions()) return;
 
         //charge one of the offenders randomly
         if(offences > 1) target = 50;
@@ -1121,7 +1121,7 @@ void CDarksendPool::CheckForCompleteQueue(){
 
 // check to see if the signature is valid
 bool CDarksendPool::SignatureValid(const CScript& newSig, const CTxIn& newVin){
-    CTransaction txNew;
+    CMutableTransaction txNew;
     txNew.vin.clear();
     txNew.vout.clear();
 
@@ -1148,7 +1148,7 @@ bool CDarksendPool::SignatureValid(const CScript& newSig, const CTxIn& newVin){
         int n = found;
         txNew.vin[n].scriptSig = newSig;
         if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Sign with sig %s\n", newSig.ToString().substr(0,24).c_str());
-        if (!VerifyScript(txNew.vin[n].scriptSig, sigPubKey, txNew, n, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0)){
+        if (!VerifyScript(txNew.vin[n].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, n))){
             if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Signing - Error signing input %u\n", n);
             return false;
         }
@@ -1202,7 +1202,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
     CValidationState state;
-    if(!AcceptableInputs(mempool, state, txCollateral)){
+    if(!AcceptableInputs(mempool, state, txCollateral, true, NULL)){
         if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
         return false;
     }
@@ -1319,7 +1319,7 @@ bool CDarksendPool::SignaturesComplete(){
 // This is only ran from clients
 //
 void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount){
-    if(darkSendPool.txCollateral == CTransaction()){
+    if(darkSendPool.txCollateral == CMutableTransaction()){
         LogPrintf ("CDarksendPool:SendDarksendDenominate() - Darksend collateral not set");
         return;
     }
@@ -1362,7 +1362,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         int64_t nValueOut = 0;
 
         CValidationState state;
-        CTransaction tx;
+        CMutableTransaction tx;
 
         BOOST_FOREACH(const CTxOut& o, vout){
             nValueOut += o.nValue;
@@ -1377,7 +1377,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        if(!AcceptableInputs(mempool, state, tx)){
+        if(!AcceptableInputs(mempool, state, tx, false, NULL)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
             return;
         }
@@ -1471,15 +1471,14 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 }
             }
 
-
             if(mine >= 0){ //might have to do this one input at a time?
                 //already signed
                 CScript scriptOld = finalTransaction.vin[mine].scriptSig;
                 if(!fSubmitAnonymousFailed && sigs.size() > 7) break; //send 7 each signing
 
                 int foundOutputs = 0;
-                int64_t nValue1 = 0;
-                int64_t nValue2 = 0;
+                CAmount nValue1 = 0;
+                CAmount nValue2 = 0;
 
                 for(unsigned int i = 0; i < finalTransaction.vout.size(); i++){
                     BOOST_FOREACH(const CTxOut& o, e.vout) {
@@ -1502,8 +1501,10 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                     return false;
                 }
 
+                const CKeyStore& keystore = *pwalletMain;
+
                 if(fDebug) LogPrintf("CDarksendPool::Sign - Signing my input %i\n", mine);
-                if(!SignSignature(*pwalletMain, prevPubKey, finalTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
+                if(!SignSignature(keystore, prevPubKey, finalTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
                     if(fDebug) LogPrintf("CDarksendPool::Sign - Unable to sign my own transaction! \n");
                     // not sure what to do here, it will timeout...?
                 }
@@ -1745,7 +1746,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     if(pNode)
                     {
                         std::string strReason;
-                        if(txCollateral == CTransaction()){
+                        if(txCollateral == CMutableTransaction()){
                             if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
                                 LogPrintf("DoAutomaticDenominating -- dsa error:%s\n", strReason.c_str());
                                 return false;
@@ -1816,7 +1817,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     if((CNetAddr)pnode->addr != (CNetAddr)pmn->addr) continue;
 
                     std::string strReason;
-                    if(txCollateral == CTransaction()){
+                    if(txCollateral == CMutableTransaction()){
                         if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
                             LogPrintf("DoAutomaticDenominating -- create collateral error:%s\n", strReason.c_str());
                             return false;
@@ -1964,7 +1965,7 @@ bool CDarksendPool::SendRandomPaymentToSelf()
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
+    scriptChange = GetScriptForDestination(vchPubKey.GetID());
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -1997,7 +1998,7 @@ bool CDarksendPool::MakeCollateralAmounts()
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
+    scriptChange = GetScriptForDestination(vchPubKey.GetID());
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -2039,7 +2040,7 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
     CScript scriptChange;
     CPubKey vchPubKey;
     assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange.SetDestination(vchPubKey.GetID());
+    scriptChange = GetScriptForDestination(vchPubKey.GetID());
 
     CWalletTx wtx;
     int64_t nFeeRet = 0;
@@ -2063,7 +2064,7 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
             CPubKey vchPubKey;
             //use a unique change address
             assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-            scriptChange.SetDestination(vchPubKey.GetID());
+            scriptChange = GetScriptForDestination(vchPubKey.GetID());
             reservekey.KeepKey();
 
             vecSend.push_back(make_pair(scriptChange, v));
@@ -2312,7 +2313,7 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
 
 bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     CScript payee2;
-    payee2.SetDestination(pubkey.GetID());
+    payee2 = GetScriptForDestination(pubkey.GetID());
 
     CTransaction txVin;
     uint256 hash;
