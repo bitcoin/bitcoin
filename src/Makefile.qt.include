@@ -99,7 +99,8 @@ QT_FORMS_UI = \
   qt/forms/txhistorydialog.ui \
   qt/forms/metadexcanceldialog.ui \
   qt/forms/metadexdialog.ui \
-  qt/forms/orderhistorydialog.ui
+  qt/forms/orderhistorydialog.ui \
+  qt/forms/balancesdialog.ui
 
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
@@ -150,7 +151,7 @@ QT_MOC_CPP = \
   qt/moc_lookupspdialog.cpp \
   qt/moc_lookuptxdialog.cpp \
   qt/moc_txhistorydialog.cpp \
-  qt/moc_balancesview.cpp \
+  qt/moc_balancesdialog.cpp \
   qt/moc_omnicore_init.cpp \
   qt/moc_metadexdialog.cpp \
   qt/moc_metadexcanceldialog.cpp \
@@ -230,7 +231,7 @@ BITCOIN_QT_H = \
   qt/lookupspdialog.h \
   qt/lookuptxdialog.h \
   qt/txhistorydialog.h \
-  qt/balancesview.h \
+  qt/balancesdialog.h \
   qt/omnicore_init.h \
   qt/metadexdialog.h \
   qt/metadexcanceldialog.h \
@@ -357,7 +358,7 @@ BITCOIN_QT_CPP += \
   qt/lookupspdialog.cpp \
   qt/lookuptxdialog.cpp \
   qt/txhistorydialog.cpp \
-  qt/balancesview.cpp \
+  qt/balancesdialog.cpp \
   qt/omnicore_init.cpp \
   qt/metadexdialog.cpp \
   qt/metadexcanceldialog.cpp \
