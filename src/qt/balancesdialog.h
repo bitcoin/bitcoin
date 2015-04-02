@@ -2,13 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BALANCESVIEW_H
-#define BALANCESVIEW_H
+#ifndef BALANCESDIALOG_H
+#define BALANCESDIALOG_H
 
 #include "guiutil.h"
 
 #include <QWidget>
 #include <QDialog>
+#include <QObject>
 #include <QString>
 #include <QTableWidget>
 #include <QTextEdit>
@@ -77,4 +78,4 @@ public slots:
     void balancesUpdated();
 };
 
-#endif // BALANCESVIEW_H
+#endif // BALANCESDIALOG_H

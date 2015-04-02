@@ -22,7 +22,7 @@
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
-#include "balancesview.h"
+#include "balancesdialog.h"
 #include "walletmodel.h"
 #include "orderhistorydialog.h"
 #include "txhistorydialog.h"
