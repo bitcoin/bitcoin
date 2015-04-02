@@ -48,23 +48,8 @@ WalletView::WalletView(QWidget *parent):
 {
     // Create tabs
     overviewPage = new OverviewPage();
-
     transactionsPage = new QWidget(this);
-    balancesPage = new QWidget(this);
-    // balances page
-    QVBoxLayout *bvbox = new QVBoxLayout();
-    QHBoxLayout *bhbox_buttons = new QHBoxLayout();
-    balancesView = new BalancesView(this);
-    bvbox->addWidget(balancesView);
-    QPushButton *bexportButton = new QPushButton(tr("&Export"), this);
-    bexportButton->setToolTip(tr("Export the data in the current tab to a file"));
-#ifndef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    bexportButton->setIcon(QIcon(":/icons/export"));
-#endif
-    bhbox_buttons->addStretch();
-    bhbox_buttons->addWidget(bexportButton);
-    bvbox->addLayout(bhbox_buttons);
-    balancesPage->setLayout(bvbox);
+    balancesPage = new BalancesDialog();
 
     // transactions page
     // bitcoin transactions in second tab, MP transactions in first
@@ -181,7 +166,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
 
     overviewPage->setClientModel(clientModel);
-    balancesView->setClientModel(clientModel);
+    balancesPage->setClientModel(clientModel);
     sendMPTab->setClientModel(clientModel);
     mpTXTab->setClientModel(clientModel);
 }
@@ -196,7 +181,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     receiveCoinsPage->setModel(walletModel);
     sendCoinsTab->setModel(walletModel);
     sendMPTab->setWalletModel(walletModel);
-    balancesView->setWalletModel(walletModel);
+    balancesPage->setWalletModel(walletModel);
     metaDExTab->setModel(walletModel);
     mpTXTab->setWalletModel(walletModel);
     cancelTab->setModel(walletModel);

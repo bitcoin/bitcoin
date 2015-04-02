@@ -24,7 +24,7 @@ class MetaDExCancelDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class TXHistoryDialog;
-class BalancesView;
+class BalancesDialog;
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
@@ -67,8 +67,8 @@ private:
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
+    BalancesDialog *balancesPage;
     QWidget *transactionsPage;
-    QWidget *balancesPage;
     QWidget *exchangePage;
     QWidget *smartPropertyPage;
     QWidget *toolboxPage;
@@ -85,7 +85,6 @@ private:
     MetaDExDialog *metaDExTab;
     MetaDExCancelDialog *cancelTab;
     TransactionView *transactionView;
-    BalancesView *balancesView;
     TXHistoryDialog *mpTXTab;
     QWidget *bitcoinTXTab;
     QProgressDialog *progressDialog;
