@@ -5,7 +5,6 @@
 
 #include "alert.h"
 
-#include "chainparams.h"
 #include "clientversion.h"
 #include "net.h"
 #include "pubkey.h"
@@ -145,9 +144,9 @@ bool CAlert::RelayTo(CNode* pnode) const
     return false;
 }
 
-bool CAlert::CheckSignature() const
+bool CAlert::CheckSignature(const std::vector<unsigned char>& alertKey) const
 {
-    CPubKey key(Params().AlertKey());
+    CPubKey key(alertKey);
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
         return error("CAlert::CheckSignature(): verify signature failed");
 
@@ -169,9 +168,9 @@ CAlert CAlert::getAlertByHash(const uint256 &hash)
     return retval;
 }
 
-bool CAlert::ProcessAlert(bool fThread)
+bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThread)
 {
-    if (!CheckSignature())
+    if (!CheckSignature(alertKey))
         return false;
     if (!IsInEffect())
         return false;
