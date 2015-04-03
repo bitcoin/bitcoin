@@ -111,6 +111,7 @@ static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *g
     secp256k1_ge_storage_t adds;
     int bits;
     int i, j;
+    memset(&adds, 0, sizeof(adds));
     secp256k1_gej_set_infinity(r);
     add.infinity = 0;
     for (j = 0; j < 64; j++) {
