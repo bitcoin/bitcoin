@@ -699,6 +699,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             // use this as a peer
             addrman.Add(CAddress(addr), pfrom->addr, 2*60*60);
 
+            //doesn't support multisig addresses
+            if(donationAddress.IsPayToScriptHash()){
+                donationAddress = CScript();
+                donationPercentage = 0;
+            }
+
             // add our Masternode
             CMasternode mn(addr, vin, pubkey, vchSig, sigTime, pubkey2, protocolVersion, donationAddress, donationPercentage);
             mn.UpdateLastSeen(lastUpdated);
