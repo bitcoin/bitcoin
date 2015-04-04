@@ -2114,7 +2114,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"></translation>
+        <translation>Mezclado en curso...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>

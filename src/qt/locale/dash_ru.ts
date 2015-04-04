@@ -2121,7 +2121,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"></translation>
+        <translation>Выполняется перемешивание...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -4997,7 +4997,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Откат к обычному перемешиванию и повторная попытка.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>

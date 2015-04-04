@@ -2113,7 +2113,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"></translation>
+        <translation>Mistura em progresso...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -4983,7 +4983,7 @@ Se o ficheiro não existir, deve criá-lo só com permissões de leitura para o 
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"></translation>
+        <translation>A diminuir o nível e tentar de novo.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>

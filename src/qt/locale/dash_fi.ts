@@ -34,7 +34,8 @@ Tämä on kokeellinen ohjelmisto.
 Levitetään MIT/X11 ohjelmistolisenssin alaisuudessa. Tarkemmat tiedot löytyvät tiedostosta COPYING tai osoitteesta http://www.opensource.org/licenses/mit-license.php.
 
 Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.openssl.org/), Eric Youngin (eay@cryptsoft.com) kehittämän salausohjelmiston sekä Thomas Bernardin UPnP ohjelmiston.
-</translation>
+
+Käännös päivitetty: 29.3.2015 by AjM.</translation>
     </message>
     <message>
         <source>Copyright</source>
@@ -112,7 +113,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../addressbookpage.cpp" line="45"/>
         <source>Choose the address to send coins to</source>
-        <translation>Valitse osoite johon lähetetään</translation>
+        <translation>Valitse osoite johon varat lähetetään</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="46"/>
@@ -137,7 +138,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Nämä ovat sinun Dash osoitteesi maksujen lähetykseen. Tarkista aina lähetettävä määrä ja vastaanottajan osoite ennen kuin lähetät kolikkoja.</translation>
+        <translation>Nämä ovat sinun Dash osoitteesi maksujen lähetykseen. Tarkista aina lähetettävä määrä ja vastaanottajan osoite ennen kuin lähetät varoja.</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
@@ -303,7 +304,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>Dash sulkeutuu nyt salauksen viimeistelyä varten. Muista että salaus pelkästään ei voi estää Darkcoiniesi varastamista jos koneesi saastuu haittaohjelmilla tai viruksilla.</translation>
+        <translation>Dash sulkeutuu nyt salauksen viimeistelyä varten. Muista että salaus pelkästään ei voi estää dashiesi varastamista jos koneesi saastuu haittaohjelmilla tai viruksilla.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="131"/>
@@ -397,7 +398,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="261"/>
         <source>Send coins to a Dash address</source>
-        <translation>Lähetä kolikoita Dash osoitteeseen</translation>
+        <translation>Lähetä varoja Dash osoitteeseen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="271"/>
@@ -482,7 +483,7 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="327"/>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Suojaa yksityiset avaimet jotka kuuluvat lompakkoosi</translation>
+        <translation>Salaa yksityiset avaimet jotka kuuluvat lompakkoosi</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="329"/>
@@ -532,12 +533,12 @@ Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.o
     <message>
         <location filename="../bitcoingui.cpp" line="338"/>
         <source>&amp;Verify message...</source>
-        <translation>Varmista &amp;Viesti...</translation>
+        <translation>Tarkista &amp;Viesti...</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="339"/>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>Varmista viestit varmistaaksesi että ne ovat allekirjoitettu määritetyillä Dash osoitteilla</translation>
+        <translation>Tarkista viestit ollaksesi varma että ne on allekirjoitettu määritetyillä Dash osoitteilla</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="341"/>
@@ -1564,7 +1565,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     <message>
         <location filename="../forms/optionsdialog.ui" line="88"/>
         <source>Number of script &amp;verification threads</source>
-        <translation>Script &amp;varmistuksen säikeiden määrä</translation>
+        <translation>Script &amp;vahvistuksien säikeiden määrä</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="101"/>
@@ -1579,7 +1580,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     <message>
         <location filename="../forms/optionsdialog.ui" line="141"/>
         <source>Darksend rounds to use</source>
-        <translation>Kuinka monta Darksend kierrosta käytetään</translation>
+        <translation>Kuinka montaa Darksend kierrosta käytetään</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="165"/>
@@ -1642,12 +1643,12 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
     <message>
         <location filename="../forms/optionsdialog.ui" line="228"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Jos poistat varmistamattomien vaihtorahojen käytön, siirtotapahtuman vaihtorahaa ei voida käyttää ennen vähintään yhtä varmistusta. Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
+        <translation>Jos poistat vahvistamattomien vaihtorahojen käytön, siirtotapahtuman vaihtorahaa ei voida käyttää ennen vähintään yhtä vahvistusta. Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="231"/>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Käytä varmistamattomia vaihtorahoja</translation>
+        <translation>&amp;Käytä vahvistamattomia vaihtorahoja</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="255"/>
@@ -1755,12 +1756,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="508"/>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>Yksikkö jona määrät näytetään</translation>
+        <translation>Yksikkö joina määrät näytetään</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="521"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Valitse mitä yksikköä käytetään ensisijaisesti kolikkomäärien näyttämiseen.</translation>
+        <translation>Valitse mitä yksikköä käytetään ensisijaisesti varojen määrien näyttämiseen.</translation>
     </message>
     <message>
         <source>Whether to show Dash addresses in the transaction list or not.</source>
@@ -1825,7 +1826,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../optionsdialog.cpp" line="229"/>
         <location filename="../optionsdialog.cpp" line="259"/>
         <source>Client restart required to activate changes.</source>
-        <translation>Ohjelman uudelleenkäynnistys aktivoi muutokset käyttöön.</translation>
+        <translation>Ohjelman uudelleen käynnistys aktivoi muutokset käyttöön.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="229"/>
@@ -1835,7 +1836,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../optionsdialog.cpp" line="263"/>
         <source>This change would require a client restart.</source>
-        <translation>Tämä muutos vaatii ohjelman uudelleenkäynnistyksen.</translation>
+        <translation>Tämä muutos vaatii ohjelman uudelleen käynnistyksen.</translation>
     </message>
     <message>
         <location filename="../optionsdialog.cpp" line="288"/>
@@ -1874,12 +1875,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="379"/>
         <source>Pending:</source>
-        <translation>Odotetaan:</translation>
+        <translation>Vahvistamatta:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="143"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Varmistamattomien siirtotapahtumien summa, jota ei vielä lasketa käytettävissä olevaan saldoon</translation>
+        <translation>Vahvistamattomien siirtotapahtumien summa, jota ei vielä lasketa käytettävissä olevaan saldoon</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="255"/>
@@ -1909,7 +1910,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="210"/>
         <source>Total:</source>
-        <translation>Yhteensä:</translation>
+        <translation>Saldo Yhteensä:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="271"/>
@@ -1939,7 +1940,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="437"/>
         <source>Status:</source>
-        <translation>Tilanne:</translation>
+        <translation>Tila:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="444"/>
@@ -2022,7 +2023,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="1053"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation>Nollaa nykyinen Darksend tilanne (voi keskeyttää Darksend sekoituksen, joka voi maksaa ylimääräisiä kuluja)</translation>
+        <translation>Nollaa nykyinen Darksend tila (voi keskeyttää Darksend sekoituksen, joka voi maksaa ylimääräisiä kuluja)</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="1059"/>
@@ -2072,7 +2073,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="377"/>
         <source>Rounds</source>
-        <translation>Kierrokset</translation>
+        <translation>Kierrosta</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="408"/>
@@ -2116,7 +2117,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"></translation>
+        <translation>Sekoitus käynnissä...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -2227,7 +2228,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../paymentserver.cpp" line="319"/>
         <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Ei voi käynnistää Darkcoinia: click-to-pay handler</translation>
+        <translation>Ei voi käynnistää dashia: click-to-pay handler</translation>
     </message>
     <message>
         <source>Net manager warning</source>
@@ -2302,7 +2303,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../paymentserver.cpp" line="570"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Varmistamattomia maksupyyntöjä kustomoituun maksupalvelun scripteihin ei tueta.</translation>
+        <translation>Vahvistamattomia maksupyyntöjä kustomoituun maksupalvelun scripteihin ei tueta.</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="578"/>
@@ -3044,7 +3045,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../sendcoinsdialog.cpp" line="590"/>
         <location filename="../sendcoinsdialog.cpp" line="602"/>
         <source>Send Coins</source>
-        <translation>Lähetä Darkcoineja</translation>
+        <translation>Lähetä Dasheja</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="90"/>
@@ -3336,7 +3337,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="242"/>
         <source>and InstantX</source>
-        <translation>ja instantx</translation>
+        <translation>ja InstantX</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="266"/>
@@ -3369,7 +3370,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="359"/>
         <source>Confirm send coins</source>
-        <translation>Hyväksy Darkcoinien lähettäminen</translation>
+        <translation>Hyväksy lähettäminen</translation>
     </message>
     <message>
         <source>Payment request expired</source>
@@ -3412,7 +3413,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="586"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Siirtotapahtuma hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopiota wallet.dat tiedostosta ja kolikot oli jo käytetty mutta ei merkattu täällä.</translation>
+        <translation>Siirtotapahtuma hylättiin! Tämä saattaa tapahtua jos lompakossa olevat varat on jo kulutettu, kuten jos käytät kopiota wallet.dat tiedostosta ja varat oli jo käytetty mutta ei merkattu täällä.</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="591"/>
@@ -3528,7 +3529,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
         <source>This is an unverified payment request.</source>
-        <translation>Tämä on varmistamaton maksupyyntö</translation>
+        <translation>Tämä on vahvistamaton maksupyyntö</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="601"/>
@@ -3545,7 +3546,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="1115"/>
         <source>This is a verified payment request.</source>
-        <translation>Tämä on varmistettu maksupyyntö.</translation>
+        <translation>Tämä on vahvistettu maksupyyntö.</translation>
     </message>
     <message>
         <location filename="../sendcoinsentry.cpp" line="31"/>
@@ -3571,7 +3572,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="14"/>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Allekirjoitukset - Allekirjoita / Varmista viesti</translation>
+        <translation>Allekirjoitukset - Allekirjoita / Tarkista viesti</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="27"/>
@@ -3642,7 +3643,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <source>Reset all sign message fields</source>
-        <translation>Tyhjennä kaikki allekirjoituskentät</translation>
+        <translation>Tyhjennä kaikki kentät</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="175"/>
@@ -3653,7 +3654,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="234"/>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Varmista viesti</translation>
+        <translation>&amp;Tarkista viesti</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="240"/>
@@ -3672,17 +3673,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation>Varmista että viesti on allekirjoitettu määritetyllä Dash osoitteella</translation>
+        <translation>Tarkista että viesti on allekirjoitettu määritetyllä Dash osoitteella</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="301"/>
         <source>Verify &amp;Message</source>
-        <translation>Varmista &amp;Viesti...</translation>
+        <translation>Tarkista &amp;Viesti...</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="315"/>
         <source>Reset all verify message fields</source>
-        <translation>Tyhjennä kaikki varmistakentät</translation>
+        <translation>Tyhjennä kaikki kentät</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="30"/>
@@ -3752,12 +3753,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="232"/>
         <source>Message verification failed.</source>
-        <translation>Viestin varmistus epäonnistui.</translation>
+        <translation>Viestin tarkistus epäonnistui.</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="237"/>
         <source>Message verified.</source>
-        <translation>Viesti varmistettu.</translation>
+        <translation>Viesti tarkistettu.</translation>
     </message>
 </context>
 <context>
@@ -3822,17 +3823,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="48"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation>%1/ei yhteyttä (varmistettu instantx:lla)</translation>
+        <translation>%1/ei yhteyttä (vahvistettu instantx:lla)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation>%1/vahvistettu (varmistettu instantx:lla)</translation>
+        <translation>%1/vahvistettu (vahvistettu instantx:lla)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="52"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation>%1 vahvistusta (varmistettu instantx:lla)</translation>
+        <translation>%1 vahvistusta (vahvistettu instantx:lla)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="81"/>
@@ -3853,27 +3854,27 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation>%1/ei yhteyttä (varmistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
+        <translation>%1/ei yhteyttä (vahvistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation>%1/vahvistettu (varmistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
+        <translation>%1/vahvistettu (vahvistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="63"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation>%1 vahvistusta (varmistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
+        <translation>%1 vahvistusta (vahvistus instantx:lla käynnissä - %2 / %3 allekirjoitusta)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="69"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation>%1/ei yhteyttä (instantx varmistus epäonnistui)</translation>
+        <translation>%1/ei yhteyttä (instantx vahvistus epäonnistui)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="71"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation>%1/vahvistettu (instantx varmistus epäonnistui)</translation>
+        <translation>%1/vahvistettu (instantx vahvistus epäonnistui)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
@@ -4016,7 +4017,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="308"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Luodut (louhitut) kolikot täytyy kypsyä %1 lohkon ajan kunnes ne voidaan käyttää. Kun generoit tämän lohkon, se lähetettiin verkkoon lohkoketjuun. Jos se epäonnistuu pääsemään lohkoketjuun sen tila tulee muuttumaan &quot;ei hyväksytty&quot; ja sitä ei voida käyttää. Näin voi ajoittain tapahtua kun toisen solmun lohko luodaan samanaikaisesti omasi kanssa.</translation>
+        <translation>Luodut (louhitut) varat täytyy kypsyä %1 lohkon ajan kunnes ne voidaan käyttää. Kun generoit tämän lohkon, se lähetettiin verkkoon lohkoketjuun. Jos se epäonnistuu pääsemään lohkoketjuun sen tila tulee muuttumaan &quot;ei hyväksytty&quot; ja sitä ei voida käyttää. Näin voi ajoittain tapahtua kun toisen solmun lohko luodaan samanaikaisesti omasi kanssa.</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="316"/>
@@ -4106,7 +4107,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
-        <translation>Varmistamaton</translation>
+        <translation>Vahvistamaton</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="299"/>
@@ -4181,7 +4182,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation>Darksend luo vakuus syöte</translation>
+        <translation>Darksend luo vakuus syötteet</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="373"/>
@@ -4290,7 +4291,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactionview.cpp" line="89"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation>Darksend vakuus syöte</translation>
+        <translation>Darksend luo vakuus syötteet</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="90"/>
@@ -4464,7 +4465,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../walletmodel.cpp" line="289"/>
         <location filename="../walletmodel.cpp" line="303"/>
         <source>Send Coins</source>
-        <translation>Lähetä Darkcoineja</translation>
+        <translation>Lähetä Dasheja</translation>
     </message>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="289"/>
@@ -4578,7 +4579,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>Darksend käyttää tarkalleen denominoituja syötteitä lähettäessään varoja, saatat tarvita anonymisoida lisää kolikoita.</translation>
+        <translation>Darksend käyttää tarkalleen denominoituja syötteitä lähettäessään varoja, saatat tarvita anonymisoida lisää varoja.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
@@ -4613,7 +4614,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="66"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Virhe: Siirtotapahtuma hylättiin! Tämä saattaa tapahtua jos jotkut kolikot lompakossa on jo käytetty. Esimerkiksi jos käytit kopioitua lompakkoa ja kolikot on käytetty jo siellä, mutta ei ole merkattu käytetyksi täällä.</translation>
+        <translation>Virhe: Siirtotapahtuma hylättiin! Tämä saattaa tapahtua jos jotkut varat lompakossa on jo käytetty. Esimerkiksi jos käytit kopioitua lompakkoa ja varat on käytetty jo siellä, mutta ei ole merkattu käytetyksi täällä.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="70"/>
@@ -4658,7 +4659,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="93"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation>Kuinka vaativa lohkonvarmistus -checkblocks on (0-4, oletus:  3)</translation>
+        <translation>Kuinka vaativa lohkon vahvistus  -checkblocks on (0-4, oletus:  3)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="95"/>
@@ -4668,7 +4669,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="98"/>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation>Instantx vaatii vähintään 6 varmistusta, odota muutama minuutti ja yritä uudelleen.</translation>
+        <translation>InstantX vaatii vähintään 6 vahvistusta, odota muutama minuutti ja yritä uudelleen.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="101"/>
@@ -4693,7 +4694,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation>Tarjoa Darksend:ille likviditeettiä jatkuvaa kolikoiden sekoitusta varten (0-100, oletus: 0, 1=usein, isot maksukulut, 100=harvoin, pienet maksukulut)</translation>
+        <translation>Tarjoa Darksend:ille likviditeettiä jatkuvaa varojen sekoitusta varten (0-100, oletus: 0, 1=usein, isot maksukulut, 100=harvoin, pienet maksukulut)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="114"/>
@@ -4713,7 +4714,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location filename="../dashstrings.cpp" line="121"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Aseta script varmistuksen säikeiden määrä (%u - %d, 0= auto, &lt;0 = jätä näin monta prosessorin ydintä vapaaksi, oletus: %d)</translation>
+        <translation>Aseta script vahvistuksen säikeiden määrä (%u - %d, 0= auto, &lt;0 = jätä näin monta prosessorin ydintä vapaaksi, oletus: %d)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="124"/>
@@ -4827,7 +4828,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="178"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Linää solmu mihin liittyä pitääksesi yhteyden auki</translation>
+        <translation>Lisää solmu mihin liittyä pitääksesi yhteyden auki</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="179"/>
@@ -4862,7 +4863,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation>Ei voida denomnoida: yhteensopivia syötteitä ei ole jäljellä.</translation>
+        <translation>Ei voida denominoida: yhteensopivia syötteitä ei ole jäljellä.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="186"/>
@@ -4987,7 +4988,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Alennetaan ja yritetään uudestaan.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
@@ -5032,7 +5033,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
-        <translation>Virhe ladattaessa wallet.dat lompakkotiedostoa: Tarvitset uudemman version Darkcoinista</translation>
+        <translation>Virhe ladattaessa wallet.dat lompakkotiedostoa: Tarvitset uudemman version dashista</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="220"/>
@@ -5117,7 +5118,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="236"/>
         <source>Failed to write to coin database</source>
-        <translation>Kolikkotietokannan kirjoitus epäonnistui</translation>
+        <translation>Tietokannan kirjoitus epäonnistui</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="237"/>
@@ -5147,7 +5148,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="242"/>
         <source>Generate coins (default: 0)</source>
-        <translation>Luo kolikoita (oletus: 0)</translation>
+        <translation>Luo varoja (oletus: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="243"/>
@@ -5212,7 +5213,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="255"/>
         <source>InstantX options:</source>
-        <translation>Instantx valinnat:</translation>
+        <translation>InstantX valinnat:</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="256"/>
@@ -5436,7 +5437,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="299"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation>Hyväksy vain lohkoketjua vastaavat sisäänrakennetut varmistuspisteet (Oletus: 1)</translation>
+        <translation>Hyväksy vain lohkoketjua vastaavat sisäänrakennetut vahvistuspisteet (Oletus: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="300"/>
@@ -5561,7 +5562,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="324"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
-        <translation>Istunnon aikaraja (30 sekuntia), esitä uudestaan.</translation>
+        <translation>Istunto vanheni (30 sekuntia), esitä uudestaan.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="325"/>
@@ -5666,7 +5667,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="345"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation>Käytä varmistamattomia vaihtorahoja lähetettäessä siirtotapahtumia (oletus: 1)</translation>
+        <translation>Käytä vahvistamattomia vaihtorahoja lähetettäessä siirtotapahtumia (oletus: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="346"/>
@@ -5746,7 +5747,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="361"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation>En voida osoittaa spork viestiä, väärä avain?</translation>
+        <translation>En voida allekirjoittaa spork viestiä, väärä avain?</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="362"/>
@@ -5816,12 +5817,12 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="375"/>
         <source>Verifying blocks...</source>
-        <translation>Varmistetaan lohkoja...</translation>
+        <translation>Tarkistetaan lohkoja...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="376"/>
         <source>Verifying wallet...</source>
-        <translation>Varmistetaan lompakko...</translation>
+        <translation>Tarkistetaan lompakko...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="377"/>
@@ -5886,7 +5887,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="389"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat lompakkotiedosto vioittunut, palastaminen epäonnistui</translation>
+        <translation>wallet.dat lompakkotiedosto vioittunut, pelastaminen epäonnistui</translation>
     </message>
 </context>
 </TS>
