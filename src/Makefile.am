@@ -130,18 +130,6 @@ BITCOIN_CORE_H = \
   script/standard.h \
   script/script_error.h \
   serialize.h \
-  sph_blake.h \
-  sph_bmw.h \
-  sph_cubehash.h \
-  sph_echo.h \
-  sph_groestl.h \
-  sph_jh.h \
-  sph_keccak.h \
-  sph_luffa.h \
-  sph_shavite.h \
-  sph_simd.h \
-  sph_skein.h \
-  sph_types.h \
   spork.h \
   streams.h \
   sync.h \
@@ -228,22 +216,20 @@ libbitcoin_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-# ***TODO*** move X11 to crypto/
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
-  aes_helper.c \
-  luffa.c \
-  groestl.c \
-  jh.c \
-  echo.c \
-  shavite.c \
-  keccak.c \
-  skein.c \
-  spork.cpp \
-  bmw.c \
-  simd.c \
-  cubehash.c \
-  blake.c \
+  crypto/aes_helper.c \
+  crypto/luffa.c \
+  crypto/groestl.c \
+  crypto/jh.c \
+  crypto/echo.c \
+  crypto/shavite.c \
+  crypto/keccak.c \
+  crypto/skein.c \
+  crypto/bmw.c \
+  crypto/simd.c \
+  crypto/cubehash.c \
+  crypto/blake.c \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
   crypto/sha512.cpp \
@@ -258,7 +244,19 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/rfc6979_hmac_sha256.h \
   crypto/hmac_sha512.h \
   crypto/sha1.h \
-  crypto/ripemd160.h
+  crypto/ripemd160.h \
+  crypto/sph_blake.h \
+  crypto/sph_bmw.h \
+  crypto/sph_cubehash.h \
+  crypto/sph_echo.h \
+  crypto/sph_groestl.h \
+  crypto/sph_jh.h \
+  crypto/sph_keccak.h \
+  crypto/sph_luffa.h \
+  crypto/sph_shavite.h \
+  crypto/sph_simd.h \
+  crypto/sph_skein.h \
+  crypto/sph_types.h
 
 # univalue JSON library
 univalue_libbitcoin_univalue_a_SOURCES = \
@@ -302,6 +300,7 @@ libbitcoin_common_a_SOURCES = \
   script/sign.cpp \
   script/standard.cpp \
   script/script_error.cpp \
+  spork.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

@@ -13,17 +13,17 @@
 #include "uint256.h"
 #include "version.h"
 
-#include "sph_blake.h"
-#include "sph_bmw.h"
-#include "sph_groestl.h"
-#include "sph_jh.h"
-#include "sph_keccak.h"
-#include "sph_skein.h"
-#include "sph_luffa.h"
-#include "sph_cubehash.h"
-#include "sph_shavite.h"
-#include "sph_simd.h"
-#include "sph_echo.h"
+#include "crypto/sph_blake.h"
+#include "crypto/sph_bmw.h"
+#include "crypto/sph_groestl.h"
+#include "crypto/sph_jh.h"
+#include "crypto/sph_keccak.h"
+#include "crypto/sph_skein.h"
+#include "crypto/sph_luffa.h"
+#include "crypto/sph_cubehash.h"
+#include "crypto/sph_shavite.h"
+#include "crypto/sph_simd.h"
+#include "crypto/sph_echo.h"
 
 #include <vector>
 
@@ -236,7 +236,7 @@ inline uint256 HashX11(const T1 pbegin, const T1 pend)
     sph_echo512_context      ctx_echo;
     static unsigned char pblank[1];
 
-    uint512 hash[17]; /* @TODO uint512 not declared */
+    uint512 hash[11];
 
     sph_blake512_init(&ctx_blake);
     sph_blake512 (&ctx_blake, (pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
