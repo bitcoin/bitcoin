@@ -41,35 +41,13 @@ bool BitcoinUnits::valid(int unit)
 
 QString BitcoinUnits::id(int unit)
 {
-//    switch(unit)
-//    {
-//    case BTC: return QString("btc");
-//    case mBTC: return QString("mbtc");
-//    case uBTC: return QString("ubtc");
-//    default: return QString("???");
-//    }
-    // ***TODO*** create icons unit_<unit>.png
-    if(Params().NetworkID() == CBaseChainParams::MAIN)
+    switch(unit)
     {
-        switch(unit)
-        {
-            case DASH: return QString("dash");
-            case mDASH: return QString("mdash");
-            case uDASH: return QString::fromUtf8("udash");
-            case duffs: return QString("duffs");
-            default: return QString("???");
-        }
-    }
-    else
-    {
-        switch(unit)
-        {
-            case DASH: return QString("tdash");
-            case mDASH: return QString("mtdash");
-            case uDASH: return QString::fromUtf8("utdash");
-            case duffs: return QString("tduffs");
-            default: return QString("???");
-        }
+        case DASH: return QString("dash");
+        case mDASH: return QString("mdash");
+        case uDASH: return QString::fromUtf8("udash");
+        case duffs: return QString("duffs");
+        default: return QString("???");
     }
 }
 
