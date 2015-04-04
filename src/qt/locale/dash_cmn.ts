@@ -6,19 +6,19 @@
     <message>
         <location filename="../forms/ui_aboutdialog.h" line="129"/>
         <source>About Dash Core</source>
-        <translation>关于暗黑币核心</translation>
+        <translation>关于达世币核心</translation>
     </message>
     <message>
         <location filename="../forms/ui_aboutdialog.h" line="130"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;暗黑币核心&lt;/b&gt; 版本</translation>
+        <translation>&lt;b&gt;达世币核心&lt;/b&gt; 版本</translation>
     </message>
     <message>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>版权 &amp;copy; 2009-2014 比特币核心的开发者。
-版权 &amp;copy; 暗黑币核心的开发者。</translation>
+版权 &amp;copy; 达世币核心的开发者。</translation>
     </message>
     <message>
         <location filename="../forms/ui_aboutdialog.h" line="133"/>
@@ -136,12 +136,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>这些是你要付款过去的暗黑币位址。在付款之前，务必要检查金额和收款位址是否正确。</translation>
+        <translation>这些是你要付款过去的达世币地址。在付款之前，务必要检查金额和收款地址是否正确。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>这些是你用来收款的暗黑币位址。建议在每次交易时，都使用一个新的收款位址。</translation>
+        <translation>这些是你用来收款的达世币地址。建议在每次交易时，都使用一个新的收款地址。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -285,7 +285,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="116"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>警告:如果把钱包加​​密后又忘记密码，你就会从此&lt;b&gt;失去所有的暗黑币了&lt;/b&gt;!</translation>
+        <translation>警告:如果把钱包加​​密后又忘记密码，你就会从此&lt;b&gt;失去所有的达世币了&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="116"/>
@@ -301,7 +301,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>暗黑币软体现在要关闭，以完成加密过程。请注意，加密钱包不能完全防止恶意软件入侵你的电脑盗取你的暗黑币。</translation>
+        <translation>达世币软体现在要关闭，以完成加密过程。请注意，加密钱包不能完全防止恶意软件入侵你的电脑盗取你的达世币。</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="131"/>
@@ -361,7 +361,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="107"/>
         <source>Dash Core</source>
-        <translation>暗黑币核心</translation>
+        <translation>达世币核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="116"/>
@@ -1188,12 +1188,12 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>使用2个独立的主节点混合资金最多1000DRK</translation>
+        <translation>使用2个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>使用8个独立的主节点混合资金最多1000DRK</translation>
+        <translation>使用8个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
@@ -1203,17 +1203,17 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DASH to anonymize 1000 DASH</source>
-        <translation>此选项为最快速度，需要支付0.025DRK/1000DRK的匿名处理费用。</translation>
+        <translation>此选项为最快速度，需要支付0.025达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DASH to anonymize 1000 DASH</source>
-        <translation>此选项为一般速度，需要支付0.05DRK/1000DRK的匿名处理费用。</translation>
+        <translation>此选项为一般速度，需要支付0.05达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DASH per 1000 DASH you anonymize.</source>
-        <translation>0.1DRK/1000DRK的匿名处理费用。</translation>
+        <translation>0.1达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1948,7 +1948,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="484"/>
         <source>0 DASH</source>
-        <translation>0 暗黑币</translation>
+        <translation>0 达世币</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="491"/>
@@ -1958,7 +1958,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="498"/>
         <source>0 DASH / 0 Rounds</source>
-        <translation>0 暗黑币 / 0 循环数</translation>
+        <translation>0 达世币 / 0 循环数</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="505"/>
@@ -3245,7 +3245,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="1358"/>
         <source>InstantX</source>
-        <translation>立即支付</translation>
+        <translation>即时支付</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="1365"/>
@@ -3322,7 +3322,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="242"/>
         <source>and InstantX</source>
-        <translation type="unfinished"></translation>
+        <translation>和 即时支付</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="266"/>
@@ -3796,17 +3796,17 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="48"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation>%1/下线(经过立即支付系统认证)</translation>
+        <translation>%1/下线(经过即时支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation>%1/已确认(经过立即支付系统认证)</translation>
+        <translation>%1/已确认(经过即时支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="52"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation>%1/确认完成(经过立即支付系统认证)</translation>
+        <translation>%1/确认完成(经过即时支付付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="81"/>
@@ -3827,27 +3827,27 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiondesc.cpp" line="59"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation>%1/下线 (立即支付系统正在认证中 - %2 of %3签名数)</translation>
+        <translation>%1/下线 (即时支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation>%1/已确认 (立即支付系统正在认证中 - %2 of %3签名数)</translation>
+        <translation>%1/已确认 (即时支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="63"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation>%1/确认完成 (立即支付系统正在认证中 - %2 of %3签名数)</translation>
+        <translation>%1/确认完成 (即时支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="69"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation>%1/下线 (立即支付系统认证失败)</translation>
+        <translation>%1/下线 (即时支付系统认证失败)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="71"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation>%1/已确认 (立即支付系统认证失败)</translation>
+        <translation>%1/已确认 (即时支付系统认证失败)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="103"/>
@@ -4548,7 +4548,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation>激活立即支付,显示锁定交易的确认数(bool, 默认：true)</translation>
+        <translation>激活即时支付,显示锁定交易的确认数(bool, 默认：true)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="54"/>
@@ -5170,7 +5170,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="255"/>
         <source>InstantX options:</source>
-        <translation>立即支付 选项：</translation>
+        <translation>即时支付 选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="256"/>
@@ -5625,7 +5625,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="346"/>
         <source>Start Dash Core Daemon</source>
-        <translation>启动暗黑币核心后台程序</translation>
+        <translation>启动达世币核心后台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="347"/>

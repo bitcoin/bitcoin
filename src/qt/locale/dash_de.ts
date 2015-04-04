@@ -574,7 +574,7 @@ Dieses Produkt enthält zudem folgende Dritt-Software:
     <message>
         <location filename="../bitcoingui.cpp" line="347"/>
         <source>Open &amp;Configuration File</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Konfigurationsdatei öffnen</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="348"/>
@@ -2116,7 +2116,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"></translation>
+        <translation>Am Mixen...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -2176,15 +2176,15 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation type="vanished">An Masternode übermittelt, wartet in Warteschange .</translation>
+        <translation>An Masternode übermittelt, wartet in Warteschlange .</translation>
     </message>
     <message>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation type="vanished">An Masternode übermittelt, wartet in Warteschange ..</translation>
+        <translation>An Masternode übermittelt, wartet in Warteschlange ..</translation>
     </message>
     <message>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation type="vanished">An Masternode übermittelt, wartet in Warteschange ...</translation>
+        <translation>An Masternode übermittelt, wartet in Warteschlange ...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="460"/>
@@ -4989,7 +4989,7 @@ Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Lese
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gehe auf ältere Version zurück und versuche es erneut.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
@@ -5334,8 +5334,8 @@ Dash Core wird heruntergefahren.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
-        <source>Loading masternode cache...</source>
-        <translation type="unfinished"></translation>
+        <source>Loading masternode list...</source>
+        <translation>Lade Masternode-Liste...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="280"/>

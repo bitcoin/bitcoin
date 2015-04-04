@@ -2118,7 +2118,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"></translation>
+        <translation>Mixning pågår...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="429"/>
@@ -4990,7 +4990,7 @@ Om filen inte existerar, skapa den och ge inga andra än ägaren läsarrättighe
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nedgraderar och försöker igen.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
@@ -5004,7 +5004,7 @@ Om filen inte existerar, skapa den och ge inga andra än ägaren läsarrättighe
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="213"/>
-        <source>Error connecting to masternode.</source>
+        <source>Error connecting to Masternode.</source>
         <translation>Fel vid anslutning till masternode.</translation>
     </message>
     <message>
