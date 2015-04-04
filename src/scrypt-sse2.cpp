@@ -122,7 +122,8 @@ uint256 scrypt_blockhash__sse2(const uint8_t* input)
 
     V = (__m128i *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
 
-    PKCS5_PBKDF2_HMAC((const int8_t *)input, 80, (const int8_t *)input, 80, 1, EVP_sha256(), 128, B);
+    void *const tmp = const_cast<uint8_t*>(input);
+    PKCS5_PBKDF2_HMAC(static_cast<const char*>(tmp), 80, input, 80, 1, EVP_sha256(), 128, B);
 
     for (k = 0; k < 2; k++) {
         for (i = 0; i < 16; i++) {
@@ -150,7 +151,7 @@ uint256 scrypt_blockhash__sse2(const uint8_t* input)
         }
     }
 
-    PKCS5_PBKDF2_HMAC((const int8_t *)input, 80, B, 128, 1, EVP_sha256(), 32, (int8_t*)&result);
+    PKCS5_PBKDF2_HMAC(static_cast<const char*>(tmp), 80, B, 128, 1, EVP_sha256(), 32, (unsigned char*)&result);
 
     return result;
 }
