@@ -2237,23 +2237,6 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     return nFeeNeeded;
 }
 
-
-//  ***TODO*** this was removed
-//string CWallet::SendMoneyToDestination(const CTxDestination& address, int64_t nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type)
-//{
-//    // Check amount
-//    if (nValue <= 0)
-//        return _("Invalid amount");
-//    if (nValue + nTransactionFee > GetBalance())
-//        return _("Insufficient funds");
-
-//    // Parse Dash address
-//    CScript scriptPubKey;
-//    scriptPubKey = GetScriptForDestination(address);
-
-//    return SendMoney(scriptPubKey, nValue, wtxNew, coin_type);
-//}
-
 int64_t CWallet::GetTotalValue(std::vector<CTxIn> vCoins) {
     int64_t nTotalValue = 0;
     CWalletTx wtx;

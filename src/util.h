@@ -28,60 +28,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/thread/exceptions.hpp>
 
-// ***TODO*** clean this
-//#define BEGIN(a)            ((char*)&(a))
-//#define END(a)              ((char*)&((&(a))[1]))
-//#define UBEGIN(a)           ((unsigned char*)&(a))
-//#define UEND(a)             ((unsigned char*)&((&(a))[1]))
-//#define ARRAYLEN(array)     (sizeof(array)/sizeof((array)[0]))
-
-//// This is needed because the foreach macro can't get over the comma in pair<t1, t2>
-//#define PAIRTYPE(t1, t2)    std::pair<t1, t2>
-
-//// Align by increasing pointer, must have extra space at end of buffer
-//template <size_t nBytes, typename T>
-//T* alignup(T* p)
-//{
-//    union
-//    {
-//        T* ptr;
-//        size_t n;
-//    } u;
-//    u.ptr = p;
-//    u.n = (u.n + (nBytes-1)) & ~(nBytes-1);
-//    return u.ptr;
-//}
-
-//#ifdef WIN32
-//#define MSG_DONTWAIT        0
-
-//#ifndef S_IRUSR
-//#define S_IRUSR             0400
-//#define S_IWUSR             0200
-//#endif
-//#else
-//#define MAX_PATH            1024
-//#endif
-//// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
-//#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
-//#define MSG_NOSIGNAL 0
-//#endif
-
-//inline void MilliSleep(int64_t n)
-//{
-//// Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
-//// until fixed in 1.52. Use the deprecated sleep method for the broken case.
-//// See: https://svn.boost.org/trac/boost/ticket/7238
-//#if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
-//    boost::this_thread::sleep_for(boost::chrono::milliseconds(n));
-//#elif defined(HAVE_WORKING_BOOST_SLEEP)
-//    boost::this_thread::sleep(boost::posix_time::milliseconds(n));
-//#else
-////should never get here
-//#error missing boost sleep implementation
-//#endif
-//}
-
 //Dash only features
 
 extern bool fMasterNode;
