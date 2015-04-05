@@ -593,7 +593,7 @@ int main(int argc, char *argv[])
     /// 7a. parse masternode.conf
     string strErr;
     if(!masternodeConfig.read(strErr)) {
-        QMessageBox::critical(0, QObject::tr("Dash"),
+        QMessageBox::critical(0, QObject::tr("Dash Core"),
                               QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
         return false;
     }

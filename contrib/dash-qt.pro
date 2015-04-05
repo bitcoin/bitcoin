@@ -356,7 +356,6 @@ SOURCES += src/activemasternode.cpp \
            src/allocators.cpp \
            src/amount.cpp \
            src/base58.cpp \
-           src/bitcoin-tx.cpp \
            src/bloom.cpp \
            src/chain.cpp \
            src/chainparams.cpp \
