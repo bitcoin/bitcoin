@@ -807,7 +807,7 @@
              <string>collapse fee-settings</string>
             </property>
             <property name="text">
-             <string>Minimize</string>
+             <string>Hide</string>
             </property>
            </widget>
           </item>
