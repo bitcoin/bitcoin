@@ -1176,10 +1176,11 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
-    if (Params().RequireStandard() && !IsStandardTx(tx, reason))
-        return state.DoS(0,
-                         error("AcceptableInputs : nonstandard transaction: %s", reason),
-                         REJECT_NONSTANDARD, reason);
+// for any real tx this will be checked on AcceptToMemoryPool anyway
+//    if (Params().RequireStandard() && !IsStandardTx(tx, reason))
+//        return state.DoS(0,
+//                         error("AcceptableInputs : nonstandard transaction: %s", reason),
+//                         REJECT_NONSTANDARD, reason);
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
@@ -1253,8 +1254,9 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
         }
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (Params().RequireStandard() && !AreInputsStandard(tx, view))
-            return error("AcceptableInputs: : nonstandard transaction input");
+// for any real tx this will be checked on AcceptToMemoryPool anyway
+//        if (Params().RequireStandard() && !AreInputsStandard(tx, view))
+//            return error("AcceptableInputs: : nonstandard transaction input");
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
@@ -1335,6 +1337,7 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
+// for any real tx this will be checked on AcceptToMemoryPool anyway
 //        if (!CheckInputs(tx, state, view, false, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
 //        {
 //            return error("AcceptableInputs: : BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
