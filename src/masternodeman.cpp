@@ -12,6 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
+CCriticalSection cs_process_message;
 
 /** Masternode manager */
 CMasternodeMan mnodeman;
@@ -546,7 +547,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
     if(IsInitialBlockDownload()) return;
 
-    LOCK(cs);
+    LOCK(cs_process_message);
 
     if (strCommand == "dsee") { //DarkSend Election Entry
 
@@ -622,7 +623,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         //search existing Masternode list, this is where we update existing Masternodes with new dsee broadcasts
         CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL)
+        // if we are masternode but with undefined vin and this dsee is ours (matches our Masternode privkey) then just skip this part
+        if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
         {
             // count == -1 when it's a new entry
             //   e.g. We don't want the entry relayed/time updated when we're syncing the list
