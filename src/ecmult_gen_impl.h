@@ -116,6 +116,16 @@ static void secp256k1_ecmult_gen(secp256k1_gej_t *r, const secp256k1_scalar_t *g
     for (j = 0; j < 64; j++) {
         bits = secp256k1_scalar_get_bits(gn, j * 4, 4);
         for (i = 0; i < 16; i++) {
+            /** This uses a conditional move to avoid any secret data in array indexes.
+             *   _Any_ use of secret indexes has been demonstrated to result in timing
+             *   sidechannels, even when the cache-line access patterns are uniform.
+             *  See also:
+             *   "A word of warning", CHES 2013 Rump Session, by Daniel J. Bernstein and Peter Schwabe
+             *    (https://cryptojedi.org/peter/data/chesrump-20130822.pdf) and
+             *   "Cache Attacks and Countermeasures: the Case of AES", RSA 2006,
+             *    by Dag Arne Osvik, Adi Shamir, and Eran Tromer
+             *    (http://www.tau.ac.il/~tromer/papers/cache.pdf)
+             */
             secp256k1_ge_storage_cmov(&adds, &c->prec[j][i], i == bits);
         }
         secp256k1_ge_from_storage(&add, &adds);
