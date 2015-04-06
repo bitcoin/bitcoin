@@ -1758,7 +1758,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks, when 75% of the network has upgraded:
-    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
+    if (block.nVersion >= 3 && IsSuperMajority(3, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus(), GetPrevIndex)) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
@@ -2583,7 +2583,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, GetPrevIndex))
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
@@ -2629,7 +2629,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     if (!CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, mapBlockIndex))
         return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
-    if (!Consensus::ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev))
+    if (!Consensus::ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetPrevIndex))
         return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
 
     if (pindex == NULL)
@@ -2729,7 +2729,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
     // NOTE: CheckBlockHeader is called by CheckBlock
-    if (!Consensus::ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev))
+    if (!Consensus::ContextualCheckBlockHeader(block, state, chainparams.GetConsensus(), pindexPrev, GetPrevIndex))
         return error("%s: Consensus::CheckBlockHeader(): ", __func__, state.GetRejectReason().c_str());
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
         return false;
