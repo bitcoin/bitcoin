@@ -12,7 +12,6 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
-#include "pow.h"
 #include "primitives/transaction.h"
 #include "timedata.h"
 #include "util.h"
@@ -80,6 +79,20 @@ public:
         }
     }
 };
+
+uint32_t GetNextWorkRequiredLog(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& consensusParams)
+{
+    uint32_t nextChallenge = GetNextWorkRequired(pindexLast, pblock, consensusParams);
+    /// debug print
+    LogPrintf("GetNextWorkRequired RETARGET\n");
+    LogPrintf("pindexLast->nTime = %d\n", (int64_t)pindexLast->nTime);
+    arith_uint256 bnNew, bnOld;
+    bnNew.SetCompact(nextChallenge);
+    bnOld.SetCompact(pindexLast->nBits);    
+    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("After:  %08x  %s\n", nextChallenge, bnNew.ToString());
+    return nextChallenge;
+}
 
 void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
