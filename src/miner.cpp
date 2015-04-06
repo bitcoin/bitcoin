@@ -6,6 +6,7 @@
 #include "miner.h"
 
 #include "amount.h"
+#include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
@@ -82,7 +83,7 @@ public:
 
 uint32_t GetNextWorkRequiredLog(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& consensusParams)
 {
-    uint32_t nextChallenge = GetNextWorkRequired(pindexLast, pblock, consensusParams);
+    uint32_t nextChallenge = GetNextWorkRequired(pindexLast, pblock, consensusParams, GetPrevIndex);
     /// debug print
     LogPrintf("GetNextWorkRequired RETARGET\n");
     LogPrintf("pindexLast->nTime = %d\n", (int64_t)pindexLast->nTime);
@@ -96,7 +97,7 @@ uint32_t GetNextWorkRequiredLog(const CBlockIndex* pindexLast, const CBlockHeade
 
 void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    pblock->nTime = std::max(GetMedianTimePast(pindexPrev)+1, GetAdjustedTime());
+    pblock->nTime = std::max(GetMedianTimePast(pindexPrev, GetPrevIndex)+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)

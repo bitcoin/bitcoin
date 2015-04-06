@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
-        pblock->nTime = GetMedianTimePast(chainActive.Tip())+1;
+        pblock->nTime = GetMedianTimePast(chainActive.Tip(), GetPrevIndex)+1;
         CMutableTransaction txCoinbase(pblock->vtx[0]);
         txCoinbase.vin[0].scriptSig = CScript();
         txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     chainActive.Tip()->nHeight = nHeight;
 
     // non-final txs in mempool
-    SetMockTime(GetMedianTimePast(chainActive.Tip())+1);
+    SetMockTime(GetMedianTimePast(chainActive.Tip(), GetPrevIndex)+1);
 
     // height locked
     tx.vin[0].prevout.hash = txFirst[0]->GetHash();
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx2.vout.resize(1);
     tx2.vout[0].nValue = 4900000000LL;
     tx2.vout[0].scriptPubKey = CScript() << OP_1;
-    tx2.nLockTime = GetMedianTimePast(chainActive.Tip())+1;
+    tx2.nLockTime = GetMedianTimePast(chainActive.Tip(), GetPrevIndex)+1;
     hash = tx2.GetHash();
     mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
     BOOST_CHECK(!IsFinalTx(tx2));
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // However if we advance height and time by one, both will.
     chainActive.Tip()->nHeight++;
-    SetMockTime(GetMedianTimePast(chainActive.Tip())+2);
+    SetMockTime(GetMedianTimePast(chainActive.Tip(), GetPrevIndex)+2);
 
     BOOST_CHECK(IsFinalTx(tx, chainActive.Tip()->nHeight + 1));
     BOOST_CHECK(IsFinalTx(tx2));

@@ -6,10 +6,11 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "consensus/types.h"
+
 #include <stdint.h>
 
 class CBlockHeader;
-class CBlockIndex;
 class CValidationState;
 class uint256;
 
@@ -33,23 +34,23 @@ class Params;
 
 /** Block header validation functions */
 
-bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndex* pindexPrev);
+bool VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, const CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter);
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true);
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndexBase* pindexPrev, PrevIndexGetter);
 
 } // namespace Consensus
 
 /** Block header validation utility functions */
 
-int64_t GetMedianTimePast(const CBlockIndex* pindex);
-uint32_t GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
-uint32_t CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
+int64_t GetMedianTimePast(const CBlockIndexBase* pindex, PrevIndexGetter);
+uint32_t GetNextWorkRequired(const CBlockIndexBase* pindexLast, const CBlockHeader *pblock, const Consensus::Params&, PrevIndexGetter);
+uint32_t CalculateNextWorkRequired(const CBlockIndexBase* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
  * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
  */
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+bool IsSuperMajority(int minVersion, const CBlockIndexBase* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

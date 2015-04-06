@@ -121,3 +121,8 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     // or ~bnTarget / (nTarget+1) + 1.
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
+
+const CBlockIndexBase* GetPrevIndex(const CBlockIndexBase* pindex)
+{
+    return ((CBlockIndex*)pindex)->pprev;
+}

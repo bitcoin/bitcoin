@@ -6,7 +6,6 @@
 #include "consensus/consensus.h"
 
 #include "arith_uint256.h"
-#include "chain.h"
 #include "consensus/params.h"
 #include "consensus/validation.h"
 #include "primitives/block.h"
@@ -16,7 +15,7 @@
 
 static const unsigned int MEDIAN_TIME_SPAN = 11;
 
-uint32_t GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
+uint32_t GetNextWorkRequired(const CBlockIndexBase* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params, PrevIndexGetter indexGetter)
 {
     uint32_t nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
@@ -37,9 +36,9 @@ uint32_t GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
-                const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
-                    pindex = pindex->pprev;
+                const CBlockIndexBase* pindex = pindexLast;
+                while (indexGetter(pindex) && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                    pindex = indexGetter(pindex);
                 return pindex->nBits;
             }
         }
@@ -47,15 +46,15 @@ uint32_t GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *
     }
 
     // Go back by what we want to be 14 days worth of blocks
-    const CBlockIndex* pindexFirst = pindexLast;
+    const CBlockIndexBase* pindexFirst = pindexLast;
     for (int i = 0; pindexFirst && i < params.DifficultyAdjustmentInterval()-1; i++)
-        pindexFirst = pindexFirst->pprev;
+        pindexFirst = indexGetter(pindexFirst);
     assert(pindexFirst);
 
     return CalculateNextWorkRequired(pindexLast, (int64_t)pindexFirst->nTime, params);
 }
 
-uint32_t CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
+uint32_t CalculateNextWorkRequired(const CBlockIndexBase* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
     // Limit adjustment step
     int64_t nActualTimespan = (int64_t)pindexLast->nTime - nFirstBlockTime;
@@ -98,27 +97,27 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
     return true;
 }
 
-int64_t GetMedianTimePast(const CBlockIndex* pindex)
+int64_t GetMedianTimePast(const CBlockIndexBase* pindex, PrevIndexGetter indexGetter)
 {
     int64_t pmedian[MEDIAN_TIME_SPAN];
     int64_t* pbegin = &pmedian[MEDIAN_TIME_SPAN];
     int64_t* pend = &pmedian[MEDIAN_TIME_SPAN];
 
-    for (unsigned int i = 0; i < MEDIAN_TIME_SPAN && pindex; i++, pindex = pindex->pprev)
+    for (unsigned int i = 0; i < MEDIAN_TIME_SPAN && pindex; i++, pindex = indexGetter(pindex))
         *(--pbegin) = (int64_t)pindex->nTime;
 
     std::sort(pbegin, pend);
     return pbegin[(pend - pbegin)/2];
 }
 
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+bool IsSuperMajority(int minVersion, const CBlockIndexBase* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter indexGetter)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
         if (pstart->nVersion >= minVersion)
             ++nFound;
-        pstart = pstart->pprev;
+        pstart = indexGetter(pstart);
     }
     return (nFound >= nRequired);
 }
@@ -136,29 +135,29 @@ bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& st
     return true;
 }
 
-bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter)
 {
     // Check proof of work
-    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
+    if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams, indexGetter))
         return state.DoS(100, false, REJECT_INVALID, "bad-diffbits");
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= GetMedianTimePast(pindexPrev))
+    if (block.GetBlockTime() <= GetMedianTimePast(pindexPrev, indexGetter))
         return state.Invalid(false, REJECT_INVALID, "time-too-old");
 
     // Reject block.nVersion=n blocks when 95% (75% on testnet) of the network has upgraded (last version=3):
     for (int i = 2; i <= 3; i++)
-        if (block.nVersion < i && IsSuperMajority(i, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+        if (block.nVersion < i && IsSuperMajority(i, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams, indexGetter))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version nVersion=%d", i-1));
 
     return true;
 }
 
-bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, CBlockIndex* pindexPrev)
+bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& params, int64_t nTime, const CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter)
 {
     if (!Consensus::CheckBlockHeader(block, state, params, nTime, true))
         return false;
-    if (!Consensus::ContextualCheckBlockHeader(block, state, params, pindexPrev))
+    if (!Consensus::ContextualCheckBlockHeader(block, state, params, pindexPrev, indexGetter))
         return false;
     return true;
 }

@@ -7,6 +7,7 @@
 #define BITCOIN_CHAIN_H
 
 #include "arith_uint256.h"
+#include "consensus/types.h"
 #include "primitives/block.h"
 #include "tinyformat.h"
 #include "uint256.h"
@@ -93,25 +94,25 @@ enum BlockStatus {
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
 };
 
+/**
+ * This getter is used by in bitcoin core when a PrevIndexGetter
+ * function pointer is needed in consensus checks. 
+ */
+const CBlockIndexBase* GetPrevIndex(const CBlockIndexBase* pindex);
+
 /** The block chain is a tree shaped structure starting with the
  * genesis block at the root, with each block potentially having multiple
  * candidates to be the next block. A blockindex may have multiple pprev pointing
  * to it, but at most one of them can be part of the currently active branch.
  */
-class CBlockIndex
+class CBlockIndex : public CBlockIndexBase
 {
 public:
-    //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
-    const uint256* phashBlock;
-
     //! pointer to the index of the predecessor of this block
     CBlockIndex* pprev;
 
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
-
-    //! height of the entry in the chain. The genesis block has height 0
-    int nHeight;
 
     //! Which # file this block is stored in (blk?????.dat)
     int nFile;
@@ -136,13 +137,6 @@ public:
 
     //! Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
-
-    //! block header
-    int nVersion;
-    uint256 hashMerkleRoot;
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
