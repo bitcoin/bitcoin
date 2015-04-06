@@ -39,8 +39,8 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 120
-#define DARKSEND_SIGNING_TIMEOUT               30
+#define DARKSEND_QUEUE_TIMEOUT                 30
+#define DARKSEND_SIGNING_TIMEOUT               15
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -72,6 +72,7 @@ public:
         prevPubKey = in.prevPubKey;
         nSequence = in.nSequence;
         nSentTimes = 0;
+        fHasSig = false;
     }
 };
 
@@ -129,7 +130,22 @@ public:
         return true;
     }
 
-    /// Is this Darksend expired?
+    bool AddSig(const CTxIn& vin)
+    {
+        BOOST_FOREACH(CTxDSIn& s, sev) {
+            if(s.prevout == vin.prevout && s.nSequence == vin.nSequence){
+                if(s.fHasSig){return false;}
+                s.scriptSig = vin.scriptSig;
+                s.prevPubKey = vin.prevPubKey;
+                s.fHasSig = true;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool IsExpired()
     {
         return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds

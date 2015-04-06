@@ -278,7 +278,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
     } else if (strCommand == "dssu") { //Darksend status update
-
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
         }
@@ -325,8 +324,8 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
         if(success){
-            CheckFinalTransaction();
-            RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
+            darkSendPool.Check();
+            RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
         }
     } else if (strCommand == "dsf") { //Darksend Final tx
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
@@ -610,7 +609,7 @@ void CDarksendPool::CheckFinalTransaction()
                 SetNull();
                 pwalletMain->Lock();
 
-                // not much we can do in this case]
+                // not much we can do in this case
                 UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
                 RelayCompletedTransaction(sessionID, true, "Transaction not valid, please try again");
                 return;
@@ -880,14 +879,7 @@ void CDarksendPool::CheckTimeout(){
         if(GetTimeMillis()-lastTimeChanged >= (DARKSEND_QUEUE_TIMEOUT*1000)+addLagTime){
             lastTimeChanged = GetTimeMillis();
 
-            ChargeFees();
-            // reset session information for the queue query stage (before entering a Masternode, clients will send a queue request to make sure they're compatible denomination wise)
-            sessionUsers = 0;
-            sessionDenom = 0;
-            sessionFoundMasternode = false;
-            vecSessionCollateral.clear();
-
-            UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
+            SetNull(true);
         }
     } else if(GetTimeMillis()-lastTimeChanged >= (DARKSEND_QUEUE_TIMEOUT*1000)+addLagTime){
         if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session timed out (30s) -- resetting\n");
@@ -895,7 +887,7 @@ void CDarksendPool::CheckTimeout(){
         UnlockCoins();
 
         UpdateState(POOL_STATUS_ERROR);
-        lastMessage = _("Session timed out (30 seconds), please resubmit.");
+        lastMessage = _("Session timed out, please resubmit.");
     }
 
     if(state == POOL_STATUS_SIGNING && GetTimeMillis()-lastTimeChanged >= (DARKSEND_SIGNING_TIMEOUT*1000)+addLagTime ) {
@@ -1086,7 +1078,7 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
     BOOST_FOREACH(const CDarkSendEntry& v, entries) {
         BOOST_FOREACH(const CTxDSIn& s, v.sev){
             if(s.scriptSig == newVin.scriptSig) {
-                LogPrintf("CDarksendPool::AddScriptSig - already exists \n");
+                printf("CDarksendPool::AddScriptSig - already exists \n");
                 return false;
             }
         }
@@ -1103,7 +1095,12 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
         if(newVin.prevout == vin.prevout && vin.nSequence == newVin.nSequence){
             vin.scriptSig = newVin.scriptSig;
             vin.prevPubKey = newVin.prevPubKey;
-            if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- adding to finalTransaction  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
+            if(fDebug) LogPrintf("CDarkSendPool::AddScriptSig -- adding to finalTransaction  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
+        }
+    }
+    for(unsigned int i = 0; i < entries.size(); i++){
+        if(entries[i].AddSig(newVin)){
+            if(fDebug) LogPrintf("CDarkSendPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
             return true;
         }
     }
@@ -1480,6 +1477,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     // initial phase, find a Masternode
     if(!sessionFoundMasternode){
         int nUseQueue = rand()%100;
+        UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
         sessionTotalValue = pwalletMain->GetTotalValue(vCoins);
 
@@ -1552,15 +1550,15 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                         pNode->PushMessage("dsa", sessionDenom, txCollateral);
                         LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d %d - %s\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue), pNode->addr.ToString().c_str());
                         strAutoDenomResult = "";
+                        dsq.time = 0; //remove node
                         return true;
                     }
                 } else {
                     LogPrintf("DoAutomaticDenominating --- error connecting \n");
                     strAutoDenomResult = _("Error connecting to Masternode.");
+                    dsq.time = 0; //remove node
                     return DoAutomaticDenominating();
                 }
-
-                dsq.time = 0; //remove node
             }
         }
 
@@ -1802,6 +1800,8 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 
 bool CDarksendPool::IsCompatibleWithEntries(std::vector<CTxOut>& vout)
 {
+    if(GetDenominations(vout) == 0) return false;
+
     BOOST_FOREACH(const CDarkSendEntry v, entries) {
         LogPrintf(" IsCompatibleWithEntries %d %d\n", GetDenominations(vout), GetDenominations(v.vout));
 /*
@@ -1851,8 +1851,8 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
         return true;
     }
 
-    if((state != POOL_STATUS_IDLE && state != POOL_STATUS_QUEUE) || sessionUsers >= GetMaxPoolTransactions()){
-        if((state != POOL_STATUS_IDLE && state != POOL_STATUS_QUEUE)) strReason = _("Incompatible mode.");
+    if((state != POOL_STATUS_ACCEPTING_ENTRIES && state != POOL_STATUS_QUEUE) || sessionUsers >= GetMaxPoolTransactions()){
+        if((state != POOL_STATUS_ACCEPTING_ENTRIES && state != POOL_STATUS_QUEUE)) strReason = _("Incompatible mode.");
         if(sessionUsers >= GetMaxPoolTransactions()) strReason = _("Masternode queue is full.");
         LogPrintf("CDarksendPool::IsCompatibleWithSession - incompatible mode, return false %d %d\n", state != POOL_STATUS_ACCEPTING_ENTRIES, sessionUsers >= GetMaxPoolTransactions());
         return false;
@@ -1863,12 +1863,7 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
         return false;
     }
 
-    if(state == POOL_STATUS_IDLE){
-        LogPrintf("CDarksendPool::IsCompatibleWithSession - Pool is open to new entries\n");
-        UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
-    }
-
-    LogPrintf("CDarksendPool::IsCompatibleWithSession - compatible\n");
+    LogPrintf("CDarkSendPool::IsCompatibleWithSession - compatible\n");
 
     sessionUsers++;
     lastTimeChanged = GetTimeMillis();
@@ -2201,6 +2196,7 @@ void ThreadCheckDarkSendPool()
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
 
         darkSendPool.CheckTimeout();
+        darkSendPool.CheckForCompleteQueue();
 
         if(c % 60 == 0)
         {
@@ -2252,22 +2248,8 @@ void ThreadCheckDarkSendPool()
                 vecMasternodesUsed.clear();
         }
 
-        //auto denom every 2.5 minutes (liquidity provides try less often)
-        if(c % 60*(nLiquidityProvider+1) == 0){
-            if(nLiquidityProvider!=0){
-                int nRand = rand() % (101+nLiquidityProvider);
-                //about 1/100 chance of starting over after 4 rounds.
-                if(nRand == 50+nLiquidityProvider && pwalletMain->GetAverageAnonymizedRounds() > 8){
-                    darkSendPool.SendRandomPaymentToSelf();
-                    int nLeftToAnon = ((pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance())/COIN)-3;
-                    if(nLeftToAnon > 999) nLeftToAnon = 999;
-                    nAnonymizeDarkcoinAmount = (rand() % nLeftToAnon)+3;
-                } else {
-                    darkSendPool.DoAutomaticDenominating();
-                }
-            } else {
-                darkSendPool.DoAutomaticDenominating();
-            }
+        if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 6 == 0){
+            darkSendPool.DoAutomaticDenominating();
         }
     }
 }
