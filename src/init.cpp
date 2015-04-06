@@ -11,15 +11,22 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "chainparams.h"
 #include "checkpoints.h"
+#include "coins.h"
+#include "coinscache.h"
 #include "compat/sanity.h"
+#include "consensus/validation.h"
 #include "key.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "miner.h"
 #include "net.h"
+#include "policy/estimator.h"
+#include "policy/policy.h"
 #include "rpcserver.h"
 #include "script/standard.h"
 #include "txdb.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -162,7 +169,7 @@ void Shutdown()
         boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
         if (!est_fileout.IsNull())
-            mempool.WriteFeeEstimates(est_fileout);
+            minerPolicyEstimator.Write(est_fileout);
         else
             LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
         fFeeEstimatesInitialized = false;
@@ -303,7 +310,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-maxsendbuffer=<n>", strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), 1000));
     strUsage += HelpMessageOpt("-onion=<ip:port>", strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy"));
     strUsage += HelpMessageOpt("-onlynet=<net>", _("Only connect to nodes in network <net> (ipv4, ipv6 or onion)"));
-    strUsage += HelpMessageOpt("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), 1));
     strUsage += HelpMessageOpt("-port=<port>", strprintf(_("Listen for connections on <port> (default: %u or testnet: %u)"), 8333, 18333));
     strUsage += HelpMessageOpt("-proxy=<ip:port>", _("Connect through SOCKS5 proxy"));
     strUsage += HelpMessageOpt("-seednode=<ip>", _("Connect to a node to retrieve peer addresses, and disconnect"));
@@ -373,7 +379,6 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-relaypriority", strprintf(_("Require high priority for relaying free or low-fee transactions (default:%u)"), 1));
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf(_("Limit size of signature cache to <n> entries (default: %u)"), 50000));
     }
-    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(::minRelayTxFee.GetFeePerK())));
     strUsage += HelpMessageOpt("-printtoconsole", _("Send trace/debug info to console instead of debug.log file"));
     if (GetBoolArg("-help-debug", false))
     {
@@ -386,9 +391,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test network"));
 
-    strUsage += HelpMessageGroup(_("Node relay options:"));
-    strUsage += HelpMessageOpt("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1));
-    strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
+    strUsage += GetPolicyUsageStr(GetArg("-policy", "standard"));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), 0));
@@ -464,6 +467,7 @@ struct CImportingNow
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
     RenameThread("bitcoin-loadblk");
+    const CPolicy& policy = Policy();
 
     // -reindex
     if (fReindex) {
@@ -477,14 +481,14 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
             if (!file)
                 break; // This error is logged in OpenBlockFile
             LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-            LoadExternalBlockFile(file, &pos);
+            LoadExternalBlockFile(policy, file, &pos);
             nFile++;
         }
         pblocktree->WriteReindexing(false);
         fReindex = false;
         LogPrintf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        InitBlockIndex();
+        InitBlockIndex(policy);
     }
 
     // hardcoded $DATADIR/bootstrap.dat
@@ -495,7 +499,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
             CImportingNow imp;
             boost::filesystem::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
             LogPrintf("Importing bootstrap.dat...\n");
-            LoadExternalBlockFile(file);
+            LoadExternalBlockFile(policy, file);
             RenameOver(pathBootstrap, pathBootstrapOld);
         } else {
             LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
@@ -508,7 +512,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
         if (file) {
             CImportingNow imp;
             LogPrintf("Importing blocks file %s...\n", path.string());
-            LoadExternalBlockFile(file);
+            LoadExternalBlockFile(policy, file);
         } else {
             LogPrintf("Warning: Could not open blocks file %s\n", path.string());
         }
@@ -607,6 +611,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 2: parameter interactions
 
+    const Consensus::Params& params = Params().GetConsensus();
     // Set this early so that parameter interactions go to console
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
@@ -726,19 +731,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     const char* pszP2SH = "/P2SH/";
     COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
-    // Fee-per-kilobyte amount considered the same as "free"
-    // If you are mining, be careful setting this:
-    // if you set it to zero then
-    // a transaction spammer can cheaply fill blocks using
-    // 1-satoshi-fee transactions. It should be set above the real
-    // cost to you of processing a transaction.
-    if (mapArgs.count("-minrelaytxfee"))
-    {
-        CAmount n = 0;
-        if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
-            ::minRelayTxFee = CFeeRate(n);
-        else
-            return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
+    // Init Policy from arguments or use the network default accessing Params()
+    try {
+        InitPolicyFromArgs(mapArgs);
+    } catch(std::exception &e) {
+        return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }
 
 #ifdef ENABLE_WALLET
@@ -758,11 +755,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (nFeePerK > nHighTransactionFeeWarning)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
         payTxFee = CFeeRate(nFeePerK, 1000);
-        if (payTxFee < ::minRelayTxFee)
-        {
+        if (!Policy().ApproveFeeRate(payTxFee))
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                                       mapArgs["-paytxfee"], ::minRelayTxFee.ToString()));
-        }
+                                       mapArgs["-paytxfee"], Policy().GetMinRelayFeeRate().ToString()));
     }
     if (mapArgs.count("-maxtxfee"))
     {
@@ -772,11 +767,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (nMaxFee > nHighTransactionMaxFeeWarning)
             InitWarning(_("Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
-        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
-        {
+        if (!Policy().ApproveFeeRate(CFeeRate(maxTxFee, 1000)))
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                                       mapArgs["-maxtxfee"], ::minRelayTxFee.ToString()));
-        }
+                                       mapArgs["-maxtxfee"], Policy().GetMinRelayFeeRate().ToString()));
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", 1);
     bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
@@ -784,9 +777,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
-
-    fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
-    nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
@@ -1042,11 +1032,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && mapBlockIndex.count(Params().HashGenesisBlock()) == 0)
+                if (!mapBlockIndex.empty() && mapBlockIndex.count(params.hashGenesisBlock) == 0)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!InitBlockIndex()) {
+                if (!InitBlockIndex(Policy())) {
                     strLoadError = _("Error initializing block database");
                     break;
                 }
@@ -1105,7 +1095,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     CAutoFile est_filein(fopen(est_path.string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
     if (!est_filein.IsNull())
-        mempool.ReadFeeEstimates(est_filein);
+        minerPolicyEstimator.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: load wallet
@@ -1121,7 +1111,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (GetBoolArg("-zapwallettxes", false)) {
             uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
 
-            pwalletMain = new CWallet(strWalletFile);
+            pwalletMain = new CWallet(Policy(), strWalletFile);
             DBErrors nZapWalletRet = pwalletMain->ZapWalletTx(vWtx);
             if (nZapWalletRet != DB_LOAD_OK) {
                 uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
@@ -1136,7 +1126,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
         nStart = GetTimeMillis();
         bool fFirstRun = true;
-        pwalletMain = new CWallet(strWalletFile);
+        pwalletMain = new CWallet(Policy(), strWalletFile);
         DBErrors nLoadWalletRet = pwalletMain->LoadWallet(fFirstRun);
         if (nLoadWalletRet != DB_LOAD_OK)
         {
@@ -1254,7 +1244,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
-    if (!ActivateBestChain(state))
+    if (!ActivateBestChain(Policy(), state))
         strErrors << "Failed to connect best block";
 
     std::vector<boost::filesystem::path> vImportFiles;

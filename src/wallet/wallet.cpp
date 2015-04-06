@@ -8,11 +8,18 @@
 #include "base58.h"
 #include "checkpoints.h"
 #include "coincontrol.h"
-#include "main.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
+#include "key.h"
+#include "keystore.h"
+#include "main.h" // cs_main
 #include "net.h"
+#include "policy/estimator.h"
+#include "primitives/block.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 
@@ -20,6 +27,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -825,7 +833,7 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
 
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
 {
-    if (!MoneyRange(txout.nValue))
+    if (!Consensus::VerifyAmount(txout.nValue))
         throw std::runtime_error("CWallet::GetCredit(): value out of range");
     return ((IsMine(txout) & filter) ? txout.nValue : 0);
 }
@@ -854,7 +862,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
 
 CAmount CWallet::GetChange(const CTxOut& txout) const
 {
-    if (!MoneyRange(txout.nValue))
+    if (!Consensus::VerifyAmount(txout.nValue))
         throw std::runtime_error("CWallet::GetChange(): value out of range");
     return (IsChange(txout) ? txout.nValue : 0);
 }
@@ -878,7 +886,7 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
         nDebit += GetDebit(txin, filter);
-        if (!MoneyRange(nDebit))
+        if (!Consensus::VerifyAmount(nDebit))
             throw std::runtime_error("CWallet::GetDebit(): value out of range");
     }
     return nDebit;
@@ -890,7 +898,7 @@ CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) c
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
         nCredit += GetCredit(txout, filter);
-        if (!MoneyRange(nCredit))
+        if (!Consensus::VerifyAmount(nCredit))
             throw std::runtime_error("CWallet::GetCredit(): value out of range");
     }
     return nCredit;
@@ -902,7 +910,7 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
         nChange += GetChange(txout);
-        if (!MoneyRange(nChange))
+        if (!Consensus::VerifyAmount(nChange))
             throw std::runtime_error("CWallet::GetChange(): value out of range");
     }
     return nChange;
@@ -965,7 +973,7 @@ void CWalletTx::GetAmounts(list<COutputEntry>& listReceived,
     CAmount nDebit = GetDebit(filter);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        CAmount nValueOut = GetValueOut();
+        CAmount nValueOut = Consensus::GetValueOut(*this);
         nFee = nDebit - nValueOut;
     }
 
@@ -1109,7 +1117,7 @@ void CWallet::ReacceptWalletTransactions()
         {
             // Try to add to memory pool
             LOCK(mempool.cs);
-            wtx.AcceptToMemoryPool(false);
+            wtx.AcceptToMemoryPool(policy, false);
         }
     }
 }
@@ -1237,7 +1245,7 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
         {
             const CTxOut &txout = vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
-            if (!MoneyRange(nCredit))
+            if (!Consensus::VerifyAmount(nCredit))
                 throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
     }
@@ -1280,7 +1288,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
         {
             const CTxOut &txout = vout[i];
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
-            if (!MoneyRange(nCredit))
+            if (!Consensus::VerifyAmount(nCredit))
                 throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
     }
@@ -1763,7 +1771,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                         }
                     }
 
-                    if (txout.IsDust(::minRelayTxFee))
+                    if (policy.ApproveOutput(txout))
                     {
                         if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
                         {
@@ -1839,16 +1847,16 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                     // We do not move dust-change to fees, because the sender would end up paying more than requested.
                     // This would be against the purpose of the all-inclusive feature.
                     // So instead we raise the change and deduct from the recipient.
-                    if (nSubtractFeeFromAmount > 0 && newTxOut.IsDust(::minRelayTxFee))
+                    if (nSubtractFeeFromAmount > 0 && policy.ApproveOutput(newTxOut))
                     {
-                        CAmount nDust = newTxOut.GetDustThreshold(::minRelayTxFee) - newTxOut.nValue;
+                        CAmount nDust = policy.GetDustThreshold(newTxOut) - newTxOut.nValue;
                         newTxOut.nValue += nDust; // raise change until no more dust
                         for (unsigned int i = 0; i < vecSend.size(); i++) // subtract from first recipient
                         {
                             if (vecSend[i].fSubtractFeeFromAmount)
                             {
                                 txNew.vout[i].nValue -= nDust;
-                                if (txNew.vout[i].IsDust(::minRelayTxFee))
+                                if (policy.ApproveOutput(txNew.vout[i]))
                                 {
                                     strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
                                     return false;
@@ -1860,7 +1868,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    if (newTxOut.IsDust(::minRelayTxFee))
+                    if (policy.ApproveOutput(newTxOut))
                     {
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
@@ -1909,7 +1917,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                 if (fSendFreeTransactions && nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE)
                 {
                     // Not enough fee: enough priority?
-                    double dPriorityNeeded = mempool.estimatePriority(nTxConfirmTarget);
+                    double dPriorityNeeded = minerPolicyEstimator.estimatePriority(nTxConfirmTarget);
                     // Not enough mempool history to estimate: use hard-coded AllowFree.
                     if (dPriorityNeeded <= 0 && AllowFree(dPriority))
                         break;
@@ -1919,11 +1927,11 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                         break;
                 }
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+                CAmount nFeeNeeded = GetMinimumFee(policy, nBytes, nTxConfirmTarget);
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
-                if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
+                if (!policy.ApproveFee(nFeeNeeded, nBytes))
                 {
                     strFailReason = _("Transaction too large for fee policy");
                     return false;
@@ -1980,7 +1988,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         mapRequestCount[wtxNew.GetHash()] = 0;
 
         // Broadcast
-        if (!wtxNew.AcceptToMemoryPool(false))
+        if (!wtxNew.AcceptToMemoryPool(policy, false))
         {
             // This must not fail. The transaction has already been signed and recorded.
             LogPrintf("CommitTransaction(): Error: Transaction not valid");
@@ -1991,7 +1999,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
     return true;
 }
 
-CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool)
+CAmount CWallet::GetMinimumFee(const CPolicy& policy, unsigned int nTxBytes, unsigned int nConfirmTarget)
 {
     // payTxFee is user-set "I want to pay this much"
     CAmount nFeeNeeded = payTxFee.GetFee(nTxBytes);
@@ -2000,14 +2008,14 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
         nFeeNeeded = payTxFee.GetFeePerK();
     // User didn't set: use -txconfirmtarget to estimate...
     if (nFeeNeeded == 0)
-        nFeeNeeded = pool.estimateFee(nConfirmTarget).GetFee(nTxBytes);
+        nFeeNeeded = minerPolicyEstimator.estimateFee(nConfirmTarget).GetFee(nTxBytes);
     // ... unless we don't have enough mempool data, in which case fall
     // back to a hard-coded fee
     if (nFeeNeeded == 0)
         nFeeNeeded = minTxFee.GetFee(nTxBytes);
     // prevent user from paying a non-sense fee (like 1 satoshi): 0 < fee < minRelayFee
-    if (nFeeNeeded < ::minRelayTxFee.GetFee(nTxBytes))
-        nFeeNeeded = ::minRelayTxFee.GetFee(nTxBytes);
+    if (!policy.ApproveFee(nFeeNeeded, nTxBytes))
+        nFeeNeeded = policy.GetMinRelayFeeRate().GetFee(nTxBytes);
     // But always obey the maximum
     if (nFeeNeeded > maxTxFee)
         nFeeNeeded = maxTxFee;
@@ -2732,9 +2740,9 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
+bool CMerkleTx::AcceptToMemoryPool(const CPolicy& policy, bool fLimitFree, bool fRejectAbsurdFee)
 {
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
+    return ::AcceptToMemoryPool(policy, mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
 }
 

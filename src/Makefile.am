@@ -85,9 +85,13 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coincontrol.h \
   coins.h \
+  coinscache.h \
   compat.h \
   compressor.h \
+  consensus/consensus.h \
   consensus/params.h \
+  consensus/pow.h \
+  consensus/validation.h \
   core_io.h \
   wallet/db.h \
   eccryptoverify.h \
@@ -105,7 +109,9 @@ BITCOIN_CORE_H = \
   netbase.h \
   net.h \
   noui.h \
-  pow.h \
+  policy/estimator.h \
+  policy/feerate.h \
+  policy/policy.h \
   primitives/block.h \
   primitives/transaction.h \
   protocol.h \
@@ -132,6 +138,7 @@ BITCOIN_CORE_H = \
   tinyformat.h \
   txdb.h \
   txmempool.h \
+  txmempoolentry.h \
   ui_interface.h \
   uint256.h \
   undo.h \
@@ -181,7 +188,9 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
-  pow.cpp \
+  policy/estimator.cpp \
+  policy/feerate.cpp \
+  policy/policy.cpp \
   rest.cpp \
   rpcblockchain.cpp \
   rpcmining.cpp \
@@ -193,6 +202,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   txdb.cpp \
   txmempool.cpp \
+  txmempoolentry.cpp \
   validationinterface.cpp \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
@@ -239,13 +249,13 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
   arith_uint256.cpp \
-  amount.cpp \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
+  coinscache.cpp \
   compressor.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
+  consensus/consensus.cpp \
+  consensus/pow.cpp \
   core_read.cpp \
   core_write.cpp \
   eccryptoverify.cpp \
@@ -254,13 +264,15 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  primitives/block.cpp \
+  primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \
   script/interpreter.cpp \
   script/script.cpp \
+  script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  script/script_error.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.

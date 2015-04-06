@@ -4,18 +4,20 @@
 
 #include "base58.h"
 #include "clientversion.h"
-#include "primitives/block.h" // for MAX_BLOCK_SIZE
-#include "primitives/transaction.h"
-#include "core_io.h"
 #include "coins.h"
+#include "coinscache.h"
+#include "consensus/consensus.h"
+#include "core_io.h"
 #include "keystore.h"
+#include "policy/policy.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "utilmoneystr.h"
+#include "utilstrencodings.h"
 
 #include <stdio.h>
 
@@ -432,7 +434,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
         BOOST_FOREACH(const CTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, ALL_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
             fComplete = false;
     }
 

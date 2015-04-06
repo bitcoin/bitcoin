@@ -5,7 +5,8 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "main.h"
+#include "consensus/consensus.h"
+#include "main.h" // cs_main
 #include "timedata.h"
 #include "wallet/wallet.h"
 
@@ -111,7 +112,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Debit
             //
-            CAmount nTxFee = nDebit - wtx.GetValueOut();
+            CAmount nTxFee = nDebit - Consensus::GetValueOut(wtx);
 
             for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
             {

@@ -27,7 +27,7 @@ typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_FIXTURE_TEST_SUITE(wallet_tests, TestingSetup)
 
-static CWallet wallet;
+static CWallet wallet(Policy("standard"));
 static vector<COutput> vCoins;
 
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)

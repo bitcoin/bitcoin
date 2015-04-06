@@ -6,7 +6,10 @@
 
 #include "test_bitcoin.h"
 
-#include "main.h"
+#include "chainparams.h"
+#include "coinscache.h"
+#include "main.h" // pblocktree, pcoinsdbview, pcoinsTip
+#include "policy/policy.h"
 #include "random.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -32,6 +35,7 @@ BasicTestingSetup::BasicTestingSetup()
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(CBaseChainParams::MAIN);
+        SelectPolicy("standard");
 }
 BasicTestingSetup::~BasicTestingSetup()
 {
@@ -39,6 +43,7 @@ BasicTestingSetup::~BasicTestingSetup()
 
 TestingSetup::TestingSetup()
 {
+    const CPolicy& policy = Policy("standard");
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
 #endif
@@ -49,10 +54,10 @@ TestingSetup::TestingSetup()
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        InitBlockIndex();
+        InitBlockIndex(policy);
 #ifdef ENABLE_WALLET
         bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
+        pwalletMain = new CWallet(policy, "wallet.dat");
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain);
 #endif

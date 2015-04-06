@@ -2,12 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "coins.h"
+#include "coinscache.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // cs_main
+#include "policy/policy.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/script_error.h"
 #include "script/sign.h"
+#include "script/standard.h"
 #include "test/test_bitcoin.h"
 
 #ifdef ENABLE_WALLET
@@ -53,6 +60,7 @@ BOOST_FIXTURE_TEST_SUITE(script_P2SH_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(sign)
 {
     LOCK(cs_main);
+    const CPolicy& policy = Policy("standard");
     // Pay-to-script-hash looks like this:
     // scriptSig:    <sig> <sig...> <serialized_script>
     // scriptPubKey: HASH160 <hash> EQUAL
@@ -81,7 +89,7 @@ BOOST_AUTO_TEST_CASE(sign)
     }
 
     CMutableTransaction txFrom;  // Funding transaction:
-    string reason;
+    CValidationState state;
     txFrom.vout.resize(8);
     for (int i = 0; i < 4; i++)
     {
@@ -90,7 +98,7 @@ BOOST_AUTO_TEST_CASE(sign)
         txFrom.vout[i+4].scriptPubKey = standardScripts[i];
         txFrom.vout[i+4].nValue = COIN;
     }
-    BOOST_CHECK(IsStandardTx(txFrom, reason));
+    BOOST_CHECK(policy.ApproveTx(txFrom, state));
 
     CMutableTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
@@ -154,6 +162,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
 BOOST_AUTO_TEST_CASE(set)
 {
     LOCK(cs_main);
+    const CPolicy& policy = Policy("standard");
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
@@ -179,14 +188,14 @@ BOOST_AUTO_TEST_CASE(set)
     }
 
     CMutableTransaction txFrom;  // Funding transaction:
-    string reason;
+    CValidationState state;
     txFrom.vout.resize(4);
     for (int i = 0; i < 4; i++)
     {
         txFrom.vout[i].scriptPubKey = outer[i];
         txFrom.vout[i].nValue = CENT;
     }
-    BOOST_CHECK(IsStandardTx(txFrom, reason));
+    BOOST_CHECK(policy.ApproveTx(txFrom, state));
 
     CMutableTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)
@@ -204,7 +213,7 @@ BOOST_AUTO_TEST_CASE(set)
     for (int i = 0; i < 4; i++)
     {
         BOOST_CHECK_MESSAGE(SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
-        BOOST_CHECK_MESSAGE(IsStandardTx(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
+        BOOST_CHECK_MESSAGE(policy.ApproveTx(txTo[i], state), strprintf("txTo[%d].IsStandard", i));
     }
 }
 
@@ -259,9 +268,10 @@ BOOST_AUTO_TEST_CASE(switchover)
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_EQUALVERIFY, ScriptErrorString(err));
 }
 
-BOOST_AUTO_TEST_CASE(AreInputsStandard)
+BOOST_AUTO_TEST_CASE(Policy_ApproveTxInputs)
 {
     LOCK(cs_main);
+    const CPolicy& policy = Policy("standard");
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     CBasicKeyStore keystore;
@@ -341,16 +351,16 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << static_cast<vector<unsigned char> >(oneAndTwo);
     txTo.vin[4].scriptSig << static_cast<vector<unsigned char> >(fifteenSigops);
 
-    BOOST_CHECK(::AreInputsStandard(txTo, coins));
+    BOOST_CHECK(policy.ApproveTxInputs(txTo, coins));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txTo, coins), 22U);
+    BOOST_CHECK_EQUAL(Consensus::GetP2SHSigOpCount(txTo, coins), 22U);
 
     // Make sure adding crap to the scriptSigs makes them non-standard:
     for (int i = 0; i < 3; i++)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;
-        BOOST_CHECK(!::AreInputsStandard(txTo, coins));
+        BOOST_CHECK(!policy.ApproveTxInputs(txTo, coins));
         txTo.vin[i].scriptSig = t;
     }
 
@@ -363,8 +373,8 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd1.vin[0].scriptSig << static_cast<vector<unsigned char> >(sixteenSigops);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd1, coins));
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd1, coins), 16U);
+    BOOST_CHECK(!policy.ApproveTxInputs(txToNonStd1, coins));
+    BOOST_CHECK_EQUAL(Consensus::GetP2SHSigOpCount(txToNonStd1, coins), 16U);
 
     CMutableTransaction txToNonStd2;
     txToNonStd2.vout.resize(1);
@@ -375,8 +385,8 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd2.vin[0].scriptSig << static_cast<vector<unsigned char> >(twentySigops);
 
-    BOOST_CHECK(!::AreInputsStandard(txToNonStd2, coins));
-    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(txToNonStd2, coins), 20U);
+    BOOST_CHECK(!policy.ApproveTxInputs(txToNonStd2, coins));
+    BOOST_CHECK_EQUAL(Consensus::GetP2SHSigOpCount(txToNonStd2, coins), 20U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -17,7 +17,8 @@
 
 #include "base58.h"
 #include "coincontrol.h"
-#include "main.h"
+#include "policy/estimator.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "wallet/wallet.h"
 
@@ -630,7 +631,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
         return;
 
     int nBlocksToConfirm = (int)25 - (int)std::max(0, std::min(24, ui->sliderSmartFee->value()));
-    CFeeRate feeRate = mempool.estimateFee(nBlocksToConfirm);
+    CFeeRate feeRate = minerPolicyEstimator.estimateFee(nBlocksToConfirm);
     if (feeRate <= CFeeRate(0)) // not enough data => minfee
     {
         ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), CWallet::minTxFee.GetFeePerK()) + "/kB");

@@ -4,16 +4,21 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "primitives/transaction.h"
+#include "coins.h"
+#include "coinscache.h"
+#include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // mapBlockIndex
 #include "net.h"
+#include "policy/policy.h"
+#include "primitives/transaction.h"
 #include "rpcserver.h"
 #include "script/script.h"
 #include "script/sign.h"
 #include "script/standard.h"
+#include "txmempool.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -699,7 +704,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         BOOST_FOREACH(const CMutableTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, ALL_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
             fComplete = false;
     }
 
@@ -753,7 +758,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     if (!fHaveMempool && !fHaveChain) {
         // push to local node and sync with wallets
         CValidationState state;
-        if (!AcceptToMemoryPool(mempool, state, tx, false, NULL, !fOverrideFees)) {
+        if (!AcceptToMemoryPool(Policy(), mempool, state, tx, false, NULL, !fOverrideFees)) {
             if(state.IsInvalid())
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
             else

@@ -11,6 +11,7 @@
 #include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 
+#include <stdio.h>
 #include <string>
 #include <vector>
 

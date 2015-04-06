@@ -6,6 +6,7 @@
 #include "rpcserver.h"
 
 #include "base58.h"
+#include "consensus/consensus.h"
 #include "init.h"
 #include "random.h"
 #include "sync.h"
@@ -129,7 +130,7 @@ CAmount AmountFromValue(const Value& value)
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     CAmount nAmount = roundint64(dAmount * COIN);
-    if (!MoneyRange(nAmount))
+    if (!Consensus::VerifyAmount(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
 }

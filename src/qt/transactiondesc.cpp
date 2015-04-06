@@ -10,12 +10,14 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
-#include "wallet/db.h"
-#include "main.h"
+#include "coinscache.h"
+#include "consensus/consensus.h"
+// #include "main.h" // cs_main
 #include "script/script.h"
 #include "timedata.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "wallet/db.h"
 #include "wallet/wallet.h"
 
 #include <stdint.h>
@@ -212,7 +214,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
                 strHTML += "<b>" + tr("Total credit") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, nValue) + "<br>";
             }
 
-            CAmount nTxFee = nDebit - wtx.GetValueOut();
+            CAmount nTxFee = nDebit - Consensus::GetValueOut(wtx);
             if (nTxFee > 0)
                 strHTML += "<b>" + tr("Transaction fee") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, -nTxFee) + "<br>";
         }

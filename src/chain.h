@@ -7,8 +7,8 @@
 #define BITCOIN_CHAIN_H
 
 #include "arith_uint256.h"
+#include "consensus/pow.h"
 #include "primitives/block.h"
-#include "pow.h"
 #include "tinyformat.h"
 #include "uint256.h"
 

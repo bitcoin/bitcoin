@@ -7,20 +7,31 @@
 #include "test/test_bitcoin.h"
 
 #include "clientversion.h"
+#include "coins.h"
+#include "coinscache.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
+#include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h"
+#include "main.h" // cs_main
+#include "policy/policy.h"
+#include "primitives/transaction.h"
+#include "script/interpreter.h"
 #include "script/script.h"
 #include "script/script_error.h"
-#include "core_io.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "utilstrencodings.h"
 
 #include <map>
 #include <string>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
+#include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
 
 using namespace std;
@@ -133,7 +144,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             stream >> tx;
 
             CValidationState state;
-            BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+            BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state), strTest);
             BOOST_CHECK(state.IsValid());
 
             for (unsigned int i = 0; i < tx.vin.size(); i++)
@@ -209,7 +220,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             stream >> tx;
 
             CValidationState state;
-            fValid = CheckTransaction(tx, state) && state.IsValid();
+            fValid = Consensus::CheckTx(tx, state) && state.IsValid();
 
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
@@ -238,11 +249,11 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     CMutableTransaction tx;
     stream >> tx;
     CValidationState state;
-    BOOST_CHECK_MESSAGE(CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
+    BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
 
     // Check that duplicate txins fail
     tx.vin.push_back(tx.vin[0]);
-    BOOST_CHECK_MESSAGE(!CheckTransaction(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
+    BOOST_CHECK_MESSAGE(!Consensus::CheckTx(tx, state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
 //
@@ -285,6 +296,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
 BOOST_AUTO_TEST_CASE(test_Get)
 {
+    const CPolicy& policy = Policy("standard");
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -305,21 +317,22 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(AreInputsStandard(t1, coins));
+    BOOST_CHECK(policy.ApproveTxInputs(t1, coins));
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
+    BOOST_CHECK(!policy.ApproveTxInputs(t1, coins));
 
     // ... as should not having enough:
     t1.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
+    BOOST_CHECK(!policy.ApproveTxInputs(t1, coins));
 }
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     LOCK(cs_main);
+    const CPolicy& policy = Policy("standard");
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -336,44 +349,44 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
 
-    string reason;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    CValidationState state;
+    BOOST_CHECK(policy.ApproveTx(t, state));
 
     t.vout[0].nValue = 501; // dust
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, state));
 
     t.vout[0].nValue = 601; // not dust
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, state));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, state));
 
     // 80-byte TX_NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, state));
 
     // 81-byte TX_NULL_DATA (non-standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, state));
 
     // TX_NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(IsStandardTx(t, reason));
+    BOOST_CHECK(policy.ApproveTx(t, state));
 
     // Only one TX_NULL_DATA permitted in all cases
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, state));
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, state));
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN;
-    BOOST_CHECK(!IsStandardTx(t, reason));
+    BOOST_CHECK(!policy.ApproveTx(t, state));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

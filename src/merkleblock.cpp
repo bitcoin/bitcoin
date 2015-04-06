@@ -6,7 +6,7 @@
 #include "merkleblock.h"
 
 #include "hash.h"
-#include "primitives/block.h" // for MAX_BLOCK_SIZE
+#include "consensus/consensus.h"
 #include "utilstrencodings.h"
 
 using namespace std;

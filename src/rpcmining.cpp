@@ -5,13 +5,17 @@
 
 #include "amount.h"
 #include "chainparams.h"
+#include "consensus/consensus.h"
+#include "consensus/pow.h"
+#include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "net.h"
-#include "main.h"
+#include "main.h" // chainActive
 #include "miner.h"
-#include "pow.h"
+#include "net.h"
+#include "policy/estimator.h"
 #include "rpcserver.h"
+#include "txmempool.h"
 #include "util.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
@@ -36,6 +40,7 @@ using namespace std;
  */
 Value GetNetworkHashPS(int lookup, int height) {
     CBlockIndex *pb = chainActive.Tip();
+    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     if (height >= 0 && height < chainActive.Height())
         pb = chainActive[height];
@@ -45,7 +50,7 @@ Value GetNetworkHashPS(int lookup, int height) {
 
     // If lookup is -1, then use blocks since last difficulty change.
     if (lookup <= 0)
-        lookup = pb->nHeight % Params().DifficultyAdjustmentInterval() + 1;
+        lookup = pb->nHeight % consensusParams.DifficultyAdjustmentInterval() + 1;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
@@ -142,6 +147,8 @@ Value setgenerate(const Array& params, bool fHelp)
     if (pwalletMain == NULL)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CPolicy& policy = Policy();
     bool fGenerate = true;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
@@ -173,7 +180,7 @@ Value setgenerate(const Array& params, bool fHelp)
         Array blockHashes;
         while (nHeight < nHeightEnd)
         {
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(Policy(), reservekey));
             if (!pblocktemplate.get())
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
             CBlock *pblock = &pblocktemplate->block;
@@ -181,13 +188,13 @@ Value setgenerate(const Array& params, bool fHelp)
                 LOCK(cs_main);
                 IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
             }
-            while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+            while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, consensusParams)) {
                 // Yes, there is a chance every nonce could fail to satisfy the -regtest
                 // target -- 1 in 2^(2^32). That ain't gonna happen.
                 ++pblock->nNonce;
             }
             CValidationState state;
-            if (!ProcessNewBlock(state, NULL, pblock))
+            if (!ProcessNewBlock(policy, state, consensusParams, NULL, pblock))
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
             ++nHeight;
             blockHashes.push_back(pblock->GetHash().GetHex());
@@ -365,6 +372,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
          );
 
     LOCK(cs_main);
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CPolicy& policy = Policy();
 
     std::string strMode = "template";
     Value lpval = Value::null;
@@ -492,7 +501,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(scriptDummy);
+        pblocktemplate = CreateNewBlock(policy, consensusParams, scriptDummy);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -502,7 +511,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
-    UpdateTime(pblock, pindexPrev);
+    UpdateTime(pblock, consensusParams, pindexPrev);
     pblock->nNonce = 0;
 
     static const Array aCaps = boost::assign::list_of("proposal");
@@ -611,6 +620,8 @@ Value submitblock(const Array& params, bool fHelp)
             + HelpExampleCli("submitblock", "\"mydata\"")
             + HelpExampleRpc("submitblock", "\"mydata\"")
         );
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    const CPolicy& policy = Policy();
 
     CBlock block;
     if (!DecodeHexBlk(block, params[0].get_str()))
@@ -630,7 +641,7 @@ Value submitblock(const Array& params, bool fHelp)
     CValidationState state;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, NULL, &block);
+    bool fAccepted = ProcessNewBlock(policy, state, consensusParams, NULL, &block);
     UnregisterValidationInterface(&sc);
     if (mi != mapBlockIndex.end())
     {
@@ -672,7 +683,7 @@ Value estimatefee(const Array& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
 
-    CFeeRate feeRate = mempool.estimateFee(nBlocks);
+    CFeeRate feeRate = minerPolicyEstimator.estimateFee(nBlocks);
     if (feeRate == CFeeRate(0))
         return -1.0;
 
@@ -704,5 +715,5 @@ Value estimatepriority(const Array& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
 
-    return mempool.estimatePriority(nBlocks);
+    return minerPolicyEstimator.estimatePriority(nBlocks);
 }

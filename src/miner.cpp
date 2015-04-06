@@ -6,12 +6,22 @@
 #include "miner.h"
 
 #include "amount.h"
-#include "primitives/transaction.h"
+#include "chain.h"
+#include "chainparams.h"
+#include "coinscache.h"
+#include "consensus/consensus.h"
+#include "consensus/pow.h"
+#include "consensus/validation.h"
 #include "hash.h"
-#include "main.h"
+#include "main.h" // cs_main
 #include "net.h"
-#include "pow.h"
+#include "policy/feerate.h"
+#include "primitives/block.h"
+#include "primitives/transaction.h"
+#include "pubkey.h"
+#include "script/standard.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -78,16 +88,16 @@ public:
     }
 };
 
-void UpdateTime(CBlockHeader* pblock, const CBlockIndex* pindexPrev)
+void UpdateTime(CBlockHeader* pblock, const Consensus::Params params, const CBlockIndex* pindexPrev)
 {
     pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
-    if (Params().AllowMinDifficultyBlocks())
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
+    if (params.fPowAllowMinDifficultyBlocks)
+        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, params);
 }
 
-CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
+CBlockTemplate* CreateNewBlock(const CPolicy& policy, const Consensus::Params& params, const CScript& scriptPubKeyIn)
 {
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
@@ -204,7 +214,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             uint256 hash = tx.GetHash();
             mempool.ApplyDeltas(hash, dPriority, nTotalIn);
 
-            CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+            CFeeRate feeRate(nTotalIn - Consensus::GetValueOut(tx), nTxSize);
 
             if (porphan)
             {
@@ -223,6 +233,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         TxPriorityCompare comparer(fSortedByFee);
         std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
+        unsigned int flags = Consensus::GetFlags(*pblock, pindexPrev, Params().GetConsensus());
 
         while (!vecPriority.empty())
         {
@@ -239,17 +250,12 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (nBlockSize + nTxSize >= nBlockMaxSize)
                 continue;
 
-            // Legacy limits on sigOps:
-            unsigned int nTxSigOps = GetLegacySigOpCount(tx);
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-                continue;
-
             // Skip free transactions if we're past the minimum block size:
             const uint256& hash = tx.GetHash();
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && (feeRate < ::minRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
+            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && !policy.ApproveFeeRate(feeRate) && (nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
 
             // Prioritise by fee once past the priority size or we run out of high-priority
@@ -262,21 +268,25 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
             }
 
-            if (!view.HaveInputs(tx))
+            CValidationState state;
+            if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view))) {
+                error("%s: Consensus::CheckTxInputs failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
                 continue;
+            }
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
-
-            nTxSigOps += GetP2SHSigOpCount(tx, view);
+            unsigned int nTxSigOps = Consensus::GetSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
             // Note that flags: we don't want to set mempool/IsStandard()
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
-            CValidationState state;
-            if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            if (!Consensus::CheckTxInputsScripts(tx, state, view, flags, true)) {
+                error("%s: Consensus::CheckTxInputsScripts failed %s %s", __func__, state.GetRejectReason(), hash.ToString());
                 continue;
+            }
+
+            CAmount nTxFees = view.GetValueIn(tx) - Consensus::GetValueOut(tx);
 
             UpdateCoins(tx, state, view, nHeight);
 
@@ -318,17 +328,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = GetBlockValue(nHeight, nFees);
+        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, params);
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        UpdateTime(pblock, pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
+        UpdateTime(pblock, params, pindexPrev);
+        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, params);
         pblock->nNonce         = 0;
-        pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
+        pblocktemplate->vTxSigOps[0] = Consensus::GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
         if (!TestBlockValidity(state, *pblock, pindexPrev, false, false))
@@ -396,17 +406,18 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     }
 }
 
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
+CBlockTemplate* CreateNewBlockWithKey(const CPolicy& policy, CReserveKey& reservekey)
 {
+    const Consensus::Params& params = Params().GetConsensus();
     CPubKey pubkey;
     if (!reservekey.GetReservedKey(pubkey))
         return NULL;
 
     CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-    return CreateNewBlock(scriptPubKey);
+    return CreateNewBlock(policy, params, scriptPubKey);
 }
 
-static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
+static bool ProcessBlockFound(const CPolicy& policy, CBlock* pblock, const Consensus::Params& params, CWallet& wallet, CReserveKey& reservekey)
 {
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
@@ -429,7 +440,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
-    if (!ProcessNewBlock(state, NULL, pblock))
+    if (!ProcessNewBlock(policy, state, params, NULL, pblock))
         return error("BitcoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
@@ -437,9 +448,12 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
 
 void static BitcoinMiner(CWallet *pwallet)
 {
+    const CPolicy& policy = Policy();
+
     LogPrintf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
+    const Consensus::Params& params = Params().GetConsensus();
 
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
@@ -460,7 +474,7 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
 
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(policy, reservekey));
             if (!pblocktemplate.get())
             {
                 LogPrintf("Error in BitcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
@@ -492,7 +506,7 @@ void static BitcoinMiner(CWallet *pwallet)
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
                         LogPrintf("BitcoinMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                        ProcessBlockFound(pblock, *pwallet, reservekey);
+                        ProcessBlockFound(policy, pblock, params, *pwallet, reservekey);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
                         // In regression test mode, stop mining after a block is found.
@@ -516,8 +530,8 @@ void static BitcoinMiner(CWallet *pwallet)
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, pindexPrev);
-                if (Params().AllowMinDifficultyBlocks())
+                UpdateTime(pblock, params, pindexPrev);
+                if (params.fPowAllowMinDifficultyBlocks)
                 {
                     // Changing pblock->nTime can change work required on testnet:
                     hashTarget.SetCompact(pblock->nBits);
