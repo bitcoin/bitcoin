@@ -109,6 +109,7 @@ Thanks to everyone who contributed to this release:
 - fsb4000
 - Gregory Maxwell
 - Ivan Pustogarov
+- Jonas Nick
 - Jonas Schnelli
 - Pieter Wuille
 - Ruben de Vries
