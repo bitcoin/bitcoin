@@ -8,6 +8,27 @@
 
 #include <assert.h>
 
+static CCoinsViewCache* globalCoins;
+
+void SetGlobalCoins(CCoinsViewCache* globalCoinsIn)
+{
+    globalCoins = globalCoinsIn;
+}
+
+unsigned int GetTxHeight(const uint256& txid)
+{
+    const CCoins* coins = globalCoins->AccessCoins(txid);
+    return coins ? coins->nHeight : 0;
+}
+
+
+const CTxOut& GetTxOutput(const uint256& txid, uint32_t n)
+{
+    const CCoins* coins = globalCoins->AccessCoins(txid);
+    assert(coins);
+    return coins->vout[n];
+}
+
 /**
  * calculate number of bytes for the bitmask, and its number of non-zero bytes
  * each bit in the bitmask represents the availability of one output, but the

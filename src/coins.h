@@ -444,4 +444,8 @@ private:
     CCoinsViewCache(const CCoinsViewCache &);
 };
 
+void SetGlobalCoins(CCoinsViewCache* globalCoinsIn);
+unsigned int GetTxHeight(const uint256& txid);
+const CTxOut& GetTxOutput(const uint256& txid, uint32_t n);
+
 #endif // BITCOIN_COINS_H

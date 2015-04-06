@@ -6,6 +6,7 @@
 #ifndef BITCOIN_CONSENSUS_TYPES_H
 #define BITCOIN_CONSENSUS_TYPES_H
 
+#include "primitives/transaction.h"
 #include "uint256.h"
 
 struct CBlockIndexBase
@@ -21,5 +22,8 @@ struct CBlockIndexBase
 };
 
 typedef const CBlockIndexBase* (*PrevIndexGetter)(const CBlockIndexBase*);
+
+typedef unsigned int (*TxHeightGetter)(const uint256& txid);
+typedef const CTxOut& (*TxOutputGetter)(const uint256& txid, uint32_t n);
 
 #endif // BITCOIN_CONSENSUS_TYPES_H
