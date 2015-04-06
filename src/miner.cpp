@@ -6,11 +6,12 @@
 #include "miner.h"
 
 #include "amount.h"
-#include "primitives/transaction.h"
+#include "coinscache.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
 #include "pow.h"
+#include "primitives/transaction.h"
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
