@@ -103,6 +103,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listtransactions_MP", 4 },
     { "getallbalancesforid_MP", 0 },
     { "listblocktransactions_MP", 0 },
+    { "setautocommit_OMNI", 0 },
 #if 0 // disabled for pre meta DEx release
     { "trade_MP", 2 },
     { "trade_MP", 4 },
@@ -115,6 +116,33 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gettradehistory_MP", 1 },
     { "gettradehistory_MP", 2 },
 #endif
+    // omni_rpctx
+    { "send_OMNI", 2 },
+    { "sendsto_OMNI", 1 },
+    { "sendtrade_OMNI", 1 },
+    { "sendtrade_OMNI", 3 },
+    { "sendtrade_OMNI", 5 },
+    { "sendissuancefixed_OMNI", 1 },
+    { "sendissuancefixed_OMNI", 2 },
+    { "sendissuancefixed_OMNI", 3 },
+    { "sendissuancemanaged_OMNI", 1 },
+    { "sendissuancemanaged_OMNI", 2 },
+    { "sendissuancemanaged_OMNI", 3 },
+    { "sendissuancecrowdsale_OMNI", 1 },
+    { "sendissuancecrowdsale_OMNI", 2 },
+    { "sendissuancecrowdsale_OMNI", 3 },
+    { "sendissuancecrowdsale_OMNI", 9 },
+    { "sendissuancecrowdsale_OMNI", 11 },
+    { "sendissuancecrowdsale_OMNI", 12 },
+    { "sendissuancecrowdsale_OMNI", 13 },
+    { "senddexsell_OMNI", 1 },
+    { "senddexsell_OMNI", 4 },
+    { "senddexsell_OMNI", 6 },
+    { "senddexaccept_OMNI", 2 },
+    { "sendclosecrowdsale_OMNI", 1 },
+    { "sendgrant_OMNI", 2 },
+    { "sendrevoke_OMNI", 1 },
+    { "sendchangeissuer_OMNI", 2 },
 };
 
 class CRPCConvertTable
