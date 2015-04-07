@@ -1,6 +1,4 @@
-/**
- * This file serves to seperate encoding of data outputs from the main mastercore.cpp/h files.
- */
+// This file serves to seperate encoding of data outputs from the main mastercore.cpp/h files.
 
 #include "mastercore.h"
 #include "omnicore_encoding.h"
@@ -32,8 +30,7 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
         if (nRemainingBytes > (PACKET_SIZE - 1)) { nKeys += 1; } // we have enough data for 2 keys in this output
         std::vector<CPubKey> keys;
         keys.push_back(redeemingPubKey); // always include the redeeming pubkey
-        int i;
-        for (i = 0; i < nKeys; i++) {
+        for (int i = 0; i < nKeys; i++) {
             std::vector<unsigned char> fakeKey;
             fakeKey.push_back(seqNum); // add sequence number
             int numBytes = nRemainingBytes < (PACKET_SIZE - 1) ? nRemainingBytes: (PACKET_SIZE - 1); // add up to 30 bytes of data
@@ -41,19 +38,17 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
             nNextByte += numBytes;
             nRemainingBytes -= numBytes;
             while (fakeKey.size() < PACKET_SIZE) { fakeKey.push_back(0); } // pad to 31 total bytes with zeros
-            int j;
             std::vector<unsigned char>hash = ParseHex(strObfuscatedHashes[seqNum]);
-            for (j = 0; j < PACKET_SIZE; j++) { // xor in the obfuscation
+            for (int j = 0; j < PACKET_SIZE; j++) { // xor in the obfuscation
                 fakeKey[j] = fakeKey[j] ^ hash[j];
             }
             fakeKey.insert(fakeKey.begin(), 2); // prepend the 2
             CPubKey pubKey;
             fakeKey.resize(33);
             unsigned char random_byte = (unsigned char)(GetRand(256)); // fix up the ecdsa code point
-            for (j = 0; i < 256 ; j++) {
+            for (int j = 0; i < 256 ; j++) {
                 fakeKey[32] = random_byte;
                 pubKey = CPubKey(fakeKey);
-                file_log("pubKey check: %s\n", (HexStr(pubKey.begin(), pubKey.end()).c_str()));
                 if (pubKey.IsFullyValid()) break;
                 ++random_byte; // cycle 256 times, if we must to find a valid ECDSA point
             }
