@@ -333,6 +333,20 @@ CMasternode *CMasternodeMan::Find(const CTxIn &vin)
     return NULL;
 }
 
+
+CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    {
+        if(mn.pubkey2 == pubKeyMasternode)
+            return &mn;
+    }
+    return NULL;
+}
+
+
 CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
 {
     LOCK(cs);

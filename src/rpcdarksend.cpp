@@ -583,6 +583,9 @@ Value masternode(const Array& params, bool fHelp)
         if(vote == "nay") nVote = -1;
 
 
+        int success = 0;
+        int failed = 0;
+
         Object resultObj;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
@@ -596,27 +599,43 @@ Value masternode(const Array& params, bool fHelp)
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
-            if(!activeMasternode.GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, mne.getTxHash(), mne.getOutputIndex())) {
-                return("could not allocate vin");
+            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+                printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
+            }
+            
+            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
+            if(pmn == NULL)
+            {
+                printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
             }
 
-            std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
+            std::string strMessage = pmn->vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode))
-                return(" Error upon calling SetKey");
+            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode)){
+                printf(" Error upon calling SignMessage for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
+            }
 
-            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode))
-                return(" Error upon calling SignMessage");
+            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)){
+                printf(" Error upon calling VerifyMessage for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
+            }
 
-            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage))
-                return(" Error upon calling VerifyMessage");
+            success++;
 
             //send to all peers
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
                 pnode->PushMessage("mvote", vin, vchMasterNodeSignature, nVote);
-
         }
+
+        return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
     }
 
     if(strCommand == "vote")
