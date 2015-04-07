@@ -165,6 +165,8 @@ OMNICORE_H = \
   mastercore_tx.h \
   mastercore_version.h \
   omnicore_encoding.h \
+  omnicore_createpayload.h \
+  omnicore_rpctx.h \
   omnicore_utils.h
 
 OMNICORE_CPP = \
@@ -178,6 +180,8 @@ OMNICORE_CPP = \
   mastercore_tx.cpp \
   mastercore_version.cpp \
   omnicore_encoding.cpp \
+  omnicore_createpayload.cpp \
+  omnicore_rpctx.cpp \
   omnicore_utils.cpp
 
 BITCOIN_CORE_H += \
