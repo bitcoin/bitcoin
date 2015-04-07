@@ -106,8 +106,41 @@ Value scaninput(const Array& params, bool fHelp)
     uint256 hashBlock = 0;
     if (GetTransaction(hash, tx, hashBlock))
     {
+        if (nOut > tx.vout.size())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Incorrect output number");
+
+        if (hashBlock == 0)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to find transaction in the blockchain");
+
+        CTxDB txdb("r");
+
+        CBlock block;
+        CTxIndex txindex;
+
+        // Load transaction index item
+        if (!txdb.ReadTxIndex(tx.GetHash(), txindex))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to read block index item");
+
+        // Read block header
+        if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CBlock::ReadFromDisk() failed");
+
+        uint64_t nStakeModifier = 0;
+        if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No kernel stake modifier generated yet");
+
+        std::pair<uint32_t, uint32_t> interval;
+        interval.first = GetTime();
+        // Only count coins meeting min age requirement
+        if (nStakeMinAge + block.nTime > interval.first)
+            interval.first += (nStakeMinAge + block.nTime - interval.first);
+        interval.second = interval.first + nDays * 86400;
+
+        SHA256_CTX ctx;
+        GetKernelMidstate(nStakeModifier, block.nTime, txindex.pos.nTxPos - txindex.pos.nBlockPos, tx.nTime, nOut, ctx);
+
         std::pair<uint256, uint32_t> solution;
-        if (ScanInputForStakeKernelHash(tx, nOut, nBits, nDays * 86400, solution))
+        if (ScanMidstateForward(ctx, nBits, tx.nTime, tx.vout[nOut].nValue, interval, solution))
         {
             Object r;
             r.push_back(Pair("hash", solution.first.GetHex()));

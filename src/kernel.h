@@ -36,7 +36,11 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, uint32_t 
 // Scan given coins set for kernel solution
 bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, uint32_t nSearchInterval, CoinsSet::value_type &kernelcoin, uint32_t &nTimeTx, uint32_t &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried);
 
-bool ScanInputForStakeKernelHash(CTransaction &tx, uint32_t nOut, uint32_t nBits, uint32_t nSearchInterval, std::pair<uint256, uint32_t> &solution);
+// Precompute hashing state for static part of kernel
+void GetKernelMidstate(uint64_t nStakeModifier, uint32_t nBlockTime, uint32_t nTxOffset, uint32_t nInputTxTime, uint32_t nOut, SHA256_CTX &ctx);
+
+// Scan given midstate for kernel solutions
+bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution);
 
 // Check kernel hash target and coinstake signature
 // Sets hashProofOfStake on success return
