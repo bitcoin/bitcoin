@@ -109,6 +109,8 @@ uint64_t global_balance_reserved_maineco[100000];
 uint64_t global_balance_money_testeco[100000];
 uint64_t global_balance_reserved_testeco[100000];
 
+bool autoCommit = true; // whether to automatically commit created transactions, override with --autocommit=false
+
 string global_alert_message;
 
 static uint64_t exodus_prev = 0;
@@ -445,7 +447,7 @@ static CMPPending *pendingDelete(const uint256 txid, bool bErase = false)
   return (CMPPending *) NULL;
 }
 
-static int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc)
+int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc)
 {
 CMPPending pending;
 
@@ -511,7 +513,7 @@ int64_t pending = getMPbalance(Address, property, PENDING);
   return money;
 }
 
-static bool isRangeOK(const uint64_t input)
+bool isRangeOK(const uint64_t input)
 {
   if (MAX_INT_8_BYTES < input) return false;
 
@@ -2325,9 +2327,13 @@ int mastercore_init()
     exodus_address = exodus_testnet;
   }*/
 
+  // check for --autocommit option and set transaction commit flag accordingly
+  if (!GetBoolArg("-autocommit", true)) {
+      file_log("Process was started with --autocommit set to false.  Created omni transactions will not be committed to wallet or broadcast.");
+      autoCommit = false;
+  }
   // check for --startclean option and delete MP_ folders if present
-  if (GetBoolArg("-startclean", false))
-  {
+  if (GetBoolArg("-startclean", false)) {
       file_log("Process was started with --startclean option, attempting to clear persistence files...");
       try
       {
@@ -2611,8 +2617,9 @@ int64_t feeCheck(const string &address)
     return selectCoins(address, coinControl, 0);
 }
 
-// CLASS Agnostic SEND - will use class depending on size
-int mastercore::ClassAgnostic_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const vector<unsigned char> &data, uint256 & txid, int64_t referenceamount)
+// Class agnostic wallet transaction builder - will use class depending on size
+int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
+                          int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit)
 {
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
@@ -2626,14 +2633,14 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
     int64_t nFeeRet = 0;
     std::string strFailReason;
     vector< pair<CScript, int64_t> > vecSend;
-    CReserveKey reserveKey(wallet); // TODO NEEDED?
+    CReserveKey reserveKey(wallet);
 
     // Next, we set the change address to the sender
     CBitcoinAddress addr = CBitcoinAddress(senderAddress);
     coinControl.destChange = addr.Get();
 
     // Select the inputs
-    if (0 > selectCoins(senderAddress, coinControl, referenceamount)) { return MP_INPUTS_INVALID; }
+    if (0 > selectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
 
     // Encode the data outputs
     switch(omniTxClass) {
@@ -2648,10 +2655,8 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
                 } else {
                     CKeyID keyID;
                     if (!address.GetKeyID(keyID)) return MP_REDEMP_BAD_KEYID;
-                    if (!bRawTX) {
-                        if (!wallet->GetPubKey(keyID, redeemingPubKey)) return MP_REDEMP_FETCH_ERR_PUBKEY;
-                        if (!redeemingPubKey.IsFullyValid()) return MP_REDEMP_INVALID_PUBKEY;
-                    }
+                    if (!wallet->GetPubKey(keyID, redeemingPubKey)) return MP_REDEMP_FETCH_ERR_PUBKEY;
+                    if (!redeemingPubKey.IsFullyValid()) return MP_REDEMP_INVALID_PUBKEY;
                 }
             } else return MP_REDEMP_BAD_VALIDATION;
             if(!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
@@ -2664,7 +2669,7 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
     // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
     if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
-        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceamount ? referenceamount : GetDustLimit(scriptPubKey)));
+        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustLimit(scriptPubKey)));
     }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
@@ -2676,153 +2681,19 @@ int mastercore::ClassAgnostic_send(const string &senderAddress, const string &re
     if (!wallet->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
 
     // If this request is only to create, but not commit the transaction then display it and exit
-    if (bRawTX) {
+    if (!commit) {
         CTransaction tx = (CTransaction) wtxNew;
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
         ssTx << tx;
-        string strHex = HexStr(ssTx.begin(), ssTx.end());
-        printf("RawTX:\n%s\n\n", strHex.c_str());
+        rawHex = HexStr(ssTx.begin(), ssTx.end());
+        return 0;
+    } else {
+        // Commit the transaction to the wallet and broadcast)
+        file_log("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString().c_str(), nFeeRet, __LINE__, __FILE__);
+        if (!wallet->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
+        txid = wtxNew.GetHash();
         return 0;
     }
-
-    // Commit the transaction to the wallet and broadcast)
-    file_log("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString().c_str(), nFeeRet, __LINE__, __FILE__);
-    if (!wallet->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
-    txid = wtxNew.GetHash();
-    return 0;
-}
-
-// WIP: expanding the function to a general-purpose one, but still sending 1 packet only for now (30-31 bytes)
-uint256 mastercore::send_INTERNAL_1packet(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount, unsigned int PropertyID_2, uint64_t Amount_2, unsigned int TransactionType, int64_t additional, int *error_code)
-{
-const int64_t iAvailable = getMPbalance(FromAddress, PropertyID, BALANCE);
-const int64_t iUserAvailable = getUserAvailableMPbalance(FromAddress, PropertyID);
-int rc = MP_INSUF_FUNDS_BPENDI;
-uint256 txid = 0;
-const int64_t amount = Amount;
-const unsigned int prop = PropertyID;
-
-  if (msc_debug_send) file_log("%s(From: %s , To: %s , Property= %u, Amount= %lu, Available= %ld, Pending= %ld)\n",
-   __FUNCTION__, FromAddress.c_str(), ToAddress.c_str(), PropertyID, Amount, iAvailable, iUserAvailable);
-
-  if (!isRangeOK(Amount))
-  {
-    rc = MP_INPUT_NOT_IN_RANGE;
-    if (error_code) *error_code = rc;
-
-    return 0;
-  }
-
-  bool bCancel_checkBypass = false;
-  //If doing a METADEX CANCEL, use following flag to bypass funds checks
-  if((TransactionType == MSC_TYPE_METADEX) && ((additional == CMPTransaction::CANCEL_AT_PRICE) || (additional == CMPTransaction::CANCEL_ALL_FOR_PAIR) || (additional == CMPTransaction::CANCEL_EVERYTHING)))
-  {
-    bCancel_checkBypass = true;
-  } 
-
-  // make sure this address has enough MP property available!
-  if ((((uint64_t)iAvailable < Amount) || (0 == Amount)) && !bCancel_checkBypass)
-  {
-    LogPrintf("%s(): aborted -- not enough MP property (%lu < %lu)\n", __FUNCTION__, iAvailable, Amount);
-    if (msc_debug_send) file_log("%s(): aborted -- not enough MP property (%lu < %lu)\n", __FUNCTION__, iAvailable, Amount);
-
-    if (error_code) *error_code = rc;
-
-    return 0;
-  }
-
-  // check once more, this time considering PENDING amount reduction
-  // make sure this address has enough MP property available!
-  if (((iUserAvailable < (int64_t)Amount) || (0 == Amount)) && !bCancel_checkBypass)
-  {
-    LogPrintf("%s(): aborted -- not enough MP property with PENDING reduction (%lu < %lu)\n", __FUNCTION__, iUserAvailable, Amount);
-    if (msc_debug_send) file_log("%s(): aborted -- not enough MP property with PENDING reduction (%lu < %lu)\n", __FUNCTION__, iUserAvailable, Amount);
-
-    rc = MP_INSUF_FUNDS_APENDI;
-    if (error_code) *error_code = rc;
-
-    return 0;
-  }
-
-  int64_t rawTransactionType = TransactionType;
-  int64_t rawPropertyID = PropertyID;
-  int64_t rawPropertyID_2 = PropertyID_2;
-  int64_t rawAmount = Amount;
-  int64_t rawAmount_2 = Amount_2;
-  vector<unsigned char> data;
-  swapByteOrder32(TransactionType);
-  swapByteOrder32(PropertyID);
-  swapByteOrder64(Amount);
-
-  PUSH_BACK_BYTES(data, TransactionType);
-  PUSH_BACK_BYTES(data, PropertyID);
-  PUSH_BACK_BYTES(data, Amount);
-  
-  if (PropertyID_2 != 0 || bCancel_checkBypass == true) // for trade_MP
-  {
-    //use additional to pass action byte
-    unsigned char action = boost::lexical_cast<int>(additional); 
-    //zero out additional for trade_MP
-    additional = 0;
-
-    swapByteOrder32(PropertyID_2);
-    swapByteOrder64(Amount_2);
-
-    PUSH_BACK_BYTES(data, PropertyID_2);
-    PUSH_BACK_BYTES(data, Amount_2);
-    PUSH_BACK_BYTES(data, action);
-  }
-
-  rc = ClassAgnostic_send(FromAddress, ToAddress, RedeemAddress, data, txid, additional);
-  if (msc_debug_send) file_log("ClassB_send returned %d\n", rc);
-
-  if (error_code) *error_code = rc;
-
-  if (0 == rc)
-  {
-      // only simple sends and metadex pending needed at moment
-      Object txobj;
-      txobj.push_back(Pair("txid", txid.GetHex()));
-      txobj.push_back(Pair("sendingaddress", FromAddress));
-      if (rawTransactionType == MSC_TYPE_SIMPLE_SEND) txobj.push_back(Pair("referenceaddress", ToAddress));
-      txobj.push_back(Pair("confirmations", 0));
-      // txobj->push_back(Pair("fee", ValueFromAmount(nFee)));
-      txobj.push_back(Pair("version", (int64_t)0)); //we only send v0 currently so all pending v0
-      txobj.push_back(Pair("type_int", (int64_t)rawTransactionType));
-      bool divisible = false;
-      bool desiredDivisible = false;
-      string amountStr;
-      string amountDStr;
-      switch (rawTransactionType)
-      {
-          case 0: //simple send
-              txobj.push_back(Pair("type", "Simple send"));
-              txobj.push_back(Pair("propertyid", rawPropertyID));
-              divisible = isPropertyDivisible(rawPropertyID);
-              txobj.push_back(Pair("divisible", divisible));
-              if (divisible) { amountStr = FormatDivisibleMP(rawAmount); } else { amountStr = FormatIndivisibleMP(rawAmount); }
-              txobj.push_back(Pair("amount", amountStr));
-          break;
-          case 21: //metadex sell
-              txobj.push_back(Pair("type", "MetaDEx token trade"));
-              divisible = isPropertyDivisible(rawPropertyID);
-              desiredDivisible = isPropertyDivisible(rawPropertyID_2);
-              if (divisible) { amountStr = FormatDivisibleMP(rawAmount); } else { amountStr = FormatIndivisibleMP(rawAmount); }
-              if (desiredDivisible) { amountDStr = FormatDivisibleMP(rawAmount_2); } else { amountDStr = FormatIndivisibleMP(rawAmount_2); }
-              txobj.push_back(Pair("amountoffered", amountStr));
-              txobj.push_back(Pair("propertyoffered", rawPropertyID));
-              txobj.push_back(Pair("propertyofferedisdivisible", divisible));
-              txobj.push_back(Pair("amountdesired", amountDStr));
-              txobj.push_back(Pair("propertydesired", rawPropertyID_2));
-              txobj.push_back(Pair("propertydesiredisdivisible", desiredDivisible));
-              txobj.push_back(Pair("action", additional));
-          break;
-      }
-      string txDesc = write_string(Value(txobj), false);
-      (void) pendingAdd(txid, FromAddress, prop, amount, rawTransactionType, txDesc);
-  }
-
-  return txid;
 }
 
 int CMPTxList::setLastAlert(int blockHeight)

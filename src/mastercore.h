@@ -218,7 +218,7 @@ const std::string ExodusAddress();
 extern int msc_debug_ui;
 
 extern CCriticalSection cs_tally;
-
+extern bool autoCommit;
 extern const int msc_debug_dex;
 
 enum TallyType { BALANCE = 0, SELLOFFER_RESERVE = 1, ACCEPT_RESERVE = 2, PENDING = 3, METADEX_RESERVE = 4, TALLY_TYPE_COUNT };
@@ -528,6 +528,8 @@ int mastercore_init(void);
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
+bool isRangeOK(const uint64_t input);
+int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc);
 
 string getLabel(const string &address);
 
@@ -558,10 +560,8 @@ bool isCrowdsalePurchase(uint256 txid, string address, int64_t *propertyId = NUL
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 std::string FormatIndivisibleMP(int64_t n);
 
-int ClassAgnostic_send(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress, const std::vector<unsigned char> &data, uint256 & txid, int64_t additional = 0);
-
-uint256 send_INTERNAL_1packet(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount,
- unsigned int PropertyID_2, uint64_t Amount_2, unsigned int TransactionType, int64_t additional, int *error_code = NULL);
+int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
+                 int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit);
 
 bool isTestEcosystemProperty(unsigned int property);
 bool isMainEcosystemProperty(unsigned int property);
