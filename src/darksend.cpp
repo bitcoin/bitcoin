@@ -1492,6 +1492,14 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             return false;
         }
 
+        //check our collateral
+        if(txCollateral != CTransaction()){
+            if(!IsCollateralValid(txCollateral)) {
+                txCollateral = CTransaction();
+                LogPrintf("DoAutomaticDenominating -- Invalid collateral, resetting.\n");
+            }
+        }
+
         //don't use the queues all of the time for mixing
         if(nUseQueue > 33){
 
