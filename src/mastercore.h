@@ -553,6 +553,7 @@ string strMPProperty(unsigned int i);
 
 int GetHeight(void);
 uint32_t GetLatestBlockTime(void);
+CBlockIndex* GetBlockIndex(const uint256& hash);
 bool isPropertyDivisible(unsigned int propertyId);
 string getPropertyName(unsigned int propertyId);
 bool isCrowdsaleActive(unsigned int propertyId);
