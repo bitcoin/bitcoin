@@ -48,7 +48,8 @@ This does not affect wallet forward or backward compatibility.
 0.12.0 changelog
 ----------------
 
-Bitcoin Core version 0.10.1
+Switched to Bitcoin Core version 0.10
+https://bitcoin.org/en/release/v0.10.0
 
 Credits
 --------
