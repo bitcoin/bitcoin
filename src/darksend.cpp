@@ -396,7 +396,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            if(!AcceptableInputs(mempool, state, tx, false, NULL)) {
+            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
                 LogPrintf("dsi -- transaction not valid! \n");
                 error = _("Transaction not valid.");
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, error);
@@ -1377,7 +1377,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        if(!AcceptableInputs(mempool, state, tx, false, NULL)){
+        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
             return;
         }

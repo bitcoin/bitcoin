@@ -265,7 +265,7 @@ void CMasternode::Check()
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
-        if(!AcceptableInputs(mempool, state, tx, false, NULL)){
+        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
             activeState = MASTERNODE_VIN_SPENT;
             return;
         }
