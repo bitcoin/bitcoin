@@ -401,7 +401,6 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
     default:
         return QIcon(":/icons/tx_inout");
     }
-    return QVariant();
 }
 
 QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const
