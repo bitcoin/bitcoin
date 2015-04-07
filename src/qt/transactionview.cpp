@@ -68,9 +68,9 @@ TransactionView::TransactionView(QWidget *parent) :
 
     typeWidget = new QComboBox(this);
 #ifdef Q_OS_MAC
-    typeWidget->setFixedWidth(121);
+    typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH+1);
 #else
-    typeWidget->setFixedWidth(120);
+    typeWidget->setFixedWidth(TYPE_COLUMN_WIDTH);
 #endif
 
     typeWidget->addItem(tr("All"), TransactionFilterProxy::ALL_TYPES);
