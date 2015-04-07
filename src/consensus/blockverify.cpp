@@ -12,6 +12,7 @@
 #include "primitives/block.h"
 #include "script/interpreter.h"
 #include "tinyformat.h"
+#include "version.h"
 
 #include <algorithm>  
 
@@ -112,7 +113,11 @@ int64_t GetMedianTimePast(const CBlockIndexBase* pindex, PrevIndexGetter indexGe
     return pbegin[(pend - pbegin)/2];
 }
 
-bool IsSuperMajority(int minVersion, const CBlockIndexBase* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter indexGetter)
+/**
+ * Returns true if there are nRequired or more blocks of minVersion or above
+ * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
+ */
+static bool IsSuperMajority(int minVersion, const CBlockIndexBase* pstart, unsigned nRequired, const Consensus::Params& consensusParams, PrevIndexGetter indexGetter)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
@@ -184,5 +189,91 @@ bool Consensus::VerifyBlockHeader(const CBlockHeader& block, CValidationState& s
         return false;
     if (!Consensus::ContextualCheckBlockHeader(block, state, params, pindexPrev, indexGetter))
         return false;
+    return true;
+}
+
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
+{
+    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    // Force block reward to zero when right shift is undefined.
+    if (halvings >= 64)
+        return 0;
+
+    CAmount nSubsidy = 50 * COIN;
+    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    nSubsidy >>= halvings;
+    return nSubsidy;
+}
+
+bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, bool fCheckPOW, bool fCheckMerkleRoot)
+{
+    // Check that the header is valid (particularly PoW).  This is mostly
+    // redundant with the call in AcceptBlockHeader.
+    if (!Consensus::CheckBlockHeader(block, state, consensusParams, nTime, fCheckPOW))
+        return false;
+
+    // Check the merkle root.
+    if (fCheckMerkleRoot) {
+        bool mutated;
+        uint256 hashMerkleRoot2 = block.BuildMerkleTree(&mutated);
+        if (block.hashMerkleRoot != hashMerkleRoot2)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txnmrklroot", true);
+
+        // Check for merkle tree malleability (CVE-2012-2459): repeating sequences
+        // of transactions in a block without affecting the merkle root of a block,
+        // while still invalidating it.
+        if (mutated)
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-duplicate", true);
+    }
+
+    // All potential-corruption validation must be done before we do any
+    // transaction validation, as otherwise we may mark the header as invalid
+    // because we receive the wrong transactions for it.
+
+    // Size limits
+    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-length");
+
+    // First transaction must be coinbase, the rest must not be
+    if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing");
+    for (unsigned int i = 1; i < block.vtx.size(); i++)
+        if (block.vtx[i].IsCoinBase())
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple");
+
+    // Check transactions
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+        if (!Consensus::CheckTx(block.vtx[i], state))
+            return false;
+
+    unsigned int nSigOps = 0;
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+        nSigOps += GetLegacySigOpCount(block.vtx[i]);
+
+    if (nSigOps > MAX_BLOCK_SIGOPS)
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", true);
+
+    return true;
+}
+
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter)
+{
+    const int nHeight = pindexPrev->nHeight + 1;
+    // Check that all transactions are finalized
+    for (unsigned int i = 1; i < block.vtx.size(); i++)
+        if (!CheckFinalTx(block.vtx[i], nHeight, block.GetBlockTime()))
+            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal");
+
+    // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
+    // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
+    if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams, indexGetter))
+    {
+        CScript expect = CScript() << nHeight;
+        if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
+            !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height");
+        }
+    }
+
     return true;
 }
