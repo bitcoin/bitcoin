@@ -2639,13 +2639,22 @@ int64_t feeCheck(const string &address)
     return selectCoins(address, coinControl, 0);
 }
 
-// Class agnostic wallet transaction builder - will use class depending on size
+// This function determines whether it is valid to use a Class C transaction for a given payload size
+static bool UseEncodingClassC(size_t nDataSize)
+{
+    size_t nTotalSize = nDataSize + 2; // Marker "om"
+    bool fDataEnabled = GetBoolArg("-datacarrier", true);
+
+    return nTotalSize < nMaxDatacarrierBytes && fDataEnabled;
+}
+
+// This function requests the wallet create an Omni transaction using the supplied parameters and payload
 int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
                           int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit)
 {
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
-    if(data.size()>nMaxDatacarrierBytes-2) omniTxClass = OMNI_CLASS_B;
+    if (!UseEncodingClassC(data.size())) omniTxClass = OMNI_CLASS_B;
 
     // Prepare the transaction - first setup some vars
     CWallet *wallet = pwalletMain;
