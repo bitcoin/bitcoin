@@ -81,13 +81,6 @@ Release Process
   5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
 
 ###Next steps:
-	pushd gitian.sigs
-	git add ${VERSION}-linux/${SIGNER}
-	git add ${VERSION}-win/${SIGNER}
-	git add ${VERSION}-osx/${SIGNER}
-	git commit -a
-	git push  # Assuming you can push to the gitian.sigs tree
-	popd
 
 Commit your signature to gitian.sigs:
 
@@ -121,6 +114,7 @@ Commit your signature for the signed OSX binary:
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
 
+-------------------------------------------------------------------------
 
 ### After 3 or more people have gitian-built and their results match:
 
@@ -139,15 +133,22 @@ rm SHA256SUMS
 (the digest algorithm is forced to sha256 to avoid confusion of the `Hash:` header that GPG adds with the SHA256 used for the files)
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
+  into `/var/www/bin/bitcoin-core-${VERSION}`
 
-- Update dashpay.io version
+- Update dashpay.io version ***TODO***
 
-  - Make a pull request to add a file named `YYYY-MM-DD-vX.Y.Z.md` with the release notes
-  to https://github.com/dashpay/dashpay.io/tree/master/_releases ***TODO***
-   ([Example for 0.9.2.1](https://raw.githubusercontent.com/dashpay/dashpay.io/master/_releases/2014-06-19-v0.9.2.1.md)). ***TODO***
+  - First, check to see if the dashpay.io maintainers have prepared a
+    release: https://github.com/bitcoin/bitcoin.org/labels/Releases
 
-  - After the pull request is merged, the website will automatically show the newest version, as well
-    as update the OS download links. Ping Saivann in case anything goes wrong
+      - If they have, it will have previously failed their Travis CI
+        checks because the final release files weren't uploaded.
+        Trigger a Travis CI rebuild---if it passes, merge.
+
+  - If they have not prepared a release, follow the Bitcoin.org release
+    instructions: https://github.com/bitcoin/bitcoin.org#release-notes
+
+  - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
+    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
 
 - Announce the release:
 
