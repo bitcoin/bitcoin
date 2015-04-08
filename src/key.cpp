@@ -5,6 +5,7 @@
 #include "key.h"
 
 #include "arith_uint256.h"
+#include "crypto/common.h"
 #include "crypto/hmac_sha512.h"
 #include "eccryptoverify.h"
 #include "pubkey.h"
@@ -73,25 +74,14 @@ CPubKey CKey::GetPubKey() const {
     return result;
 }
 
-extern "C"
-{
-static int secp256k1_nonce_function_test_case(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int attempt, const void *data)
-{
-    const uint32_t *test_case = static_cast<const uint32_t*>(data);
-    uint256 nonce;
-    secp256k1_nonce_function_rfc6979(nonce.begin(), msg32, key32, attempt, NULL);
-    nonce = ArithToUint256(UintToArith256(nonce) + *test_case);
-    memcpy(nonce32, nonce.begin(), 32);
-    return 1;
-}
-}
-
 bool CKey::Sign(const uint256 &hash, std::vector<unsigned char>& vchSig, uint32_t test_case) const {
     if (!fValid)
         return false;
     vchSig.resize(72);
     int nSigLen = 72;
-    int ret = secp256k1_ecdsa_sign(hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), test_case == 0 ? secp256k1_nonce_function_rfc6979 : secp256k1_nonce_function_test_case, test_case == 0 ? NULL : &test_case);
+    unsigned char extra_entropy[32] = {0};
+    WriteLE32(extra_entropy, test_case);
+    int ret = secp256k1_ecdsa_sign(hash.begin(), (unsigned char*)&vchSig[0], &nSigLen, begin(), secp256k1_nonce_function_rfc6979, test_case ? extra_entropy : NULL);
     assert(ret);
     vchSig.resize(nSigLen);
     return true;
