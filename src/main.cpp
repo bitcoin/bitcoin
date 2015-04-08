@@ -4716,7 +4716,7 @@ bool ProcessMessages(CNode* pfrom)
 }
 
 
-bool SendMessages(CNode* pto, bool fSendTrickle)
+bool SendMessages(CNode* pto)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
@@ -4840,48 +4840,45 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: inventory
         //
-        vector<CInv> vInv;
-        vector<CInv> vInvWait;
+        vector<CInv> vInv, vInvWait;
+
+        vInv.reserve(1000);
+        vInvWait.reserve(pto->vInventoryToSend.size());
+
         {
             LOCK(pto->cs_inventory);
-            vInv.reserve(pto->vInventoryToSend.size());
-            vInvWait.reserve(pto->vInventoryToSend.size());
-            BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend)
-            {
-                if (pto->setInventoryKnown.count(inv))
-                    continue;
 
-                // trickle out tx inv to protect privacy
-                if (inv.type == MSG_TX && !fSendTrickle)
-                {
-                    // 1/4 of tx invs blast to all immediately
-                    static uint256 hashSalt;
-                    if (hashSalt.IsNull())
-                        hashSalt = GetRandHash();
-                    uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
-                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
-
-                    if (fTrickleWait)
-                    {
-                        vInvWait.push_back(inv);
-                        continue;
-                    }
-                }
-
-                // returns true if wasn't already contained in the set
-                if (pto->setInventoryKnown.insert(inv).second)
-                {
-                    vInv.push_back(inv);
-                    if (vInv.size() >= 1000)
-                    {
+            BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend) {
+                // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
+                if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK) {
+                    // returns true if wasn't already contained in the set
+                    if (pto->setInventoryKnown.insert(inv).second) {
+                        vInv.push_back(inv);
                         pto->PushMessage("inv", vInv);
                         vInv.clear();
                     }
                 }
+
+                if (inv.type == MSG_TX && (pto->nNextInvSend < GetTime() || pto->fWhitelisted)) {
+                    // returns true if wasn't already contained in the set
+                    if (pto->setInventoryKnown.insert(inv).second) {
+                        vInv.push_back(inv);
+                        if (vInv.size() >= 1000) {
+                            pto->PushMessage("inv", vInv);
+                            vInv.clear();
+                        }
+                    }
+                }
+                else
+                    vInvWait.push_back(inv);
             }
+
             pto->vInventoryToSend = vInvWait;
         }
+        
+        if (pto->nNextInvSend < GetTime())
+            pto->nNextInvSend = GetTime() + GetRand(10);
+        
         if (!vInv.empty())
             pto->PushMessage("inv", vInv);
 

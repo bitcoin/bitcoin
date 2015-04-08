@@ -172,9 +172,8 @@ bool ProcessMessages(CNode* pfrom);
  * Send queued protocol messages to be sent to a give node.
  *
  * @param[in]   pto             The node which we are sending messages to.
- * @param[in]   fSendTrickle    When true send the trickled data, otherwise trickle the data until true.
  */
-bool SendMessages(CNode* pto, bool fSendTrickle);
+bool SendMessages(CNode* pto);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
 /** Try to detect Partition (network isolation) attacks against us */

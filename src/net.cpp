@@ -1554,7 +1554,7 @@ void ThreadMessageHandler()
             {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend)
-                    g_signals.SendMessages(pnode, pnode == pnodeTrickle || pnode->fWhitelisted);
+                    g_signals.SendMessages(pnode);
             }
             boost::this_thread::interruption_point();
         }
@@ -2072,6 +2072,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nNextAddrSend = GetTime() + GetRand(30);
     nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
     nNextClearSetKnown = GetTime() + GetRand(12 * 60 * 60);
+    nNextInvSend = GetTime() + GetRand(10);
     fRelayTxes = false;
     pfilter = new CBloomFilter();
     nPingNonceSent = 0;

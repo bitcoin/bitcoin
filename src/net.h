@@ -100,7 +100,7 @@ struct CNodeSignals
 {
     boost::signals2::signal<int ()> GetHeight;
     boost::signals2::signal<bool (CNode*), CombinerAll> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, bool), CombinerAll> SendMessages;
+    boost::signals2::signal<bool (CNode*), CombinerAll> SendMessages;
     boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
     boost::signals2::signal<void (NodeId)> FinalizeNode;
 };
@@ -386,6 +386,7 @@ public:
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
+    int64_t nNextInvSend;
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
