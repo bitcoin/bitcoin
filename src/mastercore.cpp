@@ -2645,7 +2645,7 @@ static bool UseEncodingClassC(size_t nDataSize)
     size_t nTotalSize = nDataSize + 2; // Marker "om"
     bool fDataEnabled = GetBoolArg("-datacarrier", true);
 
-    return nTotalSize < nMaxDatacarrierBytes && fDataEnabled;
+    return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
