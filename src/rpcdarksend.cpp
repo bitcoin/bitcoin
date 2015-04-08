@@ -576,6 +576,9 @@ Value masternode(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
+        if (params.size() != 2)
+            throw runtime_error("You can only vote 'yea' or 'nay'");
+
         std::string vote = params[1].get_str().c_str();
         if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
         int nVote = 0;
@@ -642,6 +645,9 @@ Value masternode(const Array& params, bool fHelp)
     {
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
+
+        if (params.size() != 2)
+            throw runtime_error("You can only vote 'yea' or 'nay'");
 
         std::string vote = params[1].get_str().c_str();
         if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
