@@ -300,7 +300,7 @@ void OverviewPage::updateDarksendProgress()
     {
         denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / denominatedBalance;
         denomPart = denomPart > 1 ? 1 : denomPart;
-        if(denomPart == 1) nMaxToAnonymize = denominatedBalance;
+        if(denomPart == 1 && nMaxToAnonymize > denominatedBalance) nMaxToAnonymize = denominatedBalance;
     }
 
     // % of fully anonymized balance
