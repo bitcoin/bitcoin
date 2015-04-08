@@ -4770,27 +4770,16 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (!lockMain)
             return true;
 
-        // Address refresh broadcast
-        static int64_t nLastRebroadcast;
-        if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
-        {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-            {
-                // Periodically clear addrKnown to allow refresh broadcasts
-                if (nLastRebroadcast)
-                    pnode->addrKnown.clear();
-
-                // Rebroadcast our address
-                AdvertizeLocal(pnode);
-            }
-            if (!vNodes.empty())
-                nLastRebroadcast = GetTime();
-        }
-
         //
         // Message: addr
         //
+
+        if (pto->nNextLocalAddrSend < GetTime()) {
+            AdvertizeLocal(pto);
+            pto->setAddrKnown.clear();
+            pto->nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
+        }
+
         if (fSendTrickle)
         {
             vector<CAddress> vAddr;
