@@ -810,15 +810,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int nVote;
         vRecv >> vin >> vchSig >> nVote;
 
-        LogPrintf("mvote - Masternode vote %s \n", vin.ToString().c_str());
-
         // see if we have this Masternode
         CMasternode* pmn = this->Find(vin);
         if(pmn != NULL)
         {
-
-            LogPrintf("mvote - found %d %d \n", GetAdjustedTime(), pmn->lastVote);
-
             if((GetAdjustedTime() - pmn->lastVote) > (60*60))
             {
                 std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
@@ -841,7 +836,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
             return;
         }
-        LogPrintf("mvote - end %s \n", vin.ToString().c_str());
 
     } else if (strCommand == "dseg") { //Get Masternode list or specific entry
 
