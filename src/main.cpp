@@ -3884,19 +3884,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (!pfrom->fInbound)
         {
-            // Advertise our address
-            if (fListen && !IsInitialBlockDownload())
-            {
-                CAddress addr = GetLocalAddress(&pfrom->addr);
-                if (addr.IsRoutable())
-                {
-                    pfrom->PushAddress(addr);
-                } else if (IsPeerAddrLocalGood(pfrom)) {
-                    addr.SetIP(pfrom->addrLocal);
-                    pfrom->PushAddress(addr);
-                }
-            }
-
             // Get recent addresses
             if (pfrom->fOneShot || pfrom->nVersion >= CADDR_TIME_VERSION || addrman.size() < 1000)
             {
