@@ -545,6 +545,12 @@ void RPCConsole::showNetwork()
     show();
 }
 
+void RPCConsole::showPeers()
+{
+    ui->tabWidget->setCurrentIndex(3);
+    show();
+}
+
 void RPCConsole::showConfEditor()
 {
     GUIUtil::openConfigfile();

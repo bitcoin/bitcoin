@@ -77,6 +77,8 @@ public slots:
     void showConsole();
     /** Switch to network tab and show */
     void showNetwork();
+    /** Switch to peers tab and show */
+    void showPeers();
     /** Open external (default) editor with dash.conf */
     void showConfEditor();	
     /** Handle selection of peer in peers list */
