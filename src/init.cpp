@@ -337,6 +337,7 @@ std::string HelpMessage(HelpMessageMode mode)
         FormatMoney(maxTxFee)));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format") + " " + _("on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), "wallet.dat"));
+    strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), true));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
         " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
@@ -1243,6 +1244,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
             }
         }
+        pwalletMain->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", true));
     } // (!fDisableWallet)
 #else // ENABLE_WALLET
     LogPrintf("No wallet compiled in!\n");
