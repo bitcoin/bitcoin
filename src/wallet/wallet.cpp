@@ -2038,7 +2038,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
             setKeyPool.clear();
             // Note: can't top-up keypool here, because wallet is locked.
             // User will be prompted to unlock wallet the next operation
-            // the requires a new key.
+            // that requires a new key.
         }
     }
 
