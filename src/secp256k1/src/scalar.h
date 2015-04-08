@@ -21,9 +21,6 @@
 #error "Please select scalar implementation"
 #endif
 
-static void secp256k1_scalar_start(void);
-static void secp256k1_scalar_stop(void);
-
 /** Clear a scalar to prevent the leak of sensitive data. */
 static void secp256k1_scalar_clear(secp256k1_scalar_t *r);
 
@@ -83,9 +80,9 @@ static void secp256k1_scalar_order_get_num(secp256k1_num_t *r);
 /** Compare two scalars. */
 static int secp256k1_scalar_eq(const secp256k1_scalar_t *a, const secp256k1_scalar_t *b);
 
-static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
-
 #ifdef USE_ENDOMORPHISM
+/** Find r1 and r2 such that r1+r2*2^128 = a. */
+static void secp256k1_scalar_split_128(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
 /** Find r1 and r2 such that r1+r2*lambda = a, and r1 and r2 are maximum 128 bits long (see secp256k1_gej_mul_lambda). */
 static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a);
 #endif
