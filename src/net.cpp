@@ -1098,7 +1098,6 @@ void MapPort()
 // The second name should resolve to a list of seed addresses.
 static const char *strDNSSeed[][2] = {
     {"novacoin.karelia.pro", "dnsseed.novacoin.karelia.pro"},
-    {"novacoin.su", "dnsseed.novacoin.su"},
     {"novacoin.ru", "dnsseed.novacoin.ru"},
     {"novacoin.ru", "testseed.novacoin.ru"},
     {"novaco.in", "dnsseed.novaco.in"},
