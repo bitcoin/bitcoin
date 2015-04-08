@@ -125,9 +125,9 @@ public:
     int GetMasternodeRank(const CTxIn &vin, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
     CMasternode* GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol=0, bool fOnlyActive=true);
 
-    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-
     void ProcessMasternodeConnections();
+
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     /// Return the number of (unique) Masternodes
     int size() { return vMasternodes.size(); }
@@ -141,6 +141,7 @@ public:
     void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage);
     void RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
 
+    void Remove(CTxIn vin);
 
 };
 
