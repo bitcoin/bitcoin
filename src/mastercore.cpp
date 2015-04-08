@@ -189,6 +189,19 @@ uint32_t mastercore::GetLatestBlockTime()
         return (int)(Params().GenesisBlock().nTime); // Genesis block's time of current network
 }
 
+CBlockIndex* mastercore::GetBlockIndex(const uint256& hash)
+{
+    CBlockIndex* pBlockIndex = NULL;
+    LOCK(cs_main);
+    BlockMap::const_iterator it = mapBlockIndex.find(hash);
+    if (it != mapBlockIndex.end()) {
+        pBlockIndex = it->second;
+    }
+
+    return pBlockIndex;
+}
+
+
 //--- CUT HERE --- mostly copied from util.h & util.cpp
 // LogPrintf() has been broken a couple of times now
 // by well-meaning people adding mutexes in the most straightforward way.
@@ -2132,14 +2145,14 @@ static int load_most_relevant_state()
     return -1;
   }
 
-  CBlockIndex const *spBlockIndex = mapBlockIndex[spWatermark];
+  CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
   if (NULL == spBlockIndex) {
     //trigger a full reparse, if the watermark isn't a real block
     return -1;
   }
 
-  while(false == chainActive.Contains(spBlockIndex)) {
-    int remainingSPs = _my_sps->popBlock(*spBlockIndex->phashBlock);
+  while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
+    int remainingSPs = _my_sps->popBlock(spBlockIndex->GetBlockHash());
     if (remainingSPs < 0) {
       // trigger a full reparse, if the levelDB cannot roll back
       return -1;
@@ -2147,7 +2160,9 @@ static int load_most_relevant_state()
       // potential optimization here?
     }*/
     spBlockIndex = spBlockIndex->pprev;
-    _my_sps->setWatermark(*spBlockIndex->phashBlock);
+    if (spBlockIndex != NULL) {
+        _my_sps->setWatermark(spBlockIndex->GetBlockHash());
+    }
   }
 
   // prepare a set of available files by block hash pruning any that are
@@ -2168,7 +2183,7 @@ static int load_most_relevant_state()
           boost::equals(vstr[2], "dat")) {
       uint256 blockHash;
       blockHash.SetHex(vstr[1]);
-      CBlockIndex *pBlockIndex = mapBlockIndex[blockHash];
+      CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
       if (pBlockIndex == NULL || false == chainActive.Contains(pBlockIndex)) {
         continue;
       }
@@ -2183,7 +2198,7 @@ static int load_most_relevant_state()
   // for each block we discard, roll back the SP database
   CBlockIndex const *curTip = spBlockIndex;
   while (NULL != curTip && persistedBlocks.size() > 0) {
-    if (persistedBlocks.find(*spBlockIndex->phashBlock) != persistedBlocks.end()) {
+    if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
         const string filename = (MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % curTip->GetBlockHash().ToString()).str().c_str()).string();
@@ -2199,16 +2214,18 @@ static int load_most_relevant_state()
       }
 
       // remove this from the persistedBlock Set
-      persistedBlocks.erase(*spBlockIndex->phashBlock);
+      persistedBlocks.erase(spBlockIndex->GetBlockHash());
     }
 
     // go to the previous block
-    if (0 > _my_sps->popBlock(*curTip->phashBlock)) {
+    if (0 > _my_sps->popBlock(curTip->GetBlockHash())) {
       // trigger a full reparse, if the levelDB cannot roll back
       return -1;
     }
     curTip = curTip->pprev;
-    _my_sps->setWatermark(*curTip->phashBlock);
+    if (curTip != NULL) {
+        _my_sps->setWatermark(curTip->GetBlockHash());
+    }
   }
 
   if (persistedBlocks.size() == 0) {
@@ -2437,11 +2454,7 @@ static void prune_state_files( CBlockIndex const *topIndex )
   std::set<uint256>::const_iterator iter;
   for (iter = statefulBlockHashes.begin(); iter != statefulBlockHashes.end(); ++iter) {
     // look up the CBlockIndex for height info
-    CBlockIndex const *curIndex = NULL;
-    BlockMap::const_iterator indexIter = mapBlockIndex.find((*iter));
-    if (indexIter != mapBlockIndex.end()) {
-      curIndex = (*indexIter).second;
-    }
+    CBlockIndex const *curIndex = GetBlockIndex(*iter);
 
     // if we have nothing int the index, or this block is too old..
     if (NULL == curIndex || (topIndex->nHeight - curIndex->nHeight) > MAX_STATE_HISTORY ) {
@@ -2475,7 +2488,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   // clean-up the directory
   prune_state_files(pBlockIndex);
 
-  _my_sps->setWatermark(*pBlockIndex->phashBlock);
+  _my_sps->setWatermark(pBlockIndex->GetBlockHash());
 
   return 0;
 }
@@ -2750,6 +2763,8 @@ int64_t GetDustLimit(const CScript& scriptPubKey)
 static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl, int64_t additional)
 {
   CWallet *wallet = pwalletMain;
+  if (NULL == wallet) { return 0; }
+
   int64_t n_max = (COIN * (20 * (0.0001))); // assume 20KBytes max TX size at 0.0001 per kilobyte
   // FUTURE: remove n_max and try 1st smallest input, then 2 smallest inputs etc. -- i.e. move Coin Control selection closer to CreateTransaction
   int64_t n_total = 0;  // total output funds collected
@@ -2757,6 +2772,7 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
   // if referenceamount is set it is needed to be accounted for here too
   if (0 < additional) n_max += additional;
 
+  int nHeight = GetHeight();
   LOCK2(cs_main, wallet->cs_wallet);
 
     string sAddress = "";
@@ -2776,8 +2792,14 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
           continue;
 
         for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-          CTxDestination dest;
+          txnouttype whichType;
+          if (!getOutputType(pcoin->vout[i].scriptPubKey, whichType))
+            continue;
 
+          if (!isAllowedOutputType(whichType, nHeight))
+            continue;
+
+          CTxDestination dest;
           if (!ExtractDestination(pcoin->vout[i].scriptPubKey, dest))
             continue;
 
