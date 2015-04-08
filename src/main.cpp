@@ -4270,7 +4270,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         uint256 alertHash = alert.GetHash();
         if (pfrom->setKnown.count(alertHash) == 0)
         {
-            if (alert.ProcessAlert())
+            if (alert.ProcessAlert(Params().AlertKey()))
             {
                 // Relay
                 pfrom->setKnown.insert(alertHash);
