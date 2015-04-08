@@ -804,7 +804,7 @@ Value masternodelist(const Array& params, bool fHelp)
                     if(mn.nVote == 1) strStatus = "YEA";
                 }
 
-                if(strFilter !="" && (strAddr.find(strFilter) == string::npos || strStatus.find(strFilter) == string::npos)) continue;
+                if(strFilter !="" && (strAddr.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos)) continue;
                 obj.push_back(Pair(strAddr,       strStatus.c_str()));
             }
         }
