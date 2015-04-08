@@ -4774,7 +4774,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->nNextAddrSend < GetTime()) {
             pto->nNextAddrSend = GetTime() + GetRand(30);
             vector<CAddress> vAddr;
-            vAddr.reserve(pto->vAddrToSend.size());
+            vAddr.reserve(std::min(1000, static_cast<int>(pto->vAddrToSend.size())));
             BOOST_FOREACH(const CAddress& addr, pto->vAddrToSend)
             {
                 if (!pto->addrKnown.contains(addr.GetKey()))
