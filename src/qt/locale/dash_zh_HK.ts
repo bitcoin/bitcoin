@@ -4,19 +4,19 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Dash Core</source>
-        <translation>關於暗黑幣核心</translation>
+        <translation>關於達世幣核心</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;暗黑幣核心&lt;/b&gt; 版本</translation>
+        <translation>&lt;b&gt;達世幣核心&lt;/b&gt; 版本</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>版權 &amp;copy 為位元幣核心開發人員自西元 2009-2014年所有
-版權 &amp;copy 為暗黑幣核心開發人員自西元 2014-YYYY年所有</translation>
+版權 &amp;copy 為達世幣核心開發人員自西元 2014-YYYY年所有</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -49,7 +49,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Dash Core developers</source>
-        <translation>暗黑幣核心開發人員</translation>
+        <translation>達世幣核心開發人員</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -138,12 +138,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>這些是你要付款過去的暗黑幣位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
+        <translation>這些是你要付款過去的達世幣位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>這些是你用來收款的暗黑幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
+        <translation>這些是你用來收款的達世幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -278,8 +278,8 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
-        <translation>警告:如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去所有的暗黑幣了&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation>警告:如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去所有的達世幣了&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -295,7 +295,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>暗黑幣軟體現在要關閉，以完成加密過程。請注意，加密錢包不能完全防止惡意軟件入侵你的電腦盜取你的暗黑幣。</translation>
+        <translation>達世幣軟體現在要關閉，以完成加密過程。請注意，加密錢包不能完全防止惡意軟件入侵你的電腦盜取你的達世幣。</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -355,7 +355,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Dash Core</source>
-        <translation>暗黑幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -391,7 +391,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="235"/>
         <source>Send coins to a Dash address</source>
-        <translation>發送幣至暗黑幣地址</translation>
+        <translation>發送幣至達世幣地址</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -401,7 +401,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="242"/>
         <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>要求付款(生成二維碼和暗黑幣付款協議的 URI)</translation>
+        <translation>要求付款(生成二維碼和達世幣付款協議的 URI)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
@@ -427,12 +427,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="271"/>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>&amp;About Dash Core</source>
-        <translation>關於暗黑幣核心</translation>
+        <translation>關於達世幣核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="274"/>
         <source>Show information about Dash</source>
-        <translation>顯示暗黑幣的相關資訊</translation>
+        <translation>顯示達世幣的相關資訊</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="277"/>
@@ -453,7 +453,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="284"/>
         <source>Modify configuration options for Dash</source>
-        <translation>修改暗黑幣配置選項</translation>
+        <translation>修改達世幣配置選項</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="287"/>
@@ -519,7 +519,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>用暗黑幣位址簽署訊息來證明位址是你的</translation>
+        <translation>用達世幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
@@ -529,7 +529,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="305"/>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>驗證訊息是用來確定訊息是用指定的暗黑幣位址簽署的</translation>
+        <translation>驗證訊息是用來確定訊息是用指定的達世幣位址簽署的</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -599,7 +599,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Open a dash: URI or payment request</source>
-        <translation>打開暗黑幣：網頁或付款請求</translation>
+        <translation>打開達世幣：網頁或付款請求</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="324"/>
@@ -609,7 +609,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="325"/>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
-        <translation>打開暗黑幣核心的幫助信息以取得可使用的命令行列表</translation>
+        <translation>打開達世幣核心的幫助信息以取得可使用的命令行列表</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="361"/>
@@ -640,12 +640,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="493"/>
         <location filename="../bitcoingui.cpp" line="498"/>
         <source>Dash client</source>
-        <translation>暗黑幣客戶端</translation>
+        <translation>達世幣客戶端</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>%n 個運作中的暗黑幣網路連線</numerusform></translation>
+        <translation><numerusform>%n 個運作中的達世幣網路連線</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="655"/>
@@ -726,7 +726,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="755"/>
         <source>Dash</source>
-        <translation>暗黑幣</translation>
+        <translation>達世幣</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="769"/>
@@ -784,7 +784,7 @@ Address: %4
     <message>
         <location filename="../dash.cpp" line="449"/>
         <source>A fatal error occurred. Dash can no longer continue safely and will quit.</source>
-        <translation>發生嚴重錯誤。暗黑幣不能繼續安全操作，將退出。</translation>
+        <translation>發生嚴重錯誤。達世幣不能繼續安全操作，將退出。</translation>
     </message>
 </context>
 <context>
@@ -1181,17 +1181,17 @@ Address: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名發送已成功設置為一般(%1到2次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為一般(%1到2次循環)。你可以通過打開達世幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名發送已成功設置為高(%1到8次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為高(%1到8次循環)。你可以通過打開達世幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名發送已成功設置為最高(%1到16次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為最高(%1到16次循環)。你可以通過打開達世幣配置窗口來隨時修改。</translation>
     </message>
 </context>
 <context>
@@ -1244,7 +1244,7 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Dash address.</source>
-        <translation>輸入的地址&quot;%1&quot;不是有效的暗黑幣地址。</translation>
+        <translation>輸入的地址&quot;%1&quot;不是有效的達世幣地址。</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1295,12 +1295,12 @@ Address: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Dash Core - Command-line options</source>
-        <translation>暗黑幣核心 - 命令行選項</translation>
+        <translation>達世幣核心 - 命令行選項</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Dash Core</source>
-        <translation>暗黑幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1358,17 +1358,17 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Dash Core.</source>
-        <translation>歡迎來到暗黑幣核心。</translation>
+        <translation>歡迎來到達世幣核心。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Dash Core will store its data.</source>
-        <translation>因為這是程式第一次啓動，你可以選擇暗黑幣核心儲存資料的地方。</translation>
+        <translation>因為這是程式第一次啓動，你可以選擇達世幣核心儲存資料的地方。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>暗黑幣核心會下載並儲存一份暗黑幣區塊鏈的拷貝。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
+        <translation>達世幣核心會下載並儲存一份達世幣區塊鏈的拷貝。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1383,7 +1383,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Dash</source>
-        <translation>暗黑幣</translation>
+        <translation>達世幣</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1449,12 +1449,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Dash after logging in to the system.</source>
-        <translation>登錄系統後自動啟動暗黑幣程序</translation>
+        <translation>登錄系統後自動啟動達世幣程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Dash on system login</source>
-        <translation>系統登錄時啟動暗黑幣程序</translation>
+        <translation>系統登錄時啟動達世幣程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1494,7 +1494,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>保持匿名化的暗黑幣數</translation>
+        <translation>保持匿名化的達世幣數</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1544,7 +1544,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動對路由器打開暗黑幣客戶端端口。此項只在路由器支持UPnP時有效。</translation>
+        <translation>自動對路由器打開達世幣客戶端端口。此項只在路由器支持UPnP時有效。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1554,7 +1554,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Dash network through a SOCKS proxy.</source>
-        <translation>通過SOCKS代理鏈接暗黑幣網絡。</translation>
+        <translation>通過SOCKS代理鏈接達世幣網絡。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1629,7 +1629,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Dash.</source>
-        <translation>可以在這裡設定使用者介面的語言。這個設定在重啓暗黑幣軟體後才會生效。</translation>
+        <translation>可以在這裡設定使用者介面的語言。這個設定在重啓達世幣軟體後才會生效。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="524"/>
@@ -1651,7 +1651,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/optionsdialog.ui" line="572"/>
         <source>Whether to show Dash addresses in the transaction list or not.</source>
-        <translation>是否顯示交易列表中的暗黑幣地址。</translation>
+        <translation>是否顯示交易列表中的達世幣地址。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="575"/>
@@ -1748,7 +1748,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../forms/overviewpage.ui" line="953"/>
         <location filename="../forms/overviewpage.ui" line="1021"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>顯示的資訊可能是過期的。跟暗黑幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
+        <translation>顯示的資訊可能是過期的。跟達世幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1813,7 +1813,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DASH</source>
-        <translation>0 暗黑幣</translation>
+        <translation>0 達世幣</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
@@ -1823,7 +1823,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DASH / 0 Rounds</source>
-        <translation>0 暗黑幣 / 0 循環數</translation>
+        <translation>0 達世幣 / 0 循環數</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
@@ -1945,7 +1945,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation>正在進行混合...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
@@ -2065,7 +2065,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start dash: click-to-pay handler</source>
-        <translation>無法啟動暗黑幣程序：click-to-pay handler</translation>
+        <translation>無法啟動達世幣程序：click-to-pay handler</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2091,7 +2091,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation>鏈接無法被解析! 原因可能是無效的暗黑幣地址或輸入的鏈接有錯。</translation>
+        <translation>鏈接無法被解析! 原因可能是無效的達世幣地址或輸入的鏈接有錯。</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2152,7 +2152,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../dash.cpp" line="539"/>
         <location filename="../dash.cpp" line="552"/>
         <source>Dash</source>
-        <translation>暗黑幣</translation>
+        <translation>達世幣</translation>
     </message>
     <message>
         <location filename="../dash.cpp" line="526"/>
@@ -2177,12 +2177,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../dash.cpp" line="612"/>
         <source>Dash Core didn&apos;t yet exit safely...</source>
-        <translation>暗黑幣核心還未安全退出...</translation>
+        <translation>達世幣核心還未安全退出...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>输入暗黑币地址(如.
+        <translation>输入達世幣地址(如.
 XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
@@ -2355,7 +2355,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Welcome to the Dash RPC console.</source>
-        <translation>歡迎來到暗黑幣RPC控制台。</translation>
+        <translation>歡迎來到達世幣RPC控制台。</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="334"/>
@@ -2419,7 +2419,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到暗黑幣網路上。</translation>
+        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2904,7 +2904,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="635"/>
         <source>Warning: Invalid Dash address</source>
-        <translation>警告：無效的暗黑幣地址</translation>
+        <translation>警告：無效的達世幣地址</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="644"/>
@@ -2986,7 +2986,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation>附加在暗黑幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到暗黑幣網路上。</translation>
+        <translation>附加在達世幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到達世幣網路上。</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3021,7 +3021,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Dash Core is shutting down...</source>
-        <translation>暗黑幣核心正在關閉...</translation>
+        <translation>達世幣核心正在關閉...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3091,7 +3091,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Dash address</source>
-        <translation>簽署信息證明你擁有此暗黑幣地址</translation>
+        <translation>簽署信息證明你擁有此達世幣地址</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3127,7 +3127,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation>驗證信息用來確保此被簽署信息對應相對的暗黑幣地址</translation>
+        <translation>驗證信息用來確保此被簽署信息對應相對的達世幣地址</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
@@ -3147,7 +3147,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>輸入暗黑幣地址(如.
+        <translation>輸入達世幣地址(如.
 XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
@@ -3222,7 +3222,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Dash Core</source>
-        <translation>暗黑幣核心</translation>
+        <translation>達世幣核心</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
@@ -3237,7 +3237,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Dash Core developers</source>
-        <translation>暗黑幣核心開發人員</translation>
+        <translation>達世幣核心開發人員</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -3620,7 +3620,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation>暗黑發送</translation>
+        <translation>匿名發送</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3704,7 +3704,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation>暗黑發送</translation>
+        <translation>匿名發送</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -3971,7 +3971,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
-        <translation>無法獲得鎖定的數據目錄%s. 暗黑幣核心可能已經在運行。</translation>
+        <translation>無法獲得鎖定的數據目錄%s. 達世幣核心可能已經在運行。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="43"/>
@@ -3981,7 +3981,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>暗黑發送要使用相同的除名金額用來發送資金，你可能需要對更多的幣進行匿名處理。</translation>
+        <translation>匿名發送要使用相同的除名金額用來發送資金，你可能需要對更多的幣進行匿名處理。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
@@ -4096,7 +4096,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation>透過偶爾混合暗黑幣，並為暗黑發送持續提供流動性 (0-100，預設值 : 0 ，1=經常 ，收費高，100=不經常，收費低)</translation>
+        <translation>透過偶爾混合達世幣，並為匿名發送持續提供流動性 (0-100，預設值 : 0 ，1=經常 ，收費高，100=不經常，收費低)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="114"/>
@@ -4136,12 +4136,12 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
-        <translation>沒辦法繫結在這台電腦上的 %s 。暗黑幣核心可能已經在執行了。</translation>
+        <translation>沒辦法繫結在這台電腦上的 %s 。達世幣核心可能已經在執行了。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation>無法找到足夠的暗黑發送己除名資金用於本次交易。</translation>
+        <translation>無法找到足夠的匿名發送己除名資金用於本次交易。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="138"/>
@@ -4166,12 +4166,12 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Dash will not work properly.</source>
-        <translation>警告: 請檢查電腦日期和時間是否正確！暗黑幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
+        <translation>警告: 請檢查電腦日期和時間是否正確！達世幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>警告: 暗黑幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
+        <translation>警告: 達世幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="155"/>
@@ -4340,22 +4340,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="200"/>
         <source>Dash Core Daemon</source>
-        <translation>黑幣核心後台程序</translation>
+        <translation>達世幣核心後台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="201"/>
         <source>Dash Core RPC client version</source>
-        <translation>暗黑幣核心RPC客戶端版本</translation>
+        <translation>達世幣核心RPC客戶端版本</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="202"/>
         <source>Darksend is disabled.</source>
-        <translation>暗黑發送已禁用。</translation>
+        <translation>匿名發送已禁用。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation>暗黑發送選項 :</translation>
+        <translation>匿名發送選項 :</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="204"/>
@@ -4390,7 +4390,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"/>
+        <translation>正在降級並再次嘗試。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
@@ -4435,7 +4435,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
-        <translation>載入檔案 wallet.dat 時發生錯誤: 錢包需要更新的暗黑幣版本</translation>
+        <translation>載入檔案 wallet.dat 時發生錯誤: 錢包需要更新的達世幣版本</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="220"/>
@@ -4450,7 +4450,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="222"/>
         <source>Error recovering public key.</source>
-        <translation>恢復公鑰時發生錯誤</translation>
+        <translation>恢復公鑰時發生錯誤。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="223"/>
@@ -4550,7 +4550,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="242"/>
         <source>Generate coins (default: 0)</source>
-        <translation>生產暗黑幣 (預設值: 0)</translation>
+        <translation>生產達世幣 (預設值: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="243"/>
@@ -4605,7 +4605,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="253"/>
         <source>Initialization sanity check failed. Dash Core is shutting down.</source>
-        <translation>初始化時的基本檢查失敗了。暗黑幣核心將會關閉。</translation>
+        <translation>初始化時的基本檢查失敗了。達世幣核心將會關閉。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="254"/>
@@ -4685,7 +4685,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="269"/>
         <source>Keep N dash anonymized (default: 0)</source>
-        <translation>保持 N 個暗黑幣是匿名的 (預設值 : 0)</translation>
+        <translation>保持 N 個達世幣是匿名的 (預設值 : 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="270"/>
@@ -4705,7 +4705,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="273"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation>距離上一次成功進行暗黑發送的時間太短。</translation>
+        <translation>距離上一次成功進行匿名發送的時間太短。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="274"/>
@@ -4735,7 +4735,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
         <source>Loading masternode list...</source>
-        <translation type="unfinished"/>
+        <translation>正在加載主節點清單...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="280"/>
@@ -4930,7 +4930,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="318"/>
         <source>Send command to Dash Core</source>
-        <translation>向暗黑幣核心發送命令</translation>
+        <translation>向達世幣核心發送命令</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="319"/>
@@ -5070,7 +5070,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="346"/>
         <source>Start Dash Core Daemon</source>
-        <translation>啟動暗黑幣核心後台程序</translation>
+        <translation>啟動達世幣核心後台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="347"/>

@@ -4390,7 +4390,7 @@ Si el archivo no existe, créelo con permiso de lectura solamente del propietari
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"/>
+        <translation>Descargando e intentando de nuevo.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
