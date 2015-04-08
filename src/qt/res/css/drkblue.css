@@ -274,45 +274,23 @@ color:#333;
 
 QScrollBar { /* Scroll Bar */
 background-color:#ffffff;
+background:#e0e0e0;
 }
 
 QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
 border:1px solid #818181;
 border-left:0px;
-background:#333;
 width:17px;
-margin: 0px 0px 0px 0px;
 }
 
 QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
 border:1px solid #818181;
 border-top:0px;
-background:#333;
 height:17px;
-margin: 0px 0px 0px 0px;
 }
-
-
-QScrollBar::handle:vertical { /* Scroll Bar Slider - vertical */
-background:#e0e0e0;
-min-height:10px;
-}
-
-QScrollBar::handle:horizontal { /* Scroll Bar Slider - horizontal */
-background:#e0e0e0;
-min-width:10px;
-}
-
 
 QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
 background:#F8F6F6;
-}
-
-QScrollBar:up-arrow, QScrollBar:down-arrow { /* Up and Down Arrows */
-border:2px solid #333;
-width:3px;
-height:3px;
-background:#fff;
 }
 
 /*******************************************************/
