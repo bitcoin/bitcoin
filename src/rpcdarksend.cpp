@@ -596,7 +596,6 @@ Value masternode(const Array& params, bool fHelp)
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
 
-            CTxIn vin;
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
             CPubKey pubKeyMasternode;
@@ -635,7 +634,7 @@ Value masternode(const Array& params, bool fHelp)
             //send to all peers
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-                pnode->PushMessage("mvote", vin, vchMasterNodeSignature, nVote);
+                pnode->PushMessage("mvote", pmn->vin, vchMasterNodeSignature, nVote);
         }
 
         return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
