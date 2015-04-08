@@ -2069,6 +2069,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     hashContinue = uint256();
     nStartingHeight = -1;
     fGetAddr = false;
+    nNextAddrSend = GetTime() + GetRand(30);
     nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
     fRelayTxes = false;
     pfilter = new CBloomFilter();

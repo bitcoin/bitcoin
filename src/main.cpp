@@ -4780,8 +4780,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
         }
 
-        if (fSendTrickle)
-        {
+        if (pto->nNextAddrSend < GetTime()) {
+            pto->nNextAddrSend = GetTime() + GetRand(30);
             vector<CAddress> vAddr;
             vAddr.reserve(pto->vAddrToSend.size());
             BOOST_FOREACH(const CAddress& addr, pto->vAddrToSend)
