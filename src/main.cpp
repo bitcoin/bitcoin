@@ -4776,8 +4776,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         if (pto->nNextLocalAddrSend < GetTime()) {
             AdvertizeLocal(pto);
-            pto->setAddrKnown.clear();
             pto->nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
+        }
+        
+        if (pto->nNextClearSetKnown < GetTime()) {
+            pto->setAddrKnown.clear();
+            pto->nNextClearSetKnown = GetTime() + GetRand(12 * 60 * 60);
         }
 
         if (pto->nNextAddrSend < GetTime()) {

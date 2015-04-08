@@ -2071,6 +2071,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fGetAddr = false;
     nNextAddrSend = GetTime() + GetRand(30);
     nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
+    nNextClearSetKnown = GetTime() + GetRand(12 * 60 * 60);
     fRelayTxes = false;
     pfilter = new CBloomFilter();
     nPingNonceSent = 0;
