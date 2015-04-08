@@ -150,6 +150,47 @@ class WalletTest (BitcoinTestFramework):
         sync_mempools(self.nodes)
 
         assert(txid1 in self.nodes[3].getrawmempool())
+        
+        
+        #do some -walletbroadcast tests
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.nodes = start_nodes(3, self.options.tmpdir, [["-walletbroadcast=0"],["-walletbroadcast=0"],["-walletbroadcast=0"]])
+        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes_bi(self.nodes,1,2)
+        connect_nodes_bi(self.nodes,0,2)
+        self.sync_all()
 
+        txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2);
+        txObjNotBroadcasted = self.nodes[0].gettransaction(txIdNotBroadcasted)
+        self.nodes[1].setgenerate(True, 1) #mine a block, tx should not be in there
+        self.sync_all()
+        assert_equal(self.nodes[2].getbalance(), Decimal('59.99800000')); #should not be changed because tx was not broadcasted
+        
+        #now broadcast from another node, mine a block, sync, and check the balance
+        self.nodes[1].sendrawtransaction(txObjNotBroadcasted['hex'])
+        self.nodes[1].setgenerate(True, 1)
+        self.sync_all()
+        txObjNotBroadcasted = self.nodes[0].gettransaction(txIdNotBroadcasted)
+        assert_equal(self.nodes[2].getbalance(), Decimal('61.99800000')); #should not be
+        
+        #create another tx
+        txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2);
+        
+        #restart the nodes with -walletbroadcast=1
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.nodes = start_nodes(3, self.options.tmpdir)
+        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes_bi(self.nodes,1,2)
+        connect_nodes_bi(self.nodes,0,2)
+        sync_blocks(self.nodes)
+        
+        self.nodes[0].setgenerate(True, 1)
+        sync_blocks(self.nodes)
+        
+        #tx should be added to balance because after restarting the nodes tx should be broadcastet
+        assert_equal(self.nodes[2].getbalance(), Decimal('63.99800000')); #should not be
+        
 if __name__ == '__main__':
     WalletTest ().main ()
