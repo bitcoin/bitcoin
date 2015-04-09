@@ -315,6 +315,11 @@ height:3px;
 background:#fff;
 }
 
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { /* Remove Up and Down Arrows from UI */
+width:0px;
+height:0px;
+}
+
 /*******************************************************/
 
 /* DIALOG BOXES */
