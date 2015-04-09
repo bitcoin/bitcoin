@@ -346,12 +346,6 @@ void CMPMetaDEx::Set(const string &sa, int b, unsigned int c, uint64_t nValue, u
   subaction = suba;
 }
 
-CMPMetaDEx::CMPMetaDEx(const string &addr, int b, unsigned int c, uint64_t nValue, unsigned int cd, uint64_t ad, const uint256 &tx, unsigned int i, unsigned char suba, uint64_t lfors)
-{
-  still_left_forsale = lfors;
-  Set(addr, b,c,nValue,cd,ad,tx,i,suba);
-}
-
 std::string CMPMetaDEx::ToString() const
 {
   return strprintf("%s:%34s in %d/%03u, txid: %s , trade #%u %s for #%u %s",
@@ -721,7 +715,7 @@ AcceptMap::iterator my_it = my_accepts.begin();
 }
 
 // pretty much directly linked to the ADD TX21 command off the wire
-int mastercore::MetaDEx_ADD(const string &sender_addr, unsigned int prop, uint64_t amount, int block, unsigned int property_desired, uint64_t amount_desired, const uint256 &txid, unsigned int idx)
+int mastercore::MetaDEx_ADD(const std::string& sender_addr, unsigned int prop, uint64_t amount, int block, unsigned int property_desired, uint64_t amount_desired, const uint256& txid, unsigned int idx)
 {
 int rc = METADEX_ERROR -1;
 
@@ -816,7 +810,7 @@ int rc = METADEX_ERROR -1;
   return rc;
 }
 
-int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256 txid, unsigned int block, const string &sender_addr, unsigned int prop, uint64_t amount, unsigned int property_desired, uint64_t amount_desired)
+int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned int prop, uint64_t amount, unsigned int property_desired, uint64_t amount_desired)
 {
 int rc = METADEX_ERROR -20;
 CMPMetaDEx mdex(sender_addr, 0, prop, amount, property_desired, amount_desired, 0, 0, CMPTransaction::CANCEL_AT_PRICE);
@@ -874,7 +868,7 @@ const CMPMetaDEx *p_mdex = NULL;
   return rc;
 }
 
-int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256 txid, unsigned int block, const string &sender_addr, unsigned int prop, unsigned int property_desired)
+int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned int prop, unsigned int property_desired)
 {
 int rc = METADEX_ERROR -30;
 md_PricesMap *prices = get_Prices(prop);
@@ -928,9 +922,9 @@ const CMPMetaDEx *p_mdex = NULL;
 }
 
 // scan the orderbook and remove everything for an address
-int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256 txid, unsigned int block, const string &sender_addr)
+int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned char ecosystem)
 {
-int rc = METADEX_ERROR -40;
+  int rc = METADEX_ERROR -40;
 
   file_log("%s()\n", __FUNCTION__);
 
@@ -941,6 +935,10 @@ int rc = METADEX_ERROR -40;
   for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
   {
     unsigned int prop = my_it->first;
+
+    // skip property, if it is not in the expected ecosystem
+    if (isMainEcosystemProperty(ecosystem) && !isMainEcosystemProperty(prop)) continue;
+    if (isTestEcosystemProperty(ecosystem) && !isTestEcosystemProperty(prop)) continue;
 
     file_log(" ## property: %u\n", prop);
     md_PricesMap & prices = my_it->second;
@@ -956,7 +954,7 @@ int rc = METADEX_ERROR -40;
       {
         file_log("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) , it->ToString());
 
-        if ((it->getAddr() != sender_addr))
+        if (it->getAddr() != sender_addr)
         {
           ++it;
           continue;

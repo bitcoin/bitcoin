@@ -845,7 +845,6 @@ int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
   return tmpPropId;
 }
 
-#ifndef DISABLE_METADEX
 Value getorderbook_MP(const Array& params, bool fHelp)
 {
    if (fHelp || params.size() < 1)
@@ -1035,7 +1034,6 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
   
   return response;
 }
-#endif
 
 Value getactivedexsells_MP(const Array& params, bool fHelp)
 {

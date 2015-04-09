@@ -104,7 +104,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getallbalancesforid_MP", 0 },
     { "listblocktransactions_MP", 0 },
     { "setautocommit_OMNI", 0 },
-#if 0 // disabled for pre meta DEx release
     { "trade_MP", 2 },
     { "trade_MP", 4 },
     { "trade_MP", 5 },
@@ -115,7 +114,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gettradessince_MP", 2 },
     { "gettradehistory_MP", 1 },
     { "gettradehistory_MP", 2 },
-#endif
     // omni_rpctx
     { "send_OMNI", 2 },
     { "sendsto_OMNI", 1 },
