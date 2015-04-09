@@ -138,42 +138,49 @@ void MetaDExDialog::OrderRefresh()
     if(pending) { ui->pendingLabel->setVisible(true); } else { ui->pendingLabel->setVisible(false); }
 }
 
+// Executed when the switch market button is clicked
 void MetaDExDialog::SwitchMarket()
 {
+    // perform some checks on the input data before attempting to switch market
     uint64_t searchPropertyId = 0;
-    // first let's check if we have a searchText, if not do nothing
     string searchText = ui->switchLineEdit->text().toStdString();
-    if (searchText.empty()) return;
-
-    // try seeing if we have a numerical search string, if so treat it as a property ID search
-    try
-    {
+    // check for empty field
+    if (searchText.empty()) {
+        QMessageBox::critical( this, "Unable to switch market",
+        "You must enter a property ID to switch the market." );
+        return;
+    }
+    // check that we can cast the field to numerical OK
+    try {
         searchPropertyId = boost::lexical_cast<int64_t>(searchText);
+    } catch(const boost::bad_lexical_cast &e) { // error casting, searchText likely not numerical
+        QMessageBox::critical( this, "Unable to switch market",
+        "The property ID entered was not a valid number." );
+        return;
     }
-    catch(const boost::bad_lexical_cast &e) { return; } // bad cast to number
+    // check that the value is in range
+    if ((searchPropertyId > 0) && (searchPropertyId < 4294967290)) {
+        QMessageBox::critical( this, "Unable to switch market",
+        "The property ID entered is outside the allowed range." );
+        return;
+    }
+    // check that not trying to trade primary for primary (eg market 1 or 2)
+    if ((searchPropertyId == 1) || (searchPropertyId == 2)) {
+        QMessageBox::critical( this, "Unable to switch market",
+        "You cannot trade MSC/TMSC against itself." );
+        return;
+    }
+    // check that the property exists
+    bool spExists = _my_sps->hasSP(searchPropertyId);
+    if (!spExists) {
+        QMessageBox::critical( this, "Unable to switch market",
+        "The property ID entered was not found." );
+        return;
+    }
 
-    if ((searchPropertyId > 0) && (searchPropertyId < 4294967290)) // sanity check
-    {
-        // check if trying to trade against self
-        if ((searchPropertyId == 1) || (searchPropertyId == 2))
-        {
-            //todo add property cannot be traded against self messgevox
-            return;
-        }
-        // check if property exists
-        bool spExists = _my_sps->hasSP(searchPropertyId);
-        if (!spExists)
-        {
-            //todo add property not found messagebox
-            return;
-        }
-        else
-        {
-            global_metadex_market = searchPropertyId;
-            FullRefresh();
-        }
-    }
-    OrderRefresh();
+    // with checks complete change the market to the entered property ID and perform a full refresh
+    global_metadex_market = searchPropertyId;
+    FullRefresh();
 }
 
 
