@@ -4841,9 +4841,12 @@ bool SendMessages(CNode* pto)
         // Message: inventory
         //
         vector<CInv> vInv, vInvWait;
+        int64_t nNow = GetTime();
 
         vInv.reserve(1000);
-        vInvWait.reserve(pto->vInventoryToSend.size());
+        
+        if (pto->nNextInvSend < nNow)
+            vInvWait.reserve(pto->vInventoryToSend.size());
 
         {
             LOCK(pto->cs_inventory);
@@ -4866,7 +4869,7 @@ bool SendMessages(CNode* pto)
                     }
                     case MSG_TX:
                     {
-                        if (pto->nNextInvSend < GetTime() || pto->fWhitelisted) {
+                        if (pto->nNextInvSend < nNow || pto->fWhitelisted) {
                             if (pto->setInventoryKnown.insert(inv).second) {
                                 vInv.push_back(inv);
                                 if (vInv.size() >= 1000) {
@@ -4897,12 +4900,12 @@ bool SendMessages(CNode* pto)
         if (!vInv.empty())
             pto->PushMessage("inv", vInv);
 
-        if (pto->nNextInvSend < GetTime())
-            pto->nNextInvSend = GetTime() + GetRand(10);
+        if (pto->nNextInvSend < nNow)
+            pto->nNextInvSend = nNow + GetRand(10);
 
         // Detect whether we're stalling
-        int64_t nNow = GetTimeMicros();
-        if (!pto->fDisconnect && state.nStallingSince && state.nStallingSince < nNow - 1000000 * BLOCK_STALLING_TIMEOUT) {
+        int64_t nNowMicros = GetTimeMicros();
+        if (!pto->fDisconnect && state.nStallingSince && state.nStallingSince < nNowMicros - 1000000 * BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
@@ -4921,12 +4924,12 @@ bool SendMessages(CNode* pto)
         // more quickly than once every 5 minutes, then we'll shorten the download window for this block).
         if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0) {
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
-            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNow, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
+            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNowMicros, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
             if (queuedBlock.nTimeDisconnect > nTimeoutIfRequestedNow) {
                 LogPrint("net", "Reducing block download timeout for peer=%d block=%s, orig=%d new=%d\n", pto->id, queuedBlock.hash.ToString(), queuedBlock.nTimeDisconnect, nTimeoutIfRequestedNow);
                 queuedBlock.nTimeDisconnect = nTimeoutIfRequestedNow;
             }
-            if (queuedBlock.nTimeDisconnect < nNow) {
+            if (queuedBlock.nTimeDisconnect < nNowMicros) {
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
                 pto->fDisconnect = true;
             }
@@ -4948,7 +4951,7 @@ bool SendMessages(CNode* pto)
             }
             if (state.nBlocksInFlight == 0 && staller != -1) {
                 if (State(staller)->nStallingSince == 0) {
-                    State(staller)->nStallingSince = nNow;
+                    State(staller)->nStallingSince = nNowMicros;
                     LogPrint("net", "Stall started peer=%d\n", staller);
                 }
             }
@@ -4957,7 +4960,7 @@ bool SendMessages(CNode* pto)
         //
         // Message: getdata (non-blocks)
         //
-        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
+        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNowMicros)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
             if (!AlreadyHave(inv))
