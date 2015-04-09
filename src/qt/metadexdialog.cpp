@@ -159,7 +159,7 @@ void MetaDExDialog::SwitchMarket()
         return;
     }
     // check that the value is in range
-    if ((searchPropertyId > 0) && (searchPropertyId < 4294967290)) {
+    if ((searchPropertyId < 0) || (searchPropertyId > 4294967290)) {
         QMessageBox::critical( this, "Unable to switch market",
         "The property ID entered is outside the allowed range." );
         return;
