@@ -4847,6 +4847,9 @@ bool SendMessages(CNode* pto)
 
         {
             LOCK(pto->cs_inventory);
+            
+            // TODO it would be sufficient to walk vInventoryToSend randomly, shuffling is relatively inefficient
+            std::random_shuffle(pto->vInventoryToSend.begin(), pto->vInventoryToSend.end());
 
             BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend) {
                 // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
