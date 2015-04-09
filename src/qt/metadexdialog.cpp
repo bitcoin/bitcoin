@@ -142,7 +142,7 @@ void MetaDExDialog::OrderRefresh()
 void MetaDExDialog::SwitchMarket()
 {
     // perform some checks on the input data before attempting to switch market
-    uint64_t searchPropertyId = 0;
+    int64_t searchPropertyId = 0;
     string searchText = ui->switchLineEdit->text().toStdString();
     // check for empty field
     if (searchText.empty()) {
@@ -194,133 +194,98 @@ void MetaDExDialog::sellClicked(int row, int col)
 printf("clickedselloffer\n");
 }
 
+// This function adds a row to the buy or sell offer list
+void MetaDExDialog::AddRow(bool buyList, bool includesMe, const string& price, const string& available, const string& total)
+{
+    int workingRow;
+    if (buyList) {
+        workingRow = ui->buyList->rowCount();
+        ui->buyList->insertRow(workingRow);
+    } else {
+        workingRow = ui->sellList->rowCount();
+        ui->sellList->insertRow(workingRow);
+    }
+    QTableWidgetItem *priceCell = new QTableWidgetItem(QString::fromStdString(price));
+    QTableWidgetItem *availableCell = new QTableWidgetItem(QString::fromStdString(available));
+    QTableWidgetItem *totalCell = new QTableWidgetItem(QString::fromStdString(total));
+    priceCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+    availableCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+    totalCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+    if(includesMe) {
+        QFont font;
+        font.setBold(true);
+        priceCell->setFont(font);
+        availableCell->setFont(font);
+        totalCell->setFont(font);
+    }
+    if (buyList) {
+        ui->buyList->setItem(workingRow, 0, priceCell);
+        ui->buyList->setItem(workingRow, 1, availableCell);
+        ui->buyList->setItem(workingRow, 2, totalCell);
+    } else {
+        ui->sellList->setItem(workingRow, 0, priceCell);
+        ui->sellList->setItem(workingRow, 1, availableCell);
+        ui->sellList->setItem(workingRow, 2, totalCell);
+    }
+}
+
+// This function loops through the MetaDEx and updates the list of sell offers
 void MetaDExDialog::UpdateSellOffers()
 {
-    ui->sellList->clear();
-    int rowcount = 0;
+    ui->sellList->setRowCount(0);
     bool testeco = isTestEcosystemProperty(global_metadex_market);
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-    {
-        // look for the property
-        if (my_it->first != global_metadex_market) { continue; }
-
-        // loop prices and list any sells for the right pair
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if (my_it->first != global_metadex_market) { continue; } // not the property we're looking for, don't waste any more work
         md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-        {
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
             //XDOUBLE price = (it->first);
-            int64_t available = 0;
-            int64_t total = 0;
+            int64_t available = 0, total = 0;
             bool includesMe = false;
             md_Set & indexes = (it->second);
-            // loop through each entry and sum up any sells for the right pair
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-            {
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
                 CMPMetaDEx obj = *it;
-                if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) )
-                {
+                if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) ) {
                     available += obj.getAmountForSale();
                     total += obj.getAmountDesired();
                     if(IsMyAddress(obj.getAddr())) includesMe = true;
                 }
             }
-            // done checking this price, if there are any available/total add to pricebook
-            if ((available > 0) && (total > 0))
-            {
-                // add to pricebook
+            if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                 double price = (double)total/(double)available;
-                QString pstr = QString::fromStdString(FormatPriceMP(price)); //(strprintf("%20.10lf",price));//FormatDivisibleAmount(price));
-                QString tstr = QString::fromStdString(FormatDivisibleShortMP(available));
-                QString mstr = QString::fromStdString(FormatDivisibleShortMP(total));
-                if (!ui->sellList) { printf("metadex dialog error\n"); return; }
-                ui->sellList->setRowCount(rowcount+2);
-                ui->sellList->setItem(rowcount, 0, new QTableWidgetItem(pstr));
-                ui->sellList->setItem(rowcount, 1, new QTableWidgetItem(tstr));
-                ui->sellList->setItem(rowcount, 2, new QTableWidgetItem(mstr));
-                ui->sellList->item(rowcount, 0)->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-                ui->sellList->item(rowcount, 1)->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-                ui->sellList->item(rowcount, 2)->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-
-                if(includesMe)
-                {
-                    QFont font;
-                    font.setBold(true);
-                    ui->sellList->item(rowcount, 0)->setFont(font);
-                    ui->sellList->item(rowcount, 1)->setFont(font);
-                    ui->sellList->item(rowcount, 2)->setFont(font);
-                }
-                rowcount += 1;
+                AddRow(false, includesMe, FormatPriceMP(price), FormatDivisibleShortMP(available), FormatDivisibleShortMP(total));
             }
         }
     }
-    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
-    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    if (!testeco) { ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
 }
 
 void MetaDExDialog::UpdateBuyOffers()
 {
-    ui->buyList->clear();
-    int rowcount = 0;
+    ui->buyList->setRowCount(0);
     bool testeco = isTestEcosystemProperty(global_metadex_market);
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-    {
-        // look for the property
-        unsigned int mapPropertyId = my_it->first;
-        if ( ((testeco) && (mapPropertyId != 2)) || ((!testeco) && (mapPropertyId != 1)) ) continue;
-
-        // loop prices and list any sells for the right pair
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC))) continue; // not the property we're looking for, don't waste any more work
         md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-        {
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
             //XDOUBLE price = (1/it->first);
             double available = 0;
             double total = 0;
             bool includesMe = false;
             md_Set & indexes = (it->second);
-            // loop through each entry and sum up any sells for the right pair
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-            {
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 CMPMetaDEx obj = *it;
-                if(obj.getDesProperty()==global_metadex_market)
-                {
+                if(obj.getDesProperty()==global_metadex_market) {
                     available += obj.getAmountDesired();
                     total += obj.getAmountForSale();
                     if(IsMyAddress(obj.getAddr())) includesMe = true;
                 }
             }
-            // done checking this price, if there are any available/total add to pricebook
-            if ((available > 0) && (total > 0))
-            {
-                // add to pricebook
+            if ((available > 0) && (total > 0)) {
                 double price = (double)total/(double)available;
-                QString pstr = QString::fromStdString(FormatPriceMP(price));
-                QString tstr = QString::fromStdString(FormatDivisibleShortMP(available));
-                QString mstr = QString::fromStdString(FormatDivisibleShortMP(total));
-                if (!ui->buyList) { printf("metadex dialog error\n"); return; }
-                ui->buyList->setRowCount(rowcount+2);
-                ui->buyList->setItem(rowcount, 0, new QTableWidgetItem(pstr));
-                ui->buyList->setItem(rowcount, 1, new QTableWidgetItem(tstr));
-                ui->buyList->setItem(rowcount, 2, new QTableWidgetItem(mstr));
-                ui->buyList->item(rowcount, 0)->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-                ui->buyList->item(rowcount, 1)->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-                ui->buyList->item(rowcount, 2)->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-
-                if(includesMe)
-                {
-                    QFont font;
-                    font.setBold(true);
-                    ui->buyList->item(rowcount, 0)->setFont(font);
-                    ui->buyList->item(rowcount, 1)->setFont(font);
-                    ui->buyList->item(rowcount, 2)->setFont(font);
-                }
-                rowcount += 1;
+                AddRow(true, includesMe, FormatPriceMP(price), FormatDivisibleShortMP(available), FormatDivisibleShortMP(total));
             }
         }
     }
-    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
-    ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    if (!testeco) { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
+
 }
 
 // This function updates the balance for the currently selected sell address
@@ -393,6 +358,12 @@ void MetaDExDialog::FullRefresh()
     ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId))));
     ui->sellButton->setText("Sell SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
     ui->buyButton->setText("Buy SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
+    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
+    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
+    if (!testeco) { ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
+    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
+    ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
+    if (!testeco) { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
 
     // populate buy and sell addresses
     for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
@@ -448,7 +419,6 @@ void MetaDExDialog::buyTrade()
 {
     sendTrade(false);
 }
-
 
 void MetaDExDialog::buyRecalc()
 {

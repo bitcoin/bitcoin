@@ -31,6 +31,7 @@ class MetaDExDialog : public QDialog
 public:
     void FullRefresh();
     void SwitchMarket();
+    void AddRow(bool buyList, bool includesMe, const std::string& price, const std::string& available, const std::string& total);
     void UpdateSellAddressBalance();
     void UpdateBuyAddressBalance();
     void UpdateSellOffers();
