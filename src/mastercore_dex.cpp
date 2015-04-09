@@ -346,12 +346,6 @@ void CMPMetaDEx::Set(const string &sa, int b, unsigned int c, uint64_t nValue, u
   subaction = suba;
 }
 
-CMPMetaDEx::CMPMetaDEx(const string &addr, int b, unsigned int c, uint64_t nValue, unsigned int cd, uint64_t ad, const uint256 &tx, unsigned int i, unsigned char suba, uint64_t lfors)
-{
-  still_left_forsale = lfors;
-  Set(addr, b,c,nValue,cd,ad,tx,i,suba);
-}
-
 std::string CMPMetaDEx::ToString() const
 {
   return strprintf("%s:%34s in %d/%03u, txid: %s , trade #%u %s for #%u %s",

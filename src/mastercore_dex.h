@@ -61,12 +61,15 @@ public:
   uint64_t getOfferAmountOriginal() const { return offer_amount_original; }
   uint64_t getBTCDesiredOriginal() const { return BTC_desired_original; }
 
-  CMPOffer():offerBlock(0),offer_amount_original(0),property(0),BTC_desired_original(0),min_fee(0),blocktimelimit(0),txid(0)
+  CMPOffer()
+      : offerBlock(0), offer_amount_original(0), property(0), BTC_desired_original(0), min_fee(0), blocktimelimit(0),
+        txid(0), subaction(0)
   {
   }
 
-  CMPOffer(int b, uint64_t a, unsigned int cu, uint64_t d, uint64_t fee, unsigned char btl, const uint256 &tx)
-   :offerBlock(b),offer_amount_original(a),property(cu),BTC_desired_original(d),min_fee(fee),blocktimelimit(btl),txid(tx)
+  CMPOffer(int b, uint64_t a, unsigned int cu, uint64_t d, uint64_t fee, unsigned char btl, const uint256& tx)
+      : offerBlock(b), offer_amount_original(a), property(cu), BTC_desired_original(d), min_fee(fee), blocktimelimit(btl),
+        txid(tx), subaction(0)
   {
     if (msc_debug_dex) file_log("%s(%lu): %s , line %d, file: %s\n", __FUNCTION__, a, txid.GetHex(), __LINE__, __FILE__);
   }
@@ -203,12 +206,9 @@ private:
   uint64_t amount_forsale; // the amount for sale specified when the offer was placed
   unsigned int desired_property;
   int64_t amount_desired;
-
   uint64_t still_left_forsale;
-
   unsigned char subaction;
-
-  string    addr;
+  std::string addr;
 
 public:
   uint256 getHash() const { return txid; }
@@ -246,13 +246,19 @@ public:
   }
 
   // needed only by the RPC functions
-  CMPMetaDEx():block(0),txid(0),idx(0),property(0),amount_forsale(0),desired_property(0),amount_desired(0),still_left_forsale(0),subaction(0)
+  // needed only by the RPC functions
+  CMPMetaDEx()
+      : block(0), txid(0), idx(0), property(0), amount_forsale(0), desired_property(0), amount_desired(0),
+        still_left_forsale(0), subaction(0)
   {
-    still_left_forsale = 0;
-    addr.empty();
   }
 
-  CMPMetaDEx(const string &, int, unsigned int, uint64_t, unsigned int, uint64_t, const uint256 &, unsigned int, unsigned char, uint64_t lfors = 0);
+  CMPMetaDEx(const std::string& addr, int b, unsigned int c, uint64_t nValue, unsigned int cd, uint64_t ad,
+             const uint256& tx, unsigned int i, unsigned char suba, uint64_t lfors = 0)
+      : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
+        still_left_forsale(lfors), subaction(suba), addr(addr)
+  {
+  }
 
   void Set(const string &, int, unsigned int, uint64_t, unsigned int, uint64_t, const uint256 &, unsigned int, unsigned char);
 
