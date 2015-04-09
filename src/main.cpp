@@ -4852,19 +4852,36 @@ bool SendMessages(CNode* pto)
             std::random_shuffle(pto->vInventoryToSend.begin(), pto->vInventoryToSend.end());
 
             BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend) {
-                // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
-                if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK) {
-                    // returns true if wasn't already contained in the set
-                    if (pto->setInventoryKnown.insert(inv).second) {
-                        vInv.push_back(inv);
-                        pto->PushMessage("inv", vInv);
-                        vInv.clear();
+                switch(inv.type) {
+                    case MSG_BLOCK:
+                    case MSG_FILTERED_BLOCK:
+                    {
+                        // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
+                        if (pto->setInventoryKnown.insert(inv).second) {
+                            vInv.push_back(inv);
+                            pto->PushMessage("inv", vInv);
+                            vInv.clear();
+                        }
+                        break;
                     }
-                }
+                    case MSG_TX:
+                    {
+                        if (pto->nNextInvSend < GetTime() || pto->fWhitelisted) {
+                            if (pto->setInventoryKnown.insert(inv).second) {
+                                vInv.push_back(inv);
+                                if (vInv.size() >= 1000) {
+                                    pto->PushMessage("inv", vInv);
+                                    vInv.clear();
+                                }
+                            }
+                        }
+                        else
+                            vInvWait.push_back(inv);
 
-                if (inv.type == MSG_TX && (pto->nNextInvSend < GetTime() || pto->fWhitelisted)) {
-                    // returns true if wasn't already contained in the set
-                    if (pto->setInventoryKnown.insert(inv).second) {
+                        break;
+                    }
+                    default:
+                    {
                         vInv.push_back(inv);
                         if (vInv.size() >= 1000) {
                             pto->PushMessage("inv", vInv);
@@ -4872,18 +4889,16 @@ bool SendMessages(CNode* pto)
                         }
                     }
                 }
-                else
-                    vInvWait.push_back(inv);
             }
 
             pto->vInventoryToSend = vInvWait;
         }
-        
-        if (pto->nNextInvSend < GetTime())
-            pto->nNextInvSend = GetTime() + GetRand(10);
-        
+
         if (!vInv.empty())
             pto->PushMessage("inv", vInv);
+
+        if (pto->nNextInvSend < GetTime())
+            pto->nNextInvSend = GetTime() + GetRand(10);
 
         // Detect whether we're stalling
         int64_t nNow = GetTimeMicros();
