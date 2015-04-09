@@ -323,49 +323,28 @@ void MetaDExDialog::UpdateBuyOffers()
     if (!testeco) { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
 }
 
-void MetaDExDialog::UpdateSellAddress()
+// This function updates the balance for the currently selected sell address
+void MetaDExDialog::UpdateSellAddressBalance()
 {
-    unsigned int propertyId = global_metadex_market;
-    bool divisible = isPropertyDivisible(propertyId);
     QString currentSetSellAddress = ui->sellAddressCombo->currentText();
-    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
-    string labStr;
-    if (divisible)
-    {
-        labStr = "Your balance: " + FormatDivisibleMP(balanceAvailable) + " SPT";
-    }
-    else
-    {
-        labStr = "Your balance: " + FormatIndivisibleMP(balanceAvailable) + " SPT";
-    }
-    QString qLabStr = QString::fromStdString(labStr);
-    ui->yourSellBalanceLabel->setText(qLabStr);
-}
-
-void MetaDExDialog::UpdateBuyAddress()
-{
     unsigned int propertyId = global_metadex_market;
-    bool testeco = false;
-    if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
-    QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
-    int64_t balanceAvailable;
-    string tokenStr;
-    if (testeco)
-    {
-        balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), OMNI_PROPERTY_TMSC);
-        tokenStr = " TMSC";
-    }
-    else
-    {
-        balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), OMNI_PROPERTY_MSC);
-        tokenStr = " MSC";
-
-    }
-    string labStr = "Your balance: " + FormatDivisibleMP(balanceAvailable) + tokenStr;
-    QString qLabStr = QString::fromStdString(labStr);
-    ui->yourBuyBalanceLabel->setText(qLabStr);
+    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
+    string sellBalStr;
+    if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
+    ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
 }
 
+// This function updates the balance for the currently selected buy address
+void MetaDExDialog::UpdateBuyAddressBalance()
+{
+    QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
+    unsigned int propertyId = OMNI_PROPERTY_MSC;
+    if (global_metadex_market >= TEST_ECO_PROPERTY_1) propertyId = OMNI_PROPERTY_TMSC;
+    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
+    ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
+}
+
+// This function performs a full refresh of all elements - for example when switching markets
 void MetaDExDialog::FullRefresh()
 {
     // populate market information
@@ -437,8 +416,8 @@ void MetaDExDialog::FullRefresh()
     if (buyIdx != -1) { ui->buyAddressCombo->setCurrentIndex(buyIdx); }
 
     // update the balances for the buy and sell addreses
-    UpdateSellAddress();
-    UpdateBuyAddress();
+    UpdateBuyAddressBalance();
+    UpdateSellAddressBalance();
 
     // update the buy and sell offers
     UpdateBuyOffers();
@@ -447,12 +426,12 @@ void MetaDExDialog::FullRefresh()
 
 void MetaDExDialog::buyAddressComboBoxChanged(int idx)
 {
-    UpdateBuyAddress();
+    UpdateBuyAddressBalance();
 }
 
 void MetaDExDialog::sellAddressComboBoxChanged(int idx)
 {
-    UpdateSellAddress();
+    UpdateSellAddressBalance();
 }
 
 void MetaDExDialog::switchButtonClicked()

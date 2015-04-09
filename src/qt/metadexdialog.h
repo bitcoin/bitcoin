@@ -31,8 +31,8 @@ class MetaDExDialog : public QDialog
 public:
     void FullRefresh();
     void SwitchMarket();
-    void UpdateSellAddress();
-    void UpdateBuyAddress();
+    void UpdateSellAddressBalance();
+    void UpdateBuyAddressBalance();
     void UpdateSellOffers();
     void UpdateBuyOffers();
     explicit MetaDExDialog(QWidget *parent = 0);
