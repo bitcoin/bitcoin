@@ -40,14 +40,14 @@ class WalletTest (BitcoinTestFramework):
     def run_test (self):
         print "Mining blocks..."
 
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
 
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['immature_balance'], 50)
         assert_equal(walletinfo['balance'], 0)
 
         self.sync_all()
-        self.nodes[1].setgenerate(True, 101)
+        self.nodes[1].generate(101)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -63,11 +63,11 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(walletinfo['immature_balance'], 0)
 
         # Have node0 mine a block, thus they will collect their own fee. 
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
 
         # Have node1 generate 100 blocks (so node0 can recover the fee)
-        self.nodes[1].setgenerate(True, 100)
+        self.nodes[1].generate(100)
         self.sync_all()
 
         # node0 should end up with 100 btc in block rewards plus fees, but
@@ -96,7 +96,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], True)
 
         # Have node1 mine a block to confirm transactions:
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 0)
@@ -107,28 +107,28 @@ class WalletTest (BitcoinTestFramework):
         address = self.nodes[0].getnewaddress("test")
         self.nodes[2].settxfee(Decimal('0.001'))
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
-        self.nodes[2].setgenerate(True, 1)
+        self.nodes[2].generate(1)
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), Decimal('89.99900000'))
         assert_equal(self.nodes[0].getbalance(), Decimal('10.00000000'))
 
         # Send 10 BTC with subtract fee from amount
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", True)
-        self.nodes[2].setgenerate(True, 1)
+        self.nodes[2].generate(1)
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), Decimal('79.99900000'))
         assert_equal(self.nodes[0].getbalance(), Decimal('19.99900000'))
 
         # Sendmany 10 BTC
         txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [])
-        self.nodes[2].setgenerate(True, 1)
+        self.nodes[2].generate(1)
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), Decimal('69.99800000'))
         assert_equal(self.nodes[0].getbalance(), Decimal('29.99900000'))
 
         # Sendmany 10 BTC with subtract fee from amount
         txid = self.nodes[2].sendmany('from1', {address: 10}, 0, "", [address])
-        self.nodes[2].setgenerate(True, 1)
+        self.nodes[2].generate(1)
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), Decimal('59.99800000'))
         assert_equal(self.nodes[0].getbalance(), Decimal('39.99800000'))

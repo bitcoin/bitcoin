@@ -28,12 +28,12 @@ class InvalidateTest(BitcoinTestFramework):
     def run_test(self):
         print "Make sure we repopulate setBlockIndexCandidates after InvalidateBlock:"
         print "Mine 4 blocks on Node 0"
-        self.nodes[0].setgenerate(True, 4)
+        self.nodes[0].generate(4)
         assert(self.nodes[0].getblockcount() == 4)
         besthash = self.nodes[0].getbestblockhash()
 
         print "Mine competing 6 blocks on Node 1"
-        self.nodes[1].setgenerate(True, 6)
+        self.nodes[1].generate(6)
         assert(self.nodes[1].getblockcount() == 6)
 
         print "Connect nodes to force a reorg"
@@ -61,7 +61,7 @@ class InvalidateTest(BitcoinTestFramework):
         self.nodes[2].invalidateblock(self.nodes[2].getblockhash(3))
         assert(self.nodes[2].getblockcount() == 2)
         print "..and then mine a block"
-        self.nodes[2].setgenerate(True, 1)
+        self.nodes[2].generate(1)
         print "Verify all nodes are at the right height"
         time.sleep(5)
         for i in xrange(3):
