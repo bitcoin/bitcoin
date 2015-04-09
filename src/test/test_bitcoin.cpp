@@ -54,10 +54,9 @@ TestingSetup::TestingSetup()
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex();
 #ifdef ENABLE_WALLET
-        bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
-        RegisterValidationInterface(pwalletMain);
+        std::string warningString, errorString;
+        pwalletMain = new CWallet();
+        pwalletMain->LoadWallet(warningString, errorString);
 #endif
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
