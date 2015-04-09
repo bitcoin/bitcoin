@@ -23,9 +23,9 @@ class ZapWalletTXesTest (BitcoinTestFramework):
 
     def run_test (self):
         print "Mining blocks..."
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
-        self.nodes[1].setgenerate(True, 101)
+        self.nodes[1].generate(101)
         self.sync_all()
         
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -33,7 +33,7 @@ class ZapWalletTXesTest (BitcoinTestFramework):
         txid0 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         txid1 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
         
         txid2 = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
