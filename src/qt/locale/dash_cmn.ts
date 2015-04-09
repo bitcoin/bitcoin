@@ -1634,7 +1634,8 @@ Address: %4
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/dash/</source>
-        <translation type="unfinished"/>
+        <translation>缺少相关语言或翻译不完整? 请到这里协助翻译:
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -2417,7 +2418,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation type="unfinished"/>
+        <translation>附加在付款要求中的讯息，可以不填，打开要求内容时会显示。注意: 这个讯息不会随着付款送到达世币网路上。</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -4150,32 +4151,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="146"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>警告: -paytxfee 设定了很高的金额！这可是你交易付款所要付的手续费。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Dash will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 请检查电脑日期和时间是否正确！达世币核心没办法在时钟不准的情况下正常运作。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 达世币网路对于区块链结的决定目前有分歧！看来有些矿工会有问题。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="155"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 我们和某些连线的节点对于区块链结的决定不同！你可能需要升级，或是需要等其它的节点升级。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="158"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 读取钱包档wallet.dat 时发生错误！所有的密钥都正确读取了，但是交易资料或位址簿资料可能会缺少或不正确。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 钱包档wallet.dat 损坏，但资料被拯救回来了！原来的wallet.dat 会改储存在%s, 档名是wallet.{timestamp}.bak. 如果余额或交易资料有误，你应该要用备份资料复原回来。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="165"/>
@@ -4187,7 +4188,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="170"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>您必须在配置中指定一个主节点密钥。请参阅文档以获得帮助。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="173"/>
@@ -4367,7 +4368,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="208"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished"/>
+        <translation>你想要现在重建区块资料库吗？</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="209"/>
@@ -4392,7 +4393,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="213"/>
         <source>Error connecting to masternode.</source>
-        <translation type="unfinished"/>
+        <translation>连接到主节点时发生错误。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="214"/>
@@ -4437,7 +4438,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="222"/>
         <source>Error recovering public key.</source>
-        <translation type="unfinished"/>
+        <translation>恢复公钥时发生错误。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="223"/>
@@ -4567,7 +4568,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="248"/>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation type="unfinished"/>
+        <translation>从其它来源的 blk000??.dat 档汇入区块</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="249"/>
@@ -4897,7 +4898,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="314"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>启用定期将变动写入​​钱包档的执行绪(默认: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="315"/>
@@ -4977,12 +4978,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="330"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>设定处理RPC 服务请求的执行绪数目(默认: 4)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="331"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>在钱包资料库环境变数设定DB_PRIVATE 旗标(默认: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="332"/>
@@ -5132,7 +5133,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="361"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>无法签署交叉信息，错误的密钥？</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="362"/>
@@ -5142,7 +5143,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="363"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>在 -onlynet 指定了不明的网路别: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="364"/>

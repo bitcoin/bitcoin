@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>576</width>
-    <height>400</height>
+    <height>402</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -148,7 +148,7 @@
             <number>2</number>
            </property>
            <property name="maximum">
-            <number>18</number>
+            <number>8</number>
            </property>
            <property name="value">
             <number>4</number>
@@ -481,7 +481,7 @@
       <attribute name="title">
        <string>&amp;Display</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_Display">       
+      <layout class="QVBoxLayout" name="verticalLayout_Display">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_1_Display">
          <item>
@@ -535,7 +535,7 @@ https://www.transifex.com/projects/p/dash/</string>
          </property>
         </widget>
        </item>
-	<item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4_Display" stretch="0,0">
          <item>
           <widget class="QLabel" name="themeLabel">
