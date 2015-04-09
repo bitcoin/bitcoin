@@ -124,6 +124,24 @@ void MetaDExDialog::setModel(WalletModel *model)
     connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
 }
 
+// Strip trailing zeros from a string containing a divisible value
+std::string MetaDExDialog::StripTrailingZeros(const string& inputStr)
+{
+    size_t dot = inputStr.find(".");
+    std::string outputStr = inputStr; // make a copy we will manipulate and return
+    if (dot==std::string::npos) { // could not find a decimal marker, unsafe - return original input string
+        return inputStr;
+    }
+    size_t lastZero = outputStr.find_last_not_of('0') + 1;
+    if (lastZero > dot) { // trailing zeros are after decimal marker, safe to remove
+        outputStr.erase ( lastZero, std::string::npos );
+        if (outputStr.length() > 0) { std::string::iterator it = outputStr.end() - 1; if (*it == '.') { outputStr.erase(it); } } //get rid of trailing dot if needed
+    } else { // last non-zero is before the decimal marker, this is a whole number
+        outputStr.erase ( dot, std::string::npos );
+    }
+    return outputStr;
+}
+
 void MetaDExDialog::OrderRefresh()
 {
     UpdateOffers();
@@ -239,7 +257,8 @@ void MetaDExDialog::UpdateOffers()
             if ((useBuyList) && (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC)))) continue;
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
-                //XDOUBLE price = (it->first);
+                XDOUBLE price = (it->first);
+                string effectivePriceStr;
                 int64_t available = 0, total = 0;
                 bool includesMe = false;
                 md_Set & indexes = (it->second);
@@ -258,15 +277,24 @@ void MetaDExDialog::UpdateOffers()
                             if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     }
+                    effectivePriceStr = StripTrailingZeros(obj.effectivePrice().str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)); // will be set multiple times, but always at same price level
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
-                    double price = (double)total/(double)available;
-                    AddRow(useBuyList, includesMe, FormatPriceMP(price), FormatDivisibleShortMP(available), FormatDivisibleShortMP(total));
+                    string strAvail;
+                    if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
+                    if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { price = price/COIN; } // handle price display for crossed divisibility to make it easy for end user to have simple pricing
+                    if (useBuyList) {
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
+                    } else {
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(effectivePriceStr), strAvail, FormatDivisibleShortMP(total));
+                    }
                 }
             }
         }
     }
 }
+
+
 
 // This function updates the balance for the currently selected sell address
 void MetaDExDialog::UpdateSellAddressBalance()
