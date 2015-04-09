@@ -20,8 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\alert.cpp" />
-    <ClCompile Include="..\..\src\scrypt-generic.c" />
-    <ClCompile Include="..\..\src\scrypt-sse2.cpp" />
     <ClCompile Include="..\..\src\stun.cpp" />
     <ClCompile Include="..\..\src\txdb-leveldb.cpp" />
     <ClCompile Include="..\..\src\version.cpp" />
@@ -52,7 +50,7 @@
     <ClCompile Include="..\..\src\noui.cpp" />
     <ClCompile Include="..\..\src\kernel.cpp" />
     <ClCompile Include="..\..\src\pbkdf2.cpp" />
-    <ClCompile Include="..\..\src\scrypt.cpp" />
+    <ClCompile Include="..\..\src\scrypt-intrin\scrypt-sse2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\addrman.h" />

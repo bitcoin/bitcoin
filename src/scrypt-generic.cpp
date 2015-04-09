@@ -27,9 +27,10 @@
  * online backup system.
  */
 
-#include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
+#include <openssl/evp.h>
+
+#include "scrypt.h"
 
 #ifdef _MSC_VER
 #define INLINE __inline
@@ -107,7 +108,7 @@ static INLINE void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
     B[15] += x15;
 }
 
-void scrypt_core(uint32_t *X, uint32_t *V)
+INLINE void scrypt_core(uint32_t *X, uint32_t *V)
 {
     uint16_t i, j, k;
 
@@ -123,4 +124,23 @@ void scrypt_core(uint32_t *X, uint32_t *V)
         xor_salsa8(&X[0], &X[16]);
         xor_salsa8(&X[16], &X[0]);
     }
+}
+
+/* cpu and memory intensive function to transform a 80 byte buffer into a 32 byte output
+   scratchpad size needs to be at least 63 + (128 * r * p) + (256 * r + 64) + (128 * r * N) bytes
+   r = 1, p = 1, N = 1024
+ */
+uint256 scrypt_blockhash(const uint8_t* input)
+{
+    uint8_t scratchpad[SCRYPT_BUFFER_SIZE];
+    uint32_t X[32];
+    uint256 result = 0;
+
+    uint32_t *V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+
+    PKCS5_PBKDF2_HMAC((const char*)input, 80, input, 80, 1, EVP_sha256(), 128, (unsigned char *)X);
+    scrypt_core(X, V);
+    PKCS5_PBKDF2_HMAC((const char*)input, 80, (const unsigned char*)X, 128, 1, EVP_sha256(), 32, (unsigned char*)&result);
+
+    return result;
 }

@@ -11,8 +11,4 @@
 
 uint256 scrypt_blockhash(const uint8_t* input);
 
-#ifdef USE_SSE2
-void scrypt_detect_sse2();
-#endif
-
 #endif // SCRYPT_MINE_H

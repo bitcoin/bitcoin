@@ -92,8 +92,7 @@ OBJS= \
     obj/wallet.o \
     obj/walletdb.o \
     obj/noui.o \
-    obj/kernel.o \
-    obj/scrypt.o
+    obj/kernel.o
 
 all: novacoind.exe
 
@@ -113,28 +112,36 @@ OBJS += obj/txdb-bdb.o
 endif
 
 ifdef USE_ASM
-OBJS += obj/scrypt-x86.o obj/scrypt-x86_64.o
+# Assembler implementation
+OBJS += scrypt-asm/obj/scrypt-arm.o scrypt-asm/obj/scrypt-x86.o scrypt-asm/obj/scrypt-x86_64.o scrypt-asm/obj/asm-wrapper.o
 
-obj/scrypt-x86.o: scrypt-x86.S
+scrypt-asm/obj/scrypt-x86.o: scrypt-asm/scrypt-x86.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-obj/scrypt-x86_64.o: scrypt-x86_64.S
+scrypt-asm/obj/scrypt-x86_64.o: scrypt-asm/scrypt-x86_64.S
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+scrypt-asm/obj/scrypt-arm.o: scrypt-asm/scrypt-arm.S
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+
+scrypt-asm/obj/asm-wrapper.o: scrypt-asm/asm-wrapper.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 else
+ifdef USE_SSE2
+# Intrinsic implementation
+DEFS += -DUSE_SSE2
+OBJS += scrypt-intrin/obj/scrypt-sse2.o
+
+scrypt-intrin/obj/scrypt-sse2.o: scrypt-intrin/scrypt-sse2.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+else
+# Generic implementation
 OBJS += obj/scrypt-generic.o
 
-obj/scrypt-generic.o: scrypt-generic.c
-	$(CC) -c $(xCXXFLAGS) -MMD -o $@ $<
-
-ifdef USE_SSE2
-DEFS += -DUSE_SSE2
-OBJS += obj/scrypt-sse2.o
-
-obj/scrypt-sse2.o: scrypt-sse2.cpp $(HEADERS)
-	g++  -c $(CFLAGS) -MMD -o $@ $<
+obj/scrypt-generic.o: scrypt-generic.cpp
+	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 endif
 endif
-
 
 
 obj/%.o: %.cpp $(HEADERS)

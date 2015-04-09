@@ -108,7 +108,7 @@ static inline void xor_salsa8_sse2(__m128i B[4], const __m128i Bx[4])
     B[3] = _mm_add_epi32(B[3], X3);
 }
 
-uint256 scrypt_blockhash__sse2(const uint8_t* input)
+uint256 scrypt_blockhash(const uint8_t* input)
 {
     uint256 result = 0;
     uint8_t scratchpad[SCRYPT_BUFFER_SIZE];

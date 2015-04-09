@@ -135,22 +135,20 @@ contains(USE_LEVELDB, 1) {
 
 # use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
-    message(Using assembler scrypt core implementation)
-    SOURCES += src/scrypt-arm.S src/scrypt-x86.S src/scrypt-x86_64.S
+    message(Using assembler scrypt implementation)
+    SOURCES += src/scrypt-asm/scrypt-arm.S src/scrypt-asm/scrypt-x86.S src/scrypt-asm/scrypt-x86_64.S src/scrypt-asm/asm-wrapper.cpp
 } else {
     # use: qmake "USE_SSE2=1"
     contains(USE_SSE2, 1) {
         message(Using SSE2 intrinsic scrypt implementation)
-        SOURCES += src/scrypt-sse2.cpp
+        SOURCES += src/scrypt-intrin/scrypt-sse2.cpp
         DEFINES += USE_SSE2
         QMAKE_CXXFLAGS += -msse2
         QMAKE_CFLAGS += -msse2
     } else {
-        message(Using generic scrypt core implementation)
+        message(Using generic scrypt implementation)
+        SOURCES += src/scrypt-generic.cpp
     }
-
-    # For now, generic module is required in both cases
-    SOURCES += src/scrypt-generic.c
 }
 
 # regenerate src/build.h
@@ -343,7 +341,6 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
     src/kernel.cpp \
-    src/scrypt.cpp \
     src/qt/multisigaddressentry.cpp \
     src/qt/multisiginputentry.cpp \
     src/qt/multisigdialog.cpp
