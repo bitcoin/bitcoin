@@ -126,8 +126,7 @@ void MetaDExDialog::setModel(WalletModel *model)
 
 void MetaDExDialog::OrderRefresh()
 {
-    UpdateSellOffers();
-    UpdateBuyOffers();
+    UpdateOffers();
     // check for pending transactions, could be more filtered to just trades here
     bool pending = false;
     for(PendingMap::iterator my_it = my_pending.begin(); my_it != my_pending.end(); ++my_it)
@@ -195,10 +194,10 @@ printf("clickedselloffer\n");
 }
 
 // This function adds a row to the buy or sell offer list
-void MetaDExDialog::AddRow(bool buyList, bool includesMe, const string& price, const string& available, const string& total)
+void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price, const string& available, const string& total)
 {
     int workingRow;
-    if (buyList) {
+    if (useBuyList) {
         workingRow = ui->buyList->rowCount();
         ui->buyList->insertRow(workingRow);
     } else {
@@ -218,7 +217,7 @@ void MetaDExDialog::AddRow(bool buyList, bool includesMe, const string& price, c
         availableCell->setFont(font);
         totalCell->setFont(font);
     }
-    if (buyList) {
+    if (useBuyList) {
         ui->buyList->setItem(workingRow, 0, priceCell);
         ui->buyList->setItem(workingRow, 1, availableCell);
         ui->buyList->setItem(workingRow, 2, totalCell);
@@ -230,62 +229,43 @@ void MetaDExDialog::AddRow(bool buyList, bool includesMe, const string& price, c
 }
 
 // This function loops through the MetaDEx and updates the list of sell offers
-void MetaDExDialog::UpdateSellOffers()
+void MetaDExDialog::UpdateOffers()
 {
-    ui->sellList->setRowCount(0);
-    bool testeco = isTestEcosystemProperty(global_metadex_market);
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-        if (my_it->first != global_metadex_market) { continue; } // not the property we're looking for, don't waste any more work
-        md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
-            //XDOUBLE price = (it->first);
-            int64_t available = 0, total = 0;
-            bool includesMe = false;
-            md_Set & indexes = (it->second);
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
-                CMPMetaDEx obj = *it;
-                if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) ) {
-                    available += obj.getAmountForSale();
-                    total += obj.getAmountDesired();
-                    if(IsMyAddress(obj.getAddr())) includesMe = true;
+    for (int useBuyList = 0; useBuyList < 2; ++useBuyList) {
+        if (useBuyList) { ui->buyList->setRowCount(0); } else { ui->sellList->setRowCount(0); }
+        bool testeco = isTestEcosystemProperty(global_metadex_market);
+        for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+            if ((!useBuyList) && (my_it->first != global_metadex_market)) { continue; } // not the property we're looking for, don't waste any more work
+            if ((useBuyList) && (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC)))) continue;
+            md_PricesMap & prices = my_it->second;
+            for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
+                //XDOUBLE price = (it->first);
+                int64_t available = 0, total = 0;
+                bool includesMe = false;
+                md_Set & indexes = (it->second);
+                for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
+                    CMPMetaDEx obj = *it;
+                    if (useBuyList) {
+                        if (obj.getDesProperty()==global_metadex_market) {
+                            available += obj.getAmountDesired();
+                            total += obj.getAmountForSale();
+                            if(IsMyAddress(obj.getAddr())) includesMe = true;
+                        }
+                    } else {
+                        if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) ) {
+                            available += obj.getAmountForSale();
+                            total += obj.getAmountDesired();
+                            if(IsMyAddress(obj.getAddr())) includesMe = true;
+                        }
+                    }
                 }
-            }
-            if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
-                double price = (double)total/(double)available;
-                AddRow(false, includesMe, FormatPriceMP(price), FormatDivisibleShortMP(available), FormatDivisibleShortMP(total));
+                if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
+                    double price = (double)total/(double)available;
+                    AddRow(useBuyList, includesMe, FormatPriceMP(price), FormatDivisibleShortMP(available), FormatDivisibleShortMP(total));
+                }
             }
         }
     }
-}
-
-void MetaDExDialog::UpdateBuyOffers()
-{
-    ui->buyList->setRowCount(0);
-    bool testeco = isTestEcosystemProperty(global_metadex_market);
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-        if (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC))) continue; // not the property we're looking for, don't waste any more work
-        md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
-            //XDOUBLE price = (1/it->first);
-            double available = 0;
-            double total = 0;
-            bool includesMe = false;
-            md_Set & indexes = (it->second);
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
-                CMPMetaDEx obj = *it;
-                if(obj.getDesProperty()==global_metadex_market) {
-                    available += obj.getAmountDesired();
-                    total += obj.getAmountForSale();
-                    if(IsMyAddress(obj.getAddr())) includesMe = true;
-                }
-            }
-            if ((available > 0) && (total > 0)) {
-                double price = (double)total/(double)available;
-                AddRow(true, includesMe, FormatPriceMP(price), FormatDivisibleShortMP(available), FormatDivisibleShortMP(total));
-            }
-        }
-    }
-
 }
 
 // This function updates the balance for the currently selected sell address
@@ -391,8 +371,7 @@ void MetaDExDialog::FullRefresh()
     UpdateSellAddressBalance();
 
     // update the buy and sell offers
-    UpdateBuyOffers();
-    UpdateSellOffers();
+    UpdateOffers();
 }
 
 void MetaDExDialog::buyAddressComboBoxChanged(int idx)
