@@ -163,13 +163,13 @@ class WalletTest (BitcoinTestFramework):
 
         txIdNotBroadcasted  = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 2);
         txObjNotBroadcasted = self.nodes[0].gettransaction(txIdNotBroadcasted)
-        self.nodes[1].setgenerate(True, 1) #mine a block, tx should not be in there
+        self.nodes[1].generate(1) #mine a block, tx should not be in there
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), Decimal('59.99800000')); #should not be changed because tx was not broadcasted
         
         #now broadcast from another node, mine a block, sync, and check the balance
         self.nodes[1].sendrawtransaction(txObjNotBroadcasted['hex'])
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
         txObjNotBroadcasted = self.nodes[0].gettransaction(txIdNotBroadcasted)
         assert_equal(self.nodes[2].getbalance(), Decimal('61.99800000')); #should not be
@@ -186,7 +186,7 @@ class WalletTest (BitcoinTestFramework):
         connect_nodes_bi(self.nodes,0,2)
         sync_blocks(self.nodes)
         
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         sync_blocks(self.nodes)
         
         #tx should be added to balance because after restarting the nodes tx should be broadcastet
