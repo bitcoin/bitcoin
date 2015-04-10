@@ -34,7 +34,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="label_2">
+           <widget class="QLabel" name="label_3">
             <property name="font">
              <font>
               <weight>75</weight>
@@ -43,6 +43,61 @@
             </property>
             <property name="styleSheet">
              <string notr="true">padding-bottom:4px;</string>
+            </property>
+            <property name="text">
+             <string>Cancellation Address:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <spacer name="horizontalSpacer_6">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>8</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QComboBox" name="fromCombo"/>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>8</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">padding-top:10px;padding-bottom:4px;</string>
             </property>
             <property name="text">
              <string>Cancellation Type:</string>
