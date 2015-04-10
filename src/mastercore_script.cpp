@@ -1,10 +1,32 @@
 #include "mastercore_script.h"
 
 #include "script/script.h"
+#include "script/standard.h"
 #include "utilstrencodings.h"
 
 #include <string>
 #include <vector>
+
+/**
+ * Identifies standard output types based on a scriptPubKey.
+ *
+ * Note: whichTypeRet is set to TX_NONSTANDARD, if no standard script was found.
+ *
+ * @param scriptPubKey[in]   The script
+ * @param whichTypeRet[out]  The output type
+ * @return True if a standard script was found
+ */
+bool GetOutputType(const CScript& scriptPubKey, txnouttype& whichTypeRet)
+{
+    std::vector<std::vector<unsigned char> > vSolutions;
+
+    if (Solver(scriptPubKey, whichTypeRet, vSolutions)) {
+        return true;
+    }
+    whichTypeRet = TX_NONSTANDARD;
+
+    return false;
+}
 
 /**
  * Extracts the pushed data as hex-encoded string from a script.
