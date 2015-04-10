@@ -16,7 +16,7 @@
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>Upphovsrätt &amp;kopia: 2009 - 2015 Bitcoin Core-utvecklarna.
-Upphovsrätt &amp;kopia; 2014 - YYYY Dash Core, utvecklarna.</translation>
+Upphovsrätt &amp;kopia; 2014 - YYYY Dash Core-utvecklarna.</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -4405,7 +4405,7 @@ Om filen inte existerar, skapa den och ge inga andra än ägaren läsarrättighe
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="213"/>
-        <source>Error connecting to Masternode.</source>
+        <source>Error connecting to masternode.</source>
         <translation>Fel vid anslutning till masternode.</translation>
     </message>
     <message>
@@ -4736,7 +4736,7 @@ Om filen inte existerar, skapa den och ge inga andra än ägaren läsarrättighe
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
         <source>Loading masternode list...</source>
-        <translation type="unfinished"/>
+        <translation>Laddar masternode-listan.</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="280"/>
