@@ -380,7 +380,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -mnconf=<file>             " + strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf") + "\n";
     strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
     strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
-    strUsage += "  -masternodeminprotocol=<n> " + strprintf(_("Ignore masternodes less than version (example: 70050; default: %u)"), MIN_PEER_PROTO_VERSION) + "\n";
+    strUsage += "  -masternodeminprotocol=<n> " + strprintf(_("Ignore masternodes less than version (example: 70050; default: %u)"), MIN_POOL_PEER_PROTO_VERSION) + "\n";
 
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), 0) + "\n";
@@ -832,7 +832,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     //ignore masternodes below protocol version
-    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_PEER_PROTO_VERSION);
+    nMasternodeMinProtocol = GetArg("-masternodeminprotocol", MIN_POOL_PEER_PROTO_VERSION);
 
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections

@@ -611,12 +611,18 @@ Value masternode(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
+        if (params.size() != 2)
+            throw runtime_error("You can only vote 'yea' or 'nay'");
+
         std::string vote = params[1].get_str().c_str();
         if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
         int nVote = 0;
         if(vote == "yea") nVote = 1;
         if(vote == "nay") nVote = -1;
 
+
+        int success = 0;
+        int failed = 0;
 
         Object resultObj;
 
@@ -625,39 +631,57 @@ Value masternode(const Array& params, bool fHelp)
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
 
-            CTxIn vin;
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
-            if(!activeMasternode.GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, mne.getTxHash(), mne.getOutputIndex())) {
-                return("could not allocate vin");
+            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+                printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
+            }
+            
+            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
+            if(pmn == NULL)
+            {
+                printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
             }
 
-            std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
+            std::string strMessage = pmn->vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode))
-                return(" Error upon calling SetKey");
+            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode)){
+                printf(" Error upon calling SignMessage for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
+            }
 
-            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, keyMasternode))
-                return(" Error upon calling SignMessage");
+            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage)){
+                printf(" Error upon calling VerifyMessage for %s\n", mne.getAlias().c_str());
+                failed++;
+                continue;
+            }
 
-            if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchMasterNodeSignature, strMessage, errorMessage))
-                return(" Error upon calling VerifyMessage");
+            success++;
 
             //send to all peers
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes)
-                pnode->PushMessage("mvote", vin, vchMasterNodeSignature, nVote);
-
+                pnode->PushMessage("mvote", pmn->vin, vchMasterNodeSignature, nVote);
         }
+
+        return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
     }
 
     if(strCommand == "vote")
     {
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
+
+        if (params.size() != 2)
+            throw runtime_error("You can only vote 'yea' or 'nay'");
 
         std::string vote = params[1].get_str().c_str();
         if(vote != "yea" && vote != "nay") return "You can only vote 'yea' or 'nay'";
@@ -825,7 +849,7 @@ Value masternodelist(const Array& params, bool fHelp)
                     if(mn.nVote == 1) strStatus = "YEA";
                 }
 
-                if(strFilter !="" && (strAddr.find(strFilter) == string::npos || strStatus.find(strFilter) == string::npos)) continue;
+                if(strFilter !="" && (strAddr.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos)) continue;
                 obj.push_back(Pair(strAddr,       strStatus.c_str()));
             }
         }

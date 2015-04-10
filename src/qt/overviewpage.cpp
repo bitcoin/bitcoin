@@ -340,6 +340,7 @@ void OverviewPage::updateDarksendProgress()
     {
         denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / denominatedBalance;
         denomPart = denomPart > 1 ? 1 : denomPart;
+        if(denomPart == 1 && nMaxToAnonymize > denominatedBalance) nMaxToAnonymize = denominatedBalance;
     }
 
     // % of fully anonymized balance
@@ -353,7 +354,7 @@ void OverviewPage::updateDarksendProgress()
 
     // apply some weights to them (sum should be <=100) and calculate the whole progress
     int progress = 80 * denomPart + 20 * anonPart;
-    if(progress > 100) progress = 100;
+    if(progress >= 100) progress = 100;
 
     ui->darksendProgress->setValue(progress);
 
