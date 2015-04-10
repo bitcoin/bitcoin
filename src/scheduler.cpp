@@ -21,11 +21,7 @@ CScheduler::~CScheduler()
 #if BOOST_VERSION < 105000
 static boost::system_time toPosixTime(const boost::chrono::system_clock::time_point& t)
 {
-    boost::chrono::system_clock::duration d = t.time_since_epoch();
-    boost::chrono::microseconds usecs = boost::chrono::duration_cast<boost::chrono::microseconds>(d);
-    boost::system_time result = boost::posix_time::from_time_t(0) +
-                                boost::posix_time::microseconds(usecs.count());
-    return result;
+    return boost::posix_time::from_time_t(boost::chrono::system_clock::to_time_t(t));
 }
 #endif
 
