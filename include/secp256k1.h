@@ -204,9 +204,9 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover_compact(
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(const unsigned char *seckey) SECP256K1_ARG_NONNULL(1);
 
-/** Just validate a public key.
- *  Returns: 1: valid public key
- *           0: invalid public key
+/** Verify an ECDSA public key.
+ *  Returns: 1: public key is valid
+ *           0: public key is invalid
  *  In:      pubkey:    pointer to a 33-byte or 65-byte public key (cannot be NULL).
  *           pubkeylen: length of pubkey
  */
@@ -220,7 +220,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_verify(const unsigned char 
  *          pubkeylen:  pointer to int that will be updated to contains the pubkey's
  *                      length (cannot be NULL)
  *  Returns: 1: secret was valid, public key stores
- *           0: secret was invalid, try again.
+ *           0: secret was invalid, try again
  * Requires starting using SECP256K1_START_SIGN.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
@@ -232,11 +232,11 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
 
 /** Decompress a public key.
  * In/Out: pubkey:    pointer to a 65-byte array to put the decompressed public key.
-                      It must contain a 33-byte or 65-byte public key already (cannot be NULL)
+ *                    It must contain a 33-byte or 65-byte public key already (cannot be NULL)
  *         pubkeylen: pointer to the size of the public key pointed to by pubkey (cannot be NULL)
-                      It will be updated to reflect the new size.
- * Returns: 0 if the passed public key was invalid, 1 otherwise. If 1 is returned, the
-            pubkey is replaced with its decompressed version.
+ *                    It will be updated to reflect the new size.
+ * Returns: 0: pubkey was invalid
+ *          1: pubkey was valid, and was replaced with its decompressed version
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_decompress(
   unsigned char *pubkey,
