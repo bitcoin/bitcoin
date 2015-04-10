@@ -418,6 +418,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(!enabled) return false;
     CMasternodePaymentWinner newWinner;
     int nMinimumAge = mnodeman.CountEnabled();
+    CScript payeeSource;
 
     uint256 hash;
     if(!GetBlockHash(hash, nBlockHeight-10)) return false;
@@ -430,8 +431,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
     {
         //if we already have the same vin - we have one full payment cycle, break
-        if(vecLastPayments.size() > 0
-                && std::find(vecLastPayments.begin(), vecLastPayments.end(), winner.vin) != vecLastPayments.end()) break;
+        if(vecLastPayments.size() > nMinimumAge) break;
         vecLastPayments.push_back(winner.vin);
     }
 
@@ -439,6 +439,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments, nMinimumAge, 0);
     if(pmn != NULL)
     {
+        LogPrintf(" Found by FindOldestNotInVec \n");
+
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
@@ -448,11 +450,15 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         } else {
             newWinner.payee.SetDestination(pmn->pubkey.GetID());
         }
+
+        payeeSource.SetDestination(pmn->pubkey.GetID());
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
     if(newWinner.nBlockHeight == 0 && nMinimumAge > 0)
     {
+        LogPrintf(" Find by reverse \n");
+
         BOOST_REVERSE_FOREACH(CTxIn& vinLP, vecLastPayments)
         {
             CMasternode* pmn = mnodeman.Find(vinLP);
@@ -471,6 +477,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                     newWinner.payee.SetDestination(pmn->pubkey.GetID());
                 }
 
+                payeeSource.SetDestination(pmn->pubkey.GetID());
+
                 break; // we found active MN
             }
         }
@@ -482,7 +490,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     ExtractDestination(newWinner.payee, address1);
     CBitcoinAddress address2(address1);
 
-    LogPrintf("Winner payee %s nHeight %d. \n", address2.ToString().c_str(), newWinner.nBlockHeight);
+    CTxDestination address3;
+    ExtractDestination(payeeSource, address3);
+    CBitcoinAddress address4(address3);
+
+    LogPrintf("Winner payee %s nHeight %d vin source %s. \n", address2.ToString().c_str(), newWinner.nBlockHeight, address4.ToString().c_str());
 
     if(Sign(newWinner))
     {
@@ -496,6 +508,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     return false;
 }
+
 
 void CMasternodePayments::Relay(CMasternodePaymentWinner& winner)
 {
