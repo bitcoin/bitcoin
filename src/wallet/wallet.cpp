@@ -2583,6 +2583,17 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
     }
 }
 
+void CWallet::GetScriptForMining(CScript &script)
+{
+    CReserveKey reservekey(this);
+    reservekey.KeepKey();
+    
+    CPubKey pubkey;
+    if (!reservekey.GetReservedKey(pubkey))
+        return;
+    script = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+}
+
 void CWallet::LockCoin(COutPoint& output)
 {
     AssertLockHeld(cs_wallet); // setLockedCoins
