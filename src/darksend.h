@@ -36,9 +36,8 @@ class CActiveMasternode;
 #define MASTERNODE_REJECTED                    0
 #define MASTERNODE_RESET                       -1
 
-#define DARKSEND_QUEUE_TIMEOUT                 180 // in seconds
-#define DARKSEND_SIGNING_TIMEOUT               30 // in seconds
-#define DARKSEND_DOWNGRADE_TIMEOUT             60 // in seconds
+#define DARKSEND_QUEUE_TIMEOUT                 30
+#define DARKSEND_SIGNING_TIMEOUT               15
 
 // used for anonymous relaying of inputs/outputs/sigs
 #define DARKSEND_RELAY_IN                 1
@@ -73,6 +72,7 @@ public:
         prevPubKey = in.prevPubKey;
         nSequence = in.nSequence;
         nSentTimes = 0;
+        fHasSig = false;
     }
 };
 
@@ -92,9 +92,7 @@ public:
     }
 };
 
-/** A clients transaction in the Darksend pool
- *  -- holds the input/output mapping for each user in the pool
- */
+// A clients transaction in the darksend pool
 class CDarkSendEntry
 {
 public:
@@ -132,7 +130,22 @@ public:
         return true;
     }
 
-    /// Is this Darksend expired?
+    bool AddSig(const CTxIn& vin)
+    {
+        BOOST_FOREACH(CTxDSIn& s, sev) {
+            if(s.prevout == vin.prevout && s.nSequence == vin.nSequence){
+                if(s.fHasSig){return false;}
+                s.scriptSig = vin.scriptSig;
+                s.prevPubKey = vin.prevPubKey;
+                s.fHasSig = true;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool IsExpired()
     {
         return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
@@ -152,20 +165,12 @@ public:
     bool ready; //ready for submit
     std::vector<unsigned char> vchSig;
 
-    //information used for the anonymous relay system
-    int nBlockHeight;
-    std::vector<unsigned char> vchRelaySig;
-    std::string strSharedKey; // shared key
-
     CDarksendQueue()
     {
         nDenom = 0;
         vin = CTxIn();
         time = 0;
         vchSig.clear();
-        vchRelaySig.clear();
-        nBlockHeight = 0;
-        strSharedKey = "";
         ready = false;
     }
 
@@ -178,12 +183,6 @@ public:
         READWRITE(time);
         READWRITE(ready);
         READWRITE(vchSig);
-
-        if(ready){
-            READWRITE(vchRelaySig);
-            READWRITE(nBlockHeight);
-            READWRITE(strSharedKey);
-        }
     }
 
     bool GetAddress(CService &addr)
@@ -208,9 +207,6 @@ public:
         }
         return false;
     }
-
-    /// Set the 'strSharedKey'
-    void SetSharedKey(std::string strSharedKey);
 
     /** Sign this Darksend transaction
      *  \return true if all conditions are met:
@@ -260,32 +256,6 @@ public:
     bool VerifyMessage(CPubKey pubkey, std::vector<unsigned char>& vchSig, std::string strMessage, std::string& errorMessage);
 };
 
-/** Build a transaction anonymously
- */
-class CDSAnonTx
-{
-public:
-    std::vector<CTxDSIn> vin; // collection of inputs
-    std::vector<CTxOut> vout; // collection of outputs
-
-    /// Is the transaction valid? (TODO: not defined - remove? or code?)
-    bool IsTransactionValid();
-    /// Add an output
-    bool AddOutput(const CTxOut out);
-    /// Add an input
-    bool AddInput(const CTxIn in);
-    /// Clear Signatures
-    bool ClearSigs();
-    /// Add Signature
-    bool AddSig(const CTxIn in);
-    /// Count the number of entries in the transaction
-    int CountEntries() {return (int)vin.size() + (int)vout.size();}
-};
-
-/// TODO: not defined - remove?
-void ConnectToDarkSendMasterNodeWinner();
-
-
 /** Used to keep track of current status of Darksend pool
  */
 class CDarksendPool
@@ -294,10 +264,7 @@ public:
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
     std::vector<CDarkSendEntry> entries; // Masternode entries
-    CMutableTransaction finalTransaction; // the finalized transaction ready for signing
-    CDSAnonTx anonTx; // anonymous inputs/outputs
-    bool fSubmitAnonymousFailed; // initally false, will change to true if when attempts > 5
-    int nCountAttempts; // number of submitted attempts
+    CTransaction finalTransaction; // the finalized transaction ready for signing
 
     int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
     int64_t lastAutoDenomination; // TODO; not used - Delete?
@@ -336,12 +303,6 @@ public:
     //debugging data
     std::string strAutoDenomResult;
 
-    // used for securing the anonymous relay system
-    vector<unsigned char> vchMasternodeRelaySig;
-    int nMasternodeBlockHeight;
-    std::string strMasternodeSharedKey;
-    int nTrickleInputsOutputs;
-
     CDarksendPool()
     {
         /* Darksend uses collateral addresses to trust parties entering the pool
@@ -353,8 +314,6 @@ public:
         txCollateral = CMutableTransaction();
         minBlockSpacing = 1;
         lastNewBlock = 0;
-        strMasternodeSharedKey = "";
-        nTrickleInputsOutputs = 0;
 
         SetNull();
     }
@@ -386,9 +345,6 @@ public:
 
     bool SetCollateralAddress(std::string strAddress);
     void Reset();
-    bool Downgrade();
-    bool TrickleInputsOutputs();
-
     void SetNull(bool clearEverything=false);
 
     void UnlockCoins();
@@ -484,18 +440,6 @@ public:
     bool IsCollateralValid(const CTransaction& txCollateral);
     /// Add a clients entry to the pool
     bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, std::string& error);
-
-    /// Add an anonymous output/inputs/sig
-    bool AddAnonymousOutput(const CTxOut& out) {return anonTx.AddOutput(out);}
-    bool AddAnonymousInput(const CTxIn& in) {return anonTx.AddInput(in);}
-    bool AddAnonymousSig(const CTxIn& in) {return anonTx.AddSig(in);}
-    bool AddRelaySignature(vector<unsigned char> vchMasternodeRelaySigIn, int nMasternodeBlockHeightIn, std::string strSharedKey) {
-        vchMasternodeRelaySig = vchMasternodeRelaySigIn;
-        nMasternodeBlockHeight = nMasternodeBlockHeightIn;
-        strMasternodeSharedKey = strSharedKey;
-        return true;
-    }
-
     /// Add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
