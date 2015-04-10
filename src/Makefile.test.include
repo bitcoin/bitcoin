@@ -83,6 +83,7 @@ endif
 OMNICORE_TESTS = \
   test/mastercore_obfuscation_tests.cpp \
   test/mastercore_rounduint64_tests.cpp \
+  test/mastercore_script_dust_tests.cpp \
   test/mastercore_script_extraction_tests.cpp \
   test/mastercore_strtoint64_tests.cpp \
   test/mastercore_swapbyteorder_tests.cpp
