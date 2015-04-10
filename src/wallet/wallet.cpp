@@ -2134,8 +2134,6 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
 
 bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
 {
-    std::string strWalletFile = CWallet::GetWalletFile();
-    
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
 
