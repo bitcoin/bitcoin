@@ -1,6 +1,7 @@
 // This file serves to seperate encoding of data outputs from the main mastercore.cpp/h files.
 
 #include "mastercore.h"
+#include "mastercore_script.h"
 #include "omnicore_encoding.h"
 #include "omnicore_utils.h"
 #include "base58.h"
@@ -56,10 +57,10 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
             seqNum++;
         }
         CScript multisig_output = GetScriptForMultisig(1, keys);
-        vecOutputs.push_back(make_pair(multisig_output, GetDustLimit(multisig_output)));
+        vecOutputs.push_back(make_pair(multisig_output, GetDustThreshold(multisig_output)));
     }
     CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
-    vecOutputs.push_back(make_pair(scriptPubKey, GetDustLimit(scriptPubKey))); // add the Exodus marker
+    vecOutputs.push_back(make_pair(scriptPubKey, GetDustThreshold(scriptPubKey))); // add the Exodus marker
     return true;
 }
 

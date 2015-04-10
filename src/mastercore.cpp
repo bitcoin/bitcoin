@@ -2690,7 +2690,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const 
     // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
     if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
-        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustLimit(scriptPubKey)));
+        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustThreshold(scriptPubKey)));
     }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
