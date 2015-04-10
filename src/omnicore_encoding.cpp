@@ -24,7 +24,7 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
     int nNextByte = 0;
     unsigned char seqNum = 1;
     std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-    prepareObfuscatedHashes(senderAddress, strObfuscatedHashes);
+    PrepareObfuscatedHashes(senderAddress, strObfuscatedHashes);
     while (nRemainingBytes > 0) {
         int nKeys = 1; // assume one key of data since we have data remaining
         if (nRemainingBytes > (PACKET_SIZE - 1)) { nKeys += 1; } // we have enough data for 2 keys in this output

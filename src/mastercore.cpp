@@ -1320,7 +1320,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
 
   // ### PREPARE A FEW VARS ###
   string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-  prepareObfuscatedHashes(strSender, strObfuscatedHashes);
+  PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
   unsigned char packets[MAX_PACKETS][32];
   int mdata_count = 0;  // multisig data count
 
