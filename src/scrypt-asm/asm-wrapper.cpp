@@ -1,10 +1,4 @@
-#include <stdlib.h>
-#include <openssl/evp.h>
-
 #include "scrypt.h"
-
-#include "util.h"
-#include "net.h"
 
 extern "C" void scrypt_core(uint32_t *X, uint32_t *V);
 

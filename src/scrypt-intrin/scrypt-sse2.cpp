@@ -27,13 +27,8 @@
  * online backup system.
  */
 
-#include "scrypt.h"
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <openssl/evp.h>
-
 #include <emmintrin.h>
+#include "scrypt.h"
 
 static inline uint32_t le32dec(const void *pp)
 {

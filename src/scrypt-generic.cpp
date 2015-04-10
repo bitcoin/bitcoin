@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright 2009 Colin Percival, 2011 ArtForz, 2011 pooler, 2013 Balthazar
  * All rights reserved.
  *
@@ -26,9 +26,6 @@
  * This file was originally written by Colin Percival as part of the Tarsnap
  * online backup system.
  */
-
-#include <string.h>
-#include <openssl/evp.h>
 
 #include "scrypt.h"
 
@@ -108,24 +105,6 @@ static INLINE void xor_salsa8(uint32_t B[16], const uint32_t Bx[16])
     B[15] += x15;
 }
 
-INLINE void scrypt_core(uint32_t *X, uint32_t *V)
-{
-    uint16_t i, j, k;
-
-    for (i = 0; i < 1024; i++) {
-        memcpy(&V[i * 32], X, 128);
-        xor_salsa8(&X[0], &X[16]);
-        xor_salsa8(&X[16], &X[0]);
-    }
-    for (i = 0; i < 1024; i++) {
-        j = 32 * (X[16] & 1023);
-        for (k = 0; k < 32; k++)
-            X[k] ^= V[j + k];
-        xor_salsa8(&X[0], &X[16]);
-        xor_salsa8(&X[16], &X[0]);
-    }
-}
-
 /* cpu and memory intensive function to transform a 80 byte buffer into a 32 byte output
    scratchpad size needs to be at least 63 + (128 * r * p) + (256 * r + 64) + (128 * r * N) bytes
    r = 1, p = 1, N = 1024
@@ -139,7 +118,21 @@ uint256 scrypt_blockhash(const uint8_t* input)
     uint32_t *V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
 
     PKCS5_PBKDF2_HMAC((const char*)input, 80, input, 80, 1, EVP_sha256(), 128, (unsigned char *)X);
-    scrypt_core(X, V);
+
+    uint16_t i, j, k;
+    for (i = 0; i < 1024; i++) {
+        memcpy(&V[i * 32], X, 128);
+        xor_salsa8(&X[0], &X[16]);
+        xor_salsa8(&X[16], &X[0]);
+    }
+    for (i = 0; i < 1024; i++) {
+        j = 32 * (X[16] & 1023);
+        for (k = 0; k < 32; k++)
+            X[k] ^= V[j + k];
+        xor_salsa8(&X[0], &X[16]);
+        xor_salsa8(&X[16], &X[0]);
+    }
+
     PKCS5_PBKDF2_HMAC((const char*)input, 80, (const unsigned char*)X, 128, 1, EVP_sha256(), 32, (unsigned char*)&result);
 
     return result;
