@@ -2069,10 +2069,10 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     hashContinue = uint256();
     nStartingHeight = -1;
     fGetAddr = false;
-    nNextAddrSend = GetTime() + GetRand(30);
-    nNextLocalAddrSend = GetTime() + GetRand(24 * 60 * 60);
-    nNextClearSetKnown = GetTime() + GetRand(12 * 60 * 60);
-    nNextInvSend = GetTime() + GetRand(10);
+    nNextAddrSend = GetTimeMicros() + GetRand(30 * 1000000);
+    nNextLocalAddrSend = GetTimeMicros() + 1000 * (int64_t)GetRand(24 * 60 * 60 * 1000);
+    nNextClearSetKnown = GetTimeMicros() + 1000 * (int64_t)GetRand(12 * 60 * 60 * 1000);
+    nNextInvSend = GetTimeMicros() + GetRand(10 * 1000000);
     fRelayTxes = false;
     pfilter = new CBloomFilter();
     nPingNonceSent = 0;
