@@ -1494,9 +1494,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         }
 
         //check our collateral
-        if(txCollateral != CTransaction()){
+        if(txCollateral != CMutableTransaction()){
             if(!IsCollateralValid(txCollateral)) {
-                txCollateral = CTransaction();
+                txCollateral = CMutableTransaction();
                 LogPrintf("DoAutomaticDenominating -- Invalid collateral, resetting.\n");
             }
         }
