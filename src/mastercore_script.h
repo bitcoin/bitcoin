@@ -6,6 +6,7 @@
 
 class CScript;
 
-bool GetScriptPushes(const CScript& scriptIn, std::vector<std::string>& vstrRet, bool fSkipFirst = false);
+/** Extracts the pushed data as hex-encoded string from a script. */
+bool GetScriptPushes(const CScript& script, std::vector<std::string>& vstrRet, bool fSkipFirst = false);
 
 #endif // MASTERCOIN_SCRIPT_H
