@@ -23,7 +23,7 @@ CMessageHeader::CMessageHeader()
     memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     memset(pchCommand, 0, sizeof(pchCommand));
     pchCommand[1] = 1;
-    nMessageSize = -1;
+    nMessageSize = UINT_MAX;
     nChecksum = 0;
 }
 

@@ -233,7 +233,7 @@ public:
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         nHeaderStart = -1;
-        nMessageStart = -1;
+        nMessageStart = UINT_MAX;
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
@@ -375,7 +375,7 @@ public:
             return;
         vSend.resize(nHeaderStart);
         nHeaderStart = -1;
-        nMessageStart = -1;
+        nMessageStart = UINT_MAX;
         LEAVE_CRITICAL_SECTION(cs_vSend);
 
         if (fDebug)
@@ -410,7 +410,7 @@ public:
         }
 
         nHeaderStart = -1;
-        nMessageStart = -1;
+        nMessageStart = UINT_MAX;
         LEAVE_CRITICAL_SECTION(cs_vSend);
     }
 
