@@ -15,9 +15,14 @@
     </message>
     <message>
         <location filename="../forms/ui_aboutdialog.h" line="131"/>
+        <source>Copyright &amp;copy; 2009-YYYY The Bitcoin Core developers.
+Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
-        <translation>Copyright &amp;copy; 2009-2014 Разработчики Bitcoin Core.
+        <translation type="vanished">Copyright &amp;copy; 2009-2014 Разработчики Bitcoin Core.
 Copyright &amp;copy; 2014-YYYY Разработчики Dash Core.</translation>
     </message>
     <message>
@@ -360,6 +365,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="107"/>
+        <location filename="../bitcoingui.cpp" line="814"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
@@ -378,57 +384,57 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="vanished">[тестовая сеть]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="250"/>
         <source>&amp;Overview</source>
         <translation>&amp;Обзор</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
+        <location filename="../bitcoingui.cpp" line="251"/>
         <source>Show general overview of wallet</source>
         <translation>Показать общий обзор действий с бумажником</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="260"/>
+        <location filename="../bitcoingui.cpp" line="261"/>
         <source>&amp;Send</source>
         <translation>&amp;Отправить</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="261"/>
+        <location filename="../bitcoingui.cpp" line="262"/>
         <source>Send coins to a Dash address</source>
         <translation>Отправить монеты на указанный адрес Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="271"/>
+        <location filename="../bitcoingui.cpp" line="272"/>
         <source>&amp;Receive</source>
         <translation>&amp;Получить</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="272"/>
+        <location filename="../bitcoingui.cpp" line="273"/>
         <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>Запросить платежи (создать QR-коды и dash: URI)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="282"/>
+        <location filename="../bitcoingui.cpp" line="283"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Транзакции</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="283"/>
+        <location filename="../bitcoingui.cpp" line="284"/>
         <source>Browse transaction history</source>
         <translation>Показать историю транзакций</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="306"/>
+        <location filename="../bitcoingui.cpp" line="307"/>
         <source>E&amp;xit</source>
         <translation>В&amp;ыход</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="308"/>
         <source>Quit application</source>
         <translation>Закрыть приложение</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="310"/>
+        <location filename="../bitcoingui.cpp" line="311"/>
         <source>&amp;About Dash Core</source>
         <translation>О &amp;Dash Core</translation>
     </message>
@@ -437,193 +443,198 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="vanished">Показать информацию о Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="311"/>
+        <location filename="../bitcoingui.cpp" line="312"/>
         <source>Show information about Dash Core</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
-        <location filename="../bitcoingui.cpp" line="316"/>
+        <location filename="../bitcoingui.cpp" line="315"/>
+        <location filename="../bitcoingui.cpp" line="317"/>
         <source>About &amp;Qt</source>
         <translation>О &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="318"/>
+        <location filename="../bitcoingui.cpp" line="319"/>
         <source>Show information about Qt</source>
         <translation>Показать информацию о Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="320"/>
+        <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Options...</source>
         <translation>&amp;Настройки...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="321"/>
+        <location filename="../bitcoingui.cpp" line="322"/>
         <source>Modify configuration options for Dash</source>
         <translation>Изменить параметры конфигурации Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="323"/>
+        <location filename="../bitcoingui.cpp" line="324"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Показать / Скрыть</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="324"/>
+        <location filename="../bitcoingui.cpp" line="325"/>
         <source>Show or hide the main Window</source>
         <translation>Показать или скрыть главное окно</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="326"/>
+        <location filename="../bitcoingui.cpp" line="327"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>За&amp;шифровать бумажник...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="327"/>
+        <location filename="../bitcoingui.cpp" line="328"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Зашифровать закрытые ключи, содержащиеся в вашем бумажнике</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="329"/>
+        <location filename="../bitcoingui.cpp" line="330"/>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;Сделать резервную копию бумажника...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="330"/>
+        <location filename="../bitcoingui.cpp" line="331"/>
         <source>Backup wallet to another location</source>
         <translation>Сделать резервную копию бумажника в другом месте</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="331"/>
+        <location filename="../bitcoingui.cpp" line="332"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Изменить пароль...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="332"/>
+        <location filename="../bitcoingui.cpp" line="333"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Изменить пароль шифрования бумажника</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="333"/>
+        <location filename="../bitcoingui.cpp" line="334"/>
         <source>&amp;Unlock Wallet...</source>
         <translation>&amp;Разблокировать бумажник...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="334"/>
+        <location filename="../bitcoingui.cpp" line="335"/>
         <source>Unlock wallet</source>
         <translation>Разблокировать бумажник</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="335"/>
+        <location filename="../bitcoingui.cpp" line="336"/>
         <source>&amp;Lock Wallet</source>
         <translation>За&amp;блокировать бумажник</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="336"/>
+        <location filename="../bitcoingui.cpp" line="337"/>
         <source>Sign &amp;message...</source>
         <translation>П&amp;одписать сообщение...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="337"/>
+        <location filename="../bitcoingui.cpp" line="338"/>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>Подписать сообщения вашими адресами Dash, чтобы доказать, что вы ими владеете</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="338"/>
+        <location filename="../bitcoingui.cpp" line="339"/>
         <source>&amp;Verify message...</source>
         <translation>П&amp;роверить сообщение...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="339"/>
+        <location filename="../bitcoingui.cpp" line="340"/>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
         <translation>Проверить сообщения, чтобы удостовериться, что они были подписаны определёнными адресами Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="341"/>
+        <location filename="../bitcoingui.cpp" line="342"/>
         <source>&amp;Information</source>
         <translation>&amp;Информация</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="342"/>
+        <location filename="../bitcoingui.cpp" line="343"/>
         <source>Show diagnostic information</source>
         <translation>Показать диагностическую информацию</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="343"/>
+        <location filename="../bitcoingui.cpp" line="344"/>
         <source>&amp;Debug console</source>
         <translation>&amp;Консоль отладки</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="344"/>
+        <location filename="../bitcoingui.cpp" line="345"/>
         <source>Open debugging console</source>
         <translation>Открыть консоль отладки</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="345"/>
+        <location filename="../bitcoingui.cpp" line="346"/>
         <source>&amp;Network Monitor</source>
         <translation>&amp;Монитор сети</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="346"/>
+        <location filename="../bitcoingui.cpp" line="347"/>
         <source>Show network monitor</source>
         <translation>Показать монитор сети</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="347"/>
+        <location filename="../bitcoingui.cpp" line="348"/>
+        <source>&amp;Peers list</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="349"/>
+        <source>Show peers info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="350"/>
         <source>Open &amp;Configuration File</source>
         <translation>Открыть файл &amp;настроек</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="348"/>
+        <location filename="../bitcoingui.cpp" line="351"/>
         <source>Open configuration file</source>
         <translation>Открыть файл настроек</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="350"/>
+        <location filename="../bitcoingui.cpp" line="353"/>
         <source>&amp;Sending addresses...</source>
         <translation>Адреса &amp;отправки...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="351"/>
+        <location filename="../bitcoingui.cpp" line="354"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Показать список использованных адресов отправки и их меток</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="352"/>
+        <location filename="../bitcoingui.cpp" line="355"/>
         <source>&amp;Receiving addresses...</source>
         <translation>Адреса &amp;получения...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="353"/>
+        <location filename="../bitcoingui.cpp" line="356"/>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Показать список использованных адресов получения и их меток</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="355"/>
+        <location filename="../bitcoingui.cpp" line="358"/>
         <source>Open &amp;URI...</source>
         <translation>Открыть &amp;URI...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="356"/>
+        <location filename="../bitcoingui.cpp" line="359"/>
         <source>Open a dash: URI or payment request</source>
         <translation>Открыть dash: URI или запрос платежа</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="358"/>
+        <location filename="../bitcoingui.cpp" line="361"/>
         <source>&amp;Command-line options</source>
         <translation>&amp;Параметры командной строки</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="360"/>
-        <source>Show the Bitcoin Core help message to get a list with possible Dash command-line options</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../bitcoingui.cpp" line="550"/>
+        <location filename="../bitcoingui.cpp" line="555"/>
         <source>Dash Core client</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="727"/>
+        <location filename="../bitcoingui.cpp" line="734"/>
         <source>Processed %n blocks of transaction history.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -632,31 +643,32 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message>
+        <location filename="../bitcoingui.cpp" line="363"/>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
-        <translation type="vanished">Показать помощь о Dash Core со списком возможных параметров командной строки</translation>
+        <translation>Показать помощь о Dash Core со списком возможных параметров командной строки</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="396"/>
+        <location filename="../bitcoingui.cpp" line="399"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="410"/>
+        <location filename="../bitcoingui.cpp" line="413"/>
         <source>&amp;Settings</source>
         <translation>&amp;Настройки</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="423"/>
+        <location filename="../bitcoingui.cpp" line="426"/>
         <source>&amp;Tools</source>
         <translation>&amp;Инструменты</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="430"/>
+        <location filename="../bitcoingui.cpp" line="435"/>
         <source>&amp;Help</source>
         <translation>&amp;Помощь</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="441"/>
+        <location filename="../bitcoingui.cpp" line="446"/>
         <source>Tabs toolbar</source>
         <translation>Панель вкладок</translation>
     </message>
@@ -665,7 +677,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="vanished">Клиент Dash</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="692"/>
+        <location filename="../bitcoingui.cpp" line="699"/>
         <source>%n active connection(s) to Dash network</source>
         <translation>
             <numerusform>%n активное соединение с сетью Dash</numerusform>
@@ -674,22 +686,22 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="707"/>
+        <location filename="../bitcoingui.cpp" line="714"/>
         <source>Synchronizing with network...</source>
         <translation>Синхронизация с сетью...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="710"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>Importing blocks from disk...</source>
         <translation>Выполняется импорт блоков с диска...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="713"/>
+        <location filename="../bitcoingui.cpp" line="720"/>
         <source>Reindexing blocks on disk...</source>
         <translation>Идёт переиндексация блоков на диске...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="717"/>
+        <location filename="../bitcoingui.cpp" line="724"/>
         <source>No block source available...</source>
         <translation>Источник блоков недоступен...</translation>
     </message>
@@ -698,12 +710,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation type="vanished">Обработано %1 блоков из истории транзакций.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="732"/>
+        <location filename="../bitcoingui.cpp" line="739"/>
         <source>Up to date</source>
         <translation>Синхронизировано</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="753"/>
+        <location filename="../bitcoingui.cpp" line="760"/>
         <source>%n hour(s)</source>
         <translation>
             <numerusform>%n час</numerusform>
@@ -712,7 +724,7 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="757"/>
+        <location filename="../bitcoingui.cpp" line="764"/>
         <source>%n day(s)</source>
         <translation>
             <numerusform>%n день</numerusform>
@@ -721,8 +733,8 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="761"/>
-        <location filename="../bitcoingui.cpp" line="767"/>
+        <location filename="../bitcoingui.cpp" line="768"/>
+        <location filename="../bitcoingui.cpp" line="774"/>
         <source>%n week(s)</source>
         <translation>
             <numerusform>%n неделя</numerusform>
@@ -731,12 +743,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="767"/>
+        <location filename="../bitcoingui.cpp" line="774"/>
         <source>%1 and %2</source>
         <translation>%1 и %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="767"/>
+        <location filename="../bitcoingui.cpp" line="774"/>
         <source>%n year(s)</source>
         <translation>
             <numerusform>%n год</numerusform>
@@ -745,57 +757,56 @@ This product includes software developed by the OpenSSL Project for use in the O
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="771"/>
+        <location filename="../bitcoingui.cpp" line="778"/>
         <source>%1 behind</source>
         <translation>%1 позади</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="776"/>
+        <location filename="../bitcoingui.cpp" line="783"/>
         <source>Catching up...</source>
         <translation>Синхронизируется...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="792"/>
+        <location filename="../bitcoingui.cpp" line="799"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>Последний полученный блок был сгенерирован %1 назад.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="794"/>
+        <location filename="../bitcoingui.cpp" line="801"/>
         <source>Transactions after this will not yet be visible.</source>
         <translation>Транзакции после этого времени пока видны не будут.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Dash</source>
-        <translation>Dash</translation>
+        <translation type="vanished">Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="821"/>
+        <location filename="../bitcoingui.cpp" line="828"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="824"/>
+        <location filename="../bitcoingui.cpp" line="831"/>
         <source>Warning</source>
         <translation>Внимание</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="827"/>
+        <location filename="../bitcoingui.cpp" line="834"/>
         <source>Information</source>
         <translation>Информация</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="901"/>
+        <location filename="../bitcoingui.cpp" line="908"/>
         <source>Sent transaction</source>
         <translation>Исходящая транзакция</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="901"/>
+        <location filename="../bitcoingui.cpp" line="908"/>
         <source>Incoming transaction</source>
         <translation>Входящая транзакция</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="902"/>
+        <location filename="../bitcoingui.cpp" line="909"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -808,17 +819,17 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="972"/>
+        <location filename="../bitcoingui.cpp" line="979"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Бумажник &lt;b&gt;зашифрован&lt;/b&gt; и в настоящее время &lt;b&gt;разблокирован&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="982"/>
+        <location filename="../bitcoingui.cpp" line="989"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
         <translation>Бумажник &lt;b&gt;зашифрован&lt;/b&gt; и в данный момент &lt;b&gt;разблокирован&lt;/b&gt; только для целей анонимизации</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="992"/>
+        <location filename="../bitcoingui.cpp" line="999"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Бумажник &lt;b&gt;зашифрован&lt;/b&gt; и в настоящее время &lt;b&gt;заблокирован&lt;/b&gt;</translation>
     </message>
@@ -1379,47 +1390,47 @@ Address: %4
         <translation type="unfinished">О Dash Core</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="62"/>
+        <location filename="../utilitydialog.cpp" line="66"/>
         <source>Command-line options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="63"/>
+        <location filename="../utilitydialog.cpp" line="67"/>
         <source>Usage:</source>
         <translation>Использование:</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="64"/>
+        <location filename="../utilitydialog.cpp" line="68"/>
         <source>command-line options</source>
         <translation>параметры командной строки</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="68"/>
+        <location filename="../utilitydialog.cpp" line="72"/>
         <source>UI options</source>
         <translation>Настройки интерфейса</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="69"/>
+        <location filename="../utilitydialog.cpp" line="73"/>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Выбрать каталог данных при запуске (по умолчанию: 0)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="70"/>
+        <location filename="../utilitydialog.cpp" line="74"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>Выберите язык, например &quot;de_DE&quot; (по умолчанию: как в системе)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="71"/>
+        <location filename="../utilitydialog.cpp" line="75"/>
         <source>Start minimized</source>
         <translation>Запускать свёрнутым</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="72"/>
+        <location filename="../utilitydialog.cpp" line="76"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
         <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="73"/>
+        <location filename="../utilitydialog.cpp" line="77"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Показывать заставку при запуске (по умолчанию: 1)</translation>
     </message>
@@ -1993,9 +2004,9 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="1081"/>
-        <location filename="../overviewpage.cpp" line="495"/>
-        <location filename="../overviewpage.cpp" line="509"/>
-        <location filename="../overviewpage.cpp" line="523"/>
+        <location filename="../overviewpage.cpp" line="497"/>
+        <location filename="../overviewpage.cpp" line="511"/>
+        <location filename="../overviewpage.cpp" line="525"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
@@ -2047,89 +2058,91 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="156"/>
-        <location filename="../overviewpage.cpp" line="392"/>
+        <location filename="../overviewpage.cpp" line="157"/>
+        <location filename="../overviewpage.cpp" line="158"/>
+        <location filename="../overviewpage.cpp" line="394"/>
         <source>Disabled</source>
         <translation>Выключен</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="159"/>
-        <location filename="../overviewpage.cpp" line="394"/>
-        <location filename="../overviewpage.cpp" line="537"/>
+        <location filename="../overviewpage.cpp" line="161"/>
+        <location filename="../overviewpage.cpp" line="396"/>
+        <location filename="../overviewpage.cpp" line="539"/>
         <source>Start Darksend Mixing</source>
         <translation>Начать автоперемешивание</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="161"/>
-        <location filename="../overviewpage.cpp" line="539"/>
+        <location filename="../overviewpage.cpp" line="163"/>
+        <location filename="../overviewpage.cpp" line="541"/>
         <source>Stop Darksend Mixing</source>
         <translation>Остановить перемешивание</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="312"/>
+        <location filename="../overviewpage.cpp" line="314"/>
         <source>No inputs detected</source>
         <translation>Монеты не найдены</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="320"/>
+        <location filename="../overviewpage.cpp" line="322"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation>Найдены неподтвержденные номиналы, пересчет будет выполнен после их подтверждения.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="377"/>
+        <location filename="../overviewpage.cpp" line="379"/>
         <source>Rounds</source>
         <translation>Раундов</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="408"/>
+        <location filename="../overviewpage.cpp" line="410"/>
         <source>Enabled</source>
         <translation>Включен</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="436"/>
-        <location filename="../overviewpage.cpp" line="437"/>
         <location filename="../overviewpage.cpp" line="438"/>
+        <location filename="../overviewpage.cpp" line="439"/>
+        <location filename="../overviewpage.cpp" line="440"/>
         <source>Submitted to masternode, waiting for more entries</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="442"/>
-        <location filename="../overviewpage.cpp" line="443"/>
         <location filename="../overviewpage.cpp" line="444"/>
+        <location filename="../overviewpage.cpp" line="445"/>
+        <location filename="../overviewpage.cpp" line="446"/>
         <source>Found enough users, signing ( waiting</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="456"/>
-        <location filename="../overviewpage.cpp" line="457"/>
         <location filename="../overviewpage.cpp" line="458"/>
+        <location filename="../overviewpage.cpp" line="459"/>
+        <location filename="../overviewpage.cpp" line="460"/>
         <source>Submitted to masternode, waiting in queue</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="466"/>
+        <location filename="../overviewpage.cpp" line="468"/>
         <source>Last Darksend message:
 </source>
         <translation>Последнее сообщение Darksend:
 </translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="419"/>
-        <location filename="../overviewpage.cpp" line="448"/>
+        <location filename="../overviewpage.cpp" line="421"/>
+        <location filename="../overviewpage.cpp" line="450"/>
         <source>Darksend is idle.</source>
         <translation>Darksend в режиме ожидания.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="423"/>
+        <location filename="../overviewpage.cpp" line="425"/>
         <source>Mixing in progress...</source>
         <translation>Выполняется перемешивание...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="429"/>
+        <location filename="../overviewpage.cpp" line="431"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
         <translation>Запрос Darksend завершен: Ваша транзакция принята в пул!</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="435"/>
+        <location filename="../overviewpage.cpp" line="437"/>
         <source>Submitted following entries to masternode:</source>
         <translation>Мастерноде отправлены следующие записи:</translation>
     </message>
@@ -2138,7 +2151,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="vanished">Отправлено мастерноде, ожидаем больше записей</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="441"/>
+        <location filename="../overviewpage.cpp" line="443"/>
         <source>Found enough users, signing ...</source>
         <translation>Найдено достаточное количество участников, подписываем ...</translation>
     </message>
@@ -2155,27 +2168,27 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="vanished">Найдено достаточное количество участников, подписываем ( ожидание.. )</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="446"/>
+        <location filename="../overviewpage.cpp" line="448"/>
         <source>Transmitting final transaction.</source>
         <translation>Передаем итоговую транзакцию.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="450"/>
+        <location filename="../overviewpage.cpp" line="452"/>
         <source>Finalizing transaction.</source>
         <translation>Завершаем транзакцию.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="452"/>
+        <location filename="../overviewpage.cpp" line="454"/>
         <source>Darksend request incomplete:</source>
         <translation>Запрос Darksend не завершен:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="452"/>
+        <location filename="../overviewpage.cpp" line="454"/>
         <source>Will retry...</source>
         <translation>Попробуем еще раз...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="454"/>
+        <location filename="../overviewpage.cpp" line="456"/>
         <source>Darksend request complete:</source>
         <translation>Запрос Darksend завершен:</translation>
     </message>
@@ -2192,27 +2205,27 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="vanished">Отправлено на мастерноду, ожидаем в очереди ...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="460"/>
+        <location filename="../overviewpage.cpp" line="462"/>
         <source>Unknown state:</source>
         <translation>Неизвестное состояние:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="474"/>
+        <location filename="../overviewpage.cpp" line="476"/>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="496"/>
+        <location filename="../overviewpage.cpp" line="498"/>
         <source>Darksend was successfully reset.</source>
         <translation>Статус Darksend был успешно сброшен.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="510"/>
+        <location filename="../overviewpage.cpp" line="512"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>Для работы Darksend требуется минимум %1.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="524"/>
+        <location filename="../overviewpage.cpp" line="526"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>Бумажник заблокирован и пользователь отказался его разблокировать. Darksend будет выключен.</translation>
     </message>
@@ -2380,9 +2393,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../dash.cpp" line="596"/>
         <source>Dash</source>
-        <translation>Dash</translation>
+        <translation type="vanished">Dash</translation>
     </message>
     <message>
         <location filename="../dash.cpp" line="558"/>
@@ -2393,6 +2405,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../dash.cpp" line="557"/>
         <location filename="../dash.cpp" line="564"/>
         <location filename="../dash.cpp" line="577"/>
+        <location filename="../dash.cpp" line="596"/>
         <source>Dash Core</source>
         <translation type="unfinished">Dash Core</translation>
     </message>
@@ -2421,7 +2434,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="vanished">Введите адрес Dash (например, XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
-        <location filename="../bitcoinunits.cpp" line="256"/>
+        <location filename="../bitcoinunits.cpp" line="234"/>
         <source>Amount</source>
         <translation type="unfinished">Сумма</translation>
     </message>
@@ -2512,227 +2525,227 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Информация</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="249"/>
+        <location filename="../forms/rpcconsole.ui" line="328"/>
         <source>Masternode Count</source>
         <translation>Количество мастернод</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="39"/>
+        <location filename="../forms/rpcconsole.ui" line="75"/>
         <source>General</source>
         <translation>Общие</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="203"/>
+        <location filename="../forms/rpcconsole.ui" line="279"/>
         <source>Name</source>
         <translation>Имя</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="46"/>
+        <location filename="../forms/rpcconsole.ui" line="82"/>
         <source>Client name</source>
         <translation>Имя клиента</translation>
     </message>
     <message>
+        <location filename="../forms/rpcconsole.ui" line="46"/>
         <location filename="../forms/rpcconsole.ui" line="56"/>
-        <location filename="../forms/rpcconsole.ui" line="79"/>
-        <location filename="../forms/rpcconsole.ui" line="105"/>
-        <location filename="../forms/rpcconsole.ui" line="131"/>
-        <location filename="../forms/rpcconsole.ui" line="154"/>
-        <location filename="../forms/rpcconsole.ui" line="177"/>
-        <location filename="../forms/rpcconsole.ui" line="213"/>
-        <location filename="../forms/rpcconsole.ui" line="236"/>
-        <location filename="../forms/rpcconsole.ui" line="256"/>
-        <location filename="../forms/rpcconsole.ui" line="286"/>
-        <location filename="../forms/rpcconsole.ui" line="309"/>
-        <location filename="../forms/rpcconsole.ui" line="774"/>
-        <location filename="../forms/rpcconsole.ui" line="797"/>
-        <location filename="../forms/rpcconsole.ui" line="820"/>
-        <location filename="../forms/rpcconsole.ui" line="843"/>
-        <location filename="../forms/rpcconsole.ui" line="866"/>
-        <location filename="../forms/rpcconsole.ui" line="889"/>
-        <location filename="../forms/rpcconsole.ui" line="912"/>
-        <location filename="../forms/rpcconsole.ui" line="935"/>
-        <location filename="../forms/rpcconsole.ui" line="958"/>
-        <location filename="../forms/rpcconsole.ui" line="981"/>
-        <location filename="../forms/rpcconsole.ui" line="1004"/>
-        <location filename="../forms/rpcconsole.ui" line="1027"/>
-        <location filename="../forms/rpcconsole.ui" line="1050"/>
+        <location filename="../forms/rpcconsole.ui" line="92"/>
+        <location filename="../forms/rpcconsole.ui" line="122"/>
+        <location filename="../forms/rpcconsole.ui" line="145"/>
+        <location filename="../forms/rpcconsole.ui" line="168"/>
+        <location filename="../forms/rpcconsole.ui" line="230"/>
+        <location filename="../forms/rpcconsole.ui" line="253"/>
+        <location filename="../forms/rpcconsole.ui" line="289"/>
+        <location filename="../forms/rpcconsole.ui" line="315"/>
+        <location filename="../forms/rpcconsole.ui" line="338"/>
+        <location filename="../forms/rpcconsole.ui" line="761"/>
+        <location filename="../forms/rpcconsole.ui" line="784"/>
+        <location filename="../forms/rpcconsole.ui" line="807"/>
+        <location filename="../forms/rpcconsole.ui" line="830"/>
+        <location filename="../forms/rpcconsole.ui" line="853"/>
+        <location filename="../forms/rpcconsole.ui" line="876"/>
+        <location filename="../forms/rpcconsole.ui" line="899"/>
+        <location filename="../forms/rpcconsole.ui" line="922"/>
+        <location filename="../forms/rpcconsole.ui" line="945"/>
+        <location filename="../forms/rpcconsole.ui" line="968"/>
+        <location filename="../forms/rpcconsole.ui" line="991"/>
+        <location filename="../forms/rpcconsole.ui" line="1014"/>
+        <location filename="../forms/rpcconsole.ui" line="1037"/>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="226"/>
+        <location filename="../forms/rpcconsole.ui" line="112"/>
         <source>Number of connections</source>
         <translation>Число подключений</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="348"/>
+        <location filename="../forms/rpcconsole.ui" line="188"/>
         <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Открыть отладочный лог-файл Dash из текущего каталога данных. Для больших лог-файлов эта операция может занять несколько секунд.</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="351"/>
+        <location filename="../forms/rpcconsole.ui" line="191"/>
         <source>&amp;Open</source>
         <translation>&amp;Открыть</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="167"/>
+        <location filename="../forms/rpcconsole.ui" line="135"/>
         <source>Startup time</source>
         <translation>Время запуска</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="196"/>
+        <location filename="../forms/rpcconsole.ui" line="272"/>
         <source>Network</source>
         <translation>Сеть</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="299"/>
+        <location filename="../forms/rpcconsole.ui" line="181"/>
         <source>Last block time</source>
         <translation>Время последнего блока</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="341"/>
+        <location filename="../forms/rpcconsole.ui" line="207"/>
         <source>Debug log file</source>
         <translation>Отладочный лог-файл</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="92"/>
+        <location filename="../forms/rpcconsole.ui" line="302"/>
         <source>Using OpenSSL version</source>
         <translation>Используется версия OpenSSL</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="144"/>
+        <location filename="../forms/rpcconsole.ui" line="105"/>
         <source>Build date</source>
         <translation>Дата сборки</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="276"/>
+        <location filename="../forms/rpcconsole.ui" line="158"/>
         <source>Current number of blocks</source>
         <translation>Текущее количество блоков</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="69"/>
+        <location filename="../forms/rpcconsole.ui" line="243"/>
         <source>Client version</source>
         <translation>Версия клиента</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="118"/>
+        <location filename="../forms/rpcconsole.ui" line="351"/>
         <source>Using BerkeleyDB version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="269"/>
+        <location filename="../forms/rpcconsole.ui" line="39"/>
         <source>Block chain</source>
         <translation>Цепочка блоков</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="375"/>
+        <location filename="../forms/rpcconsole.ui" line="362"/>
         <source>&amp;Console</source>
         <translation>&amp;Консоль</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="424"/>
+        <location filename="../forms/rpcconsole.ui" line="411"/>
         <source>Clear console</source>
         <translation>Очистить консоль</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="447"/>
+        <location filename="../forms/rpcconsole.ui" line="434"/>
         <source>&amp;Network Traffic</source>
         <translation>Сетевой &amp;трафик</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="499"/>
+        <location filename="../forms/rpcconsole.ui" line="486"/>
         <source>&amp;Clear</source>
         <translation>&amp;Очистить</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="515"/>
+        <location filename="../forms/rpcconsole.ui" line="502"/>
         <source>Totals</source>
         <translation>Всего</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="579"/>
+        <location filename="../forms/rpcconsole.ui" line="566"/>
         <source>Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="659"/>
+        <location filename="../forms/rpcconsole.ui" line="646"/>
         <source>Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="700"/>
+        <location filename="../forms/rpcconsole.ui" line="687"/>
         <source>&amp;Peers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="739"/>
+        <location filename="../forms/rpcconsole.ui" line="726"/>
         <location filename="../rpcconsole.cpp" line="237"/>
-        <location filename="../rpcconsole.cpp" line="594"/>
+        <location filename="../rpcconsole.cpp" line="600"/>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="764"/>
+        <location filename="../forms/rpcconsole.ui" line="751"/>
         <source>Direction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="787"/>
+        <location filename="../forms/rpcconsole.ui" line="774"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="810"/>
+        <location filename="../forms/rpcconsole.ui" line="797"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="833"/>
+        <location filename="../forms/rpcconsole.ui" line="820"/>
         <source>Services</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="856"/>
+        <location filename="../forms/rpcconsole.ui" line="843"/>
         <source>Starting Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="879"/>
+        <location filename="../forms/rpcconsole.ui" line="866"/>
         <source>Sync Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="902"/>
+        <location filename="../forms/rpcconsole.ui" line="889"/>
         <source>Ban Score</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="925"/>
+        <location filename="../forms/rpcconsole.ui" line="912"/>
         <source>Connection Time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="948"/>
+        <location filename="../forms/rpcconsole.ui" line="935"/>
         <source>Last Send</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="971"/>
+        <location filename="../forms/rpcconsole.ui" line="958"/>
         <source>Last Receive</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="994"/>
+        <location filename="../forms/rpcconsole.ui" line="981"/>
         <source>Bytes Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="1017"/>
+        <location filename="../forms/rpcconsole.ui" line="1004"/>
         <source>Bytes Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="1040"/>
+        <location filename="../forms/rpcconsole.ui" line="1027"/>
         <source>Ping Time</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2782,34 +2795,34 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 ГБ</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="632"/>
+        <location filename="../rpcconsole.cpp" line="638"/>
         <source>via %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="635"/>
-        <location filename="../rpcconsole.cpp" line="636"/>
+        <location filename="../rpcconsole.cpp" line="641"/>
+        <location filename="../rpcconsole.cpp" line="642"/>
         <source>never</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="643"/>
+        <location filename="../rpcconsole.cpp" line="649"/>
         <source>Inbound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="643"/>
+        <location filename="../rpcconsole.cpp" line="649"/>
         <source>Outbound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="656"/>
+        <location filename="../rpcconsole.cpp" line="662"/>
         <source>Unknown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="658"/>
-        <location filename="../rpcconsole.cpp" line="659"/>
+        <location filename="../rpcconsole.cpp" line="664"/>
+        <location filename="../rpcconsole.cpp" line="665"/>
         <source>Fetching...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2839,14 +2852,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Повторно использовать существующий адрес получения (не рекомендуется)</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation type="vanished">Необязательное сообщение для запроса платежа, которое будет показано при открытии запроса. Обратите внимание: сообщение не будет отправлено вместе с платежом через сеть Dash.</translation>
-    </message>
-    <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
-        <translation type="unfinished"></translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Необязательное сообщение для запроса платежа, которое будет показано при открытии запроса. Обратите внимание: сообщение не будет отправлено вместе с платежом через сеть Dash.</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -3046,8 +3055,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="590"/>
-        <location filename="../sendcoinsdialog.cpp" line="602"/>
+        <location filename="../sendcoinsdialog.cpp" line="597"/>
+        <location filename="../sendcoinsdialog.cpp" line="609"/>
         <source>Send Coins</source>
         <translation>Отправка</translation>
     </message>
@@ -3178,7 +3187,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="907"/>
         <location filename="../forms/sendcoinsdialog.ui" line="920"/>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3272,32 +3281,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Баланс:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
+        <location filename="../sendcoinsdialog.cpp" line="66"/>
         <source>Copy quantity</source>
         <translation>Копировать количество</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="60"/>
+        <location filename="../sendcoinsdialog.cpp" line="67"/>
         <source>Copy amount</source>
         <translation>Скопировать сумму</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="61"/>
+        <location filename="../sendcoinsdialog.cpp" line="68"/>
         <source>Copy fee</source>
         <translation>Копировать комиссию</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="62"/>
+        <location filename="../sendcoinsdialog.cpp" line="69"/>
         <source>Copy after fee</source>
         <translation>Копировать после комиссии</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="63"/>
+        <location filename="../sendcoinsdialog.cpp" line="70"/>
         <source>Copy bytes</source>
         <translation>Копировать байты</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="64"/>
+        <location filename="../sendcoinsdialog.cpp" line="71"/>
         <source>Copy priority</source>
         <translation>Копировать приоритет</translation>
     </message>
@@ -3306,73 +3315,73 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="vanished">Скопировать малый выход</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="65"/>
+        <location filename="../sendcoinsdialog.cpp" line="72"/>
         <source>Copy dust</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="66"/>
+        <location filename="../sendcoinsdialog.cpp" line="73"/>
         <source>Copy change</source>
         <translation>Копировать сдачу</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="221"/>
-        <location filename="../sendcoinsdialog.cpp" line="227"/>
-        <location filename="../sendcoinsdialog.cpp" line="236"/>
+        <location filename="../sendcoinsdialog.cpp" line="228"/>
+        <location filename="../sendcoinsdialog.cpp" line="234"/>
+        <location filename="../sendcoinsdialog.cpp" line="243"/>
         <source>using</source>
         <translation>, используя</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="221"/>
-        <location filename="../sendcoinsdialog.cpp" line="227"/>
+        <location filename="../sendcoinsdialog.cpp" line="228"/>
+        <location filename="../sendcoinsdialog.cpp" line="234"/>
         <source>anonymous funds</source>
         <translation>анонимные средства</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="231"/>
+        <location filename="../sendcoinsdialog.cpp" line="238"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation>(для работы darksend требуется принудительно округлить до ближайшего %1).</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="236"/>
+        <location filename="../sendcoinsdialog.cpp" line="243"/>
         <source>any available funds (not recommended)</source>
         <translation>любые доступные средства (не рекомендуется)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="242"/>
+        <location filename="../sendcoinsdialog.cpp" line="249"/>
         <source>and InstantX</source>
         <translation>и InstantX</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="266"/>
-        <location filename="../sendcoinsdialog.cpp" line="271"/>
-        <location filename="../sendcoinsdialog.cpp" line="276"/>
-        <location filename="../sendcoinsdialog.cpp" line="280"/>
+        <location filename="../sendcoinsdialog.cpp" line="273"/>
+        <location filename="../sendcoinsdialog.cpp" line="278"/>
+        <location filename="../sendcoinsdialog.cpp" line="283"/>
+        <location filename="../sendcoinsdialog.cpp" line="287"/>
         <source>%1 to %2</source>
         <translation>С %1 на %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="329"/>
+        <location filename="../sendcoinsdialog.cpp" line="336"/>
         <source>Are you sure you want to send?</source>
         <translation>Вы уверены, что хотите отправить?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="338"/>
+        <location filename="../sendcoinsdialog.cpp" line="345"/>
         <source>are added as transaction fee</source>
         <translation>добавлено в качестве комиссии</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="355"/>
+        <location filename="../sendcoinsdialog.cpp" line="362"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>Общая сумма %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="357"/>
+        <location filename="../sendcoinsdialog.cpp" line="364"/>
         <source>or</source>
         <translation>или</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="359"/>
+        <location filename="../sendcoinsdialog.cpp" line="366"/>
         <source>Confirm send coins</source>
         <translation>Подтвердите отправку монет</translation>
     </message>
@@ -3385,72 +3394,72 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="vanished">Неверный адрес платежа %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="567"/>
+        <location filename="../sendcoinsdialog.cpp" line="574"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Адрес получателя неверный, пожалуйста, перепроверьте.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="570"/>
+        <location filename="../sendcoinsdialog.cpp" line="577"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Сумма для отправки должна быть больше 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="573"/>
+        <location filename="../sendcoinsdialog.cpp" line="580"/>
         <source>The amount exceeds your balance.</source>
         <translation>Сумма превышает Ваш баланс.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="576"/>
+        <location filename="../sendcoinsdialog.cpp" line="583"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Сумма превысит Ваш баланс, если комиссия в размере %1 будет добавлена к транзакции.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="579"/>
+        <location filename="../sendcoinsdialog.cpp" line="586"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Обнаружен дублирующийся адрес. Отправка на один и тот же адрес возможна только один раз за одну операцию отправки.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="582"/>
+        <location filename="../sendcoinsdialog.cpp" line="589"/>
         <source>Transaction creation failed!</source>
         <translation>Не удалось создать транзакцию!</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="586"/>
+        <location filename="../sendcoinsdialog.cpp" line="593"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Транзакция была отклонена! Такое может произойти, если некоторые монеты уже были потрачены, например, если Вы используете одну копию бумажника (wallet.dat), а монеты были потрачены из другой копии, но не были отмечены как потраченные в этой.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="591"/>
+        <location filename="../sendcoinsdialog.cpp" line="598"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation>Ошибка: этот бумажник был разблокирован только для анонимизации монет.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="594"/>
+        <location filename="../sendcoinsdialog.cpp" line="601"/>
         <source>A fee higher than %1 is considered an insanely high fee.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="681"/>
+        <location filename="../sendcoinsdialog.cpp" line="688"/>
         <source>Pay only the minimum fee of %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="703"/>
+        <location filename="../sendcoinsdialog.cpp" line="710"/>
         <source>Estimated to begin confirmation within %1 block(s).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="810"/>
+        <location filename="../sendcoinsdialog.cpp" line="817"/>
         <source>Warning: Invalid Dash address</source>
         <translation>Внимание: неверный адрес Dash</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="819"/>
+        <location filename="../sendcoinsdialog.cpp" line="826"/>
         <source>Warning: Unknown change address</source>
         <translation>Внимание: неизвестный адрес для сдачи</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="830"/>
+        <location filename="../sendcoinsdialog.cpp" line="837"/>
         <source>(no label)</source>
         <translation>(нет метки)</translation>
     </message>
@@ -3561,12 +3570,12 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="116"/>
+        <location filename="../utilitydialog.cpp" line="120"/>
         <source>Dash Core is shutting down...</source>
         <translation>Dash Core выключается...</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="117"/>
+        <location filename="../utilitydialog.cpp" line="121"/>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Не выключайте компьютер, пока это окно не исчезнет.</translation>
     </message>
@@ -4454,7 +4463,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="1100"/>
+        <location filename="../bitcoingui.cpp" line="1107"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation type="unfinished"></translation>
     </message>
