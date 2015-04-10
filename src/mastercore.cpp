@@ -18,6 +18,7 @@
 #include "mastercore_convert.h"
 #include "mastercore_dex.h"
 #include "mastercore_errors.h"
+#include "mastercore_log.h"
 #include "mastercore_script.h"
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
@@ -46,7 +47,6 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <openssl/sha.h>
 
@@ -114,29 +114,6 @@ static uint64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
 
-const int msc_debug_parser_data = 0;
-const int msc_debug_parser= 0;
-const int msc_debug_verbose=0;
-const int msc_debug_verbose2=0;
-const int msc_debug_verbose3=0;
-const int msc_debug_vin   = 0;
-const int msc_debug_script= 0;
-const int msc_debug_dex   = 1;
-const int msc_debug_send  = 1;
-const int msc_debug_tokens= 0;
-const int msc_debug_spec  = 1;
-const int msc_debug_exo   = 0;
-const int msc_debug_tally = 1;
-const int msc_debug_sp    = 1;
-const int msc_debug_sto   = 1;
-const int msc_debug_txdb  = 0;
-const int msc_debug_tradedb = 1;
-const int msc_debug_persistence = 0;
-// disable all flags for metadex for the immediate tag, then turn back on 0 & 2 at least
-int msc_debug_metadex1= 0;
-int msc_debug_metadex2= 0;
-int msc_debug_metadex3= 0;  // enable this to see the orderbook before & after each TX
-
 const static int disable_Divs = 0;
 const static int disableLevelDB = 0;
 
@@ -201,74 +178,6 @@ CBlockIndex* mastercore::GetBlockIndex(const uint256& hash)
     return pBlockIndex;
 }
 
-
-//--- CUT HERE --- mostly copied from util.h & util.cpp
-// LogPrintf() has been broken a couple of times now
-// by well-meaning people adding mutexes in the most straightforward way.
-// It breaks because it may be called by global destructors during shutdown.
-// Since the order of destruction of static/global objects is undefined,
-// defining a mutex as a global object doesn't work (the mutex gets
-// destroyed, and then some later destructor calls OutputDebugStringF,
-// maybe indirectly, and you get a core dump at shutdown trying to lock
-// the mutex).
-static boost::once_flag mp_debugPrintInitFlag = BOOST_ONCE_INIT;
-// We use boost::call_once() to make sure these are initialized in
-// in a thread-safe manner the first time it is called:
-static FILE* fileout = NULL;
-static boost::mutex* mutexDebugLog = NULL;
-
-static void mp_DebugPrintInit()
-{
-    assert(fileout == NULL);
-    assert(mutexDebugLog == NULL);
-
-    boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME ;
-    fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // unbuffered
-
-    mutexDebugLog = new boost::mutex();
-}
-
-int mp_LogPrintStr(const std::string &str)
-{
-    int ret = 0; // Returns total number of characters written
-    if (fPrintToConsole)
-    {
-        // print to console
-        ret = fwrite(str.data(), 1, str.size(), stdout);
-    }
-    else if (fPrintToDebugLog)
-    {
-        static bool fStartedNewLine = true;
-        boost::call_once(&mp_DebugPrintInit, mp_debugPrintInitFlag);
-
-        if (fileout == NULL)
-            return ret;
-
-        boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
-
-        // reopen the log file, if requested
-        if (fReopenDebugLog) {
-            fReopenDebugLog = false;
-            boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME ;
-            if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
-                setbuf(fileout, NULL); // unbuffered
-        }
-
-        // Debug print useful for profiling
-        if (fLogTimestamps && fStartedNewLine)
-            ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-        if (!str.empty() && str[str.size()-1] == '\n')
-            fStartedNewLine = true;
-        else
-            fStartedNewLine = false;
-
-        ret = fwrite(str.data(), 1, str.size(), fileout);
-    }
-
-    return ret;
-}
-
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
 static bool readPersistence()
@@ -288,39 +197,6 @@ static bool writePersistence(int block_now)
   if (GetHeight() > (block_now + MAX_STATE_HISTORY)) return false;
 
   return true;
-}
-
-// copied from ShrinkDebugFile, util.cpp
-static void shrinkDebugFile()
-{
-    // Scroll log if it's getting too big
-    const int buffer_size = 8000000;  // 8MBytes
-    boost::filesystem::path pathLog = GetDataDir() / LOG_FILENAME;
-    FILE* file = fopen(pathLog.string().c_str(), "r");
-
-    if (file && boost::filesystem::file_size(pathLog) > 50000000) // 50MBytes
-    {
-      // Restart the file with some of the end
-      char *pch = new char[buffer_size];
-      if (NULL != pch)
-      {
-        fseek(file, -buffer_size, SEEK_END);
-        int nBytes = fread(pch, 1, buffer_size, file);
-        fclose(file); file = NULL;
-
-        file = fopen(pathLog.string().c_str(), "w");
-        if (file)
-        {
-            fwrite(pch, 1, nBytes, file);
-            fclose(file); file = NULL;
-        }
-        delete [] pch;
-      }
-    }
-    else
-    {
-      if (NULL != file) fclose(file);
-    }
 }
 
 string mastercore::strMPProperty(unsigned int i)
@@ -2503,7 +2379,7 @@ int mastercore_init()
 
   printf("%s()%s, line %d, file: %s\n", __FUNCTION__, isNonMainNet() ? "TESTNET":"", __LINE__, __FILE__);
 
-  shrinkDebugFile();
+  ShrinkDebugLog();
 
   file_log("\n%s OMNICORE INIT, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 

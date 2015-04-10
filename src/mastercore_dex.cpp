@@ -5,6 +5,7 @@
 #include "mastercore.h"
 #include "mastercore_convert.h"
 #include "mastercore_errors.h"
+#include "mastercore_log.h"
 #include "mastercore_tx.h"
 
 #include "main.h"
@@ -31,8 +32,6 @@ using std::string;
 
 using namespace mastercore;
 
-
-extern int msc_debug_metadex1, msc_debug_metadex2, msc_debug_metadex3;
 
 md_PropertiesMap mastercore::metadex;
 

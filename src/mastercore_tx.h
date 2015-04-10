@@ -5,6 +5,7 @@ class CMPOffer;
 class CMPMetaDEx;
 
 #include "mastercore.h"
+#include "mastercore_log.h"
 
 class CTransaction;
 

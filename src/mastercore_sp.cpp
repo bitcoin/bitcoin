@@ -3,6 +3,7 @@
 #include "mastercore_sp.h"
 
 #include "mastercore.h"
+#include "mastercore_log.h"
 
 #include "main.h"
 #include "uint256.h"
