@@ -315,7 +315,7 @@ height:3px;
 background:#fff;
 }
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { /* Remove Up and Down Arrows from UI */
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Remove Up, Down, Left, Right Arrows from UI */
 width:0px;
 height:0px;
 }
