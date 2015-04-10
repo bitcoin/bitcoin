@@ -83,7 +83,6 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     //prep lists
     ui->buyList->setColumnCount(3);
     ui->sellList->setColumnCount(3);
-    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
     ui->buyList->verticalHeader()->setVisible(false);
     ui->buyList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     ui->buyList->setShowGrid(false);
@@ -91,7 +90,6 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->buyList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->buyList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->buyList->setAlternatingRowColors(true);
-    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
     ui->sellList->verticalHeader()->setVisible(false);
     ui->sellList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
     ui->sellList->setShowGrid(false);
@@ -343,35 +341,23 @@ void MetaDExDialog::FullRefresh()
     ui->sellAddressCombo->clear();
 
     // update form labels to reflect market
-    if (testeco) {
-        ui->exchangeLabel->setText("Exchange - SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)) + "/TMSC");
-        ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("TMSC"));
-        ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("TMSC"));
-        ui->buyTotalLabel->setText("0.00000000 TMSC");
-        ui->sellTotalLabel->setText("0.00000000 TMSC");
-        ui->sellTM->setText("TMSC");
-        ui->buyTM->setText("TMSC");
-    } else {
-        ui->exchangeLabel->setText("Exchange - SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)) + "/MSC");
-        ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("MSC"));
-        ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("MSC"));
-        ui->buyTotalLabel->setText("0.00000000 MSC");
-        ui->sellTotalLabel->setText("0.00000000 MSC");
-        ui->sellTM->setText("MSC");
-        ui->buyTM->setText("MSC");
-    }
+    string primaryToken;
+    if (testeco) { primaryToken = "TMSC"; } else { primaryToken = "MSC"; }
+    ui->exchangeLabel->setText("Exchange - SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId) + "/" + primaryToken));
+    ui->buyTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
+    ui->sellTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
+    ui->sellTM->setText(QString::fromStdString(primaryToken));
+    ui->buyTM->setText(QString::fromStdString(primaryToken));
+    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
+    ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
+    ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));
+    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
+    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
+    ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));
     ui->buyMarketLabel->setText("BUY SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
     ui->sellMarketLabel->setText("SELL SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
-    ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId))));
-    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId))));
     ui->sellButton->setText("Sell SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
     ui->buyButton->setText("Buy SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
-    ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
-    ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    if (!testeco) { ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
-    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price"));
-    ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    if (!testeco) { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total MSC")); } else { ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total TMSC")); }
 
     // populate buy and sell addresses
     for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
