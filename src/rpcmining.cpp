@@ -145,28 +145,15 @@ Value generate(const Array& params, bool fHelp)
         nHeight = nHeightStart;
         nHeightEnd = nHeightStart+nGenerate;
     }
-    unsigned int nExtraNonce = 0;
     Array blockHashes;
     while (nHeight < nHeightEnd)
     {
-        auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
-        if (!pblocktemplate.get())
+        uint256 hash;
+        if (!MineBlock(reservekey, hash)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
-        CBlock *pblock = &pblocktemplate->block;
-        {
-            LOCK(cs_main);
-            IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            // Yes, there is a chance every nonce could fail to satisfy the -regtest
-            // target -- 1 in 2^(2^32). That ain't gonna happen.
-            ++pblock->nNonce;
-        }
-        CValidationState state;
-        if (!ProcessNewBlock(state, NULL, pblock))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
-        blockHashes.push_back(pblock->GetHash().GetHex());
+        blockHashes.push_back(hash.GetHex());
     }
     return blockHashes;
 }
@@ -494,7 +481,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = chainActive.Tip();
+        CBlockIndex* pindexPrevNew = NULL;
         nStart = GetTime();
 
         // Create new block
@@ -504,7 +491,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(scriptDummy);
+        pblocktemplate = CreateNewBlock(scriptDummy, pindexPrevNew, Params());
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 

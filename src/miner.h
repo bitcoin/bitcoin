@@ -7,6 +7,7 @@
 #define BITCOIN_MINER_H
 
 #include "primitives/block.h"
+#include "chainparams.h"
 
 #include <stdint.h>
 
@@ -25,8 +26,9 @@ struct CBlockTemplate
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads);
 /** Generate a new block, without valid proof-of-work */
-CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
+CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CBlockIndex*& pindexPrev, const CChainParams& params);
+CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey, CBlockIndex*& pindexPrev, const CChainParams& params);
+bool MineBlock(CReserveKey& key, uint256& hash);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
