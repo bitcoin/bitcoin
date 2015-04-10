@@ -198,7 +198,6 @@ void MetaDExDialog::SwitchMarket()
     FullRefresh();
 }
 
-
 void MetaDExDialog::buyClicked(int row, int col)
 {
 printf("clickedbuyoffer\n");
@@ -256,6 +255,7 @@ void MetaDExDialog::UpdateOffers()
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
                 XDOUBLE price = (it->first);
+                XDOUBLE effectivePrice;
                 string effectivePriceStr;
                 int64_t available = 0, total = 0;
                 bool includesMe = false;
@@ -275,24 +275,25 @@ void MetaDExDialog::UpdateOffers()
                             if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     }
-                    effectivePriceStr = StripTrailingZeros(obj.effectivePrice().str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)); // will be set multiple times, but always at same price level
+                    effectivePrice = obj.effectivePrice(); // could be set multiple times but always a same price level
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                     string strAvail;
                     if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
-                    if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { price = price/COIN; } // handle price display for crossed divisibility to make it easy for end user to have simple pricing
+
+                    if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { price = price/COIN; }
+                    if ((!isPropertyDivisible(global_metadex_market)) && (!useBuyList)) { effectivePrice = effectivePrice/COIN; }
+
                     if (useBuyList) {
                         AddRow(useBuyList, includesMe, StripTrailingZeros(price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
                     } else {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(effectivePriceStr), strAvail, FormatDivisibleShortMP(total));
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(effectivePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
                     }
                 }
             }
         }
     }
 }
-
-
 
 // This function updates the balance for the currently selected sell address
 void MetaDExDialog::UpdateSellAddressBalance()
