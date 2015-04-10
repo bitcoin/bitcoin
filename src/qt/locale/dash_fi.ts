@@ -33,7 +33,7 @@ Levitetään MIT/X11 ohjelmistolisenssin alaisuudessa. Tarkemmat tiedot löytyv�
 
 Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin (http://www.openssl.org/), Eric Youngin (eay@cryptsoft.com) kehittämän salausohjelmiston sekä Thomas Bernardin UPnP ohjelmiston.
 
-Käännös päivitetty: 29.3.2015 by AjM.</translation>
+Käännös päivitetty: 7.4.2015 by AjM.</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="30"/>
@@ -279,8 +279,7 @@ Käännös päivitetty: 29.3.2015 by AjM.</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>Varoitus: Jos salaat lompakon ja unohdat salasanan,
-&lt;b&gt;MENETÄT KAIKKI DASHISI&lt;/b&gt;!</translation>
+        <translation>Varoitus: Jos salaat lompakon ja unohdat salasanan, &lt;b&gt;MENETÄT KAIKKI DASHisi&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -296,7 +295,7 @@ Käännös päivitetty: 29.3.2015 by AjM.</translation>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>Dash sulkeutuu nyt salauksen viimeistelyä varten. Muista että salaus pelkästään ei voi estää dashiesi varastamista jos koneesi saastuu haittaohjelmilla tai viruksilla.</translation>
+        <translation>Dash sulkeutuu nyt salauksen viimeistelyä varten. Muista että salaus pelkästään ei voi estää Dashiesi varastamista jos koneesi saastuu haittaohjelmilla tai viruksilla.</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -1775,7 +1774,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="178"/>
         <source>Immature:</source>
-        <translation>Vahvistamatta:</translation>
+        <translation>Kypsymättä:</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="191"/>
@@ -1883,7 +1882,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/overviewpage.ui" line="1014"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Viimeisimmät tapahtumat&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;Uusimmat tapahtumat&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="126"/>
@@ -2067,7 +2066,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start dash: click-to-pay handler</source>
-        <translation>Ei voi käynnistää dashia: click-to-pay handler</translation>
+        <translation>Ei voi käynnistää Dashia: click-to-pay handler</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2987,7 +2986,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation>Viesti joka liitettiin dash: URI joka talletetaan siirtotapahtuman kanssa viitteeksi sinulle. Huomio: Tätä viestiä ei lähetetä Dash verkkoon.</translation>
+        <translation>Viesti joka liitettiin Dash: URI joka talletetaan siirtotapahtuman kanssa viitteeksi sinulle. Huomio: Tätä viestiä ei lähetetä Dash verkkoon.</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3027,7 +3026,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Älä sammuta tietokonetta ennenkuin tämä ikkuna katoaa.</translation>
+        <translation>Älä sammuta tietokonetta ennen kuin tämä ikkuna katoaa.</translation>
     </message>
 </context>
 <context>
@@ -3540,7 +3539,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../transactiontablemodel.cpp" line="297"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Vahvistetaan (%1 kehoitetusta %2 vahvistuksesta)</translation>
+        <translation>Vahvistetaan (%1 / %2 vahvistusta)</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="300"/>
@@ -4436,7 +4435,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
-        <translation>Virhe ladattaessa wallet.dat lompakkotiedostoa: Tarvitset uudemman version dashista</translation>
+        <translation>Virhe ladattaessa wallet.dat lompakkotiedostoa: Tarvitset uudemman version Dashista</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="220"/>
@@ -4686,7 +4685,7 @@ Jos tiedostoa ei ole, niin luo se ainoastaan omistajan kirjoitusoikeuksin.</tran
     <message>
         <location filename="../dashstrings.cpp" line="269"/>
         <source>Keep N dash anonymized (default: 0)</source>
-        <translation>Pidä N dashia anonymisoituna (default: 0)</translation>
+        <translation>Pidä N Dashia anonymisoituna (default: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="270"/>

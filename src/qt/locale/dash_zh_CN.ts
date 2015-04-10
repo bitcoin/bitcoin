@@ -4,18 +4,19 @@
     <message>
         <location filename="../forms/aboutdialog.ui" line="14"/>
         <source>About Dash Core</source>
-        <translation>关于 Dash Core</translation>
+        <translation>关于 达世币核心</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="53"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;Dash Core&lt;/b&gt; 版本 </translation>
+        <translation>&lt;b&gt;达世币核心&lt;/b&gt; 版本 </translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="94"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
-        <translation type="unfinished"/>
+        <translation>版权 &amp;copy; 2009-2014 比特币核心的开发者。
+版权 &amp;copy; 达世币核心的开发者。</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="111"/>
@@ -46,7 +47,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Dash Core developers</source>
-        <translation>Dash Core 的开发者</translation>
+        <translation>达世币核心开发人员</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="43"/>
@@ -135,12 +136,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>这些是您用以发送暗黑币的地址。请务必在每次发送前检查金额及接收地址。</translation>
+        <translation>这些是你要付款过去的达世币地址。在付款之前，务必要检查金额和收款地址是否正确。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>这些是您用以接收暗黑币的地址。推荐使用新地址以接收每次的转账。</translation>
+        <translation>这些是你用来收款的达世币地址。建议在每次交易时，都使用一个新的收款地址。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -221,7 +222,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="108"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation type="unfinished"/>
+        <translation>当OS帐号被盗就禁止发送币。这并不提供真正的安全性。</translation>
     </message>
     <message>
         <location filename="../forms/askpassphrasedialog.ui" line="111"/>
@@ -276,7 +277,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>警告：如果您加密了钱包却将该密码遗忘，您将&lt;b&gt;丢失您的暗黑币&lt;/b&gt;</translation>
+        <translation>警告:如果把钱包加​​密后又忘记密码，你就会从此&lt;b&gt;失去所有的达世币了&lt;/b&gt;!</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="113"/>
@@ -292,7 +293,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../askpassphrasedialog.cpp" line="124"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>暗黑币即将关闭以完成加密。请牢记即便是加密后的钱包也无法完全保护您的暗黑币免遭被恶意程序入侵等被偷之患。</translation>
+        <translation>达世币软体现在要关闭，以完成加密过程。请注意，加密钱包不能完全防止恶意软件入侵你的电脑盗取你的达世币。</translation>
     </message>
     <message>
         <location filename="../askpassphrasedialog.cpp" line="128"/>
@@ -352,7 +353,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="76"/>
         <source>Dash Core</source>
-        <translation>暗黑币 内核</translation>
+        <translation>达世币核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="85"/>
@@ -388,7 +389,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="235"/>
         <source>Send coins to a Dash address</source>
-        <translation>向暗黑币地址发送</translation>
+        <translation>发送币至达世币地址</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="241"/>
@@ -398,7 +399,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="242"/>
         <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>请求付款(产生QR码以及暗黑币:URIs)</translation>
+        <translation>请求付款(生成二维码和达世币付款协议的URI)</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="248"/>
@@ -424,12 +425,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="271"/>
         <location filename="../bitcoingui.cpp" line="273"/>
         <source>&amp;About Dash Core</source>
-        <translation>关于暗黑币内核(&amp;A)</translation>
+        <translation>&amp;关于达世币核心</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="274"/>
         <source>Show information about Dash</source>
-        <translation>显示关于暗黑币的信息</translation>
+        <translation>显示达世币的相关资讯</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="277"/>
@@ -450,7 +451,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="284"/>
         <source>Modify configuration options for Dash</source>
-        <translation>更改暗黑币设置</translation>
+        <translation>修改达世币配置选项</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="287"/>
@@ -516,7 +517,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="303"/>
         <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>使用您的暗黑币地址进行消息签名以证明对此地址的所有权</translation>
+        <translation>用达世币地址签署讯息来证明地址是你的</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="304"/>
@@ -526,7 +527,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="305"/>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>校验消息签名以证明此消息是由特定暗黑币地址所签发</translation>
+        <translation>验证讯息是用来确定讯息是用指定的达世币地址签署的</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="307"/>
@@ -596,7 +597,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="322"/>
         <source>Open a dash: URI or payment request</source>
-        <translation>打开一个暗黑币:URI或者付款请求</translation>
+        <translation>打开达世币：网页或付款请求</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="324"/>
@@ -606,7 +607,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="325"/>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
-        <translation>显示暗黑币内核帮助信息并以列表形式展示可用的暗黑币命令行选项</translation>
+        <translation>打开达世币核心帮助信息取得可使用的命令行列表</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="361"/>
@@ -637,12 +638,12 @@ This product includes software developed by the OpenSSL Project for use in the O
         <location filename="../bitcoingui.cpp" line="493"/>
         <location filename="../bitcoingui.cpp" line="498"/>
         <source>Dash client</source>
-        <translation>暗黑币客户端</translation>
+        <translation>达世币客户端</translation>
     </message>
     <message numerus="yes">
         <location filename="../bitcoingui.cpp" line="643"/>
         <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>%n (个)至暗黑币网络的有效连接</numerusform></translation>
+        <translation><numerusform>%n 已连接至达世币网络</numerusform></translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="655"/>
@@ -723,7 +724,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../bitcoingui.cpp" line="755"/>
         <source>Dash</source>
-        <translation>暗黑币</translation>
+        <translation>达世币</translation>
     </message>
     <message>
         <location filename="../bitcoingui.cpp" line="769"/>
@@ -781,7 +782,7 @@ Address: %4
     <message>
         <location filename="../dash.cpp" line="449"/>
         <source>A fatal error occurred. Dash can no longer continue safely and will quit.</source>
-        <translation>发生致命错误。暗黑币客户端将关闭。</translation>
+        <translation>发生严重错误。达世币不能继续提供安全性，将退出。</translation>
     </message>
 </context>
 <context>
@@ -857,7 +858,7 @@ Address: %4
     <message>
         <location filename="../forms/coincontroldialog.ui" line="400"/>
         <source>(1 locked)</source>
-        <translation type="unfinished"/>
+        <translation>(1 锁定)</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="446"/>
@@ -1116,32 +1117,32 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="26"/>
         <source>Basic Privacy</source>
-        <translation type="unfinished"/>
+        <translation>基本隐私</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="39"/>
         <source>High Privacy</source>
-        <translation type="unfinished"/>
+        <translation>高度隐私</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="52"/>
         <source>Maximum Privacy</source>
-        <translation type="unfinished"/>
+        <translation>最大隐私</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="65"/>
         <source>Please select a privacy level.</source>
-        <translation type="unfinished"/>
+        <translation>请选择隐私等级。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="78"/>
         <source>Use 2 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>使用2个独立主节点进行混合至多1000个DASH</translation>
+        <translation>使用2个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="91"/>
         <source>Use 8 separate masternodes to mix funds up to 1000 DASH</source>
-        <translation>使用8个独立主节点进行混合至多1000个DASH</translation>
+        <translation>使用8个独立的主节点混合资金最多1000达世币</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="104"/>
@@ -1151,17 +1152,17 @@ Address: %4
     <message>
         <location filename="../forms/darksendconfig.ui" line="117"/>
         <source>This option is the quickest and will cost about ~0.025 DASH to anonymize 1000 DASH</source>
-        <translation>此选项提供最快速度并且将花费大概0.025DRK的费用以匿名化1000DRK</translation>
+        <translation>此选项为最快速度，需要支付0.025达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="130"/>
         <source>This option is moderately fast and will cost about 0.05 DASH to anonymize 1000 DASH</source>
-        <translation>此选项提供中等速度并且将花费大概0.05DRK的费用以匿名化1000DRK</translation>
+        <translation>此选项为一般速度，需要支付0.05达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="156"/>
         <source>0.1 DASH per 1000 DASH you anonymize.</source>
-        <translation>0.1DRK每匿名化1000DRK</translation>
+        <translation>0.1达世币/1000达世币的匿名处理费用。</translation>
     </message>
     <message>
         <location filename="../forms/darksendconfig.ui" line="143"/>
@@ -1178,17 +1179,17 @@ Address: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名发送已成功设置为基本配置(%1 至 2轮循环)。你可以通过打开暗黑币的配置界面随时改变此配置。</translation>
+        <translation>匿名发送已成功设置为一般(%1到2次循环)。可以通过打开达世币配置窗口来随时修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名发送已成功设置为高循环配置(%1 至 8轮循环)。你可以通过打开暗黑币的配置界面随时改变此配置。</translation>
+        <translation>匿名发送已成功设置为高(%1到8次循环)。可以通过打开达世币配置窗口来随时修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名发送已成功设置为最大循环配置(%1 至 16轮循环)。你可以通过打开暗黑币的配置界面随时改变此配置。</translation>
+        <translation>匿名发送已成功设置为最高(%1到16次循环)。可以通过打开达世币配置窗口来随时修改。</translation>
     </message>
 </context>
 <context>
@@ -1241,7 +1242,7 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Dash address.</source>
-        <translation>此&quot;%1&quot;地址不是暗黑币有效地址</translation>
+        <translation>输入的地址&quot;%1&quot;不是有效的达世币地址。</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1292,12 +1293,12 @@ Address: %4
     <message>
         <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Dash Core - Command-line options</source>
-        <translation>暗黑币内核 - 命令行选项</translation>
+        <translation>达世币核心 - 命令行选项</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
         <source>Dash Core</source>
-        <translation>暗黑币 内核</translation>
+        <translation>达世币核心</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="69"/>
@@ -1356,17 +1357,17 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Dash Core.</source>
-        <translation>欢迎来到暗黑币内核</translation>
+        <translation>欢迎来到达世币核心。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Dash Core will store its data.</source>
-        <translation>本次启动是您第一次使用，您可以选择将暗黑币内核程序相应的数据文件存储在您想存储的文件路径</translation>
+        <translation>此次为第一次程序启动，你可以选择储存达世币核心数据的路径。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>暗黑币内核程序将开始下载并存储一份暗黑币数据块链资源。至少%1GB大小的数据将被保存在这个路径下。该数据会随着日后使用而增加其大小。您的钱包同样也会被保存在这个路径下。</translation>
+        <translation>达世币核心将会下载并存储达世币数据链。至少有%1GB的数据会保存到此路径下，并且随着时间增长。钱包文件也将存储到此路径下。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1381,7 +1382,7 @@ Address: %4
     <message>
         <location filename="../intro.cpp" line="185"/>
         <source>Dash</source>
-        <translation>暗黑币</translation>
+        <translation>达世币</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
@@ -1447,12 +1448,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Dash after logging in to the system.</source>
-        <translation>登录系统后自动启动暗黑币客户端</translation>
+        <translation>登录系统后自动启动达世币程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Dash on system login</source>
-        <translation>登录后启动暗黑币(&amp;S)</translation>
+        <translation>&amp;系统登录时启动达世币程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1492,7 +1493,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>匿名化暗黑币数量</translation>
+        <translation>保持匿名化的达世币数</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1542,7 +1543,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="307"/>
         <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自动在路由器上打开暗黑币客户端端口。此项设置仅在您的路由器支持UPnP功能并且处于打开情况下才可正常工作</translation>
+        <translation>自动对路由器打开达世币客户端端口。此项只在路由器支持UPnP时有效。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="310"/>
@@ -1552,7 +1553,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Dash network through a SOCKS proxy.</source>
-        <translation>通过SOCKS代理连接暗黑币网络。</translation>
+        <translation>通过SOCKS代理链接达世币网络。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="320"/>
@@ -1627,13 +1628,14 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="503"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Dash.</source>
-        <translation>在此可以进行设置用户界面的语言。此设置需要重启暗黑币客户端以生效</translation>
+        <translation>用户界面语言在这里设置。在重启达世币程序后生效。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="524"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/dash/</source>
-        <translation type="unfinished"/>
+        <translation>缺少相关语言或翻译不完整? 请到这里协助翻译:
+https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="550"/>
@@ -1643,12 +1645,12 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/optionsdialog.ui" line="563"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>选择比特币单位。</translation>
+        <translation>选择达世币单位。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="572"/>
         <source>Whether to show Dash addresses in the transaction list or not.</source>
-        <translation>是否在交易列表中显示暗黑币地址。</translation>
+        <translation>是否显示交易列表中的达世币地址。</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="575"/>
@@ -1745,7 +1747,7 @@ https://www.transifex.com/projects/p/dash/</source>
         <location filename="../forms/overviewpage.ui" line="953"/>
         <location filename="../forms/overviewpage.ui" line="1021"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>显示的信息可能已过期。在建立连接后您的钱包自动与暗黑币网络同步数据，此同步过程目前尚未完毕。</translation>
+        <translation>显示信息也许已过期。当与达世币网络连接后钱包程序会自动同步，但现在还未完成。</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="114"/>
@@ -1810,7 +1812,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="349"/>
         <source>0 DASH</source>
-        <translation>0 DASH</translation>
+        <translation>0 达世币</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="356"/>
@@ -1820,7 +1822,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/overviewpage.ui" line="363"/>
         <source>0 DASH / 0 Rounds</source>
-        <translation>0 DASH/ 0 轮循环</translation>
+        <translation>0 达世币 / 0 循环数</translation>
     </message>
     <message>
         <location filename="../forms/overviewpage.ui" line="370"/>
@@ -1942,7 +1944,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../overviewpage.cpp" line="381"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation>混淆中...</translation>
     </message>
     <message>
         <location filename="../overviewpage.cpp" line="387"/>
@@ -2062,7 +2064,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../paymentserver.cpp" line="294"/>
         <source>Cannot start dash: click-to-pay handler</source>
-        <translation>不能启动暗黑币：click-to-pay handler</translation>
+        <translation>无法启动达世币程序：click-to-pay handler</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="352"/>
@@ -2088,7 +2090,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation>URI无法被解析！此问题可能是由无效的暗黑币地址或者无效的URI参数导致。</translation>
+        <translation>链接不能被解析! 原因可能是无效的达世币地址或输入的链接有错。</translation>
     </message>
     <message>
         <location filename="../paymentserver.cpp" line="432"/>
@@ -2149,7 +2151,7 @@ https://www.transifex.com/projects/p/dash/</source>
         <location filename="../dash.cpp" line="539"/>
         <location filename="../dash.cpp" line="552"/>
         <source>Dash</source>
-        <translation>暗黑币</translation>
+        <translation>达世币</translation>
     </message>
     <message>
         <location filename="../dash.cpp" line="526"/>
@@ -2174,12 +2176,13 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../dash.cpp" line="612"/>
         <source>Dash Core didn&apos;t yet exit safely...</source>
-        <translation>暗黑币内核尚未安全退出...</translation>
+        <translation>达世币核心还未安全退出...</translation>
     </message>
     <message>
         <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>输入一个暗黑币地址(如 XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>输入达世币地址(如.
+XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
 </context>
 <context>
@@ -2259,7 +2262,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/rpcconsole.ui" line="90"/>
         <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>从目前数据路径下打开暗黑币的调试日志。如果您的日志文件比较大可能会多花费一些时间。</translation>
+        <translation>从数据路径打开达世币Debug日志，这个过程可能需要几秒钟。</translation>
     </message>
     <message>
         <location filename="../forms/rpcconsole.ui" line="93"/>
@@ -2351,7 +2354,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../rpcconsole.cpp" line="333"/>
         <source>Welcome to the Dash RPC console.</source>
-        <translation>欢迎来到暗黑币RPC控制台。</translation>
+        <translation>欢迎来到达世币RPC控制台。</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="334"/>
@@ -2415,7 +2418,7 @@ https://www.transifex.com/projects/p/dash/</source>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>可在付款请求中附加一条消息，当打开此请求时会显示这条消息。 注意：此条消息不会随着该请求被暗黑币网络发送。</translation>
+        <translation>附加在付款要求中的讯息，可以不填，打开要求内容时会显示。注意: 这个讯息不会随着付款送到达世币网路上。</translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2739,7 +2742,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="771"/>
         <source>InstantX</source>
-        <translation type="unfinished"/>
+        <translation>即时支付</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="778"/>
@@ -2812,7 +2815,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="166"/>
         <source>and InstantX</source>
-        <translation type="unfinished"/>
+        <translation>和 即时支付</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="190"/>
@@ -2830,7 +2833,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="262"/>
         <source>are added as transaction fee</source>
-        <translation type="unfinished"/>
+        <translation>作为交易费被添加</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="276"/>
@@ -2890,7 +2893,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="517"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>错误：该交易被拒绝！发生这种错误的原因可能是：钱包中的比特币已经被用掉，有可能您复制了wallet.dat钱包文件，然后用复制的钱包文件支付了比特币，但是这个钱包文件中没有记录。</translation>
+        <translation>错误：该交易被拒绝！发生这种错误的原因可能是：钱包中的达世币已经被用掉，有可能您复制了wallet.dat钱包文件，然后用复制的钱包文件支付了达世币，但是这个钱包文件中没有记录。</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="522"/>
@@ -2900,7 +2903,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="635"/>
         <source>Warning: Invalid Dash address</source>
-        <translation>警告：无效的暗黑币地址</translation>
+        <translation>警告：无效的达世币地址</translation>
     </message>
     <message>
         <location filename="../sendcoinsdialog.cpp" line="644"/>
@@ -3017,7 +3020,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../utilitydialog.cpp" line="129"/>
         <source>Dash Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation>达世币核心正在关闭...</translation>
     </message>
     <message>
         <location filename="../utilitydialog.cpp" line="130"/>
@@ -3087,7 +3090,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="152"/>
         <source>Sign the message to prove you own this Dash address</source>
-        <translation type="unfinished"/>
+        <translation>签署信息证明你拥有此达世币地址</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="155"/>
@@ -3123,7 +3126,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="295"/>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation type="unfinished"/>
+        <translation>验证信息用来确保此被签署信息对应相对的达世币地址</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
@@ -3143,7 +3146,8 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>输入一个暗黑币地址(如 XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation>输入达世币地址(如.
+XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../signverifymessagedialog.cpp" line="114"/>
@@ -3217,12 +3221,12 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../splashscreen.cpp" line="33"/>
         <source>Dash Core</source>
-        <translation>暗黑币 内核</translation>
+        <translation>达世币核心</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="34"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation>版本 %1</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="35"/>
@@ -3232,7 +3236,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../splashscreen.cpp" line="36"/>
         <source>The Dash Core developers</source>
-        <translation>Dash Core 的开发者</translation>
+        <translation>达世币核心开发人员</translation>
     </message>
     <message>
         <location filename="../splashscreen.cpp" line="37"/>
@@ -3253,7 +3257,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="28"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>对于%n个块开放</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="30"/>
@@ -3271,17 +3275,17 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactiondesc.cpp" line="43"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/下线(经过即时支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="45"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/已确认(经过即时支付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="47"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation>%1/确认完成(经过即时支付付系统认证)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="76"/>
@@ -3302,27 +3306,27 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactiondesc.cpp" line="54"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/下线 (即时支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="56"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation>%1/已确认 (即时支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="58"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation>%1/确认完成 (即时支付系统正在认证中 - %2 of %3签名数)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="64"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/下线 (即时支付系统认证失败)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="66"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation>%1/已确认 (即时支付系统认证失败)</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="98"/>
@@ -3337,7 +3341,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="105"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>，通过%n(多个)节点广播</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="109"/>
@@ -3444,7 +3448,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactiondesc.cpp" line="292"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>生成的比特币在可以使用前必须有 %1 个成熟的区块。当您生成了此区块后，它将被广播到网络中以加入区块链。如果它未成功进入区块链，其状态将变更为“不接受”并且不可使用。这可能偶尔会发生，如果另一个节点比你早几秒钟成功生成一个区块。</translation>
+        <translation>生成的达世币在可以使用前必须有 %1 个成熟的区块。当您生成了此区块后，它将被广播到网络中以加入区块链。如果它未成功进入区块链，其状态将变更为“不接受”并且不可使用。这可能偶尔会发生，如果另一个节点比你早几秒钟成功生成一个区块。</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="300"/>
@@ -3515,7 +3519,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="285"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>对于%n(多)个块开放</numerusform></translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="288"/>
@@ -3575,7 +3579,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactiontablemodel.cpp" line="358"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation>已通过匿名处理接收</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="361"/>
@@ -3595,12 +3599,12 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactiontablemodel.cpp" line="368"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送面额化</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="370"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送附加费用</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="372"/>
@@ -3615,7 +3619,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactiontablemodel.cpp" line="376"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送</translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="418"/>
@@ -3699,7 +3703,7 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactionview.cpp" line="81"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="82"/>
@@ -3714,12 +3718,12 @@ https://www.transifex.com/projects/p/dash/</source>
     <message>
         <location filename="../transactionview.cpp" line="84"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送面额化</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="85"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送附加费用</translation>
     </message>
     <message>
         <location filename="../transactionview.cpp" line="86"/>
@@ -3866,7 +3870,7 @@ https://www.transifex.com/projects/p/dash/</source>
         <location filename="../walletmodel.cpp" line="271"/>
         <location filename="../walletmodel.cpp" line="285"/>
         <source>Send Coins</source>
-        <translation>发送比特币</translation>
+        <translation>发送达世币</translation>
     </message>
     <message numerus="yes">
         <location filename="../walletmodel.cpp" line="271"/>
@@ -3937,27 +3941,27 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation>可接受的密码 (默认: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>建立RPC服务时发生了一个错误%u 正在监听 IPv4: %s</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation>建立RPC服务时发生了一个错误%u 正在监听 IPv6，失败回滚至IPv4: %s</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation>与提供地址绑定，持续监听。使用[host]:标记IPv6端口</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation>不能获得锁定的数据目录 %s. 达世币核心可能已经在运行。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="43"/>
@@ -3972,12 +3976,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>禁止所有主节点和与匿名发送相关功能(0-1,默认：0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation>激活即时支付,显示锁定交易的确认数(bool, 默认：true)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="54"/>
@@ -4147,32 +4151,32 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="146"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation>警告: -paytxfee 设定了很高的金额！这可是你交易付款所要付的手续费。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Dash will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 请检查电脑日期和时间是否正确！达世币核心没办法在时钟不准的情况下正常运作。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 达世币网路对于区块链结的决定目前有分歧！看来有些矿工会有问题。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="155"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 我们和某些连线的节点对于区块链结的决定不同！你可能需要升级，或是需要等其它的节点升级。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="158"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 读取钱包档wallet.dat 时发生错误！所有的密钥都正确读取了，但是交易资料或位址簿资料可能会缺少或不正确。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation>警告: 钱包档wallet.dat 损坏，但资料被拯救回来了！原来的wallet.dat 会改储存在%s, 档名是wallet.{timestamp}.bak. 如果余额或交易资料有误，你应该要用备份资料复原回来。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="165"/>
@@ -4184,177 +4188,177 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="170"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation>您必须在配置中指定一个主节点密钥。请参阅文档以获得帮助。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="173"/>
         <source>(default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>(默认: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="174"/>
         <source>(default: wallet.dat)</source>
-        <translation type="unfinished"/>
+        <translation>(默认: wallet.dat)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="175"/>
         <source>&lt;category&gt; can be:</source>
-        <translation type="unfinished"/>
+        <translation>&lt;category&gt; 可以是：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="176"/>
         <source>Accept command line and JSON-RPC commands</source>
-        <translation type="unfinished"/>
+        <translation>接受命令行以及JSON-RPC命令</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="177"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation>接受来自外部链接 (默认: 1 if no -proxy or -connect)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="178"/>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation type="unfinished"/>
+        <translation>添加一个可连接节点，并尝试保持连接开放。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="179"/>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation type="unfinished"/>
+        <translation>允许DNS查找 -新节点, -子节点 和 -链接</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="180"/>
         <source>Allow JSON-RPC connections from specified IP address</source>
-        <translation type="unfinished"/>
+        <translation>允许从指定IP地址连接JSON-RPC</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="181"/>
         <source>Already have that input.</source>
-        <translation type="unfinished"/>
+        <translation>输入已存在。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="182"/>
         <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>总是通过DNS查询对等地址(默认: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="183"/>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>尝试从已损坏的钱包文件中找回私钥</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="184"/>
         <source>Block creation options:</source>
-        <translation type="unfinished"/>
+        <translation>数据块创建选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation type="unfinished"/>
+        <translation>不能面额化：没有可匹配的输入。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="186"/>
         <source>Cannot downgrade wallet</source>
-        <translation type="unfinished"/>
+        <translation>不能降级钱包</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="187"/>
         <source>Cannot resolve -bind address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>不能解决 -绑定地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="188"/>
         <source>Cannot resolve -externalip address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>不能解决 -外部ip地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="189"/>
         <source>Cannot write default address</source>
-        <translation type="unfinished"/>
+        <translation>不能写入默认钱包</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="190"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
+        <translation>清除钱包交易列表 (检测工具; implies -rescan)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="191"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>并行是无效的。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="192"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation>并行无效。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="193"/>
         <source>Connect only to the specified node(s)</source>
-        <translation type="unfinished"/>
+        <translation>连接至指定(多个)节点</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="194"/>
         <source>Connect through SOCKS proxy</source>
-        <translation type="unfinished"/>
+        <translation>通过SOCKS代理连接</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="195"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation>连接至JSON-RPC&lt;端口&gt;(默认：9998 或 测试网络：19998)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="196"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation>连接至 KeePassHttp 端口 &lt;port&gt; (默认: 19455)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="197"/>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation type="unfinished"/>
+        <translation>连接至节点来找回对等地址和断开链接</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="198"/>
         <source>Connection options:</source>
-        <translation type="unfinished"/>
+        <translation>连接选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="199"/>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished"/>
+        <translation>已找到损坏的数据块</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="200"/>
         <source>Dash Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>达世币核心后台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="201"/>
         <source>Dash Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation>达世币核心RPC客户端版本</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="202"/>
         <source>Darksend is disabled.</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送未激活。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation>匿名发送选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="204"/>
         <source>Debugging/Testing options:</source>
-        <translation type="unfinished"/>
+        <translation>排除故障/测试 选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="205"/>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>未激活安全模式，重新写入真正安全模式项目(默认: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="206"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation>发现私有IP地址(默认：1 当监听时没有外部IP)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="207"/>
@@ -4364,12 +4368,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="208"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished"/>
+        <translation>你想要现在重建区块资料库吗？</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="209"/>
         <source>Done loading</source>
-        <translation type="unfinished"/>
+        <translation>读取完成</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
@@ -4379,7 +4383,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>激活客户端,使其作为主节点(0-1, 默认：0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="212"/>
@@ -4389,52 +4393,52 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="213"/>
         <source>Error connecting to masternode.</source>
-        <translation type="unfinished"/>
+        <translation>连接到主节点时发生错误。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="214"/>
         <source>Error initializing block database</source>
-        <translation type="unfinished"/>
+        <translation>正在初始化数据库块错误</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="215"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation>正在初始钱包数据库环境错误 %s!</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="216"/>
         <source>Error loading block database</source>
-        <translation type="unfinished"/>
+        <translation>读取数据库块错误</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="217"/>
         <source>Error loading wallet.dat</source>
-        <translation type="unfinished"/>
+        <translation>读取钱包文件错误</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="218"/>
         <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation type="unfinished"/>
+        <translation>读取钱包文件错误：钱包已损坏</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
-        <translation type="unfinished"/>
+        <translation>读取钱包文件错误：需要较为新版本的达世币程序来读取钱包</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="220"/>
         <source>Error opening block database</source>
-        <translation type="unfinished"/>
+        <translation>正在打开数据库块错误</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="221"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>读取数据库错误，正在关闭。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="222"/>
         <source>Error recovering public key.</source>
-        <translation type="unfinished"/>
+        <translation>恢复公钥时发生错误。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="223"/>
@@ -4459,62 +4463,62 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="227"/>
         <source>Error: system error: </source>
-        <translation type="unfinished"/>
+        <translation>错误：系统错误：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="228"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation>监听端口失败。如果想使用此项 修改-listen=0</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="229"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation>读取数据块信息失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="230"/>
         <source>Failed to read block</source>
-        <translation type="unfinished"/>
+        <translation>读取数据块失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="231"/>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation>同步数据块索引失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="232"/>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation>写入数据块索引失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="233"/>
         <source>Failed to write block info</source>
-        <translation type="unfinished"/>
+        <translation>写入数据块信息失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="234"/>
         <source>Failed to write block</source>
-        <translation type="unfinished"/>
+        <translation>写入数据块失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="235"/>
         <source>Failed to write file info</source>
-        <translation type="unfinished"/>
+        <translation>写入文件信息失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="236"/>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation>写入币的数据库失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="237"/>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation>写入交易索引失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="238"/>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation>写入撤回数据失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="239"/>
@@ -4559,22 +4563,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="247"/>
         <source>Importing...</source>
-        <translation type="unfinished"/>
+        <translation>正在导入...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="248"/>
         <source>Imports blocks from external blk000??.dat file</source>
-        <translation type="unfinished"/>
+        <translation>从其它来源的 blk000??.dat 档汇入区块</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="249"/>
         <source>Incompatible mode.</source>
-        <translation type="unfinished"/>
+        <translation>不兼容模式。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="250"/>
         <source>Incompatible version.</source>
-        <translation type="unfinished"/>
+        <translation>不兼容版本。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="251"/>
@@ -4589,37 +4593,37 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="253"/>
         <source>Initialization sanity check failed. Dash Core is shutting down.</source>
-        <translation type="unfinished"/>
+        <translation>初始化检查失败。达世币核心正在关闭。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="254"/>
         <source>Input is not valid.</source>
-        <translation type="unfinished"/>
+        <translation>输入是无效的。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="255"/>
         <source>InstantX options:</source>
-        <translation type="unfinished"/>
+        <translation>即时支付 选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="256"/>
         <source>Insufficient funds</source>
-        <translation type="unfinished"/>
+        <translation>存款不足</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="257"/>
         <source>Insufficient funds.</source>
-        <translation type="unfinished"/>
+        <translation>存款不足。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="258"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>无效-洋葱头地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="259"/>
         <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>无效-代理地址：&apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="260"/>
@@ -4639,22 +4643,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="263"/>
         <source>Invalid amount</source>
-        <translation type="unfinished"/>
+        <translation>无效金额</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="264"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation type="unfinished"/>
+        <translation>无效主节点私钥。请查阅文件材料。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="265"/>
         <source>Invalid private key.</source>
-        <translation type="unfinished"/>
+        <translation>无效私钥。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="266"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation>检测到无效脚本。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="267"/>
@@ -4684,12 +4688,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="272"/>
         <source>Last Darksend was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>最后一次匿名发送刚刚完成。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="273"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation type="unfinished"/>
+        <translation>最后一次成功匿名发送刚刚完成。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="274"/>
@@ -4699,22 +4703,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="275"/>
         <source>List commands</source>
-        <translation type="unfinished"/>
+        <translation>命令列表</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="276"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
-        <translation type="unfinished"/>
+        <translation>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="277"/>
         <source>Loading addresses...</source>
-        <translation type="unfinished"/>
+        <translation>正在读取地址...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="278"/>
         <source>Loading block index...</source>
-        <translation type="unfinished"/>
+        <translation>正在读取数据块索引...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
@@ -4724,12 +4728,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="280"/>
         <source>Loading wallet... (%3.2f %%)</source>
-        <translation type="unfinished"/>
+        <translation>正在读取钱包...(%3.2f%%)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="281"/>
         <source>Loading wallet...</source>
-        <translation type="unfinished"/>
+        <translation>正在读取钱包...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="282"/>
@@ -4739,27 +4743,27 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="283"/>
         <source>Maintain a full transaction index (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>保持全部的交易索引(默认： 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="284"/>
         <source>Maintain at most &lt;n&gt; connections to peers (default: 125)</source>
-        <translation type="unfinished"/>
+        <translation>保持对节点最高的 &lt;n&gt;连接数  (默认： 125)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="285"/>
         <source>Masternode options:</source>
-        <translation type="unfinished"/>
+        <translation>主节点选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="286"/>
         <source>Masternode queue is full.</source>
-        <translation type="unfinished"/>
+        <translation>主节点列队已满。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="287"/>
         <source>Masternode:</source>
-        <translation type="unfinished"/>
+        <translation>主节点：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="288"/>
@@ -4774,97 +4778,97 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="290"/>
         <source>Missing input transaction information.</source>
-        <translation type="unfinished"/>
+        <translation>丢失输入交易信息。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="291"/>
         <source>No compatible masternode found.</source>
-        <translation type="unfinished"/>
+        <translation>没有找到任何兼容的主节点。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="292"/>
         <source>No funds detected in need of denominating.</source>
-        <translation type="unfinished"/>
+        <translation>在面额化过程中没有检测到所需的资金。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="293"/>
         <source>No masternodes detected.</source>
-        <translation type="unfinished"/>
+        <translation>没有检测到任何主节点。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="294"/>
         <source>No matching denominations found for mixing.</source>
-        <translation type="unfinished"/>
+        <translation>对于混淆处理，没有找到匹配的面额资金。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="295"/>
         <source>Non-standard public key detected.</source>
-        <translation type="unfinished"/>
+        <translation>检测到非标准的公钥。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="296"/>
         <source>Not compatible with existing transactions.</source>
-        <translation type="unfinished"/>
+        <translation>与已存在交易不匹配。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="297"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation>文件说明符不可用</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="298"/>
         <source>Not in the masternode list.</source>
-        <translation type="unfinished"/>
+        <translation>在主节点列表中不存在。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="299"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>只接受与镶入检验点匹配的数据块链 (默认： 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="300"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation>在网络中只连接至节点 &lt;net&gt; (IPv4, IPv6 or Tor)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="301"/>
         <source>Options:</source>
-        <translation type="unfinished"/>
+        <translation>选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="302"/>
         <source>Password for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>JSON-RPC连接密码</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="303"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>通过时间标记预先调试输出 (默认： 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="304"/>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation>如果在块索引中找到，在启动时打印块</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="305"/>
         <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>在启动时打印块树(默认：0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="306"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>RPC SSL选项： (请在比特币维基百科查看SSL建立说明)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="307"/>
         <source>RPC client options:</source>
-        <translation type="unfinished"/>
+        <translation>RPC客户端选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="308"/>
         <source>RPC server options:</source>
-        <translation type="unfinished"/>
+        <translation>RPC服务器选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="309"/>
@@ -4879,277 +4883,277 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="311"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation>从现在的blk000??.dat文件重新建立数据块链索引</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="312"/>
         <source>Rescan the block chain for missing wallet transactions</source>
-        <translation type="unfinished"/>
+        <translation>对丢失的钱包交易重新扫描数据块链</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="313"/>
         <source>Rescanning...</source>
-        <translation type="unfinished"/>
+        <translation>正在重新扫描...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="314"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>启用定期将变动写入​​钱包档的执行绪(默认: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="315"/>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation type="unfinished"/>
+        <translation>运行至后台并且接受命令</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="316"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation>SSL 选项： (请在比特币维基百科查看SSL建立说明)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="317"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation>为-代理 选择SOCKS版本 (4 or 5, 默认： 5)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="318"/>
         <source>Send command to Dash Core</source>
-        <translation type="unfinished"/>
+        <translation>发送命令至达世币核心</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="319"/>
         <source>Send commands to node running on &lt;ip&gt; (default: 127.0.0.1)</source>
-        <translation type="unfinished"/>
+        <translation>发送命令至运行于 &lt;ip&gt;的节点 (默认： 127.0.0.1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="320"/>
         <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation type="unfinished"/>
+        <translation>发送追踪/debug信息而并非debug.log文件至控制台</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="321"/>
         <source>Server certificate file (default: server.cert)</source>
-        <translation type="unfinished"/>
+        <translation>服务器证书文件(默认： server.cert)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="322"/>
         <source>Server private key (default: server.pem)</source>
-        <translation type="unfinished"/>
+        <translation>服务器私钥 (默认： server.pem)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="323"/>
         <source>Session not complete!</source>
-        <translation type="unfinished"/>
+        <translation>对话未完成！</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="324"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation>对话超时 (30 秒)，请重新递交。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="325"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>以兆字节为单位设置缓存数据大小 (%d to %d, 默认： %d)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="326"/>
         <source>Set key pool size to &lt;n&gt; (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>设置钥匙池大小至&lt;n&gt; (默认： 100)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="327"/>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>以字节为单位设置最大的块(默认： 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="328"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>以字节为单位设置最小的块(默认： 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="329"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation>设置主节点私钥</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="330"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation>设定处理RPC 服务请求的执行绪数目(默认: 4)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="331"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>在钱包资料库环境变数设定DB_PRIVATE 旗标(默认: 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="332"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation>显示所有debug选项(使用： --help -help-debug)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="333"/>
         <source>Show benchmark information (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>显示基准信息(默认： 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="334"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation>客户启动时缩小debug.log文件(默认： 1 when no -debug)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="335"/>
         <source>Signing failed.</source>
-        <translation type="unfinished"/>
+        <translation>签名失败。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="336"/>
         <source>Signing timed out, please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation>签名超时，请重新递交。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="337"/>
         <source>Signing transaction failed</source>
-        <translation type="unfinished"/>
+        <translation>交易签名失败</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="338"/>
         <source>Specify configuration file (default: dash.conf)</source>
-        <translation type="unfinished"/>
+        <translation>指定配置文件(默认： dash.conf)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="339"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation>指定连接超时毫秒数 (默认： 5000)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="340"/>
         <source>Specify data directory</source>
-        <translation type="unfinished"/>
+        <translation>指定数据目录</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="341"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation>指定主节点配置文件 (默认: masternode.conf)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="342"/>
         <source>Specify pid file (default: dashd.pid)</source>
-        <translation type="unfinished"/>
+        <translation>指定pid 文件 (默认： dashd.pid)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="343"/>
         <source>Specify wallet file (within data directory)</source>
-        <translation type="unfinished"/>
+        <translation>指定钱包文件(通过数据目录)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="344"/>
         <source>Specify your own public address</source>
-        <translation type="unfinished"/>
+        <translation>指定你个人公开地址</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="345"/>
         <source>Spend unconfirmed change when sending transactions (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation>发送交易时花费未确认的费用(默认： 1)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="346"/>
         <source>Start Dash Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation>启动达世币核心后台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="347"/>
         <source>System error: </source>
-        <translation type="unfinished"/>
+        <translation>系统错误：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="348"/>
         <source>This help message</source>
-        <translation type="unfinished"/>
+        <translation>此帮助信息</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="349"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation>这被用来作为回归测试工具和app的开发。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="350"/>
         <source>This is not a masternode.</source>
-        <translation type="unfinished"/>
+        <translation>这并不是主节点。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="351"/>
         <source>Threshold for disconnecting misbehaving peers (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation>断开的作弊节点临界值(默认: 100)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="352"/>
         <source>To use the %s option</source>
-        <translation type="unfinished"/>
+        <translation>使用%s选项</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="353"/>
         <source>Transaction amount too small</source>
-        <translation type="unfinished"/>
+        <translation>交易额过小</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="354"/>
         <source>Transaction amounts must be positive</source>
-        <translation type="unfinished"/>
+        <translation>交易额一定要真实有效</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="355"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation>交易创建成功。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="356"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation>交易费用过高。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="357"/>
         <source>Transaction not valid.</source>
-        <translation type="unfinished"/>
+        <translation>交易无效。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="358"/>
         <source>Transaction too large</source>
-        <translation type="unfinished"/>
+        <translation>交易过大</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="359"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation>无法绑定%s此计算机 (绑定返回错误 %s)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="360"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>无法标记主节点奖励得主，错误钥匙？</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="361"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation>无法签署交叉信息，错误的密钥？</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="362"/>
         <source>Unknown -socks proxy version requested: %i</source>
-        <translation type="unfinished"/>
+        <translation>未知-socks代理版本请求：%i</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="363"/>
         <source>Unknown network specified in -onlynet: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>在 -onlynet 指定了不明的网路别: &apos;%s&apos;</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="364"/>
         <source>Upgrade wallet to latest format</source>
-        <translation type="unfinished"/>
+        <translation>升级钱包至最新版本</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="365"/>
         <source>Usage (deprecated, use dash-cli):</source>
-        <translation type="unfinished"/>
+        <translation>用量(不赞成, 使用 dash-cli)：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="366"/>
@@ -5164,72 +5168,72 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="368"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
-        <translation type="unfinished"/>
+        <translation>使用N个独立主节点匿名处理资金(2-8，默认：2)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="369"/>
         <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>对JSON-RPC链接使用OpenSSL(https)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="370"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation>使用UPnP来映射监听端口(默认：0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="371"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation>使用UPnP来映射监听端口(默认：1为监听中)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="372"/>
         <source>Use the test network</source>
-        <translation type="unfinished"/>
+        <translation>使用测试网络</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="373"/>
         <source>Username for JSON-RPC connections</source>
-        <translation type="unfinished"/>
+        <translation>链接JSON-RPC的用户名</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="374"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation>数值超过匿名发送池所允许的最大数。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="375"/>
         <source>Verifying blocks...</source>
-        <translation type="unfinished"/>
+        <translation>验证数据块中...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="376"/>
         <source>Verifying wallet...</source>
-        <translation type="unfinished"/>
+        <translation>验证钱包中...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="377"/>
         <source>Wait for RPC server to start</source>
-        <translation type="unfinished"/>
+        <translation>等待RPC服务器启动</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="378"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation>钱包 %s 属于外部数据目录 %s</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="379"/>
         <source>Wallet is locked.</source>
-        <translation type="unfinished"/>
+        <translation>钱包被锁。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="380"/>
         <source>Wallet needed to be rewritten: restart Dash to complete</source>
-        <translation type="unfinished"/>
+        <translation>钱包需要重新写入：请重启Dash来完成过程</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="381"/>
         <source>Wallet options:</source>
-        <translation type="unfinished"/>
+        <translation>钱包选项：</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="382"/>
@@ -5239,12 +5243,12 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="383"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation>警告：忽略使用参数-debugnet ，使用-debug =net</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="384"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation type="unfinished"/>
+        <translation>警告：版本过低，请升级！</translation>
     </message>
     <message>
         <source>Wrong state.</source>
@@ -5253,17 +5257,17 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="385"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation>你需要通过使用-reindex改变-txindex来重新建立数据库</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="386"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation>从钱包正在展开所有交易记录...</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="387"/>
         <source>on startup</source>
-        <translation type="unfinished"/>
+        <translation>正在启动</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="388"/>
@@ -5273,7 +5277,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="389"/>
         <source>wallet.dat corrupt, salvage failed</source>
-        <translation type="unfinished"/>
+        <translation>钱包数据损坏，恢复失败</translation>
     </message>
 </context>
 </TS>
