@@ -24,11 +24,9 @@ struct CBlockTemplate
 
 /** Run the miner threads */
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads);
-/** Create a single block */
-bool MineBlock(CWallet *pwallet, uint256& hash);
 /** Generate a new block, without valid proof-of-work */
-CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CBlockIndex*& pindexPrev);
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey, CBlockIndex*& pindexPrev);
+CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
+CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
