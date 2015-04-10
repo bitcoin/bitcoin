@@ -40,6 +40,7 @@ public:
     void UpdateBuyOffers();
     explicit MetaDExDialog(QWidget *parent = 0);
     void setModel(WalletModel *model);
+    void recalcTotal(bool useBuyFields);
 
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
@@ -60,10 +61,10 @@ private:
     WalletModel *model;
 
 private slots:
-    void buyRecalc();
-    void sellRecalc();
     void buyTrade();
     void sellTrade();
+    void recalcBuyTotal();
+    void recalcSellTotal();
 
 signals:
     // Fired when a message should be reported to the user

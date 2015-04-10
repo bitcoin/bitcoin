@@ -105,10 +105,10 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     connect(ui->sellButton, SIGNAL(clicked()), this, SLOT(sellTrade()));
     connect(ui->sellAddressCombo, SIGNAL(activated(int)), this, SLOT(sellAddressComboBoxChanged(int)));
     connect(ui->buyAddressCombo, SIGNAL(activated(int)), this, SLOT(buyAddressComboBoxChanged(int)));
-    connect(ui->sellAmountLE, SIGNAL(textEdited(const QString &)), this, SLOT(sellRecalc()));
-    connect(ui->sellPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(sellRecalc()));
-    connect(ui->buyAmountLE, SIGNAL(textEdited(const QString &)), this, SLOT(buyRecalc()));
-    connect(ui->buyPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(buyRecalc()));
+    connect(ui->sellAmountLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcSellTotal()));
+    connect(ui->sellPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcSellTotal()));
+    connect(ui->buyAmountLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcBuyTotal()));
+    connect(ui->buyPriceLE, SIGNAL(textEdited(const QString &)), this, SLOT(recalcBuyTotal()));
     connect(ui->sellList, SIGNAL(cellClicked(int,int)), this, SLOT(sellClicked(int,int)));
     connect(ui->buyList, SIGNAL(cellClicked(int,int)), this, SLOT(buyClicked(int,int)));
 
@@ -414,54 +414,44 @@ void MetaDExDialog::buyTrade()
     sendTrade(false);
 }
 
-void MetaDExDialog::buyRecalc()
+void MetaDExDialog::recalcBuyTotal()
 {
-    unsigned int propertyId = global_metadex_market;
-    bool divisible = isPropertyDivisible(propertyId);
-    bool testeco = false;
-    if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
-    uint64_t buyAmount = StrToInt64(ui->buyAmountLE->text().toStdString(),divisible);
-    uint64_t buyPrice = StrToInt64(ui->buyPriceLE->text().toStdString(),true);
-
-    if ((0>=buyAmount) || (0>=buyPrice)) { ui->buyTotalLabel->setText("N/A"); return; } // break out before invalid calc
-
-    //could result in overflow TODO
-    uint64_t totalPrice = 0;
-    if(divisible) { totalPrice = (buyAmount * buyPrice)/COIN; } else { totalPrice = buyAmount * buyPrice; }
-
-    string totalLabel = FormatDivisibleMP(totalPrice);
-    if (testeco)
-    {
-        ui->buyTotalLabel->setText(QString::fromStdString(totalLabel) + " TMSC");
-    }
-    else
-    {
-        ui->buyTotalLabel->setText(QString::fromStdString(totalLabel) + " MSC");
-    }
+    recalcTotal(true);
 }
 
-void MetaDExDialog::sellRecalc()
+void MetaDExDialog::recalcSellTotal()
+{
+    recalcTotal(false);
+}
+
+// This function recalulates a total price display from user fields
+void MetaDExDialog::recalcTotal(bool useBuyFields)
 {
     unsigned int propertyId = global_metadex_market;
     bool divisible = isPropertyDivisible(propertyId);
-    bool testeco = false;
-    if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
-    uint64_t sellAmount = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
-    uint64_t sellPrice = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
-    if ((0>=sellAmount) || (0>=sellPrice)) { ui->sellTotalLabel->setText("N/A"); return; } // break out before invalid calc
+    bool testeco = isTestEcosystemProperty(propertyId);
+    int64_t price = 0, amount = 0;
+    int64_t totalPrice = 0;
 
-    //could result in overflow TODO
-    uint64_t totalPrice;
-    if(divisible) { totalPrice = (sellAmount * sellPrice)/COIN; } else { totalPrice = sellAmount * sellPrice; }
-
-    string totalLabel = FormatDivisibleMP(totalPrice);
-    if (testeco)
-    {
-        ui->sellTotalLabel->setText(QString::fromStdString(totalLabel) + " TMSC");
+    if (useBuyFields) {
+        amount = StrToInt64(ui->buyAmountLE->text().toStdString(),divisible);
+        price = StrToInt64(ui->buyPriceLE->text().toStdString(),true);
+    } else {
+        amount = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
+        price = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
     }
-    else
-    {
-        ui->sellTotalLabel->setText(QString::fromStdString(totalLabel) + " MSC");
+    if ((0>=amount) || (0>=price)) {
+        if (useBuyFields) { ui->buyTotalLabel->setText("N/A"); return; } else { ui->sellTotalLabel->setText("N/A"); return; }
+    }
+    if (divisible) { totalPrice = (amount * price)/COIN; } else { totalPrice = amount * price; }
+    if ((totalPrice < amount || totalPrice < price) || (totalPrice / amount != price)) { // overflow detection
+        if (useBuyFields) { ui->buyTotalLabel->setText("N/A"); return; } else { ui->sellTotalLabel->setText("N/A"); return; }
+    }
+    QString totalLabel = QString::fromStdString(FormatDivisibleMP(totalPrice));
+    if (testeco) {
+        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " TMSC"); } else { ui->sellTotalLabel->setText(totalLabel + " TMSC"); }
+    } else {
+        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " MSC"); } else { ui->sellTotalLabel->setText(totalLabel + " MSC"); }
     }
 }
 
