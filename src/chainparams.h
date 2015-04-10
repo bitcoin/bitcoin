@@ -56,8 +56,6 @@ public:
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
-    /** Allow mining of a min-difficulty block */
-    bool AllowMinDifficultyBlocks() const { return consensus.fPowAllowMinDifficultyBlocks; }
     /** Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
