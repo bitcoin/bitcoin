@@ -1172,12 +1172,12 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
 
   // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
   for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+      outAll += wtx.vout[i].nValue;
       txnouttype outType;
       if (!getOutputType(wtx.vout[i].scriptPubKey, outType)) continue; //unable to get an output type, ignore
       if (outType == TX_PUBKEYHASH) { // look for exodus marker
           CTxDestination dest;
           string strAddress;
-          outAll += wtx.vout[i].nValue;
           if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
               strAddress = CBitcoinAddress(dest).ToString();
               if (exodus_address == strAddress) {
