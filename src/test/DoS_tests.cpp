@@ -6,12 +6,11 @@
 // Unit tests for denial-of-service detection/prevention code
 //
 
-
-
+#include "chainparams.h"
+#include "consensus/consensus.h"
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
-#include "pow.h"
 #include "script/sign.h"
 #include "serialize.h"
 #include "util.h"
