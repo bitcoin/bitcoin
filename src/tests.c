@@ -103,6 +103,47 @@ void random_scalar_order(secp256k1_scalar_t *num) {
     } while(1);
 }
 
+void run_context_tests(void) {
+    secp256k1_context_t *none = secp256k1_context_create(0);
+    secp256k1_context_t *sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
+    secp256k1_context_t *vrfy = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+    secp256k1_context_t *both = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+
+    secp256k1_gej_t pubj;
+    secp256k1_ge_t pub;
+    secp256k1_scalar_t msg, key, nonce;
+    secp256k1_ecdsa_sig_t sig;
+
+    /*** clone and destroy all of them to make sure cloning was complete ***/
+    {
+        secp256k1_context_t *ctx_tmp;
+
+        ctx_tmp = none; none = secp256k1_context_clone(none); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = sign; sign = secp256k1_context_clone(sign); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = vrfy; vrfy = secp256k1_context_clone(vrfy); secp256k1_context_destroy(ctx_tmp);
+        ctx_tmp = both; both = secp256k1_context_clone(both); secp256k1_context_destroy(ctx_tmp);
+    }
+
+    /*** attempt to use them ***/
+    random_scalar_order_test(&msg);
+    random_scalar_order_test(&key);
+    secp256k1_ecmult_gen(&both->ecmult_gen_ctx, &pubj, &key);
+    secp256k1_ge_set_gej(&pub, &pubj);
+
+    /* obtain a working nonce */
+    do {
+        random_scalar_order_test(&nonce);
+    } while(!secp256k1_ecdsa_sig_sign(&both->ecmult_gen_ctx, &sig, &key, &msg, &nonce, NULL));
+
+    /* try signing */
+    CHECK(secp256k1_ecdsa_sig_sign(&sign->ecmult_gen_ctx, &sig, &key, &msg, &nonce, NULL));
+    CHECK(secp256k1_ecdsa_sig_sign(&both->ecmult_gen_ctx, &sig, &key, &msg, &nonce, NULL));
+
+    /* try verifying */
+    CHECK(secp256k1_ecdsa_sig_verify(&vrfy->ecmult_ctx, &sig, &pub, &msg));
+    CHECK(secp256k1_ecdsa_sig_verify(&both->ecmult_ctx, &sig, &pub, &msg));
+}
+
 /***** HASH TESTS *****/
 
 void run_sha256_tests(void) {
@@ -1863,6 +1904,7 @@ int main(int argc, char **argv) {
     printf("random seed = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", seed16[0], seed16[1], seed16[2], seed16[3], seed16[4], seed16[5], seed16[6], seed16[7], seed16[8], seed16[9], seed16[10], seed16[11], seed16[12], seed16[13], seed16[14], seed16[15]);
 
     /* initialize */
+    run_context_tests();
     ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     run_sha256_tests();

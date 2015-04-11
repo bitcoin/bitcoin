@@ -131,6 +131,26 @@ static void secp256k1_ecmult_context_build(secp256k1_ecmult_context_t *ctx) {
 #endif
 }
 
+static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context_t *dst,
+                                           const secp256k1_ecmult_context_t *src) {
+    if (src->pre_g == NULL) {
+        dst->pre_g = NULL;
+    } else {
+        size_t size = sizeof((*dst->pre_g)[0]) * ECMULT_TABLE_SIZE(WINDOW_G);
+        dst->pre_g = (secp256k1_ge_storage_t (*)[])checked_malloc(size);
+        memcpy(dst->pre_g, src->pre_g, size);
+    }
+#ifdef USE_ENDOMORPHISM
+    if (src->pre_g_128 == NULL) {
+        dst->pre_g_128 = NULL;
+    } else {
+        size_t size = sizeof((*dst->pre_g_128)[0]) * ECMULT_TABLE_SIZE(WINDOW_G);
+        dst->pre_g_128 = (secp256k1_ge_storage_t (*)[])checked_malloc(size);
+        memcpy(dst->pre_g_128, src->pre_g_128, size);
+    }
+#endif
+}
+
 static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context_t *ctx) {
     return ctx->pre_g != NULL;
 }

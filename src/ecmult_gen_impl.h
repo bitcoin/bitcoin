@@ -80,6 +80,16 @@ static int secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_cont
     return ctx->prec != NULL;
 }
 
+static void secp256k1_ecmult_gen_context_clone(secp256k1_ecmult_gen_context_t *dst,
+                                               const secp256k1_ecmult_gen_context_t *src) {
+    if (src->prec == NULL) {
+        dst->prec = NULL;
+    } else {
+        dst->prec = (secp256k1_ge_storage_t (*)[64][16])checked_malloc(sizeof(*dst->prec));
+        memcpy(dst->prec, src->prec, sizeof(*dst->prec));
+    }
+}
+
 static void secp256k1_ecmult_gen_context_clear(secp256k1_ecmult_gen_context_t *ctx) {
     free(ctx->prec);
     ctx->prec = NULL;
