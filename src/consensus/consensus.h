@@ -6,8 +6,11 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "consensus/params.h"
+
 #include <stdint.h>
 
+class CBlockHeader;
 class CBlockIndex;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
@@ -22,5 +25,9 @@ static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20
 /** Block header validation utility functions */
 
 int64_t GetMedianTimePast(const CBlockIndex* pindex);
+unsigned int GetNextWorkRequired(const CBlockIndex*, const CBlockHeader*, const Consensus::Params&);
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
+/** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
+bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
