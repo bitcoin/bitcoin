@@ -17,4 +17,7 @@ bool GetOutputType(const CScript& scriptPubKey, txnouttype& whichTypeRet);
 /** Extracts the pushed data as hex-encoded string from a script. */
 bool GetScriptPushes(const CScript& script, std::vector<std::string>& vstrRet, bool fSkipFirst = false);
 
+/** Returns public keys or hashes from scriptPubKey, for standard transaction types. */
+bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
+
 #endif // MASTERCOIN_SCRIPT_H
