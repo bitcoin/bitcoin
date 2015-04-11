@@ -711,9 +711,37 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     int64_t nStart;
 
-    // ********************************************************* Step 5: verify wallet database integrity
+    // ********************************************************* Step 5: Backup wallet and verify wallet database integrity
 #ifdef ENABLE_WALLET
     if (!fDisableWallet) {
+        filesystem::path backupDir = GetDataDir() / "backups";
+        if (!filesystem::exists(backupDir))
+        {
+            // Always created backup folder, even when it's not used.
+            filesystem::create_directories(backupDir);
+        }
+
+        if(GetBoolArg("-createwalletbackups", true))
+        {
+            if (!filesystem::exists(backupDir))
+                filesystem::create_directories(backupDir);
+            // Create backup of the wallet
+            if (filesystem::exists(backupDir))
+            {
+                std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d %H:%M:%S", GetTime());
+                std::string backupDirStr = backupDir.string();
+                backupDirStr += "/" + strWalletFile;
+                boost::filesystem::path sourceFile = strWalletFile;
+                boost::filesystem::path backupFile = backupDirStr + dateTimeStr;
+                try {                
+                    boost::filesystem::copy_file(sourceFile, backupFile);
+                    LogPrintf("Creating backup of %s -> %s\n", sourceFile, backupFile);
+                } catch(boost::filesystem::filesystem_error &error) {
+                    LogPrintf("Failed to create backup %s -> %s\n", sourceFile, backupFile);
+                }
+            }
+        }
+        
         LogPrintf("Using wallet %s\n", strWalletFile);
         uiInterface.InitMessage(_("Verifying wallet..."));
 
