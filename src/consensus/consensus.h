@@ -39,6 +39,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
 
 /** Block header validation utility functions */
 
+int64_t GetMedianTimePast(const CBlockIndex* pindex);
 uint32_t GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 uint32_t CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
