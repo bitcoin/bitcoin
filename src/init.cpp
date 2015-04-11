@@ -735,6 +735,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 
                 boost::filesystem::path sourceFile = sourcePathStr;
                 boost::filesystem::path backupFile = backupPathStr + dateTimeStr;
+                sourceFile.make_preferred();
                 backupFile.make_preferred();
                 
                 try {                
