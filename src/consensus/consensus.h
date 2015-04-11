@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -35,6 +36,10 @@ bool CheckTx(const CTransaction& tx, CValidationState& state, const Params& cons
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const Params& consensusParams, const CCoinsViewCache& inputs, int nSpendHeight);
 
 } // namespace Consensus
+
+/** Block header validation utility functions */
+
+int64_t GetMedianTimePast(const CBlockIndex* pindex);
 
 /** Block validation utility functions */
 
