@@ -10,11 +10,21 @@
 
 class CBlockHeader;
 class CBlockIndex;
+class CValidationState;
 class uint256;
 
+/**
+ * Consensus validations:
+ * Check_ means checking everything possible with the data provided.
+ * Verify_ means all data provided was enough for this level and its "consensus-verified".
+ */
 namespace Consensus {
 
 class Params;
+
+/** Block header validation functions */
+
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true);
 
 } // namespace Consensus
 
