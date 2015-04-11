@@ -726,12 +726,15 @@ bool AppInit2(boost::thread_group& threadGroup)
             // Create backup of the wallet
             if (filesystem::exists(backupDir))
             {
-//                boost::system::error_code error;
                 std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H.%M", GetTime());
-                std::string backupDirStr = backupDir.string();
-                backupDirStr += "/" + strWalletFile;
-                boost::filesystem::path sourceFile = strWalletFile;
-                boost::filesystem::path backupFile = backupDirStr + dateTimeStr;
+                std::string backupPathStr = backupDir.string();
+                backupPathStr += "/" + strWalletFile;
+                
+                std::string sourcePathStr = GetDataDir().string();
+                sourcePathStr += "/" + strWalletFile;
+                
+                boost::filesystem::path sourceFile = sourcePathStr;
+                boost::filesystem::path backupFile = backupPathStr + dateTimeStr;
                 backupFile.make_preferred();
                 
                 try {                
