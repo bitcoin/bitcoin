@@ -4,6 +4,7 @@
 
 #include "chainparams.h"
 #include "coins.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "miner.h"
@@ -63,6 +64,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     CMutableTransaction tx,tx2;
     CScript script;
     uint256 hash;
+    Consensus::Params testConsensusParams;
+    testConsensusParams.nMedianTimeSpan = 11;
 
     LOCK(cs_main);
     fCheckpointsEnabled = false;
@@ -77,7 +80,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         pblock->nVersion = 1;
-        pblock->nTime = chainActive.Tip()->GetMedianTimePast()+1;
+        pblock->nTime = GetMedianTimePast(chainActive.Tip(), testConsensusParams) + 1;
         CMutableTransaction txCoinbase(pblock->vtx[0]);
         txCoinbase.nVersion = 1;
         txCoinbase.vin[0].scriptSig = CScript();
@@ -218,7 +221,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     chainActive.Tip()->nHeight = nHeight;
 
     // non-final txs in mempool
-    SetMockTime(chainActive.Tip()->GetMedianTimePast()+1);
+    SetMockTime(GetMedianTimePast(chainActive.Tip(), testConsensusParams) + 1);
 
     // height locked
     tx.vin[0].prevout.hash = txFirst[0]->GetHash();
@@ -240,7 +243,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx2.vout.resize(1);
     tx2.vout[0].nValue = 4900000000LL;
     tx2.vout[0].scriptPubKey = CScript() << OP_1;
-    tx2.nLockTime = chainActive.Tip()->GetMedianTimePast()+1;
+    tx2.nLockTime = GetMedianTimePast(chainActive.Tip(), testConsensusParams) + 1;
     hash = tx2.GetHash();
     mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
     BOOST_CHECK(!CheckFinalTx(tx2));
@@ -253,7 +256,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // However if we advance height and time by one, both will.
     chainActive.Tip()->nHeight++;
-    SetMockTime(chainActive.Tip()->GetMedianTimePast()+2);
+    SetMockTime(GetMedianTimePast(chainActive.Tip(), testConsensusParams) + 2);
 
     // FIXME: we should *actually* create a new block so the following test
     //        works; CheckFinalTx() isn't fooled by monkey-patching nHeight.

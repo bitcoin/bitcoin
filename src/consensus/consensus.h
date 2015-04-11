@@ -61,6 +61,10 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Pa
 
 } // namespace Consensus
 
+/** Block header validation utility functions */
+
+int64_t GetMedianTimePast(const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+
 /** Block validation utilities */
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
