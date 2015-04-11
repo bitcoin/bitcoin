@@ -738,7 +738,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                     boost::filesystem::copy_file(sourceFile, backupFile);
                     LogPrintf("Creating backup of %s -> %s\n", sourceFile, backupFile);
                 } catch(boost::filesystem::filesystem_error &error) {
-                    LogPrintf("Failed to create backup %s\n", &error);
+                    LogPrintf("Failed to create backup %s\n", error.what());
                 }
             }
         }
