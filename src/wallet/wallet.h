@@ -381,7 +381,7 @@ public:
     int64_t GetTxTime() const;
     int GetRequestCount() const;
 
-    void RelayWalletTransaction();
+    bool RelayWalletTransaction();
 
     std::set<uint256> GetConflicts() const;
 };
@@ -455,6 +455,7 @@ private:
 
     int64_t nNextResend;
     int64_t nLastResend;
+    bool fBroadcastTransactions;
 
     /**
      * Used to keep track of spent outpoints, and
@@ -518,6 +519,7 @@ public:
         nNextResend = 0;
         nLastResend = 0;
         nTimeFirstKey = 0;
+        fBroadcastTransactions = false;
     }
 
     std::map<uint256, CWalletTx> mapWallet;
@@ -614,7 +616,8 @@ public:
     void EraseFromWallet(const uint256 &hash);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
-    void ResendWalletTransactions();
+    void ResendWalletTransactions(int64_t nBestBlockTime);
+    std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime);
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
@@ -722,6 +725,11 @@ public:
 
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
+
+    /** Inquire whether this wallet broadcasts transactions. */
+    bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
+    /** Set whether this wallet broadcasts transactions. */
+    void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
 };
 
 /** A key allocated from the key pool. */

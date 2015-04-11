@@ -90,7 +90,7 @@ class RESTTest (BitcoinTestFramework):
         self.sync_all()
 
         # now mine the transactions
-        newblockhash = self.nodes[1].setgenerate(True, 1)
+        newblockhash = self.nodes[1].generate(1)
         self.sync_all()
 
         #check if the 3 tx show up in the new block

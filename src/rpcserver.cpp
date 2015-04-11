@@ -312,6 +312,7 @@ static const CRPCCommand vRPCCommands[] =
     /* Coin generation */
     { "generating",         "getgenerate",            &getgenerate,            true,      false },
     { "generating",         "setgenerate",            &setgenerate,            true,      false },
+    { "generating",         "generate",               &generate,               true,      false },
 #endif
 
     /* Raw transactions */
@@ -333,6 +334,9 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "invalidateblock",        &invalidateblock,        true,      false },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      false },
     { "hidden",             "setmocktime",            &setmocktime,            true,      false },
+#ifdef ENABLE_WALLET
+    { "hidden", "resendwallettransactions", &resendwallettransactions, true, true },
+#endif
 
 #ifdef ENABLE_WALLET
     /* Wallet */
