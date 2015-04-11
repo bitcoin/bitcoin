@@ -4845,7 +4845,20 @@ bool SendMessages(CNode* pto)
         nNowMicros = GetTimeMicros();
 
         vInv.reserve(1000);
-        
+
+        {
+            LOCK(pto->cs_inventory);
+
+            BOOST_FOREACH(const CInv& inv, pto->vBlockInventoryToSend) {
+                // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
+                if (pto->setInventoryKnown.insert(inv).second) {
+                    vInv.push_back(inv);
+                    pto->PushMessage("inv", vInv);
+                    vInv.clear();
+                }
+            }
+        }
+
         if (pto->nNextInvSend < nNowMicros)
             vInvWait.reserve(pto->vInventoryToSend.size());
 
@@ -4857,17 +4870,6 @@ bool SendMessages(CNode* pto)
 
             BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend) {
                 switch(inv.type) {
-                    case MSG_BLOCK:
-                    case MSG_FILTERED_BLOCK:
-                    {
-                        // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
-                        if (pto->setInventoryKnown.insert(inv).second) {
-                            vInv.push_back(inv);
-                            pto->PushMessage("inv", vInv);
-                            vInv.clear();
-                        }
-                        break;
-                    }
                     case MSG_TX:
                     {
                         if (pto->nNextInvSend < nNowMicros || pto->fWhitelisted) {

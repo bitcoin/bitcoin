@@ -384,6 +384,7 @@ public:
     // inventory based relay
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
+    std::vector<CInv> vBlockInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
     int64_t nNextInvSend;
@@ -486,10 +487,23 @@ public:
 
     void PushInventory(const CInv& inv)
     {
+        switch(inv.type)
         {
-            LOCK(cs_inventory);
-            if (!setInventoryKnown.count(inv))
-                vInventoryToSend.push_back(inv);
+            case MSG_BLOCK:
+            case MSG_FILTERED_BLOCK:
+            {
+                LOCK(cs_inventory);
+                if (!setInventoryKnown.count(inv))
+                    vBlockInventoryToSend.push_back(inv);
+                break;
+            }
+            default:
+            {
+                LOCK(cs_inventory);
+                if (!setInventoryKnown.count(inv))
+                    vInventoryToSend.push_back(inv);
+                break;
+            }
         }
     }
 
