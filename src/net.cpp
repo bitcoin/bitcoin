@@ -1519,11 +1519,6 @@ void ThreadMessageHandler()
             }
         }
 
-        // Poll the connected nodes for messages
-        CNode* pnodeTrickle = NULL;
-        if (!vNodesCopy.empty())
-            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
-
         bool fSleep = true;
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
