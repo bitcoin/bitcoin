@@ -33,6 +33,7 @@ namespace Consensus {
 /** Block header validation functions */
 
 bool CheckBlockHeader(const CBlockHeader&, CValidationState&, const Consensus::Params&, int64_t nTime, bool fCheckPOW = true);
+bool ContextualCheckBlockHeader(const CBlockHeader&, CValidationState&, const Consensus::Params&, const CBlockIndex*);
 
 } // namespace Consensus
 
