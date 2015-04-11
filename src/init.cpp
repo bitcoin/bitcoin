@@ -729,9 +729,12 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (filesystem::exists(backupDir))
             {
                 std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H.%M", GetTime());
-                std::string backupDirStr = backupDir.string() + boost::filesystem::path::preferred_separator + strWalletFile;
+                std::string backupDirStr = backupDir.string();
+                backupDirStr += "/" + strWalletFile;
                 boost::filesystem::path sourceFile = strWalletFile;
                 boost::filesystem::path backupFile = backupDirStr + dateTimeStr;
+                backupFile.make_preferred();
+                
                 try {                
                     boost::filesystem::copy_file(sourceFile, backupFile);
                     LogPrintf("Creating backup of %s -> %s\n", sourceFile, backupFile);
