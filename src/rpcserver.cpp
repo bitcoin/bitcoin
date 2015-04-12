@@ -41,6 +41,8 @@ static bool fRPCRunning = false;
 static bool fRPCInWarmup = true;
 static std::string rpcWarmupStatus("RPC server started");
 static CCriticalSection cs_rpcWarmup;
+static CCriticalSection cs_vExtURI;
+static std::vector<std::string> vExtURI;
 
 //! These are created by StartRPCThreads, destroyed in StopRPCThreads
 static boost::asio::io_service* rpc_io_service = NULL;
@@ -53,11 +55,17 @@ static std::vector< boost::shared_ptr<ip::tcp::acceptor> > rpc_acceptors;
 
 static struct CRPCSignals
 {
+    boost::signals2::signal<void (const std::string& strMethod, const UniValue& params, UniValue& result, bool& accept)> ExtCmdExecute; //!< Allow listeners to append result to a extended uri schema call
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
     boost::signals2::signal<void (const CRPCCommand&)> PreCommand;
     boost::signals2::signal<void (const CRPCCommand&)> PostCommand;
 } g_rpcSignals;
+
+void RPCServer::OnExtendedCommandExecute(boost::function<void (const std::string& strMethod, const UniValue& params, UniValue& result, bool& accept)> slot)
+{
+    g_rpcSignals.ExtCmdExecute.connect(slot);
+}
 
 void RPCServer::OnStarted(boost::function<void ()> slot)
 {
@@ -825,6 +833,12 @@ void RPCRunLater(const std::string& name, boost::function<void(void)> func, int6
     deadlineTimers[name]->async_wait(boost::bind(RPCRunHandler, _1, func));
 }
 
+void AddJSONRPCURISchema(const std::string& uri)
+{
+    LOCK(cs_vExtURI);
+    vExtURI.push_back(uri);
+}
+
 class JSONRequest
 {
 public:
@@ -900,7 +914,8 @@ static string JSONRPCExecBatch(const UniValue& vReq)
     return ret.write() + "\n";
 }
 
-static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
+static bool HTTPReq_JSONRPC(const std::string &sURI,
+                            AcceptedConnection *conn,
                             string& strRequest,
                             map<string, string>& mapHeaders,
                             bool fRun)
@@ -940,21 +955,46 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
         }
 
         string strReply;
+        size_t nVExtURISize = 0;
+        {
+            LOCK(cs_vExtURI);
+            nVExtURISize = vExtURI.size();
+        }
 
-        // singleton request
-        if (valRequest.isObject()) {
+        if(sURI == "/" || nVExtURISize == 0)
+        {
+            // singleton request
+            if (valRequest.isObject())
+            {
+                jreq.parse(valRequest);
+
+                UniValue result = tableRPC.execute(jreq.strMethod, jreq.params);
+
+                // Send reply
+                strReply = JSONRPCReply(result, NullUniValue, jreq.id);
+
+            // array of requests
+            } else if (valRequest.isArray())
+                strReply = JSONRPCExecBatch(valRequest.get_array());
+            else
+                throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
+
+        }
+        else
+        {
+            UniValue result;
             jreq.parse(valRequest);
 
-            UniValue result = tableRPC.execute(jreq.strMethod, jreq.params);
+            // allow connected listeners to add response to the call
+            // batch execution can be implemented within the listening code part
+            bool accept = false;
+            g_rpcSignals.ExtCmdExecute(jreq.strMethod, jreq.params, result, accept);
+            if (!accept)
+                throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 
-            // Send reply
+            // build JSON reply
             strReply = JSONRPCReply(result, NullUniValue, jreq.id);
-
-        // array of requests
-        } else if (valRequest.isArray())
-            strReply = JSONRPCExecBatch(valRequest.get_array());
-        else
-            throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
+        }
 
         conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, strReply.size()) << strReply << std::flush;
     }
@@ -992,8 +1032,13 @@ void ServiceConnection(AcceptedConnection *conn)
             fRun = false;
 
         // Process via JSON-RPC API
-        if (strURI == "/") {
-            if (!HTTPReq_JSONRPC(conn, strRequest, mapHeaders, fRun))
+        bool extURIFound = false;
+        {
+            LOCK(cs_vExtURI);
+            extURIFound = (std::find(vExtURI.begin(), vExtURI.end(), strURI) != vExtURI.end());
+        }
+        if (strURI == "/" || extURIFound) {
+            if (!HTTPReq_JSONRPC(strURI, conn, strRequest, mapHeaders, fRun))
                 break;
 
         // Process via HTTP REST API

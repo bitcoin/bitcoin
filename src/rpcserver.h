@@ -27,6 +27,7 @@ namespace RPCServer
     void OnStopped(boost::function<void ()> slot);
     void OnPreCommand(boost::function<void (const CRPCCommand&)> slot);
     void OnPostCommand(boost::function<void (const CRPCCommand&)> slot);
+    void OnExtendedCommandExecute(boost::function<void (const std::string& strMethod, const UniValue& params, UniValue& result, bool& accept)> slot);
 }
 
 class CBlockIndex;
@@ -86,6 +87,11 @@ void RPCTypeCheckObj(const UniValue& o,
  * Overrides previous timer <name> (if any).
  */
 void RPCRunLater(const std::string& name, boost::function<void(void)> func, int64_t nSeconds);
+
+/**
+ * Adds a JSONRPC entry point for using it over the OnExtendedCommandExecute signaling
+ */
+void AddJSONRPCURISchema(const std::string& uri);
 
 //! Convert boost::asio address to CNetAddr
 extern CNetAddr BoostAsioToCNetAddr(boost::asio::ip::address address);
