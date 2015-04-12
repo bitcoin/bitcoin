@@ -8,12 +8,17 @@
 #include <map>
 #include <set>
 
-#include <openssl/sha.h>
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/locks.hpp>
-
-#include "sync.h"
+#include "clientversion.h"
 #include "serialize.h"
+#include "streams.h"
+#include "sync.h"
+#include "util.h"
+#include "version.h"
+
+#include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
+
+#include "crypto/sha256.h"
 
 typedef std::vector<unsigned char> data_t;
 
@@ -25,13 +30,15 @@ private:
     mutable boost::shared_mutex mutex;
 
     FILE *file;
-    SHA256_CTX ctxState;
-
+    std::string fileName;
+    
+    CSHA256 ctxState;
+    
     // database
     std::map<data_t, data_t> mapData;
     size_t nUsed; // continuously updated
     size_t nWritten; // updated when writing a new block
-
+    
     // cached changes
     std::set<data_t> setDirty;
 
@@ -45,8 +52,10 @@ protected:
     bool Exists_(const data_t &key) const;
     bool Erase_(const data_t &key, bool fLoad = false);
     bool Flush_();
+    bool Open_(const char *pszFile, bool fCreate = true);
     bool Close_();
-
+    bool Reopen_(bool readOnly);
+    
 public:
     CLogDBFile()
     {
@@ -63,78 +72,13 @@ public:
         boost::lock_guard<boost::shared_mutex> lock(mutex);
         Close_();
 
-        file = fopen(pszFile, fCreate ? "a+b" : "r+b");
-
-        if (file == NULL) {
-            printf("Error opening %s: %s\n", pszFile, strerror(errno));
-                return false;
-        }
-
-        return Load_();
+        return Open_(pszFile, fCreate);
     }
-
-/*
-    template<typename K, typename V>
-    bool Write(const K &key, const V &value, bool fOverwrite = true)
-    {
-        CDataStream ssk(SER_DISK);
-        ssk << key;
-        data_t datak(ssk.begin(), ssk.end());
-        CDataStream ssv(SER_DISK);
-        ssv << value;
-        data_t datav(ssv.begin(), ssv.end());
-        CRITICAL_BLOCK(cs)
-            return Write_(datak, datav, fOverwrite);
-        return false;
-    }
-
-    template<typename K, typename V>
-    bool Read(const K &key, V &value) const
-    {
-        CDataStream ssk(SER_DISK);
-        ssk << key;
-        data_t datak(ssk.begin(), ssk.end());
-        data_t datav;
-        CRITICAL_BLOCK(cs)
-            if (!Read_(datak,datav))
-                return false;
-        CDataStream ssv(datav, SER_DISK);
-        ssv >> value;
-        return true;
-    }
-
-    template<typename K>
-    bool Exists(const K &key) const
-    {
-        CDataStream ssk(SER_DISK);
-        ssk << key;
-        data_t datak(ssk.begin(), ssk.end());
-        CRITICAL_BLOCK(cs)
-            return Exists_(datak);
-        return false;
-    }
-
-    template<typename K>
-    bool Erase(const K &key)
-    { 
-        CDataStream ssk(SER_DISK);
-        ssk << key;
-        data_t datak(ssk.begin(), ssk.end());
-        CRITICAL_BLOCK(cs)
-            return Erase_(datak);
-        return false;
-    }
-*/
 
 //    bool Flush()            { CRITICAL_BLOCK(cs) return Flush_();          return false; }
 //    bool Close()            { CRITICAL_BLOCK(cs) return Close_();          return false; }
 //    bool IsDirty() const    { CRITICAL_BLOCK(cs) return !setDirty.empty(); return false; }
 //    bool IsOpen() const     { return file != NULL; }
-
-    bool Close() {
-        boost::lock_guard<boost::shared_mutex> lock(mutex);
-        return Close_();
-    }
 };
 
 class CLogDB
@@ -143,35 +87,117 @@ public:
     typedef data_t key_type;
     typedef data_t value_type;
     typedef std::map<key_type, value_type>::const_iterator const_iterator;
-
-private:
     mutable CCriticalSection cs;
-    CLogDBFile * const db; // const pointer to non-const db
+    
+private:
+    CLogDBFile *db; // pointer to non-const db
     const bool fReadOnly; // readonly CLogDB's use a shared lock instead of a normal
 
     bool fTransaction; // true inside a transaction
     std::map<data_t, data_t> mapData; // must be empty outside transactions
     std::set<data_t> setDirty;
 
+    bool loaded;
+    
 public:
     bool TxnAbort();
     bool TxnBegin();
     bool TxnCommit();
-
-    CLogDB(CLogDBFile *dbIn, bool fReadOnlyIn = false) : db(dbIn), fReadOnly(fReadOnlyIn), fTransaction(false) { }
+    bool Flush(bool shutdown = false);
+    
+    CLogDB(std::string pathAndFile, bool fReadOnlyIn = false) : fReadOnly(fReadOnlyIn), fTransaction(false), loaded(false)
+    {
+        db = new CLogDBFile();
+        bool createFile = true;
+        if(boost::filesystem::exists(pathAndFile))
+            createFile = false;
+        
+        if(db->Open(pathAndFile.c_str(), createFile) && createFile)
+            loaded = true;
+    }
 
     ~CLogDB() {
         TxnAbort();
+        {
+            boost::lock_guard<boost::shared_mutex> lock(db->mutex);
+            db->Close_();
+        }
+        delete db;
     }
 
     bool Write(const data_t &key, const data_t &value);
     bool Erase(const data_t &key);
     bool Read(const data_t &key, data_t &value);
     bool Exists(const data_t &key);
+    bool Load();
+    bool Rewrite(const std::string &file); //rewrite and compact to a new file
+    bool ReloadDB(const std::string& walletFile); //!reload the db file
+    
+    bool Close() {
+        boost::lock_guard<boost::shared_mutex> lock(db->mutex);
+        loaded = false;
+        return db->Close_();
+    }
+    
+protected:
+    bool Write_(const data_t &key, const data_t &value, bool fOverwrite = true);
+    bool Erase_(const data_t &key);
+    bool Read_(const data_t &key, data_t &value);
+    bool Exists_(const data_t &key);
 
+public:
     // only reads committed data, no local modifications
     const_iterator begin() const { return db->mapData.begin(); }
     const_iterator end() const   { return db->mapData.end(); }
+    
+template<typename K, typename V>
+bool Write(const K &key, const V &value, bool fOverwrite = true)
+{
+    if (!loaded) return false;
+    
+    CDataStream ssk(SER_DISK, CLIENT_VERSION);
+    ssk << key;
+    data_t datak(ssk.begin(), ssk.end());
+    CDataStream ssv(SER_DISK, CLIENT_VERSION);
+    ssv << value;
+    data_t datav(ssv.begin(), ssv.end());
+    return Write_(datak, datav, fOverwrite);
+}
+template<typename K, typename V>
+bool Read(const K &key, V &value)
+{
+    if (!loaded) return false;
+    
+    CDataStream ssk(SER_DISK, CLIENT_VERSION);
+    ssk << key;
+    data_t datak(ssk.begin(), ssk.end());
+    data_t datav;
+    if (!Read_(datak,datav))
+        return false;
+    CDataStream ssv(datav, SER_DISK, CLIENT_VERSION);
+    ssv >> value;
+    return true;
+}
+template<typename K>
+bool Exists(const K &key)
+{
+    if (!loaded) return false;
+    
+    CDataStream ssk(SER_DISK, CLIENT_VERSION);
+    ssk << key;
+    data_t datak(ssk.begin(), ssk.end());
+    return Exists_(datak);
+}
+template<typename K>
+bool Erase(const K &key)
+{
+    if (!loaded) return false;
+    
+    CDataStream ssk(SER_DISK, CLIENT_VERSION);
+    ssk << key;
+    data_t datak(ssk.begin(), ssk.end());
+    return Erase_(datak);
+}
 };
 
 #endif
