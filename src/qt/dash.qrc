@@ -55,6 +55,8 @@
         <file alias="drkblue_downArrow">res/images/drkblue_downArrow.png</file>
         <file alias="drkblue_downArrow_small">res/images/drkblue_downArrow_small.png</file>
         <file alias="drkblue_upArrow_small">res/images/drkblue_upArrow_small.png</file>
+        <file alias="drkblue_leftArrow_small">res/images/drkblue_leftArrow_small.png</file>
+        <file alias="drkblue_rightArrow_small">res/images/drkblue_rightArrow_small.png</file>
         <file alias="drkblue_qtreeview_selected">res/images/drkblue_qtreeview_selected.png</file>
         <file alias="drkblue_walletFrame_bg">res/images/drkblue_walletFrame_bg.png</file>
         <file alias="drkblue_walletFrame">res/images/drkblue_walletFrame.png</file>
