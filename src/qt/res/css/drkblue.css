@@ -273,23 +273,21 @@ color:#333;
 }
 
 QScrollBar { /* Scroll Bar */
-background-color:#ffffff;
+
 }
 
 QScrollBar:vertical { /* Vertical Scroll Bar Attributes */
-border:1px solid #818181;
-border-left:0px;
-background:#333;
-width:17px;
-margin: 0px 0px 0px 0px;
+border:0;
+background:#ffffff;
+width:18px;
+margin: 18px 0px 18px 0px;
 }
 
 QScrollBar:horizontal { /* Horizontal Scroll Bar Attributes */
-border:1px solid #818181;
-border-top:0px;
-background:#333;
-height:17px;
-margin: 0px 0px 0px 0px;
+border:0;
+background:#ffffff;
+height:18px;
+margin: 0px 18px 0px 18px;
 }
 
 
@@ -303,22 +301,62 @@ background:#e0e0e0;
 min-width:10px;
 }
 
-
 QScrollBar::add-page, QScrollBar::sub-page { /* Scroll Bar Background */
 background:#F8F6F6;
 }
 
-QScrollBar:up-arrow, QScrollBar:down-arrow { /* Up and Down Arrows */
-border:2px solid #333;
-width:3px;
-height:3px;
-background:#fff;
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Define Arrow Button Dimensions */
+background-color:#F8F6F6;
+border: 1px solid #f2f0f0;
+width:16px;
+height:16px;
 }
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical, QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { /* Remove Up, Down, Left, Right Arrows from UI */
-width:0px;
-height:0px;
+QScrollBar::add-line:vertical:pressed, QScrollBar::sub-line:vertical:pressed, QScrollBar::add-line:horizontal:pressed, QScrollBar::sub-line:horizontal:pressed {
+background-color:#e0e0e0;
 }
+
+QScrollBar::sub-line:vertical { /* Vertical - top button position */
+subcontrol-position:top;
+subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:vertical { /* Vertical - bottom button position */
+subcontrol-position:bottom;
+subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal { /* Vertical - left button position */
+subcontrol-position:left;
+subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:horizontal { /* Vertical - right button position */
+subcontrol-position:right;
+subcontrol-origin: margin;
+}
+
+QScrollBar:up-arrow, QScrollBar:down-arrow, QScrollBar:left-arrow, QScrollBar:right-arrow { /* Arrows Icon */
+width:10px;
+height:10px;
+}
+
+QScrollBar:up-arrow {
+background-image: url(':/images/drkblue_upArrow_small');
+}
+
+QScrollBar:down-arrow {
+background-image: url(':/images/drkblue_downArrow_small');
+}
+
+QScrollBar:left-arrow {
+background-image: url(':/images/drkblue_leftArrow_small');
+}
+
+QScrollBar:right-arrow {
+background-image: url(':/images/drkblue_rightArrow_small');
+}
+
 
 /*******************************************************/
 
