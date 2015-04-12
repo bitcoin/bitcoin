@@ -331,8 +331,8 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     openNetworkAction->setStatusTip(tr("Show network monitor"));
 	openConfEditorAction = new QAction(QIcon(":/icons/edit"), tr("Open &Configuration File"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
-    showBackupsAction = new QAction(QIcon(":/icons/browse"), tr("Show Auto&Backups"), this);
-    showBackupsAction->setStatusTip(tr("S"));
+    showBackupsAction = new QAction(QIcon(":/icons/browse"), tr("Show Automatic &Backups"), this);
+    showBackupsAction->setStatusTip(tr("Show automatically created wallet backups"));
 
     usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));

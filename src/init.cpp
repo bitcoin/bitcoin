@@ -48,6 +48,7 @@ using namespace boost;
 #ifdef ENABLE_WALLET
 std::string strWalletFile;
 CWallet* pwalletMain;
+int nWalletBackups = 10;
 #endif
 
 #ifdef WIN32
@@ -273,22 +274,22 @@ std::string HelpMessage(HelpMessageMode hmm)
 
 #ifdef ENABLE_WALLET
     strUsage += "\n" + _("Wallet options:") + "\n";
-    strUsage += "  -createwalletbackups   " + _("Create a new backup of the wallet on start (default: 1)") + "\n";
-    strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
-    strUsage += "  -keepass               " + _("Use KeePass 2 integration using KeePassHttp plugin (default: 0)") + "\n";
-    strUsage += "  -keepassport=<port>    " + _("Connect to KeePassHttp on port <port> (default: 19455)") + "\n";
-    strUsage += "  -keepasskey=<key>      " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
-    strUsage += "  -keepassid=<name>      " + _("KeePassHttp id for the established association") + "\n";
-    strUsage += "  -keepassname=<name>    " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
-    strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 1000)") + "\n";
-    strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
-    strUsage += "  -rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
-    strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
-    strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
-    strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + " " + _("on startup") + "\n";
-    strUsage += "  -wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
-    strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
-    strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -rescan)") + "\n";
+    strUsage += "  -createwalletbackups=<n> " + _("Number of automatic wallet backups (default: 10)") + "\n";
+    strUsage += "  -disablewallet           " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
+    strUsage += "  -keepass                 " + _("Use KeePass 2 integration using KeePassHttp plugin (default: 0)") + "\n";
+    strUsage += "  -keepassport=<port>      " + _("Connect to KeePassHttp on port <port> (default: 19455)") + "\n";
+    strUsage += "  -keepasskey=<key>        " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
+    strUsage += "  -keepassid=<name>        " + _("KeePassHttp id for the established association") + "\n";
+    strUsage += "  -keepassname=<name>      " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
+    strUsage += "  -keypool=<n>             " + _("Set key pool size to <n> (default: 1000)") + "\n";
+    strUsage += "  -paytxfee=<amt>          " + _("Fee per kB to add to transactions you send") + "\n";
+    strUsage += "  -rescan                  " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
+    strUsage += "  -salvagewallet           " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
+    strUsage += "  -spendzeroconfchange     " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
+    strUsage += "  -upgradewallet           " + _("Upgrade wallet to latest format") + " " + _("on startup") + "\n";
+    strUsage += "  -wallet=<file>           " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
+    strUsage += "  -walletnotify=<cmd>      " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
+    strUsage += "  -zapwallettxes           " + _("Clear list of wallet transactions (diagnostic tool; implies -rescan)") + "\n";
 #endif
 
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
@@ -722,8 +723,9 @@ bool AppInit2(boost::thread_group& threadGroup)
             // Always create backup folder to not confuse the operating system's file browser
             filesystem::create_directories(backupDir);
         }
-
-        if(GetBoolArg("-createwalletbackups", true))
+        nWalletBackups = GetArg("-createwalletbackups", 10);
+        nWalletBackups = std::max(0, std::min(10, nWalletBackups));
+        if(nWalletBackups > 0)
         {
             if (filesystem::exists(backupDir))
             {
@@ -737,7 +739,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 boost::filesystem::path backupFile = backupPathStr + dateTimeStr;
                 sourceFile.make_preferred();
                 backupFile.make_preferred();
-                try {                
+                try {
                     boost::filesystem::copy_file(sourceFile, backupFile);
                     LogPrintf("Creating backup of %s -> %s\n", sourceFile, backupFile);
                 } catch(boost::filesystem::filesystem_error &error) {
@@ -752,7 +754,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 // Build map of backup files sorted by last write time
                 for (boost::filesystem::directory_iterator dir_iter(backupFolder); dir_iter != end_iter; ++dir_iter)
                 {
-                    if ( boost::filesystem::is_regular_file(dir_iter->status()) )
+                    if ( boost::filesystem::is_regular_file(dir_iter->status()))
                         folder_set.insert(folder_set_t::value_type(boost::filesystem::last_write_time(dir_iter->path()), *dir_iter));
                 }
                 // Loop backward through backup files and keep the 10 newest ones
@@ -760,20 +762,20 @@ bool AppInit2(boost::thread_group& threadGroup)
                 BOOST_REVERSE_FOREACH(PAIRTYPE(const std::time_t, boost::filesystem::path) file, folder_set)
                 {
                     counter++;
-                    if (counter > 10)
+                    if (counter > nWalletBackups)
                     {
-                        // More than 10 backups: delete oldest one(s)
-                        try {                
+                        // More than nWalletBackups backups: delete oldest one(s)
+                        try {
                             boost::filesystem::remove(file.second);
                             LogPrintf("Old backup deleted: %s\n", file.second);
                         } catch(boost::filesystem::filesystem_error &error) {
                             LogPrintf("Failed to delete backup %s\n", error.what());
-                        }                        
+                        }
                     }
                 }
             }
         }
-        
+
         LogPrintf("Using wallet %s\n", strWalletFile);
         uiInterface.InitMessage(_("Verifying wallet..."));
 
