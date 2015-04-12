@@ -1106,10 +1106,7 @@ public:
         if (nReadPosNext >= vch.size())
         {
             if (nReadPosNext > vch.size())
-            {
                 setstate(std::ios::failbit, "CDataStream::ignore() : end of data");
-                nSize = (int)(vch.size() - nReadPos);
-            }
             nReadPos = 0;
             vch.clear();
             return (*this);
