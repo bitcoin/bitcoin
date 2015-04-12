@@ -25,6 +25,7 @@ using namespace json_spirit;
 using namespace std;
 
 void EnsureWalletIsUnlocked();
+bool EnsureWalletIsAvailable(bool avoidException);
 
 std::string static EncodeDumpTime(int64_t nTime) {
     return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
@@ -71,6 +72,9 @@ std::string DecodeDumpString(const std::string &str) {
 
 Value importprivkey(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
             "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
@@ -142,6 +146,9 @@ Value importprivkey(const Array& params, bool fHelp)
 
 Value importaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
             "importaddress \"address\" ( \"label\" rescan )\n"
@@ -212,6 +219,9 @@ Value importaddress(const Array& params, bool fHelp)
 
 Value importwallet(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "importwallet \"filename\"\n"
@@ -313,6 +323,9 @@ Value importwallet(const Array& params, bool fHelp)
 
 Value dumpprivkey(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "dumpprivkey \"bitcoinaddress\"\n"
@@ -348,6 +361,9 @@ Value dumpprivkey(const Array& params, bool fHelp)
 
 Value dumpwallet(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "dumpwallet \"filename\"\n"
