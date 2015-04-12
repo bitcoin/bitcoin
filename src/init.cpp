@@ -242,11 +242,6 @@ void OnRPCStopped()
 
 void OnRPCPreCommand(const CRPCCommand& cmd)
 {
-#ifdef ENABLE_WALLET
-    if (cmd.reqWallet && !pwalletMain)
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
-#endif
-
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
     if (strWarning != "" && !GetBoolArg("-disablesafemode", false) &&
