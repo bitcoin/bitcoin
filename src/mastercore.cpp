@@ -1081,16 +1081,6 @@ int mastercore::set_wallet_totals()
   return (my_addresses_count);
 }
 
-static bool getOutputType(const CScript& scriptPubKey, txnouttype& whichTypeRet)
-{
-vector<vector<unsigned char> > vSolutions;
-
-  if (!Solver(scriptPubKey, whichTypeRet, vSolutions)) return false;
-
-  return true;
-}
-
-
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
 {
   if ((nBlock >= GENESIS_BLOCK && nBlock <= LAST_EXODUS_BLOCK) || (isNonMainNet()))
@@ -1174,7 +1164,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   for (unsigned int i = 0; i < wtx.vout.size(); i++) {
       outAll += wtx.vout[i].nValue;
       txnouttype outType;
-      if (!getOutputType(wtx.vout[i].scriptPubKey, outType)) continue; //unable to get an output type, ignore
+      if (!GetOutputType(wtx.vout[i].scriptPubKey, outType)) continue; //unable to get an output type, ignore
       if (outType == TX_PUBKEYHASH) { // look for exodus marker
           CTxDestination dest;
           string strAddress;
@@ -1211,7 +1201,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       string strAddress;
       txnouttype whichType;
       bool validType = false;
-      if (!getOutputType(wtx.vout[i].scriptPubKey, whichType)) validType=false;
+      if (!GetOutputType(wtx.vout[i].scriptPubKey, whichType)) validType=false;
       if (isAllowedOutputType(whichType, nBlock)) validType=true;
       if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
           strAddress = CBitcoinAddress(dest).ToString();
@@ -1259,7 +1249,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       txnouttype whichType;
       inAll += txPrev.vout[n].nValue;
       if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
-          if (!getOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
+          if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
           if (!isAllowedOutputType(whichType, nBlock)) { ++inputs_errors; break; }
           CBitcoinAddress addressSource(source);
           inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
@@ -1320,7 +1310,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
 
   // ### PREPARE A FEW VARS ###
   string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-  prepareObfuscatedHashes(strSender, strObfuscatedHashes);
+  PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
   unsigned char packets[MAX_PACKETS][32];
   int mdata_count = 0;  // multisig data count
 
@@ -1335,7 +1325,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       int64_t dataAddressValue = 0;
       for (unsigned k = 0; k<script_data.size();k++) { // Step 1, locate the data packet
           txnouttype whichType;
-          if (!getOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
+          if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
           if (!isAllowedOutputType(whichType, nBlock)) break;
           string strSub = script_data[k].substr(2,16); // retrieve bytes 1-9 of packet for peek & decode comparison
           seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
@@ -1357,7 +1347,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
           unsigned char expectedRefAddressSeq = dataAddressSeq + 1;
           for (unsigned k = 0; k<script_data.size();k++) { // loop through outputs
               txnouttype whichType;
-              if (!getOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
+              if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
               if (!isAllowedOutputType(whichType, nBlock)) break;
               seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
               if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (expectedRefAddressSeq == seq)) { // found reference address with matching sequence number
@@ -1374,7 +1364,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
           if (strRefAddress.empty()) { // Step 3, if we still don't have a reference address, see if we can locate an address with matching output amounts
               for (unsigned k = 0; k<script_data.size();k++) { // loop through outputs
                   txnouttype whichType;
-                  if (!getOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
+                  if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
                   if (!isAllowedOutputType(whichType, nBlock)) break;
                   if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (dataAddressValue == value_data[k])) { // this output matches data output, check if matches exodus output
                       for (int exodus_idx=0;exodus_idx<marker_count;exodus_idx++) {
@@ -2586,7 +2576,7 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
 
         for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
           txnouttype whichType;
-          if (!getOutputType(pcoin->vout[i].scriptPubKey, whichType))
+          if (!GetOutputType(pcoin->vout[i].scriptPubKey, whichType))
             continue;
 
           if (!isAllowedOutputType(whichType, nHeight))
@@ -2700,7 +2690,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const 
     // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
     if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
-        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustLimit(scriptPubKey)));
+        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustThreshold(scriptPubKey)));
     }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
