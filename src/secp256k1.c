@@ -40,6 +40,13 @@ secp256k1_context_t* secp256k1_context_create(int flags) {
     return ret;
 }
 
+secp256k1_context_t* secp256k1_context_clone(const secp256k1_context_t* ctx) {
+    secp256k1_context_t* ret = (secp256k1_context_t*)checked_malloc(sizeof(secp256k1_context_t));
+    secp256k1_ecmult_context_clone(&ret->ecmult_ctx, &ctx->ecmult_ctx);
+    secp256k1_ecmult_gen_context_clone(&ret->ecmult_gen_ctx, &ctx->ecmult_gen_ctx);
+    return ret;
+}
+
 void secp256k1_context_destroy(secp256k1_context_t* ctx) {
     secp256k1_ecmult_context_clear(&ctx->ecmult_ctx);
     secp256k1_ecmult_gen_context_clear(&ctx->ecmult_gen_ctx);

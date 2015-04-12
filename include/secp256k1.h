@@ -59,6 +59,14 @@ secp256k1_context_t* secp256k1_context_create(
   int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
+/** Copies a secp256k1 context object.
+ *  Returns: a newly created context object.
+ *  In:      ctx: an existing context to copy
+ */
+secp256k1_context_t* secp256k1_context_clone(
+  const secp256k1_context_t* ctx
+) SECP256K1_WARN_UNUSED_RESULT;
+
 /** Destroy a secp256k1 context object.
  *  The context pointer may not be used afterwards.
  */
