@@ -6,7 +6,6 @@
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
-#include "arith_uint256.h"
 #include "chainparamsbase.h"
 #include "checkpoints.h"
 #include "consensus/params.h"
@@ -45,7 +44,7 @@ public:
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
-    const arith_uint256& ProofOfWorkLimit() const { return consensus.powLimit; }
+    const uint256& ProofOfWorkLimit() const { return consensus.powLimit; }
     int SubsidyHalvingInterval() const { return consensus.nSubsidyHalvingInterval; }
     int EnforceBlockUpgradeMajority() const { return consensus.nMajorityEnforceBlockUpgrade; }
     int RejectBlockOutdatedMajority() const { return consensus.nMajorityRejectBlockOutdated; }
