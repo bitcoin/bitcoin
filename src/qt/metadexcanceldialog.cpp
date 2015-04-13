@@ -72,9 +72,9 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->radioCancelPair, SIGNAL(clicked()),this, SLOT(rdoCancelPair()));
-    connect(ui->radioCancelPrice, SIGNAL(clicked()),this, SLOT(rdoCancelPrice()));
-    connect(ui->radioCancelEverything, SIGNAL(clicked()),this, SLOT(rdoCancelEverything()));
+    connect(ui->radioCancelPair, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
+    connect(ui->radioCancelPrice, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
+    connect(ui->radioCancelEverything, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
 
     // perform initial from address population
     UpdateAddressSelector();
@@ -125,9 +125,71 @@ void MetaDExCancelDialog::UpdateAddressSelector()
  */
 void MetaDExCancelDialog::UpdateCancelCombo()
 {
-    if (ui->radioCancelPair->isChecked()) rdoCancelPair();
-    if (ui->radioCancelPrice->isChecked()) rdoCancelPrice();
-    // no entry is needed for cancel everything, in this case cancel combo data not dependent on state
+    string senderAddress = ui->fromCombo->currentText().toStdString();
+    QString existingSelection = ui->cancelCombo->currentText();
+
+    if (senderAddress.empty()) {
+        return; // no sender address selected, likely no wallet addresses have open MetaDEx trades
+    }
+
+    if ((!ui->radioCancelPair->isChecked()) && (!ui->radioCancelPrice->isChecked()) && (!ui->radioCancelEverything->isChecked())) {
+        return; // no radio button is selected
+    }
+
+    if (ui->radioCancelEverything->isChecked()) {
+        ui->cancelCombo->clear();
+        ui->cancelCombo->addItem("All currently active sell orders","ALL");
+        return; // don't waste time on work we don't need to do for this case
+    }
+
+    ui->cancelCombo->clear();
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            XDOUBLE price = it->first;
+            md_Set & indexes = it->second;
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                CMPMetaDEx obj = *it;
+                if(senderAddress == obj.getAddr()) {
+                    bool isBuy = false; // sell or buy? (from UI perspective)
+                    bool divisible;
+                    if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getProperty() == OMNI_PROPERTY_TMSC)) isBuy = true;
+                    string sellToken = getPropertyName(obj.getProperty()).c_str();
+                    string desiredToken = getPropertyName(obj.getDesProperty()).c_str();
+                    string sellId = static_cast<ostringstream*>( &(ostringstream() << obj.getProperty()) )->str();
+                    string desiredId = static_cast<ostringstream*>( &(ostringstream() << obj.getDesProperty()) )->str();
+                    if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
+                    sellToken += " (#" + sellId + ")";
+                    if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
+                    desiredToken += " (#" + desiredId + ")";
+                    string comboStr = "Cancel all orders ";
+                    if (isBuy) {
+                        comboStr += "buying " + desiredToken;
+                        divisible = isPropertyDivisible(obj.getDesProperty());
+                    } else {
+                        comboStr += "selling " + sellToken;
+                        divisible = isPropertyDivisible(obj.getProperty());
+                    }
+                    string dataStr = sellId + "/" + desiredId;
+                    if (ui->radioCancelPrice->isChecked()) { // append price if needed
+                        if (isBuy) {
+                            if (!divisible) price = price/COIN;
+                        } else {
+                            if (!divisible) { price = obj.effectivePrice()/COIN; } else { price = obj.effectivePrice(); }
+                        }
+                        comboStr += " priced at " + StripTrailingZeros(price.str(16, std::ios_base::fixed)); // limited to 16 digits of precision for display purposes
+                        if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getDesProperty() == OMNI_PROPERTY_MSC)) { comboStr += " MSC/SPT"; } else { comboStr += " TMSC/SPT"; }
+                        dataStr += ":" + price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+                    }
+                    int index = ui->cancelCombo->findText(QString::fromStdString(comboStr));
+                    if ( index == -1 ) { ui->cancelCombo->addItem(QString::fromStdString(comboStr),QString::fromStdString(dataStr)); }
+                }
+            }
+        }
+    }
+    int idx = ui->cancelCombo->findText(existingSelection, Qt::MatchExactly);
+    if (idx != -1) ui->cancelCombo->setCurrentIndex(idx); // if value selected before update and it still exists, reselect it
+
 }
 
 /**
@@ -138,93 +200,6 @@ void MetaDExCancelDialog::RefreshUI()
 {
     UpdateAddressSelector();
     UpdateCancelCombo();
-}
-
-
-void MetaDExCancelDialog::rdoCancelPair()
-{
-    // calculate which pairs are currently open
-    ui->cancelCombo->clear();
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-    {
-        md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-        {
-            md_Set & indexes = (it->second);
-            // loop through each entry and sum up any sells for the right pair
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-            {
-                CMPMetaDEx obj = *it;
-                if(IsMyAddress(obj.getAddr()))
-                {
-                    string comboStr;
-                    string sellToken;
-                    string desiredToken;
-                    // work out pair name
-                    sellToken = getPropertyName(obj.getProperty()).c_str();
-                    if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
-                    string sellId = static_cast<ostringstream*>( &(ostringstream() << obj.getProperty()) )->str();
-                    sellToken += " (#" + sellId + ")";
-                    desiredToken = getPropertyName(obj.getDesProperty()).c_str();
-                    if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
-                    string desiredId = static_cast<ostringstream*>( &(ostringstream() << obj.getDesProperty()) )->str();
-                    desiredToken += " (#" + desiredId + ")";
-                    comboStr = "Cancel all orders selling " + sellToken + " for " + desiredToken;
-                    //only add if not already there
-                    int index = ui->cancelCombo->findText(QString::fromStdString(comboStr));
-                    if ( index == -1 ) { ui->cancelCombo->addItem(QString::fromStdString(comboStr),QString::fromStdString(sellId+"/"+desiredId)); }
-                }
-            }
-        }
-    }
-}
-
-void MetaDExCancelDialog::rdoCancelPrice()
-{
-    // calculate which pairs are currently open and their prices
-    ui->cancelCombo->clear();
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-    {
-        md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-        {
-            XDOUBLE price = (1/it->first);
-            string priceStr = price.str(15, std::ios_base::fixed);
-            md_Set & indexes = (it->second);
-            // loop through each entry and sum up any sells for the right pair
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-            {
-                CMPMetaDEx obj = *it;
-                if(IsMyAddress(obj.getAddr()))
-                {
-                    string comboStr;
-                    string sellToken;
-                    string desiredToken;
-                    // work out pair name
-                    sellToken = getPropertyName(obj.getProperty()).c_str();
-                    if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
-                    string sellId = static_cast<ostringstream*>( &(ostringstream() << obj.getProperty()) )->str();
-                    sellToken += " (#" + sellId + ")";
-                    desiredToken = getPropertyName(obj.getDesProperty()).c_str();
-                    if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
-                    string desiredId = static_cast<ostringstream*>( &(ostringstream() << obj.getDesProperty()) )->str();
-                    desiredToken += " (#" + desiredId + ")";
-                    comboStr = "Cancel all orders priced at " + priceStr + " selling " + sellToken + " for " + desiredToken;
-                    //only add if not already there
-                    int index = ui->cancelCombo->findText(QString::fromStdString(comboStr));
-                    if ( index == -1 ) { ui->cancelCombo->addItem(QString::fromStdString(comboStr),QString::fromStdString(sellId+"/"+desiredId)); }
-                }
-            }
-        }
-    }
-
-}
-
-void MetaDExCancelDialog::rdoCancelEverything()
-{
-    // only one option here
-    ui->cancelCombo->clear();
-    ui->cancelCombo->addItem("All currently active sell orders","ALL"); //use last possible ID for summary for now
 }
 
 void MetaDExCancelDialog::sendCancelTransaction()

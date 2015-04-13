@@ -122,24 +122,6 @@ void MetaDExDialog::setModel(WalletModel *model)
     connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
 }
 
-// Strip trailing zeros from a string containing a divisible value
-std::string MetaDExDialog::StripTrailingZeros(const string& inputStr)
-{
-    size_t dot = inputStr.find(".");
-    std::string outputStr = inputStr; // make a copy we will manipulate and return
-    if (dot==std::string::npos) { // could not find a decimal marker, unsafe - return original input string
-        return inputStr;
-    }
-    size_t lastZero = outputStr.find_last_not_of('0') + 1;
-    if (lastZero > dot) { // trailing zeros are after decimal marker, safe to remove
-        outputStr.erase ( lastZero, std::string::npos );
-        if (outputStr.length() > 0) { std::string::iterator it = outputStr.end() - 1; if (*it == '.') { outputStr.erase(it); } } //get rid of trailing dot if needed
-    } else { // last non-zero is before the decimal marker, this is a whole number
-        outputStr.erase ( dot, std::string::npos );
-    }
-    return outputStr;
-}
-
 void MetaDExDialog::OrderRefresh()
 {
     UpdateOffers();

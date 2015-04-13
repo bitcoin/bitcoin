@@ -39,9 +39,6 @@ public slots:
     void UpdateAddressSelector();
     void UpdateCancelCombo();
     void RefreshUI();
-    void rdoCancelPair();
-    void rdoCancelPrice();
-    void rdoCancelEverything();
 
 private:
     Ui::MetaDExCancelDialog *ui;

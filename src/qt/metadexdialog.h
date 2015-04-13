@@ -32,7 +32,6 @@ public:
     void FullRefresh();
     void SwitchMarket();
     void AddRow(bool useBuyList, bool includesMe, const std::string& price, const std::string& available, const std::string& total);
-    std::string StripTrailingZeros(const std::string& inputStr);
     void UpdateSellAddressBalance();
     void UpdateBuyAddressBalance();
     void UpdateOffers();
