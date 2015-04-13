@@ -5,14 +5,13 @@
 #ifndef ACTIVEMASTERNODE_H
 #define ACTIVEMASTERNODE_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "init.h"
 #include "wallet.h"
 #include "darksend.h"
+#include "masternode.h"
 
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode

@@ -6,13 +6,10 @@
 #ifndef MASTERNODE_POS_H
 #define MASTERNODE_POS_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 
@@ -100,15 +97,18 @@ public:
     	return (nErrorType > 0 && nErrorType <= SCANNING_ERROR_MAX);
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+
         READWRITE(vinMasternodeA);
         READWRITE(vinMasternodeB);
         READWRITE(nErrorType);
         READWRITE(nExpiration);
         READWRITE(nBlockHeight);
         READWRITE(vchMasterNodeSignature);
-    )
+    }
 };
 
 

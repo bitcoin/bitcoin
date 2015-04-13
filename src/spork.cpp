@@ -1,12 +1,10 @@
 
 
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "protocol.h"
 #include "spork.h"
@@ -125,8 +123,7 @@ bool CSporkManager::CheckSignature(CSporkMessage& spork)
 {
     //note: need to investigate why this is failing
     std::string strMessage = boost::lexical_cast<std::string>(spork.nSporkID) + boost::lexical_cast<std::string>(spork.nValue) + boost::lexical_cast<std::string>(spork.nTimeSigned);
-    std::string strPubKey = (Params().NetworkID() == CChainParams::MAIN) ? strMainPubKey : strTestPubKey;
-    CPubKey pubkey(ParseHex(strPubKey));
+    CPubKey pubkey(ParseHex(Params().SporkKey()));
 
     std::string errorMessage = "";
     if(!darkSendSigner.VerifyMessage(pubkey, spork.vchSig, strMessage, errorMessage)){

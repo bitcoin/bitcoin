@@ -1,10 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOIN_COMPAT_H
-#define _BITCOIN_COMPAT_H
+#ifndef BITCOIN_COMPAT_H
+#define BITCOIN_COMPAT_H
+
+#if defined(HAVE_CONFIG_H)
+#include "config/dash-config.h"
+#endif
 
 #ifdef WIN32
 #ifdef _WIN32_WINNT
@@ -59,19 +63,31 @@ typedef u_int SOCKET;
 #define SOCKET_ERROR        -1
 #endif
 
-inline int myclosesocket(SOCKET& hSocket)
-{
-    if (hSocket == INVALID_SOCKET)
-        return WSAENOTSOCK;
 #ifdef WIN32
-    int ret = closesocket(hSocket);
+#ifndef S_IRUSR
+#define S_IRUSR             0400
+#define S_IWUSR             0200
+#endif
 #else
-    int ret = close(hSocket);
+#define MAX_PATH            1024
 #endif
-    hSocket = INVALID_SOCKET;
-    return ret;
-}
-#define closesocket(s)      myclosesocket(s)
 
-
+// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
+#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL 0
 #endif
+
+#ifndef WIN32
+// PRIO_MAX is not defined on Solaris
+#ifndef PRIO_MAX
+#define PRIO_MAX 20
+#endif
+#define THREAD_PRIORITY_LOWEST          PRIO_MAX
+#define THREAD_PRIORITY_BELOW_NORMAL    2
+#define THREAD_PRIORITY_NORMAL          0
+#define THREAD_PRIORITY_ABOVE_NORMAL    (-2)
+#endif
+
+size_t strnlen_int( const char *start, size_t max_len);
+
+#endif // BITCOIN_COMPAT_H
