@@ -1,4 +1,3 @@
-// This file serves to seperate encoding of data outputs from the main mastercore.cpp/h files.
 #include "omnicore_encoding.h"
 
 #include "mastercore.h"
@@ -17,59 +16,91 @@
 #include <utility>
 #include <vector>
 
-bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& redeemingPubKey, const std::vector<unsigned char>& vecPayload, std::vector<std::pair <CScript,int64_t> >& vecOutputs)
+/**
+ * Embedds a payload in obfuscated multisig outputs, and adds an Exodus marker output.
+ *
+ * @see The class B transaction encoding specification:
+ * https://github.com/mastercoin-MSC/spec#class-b-transactions-also-known-as-the-multisig-method
+ */
+bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& redeemingPubKey,
+        const std::vector<unsigned char>& vchPayload, std::vector<std::pair<CScript, int64_t> >& vecOutputs)
 {
-    int nRemainingBytes = vecPayload.size();
+    int nRemainingBytes = vchPayload.size();
     int nNextByte = 0;
-    unsigned char seqNum = 1;
+    unsigned char chSeqNum = 1;
     std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
     PrepareObfuscatedHashes(senderAddress, strObfuscatedHashes);
     while (nRemainingBytes > 0) {
-        int nKeys = 1; // assume one key of data since we have data remaining
-        if (nRemainingBytes > (PACKET_SIZE - 1)) { nKeys += 1; } // we have enough data for 2 keys in this output
-        std::vector<CPubKey> keys;
-        keys.push_back(redeemingPubKey); // always include the redeeming pubkey
+        int nKeys = 1; // Assume one key of data, because we have data remaining
+        if (nRemainingBytes > (PACKET_SIZE - 1)) { nKeys += 1; } // ... or enough data to embed in 2 keys
+        std::vector<CPubKey> vKeys;
+        vKeys.push_back(redeemingPubKey); // Always include the redeeming pubkey
         for (int i = 0; i < nKeys; i++) {
-            std::vector<unsigned char> fakeKey;
-            fakeKey.push_back(seqNum); // add sequence number
-            int numBytes = nRemainingBytes < (PACKET_SIZE - 1) ? nRemainingBytes: (PACKET_SIZE - 1); // add up to 30 bytes of data
-            fakeKey.insert(fakeKey.end(), vecPayload.begin() + nNextByte, vecPayload.begin() + nNextByte + numBytes);
-            nNextByte += numBytes;
-            nRemainingBytes -= numBytes;
-            while (fakeKey.size() < PACKET_SIZE) { fakeKey.push_back(0); } // pad to 31 total bytes with zeros
-            std::vector<unsigned char>hash = ParseHex(strObfuscatedHashes[seqNum]);
-            for (int j = 0; j < PACKET_SIZE; j++) { // xor in the obfuscation
-                fakeKey[j] = fakeKey[j] ^ hash[j];
+            // Add up to 30 bytes of data
+            int nCurrentBytes = nRemainingBytes < (PACKET_SIZE - 1) ? nRemainingBytes: (PACKET_SIZE - 1);
+            std::vector<unsigned char> vchFakeKey;
+            vchFakeKey.insert(vchFakeKey.end(), chSeqNum); // Add sequence number
+            vchFakeKey.insert(vchFakeKey.end(), vchPayload.begin() + nNextByte,
+                                                vchPayload.begin() + nNextByte + nCurrentBytes);
+            vchFakeKey.resize(PACKET_SIZE); // Pad to 31 total bytes with zeros
+            nNextByte += nCurrentBytes;
+            nRemainingBytes -= nCurrentBytes;
+            std::vector<unsigned char> vchHash = ParseHex(strObfuscatedHashes[chSeqNum]);
+            for (int j = 0; j < PACKET_SIZE; j++) { // Xor in the obfuscation
+                vchFakeKey[j] = vchFakeKey[j] ^ vchHash[j];
             }
-            fakeKey.insert(fakeKey.begin(), 2); // prepend the 2
+            vchFakeKey.insert(vchFakeKey.begin(), 0x02); // Prepend a public key prefix
+            vchFakeKey.resize(33);
             CPubKey pubKey;
-            fakeKey.resize(33);
-            unsigned char random_byte = (unsigned char)(GetRand(256)); // fix up the ecdsa code point
-            for (int j = 0; i < 256 ; j++) {
-                fakeKey[32] = random_byte;
-                pubKey = CPubKey(fakeKey);
+            unsigned char chRandom = static_cast<unsigned char>(GetRand(256));
+            for (int j = 0; i < 256 ; j++) { // Fix ECDSA coodinate
+                vchFakeKey[32] = chRandom;
+                pubKey = CPubKey(vchFakeKey);
                 if (pubKey.IsFullyValid()) break;
-                ++random_byte; // cycle 256 times, if we must to find a valid ECDSA point
+                ++chRandom; // ... but cycle no more than 256 times to find a valid point
             }
-            keys.push_back(pubKey);
-            seqNum++;
+            vKeys.push_back(pubKey);
+            chSeqNum++;
         }
-        CScript multisig_output = GetScriptForMultisig(1, keys);
-        vecOutputs.push_back(std::make_pair(multisig_output, GetDustThreshold(multisig_output)));
+
+        // Push back a bare multisig output with obfuscated data
+        CScript scriptMultisigOut = GetScriptForMultisig(1, vKeys);
+        vecOutputs.push_back(std::make_pair(scriptMultisigOut, GetDustThreshold(scriptMultisigOut)));
     }
-    CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
-    vecOutputs.push_back(std::make_pair(scriptPubKey, GetDustThreshold(scriptPubKey))); // add the Exodus marker
+
+    // Add the Exodus marker output
+    CScript scriptExodusOut = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
+    vecOutputs.push_back(std::make_pair(scriptExodusOut, GetDustThreshold(scriptExodusOut))); 
     return true;
 }
 
-bool OmniCore_Encode_ClassC(const std::vector<unsigned char>& vecPayload, std::vector<std::pair <CScript,int64_t> >& vecOutputs)
+/**
+ * @return The marker for class C transactions.
+ */
+static inline std::vector<unsigned char> GetOmMarker()
 {
-    const unsigned char bytes[] = {0x6f,0x6d}; // define Omni marker bytes
-    if (vecPayload.size()+sizeof(bytes)/sizeof(bytes[0]) > nMaxDatacarrierBytes) { return false; } // we shouldn't see this since classAgnostic_send handles size vs class, but include check here for safety
-    std::vector<unsigned char> omniBytesPlusData(bytes, bytes+sizeof(bytes)/sizeof(bytes[0]));
-    omniBytesPlusData.insert(omniBytesPlusData.end(), vecPayload.begin(), vecPayload.end());
+    const unsigned char pch[] = {0x6f, 0x6d}; // Hex-encoded: "om"
+
+    return std::vector<unsigned char>(pch, pch + sizeof (pch) / sizeof (pch[0]));
+}
+
+/**
+ * Embedds a payload in an OP_RETURN output, prefixed with a transaction marker.
+ *
+ * The request is rejected, if the size of the payload with marker is larger than
+ * the allowed data carrier size ("-datacarriersize=n").
+ */
+bool OmniCore_Encode_ClassC(const std::vector<unsigned char>& vchPayload,
+        std::vector<std::pair <CScript, int64_t> >& vecOutputs)
+{
+    std::vector<unsigned char> vchData;
+    std::vector<unsigned char> vchOmBytes = GetOmMarker();
+    vchData.insert(vchData.end(), vchOmBytes.begin(), vchOmBytes.end());
+    vchData.insert(vchData.end(), vchPayload.begin(), vchPayload.end());
+    if (vchData.size() > nMaxDatacarrierBytes) { return false; }
+
     CScript script;
-    script << OP_RETURN << omniBytesPlusData;
+    script << OP_RETURN << vchData;
     vecOutputs.push_back(std::make_pair(script, 0));
     return true;
 }
