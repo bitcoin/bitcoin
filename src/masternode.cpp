@@ -5,7 +5,6 @@
 #include "masternode.h"
 #include "masternodeman.h"
 #include "darksend.h"
-#include "core.h"
 #include "util.h"
 #include "sync.h"
 #include "addrman.h"
@@ -261,12 +260,12 @@ void CMasternode::Check()
 
     if(!unitTest){
         CValidationState state;
-        CTransaction tx = CTransaction();
+        CMutableTransaction tx = CMutableTransaction();
         CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
-        if(!AcceptableInputs(mempool, state, tx)){
+        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
             activeState = MASTERNODE_VIN_SPENT;
             return;
         }
@@ -279,8 +278,7 @@ bool CMasternodePayments::CheckSignature(CMasternodePaymentWinner& winner)
 {
     //note: need to investigate why this is failing
     std::string strMessage = winner.vin.ToString().c_str() + boost::lexical_cast<std::string>(winner.nBlockHeight) + winner.payee.ToString();
-    std::string strPubKey = (Params().NetworkID() == CChainParams::MAIN) ? strMainPubKey : strTestPubKey;
-    CPubKey pubkey(ParseHex(strPubKey));
+    CPubKey pubkey(ParseHex(Params().MasternodePaymentPubKey()));
 
     std::string errorMessage = "";
     if(!darkSendSigner.VerifyMessage(pubkey, winner.vchSig, strMessage, errorMessage)){
@@ -448,10 +446,10 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
             newWinner.payee = pmn->donationAddress;
         } else {
-            newWinner.payee.SetDestination(pmn->pubkey.GetID());
+            newWinner.payee = GetScriptForDestination(pmn->pubkey.GetID());
         }
 
-        payeeSource.SetDestination(pmn->pubkey.GetID());
+        payeeSource = GetScriptForDestination(pmn->pubkey.GetID());
     }
 
     //if we can't find new MN to get paid, pick first active MN counting back from the end of vecLastPayments list
@@ -474,10 +472,10 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
                     newWinner.payee = pmn->donationAddress;
                 } else {
-                    newWinner.payee.SetDestination(pmn->pubkey.GetID());
+                    newWinner.payee = GetScriptForDestination(pmn->pubkey.GetID());
                 }
 
-                payeeSource.SetDestination(pmn->pubkey.GetID());
+                payeeSource = GetScriptForDestination(pmn->pubkey.GetID());
 
                 break; // we found active MN
             }

@@ -4,18 +4,52 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "core.h"
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "rpcserver.h"
-#include <boost/lexical_cast.hpp>
+#include "utilmoneystr.h"
 
+#include <boost/lexical_cast.hpp>
 #include <fstream>
 using namespace json_spirit;
 using namespace std;
+
+void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS)
+{
+    // Check amount
+    if (nValue <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+
+    if (nValue > pwalletMain->GetBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    string strError;
+    if (pwalletMain->IsLocked())
+    {
+        strError = "Error: Wallet locked, unable to create transaction!";
+        LogPrintf("SendMoney() : %s", strError);
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+
+    // Parse Dash address
+    CScript scriptPubKey = GetScriptForDestination(address);
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwalletMain);
+    CAmount nFeeRequired;
+    if (!pwalletMain->CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError, NULL, coin_type))
+    {
+        if (nValue + nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+        LogPrintf("SendMoney() : %s\n", strError);
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+}
 
 Value darksend(const Array& params, bool fHelp)
 {
@@ -55,13 +89,14 @@ Value darksend(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
 
     // Amount
-    int64_t nAmount = AmountFromValue(params[1]);
+    CAmount nAmount = AmountFromValue(params[1]);
 
     // Wallet comments
     CWalletTx wtx;
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+//    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+    SendMoney(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+//    if (strError != "")
+//        throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
 }
@@ -467,7 +502,7 @@ Value masternode(const Array& params, bool fHelp)
         if(winner) {
             Object obj;
             CScript pubkey;
-            pubkey.SetDestination(winner->pubkey.GetID());
+            pubkey = GetScriptForDestination(winner->pubkey.GetID());
             CTxDestination address1;
             ExtractDestination(pubkey, address1);
             CBitcoinAddress address2(address1);
@@ -700,19 +735,24 @@ Value masternodelist(const Array& params, bool fHelp)
                 "Get a list of masternodes in different modes\n"
                 "\nArguments:\n"
                 "1. \"mode\"      (string, optional/required to use filter, defaults = status) The mode to run list in\n"
-                "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes, additional matches in some modes\n"
+                "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes,\n"
+                "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
                 "  donation       - Show donation settings\n"
-                "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)\n"
+                "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds'\n"
+                "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  pose           - Print Proof-of-Service score\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
-                "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
+                "  pubkey         - Print public key associated with a masternode (can be additionally filtered,\n"
+                "                   partial match)\n"
                 "  rank           - Print rank of a masternode based on current block\n"
-                "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
+                "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR\n"
+                "                   (can be additionally filtered, partial match)\n"
                 "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
-                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered,\n"
+                "                   partial match)\n"
                 );
     }
 
@@ -749,7 +789,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 obj.push_back(Pair(strAddr,       strOut.c_str()));
             } else if (strMode == "full") {
                 CScript pubkey;
-                pubkey.SetDestination(mn.pubkey.GetID());
+                pubkey = GetScriptForDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
                 CBitcoinAddress address2(address1);
@@ -779,7 +819,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
             } else if (strMode == "pubkey") {
                 CScript pubkey;
-                pubkey.SetDestination(mn.pubkey.GetID());
+                pubkey = GetScriptForDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
                 CBitcoinAddress address2(address1);

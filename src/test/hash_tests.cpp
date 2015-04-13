@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "hash.h"
-#include "util.h"
+#include "utilstrencodings.h"
 
 #include <vector>
 

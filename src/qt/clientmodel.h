@@ -3,13 +3,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CLIENTMODEL_H
-#define CLIENTMODEL_H
+#ifndef BITCOIN_QT_CLIENTMODEL_H
+#define BITCOIN_QT_CLIENTMODEL_H
 
 #include <QObject>
 
 class AddressTableModel;
 class OptionsModel;
+class PeerTableModel;
 class TransactionTableModel;
 
 class CWallet;
@@ -43,6 +44,7 @@ public:
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
+    PeerTableModel *getPeerTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
@@ -56,8 +58,6 @@ public:
     double getVerificationProgress() const;
     QDateTime getLastBlockDate() const;
 
-    //! Return network (main, testnet3, regtest)
-    QString getNetworkName() const;
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;
     //! Return true if core is importing blocks
@@ -73,6 +73,7 @@ public:
 
 private:
     OptionsModel *optionsModel;
+    PeerTableModel *peerTableModel;
 
     int cachedNumBlocks;
     QString cachedMasternodeCountString;
@@ -97,6 +98,9 @@ signals:
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 
+    // Show progress dialog e.g. for verifychain
+    void showProgress(const QString &title, int nProgress);
+
 public slots:
     void updateTimer();
     void updateMnTimer();
@@ -104,4 +108,4 @@ public slots:
     void updateAlert(const QString &hash, int status);
 };
 
-#endif // CLIENTMODEL_H
+#endif // BITCOIN_QT_CLIENTMODEL_H
