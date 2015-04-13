@@ -85,6 +85,8 @@ public slots:
     void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
     /** Handle updated peer information */
     void peerLayoutChanged();
+    /** Show folder with wallet backups in default browser */
+    void showBackups();
 
 signals:
     // For RPC command executor
