@@ -15,6 +15,7 @@ using namespace std;
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
+extern int64_t nReserveBalance;
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, json_spirit::Object& entry);
 
 std::string HelpRequiringPassphrase()
@@ -1752,7 +1753,6 @@ Value reservebalance(const Array& params, bool fHelp)
     }
 
     Object result;
-    int64_t nReserveBalance = 0;
     if (mapArgs.count("-reservebalance") && !ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
         throw runtime_error("invalid reserve balance amount\n");
     result.push_back(Pair("reserve", (nReserveBalance > 0)));

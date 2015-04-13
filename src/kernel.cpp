@@ -94,18 +94,6 @@ bool IsFixedModifierInterval(unsigned int nTimeBlock)
     return (nTimeBlock >= (fTestNet? nModifierTestSwitchTime : nModifierSwitchTime));
 }
 
-// Get time weight
-int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd)
-{
-    // Kernel hash weight starts from 0 at the 30-day min age
-    // this change increases active coins participating the hash and helps
-    // to secure the network when proof-of-stake difficulty is low
-    //
-    // Maximum TimeWeight is 90 days.
-
-    return min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64_t)nStakeMaxAge);
-}
-
 // Get the last stake modifier and its generation time from a given block
 static bool GetLastStakeModifier(const CBlockIndex* pindex, uint64_t& nStakeModifier, int64_t& nModifierTime)
 {
@@ -410,10 +398,10 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
             DateTimeStrFormat(nStakeModifierTime).c_str(),
             mapBlockIndex[hashBlockFrom]->nHeight,
             DateTimeStrFormat(blockFrom.GetBlockTime()).c_str());
-        printf("CheckStakeKernelHash() : check modifier=0x%016" PRIx64 " nTimeBlockFrom=%u nTxPrevOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s\n",
+        printf("CheckStakeKernelHash() : check modifier=0x%016" PRIx64 " nTimeBlockFrom=%u nTxPrevOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashTarget=%s hashProof=%s\n",
             nStakeModifier,
             nTimeBlockFrom, nTxPrevOffset, txPrev.nTime, prevout.n, nTimeTx,
-            hashProofOfStake.ToString().c_str());
+            targetProofOfStake.ToString().c_str(), hashProofOfStake.ToString().c_str());
     }
 
     // Now check if proof-of-stake hash meets target protocol
@@ -426,87 +414,12 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
             DateTimeStrFormat(nStakeModifierTime).c_str(),
             mapBlockIndex[hashBlockFrom]->nHeight,
             DateTimeStrFormat(blockFrom.GetBlockTime()).c_str());
-        printf("CheckStakeKernelHash() : pass modifier=0x%016" PRIx64 " nTimeBlockFrom=%u nTxPrevOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashProof=%s\n",
+        printf("CheckStakeKernelHash() : pass modifier=0x%016" PRIx64 " nTimeBlockFrom=%u nTxPrevOffset=%u nTimeTxPrev=%u nPrevout=%u nTimeTx=%u hashTarget=%s hashProof=%s\n",
             nStakeModifier,
             nTimeBlockFrom, nTxPrevOffset, txPrev.nTime, prevout.n, nTimeTx,
-            hashProofOfStake.ToString().c_str());
+            targetProofOfStake.ToString().c_str(), hashProofOfStake.ToString().c_str());
     }
     return true;
-}
-
-// Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, uint32_t nSearchInterval, CoinsSet::value_type &kernelcoin, uint32_t &nTimeTx, uint32_t &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried)
-{
-    uint256 hashProofOfStake = 0;
-
-    // (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
-    for(MetaMap::const_iterator meta_item = mapMeta.begin(); meta_item != mapMeta.end(); meta_item++)
-    {
-        if (!fCoinsDataActual)
-            break;
-
-        CTxIndex txindex = (*meta_item).second.first.first;
-        CBlock block = (*meta_item).second.second.first;
-        uint64_t nStakeModifier = (*meta_item).second.second.second;
-
-        // Get coin
-        CoinsSet::value_type pcoin = meta_item->second.first.second;
-
-        static unsigned int nMaxStakeSearchInterval = 60;
-
-        // only count coins meeting min age requirement
-        if (nStakeMinAge + block.nTime > nTime - nMaxStakeSearchInterval)
-            continue;
-
-        // Transaction offset inside block
-        uint32_t nTxOffset = txindex.pos.nTxPos - txindex.pos.nBlockPos;
-
-        // Current timestamp scanning interval
-        unsigned int nCurrentSearchInterval = min(nSearchInterval, nMaxStakeSearchInterval);
-
-        nBlockTime = block.nTime;
-        CBigNum bnTargetPerCoinDay;
-        bnTargetPerCoinDay.SetCompact(nBits);
-        int64_t nValueIn = pcoin.first->vout[pcoin.second].nValue;
-
-        // Search backward in time from the given timestamp
-        // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
-        // Stopping search in case of shutting down or cache invalidation
-        for (unsigned int n=0; n<nCurrentSearchInterval && fCoinsDataActual && !fShutdown; n++)
-        {
-            nTimeTx = nTime - n;
-            CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)pcoin.first->nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
-            CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
-
-            // Build kernel
-            CDataStream ss(SER_GETHASH, 0);
-            ss << nStakeModifier;
-            ss << nBlockTime << nTxOffset << pcoin.first->nTime << pcoin.second << nTimeTx;
-
-            // Calculate kernel hash
-            hashProofOfStake = Hash(ss.begin(), ss.end());
-
-            // Update statistics
-            nKernelsTried += 1;
-            nCoinDaysTried += bnCoinDayWeight.getuint64();
-
-            if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
-            {
-                if (fDebug)
-                    printf("nStakeModifier=0x%016" PRIx64 ", nBlockTime=%u nTxOffset=%u nTxPrevTime=%u nVout=%u nTimeTx=%u hashProofOfStake=%s Success=true\n",
-                        nStakeModifier, nBlockTime, nTxOffset, pcoin.first->nTime, pcoin.second, nTimeTx, hashProofOfStake.GetHex().c_str());
-
-                kernelcoin = pcoin;
-                return true;
-            }
-
-            if (fDebug)
-                printf("nStakeModifier=0x%016" PRIx64 ", nBlockTime=%u nTxOffset=%u nTxPrevTime=%u nTxNumber=%u nTimeTx=%u hashProofOfStake=%s Success=false\n",
-                    nStakeModifier, nBlockTime, nTxOffset, pcoin.first->nTime, pcoin.second, nTimeTx, hashProofOfStake.GetHex().c_str());
-        }
-    }
-
-    return false;
 }
 
 // Precompute hashing state for static part of kernel
@@ -539,6 +452,53 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
     for (uint32_t nTimeTx=SearchInterval.first; nTimeTx<SearchInterval.second && !fShutdown; nTimeTx++)
+    {
+        // Complete first hashing iteration
+        uint256 hash1;
+        SHA256_Update(&ctxCopy, (unsigned char*)&nTimeTx, 4);
+        SHA256_Final((unsigned char*)&hash1, &ctxCopy);
+
+        // Restore context
+        ctxCopy = ctx;
+
+        // Finally, calculate kernel hash
+        uint256 hashProofOfStake;
+        SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
+
+        // Skip if hash doesn't satisfy the maximum target
+        if (hashProofOfStake > maxTarget)
+            continue;
+
+        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+        if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
+        {
+            solution.first = hashProofOfStake;
+            solution.second = nTimeTx;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Scan given midstate for solution
+bool ScanMidstateBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
+{
+    CBigNum bnTargetPerCoinDay;
+    bnTargetPerCoinDay.SetCompact(nBits);
+
+    // Get maximum possible target to filter out the majority of obviously insufficient hashes
+    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
+    uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
+
+    SHA256_CTX ctxCopy = ctx;
+
+    // Search backward in time from the given timestamp
+    // Stopping search in case of shutting down
+    for (uint32_t nTimeTx=SearchInterval.first; nTimeTx>SearchInterval.second && !fShutdown; nTimeTx--)
     {
         // Complete first hashing iteration
         uint256 hash1;

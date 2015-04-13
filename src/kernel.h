@@ -7,13 +7,13 @@
 #include "main.h"
 #include "wallet.h"
 
+using namespace std;
+
 // ChainDB upgrade time
 extern unsigned int nModifierUpgradeTime;
 
 // MODIFIER_INTERVAL: time to elapse before new modifier is computed
 extern unsigned int nModifierInterval;
-
-extern bool fCoinsDataActual;
 
 // MODIFIER_INTERVAL_RATIO:
 // ratio of group interval length between the last group and the first group
@@ -33,14 +33,12 @@ bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifier);
 // Sets hashProofOfStake on success return
 bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, uint32_t nTxPrevOffset, const CTransaction& txPrev, const COutPoint& prevout, uint32_t nTimeTx, uint256& hashProofOfStake, uint256& targetProofOfStake, bool fPrintProofOfStake=false);
 
-// Scan given coins set for kernel solution
-bool ScanForStakeKernelHash(MetaMap &mapMeta, uint32_t nBits, uint32_t nTime, uint32_t nSearchInterval, CoinsSet::value_type &kernelcoin, uint32_t &nTimeTx, uint32_t &nBlockTime, uint64_t &nKernelsTried, uint64_t &nCoinDaysTried);
-
 // Precompute hashing state for static part of kernel
 void GetKernelMidstate(uint64_t nStakeModifier, uint32_t nBlockTime, uint32_t nTxOffset, uint32_t nInputTxTime, uint32_t nOut, SHA256_CTX &ctx);
 
 // Scan given midstate for kernel solutions
 bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution);
+bool ScanMidstateBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution);
 
 // Check kernel hash target and coinstake signature
 // Sets hashProofOfStake on success return
@@ -53,6 +51,16 @@ uint32_t GetStakeModifierChecksum(const CBlockIndex* pindex);
 bool CheckStakeModifierCheckpoints(int nHeight, uint32_t nStakeModifierChecksum);
 
 // Get time weight using supplied timestamps
-int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd);
+inline int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd)
+{
+    // Kernel hash weight starts from 0 at the 30-day min age
+    // this change increases active coins participating the hash and helps
+    // to secure the network when proof-of-stake difficulty is low
+    //
+    // Maximum TimeWeight is 90 days.
+
+    return min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64_t)nStakeMaxAge);
+}
+
 
 #endif // PPCOIN_KERNEL_H

@@ -30,11 +30,6 @@ class CCoinControl;
 // Set of selected transactions
 typedef std::set<std::pair<const CWalletTx*,unsigned int> > CoinsSet;
 
-// Preloaded coins metadata
-// (txid, vout.n) => ((txindex, (tx, vout.n)), (block, modifier))
-typedef std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64_t> > > MetaMap;
-
-
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
 {
@@ -78,7 +73,6 @@ public:
 class CWallet : public CCryptoKeyStore
 {
 private:
-    bool SelectCoinsSimple(int64_t nTargetValue, int64_t nMinValue, int64_t nMaxValue, unsigned int nSpendTime, int nMinConf, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
     bool SelectCoins(int64_t nTargetValue, unsigned int nSpendTime, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, const CCoinControl *coinControl=NULL) const;
 
     CWalletDB *pwalletdbEncryption, *pwalletdbDecryption;
@@ -88,9 +82,6 @@ private:
 
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
-
-    // selected coins metadata
-    std::map<std::pair<uint256, unsigned int>, std::pair<std::pair<CTxIndex, std::pair<const CWalletTx*,unsigned int> >, std::pair<CBlock, uint64_t> > > mapMeta;
 
     // stake mining statistics
     uint64_t nKernelsTried;
@@ -104,7 +95,6 @@ public:
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
-
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -152,6 +142,10 @@ public:
     void AvailableCoinsMinConf(std::vector<COutput>& vCoins, int nConf, int64_t nMinValue, int64_t nMaxValue) const;
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl=NULL) const;
     bool SelectCoinsMinConf(int64_t nTargetValue, unsigned int nSpendTime, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+
+    // Simple select (without randomization)
+    bool SelectCoinsSimple(int64_t nTargetValue, int64_t nMinValue, int64_t nMaxValue, unsigned int nSpendTime, int nMinConf, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+
     // keystore implementation
     // Generate a new key
     CPubKey GenerateNewKey();
@@ -225,7 +219,7 @@ public:
 
     void GetStakeStats(float &nKernelsRate, float &nCoinDaysRate);
     void GetStakeWeightFromValue(const int64_t& nTime, const int64_t& nValue, uint64_t& nWeight);
-    bool CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, uint32_t nSearchInterval, CTransaction& txNew, CKey& key);
+    bool CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nTime, uint32_t nBits, CTransaction &txNew, CKey& key);
     bool MergeCoins(const int64_t& nAmount, const int64_t& nMinValue, const int64_t& nMaxValue, std::list<uint256>& listMerged);
 
     std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);

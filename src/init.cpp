@@ -31,7 +31,6 @@ CClientUIInterface uiInterface;
 std::string strWalletFileName;
 bool fConfChange;
 unsigned int nNodeLifespan;
-unsigned int nMinerSleep;
 bool fUseFastIndex;
 bool fUseMemoryLog;
 enum Checkpoints::CPMode CheckpointsMode;
@@ -39,6 +38,7 @@ enum Checkpoints::CPMode CheckpointsMode;
 // Ping and address broadcast intervals
 extern int64_t nPingInterval;
 extern int64_t nBroadcastInterval;
+extern int64_t nReserveBalance;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -377,7 +377,6 @@ bool AppInit2()
     nNodeLifespan = (unsigned int)(GetArg("-addrlifespan", 7));
     fUseFastIndex = GetBoolArg("-fastindex", true);
     fUseMemoryLog = GetBoolArg("-memorylog", true);
-    nMinerSleep = (unsigned int)(GetArg("-minersleep", 500));
 
     // Ping and address broadcast intervals
     nPingInterval = max<int64_t>(10 * 60, GetArg("-keepalive", 30 * 60));
@@ -738,7 +737,6 @@ bool AppInit2()
 
     if (mapArgs.count("-reservebalance")) // ppcoin: reserve balance amount
     {
-        int64_t nReserveBalance = 0;
         if (!ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
         {
             InitError(_("Invalid amount for -reservebalance=<amount>"));
