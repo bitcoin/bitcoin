@@ -235,7 +235,8 @@ BITCOIN_QT_H = \
   qt/omnicore_init.h \
   qt/metadexdialog.h \
   qt/metadexcanceldialog.h \
-  qt/orderhistorydialog.h
+  qt/orderhistorydialog.h \
+  qt/sendmpdialog.h
 
 RES_ICONS = \
   qt/res/icons/add.png \
