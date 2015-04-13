@@ -76,7 +76,34 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
     connect(ui->radioCancelPrice, SIGNAL(clicked()),this, SLOT(rdoCancelPrice()));
     connect(ui->radioCancelEverything, SIGNAL(clicked()),this, SLOT(rdoCancelEverything()));
 
+    // perform initial from address population
+    UpdateAddressSelector();
 }
+
+/**
+ * Refreshes the cancellation address selector
+ *
+ * Note: only addresses that have a currently open MetaDEx trade (determined by
+ * the metadex map) will be shown in the address selector (cancellations sent from
+ * addresses without an open MetaDEx trade are invalid).
+ */
+void MetaDExCancelDialog::UpdateAddressSelector()
+{
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set & indexes = (it->second);
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                CMPMetaDEx obj = *it;
+                if(IsMyAddress(obj.getAddr())) { // this address is ours and has an active MetaDEx trade
+                    int idx = ui->fromCombo->findText(QString::fromStdString(obj.getAddr())); // avoid adding duplicates
+                    if (idx == -1) ui->fromCombo->addItem(QString::fromStdString(obj.getAddr()));
+                }
+            }
+        }
+    }
+}
+
 void MetaDExCancelDialog::rdoCancelPair()
 {
     // calculate which pairs are currently open

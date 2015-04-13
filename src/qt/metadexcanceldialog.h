@@ -36,6 +36,7 @@ public:
 
 
 public slots:
+    void UpdateAddressSelector();
     void rdoCancelPair();
     void rdoCancelPrice();
     void rdoCancelEverything();
