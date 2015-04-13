@@ -109,6 +109,7 @@ private:
     QAction *openNetworkAction;
     QAction *openPeersAction;
     QAction *openConfEditorAction;
+    QAction *showBackupsAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
 

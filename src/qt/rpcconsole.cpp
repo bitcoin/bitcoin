@@ -694,3 +694,8 @@ void RPCConsole::hideEvent(QHideEvent *event)
     // stop PeerTableModel auto refresh
     clientModel->getPeerTableModel()->stopAutoRefresh();
 }
+
+void RPCConsole::showBackups()
+{
+    GUIUtil::showBackups();
+}
