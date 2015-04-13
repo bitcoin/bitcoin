@@ -97,6 +97,7 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openNetworkAction;
     QAction *openConfEditorAction;
+    QAction *showBackupsAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
 

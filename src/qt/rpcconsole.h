@@ -67,6 +67,8 @@ public slots:
     void showNetwork();
     /** Open external (default) editor with dash.conf */
     void showConfEditor();	
+    /** Show folder with wallet backups in default browser */
+    void showBackups();
 
 signals:
     // For RPC command executor

@@ -222,7 +222,8 @@ RES_ICONS = \
   res/icons/drkblue_editpaste.png \
   res/icons/drkblue_address-book.png \
   res/icons/drkblue_editcopy.png \
-  res/icons/drkblue_remove.png
+  res/icons/drkblue_remove.png \
+  res/icons/browse.png
 
 
 BITCOIN_QT_CPP = \
