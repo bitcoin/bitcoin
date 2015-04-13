@@ -169,6 +169,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
     balancesPage->setClientModel(clientModel);
     sendMPTab->setClientModel(clientModel);
     mpTXTab->setClientModel(clientModel);
+    cancelTab->setClientModel(clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *walletModel)
@@ -184,7 +185,6 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     balancesPage->setWalletModel(walletModel);
     metaDExTab->setModel(walletModel);
     mpTXTab->setWalletModel(walletModel);
-    cancelTab->setModel(walletModel);
     orderHistoryTab->setModel(walletModel);
 
     if (walletModel)

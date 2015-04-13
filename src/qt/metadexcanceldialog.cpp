@@ -10,7 +10,7 @@
 #include "coincontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "walletmodel.h"
+#include "clientmodel.h"
 #include "wallet.h"
 #include "base58.h"
 #include "coincontrol.h"
@@ -68,7 +68,7 @@ using namespace leveldb;
 MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExCancelDialog),
-    model(0)
+    clientModel(0)
 {
     ui->setupUi(this);
 
@@ -78,6 +78,21 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
 
     // perform initial from address population
     UpdateAddressSelector();
+}
+
+
+/**
+ * Sets the client model.
+ *
+ * Note: for metadex cancels we only need to know when the Omni state has been refreshed
+ * so only the client model (instead of both client and wallet models) is needed.
+ */
+void MetaDExCancelDialog::setClientModel(ClientModel *model)
+{
+    if (model != NULL) {
+        this->clientModel = model;
+        connect(model, SIGNAL(refreshOmniState()), this, SLOT(RefreshUI()));
+    }
 }
 
 /**
@@ -114,6 +129,17 @@ void MetaDExCancelDialog::UpdateCancelCombo()
     if (ui->radioCancelPrice->isChecked()) rdoCancelPrice();
     // no entry is needed for cancel everything, in this case cancel combo data not dependent on state
 }
+
+/**
+ * Refreshes the UI fields with the most current data - called when the
+ * refreshOmniState() signal is received.
+ */
+void MetaDExCancelDialog::RefreshUI()
+{
+    UpdateAddressSelector();
+    UpdateCancelCombo();
+}
+
 
 void MetaDExCancelDialog::rdoCancelPair()
 {
@@ -199,11 +225,6 @@ void MetaDExCancelDialog::rdoCancelEverything()
     // only one option here
     ui->cancelCombo->clear();
     ui->cancelCombo->addItem("All currently active sell orders","ALL"); //use last possible ID for summary for now
-}
-
-void MetaDExCancelDialog::setModel(WalletModel *model)
-{
-    this->model = model;
 }
 
 void MetaDExCancelDialog::sendCancelTransaction()
