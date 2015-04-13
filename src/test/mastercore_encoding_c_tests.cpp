@@ -69,4 +69,29 @@ BOOST_AUTO_TEST_CASE(class_c_marker)
     nMaxDatacarrierBytes = nMaxDatacarrierBytesOriginal;
 }
 
+BOOST_AUTO_TEST_CASE(class_c_with_empty_payload)
+{
+    // Store initial data carrier size
+    unsigned nMaxDatacarrierBytesOriginal = nMaxDatacarrierBytes;
+
+    const std::vector<unsigned char> vchEmptyPayload;
+    BOOST_CHECK_EQUAL(vchEmptyPayload.size(), 0);
+
+    // Even less than the size of the marker
+    nMaxDatacarrierBytes = 0; // byte
+
+    std::vector<std::pair<CScript, int64_t> > vecOutputs;
+    BOOST_CHECK(!OmniCore_Encode_ClassC(vchEmptyPayload, vecOutputs));
+    BOOST_CHECK_EQUAL(vecOutputs.size(), 0);
+
+    // Exactly the size of the marker
+    nMaxDatacarrierBytes = 2; // byte
+
+    BOOST_CHECK(OmniCore_Encode_ClassC(vchEmptyPayload, vecOutputs));
+    BOOST_CHECK_EQUAL(vecOutputs.size(), 1);
+
+    // Restore original data carrier size settings
+    nMaxDatacarrierBytes = nMaxDatacarrierBytesOriginal;
+}
+
 BOOST_AUTO_TEST_SUITE_END()
