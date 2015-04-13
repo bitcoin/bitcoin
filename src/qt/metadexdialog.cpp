@@ -84,14 +84,22 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->buyList->setColumnCount(3);
     ui->sellList->setColumnCount(3);
     ui->buyList->verticalHeader()->setVisible(false);
-    ui->buyList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION < 0x050000
+        ui->buyList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #else
+        ui->buyList->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #endif
     ui->buyList->setShowGrid(false);
     ui->buyList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->buyList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->buyList->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->buyList->setAlternatingRowColors(true);
     ui->sellList->verticalHeader()->setVisible(false);
-    ui->sellList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION < 0x050000
+        ui->sellList->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #else
+        ui->sellList->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #endif
     ui->sellList->setShowGrid(false);
     ui->sellList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->sellList->setEditTriggers(QAbstractItemView::NoEditTriggers);

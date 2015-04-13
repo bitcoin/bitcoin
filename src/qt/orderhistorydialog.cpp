@@ -82,7 +82,11 @@ OrderHistoryDialog::OrderHistoryDialog(QWidget *parent) :
     ui->orderHistoryTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->orderHistoryTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->orderHistoryTable->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->orderHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Stretch);
+    #if QT_VERSION < 0x050000
+        ui->orderHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Stretch);
+    #else
+        ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+    #endif
     ui->orderHistoryTable->setColumnWidth(0, 23);
     ui->orderHistoryTable->setColumnWidth(1, 150);
     ui->orderHistoryTable->setColumnWidth(2, 100);
