@@ -2349,10 +2349,6 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
-    {
-         LOCK(cs_nBlockSequenceId);
-         pindexNew->nSequenceId = nBlockSequenceId++;
-    }
     setDirtyBlockIndex.insert(pindexNew);
 
     if (pindexNew->pprev == NULL || pindexNew->pprev->nChainTx) {
@@ -2365,6 +2361,10 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
             CBlockIndex *pindex = queue.front();
             queue.pop_front();
             pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
+            {
+                LOCK(cs_nBlockSequenceId);
+                pindex->nSequenceId = nBlockSequenceId++;
+            }
             if (chainActive.Tip() == NULL || !setBlockIndexCandidates.value_comp()(pindex, chainActive.Tip())) {
                 setBlockIndexCandidates.insert(pindex);
             }
@@ -3269,6 +3269,7 @@ void static CheckBlockIndex()
         // HAVE_DATA is equivalent to VALID_TRANSACTIONS and equivalent to nTx > 0 (we stored the number of transactions in the block)
         assert(!(pindex->nStatus & BLOCK_HAVE_DATA) == (pindex->nTx == 0));
         assert(((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) == (pindex->nTx > 0));
+        if (pindex->nChainTx == 0) assert(pindex->nSequenceId == 0);  // nSequenceId can't be set for blocks that aren't linked
         // All parents having data is equivalent to all parents being VALID_TRANSACTIONS, which is equivalent to nChainTx being set.
         assert((pindexFirstMissing != NULL) == (pindex->nChainTx == 0)); // nChainTx == 0 is used to signal that all parent block's transaction data is available.
         assert((pindexFirstNotTransactionsValid != NULL) == (pindex->nChainTx == 0));
