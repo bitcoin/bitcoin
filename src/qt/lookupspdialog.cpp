@@ -69,7 +69,9 @@ LookupSPDialog::LookupSPDialog(QWidget *parent) :
     this->model = model;
 
     // populate placeholder text
+#if QT_VERSION >= 0x040700
     ui->searchLineEdit->setPlaceholderText("ID, name or issuer");
+#endif
 
     // connect actions
     connect(ui->matchingComboBox, SIGNAL(activated(int)), this, SLOT(matchingComboBoxChanged(int)));
