@@ -75,6 +75,7 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
     connect(ui->radioCancelPair, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
     connect(ui->radioCancelPrice, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
     connect(ui->radioCancelEverything, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
+    connect(ui->cancelButton, SIGNAL(clicked()),this, SLOT(SendCancelTransaction()));
 
     // perform initial from address population
     UpdateAddressSelector();
@@ -202,8 +203,234 @@ void MetaDExCancelDialog::RefreshUI()
     UpdateCancelCombo();
 }
 
-void MetaDExCancelDialog::sendCancelTransaction()
+
+/**
+ * Takes the data from the fields in the cancellation UI and asks the wallet to construct a
+ * MetaDEx cancel transaction.  Then commits & broadcast the created transaction.
+ */
+void MetaDExCancelDialog::SendCancelTransaction()
 {
-    // TODO - implement creation of cancels
+    std::string fromAddress = ui->fromCombo->currentText().toStdString();
+    if (fromAddress.empty()) {
+        // no sender address selected
+        QMessageBox::critical( this, "Unable to send transaction",
+        "Please select the address you would like to send the cancellation transaction from." );
+        return;
+    }
+
+    int64_t action = 0;
+    if (ui->radioCancelPair->isChecked()) action = 2;
+    if (ui->radioCancelPrice->isChecked()) action = 3;
+    if (ui->radioCancelEverything->isChecked()) action = 4;
+    if (action == 0) {
+        // no cancellation method selected
+        QMessageBox::critical( this, "Unable to send transaction",
+        "Please ensure you have selected a cancellation method and valid cancellation criteria." );
+        return;
+    }
+
+    std::string dataStr = ui->cancelCombo->itemData(ui->cancelCombo->currentIndex()).toString().toStdString();
+    size_t slashPos = dataStr.find("/");
+    size_t colonPos = dataStr.find(":");
+    if ((slashPos==std::string::npos) && (action !=4)) {
+        // cancelCombo does not contain valid data - error out and abort
+        QMessageBox::critical( this, "Unable to send transaction",
+        "Please ensure you have selected valid cancellation criteria." );
+        return;
+    }
+
+    uint32_t intBlockDate = GetLatestBlockTime();
+    QDateTime currentDate = QDateTime::currentDateTime();
+    int secs = QDateTime::fromTime_t(intBlockDate).secsTo(currentDate);
+    if(secs > 90*60)
+    {
+        // wallet is still synchronizing, potential lockup if we try to create a transaction now
+        QMessageBox::critical( this, "Unable to send transaction",
+        "The client is still synchronizing.  Sending transactions can currently be performed only when the client has completed synchronizing." );
+        return;
+    }
+
+    std::string propertyIdForSaleStr = dataStr.substr(0,slashPos);
+    std::string propertyIdDesiredStr = dataStr.substr(slashPos+1,std::string::npos);
+    std::string priceStr;
+    if (colonPos!=std::string::npos) {
+        propertyIdDesiredStr = dataStr.substr(slashPos+1,colonPos-slashPos-1);
+        priceStr = dataStr.substr(colonPos+1,std::string::npos);
+    }
+    unsigned int propertyIdForSale = boost::lexical_cast<uint32_t>(propertyIdForSaleStr);
+    unsigned int propertyIdDesired = boost::lexical_cast<uint32_t>(propertyIdDesiredStr);
+    int64_t amountForSale = 0, amountDesired = 0;
+
+    if (action == 3) { // do not attempt to reverse calc values from price, pull suitable ForSale/Desired amounts from metadex map
+        bool matched = false;
+        for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+            if (my_it->first != propertyIdForSale) { continue; } // move along, this isn't the prop you're looking for
+            md_PricesMap & prices = my_it->second;
+            for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+                XDOUBLE price = it->first;
+                XDOUBLE effectivePrice;
+                md_Set & indexes = it->second;
+                for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                    CMPMetaDEx obj = *it;
+                    effectivePrice = obj.effectivePrice();
+                    if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdForSale == OMNI_PROPERTY_TMSC)) { // "buy" order
+                        if (price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) == priceStr) matched=true;
+                    } else {
+                        if (effectivePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) == priceStr) matched=true;
+                    }
+                    if (matched) {
+                        amountForSale = obj.getAmountForSale();
+                        amountDesired = obj.getAmountDesired();
+                        break;
+                    }
+                }
+                if (matched) break;
+            }
+            if (matched) break;
+        }
+    }
+
+    printf("ForSale \"%s\"=%lu  Desired \"%s\"=%lu  Price \"%s\"  Action %lu  AmountForSale %lu  AmountDesired %lu\n", propertyIdForSaleStr.c_str(), propertyIdForSale, propertyIdDesiredStr.c_str(), propertyIdDesired, priceStr.c_str(), action, amountForSale, amountDesired);
+
+    // confirmation dialog
+    string strMsgText = "You are about to send the following MetaDEx trade cancellation transaction, please check the details thoroughly:\n\n";
+    strMsgText += "Type: Cancel Trade Request\nFrom: " + fromAddress + "\nAction: ";
+    switch (action) {
+        case 2: strMsgText += "2 (Cancel by pair)\n"; break;
+        case 3: strMsgText += "3 (Cancel by price)\n"; break;
+        case 4: strMsgText += "4 (Cancel all)\n"; break;
+    }
+    string sellToken = getPropertyName(propertyIdForSale).c_str();
+    string desiredToken = getPropertyName(propertyIdDesired).c_str();
+    string sellId = static_cast<ostringstream*>( &(ostringstream() << propertyIdForSale) )->str();
+    string desiredId = static_cast<ostringstream*>( &(ostringstream() << propertyIdDesired) )->str();
+    if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
+    sellToken += " (#" + sellId + ")";
+    if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
+    desiredToken += " (#" + desiredId + ")";
+    string messageStr = "Cancel all orders ";
+    if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdForSale == OMNI_PROPERTY_TMSC)) { // "buy" order
+        messageStr += "buying " + desiredToken;
+    } else {
+        messageStr += "selling " + sellToken;
+    }
+    if (action == 3) { // append price if needed - display the first 24 digits
+         std::string displayPrice = StripTrailingZeros(priceStr);
+         if (displayPrice.size()>24) displayPrice = displayPrice.substr(0,24)+"...";
+         messageStr += " priced at " + displayPrice;
+         if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdDesired == OMNI_PROPERTY_MSC)) { messageStr += " MSC/SPT"; } else { messageStr += " TMSC/SPT"; }
+    }
+    strMsgText += "Message: " + messageStr;
+    strMsgText += "\n\nAre you sure you wish to send this transaction?";
+    QString msgText = QString::fromStdString(strMsgText);
+    QMessageBox::StandardButton responseClick;
+    responseClick = QMessageBox::question(this, "Confirm transaction", msgText, QMessageBox::Yes|QMessageBox::No);
+    if (responseClick == QMessageBox::No)
+    {
+        QMessageBox::critical( this, "MetaDEx cancel aborted",
+        "The MetaDEx trade cancellation transaction has been aborted.\n\nPlease double-check the transction details thoroughly before retrying your transaction." );
+        return;
+    }
+
+    /* #REIMPLEMENT WALLETMODEL#
+    // unlock the wallet
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if(!ctx.isValid())
+    {
+        // Unlock wallet was cancelled/failed
+        QMessageBox::critical( this, "MetaDEx cancel transaction failed",
+        "The MetaDEx cancel transaction has been aborted.\n\nThe wallet unlock process must be completed to send a transaction." );
+        return;
+    }
+    */
+
+    // create a payload for the transaction
+    // #CLASSC# std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid = 0;
+    std::string rawHex;
+    int result = 0; // #CLASSC# int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        string strCode = boost::lexical_cast<string>(result);
+        string strError;
+        switch(result) {
+            case -212:
+                strError = "Error choosing inputs for the send transaction";
+                break;
+            case -233:
+                strError = "Error with redemption address";
+                break;
+            case -220:
+                strError = "Error with redemption address key ID";
+                break;
+            case -221:
+                strError = "Error obtaining public key for redemption address";
+                break;
+            case -222:
+                strError = "Error public key for redemption address is not valid";
+                break;
+            case -223:
+                strError = "Error validating redemption address";
+                break;
+            case -205:
+                strError = "Error with wallet object";
+                break;
+            case -206:
+                strError = "Error with selected inputs for the send transaction";
+                break;
+            case -211:
+                strError = "Error creating transaction (wallet may be locked or fees may not be sufficient)";
+                break;
+            case -213:
+                strError = "Error committing transaction";
+                break;
+        }
+        if (strError.empty()) strError = "Error code does not have associated error text.";
+        QMessageBox::critical( this, "MetaDEx cancel transaction failed",
+        "The MetaDEx cancel transaction has failed.\n\nThe error code was: " + QString::fromStdString(strCode) + "\nThe error message was:\n" + QString::fromStdString(strError));
+        return;
+    } else {
+        if (0) { // #CLASSC# if (!autoCommit) {
+            QDialog *rawDlg = new QDialog;
+            QLayout *dlgLayout = new QVBoxLayout;
+            dlgLayout->setSpacing(12);
+            dlgLayout->setMargin(12);
+            QTextEdit *dlgTextEdit = new QTextEdit;
+            dlgTextEdit->setText(QString::fromStdString(rawHex));
+            dlgTextEdit->setStatusTip("Raw transaction hex");
+            dlgLayout->addWidget(dlgTextEdit);
+            rawDlg->setWindowTitle("Raw Hex (auto commit is disabled)");
+            QPushButton *closeButton = new QPushButton(tr("&Close"));
+            closeButton->setDefault(true);
+            QDialogButtonBox *buttonBox = new QDialogButtonBox;
+            buttonBox->addButton(closeButton, QDialogButtonBox::AcceptRole);
+            dlgLayout->addWidget(buttonBox);
+            rawDlg->setLayout(dlgLayout);
+            rawDlg->resize(700, 360);
+            connect(buttonBox, SIGNAL(accepted()), rawDlg, SLOT(accept()));
+            rawDlg->setAttribute(Qt::WA_DeleteOnClose);
+            if (rawDlg->exec() == QDialog::Accepted) { } else { } //do nothing but close
+        } else {
+            // display the result
+            string strSentText = "Your Omni Layer transaction has been sent.\n\nThe transaction ID is:\n\n";
+            strSentText += txid.GetHex() + "\n\n";
+            QString sentText = QString::fromStdString(strSentText);
+            QMessageBox sentDialog;
+            sentDialog.setIcon(QMessageBox::Information);
+            sentDialog.setWindowTitle("Transaction broadcast successfully");
+            sentDialog.setText(sentText);
+            sentDialog.setStandardButtons(QMessageBox::Yes|QMessageBox::Ok);
+            sentDialog.setDefaultButton(QMessageBox::Ok);
+            sentDialog.setButtonText( QMessageBox::Yes, "Copy TXID to clipboard" );
+            if(sentDialog.exec() == QMessageBox::Yes) {
+                GUIUtil::setClipboard(QString::fromStdString(txid.GetHex())); // copy TXID to clipboard
+            }
+            // no need for a pending object for now, no available balances will be affected until confirmation
+        }
+    }
 }
+
 

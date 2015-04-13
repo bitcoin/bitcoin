@@ -9,6 +9,8 @@
 
 #include <QDialog>
 #include <QString>
+#include <QDialogButtonBox>
+#include <QTextEdit>
 
 class OptionsModel;
 
@@ -29,13 +31,18 @@ public:
     explicit MetaDExCancelDialog(QWidget *parent = 0);
 
     void setClientModel(ClientModel *model);
-    void sendCancelTransaction();
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
     QWidget *setupTabChain(QWidget *prev);
 
+    QLayout *dlgLayout;
+    QTextEdit *dlgTextEdit;
+    QDialogButtonBox *buttonBox;
+    QPushButton *closeButton;
+
 
 public slots:
+    void SendCancelTransaction();
     void UpdateAddressSelector();
     void UpdateCancelCombo();
     void RefreshUI();
