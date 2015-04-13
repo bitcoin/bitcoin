@@ -13,25 +13,62 @@
 #include <string>
 
 #include "json/json_spirit_utils.h"
-#include <boost/foreach.hpp>
 
-typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool fHelp);
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/foreach.hpp>
 
 namespace CoreWallet
 {
 
+//!rpc help exception
+class RPCHelpException: public std::exception
+{
+public:
+    explicit RPCHelpException(const std::string& message): msg_(message) {}
+    virtual ~RPCHelpException() throw (){}
+    virtual const char* what() const throw (){
+        return msg_.c_str();
+    }
+protected:
+    std::string msg_;
+};
+    
+typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool fHelp);
+
+struct RPCDispatchEntry
+{
+    std::string name;
+    rpcfn_type actor;
+};
+
+//dispatch compatible rpc function definitions
+json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp);
+json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp);
+json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp);
+json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp);
+json_spirit::Value help(const json_spirit::Array& params, bool fHelp);
+    
+static const RPCDispatchEntry vDispatchEntries[] = {
+    { "getnewaddress",                  &getnewaddress },
+    { "listaddresses",                  &listaddresses },
+    
+    // Multiwallet
+    { "addwallet",                      &addwallet },
+    { "listwallets",                    &listwallets },
+    
+    // Help / Debug
+    { "help",                           &help },
+};
+
+    
 ///////////////////////////
 // helpers
 ///////////////////////////
 
+//! try to filter out the desired wallet instance via given params
 Wallet* WalletFromParams(const json_spirit::Array& params)
 {
-    if (params.size() < 1 || params[0].type() != json_spirit::obj_type)
-        throw std::runtime_error("invalid parameters, always use a json key/value object");
     std::string walletID = ""; //"" stands for default wallet
-    
-    const json_spirit::Object& o = params[0].get_obj();
-    walletID = find_value(o, "walletid").get_str();
     if (params.size() > 0 && params[0].type() == json_spirit::obj_type) //TODO also allow params at index position different the 0
     {
         const json_spirit::Object& o = params[0].get_obj();
@@ -46,13 +83,23 @@ Wallet* WalletFromParams(const json_spirit::Array& params)
     return wallet;
 }
 
+//! search in exiting json object for a key/value pair and returns value
+json_spirit::Value ValueFromParams(const json_spirit::Array& params, const std::string& key)
+{
+    if (params.size() < 1 || params[0].type() != json_spirit::obj_type)
+        throw std::runtime_error("invalid parameters, always use a json key/value object");
+    
+    const json_spirit::Object& o = params[0].get_obj();
+    return find_value(o, key);
+}
+    
 ///////////////////////////
 // Keys/Addresses stack
 ///////////////////////////
 json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
-        throw std::runtime_error(
+        throw RPCHelpException(
                             "getnewaddress\n"
                             "\nReturns a new Bitcoin address for receiving payments.\n"
                             "\nResult:\n"
@@ -64,18 +111,61 @@ json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
     
 
     Wallet *wallet = WalletFromParams(params);
-    CPubKey newKey = wallet->GenerateNewKey();
-    CKeyID keyID = newKey.GetID();
+    json_spirit::Value value = ValueFromParams(params, "chainpath");
+    json_spirit::Value valueIndex = ValueFromParams(params, "index");
     
-    wallet->SetAddressBook(keyID, "receive");
+    CKeyID keyID;
     
-    return CBitcoinAddress(keyID).ToString();
+    if(value.is_null())
+    {
+        int index = -1;
+        if (!valueIndex.is_null())
+            index = atoi(valueIndex.get_str());
+            
+        CPubKey newKey = wallet->GenerateNewKey(index);
+        keyID = newKey.GetID();
+        wallet->SetAddressBook(keyID, "receive");
+        return CBitcoinAddress(keyID).ToString();
+    }
+    else
+    {
+        //Bip32
+        std::string chainpath = value.get_str();
+        boost::to_lower(chainpath);
+        
+        json_spirit::Object obj;
+        if (chainpath == "m")
+        {
+            unsigned char vch[32];
+            json_spirit::Value seedHex = ValueFromParams(params, "seed");
+            bool useSeed = false;
+            if (!seedHex.is_null())
+            {
+                std::vector<unsigned char> result = ParseHex(seedHex.get_str());
+                memcpy((void *)&vch,(const void *)&result.front(),32);
+                useSeed = true;
+            }
+            
+            CPubKey newKey = wallet->GenerateBip32Structure("m/44'/0'/0'/", vch, useSeed);
+            if (!useSeed)
+                obj.push_back(json_spirit::Pair("seed", HexStr(vch, vch+sizeof(vch))));
+        }
+        else
+        {
+//            CPubKey newKey = wallet->GenerateBip32Structure(vch, useSeed);
+//            keyID = newKey.GetID();
+//            wallet->SetAddressBook(keyID, "receive");
+//            obj.push_back(json_spirit::Pair("address", CBitcoinAddress(keyID).ToString()));
+        }
+            
+        return obj;
+    }
 }
     
 json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
-        throw std::runtime_error(
+    if (fHelp)
+        throw RPCHelpException(
                             "listaddresses\n"
                             "\nResult:\n"
                             "[                     (json array of string)\n"
@@ -88,11 +178,23 @@ json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
                             );
     Wallet *wallet = WalletFromParams(params);
     json_spirit::Array ret;
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CoreWallet::CAddressBookMetadata)& item, wallet->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookMetadata)& item, wallet->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
-        ret.push_back(address.ToString());
+        const CAddressBookMetadata& metadata = item.second;
+        json_spirit::Object obj;
+        obj.push_back(json_spirit::Pair(address.ToString(), metadata.purpose));
+        ret.push_back(obj);
     }
+    
+    CKeyID masterKeyID = wallet->masterKeyID;
+    if (!masterKeyID.IsNull())
+    {
+        json_spirit::Object obj;
+        obj.push_back(json_spirit::Pair(CBitcoinAddress(masterKeyID).ToString(), "masterkey"));
+        ret.push_back(obj);
+    }
+    
     return ret;
 }
 
@@ -104,7 +206,7 @@ json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
 json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
-        throw std::runtime_error(
+        throw RPCHelpException(
                              "addwallet \"walletid\"\n"
                              "\nArguments:\n"
                              "  \"walletid\"    (string, required) allowed characters: A-Za-z0-9._-\n"
@@ -122,7 +224,7 @@ json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
 json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
-        throw std::runtime_error(
+        throw RPCHelpException(
                                  "listwallets\n"
                                  "\nResult:\n"
                                  "[                     (json array of string)\n"
@@ -144,50 +246,81 @@ json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp)
     return ret;
 }
 
+///////////////////////////
+// Help stack
+///////////////////////////
+json_spirit::Value help(const json_spirit::Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw RPCHelpException(
+                            "help ( \"command\" )\n"
+                            "\nList all commands, or get help for a specified command.\n"
+                            "\nArguments:\n"
+                            "1. \"command\"     (string, optional) The command to get help on\n"
+                            "\nResult:\n"
+                            "\"text\"     (string) The help text\n"
+                            );
+    
+    std::string helpString = "\n== CoreWallet ==\n";
+    json_spirit::Value value = ValueFromParams(params, "command");
+    
+    unsigned int i;
+    for (i = 0; i < (sizeof(vDispatchEntries) / sizeof(vDispatchEntries[0])); i++)
+    {
+        try {
+            json_spirit::Array params;
+            vDispatchEntries[i].actor(params, true);
+        } catch (const RPCHelpException& e)
+        {
+            // Help text is returned in an exception
+            std::string strHelp = std::string(e.what());
+            if (!value.is_null() && value.get_str() == vDispatchEntries[i].name)
+            {
+                //shortcut if uses likes help of a single command
+                helpString = strHelp;
+                return helpString;
+            }
+            
+            if (strHelp.find('\n') != std::string::npos)
+                strHelp = strHelp.substr(0, strHelp.find('\n'));
+               
+            helpString+=strHelp+"\n";
+        }
+    }
+    
+    return helpString;
+}
     
 ///////////////////////////
 // Dispatching/signaling stack
 ///////////////////////////
+    
+//! search for command in dispatch table and executes
 void ExecuteRPC(const std::string& strMethod, const json_spirit::Array& params, json_spirit::Value& result, bool& accept)
 {
-    if(strMethod == "getnewaddress")
+    unsigned int i;
+    for (i = 0; i < (sizeof(vDispatchEntries) / sizeof(vDispatchEntries[0])); i++)
     {
-        result = getnewaddress(params, false);
-        accept = true;
-    }
-    else if(strMethod == "listaddresses")
-    {
-        result = listaddresses(params, false);
-        accept = true;
-    }
-    else if(strMethod == "addwallet")
-    {
-        result = addwallet(params, false);
-        accept = true;
-    }
-    else if(strMethod == "listwallets")
-    {
-        result = listwallets(params, false);
-        accept = true;
+        if(vDispatchEntries[i].name == strMethod)
+        {
+            try
+            {
+                result = vDispatchEntries[i].actor(params, false);
+            }
+            catch (const RPCHelpException& e)
+            {
+                throw JSONRPCError(RPC_MISC_ERROR, e.what());
+            }
+            
+            accept = true;
+        }
     }
 }
-    
+
+//! Create helpstring by catching "help"-exceptions over dispatching table.
 void AddRPCHelp(std::string& helpString)
 {
-    helpString += "\n== CoreWallet ==\n";
-    try {
-        json_spirit::Array params;
-        getnewaddress(params, true);
-    } catch (const std::exception& e)
-    {
-        // Help text is returned in an exception
-        std::string strHelp = std::string(e.what());
-        if (strHelp.find('\n') != std::string::npos)
-            strHelp = strHelp.substr(0, strHelp.find('\n'));
-        
-        helpString+=strHelp;
-        
-    }
+    
 }
     
 

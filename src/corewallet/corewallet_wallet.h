@@ -30,15 +30,18 @@ public:
         walletDB->LoadWallet(this);
     }
     
-    /**
-     * keystore implementation
-     * Generate a new key
-     */
-    CPubKey GenerateNewKey();
+    CPubKey GenerateBip32Structure(const std::string& chainpath, unsigned char (&vchOut)[32], bool useSeed=false);
+    CPubKey GenerateNewKey(int index=-1);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool LoadKeyMetadata(const CPubKey &pubkey, const CoreWallet::CKeyMetadata &metadata);
     bool LoadKey(const CKey& key, const CPubKey &pubkey);
     bool SetAddressBook(const CTxDestination& address, const std::string& purpose);
+    
+    CKeyID masterKeyID;
+    CExtPubKey internalPubKey;
+    CExtPubKey externalPubKey;
+    unsigned char masterSeed[32];
+    std::string strChainPath;
 };
 
 // WalletModel: a wallet metadata class

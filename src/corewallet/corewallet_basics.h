@@ -6,6 +6,7 @@
 #ifndef BITCOIN_COREWALLET_COREWALLET_BASICS_H
 #define BITCOIN_COREWALLET_COREWALLET_BASICS_H
 
+#include "pubkey.h"
 #include "serialize.h"
 
 #include <stdint.h>
@@ -52,6 +53,11 @@ namespace CoreWallet
         std::string label;
         std::string purpose;
         
+        // BIP32 metadata.
+        CKeyID keyidParent;
+        uint32_t nDerivationIndex;
+        int nDepth;
+        
         CKeyMetadata()
         {
             SetNull();
@@ -71,12 +77,18 @@ namespace CoreWallet
             READWRITE(nCreateTime);
             READWRITE(label);
             READWRITE(purpose);
+            READWRITE(keyidParent);
+            READWRITE(nDerivationIndex);
+            READWRITE(nDepth);
         }
         
         void SetNull()
         {
             nVersion = CKeyMetadata::CURRENT_VERSION;
             nCreateTime = 0;
+            keyidParent = CKeyID();
+            nDerivationIndex = 0;
+            nDepth = 0;
         }
     };
 }; // end namespace CoreWallet

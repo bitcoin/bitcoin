@@ -97,6 +97,18 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> metadata;
             pCoreWallet->mapAddressBook[CBitcoinAddress(strAddress).Get()] = metadata;
         }
+        else if (strType == "masterkeyid")
+        {
+            ssValue >> pCoreWallet->masterKeyID;
+        }
+        else if (strType == "bip32intpubkey")
+        {
+            ssValue >> pCoreWallet->internalPubKey.pubkey;
+        }
+        else if (strType == "bip32extpubkey")
+        {
+            ssValue >> pCoreWallet->externalPubKey.pubkey;
+        }
     } catch (...)
     {
         return false;
