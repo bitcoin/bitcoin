@@ -1,22 +1,20 @@
 // This file serves to seperate encoding of data outputs from the main mastercore.cpp/h files.
+#include "omnicore_encoding.h"
 
 #include "mastercore.h"
 #include "mastercore_script.h"
-#include "omnicore_encoding.h"
 #include "omnicore_utils.h"
+
 #include "base58.h"
-#include "primitives/transaction.h"
 #include "pubkey.h"
+#include "random.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "utilstrencodings.h"
-#include "random.h"
-#include "wallet.h"
-#include "openssl/sha.h"
 
-#include <boost/algorithm/string.hpp>
-
+#include <stdint.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& redeemingPubKey, const std::vector<unsigned char>& vecPayload, std::vector<std::pair <CScript,int64_t> >& vecOutputs)
@@ -57,21 +55,21 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
             seqNum++;
         }
         CScript multisig_output = GetScriptForMultisig(1, keys);
-        vecOutputs.push_back(make_pair(multisig_output, GetDustThreshold(multisig_output)));
+        vecOutputs.push_back(std::make_pair(multisig_output, GetDustThreshold(multisig_output)));
     }
     CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
-    vecOutputs.push_back(make_pair(scriptPubKey, GetDustThreshold(scriptPubKey))); // add the Exodus marker
+    vecOutputs.push_back(std::make_pair(scriptPubKey, GetDustThreshold(scriptPubKey))); // add the Exodus marker
     return true;
 }
 
 bool OmniCore_Encode_ClassC(const std::vector<unsigned char>& vecPayload, std::vector<std::pair <CScript,int64_t> >& vecOutputs)
 {
     const unsigned char bytes[] = {0x6f,0x6d}; // define Omni marker bytes
-    if (vecPayload.size() > nMaxDatacarrierBytes-sizeof(bytes)/sizeof(bytes[0])) { return false; } // we shouldn't see this since classAgnostic_send handles size vs class, but include check here for safety
+    if (vecPayload.size()+sizeof(bytes)/sizeof(bytes[0]) > nMaxDatacarrierBytes) { return false; } // we shouldn't see this since classAgnostic_send handles size vs class, but include check here for safety
     std::vector<unsigned char> omniBytesPlusData(bytes, bytes+sizeof(bytes)/sizeof(bytes[0]));
     omniBytesPlusData.insert(omniBytesPlusData.end(), vecPayload.begin(), vecPayload.end());
     CScript script;
     script << OP_RETURN << omniBytesPlusData;
-    vecOutputs.push_back(make_pair(script, 0));
+    vecOutputs.push_back(std::make_pair(script, 0));
     return true;
 }
