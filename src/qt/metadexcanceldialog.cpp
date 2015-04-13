@@ -104,6 +104,17 @@ void MetaDExCancelDialog::UpdateAddressSelector()
     }
 }
 
+/**
+ * Refreshes the cancel combo with the latest data based on the currently selected
+ * radio button.
+ */
+void MetaDExCancelDialog::UpdateCancelCombo()
+{
+    if (ui->radioCancelPair->isChecked()) rdoCancelPair();
+    if (ui->radioCancelPrice->isChecked()) rdoCancelPrice();
+    // no entry is needed for cancel everything, in this case cancel combo data not dependent on state
+}
+
 void MetaDExCancelDialog::rdoCancelPair()
 {
     // calculate which pairs are currently open
