@@ -362,6 +362,8 @@ bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
+  arith_uint256.cpp \
+  consensus/blockverify.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/sha1.cpp \
@@ -370,6 +372,7 @@ libbitcoinconsensus_la_SOURCES = \
   eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
+  primitives/block.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
   script/bitcoinconsensus.cpp \
