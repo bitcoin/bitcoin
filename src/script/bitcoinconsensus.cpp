@@ -5,24 +5,27 @@
 
 #include "bitcoinconsensus.h"
 
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
+#include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/interpreter.h"
 #include "version.h"
 
 namespace {
 
-/** A class that deserializes a single CTransaction one time. */
-class TxInputStream
+/** A class that deserializes a single object implementing ::Unserialize() one time. */
+class ObjectInputStream
 {
 public:
-    TxInputStream(int nTypeIn, int nVersionIn, const unsigned char *txTo, size_t txToLen) :
+    ObjectInputStream(int nTypeIn, int nVersionIn, const unsigned char *object, size_t objectLen) :
     m_type(nTypeIn),
     m_version(nVersionIn),
-    m_data(txTo),
-    m_remaining(txToLen)
+    m_data(object),
+    m_remaining(objectLen)
     {}
 
-    TxInputStream& read(char* pch, size_t nSize)
+    ObjectInputStream& read(char* pch, size_t nSize)
     {
         if (nSize > m_remaining)
             throw std::ios_base::failure(std::string(__func__) + ": end of data");
@@ -40,7 +43,7 @@ public:
     }
 
     template<typename T>
-    TxInputStream& operator>>(T& obj)
+    ObjectInputStream& operator>>(T& obj)
     {
         ::Unserialize(*this, obj, m_type, m_version);
         return *this;
@@ -63,11 +66,11 @@ inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
 } // anon namespace
 
 int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
-                                    const unsigned char *txTo        , unsigned int txToLen,
-                                    unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
+                                   const unsigned char *txTo        , unsigned int txToLen,
+                                   unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
     try {
-        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
+        ObjectInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
         CTransaction tx;
         stream >> tx;
         if (nIn >= tx.vin.size())
@@ -79,6 +82,27 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
          set_error(err, bitcoinconsensus_ERR_OK);
 
         return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, TransactionSignatureChecker(&tx, nIn), NULL);
+    } catch (const std::exception&) {
+        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+    }
+}
+
+int bitcoinconsensus_verify_header(const unsigned char* blockHeader, unsigned int blockHeaderLen,
+                                   const Consensus::Params& params, int64_t nTime, CBlockIndexBase* pindexPrev, PrevIndexGetter indexGetter, 
+                                   bitcoinconsensus_error* err)
+{
+    try {
+        ObjectInputStream stream(SER_NETWORK, PROTOCOL_VERSION, blockHeader, blockHeaderLen);
+        CBlockHeader header;
+        stream >> header;
+        if (header.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != blockHeaderLen)
+            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+
+         // Regardless of the verification result, the tx did not error.
+         set_error(err, bitcoinconsensus_ERR_OK);
+
+         CValidationState state;
+         return Consensus::VerifyBlockHeader(header, state, params, nTime, pindexPrev, indexGetter);
     } catch (const std::exception&) {
         return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
