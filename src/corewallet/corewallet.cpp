@@ -5,6 +5,7 @@
 
 #include "corewallet/corewallet.h"
 #include "corewallet/corewallet_db.h"
+#include "corewallet/corewallet_wallet.h"
 #include "rpcserver.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -17,18 +18,40 @@
 namespace CoreWallet {
 
 const static std::string DEFAULT_WALLET_FILE = "wallet.wal";
-static std::map<std::string, WalletModel*> mapWallets;
+const static std::string DEFAULT_WALLETS_METADATA_FILE = "multiwallet.dat";
+static std::map<std::string, WalletModel> mapWallets;
 static FileDB *walletsListDB;
     
 //implemented in corewallet_rpc.cpp
 extern void ExecuteRPC(const std::string& strMethod, const json_spirit::Array& params, json_spirit::Value& result, bool& accept);
 
-CoreWallet::Wallet* pCoreWallet = NULL;
 
-
-CoreWallet::Wallet* GetWallet()
+std::vector<std::string> GetWalletIDs()
 {
-    return pCoreWallet;
+    std::vector<std::string> vIDs;
+    std::pair<std::string, WalletModel> walletAndMetadata; // what a map<int, int> is made of
+    BOOST_FOREACH(walletAndMetadata, mapWallets) {
+        vIDs.push_back(walletAndMetadata.first);
+    }
+    return vIDs;
+}
+    
+CoreWallet::Wallet* GetWalletWithID(const std::string& walletIDIn)
+{
+    std::string walletID = walletIDIn;
+    
+    if (walletID == "" && mapWallets.size() == 1)
+        walletID = mapWallets.begin()->first;
+    
+    if (mapWallets.find(walletID) != mapWallets.end())
+    {
+        if (!mapWallets[walletID].pWallet) //is it closed?
+            mapWallets[walletID].pWallet = new Wallet(walletID);
+        
+        return mapWallets[walletID].pWallet;
+    }
+    
+    return NULL;
 }
     
 void AppendHelpMessageString(std::string& strUsage, bool debugHelp)
@@ -39,12 +62,58 @@ void AppendHelpMessageString(std::string& strUsage, bool debugHelp)
     strUsage += HelpMessageGroup(_("CoreWallet options:"));
     strUsage += HelpMessageOpt("-disablecorewallet", _("Do not load the wallet and disable wallet RPC calls"));
 }
+    
+void readWalletLists()
+{
+    CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
+    if (!multiwalletFile.IsNull())
+    {
+        try {
+            multiwalletFile >> mapWallets;
+        } catch (const std::exception&) {
+            LogPrintf("CoreWallet: could not read multiwallet metadata file (non-fatal)");
+        }
+    }
+}
+
+void writeWalletList()
+{
+    CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+    if (!multiwalletFile.IsNull())
+        multiwalletFile << mapWallets;
+}
 
 void LoadAsModule(std::string& warningString, std::string& errorString, bool& stopInit)
 {
-    pCoreWallet = new Wallet(DEFAULT_WALLET_FILE);
+    readWalletLists();
 }
     
+bool CheckFilenameString(const std::string& str)
+{
+    static std::string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890._-");
+    std::string strResult;
+    for (std::string::size_type i = 0; i < str.size(); i++)
+    {
+        if (safeChars.find(str[i]) == std::string::npos)
+            return false;
+    }
+    return true;
+}
+    
+void AddNewWallet(const std::string& walletID)
+{
+    if (mapWallets.find(walletID) != mapWallets.end())
+        throw std::runtime_error(_("walletid already exists"));
+    
+    if (!CheckFilenameString(walletID))
+        throw std::runtime_error(_("wallet ids can only contain A-Za-z0-9._- chars"));
+    
+    Wallet *newWallet = new Wallet(walletID);
+    mapWallets[walletID] = WalletModel(walletID, newWallet);
+    
+    writeWalletList();
+}
+
 void Dealloc()
 {
     delete walletsListDB;

@@ -488,7 +488,7 @@ bool CLogDB::Load() {
     
     // map to memory
     bool loadRet = db->Load_();
-    
+    loadRet = true;
     // reset the file to append writing mode "ab+"
     if (loadRet)
     {

@@ -8,8 +8,10 @@
 #include "base58.h"
 #include "timedata.h"
 #include "util.h"
+
+namespace CoreWallet {
     
-CPubKey CoreWallet::Wallet::GenerateNewKey()
+CPubKey Wallet::GenerateNewKey()
 {
     CKey secret;
     secret.MakeNewKey(true);
@@ -19,7 +21,7 @@ CPubKey CoreWallet::Wallet::GenerateNewKey()
     
     // Create new metadata
     int64_t nCreationTime = GetTime();
-    mapKeyMetadata[pubkey.GetID()] = CoreWallet::CKeyMetadata(nCreationTime);
+    mapKeyMetadata[pubkey.GetID()] = CKeyMetadata(nCreationTime);
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
     
@@ -28,12 +30,12 @@ CPubKey CoreWallet::Wallet::GenerateNewKey()
     return pubkey;
 }
 
-bool CoreWallet::Wallet::LoadKey(const CKey& key, const CPubKey &pubkey)
+bool Wallet::LoadKey(const CKey& key, const CPubKey &pubkey)
 {
     return CCryptoKeyStore::AddKeyPubKey(key, pubkey);
 }
 
-bool CoreWallet::Wallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
+bool Wallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
 {
     if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey))
         return false;
@@ -41,7 +43,7 @@ bool CoreWallet::Wallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     return walletDB->WriteKey(pubkey, secret.GetPrivKey(), mapKeyMetadata[pubkey.GetID()]);
 }
 
-bool CoreWallet::Wallet::LoadKeyMetadata(const CPubKey &pubkey, const CoreWallet::CKeyMetadata &meta)
+bool Wallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
 {
     if (meta.nCreateTime && (!nTimeFirstKey || meta.nCreateTime < nTimeFirstKey))
         nTimeFirstKey = meta.nCreateTime;
@@ -50,17 +52,14 @@ bool CoreWallet::Wallet::LoadKeyMetadata(const CPubKey &pubkey, const CoreWallet
     return true;
 }
 
-bool CoreWallet::Wallet::SetAddressBook(const CTxDestination& address, const std::string& strPurpose)
+bool Wallet::SetAddressBook(const CTxDestination& address, const std::string& strPurpose)
 {
-    CoreWallet::CAddressBookMetadata metadata;
-    {
-        LOCK(cs_coreWallet);
-        std::map<CTxDestination, CoreWallet::CAddressBookMetadata> ::iterator mi = mapAddressBook.find(address);
-        if(mi != mapAddressBook.end())
-        {
-            metadata = mapAddressBook[address];
-        }
-    }
-    metadata.purpose = strPurpose;
-    return walletDB->Write(make_pair(std::string("keymeta"), CBitcoinAddress(address).ToString()), metadata);
+    LOCK(cs_coreWallet);
+    std::map<CTxDestination, CAddressBookMetadata> ::iterator mi = mapAddressBook.find(address);
+    if(mi == mapAddressBook.end())
+        mapAddressBook[address] = CAddressBookMetadata();
+    
+    return walletDB->Write(make_pair(std::string("adrmeta"), CBitcoinAddress(address).ToString()), mapAddressBook[address]);
 }
+
+}; //end namespace

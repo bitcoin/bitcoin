@@ -12,7 +12,9 @@ namespace CoreWallet {
     void RegisterSignals();
     void UnregisterSignals();
     
-    CoreWallet::Wallet* GetWallet();
+    std::vector<std::string> GetWalletIDs();
+    Wallet* GetWalletWithID(const std::string& walletID = "");
+    void AddNewWallet(const std::string& walletID);
 };
 
 #endif // BITCOIN_COREWALLT_COREWALLET_H

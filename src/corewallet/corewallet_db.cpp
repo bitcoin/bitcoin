@@ -1,13 +1,19 @@
+// Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "base58.h"
+
 #include "corewallet/corewallet_db.h"
 #include "corewallet/corewallet_wallet.h"
 
 namespace CoreWallet
 {
     
-bool FileDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CoreWallet::CKeyMetadata& keyMeta)
+bool FileDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
 {
-    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
-               keyMeta, false))
+    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false))
         return false;
     
     // hash pubkey/privkey to accelerate wallet load
@@ -73,7 +79,7 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             CPubKey vchPubKey;
             ssKey >> vchPubKey;
-            CoreWallet::CKeyMetadata keyMeta;
+            CKeyMetadata keyMeta;
             ssValue >> keyMeta;
             
             pCoreWallet->LoadKeyMetadata(vchPubKey, keyMeta);
@@ -82,6 +88,14 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!pCoreWallet->nTimeFirstKey ||
                 (keyMeta.nCreateTime < pCoreWallet->nTimeFirstKey))
                 pCoreWallet->nTimeFirstKey = keyMeta.nCreateTime;
+        }
+        else if (strType == "adrmeta")
+        {
+            std::string strAddress;
+            CAddressBookMetadata metadata;
+            ssKey >> strAddress;
+            ssValue >> metadata;
+            pCoreWallet->mapAddressBook[CBitcoinAddress(strAddress).Get()] = metadata;
         }
     } catch (...)
     {

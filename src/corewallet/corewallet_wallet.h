@@ -18,8 +18,8 @@ namespace CoreWallet {
 class Wallet : public CCryptoKeyStore, public CValidationInterface{
 public:
     mutable CCriticalSection cs_coreWallet;
-    std::map<CKeyID, CoreWallet::CKeyMetadata> mapKeyMetadata;
-    std::map<CTxDestination, CoreWallet::CAddressBookMetadata> mapAddressBook;
+    std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
+    std::map<CTxDestination, CAddressBookMetadata> mapAddressBook;
     int64_t nTimeFirstKey;
     FileDB *walletDB;
     
@@ -53,8 +53,15 @@ public:
     std::string strWalletFilename;
     int64_t nCreateTime; // 0 means unknown
     
+    WalletModel()
+    {
+        SetNull();
+    }
+    
     WalletModel(const std::string& filenameIn, Wallet *pWalletIn)
     {
+        SetNull();
+        
         strWalletFilename = filenameIn;
         pWallet = pWalletIn;
     }
@@ -63,6 +70,7 @@ public:
     {
         nVersion = CURRENT_VERSION;
         nCreateTime = 0;
+        pWallet = NULL;
     }
     
     ADD_SERIALIZE_METHODS;
