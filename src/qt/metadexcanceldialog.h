@@ -6,6 +6,7 @@
 #define METADEXCANCELDIALOG_H
 
 #include "clientmodel.h"
+#include "walletmodel.h"
 
 #include <QDialog>
 #include <QString>
@@ -31,6 +32,8 @@ public:
     explicit MetaDExCancelDialog(QWidget *parent = 0);
 
     void setClientModel(ClientModel *model);
+    void setWalletModel(WalletModel *model);
+
     /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
      */
     QWidget *setupTabChain(QWidget *prev);
@@ -50,6 +53,7 @@ public slots:
 private:
     Ui::MetaDExCancelDialog *ui;
     ClientModel *clientModel;
+    WalletModel *walletModel;
 
 private slots:
 

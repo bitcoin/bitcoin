@@ -11,6 +11,7 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "clientmodel.h"
+#include "walletmodel.h"
 #include "wallet.h"
 #include "base58.h"
 #include "coincontrol.h"
@@ -68,7 +69,8 @@ using namespace leveldb;
 MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExCancelDialog),
-    clientModel(0)
+    clientModel(0),
+    walletModel(0)
 {
     ui->setupUi(this);
 
@@ -84,9 +86,6 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
 
 /**
  * Sets the client model.
- *
- * Note: for metadex cancels we only need to know when the Omni state has been refreshed
- * so only the client model (instead of both client and wallet models) is needed.
  */
 void MetaDExCancelDialog::setClientModel(ClientModel *model)
 {
@@ -94,6 +93,14 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
         this->clientModel = model;
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(RefreshUI()));
     }
+}
+
+/**
+ * Sets the wallet model.
+ */
+void MetaDExCancelDialog::setWalletModel(WalletModel *model)
+{
+    if (model != NULL) this->walletModel = model;
 }
 
 /**
@@ -332,7 +339,6 @@ void MetaDExCancelDialog::SendCancelTransaction()
         return;
     }
 
-    /* #REIMPLEMENT WALLETMODEL#
     // unlock the wallet
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
@@ -342,7 +348,6 @@ void MetaDExCancelDialog::SendCancelTransaction()
         "The MetaDEx cancel transaction has been aborted.\n\nThe wallet unlock process must be completed to send a transaction." );
         return;
     }
-    */
 
     // create a payload for the transaction
     // #CLASSC# std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);

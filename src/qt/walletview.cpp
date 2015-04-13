@@ -186,6 +186,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     metaDExTab->setModel(walletModel);
     mpTXTab->setWalletModel(walletModel);
     orderHistoryTab->setModel(walletModel);
+    cancelTab->setWalletModel(walletModel);
 
     if (walletModel)
     {
