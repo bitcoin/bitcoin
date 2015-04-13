@@ -193,6 +193,7 @@ BitcoinGUI::BitcoinGUI(bool fIsTestnet, QWidget *parent) :
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(showConsole()));
     connect(openNetworkAction, SIGNAL(triggered()), rpcConsole, SLOT(showNetwork()));
     connect(openConfEditorAction, SIGNAL(triggered()), rpcConsole, SLOT(showConfEditor()));
+    connect(showBackupsAction, SIGNAL(triggered()), rpcConsole, SLOT(showBackups()));
 
 
     // prevents an oben debug window from becoming stuck/unusable on client shutdown
@@ -330,6 +331,8 @@ void BitcoinGUI::createActions(bool fIsTestnet)
     openNetworkAction->setStatusTip(tr("Show network monitor"));
 	openConfEditorAction = new QAction(QIcon(":/icons/edit"), tr("Open &Configuration File"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
+    showBackupsAction = new QAction(QIcon(":/icons/browse"), tr("Show Automatic &Backups"), this);
+    showBackupsAction->setStatusTip(tr("Show automatically created wallet backups"));
 
     usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
@@ -408,6 +411,7 @@ void BitcoinGUI::createMenuBar()
         tools->addAction(openRPCConsoleAction);
         tools->addAction(openNetworkAction);
         tools->addAction(openConfEditorAction);
+        tools->addAction(showBackupsAction);
     }
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
@@ -570,6 +574,7 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addAction(openRPCConsoleAction);
     trayIconMenu->addAction(openNetworkAction);
     trayIconMenu->addAction(openConfEditorAction);
+    trayIconMenu->addAction(showBackupsAction);
 #ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
