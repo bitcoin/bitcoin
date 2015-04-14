@@ -80,4 +80,19 @@ std::string StripTrailingZeros(const std::string& inputStr)
     return outputStr;
 }
 
+/**
+ * Variable length find and replace.  Find all iterations of findText within inputStr and replace them
+ * with replaceText.
+ */
+std::string ReplaceStr(const std::string& findText, const std::string& replaceText, const std::string& inputStr)
+{
+    size_t start_pos = 0;
+    std::string outputStr = inputStr;
+    while((start_pos = outputStr.find(findText, start_pos)) != std::string::npos) {
+        outputStr.replace(start_pos, findText.length(), replaceText);
+        start_pos += replaceText.length();
+    }
+    return outputStr;
+}
+
 } // end namespace

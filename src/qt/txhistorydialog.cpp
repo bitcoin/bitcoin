@@ -59,6 +59,7 @@ using namespace leveldb;
 #include "mastercore_sp.h"
 #include "mastercore_rpc.h"
 #include "mastercore_parse_string.h"
+#include "omnicore_qtutils.h"
 
 #include <QDateTime>
 #include <QMessageBox>
@@ -543,17 +544,13 @@ void TXHistoryDialog::showDetails()
 
     // first of all check if the TX is a pending tx, if so grab details from pending map
     PendingMap::iterator it = my_pending.find(txid);
-    if (it != my_pending.end())
-    {
+    if (it != my_pending.end()) {
         CMPPending *p_pending = &(it->second);
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
-    }
-    else
-    {
+    } else {
         // grab details usual way
         int pop = populateRPCTransactionObject(txid, &txobj, "");
-        if (0<=pop)
-        {
+        if (0<=pop) {
             strTXText = write_string(Value(txobj), false) + "\n";
             // manipulate for STO if needed
             size_t pos = strTXText.find("Send To Owners");
@@ -568,70 +565,12 @@ void TXHistoryDialog::showDetails()
             }
         }
     }
-
-    if (!strTXText.empty())
-    {
-        // clean up
-        string from = ",";
-        string to = ",\n    ";
-        size_t start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = ":";
-        to = "   :   ";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "{";
-        to = "{\n    ";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "}";
-        to = "\n}";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "[";
-        to = "[\n";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        QString txText = QString::fromStdString(strTXText);
-        QDialog *txDlg = new QDialog;
-        QLayout *dlgLayout = new QVBoxLayout;
-        dlgLayout->setSpacing(12);
-        dlgLayout->setMargin(12);
-        QTextEdit *dlgTextEdit = new QTextEdit;
-        dlgTextEdit->setText(txText);
-        dlgTextEdit->setStatusTip("Transaction Information");
-        dlgLayout->addWidget(dlgTextEdit);
-        txDlg->setWindowTitle("Transaction Information");
-        QPushButton *closeButton = new QPushButton(tr("&Close"));
-        closeButton->setDefault(true);
-        QDialogButtonBox *buttonBox = new QDialogButtonBox;
-        buttonBox->addButton(closeButton, QDialogButtonBox::AcceptRole);
-        dlgLayout->addWidget(buttonBox);
-        txDlg->setLayout(dlgLayout);
-        txDlg->resize(700, 360);
-        connect(buttonBox, SIGNAL(accepted()), txDlg, SLOT(accept()));
-        txDlg->setAttribute(Qt::WA_DeleteOnClose); //delete once it's closed
-        if (txDlg->exec() == QDialog::Accepted) { } else { } //do nothing but close
+    if (!strTXText.empty()) {
+        strTXText = ReplaceStr(",",",\n    ",strTXText);
+        strTXText = ReplaceStr(":","   :   ",strTXText);
+        strTXText = ReplaceStr("}","\n}",strTXText);
+        strTXText = ReplaceStr("[","[\n",strTXText);
+        PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
     }
 }
 

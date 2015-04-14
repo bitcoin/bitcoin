@@ -20,6 +20,12 @@ namespace mastercore
     * Displays a 'transaction sent' message box containing the transaction ID and an extra button to copy txid to clipboard
     */
     void PopulateTXSentDialog(const std::string& txidStr);
+
+    /**
+    * Variable length find and replace.  Find all iterations of findText within inputStr and replace them
+    * with replaceText.
+    */
+    std::string ReplaceStr(const std::string& findText, const std::string& replaceText, const std::string& inputStr);
 }
 
 #endif // OMNICORE_QTUTILS
