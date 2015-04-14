@@ -74,7 +74,7 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
 }
 
 
-qint64 WalletModel::getAnonymizedBalance() const
+CAmount WalletModel::getAnonymizedBalance() const
 {
     return wallet->GetAnonymizedBalance();
 }
