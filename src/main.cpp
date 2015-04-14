@@ -2387,7 +2387,7 @@ bool CBlock::AcceptBlock()
     // Write block to history file
     if (!CheckDiskSpace(::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION)))
         return error("AcceptBlock() : out of disk space");
-    unsigned int nFile = -1;
+    unsigned int nFile = UINT_MAX;
     unsigned int nBlockPos = 0;
     if (!WriteToDisk(nFile, nBlockPos))
         return error("AcceptBlock() : WriteToDisk failed");
