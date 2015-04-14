@@ -60,6 +60,8 @@ using namespace leveldb;
 #include "mastercore_parse_string.h"
 #include "mastercore_tx.h"
 #include "mastercore_sp.h"
+#include "mastercore_errors.h"
+#include "omnicore_qtutils.h"
 
 #include <QDateTime>
 #include <QMessageBox>
@@ -359,80 +361,15 @@ void MetaDExCancelDialog::SendCancelTransaction()
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
-        string strCode = boost::lexical_cast<string>(result);
-        string strError;
-        switch(result) {
-            case -212:
-                strError = "Error choosing inputs for the send transaction";
-                break;
-            case -233:
-                strError = "Error with redemption address";
-                break;
-            case -220:
-                strError = "Error with redemption address key ID";
-                break;
-            case -221:
-                strError = "Error obtaining public key for redemption address";
-                break;
-            case -222:
-                strError = "Error public key for redemption address is not valid";
-                break;
-            case -223:
-                strError = "Error validating redemption address";
-                break;
-            case -205:
-                strError = "Error with wallet object";
-                break;
-            case -206:
-                strError = "Error with selected inputs for the send transaction";
-                break;
-            case -211:
-                strError = "Error creating transaction (wallet may be locked or fees may not be sufficient)";
-                break;
-            case -213:
-                strError = "Error committing transaction";
-                break;
-        }
-        if (strError.empty()) strError = "Error code does not have associated error text.";
+        string strError = error_str(result);
         QMessageBox::critical( this, "MetaDEx cancel transaction failed",
-        "The MetaDEx cancel transaction has failed.\n\nThe error code was: " + QString::fromStdString(strCode) + "\nThe error message was:\n" + QString::fromStdString(strError));
+        "The MetaDEx cancel transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(strError));
         return;
     } else {
         if (0) { // #CLASSC# if (!autoCommit) {
-            QDialog *rawDlg = new QDialog;
-            QLayout *dlgLayout = new QVBoxLayout;
-            dlgLayout->setSpacing(12);
-            dlgLayout->setMargin(12);
-            QTextEdit *dlgTextEdit = new QTextEdit;
-            dlgTextEdit->setText(QString::fromStdString(rawHex));
-            dlgTextEdit->setStatusTip("Raw transaction hex");
-            dlgLayout->addWidget(dlgTextEdit);
-            rawDlg->setWindowTitle("Raw Hex (auto commit is disabled)");
-            QPushButton *closeButton = new QPushButton(tr("&Close"));
-            closeButton->setDefault(true);
-            QDialogButtonBox *buttonBox = new QDialogButtonBox;
-            buttonBox->addButton(closeButton, QDialogButtonBox::AcceptRole);
-            dlgLayout->addWidget(buttonBox);
-            rawDlg->setLayout(dlgLayout);
-            rawDlg->resize(700, 360);
-            connect(buttonBox, SIGNAL(accepted()), rawDlg, SLOT(accept()));
-            rawDlg->setAttribute(Qt::WA_DeleteOnClose);
-            if (rawDlg->exec() == QDialog::Accepted) { } else { } //do nothing but close
+            PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
-            // display the result
-            string strSentText = "Your Omni Layer transaction has been sent.\n\nThe transaction ID is:\n\n";
-            strSentText += txid.GetHex() + "\n\n";
-            QString sentText = QString::fromStdString(strSentText);
-            QMessageBox sentDialog;
-            sentDialog.setIcon(QMessageBox::Information);
-            sentDialog.setWindowTitle("Transaction broadcast successfully");
-            sentDialog.setText(sentText);
-            sentDialog.setStandardButtons(QMessageBox::Yes|QMessageBox::Ok);
-            sentDialog.setDefaultButton(QMessageBox::Ok);
-            sentDialog.setButtonText( QMessageBox::Yes, "Copy TXID to clipboard" );
-            if(sentDialog.exec() == QMessageBox::Yes) {
-                GUIUtil::setClipboard(QString::fromStdString(txid.GetHex())); // copy TXID to clipboard
-            }
+            PopulateTXSentDialog(txid.GetHex());
             // no need for a pending object for now, no available balances will be affected until confirmation
         }
     }

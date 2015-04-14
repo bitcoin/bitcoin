@@ -61,6 +61,8 @@ using namespace leveldb;
 #include "mastercore_parse_string.h"
 #include "mastercore_tx.h"
 #include "mastercore_sp.h"
+#include "mastercore_errors.h"
+#include "omnicore_qtutils.h"
 
 #include <QDateTime>
 #include <QMessageBox>
@@ -383,82 +385,32 @@ void SendMPDialog::sendMPTransaction()
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled/failed
+        return;
+    }
+
+    // create a payload for the transaction
+    // #CLASSC# std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, sendAmount);
+
+    // request the wallet build the transaction (and if needed commit it) - note UI does not support added reference amounts currently
+    uint256 txid = 0;
+    std::string rawHex;
+    int result = 0; // #CLASSC# int result = ClassAgnosticWalletTXBuilder(fromAddress.ToString(), refAddress.ToString(), "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        string strError = error_str(result);
         QMessageBox::critical( this, "Send transaction failed",
         "The send transaction has been cancelled.\n\nThe wallet unlock process must be completed to send a transaction." );
         return;
-    }
-
-    // send the transaction - UI will not send any extra reference amounts at this stage
-    int code = 0;
-    uint256 sendTXID = send_INTERNAL_1packet(fromAddress.ToString(), refAddress.ToString(), fromAddress.ToString(), propertyId, sendAmount, 0, 0, MSC_TYPE_SIMPLE_SEND, 0, &code);
-    if (0 != code)
-    {
-        string strCode = boost::lexical_cast<string>(code);
-        string strError;
-        switch(code)
-        {
-            case -212:
-                strError = "Error choosing inputs for the send transaction";
-                break;
-            case -233:
-                strError = "Error with redemption address";
-                break;
-            case -220:
-                strError = "Error with redemption address key ID";
-                break;
-            case -221:
-                strError = "Error obtaining public key for redemption address";
-                break;
-            case -222:
-                strError = "Error public key for redemption address is not valid";
-                break;
-            case -223:
-                strError = "Error validating redemption address";
-                break;
-            case -205:
-                strError = "Error with wallet object";
-                break;
-            case -206:
-                strError = "Error with selected inputs for the send transaction";
-                break;
-            case -211:
-                strError = "Error creating transaction (wallet may be locked or fees may not be sufficient)";
-                break;
-            case -213:
-                strError = "Error committing transaction";
-                break;
+    } else {
+        if (0) { // #CLASSC# if (!autoCommit) {
+            PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
+        } else {
+            PopulateTXSentDialog(txid.GetHex());
+            // TODO PENDING OBJECT
         }
-        if (strError.empty()) strError = "Error code does not have associated error text.";
-        QMessageBox::critical( this, "Send transaction failed",
-        "The send transaction has failed.\n\nThe error code was: " + QString::fromStdString(strCode) + "\nThe error message was:\n" + QString::fromStdString(strError));
-        return;
     }
-    else
-    {
-        // call an update of the balances
-        set_wallet_totals();
-        updateProperty();
-        updateFrom();
-
-        // display the result
-        string strSentText = "Your Omni Layer transaction has been sent.\n\nThe transaction ID is:\n\n";
-        strSentText += sendTXID.GetHex() + "\n\n";
-        QString sentText = QString::fromStdString(strSentText);
-        QMessageBox sentDialog;
-        sentDialog.setIcon(QMessageBox::Information);
-        sentDialog.setWindowTitle("Transaction broadcast successfully");
-        sentDialog.setText(sentText);
-        sentDialog.setStandardButtons(QMessageBox::Yes|QMessageBox::Ok);
-        sentDialog.setDefaultButton(QMessageBox::Ok);
-        sentDialog.setButtonText( QMessageBox::Yes, "Copy TXID to clipboard" );
-        if(sentDialog.exec() == QMessageBox::Yes)
-        {
-            // copy TXID to clipboard
-            GUIUtil::setClipboard(QString::fromStdString(sendTXID.GetHex()));
-        }
-        // clear the form
-        clearFields();
-    }
+    clearFields();
 }
 
 void SendMPDialog::sendFromComboBoxChanged(int idx)
