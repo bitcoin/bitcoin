@@ -15,6 +15,11 @@ namespace mastercore
     * Strips trailing zeros from a string containing a divisible value
     */
     std::string StripTrailingZeros(const std::string& inputStr);
+
+    /**
+    * Displays a 'transaction sent' message box containing the transaction ID and an extra button to copy txid to clipboard
+    */
+    void PopulateTXSentDialog(const std::string& txidStr);
 }
 
 #endif // OMNICORE_QTUTILS

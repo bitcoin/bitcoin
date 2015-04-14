@@ -9,12 +9,29 @@
 #include <QPushButton>
 #include <QObject>
 #include <QWidget>
+#include <QMessageBox>
 
 namespace mastercore
 {
 
 /**
- * Sets up a simple dialog layout that can be used to provide selectable text to the user
+ * Displays a 'transaction sent' message box containing the transaction ID and an extra button to copy txid to clipboard
+ */
+void PopulateTXSentDialog(const std::string& txidStr)
+{
+    std::string strSentText = "Your Omni Layer transaction has been sent.\n\nThe transaction ID is:\n\n" + txidStr + "\n\n";
+    QMessageBox sentDialog;
+    sentDialog.setIcon(QMessageBox::Information);
+    sentDialog.setWindowTitle("Transaction broadcast successfully");
+    sentDialog.setText(QString::fromStdString(strSentText));
+    sentDialog.setStandardButtons(QMessageBox::Yes|QMessageBox::Ok);
+    sentDialog.setDefaultButton(QMessageBox::Ok);
+    sentDialog.setButtonText( QMessageBox::Yes, "Copy TXID to clipboard" );
+    if(sentDialog.exec() == QMessageBox::Yes) GUIUtil::setClipboard(QString::fromStdString(txidStr));
+}
+
+/**
+ * Displays a simple dialog layout that can be used to provide selectable text to the user
  *
  * Note: used in place of standard dialogs in cases where text selection & copy to clipboard functions are useful
  */
