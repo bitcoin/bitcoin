@@ -710,7 +710,7 @@ void StakeMiner(CWallet *pwallet)
             CTransaction txCoinStake;
 
             // Create new coinstake transaction
-            if (!pwallet->CreateCoinStake(LuckyInput.first, LuckyInput.second, solution.second, pindexPrev->nBits, txCoinStake, key))
+            if (!pwallet->CreateCoinStake(LuckyInput.first, LuckyInput.second, solution.second, nBits, txCoinStake, key))
             {
                 string strMessage = _("Warning: Unable to create coinstake transaction, see debug.log for the details. Mining thread has been stopped.");
                 strMiscWarning = strMessage;
