@@ -37,10 +37,10 @@ source for all other translations. Whenever a string in the code is changed
 this file must be updated to reflect those changes. A custom script is used
 to extract strings from the non-Qt parts. This script makes use of `gettext`,
 so make sure that utility is installed (ie, `apt-get install gettext` on
-Ubuntu/Debian). Once this has been updated, lupdate-qt4 (included in the Qt SDK)
-is used to update dash_en.ts. Simply run:
-
-    lupdate-qt4 ./contrib/dash-qt.pro -ts ./src/qt/locale/dash_en.ts
+Ubuntu/Debian). Once this has been updated, lupdate (included in the Qt SDK)
+is used to update dash_en.ts. This process has been automated, from src/,
+simply run:
+    make translate
 
 ##### Handling of plurals in the source file
 
