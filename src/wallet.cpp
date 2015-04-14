@@ -1697,40 +1697,6 @@ void CWallet::GetStakeWeightFromValue(const int64_t& nTime, const int64_t& nValu
     nWeight = bnCoinDayWeight.getuint64();
 }
 
-
-// NovaCoin: get current stake miner statistics
-void CWallet::GetStakeStats(float &nKernelsRate, float &nCoinDaysRate)
-{
-    static uint64_t nLastKernels = 0, nLastCoinDays = 0;
-    static float nLastKernelsRate = 0, nLastCoinDaysRate = 0;
-    static int64_t nLastTime = GetTime();
-
-    if (nKernelsTried < nLastKernels)
-    {
-        nLastKernels = 0;
-        nLastCoinDays = 0;
-
-        nLastTime = GetTime();
-    }
-
-    int64_t nInterval = GetTime() - nLastTime;
-    //if (nKernelsTried > 1000 && nInterval > 5)
-    if (nInterval > 10)
-    {
-        nKernelsRate = nLastKernelsRate = ( nKernelsTried - nLastKernels ) / (float) nInterval;
-        nCoinDaysRate = nLastCoinDaysRate = ( nCoinDaysTried - nLastCoinDays ) / (float) nInterval;
-
-        nLastKernels = nKernelsTried;
-        nLastCoinDays = nCoinDaysTried;
-        nLastTime = GetTime();
-    }
-    else
-    {
-        nKernelsRate = nLastKernelsRate;
-        nCoinDaysRate = nLastCoinDaysRate;
-    }
-}
-
 bool CWallet::MergeCoins(const int64_t& nAmount, const int64_t& nMinValue, const int64_t& nOutputValue, list<uint256>& listMerged)
 {
     int64_t nBalance = GetBalance();

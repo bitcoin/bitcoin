@@ -70,6 +70,7 @@
 #include <iostream>
 
 extern bool fWalletUnlockMintOnly;
+extern uint64_t nStakeInputsMapSize;
 
 BitcoinGUI::BitcoinGUI(QWidget *parent):
     QMainWindow(parent),
@@ -703,33 +704,13 @@ void BitcoinGUI::updateMining()
         return;
     }
 
-    float nKernelsRate = 0, nCoinDaysRate = 0;
-    walletModel->getStakeStats(nKernelsRate, nCoinDaysRate);
-
-    if (nKernelsRate > 0)
+    if (nStakeInputsMapSize > 0)
     {
         labelMiningIcon->setPixmap(QIcon(":/icons/mining_active").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 
         uint64_t nNetworkWeight = clientModel->getPoSKernelPS();
-/*
-        double dDifficulty = clientModel->getDifficulty(true);
-        QString msg;
 
-        int nApproxTime = 4294967297 * dDifficulty / nTotalWeight;
-
-        if (nApproxTime < 60)
-            msg = tr("%n second(s)", "", nApproxTime);
-        else if (nApproxTime < 60*60)
-            msg = tr("%n minute(s)", "", nApproxTime / 60);
-        else if (nApproxTime < 24*60*60)
-            msg = tr("%n hour(s)", "", nApproxTime / 3600);
-        else
-            msg = tr("%n day(s)", "", nApproxTime / 86400);
-
-        labelMiningIcon->setToolTip(tr("Stake miner is active\nYour current stake weight is %1\nNetwork weight is %2\nAverage block generation time is %3").arg(nTotalWeight).arg(dNetworkWeight).arg(msg));
-*/
-
-        labelMiningIcon->setToolTip(QString("<nobr>")+tr("Stake miner is active<br>Kernel rate is %1 k/s<br>CD rate is %2 CD/s<br>Network weight is %3").arg(nKernelsRate).arg(nCoinDaysRate).arg(nNetworkWeight)+QString("<\nobr>"));
+        labelMiningIcon->setToolTip(QString("<nobr>")+tr("Stake miner is active<br>%1 inputs used the mining<br>Network weight is %3").arg(nStakeInputsMapSize).arg(nNetworkWeight)+QString("<\nobr>"));
     }
     else
         labelMiningIcon->setToolTip(tr("No suitable inputs were found"));

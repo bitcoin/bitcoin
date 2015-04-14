@@ -17,6 +17,7 @@ using namespace std;
 
 int64_t nReserveBalance = 0;
 static unsigned int nMaxStakeSearchInterval = 60;
+uint64_t nStakeInputsMapSize = 0;
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len)
 {
@@ -600,8 +601,10 @@ bool FillMap(CWallet *pwallet, uint32_t nUpperTime, MidstateMap &inputsMap)
             inputsMap[key] = make_pair(ctx, make_pair(pcoin->first->nTime, pcoin->first->vout[pcoin->second].nValue));
         }
 
+        nStakeInputsMapSize = inputsMap.size();
+
         if (fDebug)
-            printf("Stake miner: %" PRIszu " precalculated contexts created\n", inputsMap.size());
+            printf("Stake miner: map of %" PRIu64 " precalculated contexts has been created\n", nStakeInputsMapSize);
     }
 
     return true;

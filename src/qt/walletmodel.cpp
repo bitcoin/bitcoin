@@ -332,11 +332,6 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
     return retval;
 }
 
-void WalletModel::getStakeStats(float &nKernelsRate, float &nCoinDaysRate)
-{
-    wallet->GetStakeStats(nKernelsRate, nCoinDaysRate);
-}
-
 void WalletModel::getStakeWeightFromValue(const int64_t& nTime, const int64_t& nValue, uint64_t& nWeight)
 {
     wallet->GetStakeWeightFromValue(nTime, nValue, nWeight);
