@@ -59,6 +59,8 @@ int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const unsigned char *
     secp256k1_ecdsa_sig_t s;
     secp256k1_scalar_t m;
     int ret = -3;
+    DEBUG_CHECK(ctx != NULL);
+    DEBUG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
     DEBUG_CHECK(msg32 != NULL);
     DEBUG_CHECK(sig != NULL);
     DEBUG_CHECK(pubkey != NULL);
@@ -250,6 +252,8 @@ int secp256k1_ec_pubkey_create(const secp256k1_context_t* ctx, unsigned char *pu
     secp256k1_scalar_t sec;
     int overflow;
     int ret = 0;
+    DEBUG_CHECK(ctx != NULL);
+    DEBUG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     DEBUG_CHECK(pubkey != NULL);
     DEBUG_CHECK(pubkeylen != NULL);
     DEBUG_CHECK(seckey != NULL);
@@ -383,6 +387,7 @@ int secp256k1_ec_privkey_export(const secp256k1_context_t* ctx, const unsigned c
     DEBUG_CHECK(seckey != NULL);
     DEBUG_CHECK(privkey != NULL);
     DEBUG_CHECK(privkeylen != NULL);
+    DEBUG_CHECK(ctx != NULL);
     DEBUG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
 
     secp256k1_scalar_set_b32(&key, seckey, NULL);
