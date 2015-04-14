@@ -216,20 +216,9 @@ libbitcoin_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
+crypto_libbitcoin_crypto_a_CFLAGS = -fPIC
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_SOURCES = \
-  crypto/aes_helper.c \
-  crypto/luffa.c \
-  crypto/groestl.c \
-  crypto/jh.c \
-  crypto/echo.c \
-  crypto/shavite.c \
-  crypto/keccak.c \
-  crypto/skein.c \
-  crypto/bmw.c \
-  crypto/simd.c \
-  crypto/cubehash.c \
-  crypto/blake.c \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
   crypto/sha512.cpp \
@@ -237,6 +226,18 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/rfc6979_hmac_sha256.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
+  crypto/aes_helper.c \
+  crypto/blake.c \
+  crypto/bmw.c \
+  crypto/cubehash.c \
+  crypto/echo.c \
+  crypto/groestl.c \
+  crypto/jh.c \
+  crypto/keccak.c \
+  crypto/luffa.c \
+  crypto/shavite.c \
+  crypto/simd.c \
+  crypto/skein.c \
   crypto/common.h \
   crypto/sha256.h \
   crypto/sha512.h \
@@ -308,6 +309,7 @@ libbitcoin_common_a_SOURCES = \
 # backward-compatibility objects and their sanity checks are linked.
 libbitcoin_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_util_a_SOURCES = \
+  allocators.cpp \
   compat/strnlen.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
@@ -359,7 +361,7 @@ dashd_SOURCES += dash-res.rc
 endif
 
 dashd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
-bitcoind_CPPFLAGS = $(BITCOIN_INCLUDES)
+dashd_CPPFLAGS = $(BITCOIN_INCLUDES)
 dashd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 # dash-cli binary #
@@ -373,7 +375,7 @@ dash_cli_LDADD = \
 dash_cli_SOURCES = \
   dash-cli.cpp
 
-bitcoin_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+dash_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 
 # dash-tx binary #
@@ -387,7 +389,7 @@ dash_tx_LDADD = \
   $(CRYPTO_LIBS)
 
 dash_tx_SOURCES = dash-tx.cpp
-bitcoin_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
+dash_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
 #
 dash_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
