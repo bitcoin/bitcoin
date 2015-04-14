@@ -710,7 +710,7 @@ void BitcoinGUI::updateMining()
 
         uint64_t nNetworkWeight = clientModel->getPoSKernelPS();
 
-        labelMiningIcon->setToolTip(QString("<nobr>")+tr("Stake miner is active<br>%1 inputs used the mining<br>Network weight is %3").arg(nStakeInputsMapSize).arg(nNetworkWeight)+QString("<\nobr>"));
+        labelMiningIcon->setToolTip(QString("<nobr>")+tr("Stake miner is active<br>%1 inputs used for mining<br>Network weight is %3").arg(nStakeInputsMapSize).arg(nNetworkWeight)+QString("<\nobr>"));
     }
     else
         labelMiningIcon->setToolTip(tr("No suitable inputs were found"));
