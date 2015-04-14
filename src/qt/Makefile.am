@@ -287,6 +287,8 @@ RES_IMAGES = \
   res/images/drkblue_downArrow.png \
   res/images/drkblue_downArrow_small.png \
   res/images/drkblue_upArrow_small.png \
+  res/images/drkblue_leftArrow_small.png \
+  res/images/drkblue_rightArrow_small.png \
   res/images/drkblue_qtreeview_selected.png \
   res/images/drkblue_walletFrame_bg.png \
   res/images/drkblue_walletFrame.png
