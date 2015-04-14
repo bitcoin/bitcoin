@@ -568,6 +568,7 @@ void TXHistoryDialog::showDetails()
     if (!strTXText.empty()) {
         strTXText = ReplaceStr(",",",\n    ",strTXText);
         strTXText = ReplaceStr(":","   :   ",strTXText);
+        strTXText = ReplaceStr("{","{\n    ",strTXText);
         strTXText = ReplaceStr("}","\n}",strTXText);
         strTXText = ReplaceStr("[","[\n",strTXText);
         PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
