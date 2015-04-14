@@ -155,7 +155,8 @@ QT_MOC_CPP = \
   qt/moc_omnicore_init.cpp \
   qt/moc_metadexdialog.cpp \
   qt/moc_metadexcanceldialog.cpp \
-  qt/moc_orderhistorydialog.cpp
+  qt/moc_orderhistorydialog.cpp \
+  qt/moc_omnicore_qtutils.cpp
 
 BITCOIN_MM = \
   qt/macdockiconhandler.mm \
@@ -236,7 +237,8 @@ BITCOIN_QT_H = \
   qt/metadexdialog.h \
   qt/metadexcanceldialog.h \
   qt/orderhistorydialog.h \
-  qt/sendmpdialog.h
+  qt/sendmpdialog.h \
+  qt/omnicore_qtutils.h
 
 RES_ICONS = \
   qt/res/icons/add.png \
@@ -363,7 +365,8 @@ BITCOIN_QT_CPP += \
   qt/omnicore_init.cpp \
   qt/metadexdialog.cpp \
   qt/metadexcanceldialog.cpp \
-  qt/orderhistorydialog.cpp
+  qt/orderhistorydialog.cpp \
+  qt/omnicore_qtutils.cpp
 endif
 
 RES_IMAGES = \

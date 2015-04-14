@@ -15,7 +15,6 @@ namespace mastercore
 // amounts.
 // Any minus sign invalidates.
 int64_t StrToInt64(const std::string& str, bool divisible);
-std::string StripTrailingZeros(const std::string& inputStr);
 }
 
 #endif // _MASTERCOIN_PARSE_STRRING
