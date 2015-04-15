@@ -1579,15 +1579,17 @@ int msc_initial_scan(int nFirstBlock)
 {
     unsigned int nTotal = 0;
     unsigned int nFound = 0;
+    int nBlock = 999999;
     const int nLastBlock = GetHeight();
 
     // this function is useless if there are not enough blocks in the blockchain yet!
     if (nFirstBlock < 0 || nLastBlock < nFirstBlock) return -1;
     printf("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
 
-    for (int nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
+    for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
         CBlockIndex* pblockindex = chainActive[nBlock];
+        if (NULL == pblockindex) break;
         std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
 
         if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
@@ -1606,6 +1608,10 @@ int msc_initial_scan(int nFirstBlock)
 
         nTotal += nTxNum;
         mastercore_handler_block_end(nBlock, pblockindex, nFound);
+    }
+
+    if (nBlock < nLastBlock) {
+        printf("Scan stopped early at block %d of block %d\n", nBlock, nLastBlock);
     }
 
     printf("%d transactions processed, %d meta transactions found\n", nTotal, nFound);
