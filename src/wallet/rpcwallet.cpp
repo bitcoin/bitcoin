@@ -37,6 +37,18 @@ std::string HelpRequiringPassphrase()
         : "";
 }
 
+bool EnsureWalletIsAvailable(bool avoidException)
+{
+    if (!pwalletMain)
+    {
+        if (!avoidException)
+            throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
+        else
+            return false;
+    }
+    return true;
+}
+
 void EnsureWalletIsUnlocked()
 {
     if (pwalletMain->IsLocked())
@@ -77,6 +89,9 @@ string AccountFromValue(const Value& value)
 
 Value getnewaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress ( \"account\" )\n"
@@ -153,6 +168,9 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 
 Value getaccountaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaccountaddress \"account\"\n"
@@ -182,6 +200,9 @@ Value getaccountaddress(const Array& params, bool fHelp)
 
 Value getrawchangeaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getrawchangeaddress\n"
@@ -214,6 +235,9 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
 
 Value setaccount(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "setaccount \"bitcoinaddress\" \"account\"\n"
@@ -257,6 +281,9 @@ Value setaccount(const Array& params, bool fHelp)
 
 Value getaccount(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaccount \"bitcoinaddress\"\n"
@@ -286,6 +313,9 @@ Value getaccount(const Array& params, bool fHelp)
 
 Value getaddressesbyaccount(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaddressesbyaccount \"account\"\n"
@@ -351,6 +381,9 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
 
 Value sendtoaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
             "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
@@ -404,6 +437,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 Value listaddressgroupings(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp)
         throw runtime_error(
             "listaddressgroupings\n"
@@ -453,6 +489,9 @@ Value listaddressgroupings(const Array& params, bool fHelp)
 
 Value signmessage(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 2)
         throw runtime_error(
             "signmessage \"bitcoinaddress\" \"message\"\n"
@@ -506,6 +545,9 @@ Value signmessage(const Array& params, bool fHelp)
 
 Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "getreceivedbyaddress \"bitcoinaddress\" ( minconf )\n"
@@ -561,6 +603,9 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 
 Value getreceivedbyaccount(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "getreceivedbyaccount \"account\" ( minconf )\n"
@@ -647,6 +692,9 @@ CAmount GetAccountBalance(const string& strAccount, int nMinDepth, const isminef
 
 Value getbalance(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 3)
         throw runtime_error(
             "getbalance ( \"account\" minconf includeWatchonly )\n"
@@ -719,6 +767,9 @@ Value getbalance(const Array& params, bool fHelp)
 
 Value getunconfirmedbalance(const Array &params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 0)
         throw runtime_error(
                 "getunconfirmedbalance\n"
@@ -732,6 +783,9 @@ Value getunconfirmedbalance(const Array &params, bool fHelp)
 
 Value movecmd(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
             "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
@@ -799,6 +853,9 @@ Value movecmd(const Array& params, bool fHelp)
 
 Value sendfrom(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
             "sendfrom \"fromaccount\" \"tobitcoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
@@ -859,6 +916,9 @@ Value sendfrom(const Array& params, bool fHelp)
 
 Value sendmany(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
             "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] )\n"
@@ -965,6 +1025,9 @@ extern CScript _createmultisig_redeemScript(const Array& params);
 
 Value addmultisigaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 2 || params.size() > 3)
     {
         string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
@@ -1143,6 +1206,9 @@ Value ListReceived(const Array& params, bool fByAccounts)
 
 Value listreceivedbyaddress(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 3)
         throw runtime_error(
             "listreceivedbyaddress ( minconf includeempty includeWatchonly)\n"
@@ -1177,6 +1243,9 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
 
 Value listreceivedbyaccount(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 3)
         throw runtime_error(
             "listreceivedbyaccount ( minconf includeempty includeWatchonly)\n"
@@ -1304,6 +1373,9 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
 
 Value listtransactions(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 4)
         throw runtime_error(
             "listtransactions ( \"account\" count from includeWatchonly)\n"
@@ -1415,6 +1487,9 @@ Value listtransactions(const Array& params, bool fHelp)
 
 Value listaccounts(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 2)
         throw runtime_error(
             "listaccounts ( minconf includeWatchonly)\n"
@@ -1492,6 +1567,9 @@ Value listaccounts(const Array& params, bool fHelp)
 
 Value listsinceblock(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp)
         throw runtime_error(
             "listsinceblock ( \"blockhash\" target-confirmations includeWatchonly)\n"
@@ -1580,6 +1658,9 @@ Value listsinceblock(const Array& params, bool fHelp)
 
 Value gettransaction(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "gettransaction \"txid\" ( includeWatchonly )\n"
@@ -1655,6 +1736,9 @@ Value gettransaction(const Array& params, bool fHelp)
 
 Value backupwallet(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "backupwallet \"destination\"\n"
@@ -1678,6 +1762,9 @@ Value backupwallet(const Array& params, bool fHelp)
 
 Value keypoolrefill(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "keypoolrefill ( newsize )\n"
@@ -1719,6 +1806,9 @@ static void LockWallet(CWallet* pWallet)
 
 Value walletpassphrase(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
@@ -1776,6 +1866,9 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
 Value walletpassphrasechange(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
@@ -1819,6 +1912,9 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 
 Value walletlock(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
             "walletlock\n"
@@ -1855,6 +1951,9 @@ Value walletlock(const Array& params, bool fHelp)
 
 Value encryptwallet(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
         throw runtime_error(
             "encryptwallet \"passphrase\"\n"
@@ -1909,6 +2008,9 @@ Value encryptwallet(const Array& params, bool fHelp)
 
 Value lockunspent(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "lockunspent unlock [{\"txid\":\"txid\",\"vout\":n},...]\n"
@@ -1990,6 +2092,9 @@ Value lockunspent(const Array& params, bool fHelp)
 
 Value listlockunspent(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() > 0)
         throw runtime_error(
             "listlockunspent\n"
@@ -2036,6 +2141,9 @@ Value listlockunspent(const Array& params, bool fHelp)
 
 Value settxfee(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
             "settxfee amount\n"
@@ -2062,6 +2170,9 @@ Value settxfee(const Array& params, bool fHelp)
 
 Value getwalletinfo(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getwalletinfo\n"
@@ -2099,6 +2210,9 @@ Value getwalletinfo(const Array& params, bool fHelp)
 
 Value resendwallettransactions(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "resendwallettransactions\n"
@@ -2117,4 +2231,116 @@ Value resendwallettransactions(const Array& params, bool fHelp)
         result.push_back(txid.ToString());
     }
     return result;
+}
+
+Value listunspent(const Array& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
+    if (fHelp || params.size() > 3)
+        throw runtime_error(
+            "listunspent ( minconf maxconf  [\"address\",...] )\n"
+            "\nReturns array of unspent transaction outputs\n"
+            "with between minconf and maxconf (inclusive) confirmations.\n"
+            "Optionally filter to only include txouts paid to specified addresses.\n"
+            "Results are an array of Objects, each of which has:\n"
+            "{txid, vout, scriptPubKey, amount, confirmations}\n"
+            "\nArguments:\n"
+            "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
+            "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+            "3. \"addresses\"    (string) A json array of bitcoin addresses to filter\n"
+            "    [\n"
+            "      \"address\"   (string) bitcoin address\n"
+            "      ,...\n"
+            "    ]\n"
+            "\nResult\n"
+            "[                   (array of json object)\n"
+            "  {\n"
+            "    \"txid\" : \"txid\",        (string) the transaction id \n"
+            "    \"vout\" : n,               (numeric) the vout value\n"
+            "    \"address\" : \"address\",  (string) the bitcoin address\n"
+            "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"scriptPubKey\" : \"key\", (string) the script key\n"
+            "    \"amount\" : x.xxx,         (numeric) the transaction amount in btc\n"
+            "    \"confirmations\" : n       (numeric) The number of confirmations\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("listunspent", "")
+            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+        );
+
+    RPCTypeCheck(params, boost::assign::list_of(int_type)(int_type)(array_type));
+
+    int nMinDepth = 1;
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
+
+    int nMaxDepth = 9999999;
+    if (params.size() > 1)
+        nMaxDepth = params[1].get_int();
+
+    set<CBitcoinAddress> setAddress;
+    if (params.size() > 2) {
+        Array inputs = params[2].get_array();
+        BOOST_FOREACH(Value& input, inputs) {
+            CBitcoinAddress address(input.get_str());
+            if (!address.IsValid())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+input.get_str());
+            if (setAddress.count(address))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
+           setAddress.insert(address);
+        }
+    }
+
+    Array results;
+    vector<COutput> vecOutputs;
+    assert(pwalletMain != NULL);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+    pwalletMain->AvailableCoins(vecOutputs, false);
+    BOOST_FOREACH(const COutput& out, vecOutputs) {
+        if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
+            continue;
+
+        if (setAddress.size()) {
+            CTxDestination address;
+            if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+                continue;
+
+            if (!setAddress.count(address))
+                continue;
+        }
+
+        CAmount nValue = out.tx->vout[out.i].nValue;
+        const CScript& pk = out.tx->vout[out.i].scriptPubKey;
+        Object entry;
+        entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
+        entry.push_back(Pair("vout", out.i));
+        CTxDestination address;
+        if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address)) {
+            entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
+            if (pwalletMain->mapAddressBook.count(address))
+                entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
+        }
+        entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
+        if (pk.IsPayToScriptHash()) {
+            CTxDestination address;
+            if (ExtractDestination(pk, address)) {
+                const CScriptID& hash = boost::get<const CScriptID&>(address);
+                CScript redeemScript;
+                if (pwalletMain->GetCScript(hash, redeemScript))
+                    entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+            }
+        }
+        entry.push_back(Pair("amount",ValueFromAmount(nValue)));
+        entry.push_back(Pair("confirmations",out.nDepth));
+        entry.push_back(Pair("spendable", out.fSpendable));
+        results.push_back(entry);
+    }
+
+    return results;
 }
