@@ -275,7 +275,19 @@ endif
 RES_IMAGES = \
   qt/res/images/about.png \
   qt/res/images/splash.png \
-  qt/res/images/splash_testnet.png
+  qt/res/images/splash_testnet.png \
+  qt/res/images/dash_logo_horizontal.png \
+  qt/res/images/drkblue_downArrow.png \
+  qt/res/images/drkblue_downArrow_small.png \
+  qt/res/images/drkblue_upArrow_small.png \
+  qt/res/images/drkblue_leftArrow_small.png \
+  qt/res/images/drkblue_rightArrow_small.png \
+  qt/res/images/drkblue_qtreeview_selected.png \
+  qt/res/images/drkblue_walletFrame_bg.png \
+  qt/res/images/drkblue_walletFrame.png
+
+RES_CSS = \
+  qt/res/css/drkblue.css
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
