@@ -514,7 +514,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
-    UpdateTime(pblock, pindexPrev);
+    UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
     pblock->nNonce = 0;
 
     static const Array aCaps = boost::assign::list_of("proposal");
