@@ -1575,43 +1575,42 @@ uint64_t txFee = 0;
 
 
 // parse blocks, potential right from Mastercoin's Exodus
-int msc_initial_scan(int nHeight)
+int msc_initial_scan(int nFirstBlock)
 {
-int n_total = 0, n_found = 0;
-const int max_block = GetHeight();
+    unsigned int nTotal = 0;
+    unsigned int nFound = 0;
+    const int nLastBlock = GetHeight();
 
-  // this function is useless if there are not enough blocks in the blockchain yet!
-  if ((0 >= nHeight) || (max_block < nHeight)) return -1;
-  printf("Scanning for transactions in block %d to block %d..\n", nHeight, max_block);
+    // this function is useless if there are not enough blocks in the blockchain yet!
+    if (nFirstBlock < 0 || nLastBlock < nFirstBlock) return -1;
+    printf("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
 
-  CBlock block;
-  for (int blockNum = nHeight;blockNum<=max_block;blockNum++)
-  {
-    CBlockIndex* pblockindex = chainActive[blockNum];
-    string strBlockHash = pblockindex->GetBlockHash().GetHex();
-
-    if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
-     __FUNCTION__, blockNum, max_block, strBlockHash.c_str(), __LINE__, __FILE__);
-
-    ReadBlockFromDisk(block, pblockindex);
-
-    int tx_count = 0;
-    mastercore_handler_block_begin(blockNum, pblockindex);
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
+    for (int nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
-      if (0 == mastercore_handler_tx(tx, blockNum, tx_count, pblockindex)) n_found++;
+        CBlockIndex* pblockindex = chainActive[nBlock];
+        std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
 
-      ++tx_count;
+        if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
+            __FUNCTION__, nBlock, nLastBlock, strBlockHash.c_str(), __LINE__, __FILE__);
+
+        CBlock block;
+        ReadBlockFromDisk(block, pblockindex);
+
+        unsigned int nTxNum = 0;
+        mastercore_handler_block_begin(nBlock, pblockindex);
+
+        BOOST_FOREACH(const CTransaction&tx, block.vtx) {
+            if (0 == mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) nFound++;
+            ++nTxNum;
+        }
+
+        nTotal += nTxNum;
+        mastercore_handler_block_end(nBlock, pblockindex, nFound);
     }
-    
-    n_total += tx_count;
 
-    mastercore_handler_block_end(blockNum, pblockindex, n_found);
-  }
+    printf("%d transactions processed, %d meta transactions found\n", nTotal, nFound);
 
-  printf("%d transactions processed, %d meta transactions found\n", n_total, n_found);
-
-  return 0;
+    return 0;
 }
 
 int input_msc_balances_string(const string &s)
