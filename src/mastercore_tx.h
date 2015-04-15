@@ -48,7 +48,7 @@ private:
   uint64_t nNewValue;
   int64_t blockTime;  // internally nTime is still an "unsigned int"
 
-// SP additions, perhaps a new class or a union is needed
+  // SP additions, perhaps a new class or a union is needed
   unsigned char ecosystem;
   unsigned short prop_type;
   unsigned int prev_prop_id;
