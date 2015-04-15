@@ -69,7 +69,6 @@ enum BindFlags {
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 CClientUIInterface uiInterface;
-const int OUTBOUND_CONNECTIONS_UPPER_LIMIT = 8;
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -679,16 +678,29 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
 
-    // Change the default number of outbound connections.  Setting it to more
-    // than 8 is a bad idea. The number of peers that are able to accept
-    // incoming connections is about 8,000 ('servers'). The number of peers that
-    // are behind NAT is about 100,000. If every NATed peer has 8 outgoing
-    // connections then each server will have 100+8 connections in average.
-    // This is close to maximum of 125. Increasing '-maxoutbound' to e.g. 10 at
-    // each client will result in that Bitcoin users will have problems
-    // connecting to the Bitcoin network.
+    // This option is useful for mining pools that want faster block propagation.
+    // Outbound connections will statistically have better overall network connectivity
+    // than incoming connections. This is due to most nodes that accept these
+    // outbound connections supporting a maximum of 125 connections.
+    // Inbound connections are often NAT restricted and will then only support 8
+    // connections. These NAT restricted connections are less desirable for pools.
+    // This can be demonstrated using the following example of a pool with 125 connections.
+    // This example makes the assumption that inbound connections are NAT restricted and 
+    // limited to 8 connections while outbound connections connect to nodes with the
+    // default connection limit of 125.
+    // Connection capacity within one hop of pool with default settings:
+    // (8 outbound connections * 125 connections per node) +
+    // (117 incoming connections * 8 connections per node) =
+    // 1936 Connections within one hop of the pool server
+    // (125 outbound connections * 125 connections per node) =
+    // 15625 Connections within one hop of the pool server
+    // Based off of these calculations a pool server can have about 8 times the
+    // overall network connections within one hop while establishing
+    // the same amount of connections itself. In reality it will likely be even more
+    // due to the bitcoin network having far more available connections slots on nodes
+    // than there are nodes trying to connect to those slots.
+    // This setting should only be used by pool operators.
     nMaxOutboundConnections = GetArg("-maxoutbound", 8);
-    nMaxOutboundConnections = std::max(std::min(OUTBOUND_CONNECTIONS_UPPER_LIMIT,std::min(nMaxOutboundConnections, nMaxConnections)),0);
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
