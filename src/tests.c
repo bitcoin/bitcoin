@@ -907,6 +907,28 @@ void ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
     CHECK(secp256k1_fe_equal_var(&b->y, &b->y));
 }
 
+/* This compares jacobian points including their Z, not just their geometric meaning. */
+int gej_xyz_equals_gej(const secp256k1_gej_t *a, const secp256k1_gej_t *b) {
+    secp256k1_gej_t a2;
+    secp256k1_gej_t b2;
+    int ret = 1;
+    ret &= a->infinity == b->infinity;
+    if (ret && !a->infinity) {
+        a2 = *a;
+        b2 = *b;
+        secp256k1_fe_normalize(&a2.x);
+        secp256k1_fe_normalize(&a2.y);
+        secp256k1_fe_normalize(&a2.z);
+        secp256k1_fe_normalize(&b2.x);
+        secp256k1_fe_normalize(&b2.y);
+        secp256k1_fe_normalize(&b2.z);
+        ret &= secp256k1_fe_cmp_var(&a2.x, &b2.x) == 0;
+        ret &= secp256k1_fe_cmp_var(&a2.y, &b2.y) == 0;
+        ret &= secp256k1_fe_cmp_var(&a2.z, &b2.z) == 0;
+    }
+    return ret;
+}
+
 void ge_equals_gej(const secp256k1_ge_t *a, const secp256k1_gej_t *b) {
     secp256k1_fe_t z2s;
     secp256k1_fe_t u1, u2, s1, s2;
@@ -1033,6 +1055,9 @@ void test_ge(void) {
         secp256k1_ge_t *ge_set_all = (secp256k1_ge_t *)malloc((4 * runs + 1) * sizeof(secp256k1_ge_t));
         secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej);
         for (i = 0; i < 4 * runs + 1; i++) {
+            secp256k1_fe_t s;
+            random_fe_non_zero(&s);
+            secp256k1_gej_rescale(&gej[i], &s);
             ge_equals_gej(&ge_set_all[i], &gej[i]);
         }
         free(ge_set_all);
@@ -1202,6 +1227,87 @@ void run_wnaf(void) {
         test_wnaf(&n, 4+(i%10));
     }
 }
+
+void test_ecmult_constants(void) {
+    /* Test ecmult_gen() for [0..36) and [order-36..0). */
+    secp256k1_scalar_t x;
+    secp256k1_gej_t r;
+    secp256k1_ge_t ng;
+    int i;
+    int j;
+    secp256k1_ge_neg(&ng, &secp256k1_ge_const_g);
+    for (i = 0; i < 36; i++ ) {
+        secp256k1_scalar_set_int(&x, i);
+        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &r, &x);
+        for (j = 0; j < i; j++) {
+            if (j == i - 1) {
+                ge_equals_gej(&secp256k1_ge_const_g, &r);
+            }
+            secp256k1_gej_add_ge(&r, &r, &ng);
+        }
+        CHECK(secp256k1_gej_is_infinity(&r));
+    }
+    for (i = 1; i <= 36; i++ ) {
+        secp256k1_scalar_set_int(&x, i);
+        secp256k1_scalar_negate(&x, &x);
+        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &r, &x);
+        for (j = 0; j < i; j++) {
+            if (j == i - 1) {
+                ge_equals_gej(&ng, &r);
+            }
+            secp256k1_gej_add_ge(&r, &r, &secp256k1_ge_const_g);
+        }
+        CHECK(secp256k1_gej_is_infinity(&r));
+    }
+}
+
+void run_ecmult_constants(void) {
+    test_ecmult_constants();
+}
+
+void test_ecmult_gen_blind(void) {
+    /* Test ecmult_gen() blinding and confirm that the blinding changes, the affline points match, and the z's don't match. */
+    secp256k1_scalar_t key;
+    secp256k1_scalar_t b;
+    unsigned char seed32[32];
+    secp256k1_gej_t pgej;
+    secp256k1_gej_t pgej2;
+    secp256k1_gej_t i;
+    secp256k1_ge_t pge;
+    random_scalar_order_test(&key);
+    secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pgej, &key);
+    secp256k1_rand256(seed32);
+    b = ctx->ecmult_gen_ctx.blind;
+    i = ctx->ecmult_gen_ctx.initial;
+    secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
+    CHECK(!secp256k1_scalar_eq(&b, &ctx->ecmult_gen_ctx.blind));
+    secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pgej2, &key);
+    CHECK(!gej_xyz_equals_gej(&pgej, &pgej2));
+    CHECK(!gej_xyz_equals_gej(&i, &ctx->ecmult_gen_ctx.initial));
+    secp256k1_ge_set_gej(&pge, &pgej);
+    ge_equals_gej(&pge, &pgej2);
+}
+
+void test_ecmult_gen_blind_reset(void) {
+    /* Test ecmult_gen() blinding reset and confirm that the blinding is consistent. */
+    secp256k1_scalar_t b;
+    secp256k1_gej_t initial;
+    secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, 0);
+    b = ctx->ecmult_gen_ctx.blind;
+    initial = ctx->ecmult_gen_ctx.initial;
+    secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, 0);
+    CHECK(secp256k1_scalar_eq(&b, &ctx->ecmult_gen_ctx.blind));
+    CHECK(gej_xyz_equals_gej(&initial, &ctx->ecmult_gen_ctx.initial));
+}
+
+void run_ecmult_gen_blind(void) {
+    int i;
+    test_ecmult_gen_blind_reset();
+    for (i = 0; i < 10; i++) {
+        test_ecmult_gen_blind();
+    }
+}
+
 
 void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *key, const secp256k1_scalar_t *msg, int *recid) {
     secp256k1_scalar_t nonce;
@@ -1913,6 +2019,11 @@ int main(int argc, char **argv) {
     run_context_tests();
     ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
+    if (secp256k1_rand32() & 1) {
+        secp256k1_rand256(run32);
+        CHECK(secp256k1_context_randomize(ctx, secp256k1_rand32() & 1 ? run32 : NULL));
+    }
+
     run_sha256_tests();
     run_hmac_sha256_tests();
     run_rfc6979_hmac_sha256_tests();
@@ -1941,6 +2052,8 @@ int main(int argc, char **argv) {
     run_wnaf();
     run_point_times_order();
     run_ecmult_chain();
+    run_ecmult_constants();
+    run_ecmult_gen_blind();
 
     /* ecdsa tests */
     run_random_pubkeys();

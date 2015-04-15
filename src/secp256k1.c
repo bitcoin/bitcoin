@@ -410,3 +410,10 @@ int secp256k1_ec_privkey_import(const secp256k1_context_t* ctx, unsigned char *s
     secp256k1_scalar_clear(&key);
     return ret;
 }
+
+int secp256k1_context_randomize(secp256k1_context_t* ctx, const unsigned char *seed32) {
+    DEBUG_CHECK(ctx != NULL);
+    DEBUG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
+    secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
+    return 1;
+}

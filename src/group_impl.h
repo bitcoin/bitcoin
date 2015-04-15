@@ -396,6 +396,17 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     r->infinity = infinity;
 }
 
+static void secp256k1_gej_rescale(secp256k1_gej_t *r, const secp256k1_fe_t *s) {
+    /* Operations: 4 mul, 1 sqr */
+    secp256k1_fe_t zz;
+    VERIFY_CHECK(!secp256k1_fe_is_zero(s));
+    secp256k1_fe_sqr(&zz, s);
+    secp256k1_fe_mul(&r->x, &r->x, &zz);                /* r->x *= s^2 */
+    secp256k1_fe_mul(&r->y, &r->y, &zz);
+    secp256k1_fe_mul(&r->y, &r->y, s);                  /* r->y *= s^3 */
+    secp256k1_fe_mul(&r->z, &r->z, s);                  /* r->z *= s   */
+}
+
 static void secp256k1_ge_to_storage(secp256k1_ge_storage_t *r, const secp256k1_ge_t *a) {
     secp256k1_fe_t x, y;
     VERIFY_CHECK(!a->infinity);
