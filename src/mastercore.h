@@ -6,6 +6,7 @@
 #ifndef _MASTERCOIN
 #define _MASTERCOIN 1
 
+class CBitcoinAddress;
 class CBlockIndex;
 class CTransaction;
 
@@ -211,12 +212,16 @@ std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
 uint256 send_MP(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount);
 int64_t feeCheck(const string &address);
 
-const std::string ExodusAddress();
+/** Returns the Exodus address. */
+const CBitcoinAddress ExodusAddress();
+
+/** Used to indicate, whether to automatically commit created transactions. */
+extern bool autoCommit;
 
 extern int msc_debug_ui;
 
 extern CCriticalSection cs_tally;
-extern bool autoCommit;
+
 extern const int msc_debug_dex;
 
 enum TallyType { BALANCE = 0, SELLOFFER_RESERVE = 1, ACCEPT_RESERVE = 2, PENDING = 3, METADEX_RESERVE = 4, TALLY_TYPE_COUNT };
@@ -518,8 +523,6 @@ extern uint64_t global_balance_money_maineco[100000];
 extern uint64_t global_balance_reserved_maineco[100000];
 extern uint64_t global_balance_money_testeco[100000];
 extern uint64_t global_balance_reserved_testeco[100000];
-
-extern std::string exodus_address;
 
 int mastercore_init(void);
 

@@ -69,8 +69,8 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
     }
 
     // Add the Exodus marker output
-    CScript scriptExodusOut = GetScriptForDestination(CBitcoinAddress(exodus_address).Get());
-    vecOutputs.push_back(std::make_pair(scriptExodusOut, GetDustThreshold(scriptExodusOut))); 
+    CScript scriptExodusOutput = GetScriptForDestination(ExodusAddress().Get());
+    vecOutputs.push_back(std::make_pair(scriptExodusOutput, GetDustThreshold(scriptExodusOutput)));
     return true;
 }
 
