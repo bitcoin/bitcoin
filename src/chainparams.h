@@ -40,7 +40,6 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
-    const uint256& HashGenesisBlock() const { return consensus.hashGenesisBlock; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
