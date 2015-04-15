@@ -9,6 +9,9 @@
 /** Print to debug log file or console. */
 int DebugLogPrint(const std::string& str);
 
+/** Print to the console. */
+int StatusLogPrint(const std::string& str);
+
 /** Scroll debug log, if it's getting too big. */
 void ShrinkDebugLog();
 
@@ -61,6 +64,16 @@ extern bool msc_debug_metadex3;
     static inline int file_log(TINYFORMAT_VARARGS(n))                         \
     {                                                                         \
         return DebugLogPrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));      \
+    }                                                                         \
+    template<TINYFORMAT_ARGTYPES(n)>                                          \
+    static inline int LogStatus(const char* format, TINYFORMAT_VARARGS(n))    \
+    {                                                                         \
+        return StatusLogPrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));   \
+    }                                                                         \
+    template<TINYFORMAT_ARGTYPES(n)>                                          \
+    static inline int LogStatus(TINYFORMAT_VARARGS(n))                        \
+    {                                                                         \
+        return StatusLogPrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));     \
     }
 
 TINYFORMAT_FOREACH_ARGNUM(MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC)

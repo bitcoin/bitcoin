@@ -81,6 +81,14 @@ static void DebugLogInit()
 }
 
 /**
+ * @return The current timestamp in the format: 2015-04-15 11:18:01
+ */
+static std::string GetTimestamp()
+{
+    return DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
+}
+
+/**
  * Print to debug log file or console.
  *
  * The configuration options "-printtoconsole" and "-logtimestamps" can be used
@@ -95,8 +103,7 @@ int DebugLogPrint(const std::string& str)
     int ret = 0; // Number of characters written
     if (fPrintToConsole) {
         // Print to console
-        ret = fwrite(str.data(), 1, str.size(), stdout);
-        fflush(stdout);
+        ret = StatusLogPrint(str);
     }
     else if (fPrintToDebugLog && AreBaseParamsConfigured()) {
         static bool fStartedNewLine = true;
@@ -118,7 +125,7 @@ int DebugLogPrint(const std::string& str)
 
         // Printing log timestamps can be useful for profiling
         if (fLogTimestamps && fStartedNewLine) {
-            ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+            ret += fprintf(fileout, "%s ", GetTimestamp().c_str());
         }
         if (!str.empty() && str[str.size()-1] == '\n') {
             fStartedNewLine = true;
@@ -127,6 +134,35 @@ int DebugLogPrint(const std::string& str)
         }
         ret += fwrite(str.data(), 1, str.size(), fileout);
     }
+
+    return ret;
+}
+
+/**
+ * Print to the console.
+ *
+ * The configuration options "-logtimestamps" can be used to indicate, whether
+ * the message should be prepended with a timestamp.
+ *
+ * @param str[in]  The message to log
+ * @return The total number of characters written
+ */
+int StatusLogPrint(const std::string& str)
+{
+    int ret = 0; // Number of characters written
+    static bool fStartedNewLine = true;
+
+    if (fLogTimestamps && fStartedNewLine) {
+        ret = fprintf(stdout, "%s %s", GetTimestamp().c_str(), str.c_str());
+    } else {
+        ret = fwrite(str.data(), 1, str.size(), stdout);
+    }
+    if (!str.empty() && str[str.size()-1] == '\n') {
+        fStartedNewLine = true;
+    } else {
+        fStartedNewLine = false;
+    }
+    fflush(stdout);
 
     return ret;
 }
