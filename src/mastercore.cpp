@@ -1589,6 +1589,11 @@ int msc_initial_scan(int nFirstBlock)
 
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
+        if (ShutdownRequested()) {
+            file_log("Shutdown requested, stop scan at block %d of %d\n", nBlock, nLastBlock);
+            break;
+        }
+
         if (GetTime() >= nNow + 15) {
             double dProgress = 100.0 * (nBlock - nFirstBlock) / (nLastBlock - nFirstBlock);
             printf("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nBlock, nLastBlock, dProgress);
