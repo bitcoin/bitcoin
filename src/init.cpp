@@ -1104,6 +1104,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 7.5: load omni core
 
+#ifndef ENABLE_WALLET
+    bool fDisableWallet = true;
+#endif
+
     if (fDisableWallet) {
         return InitError(_(
                 "Disabled wallet detected.\n\n"
