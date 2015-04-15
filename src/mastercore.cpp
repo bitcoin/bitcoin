@@ -1577,6 +1577,7 @@ uint64_t txFee = 0;
 // parse blocks, potential right from Mastercoin's Exodus
 int msc_initial_scan(int nFirstBlock)
 {
+    int64_t nNow = GetTime();
     unsigned int nTotal = 0;
     unsigned int nFound = 0;
     int nBlock = 999999;
@@ -1588,6 +1589,12 @@ int msc_initial_scan(int nFirstBlock)
 
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
+        if (GetTime() >= nNow + 15) {
+            double dProgress = 100.0 * (nBlock - nFirstBlock) / (nLastBlock - nFirstBlock);
+            printf("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nBlock, nLastBlock, dProgress);
+            nNow = GetTime();
+        }
+
         CBlockIndex* pblockindex = chainActive[nBlock];
         if (NULL == pblockindex) break;
         std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
