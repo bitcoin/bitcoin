@@ -131,7 +131,7 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
+    bool processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void fetchRequest(const QUrl& url);
 
     // Setup networking
