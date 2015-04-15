@@ -299,7 +299,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+      printf("Loading send-to-owners database: %s\n", status.ToString().c_str());
     }
 
     ~CMPSTOList()
@@ -342,7 +342,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+      printf("Loading trades database: %s\n", status.ToString().c_str());
     }
 
     ~CMPTradeList()
@@ -398,8 +398,7 @@ public:
       syncoptions.sync = true;
 
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+      printf("Loading transactions database: %s\n", status.ToString().c_str());
     }
 
     ~CMPTxList()

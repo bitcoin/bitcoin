@@ -277,7 +277,7 @@ private:
   unsigned int next_spid;
   unsigned int next_test_spid;
 
-  void openDB() {
+  leveldb::Status openDB() {
     leveldb::Options options;
     options.paranoid_checks = true;
     options.create_if_missing = true;
@@ -287,6 +287,7 @@ private:
      if (false == s.ok()) {
        printf("Failed to create or read LevelDB for Smart Property at %s", path.c_str());
      }
+     return s;
   }
 
   void closeDB() {
@@ -299,7 +300,8 @@ public:
   CMPSPInfo(const boost::filesystem::path &_path)
     : path(_path)
   {
-    openDB();
+    leveldb::Status status = openDB();
+    printf("Loading smart property database: %s\n", status.ToString().c_str());
 
     // special cases for constant SPs MSC and TMSC
     implied_msc.issuer = ExodusAddress();

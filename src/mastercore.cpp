@@ -1582,8 +1582,7 @@ const int max_block = GetHeight();
 
   // this function is useless if there are not enough blocks in the blockchain yet!
   if ((0 >= nHeight) || (max_block < nHeight)) return -1;
-
-  printf("starting block= %d, max_block= %d\n", nHeight, max_block);
+  printf("Scanning for transactions in block %d to block %d..\n", nHeight, max_block);
 
   CBlock block;
   for (int blockNum = nHeight;blockNum<=max_block;blockNum++)
@@ -1610,18 +1609,7 @@ const int max_block = GetHeight();
     mastercore_handler_block_end(blockNum, pblockindex, n_found);
   }
 
-  printf("\n");
-  for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-  {
-    // my_it->first = key
-    // my_it->second = value
-
-    printf("%34s => ", (my_it->first).c_str());
-    (my_it->second).print();
-  }
-
-  printf("starting block= %d, max_block= %d\n", nHeight, max_block);
-  printf("n_total= %d, n_found= %d\n", n_total, n_found);
+  printf("%d transactions processed, %d meta transactions found\n", n_total, n_found);
 
   return 0;
 }
@@ -2377,7 +2365,7 @@ int mastercore_init()
     return 0;
   }
 
-  printf("%s()%s, line %d, file: %s\n", __FUNCTION__, isNonMainNet() ? "TESTNET":"", __LINE__, __FILE__);
+  printf("Initializing Omni Core v%s [%s]\n", OmniCoreVersion().c_str(), Params().NetworkIDString().c_str());
 
   ShrinkDebugLog();
 
@@ -2492,7 +2480,7 @@ int mastercore_init()
   // collect the real Exodus balances available at the snapshot time
   // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  printf("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance).c_str());
+  file_log("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
   // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
   (void) p_txlistdb->setLastAlert(nWaterlineBlock);
@@ -2501,15 +2489,16 @@ int mastercore_init()
 
   // display Exodus balance
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  printf("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance).c_str());
+  file_log("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+
+  printf("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance).c_str());
+  printf("Omni Core initialization completed\n");
 
   return 0;
 }
 
 int mastercore_shutdown()
 {
-  printf("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
-
   if (p_txlistdb)
   {
     delete p_txlistdb; p_txlistdb = NULL;
@@ -2522,12 +2511,13 @@ int mastercore_shutdown()
   {
     delete s_stolistdb; s_stolistdb = NULL;
   }
-  file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-
   if (_my_sps)
   {
     delete _my_sps; _my_sps = NULL;
   }
+
+  file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+  printf("Omni Core shutdown completed\n");
 
   return 0;
 }
