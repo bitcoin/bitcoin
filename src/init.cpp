@@ -1104,8 +1104,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 7.5: load omni core
 
-    uiInterface.InitMessage(_("Performing out of order block detection..."));
-
     if (fDisableWallet) {
         return InitError(_(
                 "Disabled wallet detected.\n\n"
