@@ -2,6 +2,7 @@
 #define _MASTERCOIN_SP 1
 
 #include "mastercore.h"
+#include "mastercore_log.h"
 
 class CBlockIndex;
 
@@ -255,13 +256,13 @@ public:
 
     void print() const
     {
-      printf("%s:%s(Fixed=%s,Divisible=%s):%lu:%s/%s, %s %s\n",
-        issuer.c_str(),
-        name.c_str(),
-        fixed ? "Yes":"No",
-        isDivisible() ? "Yes":"No",
+      LogStatus("%s:%s(Fixed=%s,Divisible=%s):%lu:%s/%s, %s %s\n",
+        issuer,
+        name,
+        fixed ? "Yes" : "No",
+        isDivisible() ? "Yes" : "No",
         num_tokens,
-        category.c_str(), subcategory.c_str(), url.c_str(), data.c_str());
+        category, subcategory, url, data);
     }
 
   };
@@ -285,7 +286,7 @@ private:
     leveldb::Status s = leveldb::DB::Open(options, path.string(), &pDb);
 
      if (false == s.ok()) {
-       printf("Failed to create or read LevelDB for Smart Property at %s", path.c_str());
+       LogStatus("Failed to create or read LevelDB for Smart Property at %s", path.string());
      }
      return s;
   }
@@ -301,7 +302,7 @@ public:
     : path(_path)
   {
     leveldb::Status status = openDB();
-    printf("Loading smart property database: %s\n", status.ToString().c_str());
+    LogStatus("Loading smart property database: %s\n", status.ToString());
 
     // special cases for constant SPs MSC and TMSC
     implied_msc.issuer = ExodusAddress();
@@ -399,11 +400,11 @@ public:
     // print off the hard coded MSC and TMSC entries
     for (unsigned int idx = OMNI_PROPERTY_MSC; idx <= OMNI_PROPERTY_TMSC; idx++ ) {
       Entry info;
-      printf("%10d => ", idx);
+      LogStatus("%10d => ", idx);
       if (getSP(idx, info)) {
         info.print();
       } else {
-        printf("<Internal Error on implicit SP>\n");
+        LogStatus("<Internal Error on implicit SP>\n");
       }
     }
 
@@ -416,7 +417,7 @@ public:
         std::string key = iter->key().ToString();
         boost::split(vstr, key, boost::is_any_of("-"), token_compress_on);
 
-        printf("%10s => ", vstr[1].c_str());
+        LogStatus("%10s => ", vstr[1]);
 
         // parse the encoded json, failing if it doesnt parse or is an object
         Value spInfoVal;
@@ -425,7 +426,7 @@ public:
           info.fromJSON(spInfoVal.get_obj());
           info.print();
         } else {
-          printf("<Malformed JSON in DB>\n");
+          LogStatus("<Malformed JSON in DB>\n");
         }
       }
     }

@@ -9,6 +9,8 @@
 class CBlockIndex;
 class CTransaction;
 
+#include "mastercore_log.h"
+
 #include "sync.h"
 #include "uint256.h"
 #include "util.h"
@@ -20,7 +22,6 @@ class CTransaction;
 #include "json/json_spirit_value.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <map>
 #include <string>
@@ -249,12 +250,12 @@ public:
 
     if (bDivisible)
     {
-      printf("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
-       FormatDivisibleMP(money, true).c_str(), FormatDivisibleMP(so_r, true).c_str(), FormatDivisibleMP(a_r, true).c_str(), FormatDivisibleMP(pending, true).c_str());
+      LogStatus("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
+       FormatDivisibleMP(money, true), FormatDivisibleMP(so_r, true), FormatDivisibleMP(a_r, true), FormatDivisibleMP(pending, true));
     }
     else
     {
-      printf("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
+      LogStatus("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
     }
 
     return (money + so_r + a_r);
@@ -299,7 +300,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
-      printf("Loading send-to-owners database: %s\n", status.ToString().c_str());
+      LogStatus("Loading send-to-owners database: %s\n", status.ToString());
     }
 
     ~CMPSTOList()
@@ -342,7 +343,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
-      printf("Loading trades database: %s\n", status.ToString().c_str());
+      LogStatus("Loading trades database: %s\n", status.ToString());
     }
 
     ~CMPTradeList()
@@ -398,7 +399,7 @@ public:
       syncoptions.sync = true;
 
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-      printf("Loading transactions database: %s\n", status.ToString().c_str());
+      LogStatus("Loading transactions database: %s\n", status.ToString());
     }
 
     ~CMPTxList()
@@ -441,7 +442,7 @@ public:
 
   void print(uint256 txid) const
   {
-    printf("%s : %s %d %ld %ld %s\n", txid.GetHex().c_str(), src.c_str(), prop, amount, type, desc.c_str());
+    LogStatus("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
   }
  
 };
