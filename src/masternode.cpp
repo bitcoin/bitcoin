@@ -156,6 +156,9 @@ CMasternode::CMasternode()
     lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
+
+    //mark last paid as current for new entries
+    nLastPaid = GetAdjustedTime();
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -182,6 +185,7 @@ CMasternode::CMasternode(const CMasternode& other)
     lastVote = other.lastVote;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
+    nLastPaid = other.nLastPaid;
 }
 
 CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
@@ -208,6 +212,7 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
+    nLastPaid = GetAdjustedTime();
 }
 
 //
@@ -434,7 +439,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     }
 
     // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
-    CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments, nMinimumAge, 0);
+    CMasternode *pmn = mnodeman.FindOldestNotInVec(vecLastPayments, nMinimumAge);
     if(pmn != NULL)
     {
         LogPrintf(" Found by FindOldestNotInVec \n");
@@ -442,6 +447,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.score = 0;
         newWinner.nBlockHeight = nBlockHeight;
         newWinner.vin = pmn->vin;
+        pmn->nLastPaid = GetAdjustedTime();
 
         if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
             newWinner.payee = pmn->donationAddress;
@@ -468,6 +474,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
                 newWinner.score = 0;
                 newWinner.nBlockHeight = nBlockHeight;
                 newWinner.vin = pmn->vin;
+                pmn->nLastPaid = GetAdjustedTime();
 
                 if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
                     newWinner.payee = pmn->donationAddress;

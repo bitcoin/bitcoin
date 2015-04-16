@@ -47,6 +47,8 @@ public:
     }
 
     std::string ToString() const;
+    std::string ToStringShort() const;
+
 };
 
 /** An input of a transaction.  It contains the location of the previous
@@ -145,7 +147,7 @@ public:
         // to spend something, then we consider it dust.
         // A typical txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
-        // so dust is a txout less than 546 satoshis 
+        // so dust is a txout less than 546 satoshis
         // with default minRelayTxFee.
         size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
         return (nValue < 3*minRelayTxFee.GetFee(nSize));
