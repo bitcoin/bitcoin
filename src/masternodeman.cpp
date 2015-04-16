@@ -345,8 +345,7 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
     return NULL;
 }
 
-
-CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds)
+CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge)
 {
     LOCK(cs);
 
@@ -357,9 +356,7 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins,
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
-        if(Params().NetworkID() != CBaseChainParams::REGTEST){
-            if(mn.GetMasternodeInputAge() < nMinimumAge || mn.lastTimeSeen - mn.sigTime < nMinimumActiveSeconds) continue;
-        }
+        if(Params().NetworkID() != CBaseChainParams::REGTEST && mn.GetMasternodeInputAge() < nMinimumAge) continue;
 
         bool found = false;
         BOOST_FOREACH(const CTxIn& vin, vVins)
@@ -371,7 +368,7 @@ CMasternode* CMasternodeMan::FindOldestNotInVec(const std::vector<CTxIn> &vVins,
 
         if(found) continue;
 
-        if(pOldestMasternode == NULL || pOldestMasternode->GetMasternodeInputAge() < mn.GetMasternodeInputAge()){
+        if(pOldestMasternode == NULL || pOldestMasternode->SecondsSincePayment() < mn.SecondsSincePayment()){
             pOldestMasternode = &mn;
         }
     }

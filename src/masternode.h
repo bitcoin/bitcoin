@@ -84,6 +84,7 @@ public:
     int64_t lastVote;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
+    int64_t nLastPaid;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -117,6 +118,7 @@ public:
         swap(first.lastVote, second.lastVote);
         swap(first.nScanningErrorCount, second.nScanningErrorCount);
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
+        swap(first.nLastPaid, second.nLastPaid);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -161,6 +163,12 @@ public:
             READWRITE(lastVote);
             READWRITE(nScanningErrorCount);
             READWRITE(nLastScanningErrorBlockHeight);
+            READWRITE(nLastPaid);
+    }
+
+    int64_t SecondsSincePayment()
+    {
+        return (GetAdjustedTime() - nLastPaid);
     }
 
     void UpdateLastSeen(int64_t override=0)
