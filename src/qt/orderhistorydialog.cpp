@@ -11,6 +11,7 @@
 #include "wallet.h"
 #include "base58.h"
 #include "ui_interface.h"
+#include "guiutil.h"
 
 #include <boost/filesystem.hpp>
 
@@ -56,6 +57,7 @@ using namespace leveldb;
 #include "mastercore_sp.h"
 #include "mastercore_parse_string.h"
 #include "mastercore_rpc.h"
+#include "omnicore_qtutils.h"
 
 #include <QDateTime>
 #include <QMessageBox>
@@ -68,48 +70,58 @@ OrderHistoryDialog::OrderHistoryDialog(QWidget *parent) :
     ui(new Ui::orderHistoryDialog),
     model(0)
 {
+    // Setup the UI
     ui->setupUi(this);
-
-    // setup
     ui->orderHistoryTable->setColumnCount(7);
-    ui->orderHistoryTable->setHorizontalHeaderItem(0, new QTableWidgetItem(" "));
-    ui->orderHistoryTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Date"));
-    ui->orderHistoryTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Status"));
-    ui->orderHistoryTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Trade Details"));
-    ui->orderHistoryTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Sold"));
-    ui->orderHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Received"));
+    ui->orderHistoryTable->setHorizontalHeaderItem(1, new QTableWidgetItem(" "));
+    ui->orderHistoryTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Date"));
+    ui->orderHistoryTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Status"));
+    ui->orderHistoryTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Trade Details"));
+    ui->orderHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Sold"));
+    ui->orderHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Received"));
+    borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->orderHistoryTable,100,100);
+    #if QT_VERSION < 0x050000
+       ui->orderHistoryTable->horizontalHeader()->setResizeMode(1, QHeaderView::Fixed);
+       ui->orderHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setResizeMode(4, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setResizeMode(5, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setResizeMode(6, QHeaderView::Interactive);
+    #else
+       ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+       ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Interactive);
+       ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
+    #endif
+    ui->orderHistoryTable->setAlternatingRowColors(true);
     ui->orderHistoryTable->verticalHeader()->setVisible(false);
     ui->orderHistoryTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->orderHistoryTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->orderHistoryTable->setSelectionMode(QAbstractItemView::SingleSelection);
-    #if QT_VERSION < 0x050000
-        ui->orderHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Stretch);
-    #else
-        ui->orderHistoryTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-    #endif
-    ui->orderHistoryTable->setColumnWidth(0, 23);
-    ui->orderHistoryTable->setColumnWidth(1, 150);
-    ui->orderHistoryTable->setColumnWidth(2, 100);
-    ui->orderHistoryTable->setColumnWidth(4, 180);
-    ui->orderHistoryTable->setColumnWidth(5, 180);
-    ui->orderHistoryTable->setColumnWidth(6, 0);
     ui->orderHistoryTable->setContextMenuPolicy(Qt::CustomContextMenu);
-
-    // Actions
+    ui->orderHistoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->orderHistoryTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    Update(); // make sure we're populated before attempting to resize to contents
+    ui->orderHistoryTable->setColumnHidden(0, true);
+    ui->orderHistoryTable->setColumnWidth(1, 23);
+    ui->orderHistoryTable->resizeColumnToContents(2);
+    ui->orderHistoryTable->resizeColumnToContents(3);
+    ui->orderHistoryTable->resizeColumnToContents(5);
+    ui->orderHistoryTable->resizeColumnToContents(6);
+    borrowedColumnResizingFixer->stretchColumnWidth(4);
+//    ui->orderHistoryTable->setSortingEnabled(true);
+//    ui->orderHistoryTable->horizontalHeader()->setSortIndicator(2, Qt::DescendingOrder);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *showDetailsAction = new QAction(tr("Show trade details"), this);
-
     contextMenu = new QMenu();
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(showDetailsAction);
-
-    // Connect actions
     connect(ui->orderHistoryTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     connect(ui->orderHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
-
-    Update();
 }
 
 void OrderHistoryDialog::Update()
@@ -185,13 +197,13 @@ void OrderHistoryDialog::Update()
             amountInCell->setForeground(QColor("#000000"));
             amountOutCell->setForeground(QColor("#000000"));
 
-            ui->orderHistoryTable->setItem(rowcount, 0, iconCell);
-            ui->orderHistoryTable->setItem(rowcount, 1, dateCell);
-            ui->orderHistoryTable->setItem(rowcount, 2, statusCell);
-            ui->orderHistoryTable->setItem(rowcount, 3, infoCell);
-            ui->orderHistoryTable->setItem(rowcount, 4, amountOutCell);
-            ui->orderHistoryTable->setItem(rowcount, 5, amountInCell);
-            ui->orderHistoryTable->setItem(rowcount, 6, txidCell);
+            ui->orderHistoryTable->setItem(rowcount, 0, txidCell);
+            ui->orderHistoryTable->setItem(rowcount, 1, iconCell);
+            ui->orderHistoryTable->setItem(rowcount, 2, dateCell);
+            ui->orderHistoryTable->setItem(rowcount, 3, statusCell);
+            ui->orderHistoryTable->setItem(rowcount, 4, infoCell);
+            ui->orderHistoryTable->setItem(rowcount, 5, amountOutCell);
+            ui->orderHistoryTable->setItem(rowcount, 6, amountInCell);
             rowcount += 1;
         }
     }
@@ -405,13 +417,13 @@ void OrderHistoryDialog::Update()
                         if(displayIn.substr(0,2) == "0 ") amountInCell->setForeground(QColor("#000000"));
                         if(displayOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
 
-                        ui->orderHistoryTable->setItem(rowcount, 0, iconCell);
-                        ui->orderHistoryTable->setItem(rowcount, 1, dateCell);
-                        ui->orderHistoryTable->setItem(rowcount, 2, statusCell);
-                        ui->orderHistoryTable->setItem(rowcount, 3, infoCell);
-                        ui->orderHistoryTable->setItem(rowcount, 4, amountOutCell);
-                        ui->orderHistoryTable->setItem(rowcount, 5, amountInCell);
-                        ui->orderHistoryTable->setItem(rowcount, 6, txidCell);
+                        ui->orderHistoryTable->setItem(rowcount, 0, txidCell);
+                        ui->orderHistoryTable->setItem(rowcount, 1, iconCell);
+                        ui->orderHistoryTable->setItem(rowcount, 2, dateCell);
+                        ui->orderHistoryTable->setItem(rowcount, 3, statusCell);
+                        ui->orderHistoryTable->setItem(rowcount, 4, infoCell);
+                        ui->orderHistoryTable->setItem(rowcount, 5, amountOutCell);
+                        ui->orderHistoryTable->setItem(rowcount, 6, amountInCell);
                         rowcount += 1;
                     }
                 }
@@ -429,10 +441,7 @@ void OrderHistoryDialog::setModel(WalletModel *model)
 void OrderHistoryDialog::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->orderHistoryTable->indexAt(point);
-    if(index.isValid())
-    {
-        contextMenu->exec(QCursor::pos());
-    }
+    if(index.isValid()) contextMenu->exec(QCursor::pos());
 }
 
 void OrderHistoryDialog::copyTxID()
@@ -440,26 +449,23 @@ void OrderHistoryDialog::copyTxID()
     GUIUtil::setClipboard(ui->orderHistoryTable->item(ui->orderHistoryTable->currentRow(),6)->text());
 }
 
+/* Opens a dialog containing the details of the selected trade and any associated matches
+ */
 void OrderHistoryDialog::showDetails()
 {
     Object txobj;
     uint256 txid;
-    txid.SetHex(ui->orderHistoryTable->item(ui->orderHistoryTable->currentRow(),6)->text().toStdString());
+    txid.SetHex(ui->orderHistoryTable->item(ui->orderHistoryTable->currentRow(),0)->text().toStdString());
     std::string strTXText;
 
     // first of all check if the TX is a pending tx, if so grab details from pending map
     PendingMap::iterator it = my_pending.find(txid);
-    if (it != my_pending.end())
-    {
+    if (it != my_pending.end()) {
         CMPPending *p_pending = &(it->second);
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
-    }
-    else
-    {
-        // grab details usual way
+    } else {
         int pop = populateRPCTransactionObject(txid, &txobj, "");
-        if (0<=pop)
-        {
+        if (0<=pop) {
             Object tradeobj;
             CMPMetaDEx temp_metadexoffer;
             string senderAddress;
@@ -469,158 +475,84 @@ void OrderHistoryDialog::showDetails()
             if (!GetTransaction(txid, wtx, blockHash, true)) { return; }
             CMPTransaction mp_obj;
             int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
-            if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sa$
-            {
-                if (0<=mp_obj.step1())
-                {
+            if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
+                if (0<=mp_obj.step1()) {
                     senderAddress = mp_obj.getSender();
-                    if (0 == mp_obj.step2_Value())
-                    {
-                        propertyId = mp_obj.getProperty();
-                    }
+                    if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
                 }
             }
-            // get the amount for sale in this sell offer to see if filled
             uint64_t amountForSale = mp_obj.getAmount();
 
-            // create array of matches
-            Array tradeArray;
-            uint64_t totalBought = 0;
-            uint64_t totalSold = 0;
-            t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
-
-            // get action byte
+            // obtain action byte
             int actionByte = 0;
             if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
 
-            // everything seems ok, now add status and get an array of matches to add to the object
-            // work out status
-            bool orderOpen = isMetaDExOfferActive(txid, propertyId);
-            bool partialFilled = false;
-            bool filled = false;
-            string statusText;
-            if(totalSold>0) partialFilled = true;
-            if(totalSold>=amountForSale) filled = true;
-            statusText = "unknown";
-            if((!orderOpen) && (!partialFilled)) statusText = "cancelled"; // offers that are closed but not filled must have been cancelled
-            if((!orderOpen) && (partialFilled)) statusText = "cancelled part filled"; // offers that are closed but not filled must have been cancelled
-            if((!orderOpen) && (filled)) statusText = "filled"; // filled offers are closed
-            if((orderOpen) && (!partialFilled)) statusText = "open"; // offer exists but no matches yet
-            if((orderOpen) && (partialFilled)) statusText = "open part filled"; // offer exists, some matches but not filled yet
-            if(actionByte==1) txobj.push_back(Pair("status", statusText)); // no status for cancel txs
-
-            // add cancels array to object and set status as cancelled only if cancel type
-            if(actionByte != 1)
-            {
-                Array cancelArray;
+            // obtain an array of matched trades (action 1) or array of cancelled trades (action 2/3/4)
+            Array tradeArray, cancelArray;
+            uint64_t totalBought = 0, totalSold = 0;
+            if (actionByte == 1) {
+                t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
+            } else {
                 int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
-                if (0<numberOfCancels)
-                {
-                    for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++)
-                    {
+                if (numberOfCancels > 0) {
+                    for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
                         Object cancelTx;
                         string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + static_cast<ostringstream*>( &(ostringstream() << refNumber) )->str() );
-                        if (!strValue.empty())
-                        {
+                        if (!strValue.empty()) {
                             std::vector<std::string> vstr;
                             boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-                            if (3 <= vstr.size())
-                            {
+                            if (3 <= vstr.size()) {
                                 uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
-                                uint64_t amountUnreserved = boost::lexical_cast<uint64_t>(vstr[2]);
                                 cancelTx.push_back(Pair("txid", vstr[0]));
                                 cancelTx.push_back(Pair("propertyid", propId));
-                                cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, amountUnreserved)));
+                                cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, boost::lexical_cast<uint64_t>(vstr[2]))));
                                 cancelArray.push_back(cancelTx);
                             }
                         }
                     }
                 }
+            }
+
+            // obtain the status of the trade
+            bool orderOpen = isMetaDExOfferActive(txid, propertyId);
+            bool partialFilled = false, filled = false;
+            string statusText = "unknown";
+            if (totalSold>0) partialFilled = true;
+            if (totalSold>=amountForSale) filled = true;
+            if (orderOpen) {
+                if (!partialFilled) { statusText = "open"; } else { statusText = "open part filled"; }
+            } else {
+                if (!partialFilled) { statusText = "cancelled"; } else { statusText = "cancelled part filled"; }
+                if (filled) statusText = "filled";
+            }
+            if (actionByte == 1) { txobj.push_back(Pair("status", statusText)); } else { txobj.push_back(Pair("status", "N/A")); }
+
+            // add the appropriate array based on action byte
+            if(actionByte == 1) {
+                txobj.push_back(Pair("matches", tradeArray));
+                if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
+            } else {
                 txobj.push_back(Pair("cancelledtransactions", cancelArray));
             }
-            else
-            {
-                // if cancelled, show cancellation txid
-                if((statusText == "cancelled") || (statusText == "cancelled part filled")) { txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex())); }
-                // add matches array to object
-                txobj.push_back(Pair("matches", tradeArray)); // only action 1 offers can have matches
-            }
+
             strTXText = write_string(Value(txobj), false) + "\n";
         }
     }
 
-    if (!strTXText.empty())
-    {
-        // clean up
-        string from = ",";
-        string to = ",\n    ";
-        size_t start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = ":";
-        to = "   :   ";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "{";
-        to = "{\n    ";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "}";
-        to = "\n}";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "[";
-        to = "[\n";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "]";
-        to = "\n]";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-
-        QString txText = QString::fromStdString(strTXText);
-        QDialog *txDlg = new QDialog;
-        QLayout *dlgLayout = new QVBoxLayout;
-        dlgLayout->setSpacing(12);
-        dlgLayout->setMargin(12);
-        QTextEdit *dlgTextEdit = new QTextEdit;
-        dlgTextEdit->setText(txText);
-        dlgTextEdit->setStatusTip("Transaction Information");
-        dlgLayout->addWidget(dlgTextEdit);
-        txDlg->setWindowTitle("Transaction Information");
-        QPushButton *closeButton = new QPushButton(tr("&Close"));
-        closeButton->setDefault(true);
-        QDialogButtonBox *buttonBox = new QDialogButtonBox;
-        buttonBox->addButton(closeButton, QDialogButtonBox::AcceptRole);
-        dlgLayout->addWidget(buttonBox);
-        txDlg->setLayout(dlgLayout);
-        txDlg->resize(700, 360);
-        connect(buttonBox, SIGNAL(accepted()), txDlg, SLOT(accept()));
-        txDlg->setAttribute(Qt::WA_DeleteOnClose); //delete once it's closed
-        if (txDlg->exec() == QDialog::Accepted) { } else { } //do nothing but close
+    if (!strTXText.empty()) {
+        strTXText = ReplaceStr(",",",\n    ",strTXText);
+        strTXText = ReplaceStr(":","   :   ",strTXText);
+        strTXText = ReplaceStr("{","{\n    ",strTXText);
+        strTXText = ReplaceStr("}","\n}",strTXText);
+        strTXText = ReplaceStr("[","[\n",strTXText);
+        strTXText = ReplaceStr("]","\n]",strTXText);
+        PopulateSimpleDialog(strTXText, "Trade Information", "Trade Information");
     }
+}
+
+void OrderHistoryDialog::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    borrowedColumnResizingFixer->stretchColumnWidth(4);
 }
 

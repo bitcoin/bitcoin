@@ -5,6 +5,7 @@
 #ifndef ORDERHISTORYDIALOG_H
 #define ORDERHISTORYDIALOG_H
 
+#include "guiutil.h"
 #include "walletmodel.h"
 
 #include <QDialog>
@@ -50,6 +51,8 @@ public:
     QDialogButtonBox *buttonBox;
     QPushButton *closeButton;
 
+    GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
+    virtual void resizeEvent(QResizeEvent* event);
 
 public slots:
     void Update();
