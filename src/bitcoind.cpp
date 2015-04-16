@@ -8,7 +8,6 @@
 #include "init.h"
 #include "main.h"
 #include "noui.h"
-#include "ui_interface.h"
 #include "util.h"
 
 #include <boost/algorithm/string/predicate.hpp>

@@ -11,7 +11,6 @@
 #include "keystore.h"
 #include "script/script.h"
 #include "script/sign.h"
-#include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -26,7 +25,6 @@ using namespace std;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;
-CClientUIInterface uiInterface;
 
 static bool AppInitRawTx(int argc, char* argv[])
 {
