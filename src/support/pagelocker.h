@@ -169,9 +169,10 @@ void LockObject(const T& t)
 }
 
 template <typename T>
-void UnlockObject(const T& t)
+void UnlockObject(const T& t, bool cleanse = true)
 {
-    memory_cleanse((void*)(&t), sizeof(T));
+    if(cleanse)
+        memory_cleanse((void*)(&t), sizeof(T));
     LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
 }
 

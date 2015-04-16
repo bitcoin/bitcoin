@@ -36,6 +36,11 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
     ui->passEdit2->installEventFilter(this);
     ui->passEdit3->installEventFilter(this);
 
+    // Lock the memory
+    LockObject(ui->passEdit1->text());
+    LockObject(ui->passEdit2->text());
+    LockObject(ui->passEdit3->text());
+
     switch(mode)
     {
         case Encrypt: // Ask passphrase x2
@@ -77,6 +82,10 @@ AskPassphraseDialog::~AskPassphraseDialog()
     ui->passEdit1->setText(QString(" ").repeated(ui->passEdit1->text().size()));
     ui->passEdit2->setText(QString(" ").repeated(ui->passEdit2->text().size()));
     ui->passEdit3->setText(QString(" ").repeated(ui->passEdit3->text().size()));
+    // Don't cleanse the memory, QString's destructor doesn't like that
+    UnlockObject(ui->passEdit1->text(), false);
+    UnlockObject(ui->passEdit2->text(), false);
+    UnlockObject(ui->passEdit3->text(), false);
     delete ui;
 }
 
@@ -93,8 +102,7 @@ void AskPassphraseDialog::accept()
     oldpass.reserve(MAX_PASSPHRASE_SIZE);
     newpass1.reserve(MAX_PASSPHRASE_SIZE);
     newpass2.reserve(MAX_PASSPHRASE_SIZE);
-    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
-    // Alternately, find a way to make this input mlock()'d to begin with.
+
     oldpass.assign(ui->passEdit1->text().toStdString().c_str());
     newpass1.assign(ui->passEdit2->text().toStdString().c_str());
     newpass2.assign(ui->passEdit3->text().toStdString().c_str());
