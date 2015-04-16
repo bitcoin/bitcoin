@@ -142,6 +142,12 @@ void run_context_tests(void) {
     /* try verifying */
     CHECK(secp256k1_ecdsa_sig_verify(&vrfy->ecmult_ctx, &sig, &pub, &msg));
     CHECK(secp256k1_ecdsa_sig_verify(&both->ecmult_ctx, &sig, &pub, &msg));
+
+    /* cleanup */
+    secp256k1_context_destroy(none);
+    secp256k1_context_destroy(sign);
+    secp256k1_context_destroy(vrfy);
+    secp256k1_context_destroy(both);
 }
 
 /***** HASH TESTS *****/
