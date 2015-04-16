@@ -2349,6 +2349,9 @@ Value listunspent(const Array& params, bool fHelp)
 
 Value fundrawtransaction(const Array& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return Value::null;
+    
     if (fHelp || params.size() != 1)
         throw runtime_error(
                             "fundrawtransaction \"hexstring\"\n"
