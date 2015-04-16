@@ -461,8 +461,12 @@ bool IsMyAddress(const std::string &address);
 
 string getLabel(const string &address);
 
+/** Global handler to initialize Omni Core. */
 int mastercore_init();
+
+/** Global handler to shut down Omni Core. */
 int mastercore_shutdown();
+
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);

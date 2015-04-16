@@ -2301,7 +2301,11 @@ static void clear_all_state() {
   exodus_prev = 0;
 }
 
-// called from init.cpp of Bitcoin Core
+/**
+ * Global handler to initialize Omni Core.
+ *
+ * @return An exit code, indicating success or failure
+ */
 int mastercore_init()
 {
   if (mastercoreInitialized) {
@@ -2441,29 +2445,37 @@ int mastercore_init()
   return 0;
 }
 
+/**
+ * Global handler to shut down Omni Core.
+ *
+ * In particular, the LevelDB databases of the global state objects are closed
+ * properly.
+ *
+ * @return An exit code, indicating success or failure
+ */
 int mastercore_shutdown()
 {
-  if (p_txlistdb)
-  {
-    delete p_txlistdb; p_txlistdb = NULL;
-  }
-  if (t_tradelistdb)
-  {
-    delete t_tradelistdb; t_tradelistdb = NULL;
-  }
-  if (s_stolistdb)
-  {
-    delete s_stolistdb; s_stolistdb = NULL;
-  }
-  if (_my_sps)
-  {
-    delete _my_sps; _my_sps = NULL;
-  }
+    if (p_txlistdb) {
+        delete p_txlistdb;
+        p_txlistdb = NULL;
+    }
+    if (t_tradelistdb) {
+        delete t_tradelistdb;
+        t_tradelistdb = NULL;
+    }
+    if (s_stolistdb) {
+        delete s_stolistdb;
+        s_stolistdb = NULL;
+    }
+    if (_my_sps) {
+        delete _my_sps;
+        _my_sps = NULL;
+    }
 
-  file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
-  PrintToConsole("Omni Core shutdown completed\n");
+    file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToConsole("Omni Core shutdown completed\n");
 
-  return 0;
+    return 0;
 }
 
 // this is called for every new transaction that comes in (actually in block parsing loop)

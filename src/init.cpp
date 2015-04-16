@@ -71,9 +71,9 @@ enum BindFlags {
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 CClientUIInterface uiInterface;
 
-/** Omni Core initialization and shutdown handler */
-int mastercore_init(void);
-int mastercore_shutdown(void);
+// Omni Core initialization and shutdown handlers
+int mastercore_init();
+int mastercore_shutdown();
 
 //////////////////////////////////////////////////////////////////////////////
 //
