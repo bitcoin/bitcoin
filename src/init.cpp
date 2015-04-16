@@ -751,13 +751,22 @@ bool AppInit2(boost::thread_group& threadGroup)
                 boost::filesystem::directory_iterator end_iter;
                 boost::filesystem::path backupFolder = backupDir.string();
                 backupFolder.make_preferred();
-                // Build map of backup files sorted by last write time
+                // Build map of backup files for current(!) wallet sorted by last write time
+                boost::filesystem::path currentFile;
                 for (boost::filesystem::directory_iterator dir_iter(backupFolder); dir_iter != end_iter; ++dir_iter)
                 {
+                    // Only check regular files
                     if ( boost::filesystem::is_regular_file(dir_iter->status()))
-                        folder_set.insert(folder_set_t::value_type(boost::filesystem::last_write_time(dir_iter->path()), *dir_iter));
+                    {
+                        currentFile = dir_iter->path().filename();
+                        // Only add the backups for the current wallet, e.g. wallet.dat.*
+                        if(currentFile.string().find(strWalletFile) != string::npos)
+                        {
+                            folder_set.insert(folder_set_t::value_type(boost::filesystem::last_write_time(dir_iter->path()), *dir_iter));
+                        }
+                    }
                 }
-                // Loop backward through backup files and keep the 10 newest ones
+                // Loop backward through backup files and keep the N newest ones (1 <= N <= 10)
                 int counter = 0;
                 BOOST_REVERSE_FOREACH(PAIRTYPE(const std::time_t, boost::filesystem::path) file, folder_set)
                 {
