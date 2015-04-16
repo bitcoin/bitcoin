@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2013 The PPCoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2009-2012 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Peercoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "db.h"
@@ -1200,6 +1200,7 @@ static const char *strMainNetDNSSeed[][2] = {
     {"seed", "seed.ppcoin.net"},
     {"seedppc", "seedppc.ppcoin.net"},
     {"altcointech", "dnsseed.ppc.altcointech.net"},
+    {"diandianbi", "seed.diandianbi.org"},
     {NULL, NULL}
 };
 
