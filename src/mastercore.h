@@ -250,12 +250,12 @@ public:
 
     if (bDivisible)
     {
-      LogStatus("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
+      PrintToConsole("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
        FormatDivisibleMP(money, true), FormatDivisibleMP(so_r, true), FormatDivisibleMP(a_r, true), FormatDivisibleMP(pending, true));
     }
     else
     {
-      LogStatus("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
+      PrintToConsole("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
     }
 
     return (money + so_r + a_r);
@@ -300,7 +300,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
-      LogStatus("Loading send-to-owners database: %s\n", status.ToString());
+      PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
     }
 
     ~CMPSTOList()
@@ -343,7 +343,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
-      LogStatus("Loading trades database: %s\n", status.ToString());
+      PrintToConsole("Loading trades database: %s\n", status.ToString());
     }
 
     ~CMPTradeList()
@@ -399,7 +399,7 @@ public:
       syncoptions.sync = true;
 
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-      LogStatus("Loading transactions database: %s\n", status.ToString());
+      PrintToConsole("Loading transactions database: %s\n", status.ToString());
     }
 
     ~CMPTxList()
@@ -442,7 +442,7 @@ public:
 
   void print(uint256 txid) const
   {
-    LogStatus("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
+    PrintToConsole("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
   }
  
 };

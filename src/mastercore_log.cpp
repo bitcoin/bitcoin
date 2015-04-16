@@ -44,7 +44,7 @@ bool msc_debug_persistence        = 0;
 bool msc_debug_ui                 = 0;
 bool msc_debug_metadex1           = 0;
 bool msc_debug_metadex2           = 0;
-// Print orderbook before and after each transaction
+//! Print orderbook before and after each trade
 bool msc_debug_metadex3           = 0;
 
 /**
@@ -66,7 +66,7 @@ static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 
 /**
- * Open debug log file.
+ * Opens debug log file.
  */
 static void DebugLogInit()
 {
@@ -81,7 +81,7 @@ static void DebugLogInit()
 }
 
 /**
- * @return The current timestamp in the format: 2015-04-15 11:18:01
+ * @return The current timestamp in the format: 2009-01-03 18:15:05
  */
 static std::string GetTimestamp()
 {
@@ -89,21 +89,23 @@ static std::string GetTimestamp()
 }
 
 /**
- * Print to debug log file or console.
+ * Prints to log file.
  *
- * The configuration options "-printtoconsole" and "-logtimestamps" can be used
- * to indicate, whether to add log entries to a file or print to the console,
- * and if the message should be prepended with a timestamp.
+ * The configuration options "-logtimestamps" can be used to indicate, whether
+ * the message to log should be prepended with a timestamp.
+ *
+ * If "-printtoconsole" is enabled, then the message is written to the standard
+ * output, usually the console, instead of a log file.
  *
  * @param str[in]  The message to log
  * @return The total number of characters written
  */
-int DebugLogPrint(const std::string& str)
+int LogFilePrint(const std::string& str)
 {
     int ret = 0; // Number of characters written
     if (fPrintToConsole) {
         // Print to console
-        ret = StatusLogPrint(str);
+        ret = ConsolePrint(str);
     }
     else if (fPrintToDebugLog && AreBaseParamsConfigured()) {
         static bool fStartedNewLine = true;
@@ -139,15 +141,15 @@ int DebugLogPrint(const std::string& str)
 }
 
 /**
- * Print to the console.
+ * Prints to the standard output, usually the console.
  *
- * The configuration options "-logtimestamps" can be used to indicate, whether
+ * The configuration option "-logtimestamps" can be used to indicate, whether
  * the message should be prepended with a timestamp.
  *
- * @param str[in]  The message to log
+ * @param str[in]  The message to print
  * @return The total number of characters written
  */
-int StatusLogPrint(const std::string& str)
+int ConsolePrint(const std::string& str)
 {
     int ret = 0; // Number of characters written
     static bool fStartedNewLine = true;
@@ -168,7 +170,7 @@ int StatusLogPrint(const std::string& str)
 }
 
 /**
- * Scroll debug log, if it's getting too big.
+ * Scrolls debug log, if it's getting too big.
  */
 void ShrinkDebugLog()
 {

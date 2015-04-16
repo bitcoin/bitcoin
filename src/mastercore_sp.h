@@ -247,7 +247,7 @@ public:
 
     void print() const
     {
-      LogStatus("%s:%s(Fixed=%s,Divisible=%s):%lu:%s/%s, %s %s\n",
+      PrintToConsole("%s:%s(Fixed=%s,Divisible=%s):%lu:%s/%s, %s %s\n",
         issuer,
         name,
         fixed ? "Yes" : "No",
@@ -277,7 +277,7 @@ private:
     leveldb::Status s = leveldb::DB::Open(options, path.string(), &pDb);
 
      if (false == s.ok()) {
-       LogStatus("Failed to create or read LevelDB for Smart Property at %s", path.string());
+       PrintToConsole("Failed to create or read LevelDB for Smart Property at %s", path.string());
      }
      return s;
   }
@@ -292,7 +292,7 @@ public:
     : path(_path)
   {
     leveldb::Status status = openDB();
-    LogStatus("Loading smart property database: %s\n", status.ToString());
+    PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
     // special cases for constant SPs MSC and TMSC
     implied_msc.issuer = ExodusAddress();
@@ -390,11 +390,11 @@ public:
     // print off the hard coded MSC and TMSC entries
     for (unsigned int idx = OMNI_PROPERTY_MSC; idx <= OMNI_PROPERTY_TMSC; idx++ ) {
       Entry info;
-      LogStatus("%10d => ", idx);
+      PrintToConsole("%10d => ", idx);
       if (getSP(idx, info)) {
         info.print();
       } else {
-        LogStatus("<Internal Error on implicit SP>\n");
+        PrintToConsole("<Internal Error on implicit SP>\n");
       }
     }
 
@@ -407,7 +407,7 @@ public:
         std::string key = iter->key().ToString();
         boost::split(vstr, key, boost::is_any_of("-"), token_compress_on);
 
-        LogStatus("%10s => ", vstr[1]);
+        PrintToConsole("%10s => ", vstr[1]);
 
         // parse the encoded json, failing if it doesnt parse or is an object
         Value spInfoVal;
@@ -416,7 +416,7 @@ public:
           info.fromJSON(spInfoVal.get_obj());
           info.print();
         } else {
-          LogStatus("<Malformed JSON in DB>\n");
+          PrintToConsole("<Malformed JSON in DB>\n");
         }
       }
     }

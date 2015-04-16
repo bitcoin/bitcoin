@@ -577,7 +577,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                          // we know we have transactions live we don't understand
                          // can't be trusted to provide valid data, shutdown
                          file_log("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
-                         LogStatus("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
+                         PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
                          if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode("Shutting down due to alert: " + getMasterCoreAlertTextOnly());
                          return false;
                      }
@@ -1512,7 +1512,7 @@ int msc_initial_scan(int nFirstBlock)
 
     // this function is useless if there are not enough blocks in the blockchain yet!
     if (nFirstBlock < 0 || nLastBlock < nFirstBlock) return -1;
-    LogStatus("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
+    PrintToConsole("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
 
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
@@ -1523,7 +1523,7 @@ int msc_initial_scan(int nFirstBlock)
 
         if (GetTime() >= nNow + 15) {
             double dProgress = 100.0 * (nBlock - nFirstBlock) / (nLastBlock - nFirstBlock);
-            LogStatus("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nBlock, nLastBlock, dProgress);
+            PrintToConsole("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nBlock, nLastBlock, dProgress);
             nNow = GetTime();
         }
 
@@ -1550,10 +1550,10 @@ int msc_initial_scan(int nFirstBlock)
     }
 
     if (nBlock < nLastBlock) {
-        LogStatus("Scan stopped early at block %d of block %d\n", nBlock, nLastBlock);
+        PrintToConsole("Scan stopped early at block %d of block %d\n", nBlock, nLastBlock);
     }
 
-    LogStatus("%d transactions processed, %d meta transactions found\n", nTotal, nFound);
+    PrintToConsole("%d transactions processed, %d meta transactions found\n", nTotal, nFound);
 
     return 0;
 }
@@ -2309,7 +2309,7 @@ int mastercore_init()
     return 0;
   }
 
-  LogStatus("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
+  PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
 
   ShrinkDebugLog();
 
@@ -2346,7 +2346,7 @@ int mastercore_init()
       catch(boost::filesystem::filesystem_error const & e)
       {
           file_log("Exception deleting folders for --startclean option.\n");
-          LogStatus("Exception deleting folders for --startclean option.\n");
+          PrintToConsole("Exception deleting folders for --startclean option.\n");
       }
   }
 
@@ -2435,8 +2435,8 @@ int mastercore_init()
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
   file_log("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
-  LogStatus("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
-  LogStatus("Omni Core initialization completed\n");
+  PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
+  PrintToConsole("Omni Core initialization completed\n");
 
   return 0;
 }
@@ -2461,7 +2461,7 @@ int mastercore_shutdown()
   }
 
   file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
-  LogStatus("Omni Core shutdown completed\n");
+  PrintToConsole("Omni Core shutdown completed\n");
 
   return 0;
 }
@@ -3355,7 +3355,7 @@ Slice skey, svalue;
     skey = it->key();
     svalue = it->value();
     ++count;
-    LogStatus("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
   }
 
   delete it;
@@ -3400,7 +3400,7 @@ unsigned int n_found = 0;
     }
   }
 
-  LogStatus("%s(%d, %d); n_found= %d\n", __FUNCTION__, starting_block, ending_block, n_found);
+  PrintToConsole("%s(%d, %d); n_found= %d\n", __FUNCTION__, starting_block, ending_block, n_found);
 
   delete it;
 
@@ -3600,7 +3600,7 @@ void CMPSTOList::printAll()
     skey = it->key();
     svalue = it->value();
     ++count;
-    LogStatus("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
   }
 
   delete it;
@@ -3654,7 +3654,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
     }
   }
 
-  LogStatus("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToConsole("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 
@@ -3796,7 +3796,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
     }
   }
 
-  LogStatus("%s(%d); tradedb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToConsole("%s(%d); tradedb n_found= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 
@@ -3836,7 +3836,7 @@ void CMPTradeList::printAll()
     skey = it->key();
     svalue = it->value();
     ++count;
-    LogStatus("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
   }
 
   delete it;

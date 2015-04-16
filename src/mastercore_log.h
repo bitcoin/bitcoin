@@ -6,13 +6,13 @@
 
 #include <string>
 
-/** Print to debug log file or console. */
-int DebugLogPrint(const std::string& str);
+/** Prints to the log file. */
+int LogFilePrint(const std::string& str);
 
-/** Print to the console. */
-int StatusLogPrint(const std::string& str);
+/** Prints to the console. */
+int ConsolePrint(const std::string& str);
 
-/** Scroll debug log, if it's getting too big. */
+/** Scrolls log file, if it's getting too big. */
 void ShrinkDebugLog();
 
 // Log files
@@ -47,33 +47,33 @@ extern bool msc_debug_metadex3;
 /* When we switch to C++11, this can be switched to variadic templates instead
  * of this macro-based construction (see tinyformat.h).
  */
-#define MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC(n)                                  \
-    /** Log, if -debug=category switch is given OR category is NULL. */       \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_category_log(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        if (!LogAcceptCategory(category)) return 0;                           \
-        return DebugLogPrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));    \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int file_log(const char* format, TINYFORMAT_VARARGS(n))     \
-    {                                                                         \
-        return DebugLogPrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));    \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int file_log(TINYFORMAT_VARARGS(n))                         \
-    {                                                                         \
-        return DebugLogPrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));      \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int LogStatus(const char* format, TINYFORMAT_VARARGS(n))    \
-    {                                                                         \
-        return StatusLogPrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));   \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int LogStatus(TINYFORMAT_VARARGS(n))                        \
-    {                                                                         \
-        return StatusLogPrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));     \
+#define MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC(n)                                    \
+    /** Log, if -debug=category switch is given OR category is NULL. */         \
+    template<TINYFORMAT_ARGTYPES(n)>                                            \
+    static inline int mp_category_log(const char* category, const char* format, TINYFORMAT_VARARGS(n)) \
+    {                                                                           \
+        if (!LogAcceptCategory(category)) return 0;                             \
+        return LogFilePrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));       \
+    }                                                                           \
+    template<TINYFORMAT_ARGTYPES(n)>                                            \
+    static inline int file_log(const char* format, TINYFORMAT_VARARGS(n))       \
+    {                                                                           \
+        return LogFilePrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));       \
+    }                                                                           \
+    template<TINYFORMAT_ARGTYPES(n)>                                            \
+    static inline int file_log(TINYFORMAT_VARARGS(n))                           \
+    {                                                                           \
+        return LogFilePrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));         \
+    }                                                                           \
+    template<TINYFORMAT_ARGTYPES(n)>                                            \
+    static inline int PrintToConsole(const char* format, TINYFORMAT_VARARGS(n)) \
+    {                                                                           \
+        return ConsolePrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));       \
+    }                                                                           \
+    template<TINYFORMAT_ARGTYPES(n)>                                            \
+    static inline int PrintToConsole(TINYFORMAT_VARARGS(n))                     \
+    {                                                                           \
+        return ConsolePrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));         \
     }
 
 TINYFORMAT_FOREACH_ARGNUM(MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC)

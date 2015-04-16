@@ -319,7 +319,7 @@ void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
       {
       CMPMetaDEx obj = *it;
 
-        if (bDisplay) LogStatus("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) , obj.ToString());
+        if (bDisplay) PrintToConsole("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) , obj.ToString());
         else file_log("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) , obj.ToString());
 
         // extra checks: price or either of the amounts is 0
