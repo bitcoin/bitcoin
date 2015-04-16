@@ -8,6 +8,7 @@
 #include "init.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "masternodeconfig.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
