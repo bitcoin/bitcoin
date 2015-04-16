@@ -483,7 +483,7 @@ public:
 
     int size() const
     {
-        return vValues.size();
+        return static_cast<int>(vValues.size());
     }
 
     std::vector<T> sorted () const
