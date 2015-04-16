@@ -1500,9 +1500,41 @@ uint64_t txFee = 0;
   return 0;
 }
 
+/**
+ * Reports the progress of the initial transaction scanning to the user.
+ *
+ * @see msc_initial_scan()
+ *
+ * @param nFirst[in]    The first block
+ * @param nCurrent[in]  The current block
+ * @param nLast[in]     The last block
+ */
+static void ReportScanProgress(int nFirst, int nCurrent, int nLast)
+{
+    double dProgress = 100.0 * (nCurrent - nFirst) / (nLast - nFirst);
+    PrintToConsole("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nCurrent, nLast, dProgress);
+}
 
-// parse blocks, potential right from Mastercoin's Exodus
-int msc_initial_scan(int nFirstBlock)
+/**
+ * Scans the blockchain for meta transactions.
+ *
+ * It scans the blockchain, starting at the given block index, to the current
+ * tip, much like as if new block were arriving and being processed on the fly.
+ *
+ * Every 30 seconds the progress of the scan is reported to the user.
+ *
+ * In case the current block being processed is not part of the active chain, or
+ * if a block could not be retrieved from the disk, then the scan stops early.
+ * Likewise, global shutdown requests are honored, and stop the scan progress.
+ *
+ * @see mastercore_handler_block_begin()
+ * @see mastercore_handler_tx()
+ * @see mastercore_handler_block_end()
+ *
+ * @param nFirstBlock[in]  The index of the first block to scan
+ * @return An exit code, indicating success or failure
+ */
+static int msc_initial_scan(int nFirstBlock)
 {
     int64_t nNow = GetTime();
     unsigned int nTotal = 0;
@@ -1521,9 +1553,8 @@ int msc_initial_scan(int nFirstBlock)
             break;
         }
 
-        if (GetTime() >= nNow + 15) {
-            double dProgress = 100.0 * (nBlock - nFirstBlock) / (nLastBlock - nFirstBlock);
-            PrintToConsole("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nBlock, nLastBlock, dProgress);
+        if (GetTime() >= nNow + 30) { // seconds
+            ReportScanProgress(nFirstBlock, nBlock, nLastBlock);
             nNow = GetTime();
         }
 
@@ -1532,10 +1563,10 @@ int msc_initial_scan(int nFirstBlock)
         std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
 
         if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
-            __FUNCTION__, nBlock, nLastBlock, strBlockHash.c_str(), __LINE__, __FILE__);
+            __FUNCTION__, nBlock, nLastBlock, strBlockHash, __LINE__, __FILE__);
 
         CBlock block;
-        ReadBlockFromDisk(block, pblockindex);
+        if (!ReadBlockFromDisk(block, pblockindex)) break;
 
         unsigned int nTxNum = 0;
         mastercore_handler_block_begin(nBlock, pblockindex);
