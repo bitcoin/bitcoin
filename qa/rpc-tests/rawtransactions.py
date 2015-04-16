@@ -29,14 +29,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         print "Mining blocks..."
         feeTolerance = 2 #if the fee's positive delta is higher than this value tests will fail, neg. delta always fail the tests
         
-        self.nodes[2].setgenerate(True, 1)
-        self.nodes[0].setgenerate(True, 101)
+        self.nodes[2].generate(1)
+        self.nodes[0].generate(101)
         self.sync_all()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5);
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0);
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0);
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
 
         ###############
@@ -383,7 +383,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # send 1.2 BTC to msig addr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2);
         self.sync_all()
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
         
         oldBalance = self.nodes[1].getbalance()
@@ -395,7 +395,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedTx = self.nodes[2].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[2].sendrawtransaction(signedTx['hex'])
         self.sync_all()
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
         
         # make sure funds are received at node1
@@ -435,7 +435,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(signedTx['hex'])
         self.sync_all()
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         self.sync_all()
         
         # make sure funds are received at node1
@@ -450,13 +450,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         #empty node1, send some small coins from node0 to node1
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True);
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
         
         for i in range(0,20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01);
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
         
         #fund a tx with ~20 small inputs
@@ -481,13 +481,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         #again, empty node1, send some small coins from node0 to node1
         self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True);
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
         
         for i in range(0,20):
             self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.01);
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
         
         #fund a tx with ~20 small inputs
@@ -500,7 +500,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedAndSignedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
         self.sync_all()
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         self.sync_all()
         assert_equal(oldBalance+Decimal('50.19000000'), self.nodes[0].getbalance()) #0.19+block reward
         
