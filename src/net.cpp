@@ -1100,10 +1100,16 @@ void ThreadDNSAddressSeed()
         } else {
             vector<CNetAddr> vIPs;
             vector<CAddress> vAdd;
-            if (LookupHost(seed.host.c_str(), vIPs))
+
+            //if the seed supports xored output, use a random subdomain x+(a-z)
+            //x[a-z].<NS> indicates that the dns seed server should response with XORed ips
+            if (LookupHost(((seed.fXoredIPs ? "x"+std::string(1, static_cast<char>(97+(int)GetRand(25)))+"." : "") + seed.host).c_str(), vIPs))
             {
                 BOOST_FOREACH(CNetAddr& ip, vIPs)
                 {
+                    if (seed.fXoredIPs)
+                        ip.XORAddress();
+                    
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old

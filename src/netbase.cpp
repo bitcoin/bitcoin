@@ -1067,6 +1067,18 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
     }
 }
 
+void CNetAddr::XORAddress()
+{
+    unsigned char xorKey[16] = {0xF, 0xA, 0x9, 0xC, 0xF, 0xB, 0x1, 0x9, 0x9, 0xA, 0xC, 0x5, 0xA, 0xB, 0xF, 0xF};
+    int offset = 0;
+    if (!IsIPv6())
+        offset = 12;
+   
+    for (int i=offset; i<16; i++) {
+        ip[i]=ip[i]^xorKey[i-offset];
+    }
+}
+
 void CService::Init()
 {
     port = 0;
