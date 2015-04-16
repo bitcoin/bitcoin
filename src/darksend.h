@@ -9,6 +9,7 @@
 #include "sync.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "darksend-relay.h"
 
 class CTxIn;

@@ -15,6 +15,7 @@
 #include "instantx.h"
 #include "darksend.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "pow.h"

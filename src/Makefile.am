@@ -107,6 +107,7 @@ BITCOIN_CORE_H = \
   limitedmap.h \
   main.h \
   masternode.h \
+  masternode-payments.h \
   masternode-pos.h \
   masternodeman.h \
   masternodeconfig.h \
@@ -278,6 +279,7 @@ libbitcoin_common_a_SOURCES = \
   darksend.cpp \
   darksend-relay.cpp \
   masternode.cpp \
+  masternode-payments.cpp \
   masternode-pos.cpp \
   masternodeman.cpp \
   masternodeconfig.cpp \

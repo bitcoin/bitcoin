@@ -24,6 +24,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
+#include "masternode-payments.h"
 #include "masternodeman.h"
 #include "spork.h"
 #include "utilmoneystr.h"
