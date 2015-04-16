@@ -531,15 +531,25 @@ Value masternode(const Array& params, bool fHelp)
     if (strCommand == "winners")
     {
         Object obj;
+        std::string strMode = "addr";
+    
+        if (params.size() >= 1) strMode = params[0].get_str();
 
         for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
             CScript payee;
-            if(masternodePayments.GetBlockPayee(nHeight, payee)){
+            CTxIn vin;
+            if(masternodePayments.GetBlockPayee(nHeight, payee, vin)){
                 CTxDestination address1;
                 ExtractDestination(payee, address1);
                 CBitcoinAddress address2(address1);
-                obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       address2.ToString().c_str()));
+
+                if(strMode == "addr")
+                    obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       address2.ToString().c_str()));
+
+                if(strMode == "vin")
+                    obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       vin.ToString().c_str()));
+
             } else {
                 obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       ""));
             }

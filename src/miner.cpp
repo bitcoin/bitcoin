@@ -141,8 +141,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         if(bMasterNodePayment) {
             bool hasPayment = true;
+            CTxIn vin;
             //spork
-            if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee)){
+            if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, pblock->payee, vin)){
                 //no masternode detected
                 CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
                 if(winningNode){

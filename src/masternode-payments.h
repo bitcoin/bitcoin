@@ -101,8 +101,7 @@ public:
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);
 
-    //slow
-    bool GetBlockPayee(int nBlockHeight, CScript& payee);
+    bool GetBlockPayee(int nBlockHeight, CScript& payee, CTxIn& vin);
 };
 
 

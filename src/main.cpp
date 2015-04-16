@@ -2953,7 +2953,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     bool foundPaymentAndPayee = false;
 
                     CScript payee;
-                    if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee) || payee == CScript()){
+                    CTxIn vin;
+                    if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee, vin) || payee == CScript()){
                         foundPayee = true; //doesn't require a specific payee
                         foundPaymentAmount = true;
                         foundPaymentAndPayee = true;
@@ -3284,6 +3285,18 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     if(!fLiteMode){
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
+
+            CScript payee;
+            CTxIn vin;
+            if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight, payee, vin)){
+                //UPDATE MASTERNODE LAST PAID TIME
+                CMasternode* pmn = mnodeman.Find(vin);
+                if(pmn != NULL) pmn->nLastPaid = GetAdjustedTime(); 
+
+                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", chainActive.Tip()->nHeight);
+            }
+
+
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
