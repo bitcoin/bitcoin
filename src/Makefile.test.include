@@ -81,6 +81,8 @@ endif
 
 # Omni Core extensions
 OMNICORE_TESTS = \
+  test/mastercore_create_payload_tests.cpp \
+  test/mastercore_encoding_c_tests.cpp \
   test/mastercore_obfuscation_tests.cpp \
   test/mastercore_rounduint64_tests.cpp \
   test/mastercore_script_dust_tests.cpp \

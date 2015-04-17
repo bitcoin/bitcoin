@@ -93,7 +93,7 @@ using namespace mastercore;
 // comment out MY_HACK & others here - used for Unit Testing only !
 // #define MY_HACK
 
-string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
+static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
@@ -109,7 +109,12 @@ uint64_t global_balance_reserved_maineco[100000];
 uint64_t global_balance_money_testeco[100000];
 uint64_t global_balance_reserved_testeco[100000];
 
-bool autoCommit = true; // whether to automatically commit created transactions, override with --autocommit=false
+/**
+ * Used to indicate, whether to automatically commit created transactions.
+ *
+ * Can be set with configuration "-autocommit" or RPC "setautocommit_OMNI".
+ */
+bool autoCommit = true;
 
 string global_alert_message;
 
@@ -3770,18 +3775,20 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex) 
     return 0;
 }
 
-const std::string ExodusAddress()
+/**
+ * Returns the Exodus address.
+ *
+ * Main network:
+ *   1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P
+ *
+ * Test network:
+ *   mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv
+ *
+ * @return The Exodus address
+ */
+const CBitcoinAddress ExodusAddress()
 {
-  return string(exodus_address);
-}
-
-const std::string NotificationAddress()
-{
-static const string addr = "1MpNote1jsHkbQLwEmgoMr29EoUC1nyxxV";
-
-  if (isNonMainNet()) {}; // TODO pick a notification address for TestNet
-
-  return addr;
+    return CBitcoinAddress(exodus_address);
 }
 
  // the 31-byte packet & the packet #
