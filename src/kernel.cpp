@@ -617,7 +617,7 @@ uint32_t GetStakeModifierChecksum(const CBlockIndex* pindex)
     ss << pindex->nFlags << pindex->hashProofOfStake << pindex->nStakeModifier;
     uint256 hashChecksum = Hash(ss.begin(), ss.end());
     hashChecksum >>= (256 - 32);
-    return hashChecksum.Get64();
+    return static_cast<uint32_t>(hashChecksum.Get64());
 }
 
 // Check stake modifier hard checkpoints
