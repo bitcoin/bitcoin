@@ -1501,7 +1501,10 @@ uint64_t txFee = 0;
 }
 
 /**
- * Reports the progress of the initial transaction scanning to the user.
+ * Reports the progress of the initial transaction scanning.
+ *
+ * The progress is printed to the console, written to the debug log file, and
+ * the RPC status, as well as the splash screen progress label, are updated.
  *
  * @see msc_initial_scan()
  *
@@ -1512,7 +1515,11 @@ uint64_t txFee = 0;
 static void ReportScanProgress(int nFirst, int nCurrent, int nLast)
 {
     double dProgress = 100.0 * (nCurrent - nFirst) / (nLast - nFirst);
-    PrintToConsole("Still scanning.. at block %d of %d. Progress: %.2f %%\n", nCurrent, nLast, dProgress);
+    std::string strProgress = strprintf(
+            "Still scanning.. at block %d of %d. Progress: %.2f %%", nCurrent, nLast, dProgress);
+
+    PrintToConsole(strProgress + "\n");
+    uiInterface.InitMessage(strProgress);
 }
 
 /**
@@ -1521,7 +1528,7 @@ static void ReportScanProgress(int nFirst, int nCurrent, int nLast)
  * It scans the blockchain, starting at the given block index, to the current
  * tip, much like as if new block were arriving and being processed on the fly.
  *
- * Every 30 seconds the progress of the scan is reported to the user.
+ * Every 30 seconds the progress of the scan is reported.
  *
  * In case the current block being processed is not part of the active chain, or
  * if a block could not be retrieved from the disk, then the scan stops early.
