@@ -116,16 +116,16 @@ ifdef USE_ASM
 OBJS += scrypt-asm/obj/scrypt-arm.o scrypt-asm/obj/scrypt-x86.o scrypt-asm/obj/scrypt-x86_64.o scrypt-asm/obj/asm-wrapper.o
 
 scrypt-asm/obj/scrypt-x86.o: scrypt-asm/scrypt-x86.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 scrypt-asm/obj/scrypt-x86_64.o: scrypt-asm/scrypt-x86_64.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 scrypt-asm/obj/scrypt-arm.o: scrypt-asm/scrypt-arm.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 scrypt-asm/obj/asm-wrapper.o: scrypt-asm/asm-wrapper.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 else
 ifdef USE_SSE2
 # Intrinsic implementation
@@ -133,13 +133,13 @@ DEFS += -DUSE_SSE2
 OBJS += scrypt-intrin/obj/scrypt-sse2.o
 
 scrypt-intrin/obj/scrypt-sse2.o: scrypt-intrin/scrypt-sse2.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 else
 # Generic implementation
 OBJS += obj/scrypt-generic.o
 
 obj/scrypt-generic.o: scrypt-generic.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 endif
 endif
 
