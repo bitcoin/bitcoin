@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
+#include <limits>
 #include <deque>
 #ifndef Q_MOC_RUN
 #include <boost/array.hpp>
@@ -233,7 +234,7 @@ public:
         nLastSendEmpty = GetTime();
         nTimeConnected = GetTime();
         nHeaderStart = -1;
-        nMessageStart = UINT_MAX;
+        nMessageStart = std::numeric_limits<uint32_t>::max();
         addr = addrIn;
         addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
@@ -375,7 +376,7 @@ public:
             return;
         vSend.resize(nHeaderStart);
         nHeaderStart = -1;
-        nMessageStart = UINT_MAX;
+        nMessageStart = std::numeric_limits<uint32_t>::max();
         LEAVE_CRITICAL_SECTION(cs_vSend);
 
         if (fDebug)
@@ -410,7 +411,7 @@ public:
         }
 
         nHeaderStart = -1;
-        nMessageStart = UINT_MAX;
+        nMessageStart = std::numeric_limits<uint32_t>::max();
         LEAVE_CRITICAL_SECTION(cs_vSend);
     }
 

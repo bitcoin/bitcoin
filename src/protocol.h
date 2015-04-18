@@ -13,6 +13,7 @@
 #include "serialize.h"
 #include "netbase.h"
 #include <string>
+#include <limits>
 #include "uint256.h"
 
 extern bool fTestNet;
