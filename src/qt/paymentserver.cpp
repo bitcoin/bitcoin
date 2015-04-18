@@ -1,23 +1,25 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "paymentserver.h"
 
 #include "bitcoinunits.h"
-#include "guiconstants.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 
 #include "base58.h"
+#include "chainparams.h"
 #include "ui_interface.h"
+#include "util.h"
 #include "wallet.h"
 
 #include <cstdlib>
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
+
 #include <QApplication>
 #include <QByteArray>
 #include <QDataStream>
@@ -46,12 +48,19 @@
 #endif
 
 using namespace boost;
+using namespace std;
 
 const int BITCOIN_IPC_CONNECT_TIMEOUT = 1000; // milliseconds
 const QString BITCOIN_IPC_PREFIX("dash:");
-const char* BITCOIN_REQUEST_MIMETYPE = "application/dash-paymentrequest";
-const char* BITCOIN_PAYMENTACK_MIMETYPE = "application/dash-paymentack";
-const char* BITCOIN_PAYMENTACK_CONTENTTYPE = "application/dash-payment";
+// BIP70 payment protocol messages
+const char* BIP70_MESSAGE_PAYMENTACK = "PaymentACK";
+const char* BIP70_MESSAGE_PAYMENTREQUEST = "PaymentRequest";
+// BIP71 payment protocol media types
+const char* BIP71_MIMETYPE_PAYMENT = "application/dash-payment";
+const char* BIP71_MIMETYPE_PAYMENTACK = "application/dash-paymentack";
+const char* BIP71_MIMETYPE_PAYMENTREQUEST = "application/dash-paymentrequest";
+// BIP70 max payment request size in bytes (DoS protection)
+const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 
 X509_STORE* PaymentServer::certStore = NULL;
 void PaymentServer::freeCertStore()
@@ -70,7 +79,7 @@ void PaymentServer::freeCertStore()
 //
 static QString ipcServerName()
 {
-    QString name("DarkcoinQt");
+    QString name("DashQt");
 
     // Append a simple hash of the datadir
     // Note that GetDataDir(true) returns a different path
@@ -161,7 +170,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
             continue;
         }
     }
-    qDebug() << "PaymentServer::LoadRootCAs : Loaded " << nRootCerts << " root certificates";
+    qWarning() << "PaymentServer::LoadRootCAs : Loaded " << nRootCerts << " root certificates";
 
     // Project for another day:
     // Fetch certificate revocation lists, and add them to certStore.
@@ -179,7 +188,10 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
 // and the items in savedPaymentRequest will be handled
 // when uiReady() is called.
 //
-bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
+// Warning: ipcSendCommandLine() is called early in init,
+// so don't use "emit message()", but "QMessageBox::"!
+//
+void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
 {
     for (int i = 1; i < argc; i++)
     {
@@ -187,6 +199,10 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
         if (arg.startsWith("-"))
             continue;
 
+        // If the dash: URI contains a payment request, we are not able to detect the
+        // network as that would require fetching and parsing the payment request.
+        // That means clicking such an URI which contains a testnet payment request
+        // will start a mainnet instance and throw a "wrong network" error.
         if (arg.startsWith(BITCOIN_IPC_PREFIX, Qt::CaseInsensitive)) // dash: URI
         {
             savedPaymentRequests.append(arg);
@@ -196,10 +212,13 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             {
                 CBitcoinAddress address(r.address.toStdString());
 
-                SelectParams(CChainParams::MAIN);
-                if (!address.IsValid())
+                if (address.IsValid(Params(CBaseChainParams::MAIN)))
                 {
-                    SelectParams(CChainParams::TESTNET);
+                    SelectParams(CBaseChainParams::MAIN);
+                }
+                else if (address.IsValid(Params(CBaseChainParams::TESTNET)))
+                {
+                    SelectParams(CBaseChainParams::TESTNET);
                 }
             }
         }
@@ -208,22 +227,25 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             savedPaymentRequests.append(arg);
 
             PaymentRequestPlus request;
-            if (readPaymentRequest(arg, request))
+            if (readPaymentRequestFromFile(arg, request))
             {
                 if (request.getDetails().network() == "main")
-                    SelectParams(CChainParams::MAIN);
-                else
-                    SelectParams(CChainParams::TESTNET);
+                {
+                    SelectParams(CBaseChainParams::MAIN);
+                }
+                else if (request.getDetails().network() == "test")
+                {
+                    SelectParams(CBaseChainParams::TESTNET);
+                }
             }
         }
         else
         {
             // Printing to debug.log is about the best we can do here, the
             // GUI hasn't started yet so we can't pop up a message box.
-            qDebug() << "PaymentServer::ipcSendCommandLine : Payment request file does not exist: " << arg;
+            qWarning() << "PaymentServer::ipcSendCommandLine : Payment request file does not exist: " << arg;
         }
     }
-    return true;
 }
 
 //
@@ -242,6 +264,7 @@ bool PaymentServer::ipcSendCommandLine()
         if (!socket->waitForConnected(BITCOIN_IPC_CONNECT_TIMEOUT))
         {
             delete socket;
+            socket = NULL;
             return false;
         }
 
@@ -250,12 +273,14 @@ bool PaymentServer::ipcSendCommandLine()
         out.setVersion(QDataStream::Qt_4_0);
         out << r;
         out.device()->seek(0);
+
         socket->write(block);
         socket->flush();
-
         socket->waitForBytesWritten(BITCOIN_IPC_CONNECT_TIMEOUT);
         socket->disconnectFromServer();
+
         delete socket;
+        socket = NULL;
         fResult = true;
     }
 
@@ -338,20 +363,14 @@ void PaymentServer::initNetManager()
 
     QNetworkProxy proxy;
 
-    // Query active proxy (fails if no SOCKS5 proxy)
+    // Query active SOCKS5 proxy
     if (optionsModel->getProxySettings(proxy)) {
-        if (proxy.type() == QNetworkProxy::Socks5Proxy) {
-            netManager->setProxy(proxy);
+        netManager->setProxy(proxy);
 
-            qDebug() << "PaymentServer::initNetManager : Using SOCKS5 proxy" << proxy.hostName() << ":" << proxy.port();
-        }
-        else
-            qDebug() << "PaymentServer::initNetManager : No active proxy server found.";
+        qDebug() << "PaymentServer::initNetManager : Using SOCKS5 proxy" << proxy.hostName() << ":" << proxy.port();
     }
     else
-        emit message(tr("Net manager warning"),
-            tr("Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy."),
-            CClientUIInterface::MSG_WARNING);
+        qDebug() << "PaymentServer::initNetManager : No active proxy server found.";
 
     connect(netManager, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(netRequestFinished(QNetworkReply*)));
@@ -400,7 +419,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
             }
             else
             {
-                qDebug() << "PaymentServer::handleURIOrFile : Invalid URL: " << fetchUrl;
+                qWarning() << "PaymentServer::handleURIOrFile : Invalid URL: " << fetchUrl;
                 emit message(tr("URI handling"),
                     tr("Payment request fetch URL is invalid: %1").arg(fetchUrl.toString()),
                     CClientUIInterface::ICON_WARNING);
@@ -412,10 +431,18 @@ void PaymentServer::handleURIOrFile(const QString& s)
         {
             SendCoinsRecipient recipient;
             if (GUIUtil::parseBitcoinURI(s, &recipient))
-                emit receivedPaymentRequest(recipient);
+            {
+                CBitcoinAddress address(recipient.address.toStdString());
+                if (!address.IsValid()) {
+                    emit message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
+                        CClientUIInterface::MSG_ERROR);
+                }
+                else
+                    emit receivedPaymentRequest(recipient);
+            }
             else
                 emit message(tr("URI handling"),
-                    tr("URI can not be parsed! This can be caused by an invalid Dash address or malformed URI parameters."),
+                    tr("URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters."),
                     CClientUIInterface::ICON_WARNING);
 
             return;
@@ -426,12 +453,14 @@ void PaymentServer::handleURIOrFile(const QString& s)
     {
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
-        if (readPaymentRequest(s, request) && processPaymentRequest(request, recipient))
-            emit receivedPaymentRequest(recipient);
-        else
+        if (!readPaymentRequestFromFile(s, request))
+        {
             emit message(tr("Payment request file handling"),
-                tr("Payment request file can not be read or processed! This can be caused by an invalid payment request file."),
+                tr("Payment request file cannot be read! This can be caused by an invalid payment request file."),
                 CClientUIInterface::ICON_WARNING);
+        }
+        else if (processPaymentRequest(request, recipient))
+            emit receivedPaymentRequest(recipient);
 
         return;
     }
@@ -458,18 +487,25 @@ void PaymentServer::handleURIConnection()
     handleURIOrFile(msg);
 }
 
-bool PaymentServer::readPaymentRequest(const QString& filename, PaymentRequestPlus& request)
+//
+// Warning: readPaymentRequestFromFile() is used in ipcSendCommandLine()
+// so don't use "emit message()", but "QMessageBox::"!
+//
+bool PaymentServer::readPaymentRequestFromFile(const QString& filename, PaymentRequestPlus& request)
 {
     QFile f(filename);
-    if (!f.open(QIODevice::ReadOnly))
-    {
-        qDebug() << "PaymentServer::readPaymentRequest : Failed to open " << filename;
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << QString("PaymentServer::%1: Failed to open %2").arg(__func__).arg(filename);
         return false;
     }
 
-    if (f.size() > MAX_PAYMENT_REQUEST_SIZE)
-    {
-        qDebug() << "PaymentServer::readPaymentRequest : " << filename << " too large";
+    // BIP70 DoS protection
+    if (f.size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
+        qWarning() << QString("PaymentServer::%1: Payment request %2 is too large (%3 bytes, allowed %4 bytes).")
+            .arg(__func__)
+            .arg(filename)
+            .arg(f.size())
+            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
         return false;
     }
 
@@ -483,26 +519,54 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
     if (!optionsModel)
         return false;
 
+    if (request.IsInitialized()) {
+        const payments::PaymentDetails& details = request.getDetails();
+
+        // Payment request network matches client network?
+        if (details.network() != Params().NetworkIDString())
+        {
+            emit message(tr("Payment request rejected"), tr("Payment request network doesn't match client network."),
+                CClientUIInterface::MSG_ERROR);
+
+            return false;
+        }
+
+        // Expired payment request?
+        if (details.has_expires() && (int64_t)details.expires() < GetTime())
+        {
+            emit message(tr("Payment request rejected"), tr("Payment request has expired."),
+                CClientUIInterface::MSG_ERROR);
+
+            return false;
+        }
+    }
+    else {
+        emit message(tr("Payment request error"), tr("Payment request is not initialized."),
+            CClientUIInterface::MSG_ERROR);
+
+        return false;
+    }
+
     recipient.paymentRequest = request;
     recipient.message = GUIUtil::HtmlEscape(request.getDetails().memo());
 
     request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
 
-    QList<std::pair<CScript, qint64> > sendingTos = request.getPayTo();
+    QList<std::pair<CScript, CAmount> > sendingTos = request.getPayTo();
     QStringList addresses;
 
-    foreach(const PAIRTYPE(CScript, qint64)& sendingTo, sendingTos) {
+    foreach(const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
         // Extract and check destination addresses
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
             // Append destination address
             addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
         }
-        else if (!recipient.authenticatedMerchant.isEmpty()){
+        else if (!recipient.authenticatedMerchant.isEmpty()) {
             // Insecure payments to custom dash addresses are not supported
             // (there is no good way to tell the user where they are paying in a way
             // they'd have a chance of understanding).
-            emit message(tr("Payment request error"),
+            emit message(tr("Payment request rejected"),
                 tr("Unverified payment requests to custom payment scripts are unsupported."),
                 CClientUIInterface::MSG_ERROR);
             return false;
@@ -510,12 +574,11 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
 
         // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
-        if (txOut.IsDust(CTransaction::nMinRelayTxFee)) {
-            QString msg = tr("Requested payment amount of %1 is too small (considered dust).")
-                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second));
+        if (txOut.IsDust(::minRelayTxFee)) {
+            emit message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
+                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
+                CClientUIInterface::MSG_ERROR);
 
-            qDebug() << "PaymentServer::processPaymentRequest : " << msg;
-            emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);
             return false;
         }
 
@@ -537,10 +600,10 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
 void PaymentServer::fetchRequest(const QUrl& url)
 {
     QNetworkRequest netRequest;
-    netRequest.setAttribute(QNetworkRequest::User, "PaymentRequest");
+    netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTREQUEST);
     netRequest.setUrl(url);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
-    netRequest.setRawHeader("Accept", BITCOIN_REQUEST_MIMETYPE);
+    netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTREQUEST);
     netManager->get(netRequest);
 }
 
@@ -551,11 +614,11 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
         return;
 
     QNetworkRequest netRequest;
-    netRequest.setAttribute(QNetworkRequest::User, "PaymentACK");
+    netRequest.setAttribute(QNetworkRequest::User, BIP70_MESSAGE_PAYMENTACK);
     netRequest.setUrl(QString::fromStdString(details.payment_url()));
-    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BITCOIN_PAYMENTACK_CONTENTTYPE);
+    netRequest.setHeader(QNetworkRequest::ContentTypeHeader, BIP71_MIMETYPE_PAYMENT);
     netRequest.setRawHeader("User-Agent", CLIENT_NAME.c_str());
-    netRequest.setRawHeader("Accept", BITCOIN_PAYMENTACK_MIMETYPE);
+    netRequest.setRawHeader("Accept", BIP71_MIMETYPE_PAYMENTACK);
 
     payments::Payment payment;
     payment.set_merchant_data(details.merchant_data());
@@ -566,25 +629,24 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
     std::string strAccount = account.toStdString();
     set<CTxDestination> refundAddresses = wallet->GetAccountAddresses(strAccount);
     if (!refundAddresses.empty()) {
-        CScript s; s.SetDestination(*refundAddresses.begin());
+        CScript s = GetScriptForDestination(*refundAddresses.begin());
         payments::Output* refund_to = payment.add_refund_to();
         refund_to->set_script(&s[0], s.size());
     }
     else {
         CPubKey newKey;
         if (wallet->GetKeyFromPool(newKey)) {
-            LOCK(wallet->cs_wallet); // SetAddressBook
             CKeyID keyID = newKey.GetID();
             wallet->SetAddressBook(keyID, strAccount, "refund");
 
-            CScript s; s.SetDestination(keyID);
+            CScript s = GetScriptForDestination(keyID);
             payments::Output* refund_to = payment.add_refund_to();
             refund_to->set_script(&s[0], s.size());
         }
         else {
-            // This should never happen, because sending coins should have just unlocked the wallet
-            // and refilled the keypool
-            qDebug() << "PaymentServer::fetchPaymentACK : Error getting refund key, refund_to not set";
+            // This should never happen, because sending coins should have
+            // just unlocked the wallet and refilled the keypool.
+            qWarning() << "PaymentServer::fetchPaymentACK : Error getting refund key, refund_to not set";
         }
     }
 
@@ -595,21 +657,33 @@ void PaymentServer::fetchPaymentACK(CWallet* wallet, SendCoinsRecipient recipien
         netManager->post(netRequest, serData);
     }
     else {
-        // This should never happen, either:
-        qDebug() << "PaymentServer::fetchPaymentACK : Error serializing payment message";
+        // This should never happen, either.
+        qWarning() << "PaymentServer::fetchPaymentACK : Error serializing payment message";
     }
 }
 
 void PaymentServer::netRequestFinished(QNetworkReply* reply)
 {
     reply->deleteLater();
-    if (reply->error() != QNetworkReply::NoError)
-    {
+
+    // BIP70 DoS protection
+    if (reply->size() > BIP70_MAX_PAYMENTREQUEST_SIZE) {
+        QString msg = tr("Payment request %1 is too large (%2 bytes, allowed %3 bytes).")
+            .arg(reply->request().url().toString())
+            .arg(reply->size())
+            .arg(BIP70_MAX_PAYMENTREQUEST_SIZE);
+
+        qWarning() << QString("PaymentServer::%1:").arg(__func__) << msg;
+        emit message(tr("Payment request DoS protection"), msg, CClientUIInterface::MSG_ERROR);
+        return;
+    }
+
+    if (reply->error() != QNetworkReply::NoError) {
         QString msg = tr("Error communicating with %1: %2")
             .arg(reply->request().url().toString())
             .arg(reply->errorString());
 
-        qDebug() << "PaymentServer::netRequestFinished : " << msg;
+        qWarning() << "PaymentServer::netRequestFinished: " << msg;
         emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);
         return;
     }
@@ -617,25 +691,23 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
     QByteArray data = reply->readAll();
 
     QString requestType = reply->request().attribute(QNetworkRequest::User).toString();
-    if (requestType == "PaymentRequest")
+    if (requestType == BIP70_MESSAGE_PAYMENTREQUEST)
     {
         PaymentRequestPlus request;
         SendCoinsRecipient recipient;
-        if (request.parse(data) && processPaymentRequest(request, recipient))
+        if (!request.parse(data))
         {
-            emit receivedPaymentRequest(recipient);
-        }
-        else
-        {
-            qDebug() << "PaymentServer::netRequestFinished : Error processing payment request";
+            qWarning() << "PaymentServer::netRequestFinished : Error parsing payment request";
             emit message(tr("Payment request error"),
-                tr("Payment request can not be parsed or processed!"),
+                tr("Payment request cannot be parsed!"),
                 CClientUIInterface::MSG_ERROR);
         }
+        else if (processPaymentRequest(request, recipient))
+            emit receivedPaymentRequest(recipient);
 
         return;
     }
-    else if (requestType == "PaymentACK")
+    else if (requestType == BIP70_MESSAGE_PAYMENTACK)
     {
         payments::PaymentACK paymentACK;
         if (!paymentACK.ParseFromArray(data.data(), data.size()))
@@ -643,7 +715,7 @@ void PaymentServer::netRequestFinished(QNetworkReply* reply)
             QString msg = tr("Bad response from server %1")
                 .arg(reply->request().url().toString());
 
-            qDebug() << "PaymentServer::netRequestFinished : " << msg;
+            qWarning() << "PaymentServer::netRequestFinished : " << msg;
             emit message(tr("Payment request error"), msg, CClientUIInterface::MSG_ERROR);
         }
         else
@@ -659,7 +731,7 @@ void PaymentServer::reportSslErrors(QNetworkReply* reply, const QList<QSslError>
 
     QString errString;
     foreach (const QSslError& err, errs) {
-        qDebug() << "PaymentServer::reportSslErrors : " << err;
+        qWarning() << "PaymentServer::reportSslErrors : " << err;
         errString += err.errorString() + "\n";
     }
     emit message(tr("Network request error"), errString, CClientUIInterface::MSG_ERROR);

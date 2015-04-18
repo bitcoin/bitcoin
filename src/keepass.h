@@ -15,7 +15,6 @@
 #include <map>
 
 #include "json/json_spirit_value.h"
-#include "crypter.h"
 #include "allocators.h"
 
 class CKeePassIntegrator {

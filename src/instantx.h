@@ -5,15 +5,20 @@
 #ifndef INSTANTX_H
 #define INSTANTX_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
+
+/*
+    At 15 signatures, 1/2 of the masternode network can be owned by
+    one party without comprimising the security of InstantX
+    (1000/2150.0)**15 = 1.031e-05
+*/
+#define INSTANTX_SIGNATURES_REQUIRED           15
+#define INSTANTX_SIGNATURES_TOTAL              20
 
 using namespace std;
 using namespace boost;
@@ -65,13 +70,15 @@ public:
     bool SignatureValid();
     bool Sign();
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(txHash);
         READWRITE(vinMasternode);
         READWRITE(vchMasterNodeSignature);
         READWRITE(nBlockHeight);
-    )
+    }
 };
 
 class CTransactionLock
