@@ -238,7 +238,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     BOOST_REVERSE_FOREACH(CMasternodePaymentWinner& winner, vWinning)
     {
         //if we already have the same vin - we have one full payment cycle, break
-        if(vecLastPayments.size() > nMinimumAge) break;
+        if(vecLastPayments.size() > (unsigned int)nMinimumAge) break;
         vecLastPayments.push_back(winner.vin);
     }
 

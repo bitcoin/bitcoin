@@ -26,7 +26,7 @@
 #define MASTERNODE_REMOTELY_ENABLED            9
 
 #define MASTERNODE_MIN_CONFIRMATIONS           15
-#define MASTERNODE_MIN_DSEEP_SECONDS           (30*60)
+#define MASTERNODE_MIN_MNP_SECONDS             (30*60)
 #define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
 #define MASTERNODE_PING_SECONDS                (1*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
@@ -35,6 +35,8 @@
 using namespace std;
 
 class CMasternode;
+class CMasternodeBroadcast;
+class CMasternodePing;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
 bool GetBlockHash(uint256& hash, int nBlockHeight);
@@ -65,7 +67,7 @@ public:
     std::vector<unsigned char> sig;
     int activeState;
     int64_t sigTime; //dsee message times
-    int64_t lastDseep;
+    int64_t lastMnping;
     int64_t lastTimeSeen;
     int cacheInputAge;
     int cacheInputAgeBlock;
@@ -83,7 +85,9 @@ public:
 
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript donationAddress, int donationPercentage);
+    CMasternode(const CMasternodeBroadcast& other);
+    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage);
+
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
     {
@@ -99,7 +103,7 @@ public:
         swap(first.sig, second.sig);
         swap(first.activeState, second.activeState);
         swap(first.sigTime, second.sigTime);
-        swap(first.lastDseep, second.lastDseep);
+        swap(first.lastMnping, second.lastMnping);
         swap(first.lastTimeSeen, second.lastTimeSeen);
         swap(first.cacheInputAge, second.cacheInputAge);
         swap(first.cacheInputAgeBlock, second.cacheInputAgeBlock);
@@ -137,34 +141,38 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             LOCK(cs);
+
             READWRITE(vin);
             READWRITE(addr);
             READWRITE(pubkey);
             READWRITE(pubkey2);
             READWRITE(sig);
-            READWRITE(activeState);
             READWRITE(sigTime);
-            READWRITE(lastDseep);
             READWRITE(lastTimeSeen);
+            READWRITE(protocolVersion);
+            READWRITE(donationAddress);
+            READWRITE(donationPercentage);
+            READWRITE(nLastPaid);
+            READWRITE(activeState);
+            READWRITE(lastMnping);
             READWRITE(cacheInputAge);
             READWRITE(cacheInputAgeBlock);
             READWRITE(unitTest);
             READWRITE(allowFreeTx);
-            READWRITE(protocolVersion);
             READWRITE(nLastDsq);
-            READWRITE(donationAddress);
-            READWRITE(donationPercentage);
             READWRITE(nVote);
             READWRITE(lastVote);
             READWRITE(nScanningErrorCount);
             READWRITE(nLastScanningErrorBlockHeight);
-            READWRITE(nLastPaid);
     }
 
     int64_t SecondsSincePayment()
     {
         return (GetAdjustedTime() - nLastPaid);
+
     }
+
+    void UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
 
     void UpdateLastSeen(int64_t override=0)
     {
@@ -243,4 +251,72 @@ public:
 
 };
 
+
+//
+// The Masternode Broadcast Class : Contains a different serialize method for sending masternodes through the network
+//
+
+class CMasternodeBroadcast : public CMasternode
+{
+public:
+    CMasternodeBroadcast();
+    CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage);
+    CMasternodeBroadcast(const CMasternode& other);
+
+    bool CheckAndUpdate(int& nDoS, bool fRequested);
+    bool CheckInputsAndAdd(int& nDos, bool fRequested);
+    bool Sign(CKey& keyCollateralAddress);
+    void Relay(bool fRequested);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin);
+        READWRITE(addr);
+        READWRITE(pubkey);
+        READWRITE(pubkey2);
+        READWRITE(sig);
+        READWRITE(sigTime);
+        READWRITE(lastTimeSeen);
+        READWRITE(protocolVersion);
+        READWRITE(donationAddress);
+        READWRITE(donationPercentage);
+        READWRITE(nLastPaid);
+    }
+    
+
+};
+
+
+//
+// The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
+//
+
+class CMasternodePing
+{
+public:
+
+    CTxIn vin;
+    std::vector<unsigned char> vchSig;
+    int64_t sigTime; //dsee message times
+    //removed stop
+
+    CMasternodePing();
+    CMasternodePing(CTxIn& newVin);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin);
+        READWRITE(sigTime);
+        READWRITE(vchSig);
+    }
+
+    bool CheckAndUpdate(int& nDos);
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    void Relay();
+
+};
 #endif
