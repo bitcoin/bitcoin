@@ -40,6 +40,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
+#include "ui_interface.h"
 #include "wallet.h"
 
 #include <boost/algorithm/string.hpp>
@@ -148,6 +149,15 @@ static const int txRestrictionsRules[][3] = {
 CMPTxList *mastercore::p_txlistdb;
 CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
+
+// We don't always want to tell the user a fatal internal error occured (as AbortNode now does), so use our own abort (copied from 0.9)
+bool mastercore::AbortOmniNode(const std::string &strMessage) {
+    strMiscWarning = strMessage;
+    LogPrintf("*** %s\n", strMessage);
+    uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
+    StartShutdown();
+    return false;
+}
 
 // a copy from main.cpp -- unfortunately that one is in a private namespace
 int mastercore::GetHeight()
@@ -579,7 +589,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                          // can't be trusted to provide valid data, shutdown
                          file_log("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
                          PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
-                         if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode("Shutting down due to alert: " + getMasterCoreAlertTextOnly());
+                         if (!GetBoolArg("-overrideforcedshutdown", false)) AbortOmniNode("Shutting down due to alert: " + getMasterCoreAlertTextOnly());
                          return false;
                      }
 
