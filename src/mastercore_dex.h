@@ -2,6 +2,7 @@
 #define _MASTERCOIN_DEX 1
 
 #include "mastercore.h"
+#include "mastercore_log.h"
 
 #include "main.h"
 #include "tinyformat.h"

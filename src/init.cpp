@@ -71,9 +71,9 @@ enum BindFlags {
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 CClientUIInterface uiInterface;
 
-/** Omni Core initialization and shutdown handler */
-int mastercore_init(void);
-int mastercore_shutdown(void);
+// Omni Core initialization and shutdown handlers
+int mastercore_init();
+int mastercore_shutdown();
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1104,7 +1104,9 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 7.5: load omni core
 
-    uiInterface.InitMessage(_("Performing out of order block detection..."));
+#ifndef ENABLE_WALLET
+    bool fDisableWallet = true;
+#endif
 
     if (fDisableWallet) {
         return InitError(_(
