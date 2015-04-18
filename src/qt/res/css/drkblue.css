@@ -872,7 +872,7 @@ color:#818181;
 
 QWidget .QFrame#frameDarksend #formLayoutWidget .QProgressBar#darksendProgress::chunk {
 background-color: #3398CC;
-width:10px;
+width:1px;
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelAnonymizedText { /* Darksend Balance Label */

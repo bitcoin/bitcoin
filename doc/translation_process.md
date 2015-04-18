@@ -1,7 +1,7 @@
 Translations
 ============
 
-The Qt GUI can be easily translated into other languages. Here's how we
+The Dash Core GUI can be easily translated into other languages. Here's how we
 handle those translations.
 
 Files and Folders
@@ -17,10 +17,12 @@ automated.
 This file must be updated whenever a new translation is added. Please note that
 files must end with `.qm`, not `.ts`.
 
-    <qresource prefix="/translations">
-        <file alias="en">locale/dash_en.qm</file>
-        ...
-    </qresource>
+```xml
+<qresource prefix="/translations">
+    <file alias="en">locale/dash_en.qm</file>
+    ...
+</qresource>
+```
 
 ### src/qt/locale/
 
@@ -35,10 +37,10 @@ source for all other translations. Whenever a string in the code is changed
 this file must be updated to reflect those changes. A custom script is used
 to extract strings from the non-Qt parts. This script makes use of `gettext`,
 so make sure that utility is installed (ie, `apt-get install gettext` on
-Ubuntu/Debian). Once this has been updated, lupdate-qt4 (included in the Qt SDK)
-is used to update dash_en.ts. Simply run:
-
-    lupdate-qt4 ./contrib/dash-qt.pro -ts ./src/qt/locale/dash_en.ts
+Ubuntu/Debian). Once this has been updated, lupdate (included in the Qt SDK)
+is used to update dash_en.ts. This process has been automated, from src/,
+simply run:
+    make translate
 
 ##### Handling of plurals in the source file
 
@@ -82,6 +84,6 @@ postprocessing steps before committing the translations.
 1. `python contrib/devtools/update-translations.py`
 2. update `src/qt/dash.qrc` manually or via
    `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/        <file alias="\2">locale\/\1.qm<\/file>/'`
-3. update `src/qt/Makefile.am` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/  locale\/\1.ts \\/'`
+3. update `src/Makefile.qt.include` manually or via
+   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(dash_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
 4. `git add` new translations from `src/qt/locale/`

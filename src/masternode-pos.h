@@ -6,13 +6,10 @@
 #ifndef MASTERNODE_POS_H
 #define MASTERNODE_POS_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 
@@ -25,7 +22,7 @@ class CMasternodeScanningError;
 extern map<uint256, CMasternodeScanningError> mapMasternodeScanningErrors;
 extern CMasternodeScanning mnscan;
 
-static const int MIN_MASTERNODE_POS_PROTO_VERSION = 70076;
+static const int MIN_MASTERNODE_POS_PROTO_VERSION = 70077;
 
 /*
 	1% of the network is scanned every 2.5 minutes, making a full
@@ -100,15 +97,18 @@ public:
     	return (nErrorType > 0 && nErrorType <= SCANNING_ERROR_MAX);
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+
         READWRITE(vinMasternodeA);
         READWRITE(vinMasternodeB);
         READWRITE(nErrorType);
         READWRITE(nExpiration);
         READWRITE(nBlockHeight);
         READWRITE(vchMasterNodeSignature);
-    )
+    }
 };
 
 

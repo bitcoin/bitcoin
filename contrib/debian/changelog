@@ -1,3 +1,9 @@
+bitcoin (0.9.3-precise1) precise; urgency=medium
+
+  * New upstream releases.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Fri, 26 Sep 2014 12:01:00 -0700
+
 bitcoin (0.9.1-precise1) precise; urgency=medium
 
   * New upstream release.

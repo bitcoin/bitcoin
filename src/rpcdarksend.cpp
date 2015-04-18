@@ -4,18 +4,53 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "core.h"
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "masternodeconfig.h"
 #include "rpcserver.h"
-#include <boost/lexical_cast.hpp>
+#include "utilmoneystr.h"
 
+#include <boost/lexical_cast.hpp>
 #include <fstream>
 using namespace json_spirit;
 using namespace std;
+
+void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS)
+{
+    // Check amount
+    if (nValue <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+
+    if (nValue > pwalletMain->GetBalance())
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    string strError;
+    if (pwalletMain->IsLocked())
+    {
+        strError = "Error: Wallet locked, unable to create transaction!";
+        LogPrintf("SendMoney() : %s", strError);
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+
+    // Parse Dash address
+    CScript scriptPubKey = GetScriptForDestination(address);
+
+    // Create and send the transaction
+    CReserveKey reservekey(pwalletMain);
+    CAmount nFeeRequired;
+    if (!pwalletMain->CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError, NULL, coin_type))
+    {
+        if (nValue + nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+        LogPrintf("SendMoney() : %s\n", strError);
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+}
 
 Value darksend(const Array& params, bool fHelp)
 {
@@ -55,13 +90,14 @@ Value darksend(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
 
     // Amount
-    int64_t nAmount = AmountFromValue(params[1]);
+    CAmount nAmount = AmountFromValue(params[1]);
 
     // Wallet comments
     CWalletTx wtx;
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+//    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+    SendMoney(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
+//    if (strError != "")
+//        throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
 }
@@ -108,156 +144,12 @@ Value masternode(const Array& params, bool fHelp)
                 "  start        - Start masternode configured in dash.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
                 "  start-many   - Start all masternodes configured in masternode.conf\n"
-                "  stop         - Stop masternode configured in dash.conf\n"
-                "  stop-alias   - Stop single masternode by assigned alias configured in masternode.conf\n"
-                "  stop-many    - Stop all masternodes configured in masternode.conf\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
                 "  winners      - Print list of masternode winners\n"
                 "  vote-many    - Vote on a Dash initiative\n"
                 "  vote         - Vote on a Dash initiative\n"
                 );
-
-
-    if (strCommand == "stop")
-    {
-        if(!fMasterNode) return "you must set masternode=1 in the configuration";
-
-        if(pwalletMain->IsLocked()) {
-            SecureString strWalletPass;
-            strWalletPass.reserve(100);
-
-            if (params.size() == 2){
-                strWalletPass = params[1].get_str().c_str();
-            } else {
-                throw runtime_error(
-                    "Your wallet is locked, passphrase is required\n");
-            }
-
-            if(!pwalletMain->Unlock(strWalletPass)){
-                return "incorrect passphrase";
-            }
-        }
-
-        std::string errorMessage;
-        if(!activeMasternode.StopMasterNode(errorMessage)) {
-        	return "stop failed: " + errorMessage;
-        }
-        pwalletMain->Lock();
-
-        if(activeMasternode.status == MASTERNODE_STOPPED) return "successfully stopped masternode";
-        if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode";
-
-        return "unknown";
-    }
-
-    if (strCommand == "stop-alias")
-    {
-	    if (params.size() < 2){
-			throw runtime_error(
-			"command needs at least 2 parameters\n");
-	    }
-
-	    std::string alias = params[1].get_str().c_str();
-
-    	if(pwalletMain->IsLocked()) {
-    		SecureString strWalletPass;
-    	    strWalletPass.reserve(100);
-
-			if (params.size() == 3){
-				strWalletPass = params[2].get_str().c_str();
-			} else {
-				throw runtime_error(
-				"Your wallet is locked, passphrase is required\n");
-			}
-
-			if(!pwalletMain->Unlock(strWalletPass)){
-				return "incorrect passphrase";
-			}
-        }
-
-    	bool found = false;
-
-		Object statusObj;
-		statusObj.push_back(Pair("alias", alias));
-
-    	BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-    		if(mne.getAlias() == alias) {
-    			found = true;
-    			std::string errorMessage;
-    			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), errorMessage);
-
-				statusObj.push_back(Pair("result", result ? "successful" : "failed"));
-    			if(!result) {
-   					statusObj.push_back(Pair("errorMessage", errorMessage));
-   				}
-    			break;
-    		}
-    	}
-
-    	if(!found) {
-    		statusObj.push_back(Pair("result", "failed"));
-    		statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
-    	}
-
-    	pwalletMain->Lock();
-    	return statusObj;
-    }
-
-    if (strCommand == "stop-many")
-    {
-    	if(pwalletMain->IsLocked()) {
-			SecureString strWalletPass;
-			strWalletPass.reserve(100);
-
-			if (params.size() == 2){
-				strWalletPass = params[1].get_str().c_str();
-			} else {
-				throw runtime_error(
-				"Your wallet is locked, passphrase is required\n");
-			}
-
-			if(!pwalletMain->Unlock(strWalletPass)){
-				return "incorrect passphrase";
-			}
-		}
-
-		int total = 0;
-		int successful = 0;
-		int fail = 0;
-
-
-		Object resultsObj;
-
-		BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-			total++;
-
-			std::string errorMessage;
-			bool result = activeMasternode.StopMasterNode(mne.getIp(), mne.getPrivKey(), errorMessage);
-
-			Object statusObj;
-			statusObj.push_back(Pair("alias", mne.getAlias()));
-			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
-
-			if(result) {
-				successful++;
-			} else {
-				fail++;
-				statusObj.push_back(Pair("errorMessage", errorMessage));
-			}
-
-			resultsObj.push_back(Pair("status", statusObj));
-		}
-		pwalletMain->Lock();
-
-		Object returnObj;
-		returnObj.push_back(Pair("overall", "Successfully stopped " + boost::lexical_cast<std::string>(successful) + " masternodes, failed to stop " +
-				boost::lexical_cast<std::string>(fail) + ", total " + boost::lexical_cast<std::string>(total)));
-		returnObj.push_back(Pair("detail", resultsObj));
-
-		return returnObj;
-
-    }
 
     if (strCommand == "list")
     {
@@ -467,7 +359,7 @@ Value masternode(const Array& params, bool fHelp)
         if(winner) {
             Object obj;
             CScript pubkey;
-            pubkey.SetDestination(winner->pubkey.GetID());
+            pubkey = GetScriptForDestination(winner->pubkey.GetID());
             CTxDestination address1;
             ExtractDestination(pubkey, address1);
             CBitcoinAddress address2(address1);
@@ -495,15 +387,25 @@ Value masternode(const Array& params, bool fHelp)
     if (strCommand == "winners")
     {
         Object obj;
+        std::string strMode = "addr";
+    
+        if (params.size() >= 1) strMode = params[0].get_str();
 
         for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
             CScript payee;
-            if(masternodePayments.GetBlockPayee(nHeight, payee)){
+            CTxIn vin;
+            if(masternodePayments.GetBlockPayee(nHeight, payee, vin)){
                 CTxDestination address1;
                 ExtractDestination(payee, address1);
                 CBitcoinAddress address2(address1);
-                obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       address2.ToString().c_str()));
+
+                if(strMode == "addr")
+                    obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       address2.ToString().c_str()));
+
+                if(strMode == "vin")
+                    obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       vin.ToString().c_str()));
+
             } else {
                 obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       ""));
             }
@@ -606,7 +508,7 @@ Value masternode(const Array& params, bool fHelp)
                 failed++;
                 continue;
             }
-            
+
             CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
             if(pmn == NULL)
             {
@@ -693,26 +595,32 @@ Value masternodelist(const Array& params, bool fHelp)
 
     if (fHelp ||
             (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank"
-                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose"))
+                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose" && strMode != "lastpaid"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
                 "Get a list of masternodes in different modes\n"
                 "\nArguments:\n"
                 "1. \"mode\"      (string, optional/required to use filter, defaults = status) The mode to run list in\n"
-                "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes, additional matches in some modes\n"
+                "2. \"filter\"    (string, optional) Filter results. Partial match by IP by default in all modes,\n"
+                "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
                 "  donation       - Show donation settings\n"
-                "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)\n"
+                "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds'\n"
+                "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  pose           - Print Proof-of-Service score\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
-                "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
+                "  pubkey         - Print public key associated with a masternode (can be additionally filtered,\n"
+                "                   partial match)\n"
                 "  rank           - Print rank of a masternode based on current block\n"
-                "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR (can be additionally filtered, partial match)\n"
-                "  vin            - Print vin associated with a masternode (can be additionally filtered, partial match)\n"
-                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered, partial match)\n"
+                "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR\n"
+                "                   (can be additionally filtered, partial match)\n"
+                "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
+                "  votes          - Print all masternode votes for a Dash initiative (can be additionally filtered,\n"
+                "                   partial match)\n"
+                "  lastpaid       - The last time a node was paid on the network\n"
                 );
     }
 
@@ -720,24 +628,24 @@ Value masternodelist(const Array& params, bool fHelp)
     if (strMode == "rank") {
         std::vector<pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks(chainActive.Tip()->nHeight);
         BOOST_FOREACH(PAIRTYPE(int, CMasternode)& s, vMasternodeRanks) {
-            std::string strAddr = s.second.addr.ToString();
-            if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
-            obj.push_back(Pair(strAddr,       s.first));
+            std::string strVin = s.second.vin.prevout.ToStringShort();
+            if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strVin,       s.first));
         }
     } else {
         std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-            std::string strAddr = mn.addr.ToString();
+            std::string strVin = mn.vin.prevout.ToStringShort();
             if (strMode == "activeseconds") {
-                if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strAddr,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
+                if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
             } else if (strMode == "donation") {
                 CTxDestination address1;
                 ExtractDestination(mn.donationAddress, address1);
                 CBitcoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
-                    strAddr.find(strFilter) == string::npos) continue;
+                    strVin.find(strFilter) == string::npos) continue;
 
                 std::string strOut = "";
 
@@ -746,59 +654,60 @@ Value masternodelist(const Array& params, bool fHelp)
                     strOut += ":";
                     strOut += boost::lexical_cast<std::string>(mn.donationPercentage);
                 }
-                obj.push_back(Pair(strAddr,       strOut.c_str()));
+                obj.push_back(Pair(strVin,       strOut.c_str()));
             } else if (strMode == "full") {
                 CScript pubkey;
-                pubkey.SetDestination(mn.pubkey.GetID());
+                pubkey = GetScriptForDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
                 CBitcoinAddress address2(address1);
 
                 std::ostringstream addrStream;
-                addrStream << setw(21) << strAddr;
+                addrStream << setw(21) << strVin;
 
                 std::ostringstream stringStream;
                 stringStream << setw(10) <<
                                mn.Status() << " " <<
                                mn.protocolVersion << " " <<
                                address2.ToString() << " " <<
-                               mn.vin.prevout.hash.ToString() << " " <<
+                               mn.addr.ToString() << " " <<
                                mn.lastTimeSeen << " " << setw(8) <<
-                               (mn.lastTimeSeen - mn.sigTime);
+                               (mn.lastTimeSeen - mn.sigTime) << " " <<
+                               mn.nLastPaid;
                 std::string output = stringStream.str();
-                stringStream << " " << strAddr;
+                stringStream << " " << strVin;
                 if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
-                        strAddr.find(strFilter) == string::npos) continue;
+                        strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(addrStream.str(), output));
             } else if (strMode == "lastseen") {
-                if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strAddr,       (int64_t)mn.lastTimeSeen));
+                if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,       (int64_t)mn.lastTimeSeen));
             } else if (strMode == "protocol") {
                 if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
-                    strAddr.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strAddr,       (int64_t)mn.protocolVersion));
+                    strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,       (int64_t)mn.protocolVersion));
             } else if (strMode == "pubkey") {
                 CScript pubkey;
-                pubkey.SetDestination(mn.pubkey.GetID());
+                pubkey = GetScriptForDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
                 CBitcoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
-                    strAddr.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strAddr,       address2.ToString().c_str()));
+                    strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,       address2.ToString().c_str()));
             } else if (strMode == "pose") {
-                if(strFilter !="" && strAddr.find(strFilter) == string::npos) continue;
+                if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
                 std::string strOut = boost::lexical_cast<std::string>(mn.nScanningErrorCount);
-                obj.push_back(Pair(strAddr,       strOut.c_str()));
+                obj.push_back(Pair(strVin,       strOut.c_str()));
             } else if(strMode == "status") {
                 std::string strStatus = mn.Status();
-                if(strFilter !="" && strAddr.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strAddr,       strStatus.c_str()));
-            } else if (strMode == "vin") {
+                if(strFilter !="" && strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,       strStatus.c_str()));
+            } else if (strMode == "addr") {
                 if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
-                    strAddr.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strAddr,       mn.vin.prevout.hash.ToString().c_str()));
+                    strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,       mn.addr.ToString().c_str()));
             } else if(strMode == "votes"){
                 std::string strStatus = "ABSTAIN";
 
@@ -809,8 +718,12 @@ Value masternodelist(const Array& params, bool fHelp)
                     if(mn.nVote == 1) strStatus = "YEA";
                 }
 
-                if(strFilter !="" && (strAddr.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos)) continue;
-                obj.push_back(Pair(strAddr,       strStatus.c_str()));
+                if(strFilter !="" && (strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos)) continue;
+                obj.push_back(Pair(strVin,       strStatus.c_str()));
+            } else if(strMode == "lastpaid"){
+                if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
+                    strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,      (int64_t)mn.nLastPaid));
             }
         }
     }

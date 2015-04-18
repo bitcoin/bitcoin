@@ -1,12 +1,17 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcprotocol.h"
 
+#include "clientversion.h"
+#include "tinyformat.h"
 #include "util.h"
+#include "utilstrencodings.h"
+#include "utiltime.h"
+#include "version.h"
 
 #include <stdint.h>
 
@@ -26,12 +31,15 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
-//
-// HTTP protocol
-//
-// This ain't Apache.  We're just using HTTP header for the length field
-// and to be compatible with other JSON-RPC implementations.
-//
+//! Number of bytes to allocate and read at most at once in post data
+const size_t POST_READ_SIZE = 256 * 1024;
+
+/**
+ * HTTP protocol
+ * 
+ * This ain't Apache.  We're just using HTTP header for the length field
+ * and to be compatible with other JSON-RPC implementations.
+ */
 
 string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeaders)
 {
@@ -55,7 +63,19 @@ static string rfc1123Time()
     return DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", GetTime());
 }
 
-string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
+static const char *httpStatusDescription(int nStatus)
+{
+    switch (nStatus) {
+        case HTTP_OK: return "OK";
+        case HTTP_BAD_REQUEST: return "Bad Request";
+        case HTTP_FORBIDDEN: return "Forbidden";
+        case HTTP_NOT_FOUND: return "Not Found";
+        case HTTP_INTERNAL_SERVER_ERROR: return "Internal Server Error";
+        default: return "";
+    }
+}
+
+string HTTPError(int nStatus, bool keepalive, bool headersOnly)
 {
     if (nStatus == HTTP_UNAUTHORIZED)
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
@@ -74,29 +94,39 @@ string HTTPReply(int nStatus, const string& strMsg, bool keepalive)
             "</HEAD>\r\n"
             "<BODY><H1>401 Unauthorized.</H1></BODY>\r\n"
             "</HTML>\r\n", rfc1123Time(), FormatFullVersion());
-    const char *cStatus;
-         if (nStatus == HTTP_OK) cStatus = "OK";
-    else if (nStatus == HTTP_BAD_REQUEST) cStatus = "Bad Request";
-    else if (nStatus == HTTP_FORBIDDEN) cStatus = "Forbidden";
-    else if (nStatus == HTTP_NOT_FOUND) cStatus = "Not Found";
-    else if (nStatus == HTTP_INTERNAL_SERVER_ERROR) cStatus = "Internal Server Error";
-    else cStatus = "";
+
+    return HTTPReply(nStatus, httpStatusDescription(nStatus), keepalive,
+                     headersOnly, "text/plain");
+}
+
+string HTTPReplyHeader(int nStatus, bool keepalive, size_t contentLength, const char *contentType)
+{
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Date: %s\r\n"
             "Connection: %s\r\n"
             "Content-Length: %u\r\n"
-            "Content-Type: application/json\r\n"
+            "Content-Type: %s\r\n"
             "Server: dash-json-rpc/%s\r\n"
-            "\r\n"
-            "%s",
+            "\r\n",
         nStatus,
-        cStatus,
+        httpStatusDescription(nStatus),
         rfc1123Time(),
         keepalive ? "keep-alive" : "close",
-        strMsg.size(),
-        FormatFullVersion(),
-        strMsg);
+        contentLength,
+        contentType,
+        FormatFullVersion());
+}
+
+string HTTPReply(int nStatus, const string& strMsg, bool keepalive,
+                 bool headersOnly, const char *contentType)
+{
+    if (headersOnly)
+    {
+        return HTTPReplyHeader(nStatus, keepalive, 0, contentType);
+    } else {
+        return HTTPReplyHeader(nStatus, keepalive, strMsg.size(), contentType) + strMsg;
+    }
 }
 
 bool ReadHTTPRequestLine(std::basic_istream<char>& stream, int &proto,
@@ -178,21 +208,30 @@ int ReadHTTPHeaders(std::basic_istream<char>& stream, map<string, string>& mapHe
 
 int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
                     string>& mapHeadersRet, string& strMessageRet,
-                    int nProto)
+                    int nProto, size_t max_size)
 {
     mapHeadersRet.clear();
     strMessageRet = "";
 
     // Read header
     int nLen = ReadHTTPHeaders(stream, mapHeadersRet);
-    if (nLen < 0 || nLen > (int)MAX_SIZE)
+    if (nLen < 0 || (size_t)nLen > max_size)
         return HTTP_INTERNAL_SERVER_ERROR;
 
     // Read message
     if (nLen > 0)
     {
-        vector<char> vch(nLen);
-        stream.read(&vch[0], nLen);
+        vector<char> vch;
+        size_t ptr = 0;
+        while (ptr < (size_t)nLen)
+        {
+            size_t bytes_to_read = std::min((size_t)nLen - ptr, POST_READ_SIZE);
+            vch.resize(ptr + bytes_to_read);
+            stream.read(&vch[ptr], bytes_to_read);
+            if (!stream) // Connection lost while reading
+                return HTTP_INTERNAL_SERVER_ERROR;
+            ptr += bytes_to_read;
+        }
         strMessageRet = string(vch.begin(), vch.end());
     }
 
@@ -209,15 +248,15 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
     return HTTP_OK;
 }
 
-//
-// JSON-RPC protocol.  Dash speaks version 1.0 for maximum compatibility,
-// but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
-// unspecified (HTTP errors and contents of 'error').
-//
-// 1.0 spec: http://json-rpc.org/wiki/specification
-// 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
-// http://www.codeproject.com/KB/recipes/JSON_Spirit.aspx
-//
+/**
+ * JSON-RPC protocol.  Dash speaks version 1.0 for maximum compatibility,
+ * but uses JSON-RPC 1.1/2.0 standards for parts of the 1.0 standard that were
+ * unspecified (HTTP errors and contents of 'error').
+ * 
+ * 1.0 spec: http://json-rpc.org/wiki/specification
+ * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
+ * http://www.codeproject.com/KB/recipes/JSON_Spirit.aspx
+ */
 
 string JSONRPCRequest(const string& strMethod, const Array& params, const Value& id)
 {
