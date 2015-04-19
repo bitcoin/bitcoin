@@ -8,7 +8,7 @@ DEB_INSTALL_MANPAGES_novacoind += debian/manpages/*
 	dh --with bash-completion $@
 
 override_dh_auto_build:
-	cd src; $(MAKE) -f makefile.unix novacoind
+	cd src; $(MAKE) -f makefile.unix novacoind USE_ASM=1 USE_LEVELDB=1
 	$(MAKE)
 
 override_dh_auto_clean:
@@ -16,11 +16,7 @@ override_dh_auto_clean:
 	cd src; $(MAKE) -f makefile.unix clean
 
 override_dh_auto_configure:
-	qmake novacoin-qt.pro USE_QRCODE=1
-
-override_dh_auto_test:
-	cd src; $(MAKE) -f makefile.unix test_novacoin
-	src/test_novacoin
+	qmake novacoin-qt.pro USE_QRCODE=1 USE_ASM=1 USE_LEVELDB=1
 
 # Ensure wrapper is set executable
 binary-post-install/novacoind:
