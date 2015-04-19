@@ -1146,7 +1146,7 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
 // CBlock and CBlockIndex
 //
 
-bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
+bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& messageStart)
 {
     // Open history file to append
     CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
@@ -1155,7 +1155,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 
     // Write index header
     unsigned int nSize = fileout.GetSerializeSize(block);
-    fileout << FLATDATA(Params().MessageStart()) << nSize;
+    fileout << FLATDATA(messageStart) << nSize;
 
     // Write block
     long fileOutPos = ftell(fileout.Get());
@@ -1509,7 +1509,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 
 namespace {
 
-bool UndoWriteToDisk(const CBlockUndo& blockundo, CDiskBlockPos& pos, const uint256& hashBlock)
+bool UndoWriteToDisk(const CBlockUndo& blockundo, CDiskBlockPos& pos, const uint256& hashBlock, const CMessageHeader::MessageStartChars& messageStart)
 {
     // Open history file to append
     CAutoFile fileout(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
@@ -1518,7 +1518,7 @@ bool UndoWriteToDisk(const CBlockUndo& blockundo, CDiskBlockPos& pos, const uint
 
     // Write index header
     unsigned int nSize = fileout.GetSerializeSize(blockundo);
-    fileout << FLATDATA(Params().MessageStart()) << nSize;
+    fileout << FLATDATA(messageStart) << nSize;
 
     // Write undo data
     long fileOutPos = ftell(fileout.Get());
@@ -1918,7 +1918,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             CDiskBlockPos pos;
             if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                 return error("ConnectBlock(): FindUndoPos failed");
-            if (!UndoWriteToDisk(blockundo, pos, pindex->pprev->GetBlockHash()))
+            if (!UndoWriteToDisk(blockundo, pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart()))
                 return AbortNode(state, "Failed to write undo data");
 
             // update nUndoPos in block index
@@ -2841,6 +2841,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, CDiskBlockPos* dbp)
 {
+    const CChainParams& chainparams = Params();
     AssertLockHeld(cs_main);
 
     CBlockIndex *&pindex = *ppindex;
@@ -2876,7 +2877,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         if (!FindBlockPos(state, blockPos, nBlockSize+8, nHeight, block.GetBlockTime(), dbp != NULL))
             return error("AcceptBlock(): FindBlockPos failed");
         if (dbp == NULL)
-            if (!WriteBlockToDisk(block, blockPos))
+            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
                 AbortNode(state, "Failed to write block");
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
             return error("AcceptBlock(): ReceivedBlockTransactions failed");
@@ -3366,6 +3367,7 @@ bool LoadBlockIndex()
 
 
 bool InitBlockIndex() {
+    const CChainParams& chainparams = Params();
     LOCK(cs_main);
     // Check whether we're already initialized
     if (chainActive.Genesis() != NULL)
@@ -3386,7 +3388,7 @@ bool InitBlockIndex() {
             CValidationState state;
             if (!FindBlockPos(state, blockPos, nBlockSize+8, 0, block.GetBlockTime()))
                 return error("LoadBlockIndex(): FindBlockPos failed");
-            if (!WriteBlockToDisk(block, blockPos))
+            if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
                 return error("LoadBlockIndex(): writing genesis block to disk failed");
             CBlockIndex *pindex = AddToBlockIndex(block);
             if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
