@@ -1,27 +1,26 @@
 Source: novacoin
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Alex D. <balthazar.ad@gmail.com>
+Uploaders: Alex D. <balthazar.ad@gmail.com>
 Build-Depends: debhelper,
  devscripts,
  bash-completion,
- libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
- libdb4.8++-dev,
+ libboost-system-dev,
+ libdb++-dev,
  libssl-dev,
  pkg-config,
  libminiupnpc8-dev,
- libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
- libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
- libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
- libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
+ libboost-filesystem-dev,
+ libboost-program-options-dev,
+ libboost-thread-dev,
  qt4-qmake,
  libqt4-dev,
  libqrencode-dev
 Standards-Version: 3.9.2
-Homepage: http://www.novacoin.su/
-Vcs-Git: git://github.com/CryptoManiac/novacoin.git
-Vcs-Browser: http://github.com/CryptoManiac/novacoin
+Homepage: http://www.novaco.in/
+Vcs-Git: git://github.com/novacoin-project/novacoin.git
+Vcs-Browser: http://github.com/novacoin-project/novacoin
 
 Package: novacoind
 Architecture: any
@@ -36,7 +35,7 @@ Description: peer-to-peer network based digital currency - daemon
  By default connects to an IRC network to discover other peers.
  .
  Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
+ requires 150+ MiB of space, slowly growing.
  .
  This package provides novacoind, a combined daemon and CLI tool to
  interact with the daemon.
@@ -54,6 +53,6 @@ Description: peer-to-peer network based digital currency - Qt GUI
  By default connects to an IRC network to discover other peers.
  .
  Full transaction history is stored locally at each client.  This
- requires 2+ GB of space, slowly growing.
+ requires 150+ MiB of space, slowly growing.
  .
  This package provides Novacoin-Qt, a GUI for Novacoin based on Qt.

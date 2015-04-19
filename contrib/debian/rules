@@ -1,10 +1,6 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-#DEB_MAKE_CHECK_TARGET = test_bitcoin
-#build/bitcoind::
-#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcoin)
-
 DEB_INSTALL_EXAMPLES_novacoind += debian/examples/*
 DEB_INSTALL_MANPAGES_novacoind += debian/manpages/*
 

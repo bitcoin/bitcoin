@@ -2,11 +2,12 @@
 Encoding=UTF-8
 Name=NovaCoin
 Comment=NovaCoin P2P Cryptocurrency
+Comment[ru]=NovaCoin, P2P криптовалюта
 Comment[fr]=NovaCoin, monnaie virtuelle cryptographique pair à pair
 Comment[tr]=NovaCoin, eşten eşe kriptografik sanal para birimi
 Exec=/usr/bin/novacoin-qt
 Terminal=false
 Type=Application
-Icon=/usr/share/pixmaps/bitcoin80.xpm
+Icon=/usr/share/pixmaps/novacoin80.xpm
 MimeType=x-scheme-handler/novacoin;
 Categories=Office;
