@@ -216,6 +216,9 @@
     <ClCompile Include="build\moc_multisiginputentry.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\qt\intro.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\qt\aboutdialog.h">
@@ -377,9 +380,6 @@
     <CustomBuild Include="..\..\src\qt\overviewpage.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="..\..\src\pbkdf2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\protocol.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -416,9 +416,6 @@
     <CustomBuild Include="..\..\src\qt\signverifymessagedialog.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <ClInclude Include="..\..\src\strlcpy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\sync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -497,6 +494,9 @@
     <CustomBuild Include="..\..\src\qt\forms\multisiginputentry.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\intro.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="build\moc_aboutdialog.cpp">
@@ -512,6 +512,9 @@
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="build\moc_bitcoinaddressvalidator.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="build\moc_intro.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="build\moc_trafficgraphwidget.cpp">
@@ -607,6 +610,9 @@
     <CustomBuild Include="build\rpcconsole.moc">
       <Filter>Generated Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="build\intro.moc">
+      <Filter>Generated Files</Filter>
+    </CustomBuild>
     <ClInclude Include="build\ui_aboutdialog.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
@@ -672,6 +678,9 @@
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\forms\editaddressdialog.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\intro.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\forms\optionsdialog.ui">
@@ -874,6 +883,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\txdb-leveldb.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="build\ui_intro.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
