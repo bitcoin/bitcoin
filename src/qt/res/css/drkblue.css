@@ -651,6 +651,10 @@ min-height:25px;
 min-width:180px;
 }
 
+QDialog#RPCConsole QWidget#tab_peers  QLabel#peerHeading { /* Peers Info Header */
+color:#3398CC;
+}
+
 QDialog#RPCConsole QPushButton#openDebugLogfileButton {
 max-width:60px;
 }
