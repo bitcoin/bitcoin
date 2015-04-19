@@ -43,10 +43,6 @@ public:
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
-    int SubsidyHalvingInterval() const { return consensus.nSubsidyHalvingInterval; }
-    int EnforceBlockUpgradeMajority() const { return consensus.nMajorityEnforceBlockUpgrade; }
-    int RejectBlockOutdatedMajority() const { return consensus.nMajorityRejectBlockOutdated; }
-    int ToCheckBlockUpgradeMajority() const { return consensus.nMajorityWindow; }
 
     /** Used if GenerateBitcoins is called with a negative number of threads */
     int DefaultMinerThreads() const { return nMinerThreads; }

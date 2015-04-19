@@ -5,10 +5,10 @@
 
 #include "txdb.h"
 
+#include "consensus/consensus.h"
 #include "chainparams.h"
 #include "hash.h"
 #include "main.h"
-#include "pow.h"
 #include "uint256.h"
 
 #include <stdint.h>

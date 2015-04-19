@@ -87,7 +87,10 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compressor.h \
+  consensus/consensus.h \
   consensus/params.h \
+  consensus/types.h \
+  consensus/validation.h \
   core_io.h \
   wallet/db.h \
   eccryptoverify.h \
@@ -105,7 +108,6 @@ BITCOIN_CORE_H = \
   netbase.h \
   net.h \
   noui.h \
-  pow.h \
   primitives/block.h \
   primitives/transaction.h \
   protocol.h \
@@ -174,6 +176,8 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/blockverify.cpp \
+  consensus/txverify.cpp \
   init.cpp \
   leveldbwrapper.cpp \
   main.cpp \
@@ -181,7 +185,6 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
-  pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \
   rpcmining.cpp \
@@ -360,6 +363,8 @@ bitcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
+  arith_uint256.cpp \
+  consensus/blockverify.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/sha1.cpp \
@@ -368,6 +373,7 @@ libbitcoinconsensus_la_SOURCES = \
   eccryptoverify.cpp \
   ecwrapper.cpp \
   hash.cpp \
+  primitives/block.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
   script/bitcoinconsensus.cpp \

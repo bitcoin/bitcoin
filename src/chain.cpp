@@ -106,3 +106,8 @@ void CBlockIndex::BuildSkip()
     if (pprev)
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
+
+const CBlockIndexBase* GetPrevIndex(const CBlockIndexBase* pindex)
+{
+    return ((CBlockIndex*)pindex)->pprev;
+}

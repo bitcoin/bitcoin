@@ -2,15 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
 #include "data/sighash.json.h"
-#include "main.h"
 #include "random.h"
-#include "serialize.h"
-#include "script/script.h"
+#include "hash.h"
 #include "script/interpreter.h"
-#include "util.h"
-#include "version.h"
+#include "script/script.h"
+#include "serialize.h"
 #include "test/test_bitcoin.h"
+#include "util.h"
+#include "utilstrencodings.h"
+#include "version.h"
 
 #include <iostream>
 
@@ -199,7 +202,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           stream >> tx;
 
           CValidationState state;
-          BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+          BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state), strTest);
           BOOST_CHECK(state.IsValid());
 
           std::vector<unsigned char> raw = ParseHex(raw_script);

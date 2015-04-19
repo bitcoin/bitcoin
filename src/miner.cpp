@@ -6,11 +6,13 @@
 #include "miner.h"
 
 #include "amount.h"
+#include "chain.h"
 #include "chainparams.h"
+#include "consensus/consensus.h"
+#include "consensus/validation.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
-#include "pow.h"
 #include "primitives/transaction.h"
 #include "timedata.h"
 #include "util.h"
@@ -79,17 +81,32 @@ public:
     }
 };
 
+uint32_t GetNextWorkRequiredLog(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& consensusParams)
+{
+    uint32_t nextChallenge = GetNextWorkRequired(pindexLast, pblock, consensusParams, GetPrevIndex);
+    /// debug print
+    LogPrintf("GetNextWorkRequired RETARGET\n");
+    LogPrintf("pindexLast->nTime = %d\n", (int64_t)pindexLast->nTime);
+    arith_uint256 bnNew, bnOld;
+    bnNew.SetCompact(nextChallenge);
+    bnOld.SetCompact(pindexLast->nBits);    
+    LogPrintf("Before: %08x  %s\n", pindexLast->nBits, bnOld.ToString());
+    LogPrintf("After:  %08x  %s\n", nextChallenge, bnNew.ToString());
+    return nextChallenge;
+}
+
 void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    pblock->nTime = std::max(GetMedianTimePast(pindexPrev, GetPrevIndex)+1, GetAdjustedTime());
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+        pblock->nBits = GetNextWorkRequiredLog(pindexPrev, pblock, consensusParams);
 }
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 {
+    const CChainParams& chainparams = Params();
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
@@ -98,7 +115,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
-    if (Params().MineBlocksOnDemand())
+    if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
     // Create coinbase tx
@@ -136,6 +153,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         CCoinsViewCache view(pcoinsTip);
+        int nSpendHeight = GetSpendHeight(view);
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
@@ -224,6 +242,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         TxPriorityCompare comparer(fSortedByFee);
         std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
+        unsigned int flags = Consensus::GetFlags(*pblock, chainparams.GetConsensus(), pindexPrev, GetPrevIndex);
 
         while (!vecPriority.empty())
         {
@@ -240,10 +259,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (nBlockSize + nTxSize >= nBlockMaxSize)
                 continue;
 
-            // Legacy limits on sigOps:
-            unsigned int nTxSigOps = GetLegacySigOpCount(tx);
-            if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-                continue;
 
             // Skip free transactions if we're past the minimum block size:
             const uint256& hash = tx.GetHash();
@@ -263,21 +278,21 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
             }
 
-            if (!view.HaveInputs(tx))
+            CValidationState state;
+            if (!Consensus::CheckTxInputs(tx, state, view, nSpendHeight))
                 continue;
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
-
-            nTxSigOps += GetP2SHSigOpCount(tx, view);
+            unsigned int nTxSigOps = GetSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
             // Note that flags: we don't want to set mempool/IsStandard()
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
-            CValidationState state;
-            if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            if (!Consensus::CheckTxInputsScripts(tx, state, view, flags, true))
                 continue;
+
+            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
 
             UpdateCoins(tx, state, view, nHeight);
 
@@ -319,15 +334,15 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = GetBlockValue(nHeight, nFees);
+        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
-        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
+        UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
+        pblock->nBits          = GetNextWorkRequiredLog(pindexPrev, pblock, chainparams.GetConsensus());
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
