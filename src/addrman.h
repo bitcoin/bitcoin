@@ -29,6 +29,9 @@ public:
     //! last try whatsoever by us (memory only)
     int64_t nLastTry;
 
+    //! last counted attempt (memory only)
+    int64_t nLastCountAttempt;
+
 private:
     //! where knowledge about this address first came from
     CNetAddr source;
@@ -66,6 +69,7 @@ public:
     {
         nLastSuccess = 0;
         nLastTry = 0;
+        nLastCountAttempt = 0;
         nAttempts = 0;
         nRefCount = 0;
         fInTried = false;
@@ -199,6 +203,9 @@ private:
 
     //! list of "new" buckets
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+
+    //! last time Good was called (memory only)
+    int64_t nLastGood;
 
 protected:
     //! secret key to randomize bucket select with
@@ -458,6 +465,7 @@ public:
         nIdCount = 0;
         nTried = 0;
         nNew = 0;
+        nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
     }
 
     CAddrMan()
