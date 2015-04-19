@@ -77,7 +77,7 @@ const string strMessageMagic = "NovaCoin Signed Message:\n";
 
 // Settings
 int64_t nTransactionFee = MIN_TX_FEE;
-int64_t nMinimumInputValue = MIN_TX_FEE;
+int64_t nMinimumInputValue = MIN_TXOUT_AMOUNT;
 
 // Ping and address broadcast intervals
 int64_t nPingInterval = 30 * 60;

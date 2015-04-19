@@ -263,7 +263,7 @@ Value mergecoins(const Array& params, bool fHelp)
             "<amount> is resulting inputs sum\n"
             "<minvalue> is minimum value of inputs which are used in join process\n"
             "<outputvalue> is resulting value of inputs which will be created\n"
-            "All values are real and and rounded to the nearest " + FormatMoney(MIN_TXOUT_AMOUNT)
+            "All values are real and and rounded to the nearest " + FormatMoney(nMinimumInputValue)
             + HelpRequiringPassphrase());
 
     if (pwalletMain->IsLocked())
@@ -278,13 +278,13 @@ Value mergecoins(const Array& params, bool fHelp)
     // Output amount
     int64_t nOutputValue = AmountFromValue(params[2]);
 
-    if (nAmount < MIN_TXOUT_AMOUNT)
+    if (nAmount < nMinimumInputValue)
         throw JSONRPCError(-101, "Send amount too small");
 
-    if (nMinValue < MIN_TXOUT_AMOUNT)
+    if (nMinValue < nMinimumInputValue)
         throw JSONRPCError(-101, "Max value too small");
 
-    if (nOutputValue < MIN_TXOUT_AMOUNT)
+    if (nOutputValue < nMinimumInputValue)
         throw JSONRPCError(-101, "Output value too small");
 
     if (nOutputValue < nMinValue)
@@ -306,7 +306,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
             "sendtoaddress <novacoinaddress> <amount> [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest " + FormatMoney(MIN_TXOUT_AMOUNT)
+            "<amount> is a real and is rounded to the nearest " + FormatMoney(nMinimumInputValue)
             + HelpRequiringPassphrase());
 
     CBitcoinAddress address(params[0].get_str());
@@ -316,7 +316,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
 
-    if (nAmount < MIN_TXOUT_AMOUNT)
+    if (nAmount < nMinimumInputValue)
         throw JSONRPCError(-101, "Send amount too small");
 
     // Wallet comments
@@ -629,7 +629,7 @@ Value movecmd(const Array& params, bool fHelp)
     string strTo = AccountFromValue(params[1]);
     int64_t nAmount = AmountFromValue(params[2]);
 
-    if (nAmount < MIN_TXOUT_AMOUNT)
+    if (nAmount < nMinimumInputValue)
         throw JSONRPCError(-101, "Send amount too small");
 
     if (params.size() > 3)
@@ -677,7 +677,7 @@ Value sendfrom(const Array& params, bool fHelp)
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
             "sendfrom <fromaccount> <tonovacoinaddress> <amount> [minconf=1] [comment] [comment-to]\n"
-            "<amount> is a real and is rounded to the nearest " + FormatMoney(MIN_TXOUT_AMOUNT)
+            "<amount> is a real and is rounded to the nearest " + FormatMoney(nMinimumInputValue)
             + HelpRequiringPassphrase());
 
     string strAccount = AccountFromValue(params[0]);
@@ -686,7 +686,7 @@ Value sendfrom(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
     int64_t nAmount = AmountFromValue(params[2]);
 
-    if (nAmount < MIN_TXOUT_AMOUNT)
+    if (nAmount < nMinimumInputValue)
         throw JSONRPCError(-101, "Send amount too small");
 
     int nMinDepth = 1;
@@ -753,7 +753,7 @@ Value sendmany(const Array& params, bool fHelp)
         scriptPubKey.SetDestination(address.Get());
         int64_t nAmount = AmountFromValue(s.value_);
 
-        if (nAmount < MIN_TXOUT_AMOUNT)
+        if (nAmount < nMinimumInputValue)
             throw JSONRPCError(-101, "Send amount too small");
 
         totalAmount += nAmount;
