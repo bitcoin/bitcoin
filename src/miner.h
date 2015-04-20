@@ -14,7 +14,7 @@ class CBlockIndex;
 class CReserveKey;
 class CScript;
 class CWallet;
-namespace Consensus { class Params; };
+namespace Consensus { struct Params; };
 
 struct CBlockTemplate
 {
