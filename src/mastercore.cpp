@@ -4020,7 +4020,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 // for every new received block must do:
 // 1) remove expired entries from the accept list (per spec accept entries are valid until their blocklimit expiration; because the customer can keep paying BTC for the offer in several installments)
 // 2) update the amount in the Exodus address
-  uint64_t devmsc = 0;
+  int64_t devmsc = 0;
   unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
 
   if (how_many_erased)
