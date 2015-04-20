@@ -233,7 +233,6 @@ RPCConsole::RPCConsole(QWidget *parent) :
     startExecutor();
     setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_MINS);
 
-    ui->detailWidget->hide();
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
     clear();
@@ -596,7 +595,6 @@ void RPCConsole::peerLayoutChanged()
         // detail node dissapeared from table (node disconnected)
         fUnselect = true;
         cachedNodeid = -1;
-        ui->detailWidget->hide();
         ui->peerHeading->setText(tr("Select a peer to view detailed information."));
     }
     else
