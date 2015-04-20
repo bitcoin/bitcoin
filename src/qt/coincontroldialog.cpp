@@ -8,12 +8,12 @@
 #include "addresstablemodel.h"
 #include "bitcoinunits.h"
 #include "guiutil.h"
-#include "init.h"
 #include "optionsmodel.h"
 #include "scicon.h"
 #include "walletmodel.h"
 
 #include "coincontrol.h"
+#include "init.h"
 #include "main.h"
 #include "wallet/wallet.h"
 
