@@ -2,7 +2,7 @@
 # Attempt to guess a canonical system name.
 #   Copyright 1992-2015 Free Software Foundation, Inc.
 
-timestamp='2015-01-01'
+timestamp='2015-03-04'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -168,20 +168,27 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	# Note: NetBSD doesn't particularly care about the vendor
 	# portion of the name.  We always set it to "unknown".
 	sysctl="sysctl -n hw.machine_arch"
-	UNAME_MACHINE_ARCH=`(/sbin/$sysctl 2>/dev/null || \
-	    /usr/sbin/$sysctl 2>/dev/null || echo unknown)`
+	UNAME_MACHINE_ARCH=`(uname -p 2>/dev/null || \
+	    /sbin/$sysctl 2>/dev/null || \
+	    /usr/sbin/$sysctl 2>/dev/null || \
+	    echo unknown)`
 	case "${UNAME_MACHINE_ARCH}" in
 	    armeb) machine=armeb-unknown ;;
 	    arm*) machine=arm-unknown ;;
 	    sh3el) machine=shl-unknown ;;
 	    sh3eb) machine=sh-unknown ;;
 	    sh5el) machine=sh5le-unknown ;;
+	    earmv*)
+		arch=`echo ${UNAME_MACHINE_ARCH} | sed -e 's,^e\(armv[0-9]\).*$,\1,'`
+		endian=`echo ${UNAME_MACHINE_ARCH} | sed -ne 's,^.*\(eb\)$,\1,p'`
+		machine=${arch}${endian}-unknown
+		;;
 	    *) machine=${UNAME_MACHINE_ARCH}-unknown ;;
 	esac
 	# The Operating System including object format, if it has switched
 	# to ELF recently, or will in the future.
 	case "${UNAME_MACHINE_ARCH}" in
-	    arm*|i386|m68k|ns32k|sh3*|sparc|vax)
+	    arm*|earm*|i386|m68k|ns32k|sh3*|sparc|vax)
 		eval $set_cc_for_build
 		if echo __ELF__ | $CC_FOR_BUILD -E - 2>/dev/null \
 			| grep -q __ELF__
@@ -195,6 +202,13 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 		;;
 	    *)
 		os=netbsd
+		;;
+	esac
+	# Determine ABI tags.
+	case "${UNAME_MACHINE_ARCH}" in
+	    earm*)
+		expr='s/^earmv[0-9]/-eabi/;s/eb$//'
+		abi=`echo ${UNAME_MACHINE_ARCH} | sed -e "$expr"`
 		;;
 	esac
 	# The OS release
@@ -213,7 +227,7 @@ case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
 	# Since CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM:
 	# contains redundant information, the shorter form:
 	# CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM is used.
-	echo "${machine}-${os}${release}"
+	echo "${machine}-${os}${release}${abi}"
 	exit ;;
     *:Bitrig:*:*)
 	UNAME_MACHINE_ARCH=`arch | sed 's/Bitrig.//'`
@@ -932,6 +946,9 @@ EOF
 	exit ;;
     crisv32:Linux:*:*)
 	echo ${UNAME_MACHINE}-axis-linux-${LIBC}
+	exit ;;
+    e2k:Linux:*:*)
+	echo ${UNAME_MACHINE}-unknown-linux-${LIBC}
 	exit ;;
     frv:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux-${LIBC}
