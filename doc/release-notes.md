@@ -59,6 +59,7 @@ behavior, not code moves, refactors or string updates.
 
 RPC:
 - `7f502be` fix crash: createmultisig and addmultisigaddress
+- `eae305f` Fix missing lock in submitblock
 
 Block (database) and transaction handling:
 - `1d2cdd2` Fix InvalidateBlock to add chainActive.Tip to setBlockIndexCandidates
@@ -66,6 +67,8 @@ Block (database) and transaction handling:
 - `002c8a2` fix possible block db breakage during re-index
 - `a1f425b` Add (optional) consistency check for the block chain data structures
 - `1c62e84` Keep mempool consistent during block-reorgs
+- `57d1f46` Fix CheckBlockIndex for reindex
+- `bac6fca` Set nSequenceId when a block is fully linked
 
 P2P protocol and network code:
 - `78f64ef` don't trickle for whitelisted nodes
@@ -77,6 +80,7 @@ P2P protocol and network code:
 - `0c6f334` Always use a 50% chance to choose between tried and new entries (countermeasure 2 against eclipse attacks)
 - `214154e` Do not bias outgoing connections towards fresh addresses (countermeasure 2 against eclipse attacks)
 - `aa587d4` Scale up addrman (countermeasure 6 against eclipse attacks)
+- `139cd81` Cap nAttempts penalty at 8 and switch to pow instead of a division loop
 
 Validation:
 - `d148f62` Acquire CCheckQueue's lock to avoid race condition
@@ -98,6 +102,9 @@ Tests:
 Miscellaneous:
 - `c9e022b` Initialization: set Boost path locale in main thread
 - `23126a0` Sanitize command strings before logging them.
+- `323de27` Initialization: setup environment before starting QT tests
+- `7494e09` Initialization: setup environment before starting tests
+- `df45564` Initialization: set fallback locale as environment variable
 
 Credits
 =======
@@ -113,6 +120,8 @@ Thanks to everyone who contributed to this release:
 - Ivan Pustogarov
 - Jonas Nick
 - Jonas Schnelli
+- Matt Corallo
+- mrbandrews
 - Pieter Wuille
 - Ruben de Vries
 - Suhas Daftuar
