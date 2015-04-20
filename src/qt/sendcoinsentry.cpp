@@ -99,11 +99,11 @@ void SendCoinsEntry::clear()
     ui->messageTextLabel->clear();
     ui->messageTextLabel->hide();
     ui->messageLabel->hide();
-    // clear UI elements for insecure payment request
+    // clear UI elements for unauthenticated payment request
     ui->payTo_is->clear();
     ui->memoTextLabel_is->clear();
     ui->payAmount_is->clear();
-    // clear UI elements for secure payment request
+    // clear UI elements for authenticated payment request
     ui->payTo_s->clear();
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
@@ -190,21 +190,21 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
 
     if (recipient.paymentRequest.IsInitialized()) // payment request
     {
-        if (recipient.authenticatedMerchant.isEmpty()) // insecure
+        if (recipient.authenticatedMerchant.isEmpty()) // unauthenticated
         {
             ui->payTo_is->setText(recipient.address);
             ui->memoTextLabel_is->setText(recipient.message);
             ui->payAmount_is->setValue(recipient.amount);
             ui->payAmount_is->setReadOnly(true);
-            setCurrentWidget(ui->SendCoins_InsecurePaymentRequest);
+            setCurrentWidget(ui->SendCoins_UnauthenticatedPaymentRequest);
         }
-        else // secure
+        else // authenticated
         {
             ui->payTo_s->setText(recipient.authenticatedMerchant);
             ui->memoTextLabel_s->setText(recipient.message);
             ui->payAmount_s->setValue(recipient.amount);
             ui->payAmount_s->setReadOnly(true);
-            setCurrentWidget(ui->SendCoins_SecurePaymentRequest);
+            setCurrentWidget(ui->SendCoins_AuthenticatedPaymentRequest);
         }
     }
     else // normal payment
