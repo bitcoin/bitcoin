@@ -37,7 +37,7 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
     int nHashType;
     const TransactionSignatureChecker checker;
     bool dummySign;
-    
+
 public:
     TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, int nHashTypeIn=SIGHASH_ALL, bool dummySign = false);
     const BaseSignatureChecker& Checker() const { return checker; }

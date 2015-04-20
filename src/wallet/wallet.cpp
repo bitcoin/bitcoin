@@ -1667,11 +1667,11 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 {
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
-    
+
     // create a empty set to store possible inputs
     set<pair<const CWalletTx*,unsigned int> > setTempCoins;
     CAmount nValueTroughInputs = 0;
-    
+
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected())
     {
@@ -1684,7 +1684,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
         }
         return (nValueRet >= nTargetValue);
     }
-    
+
     // fill up the tx with possible predefined inputs
     BOOST_FOREACH(const CTxIn& txin, vPresetInputs)
     {
@@ -1697,38 +1697,38 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
             {
                 if (!out.fSpendable)
                     continue;
-                
+
                 nValueTroughInputs    += out.tx->vout[out.i].nValue;
-                
+
                 // temporarily keep the coin to add them later after SelectCoinsMinConf has added some
                 setTempCoins.insert(make_pair(out.tx, out.i));
                 vinOk = true;
-                
+
                 // remove the coins from available coins vector to avoid double use because of a upcomming SelectCoinsMinConf
                 it = vCoins.erase(it);
             }
             else
                 ++it;
         }
-        
+
         if (!vinOk)
             return false; // if vin was not an available coin, cancel (will return "Insufficient funds")
     }
 
     bool state = true;
-    
+
     // only select further coins if we need to
     if (nTargetValue-nValueTroughInputs > 0)
         state = (SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 1, 6, vCoins, setCoinsRet, nValueRet) ||
             SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 1, 1, vCoins, setCoinsRet, nValueRet) ||
             (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 0, 1, vCoins, setCoinsRet, nValueRet)));
-    
+
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     setCoinsRet.insert(setTempCoins.begin(), setTempCoins.end());
-    
+
     // increase return value due of possible inputs
     nValueRet+=nValueTroughInputs;
-    
+
     return state;
 }
 
@@ -1745,13 +1745,13 @@ bool CWallet::FundTransaction(const CTransaction& txToFund, CMutableTransaction&
         CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, nSubtractFeeFromAmount};
         vecSend.push_back(recipient);
     }
-    
+
     // Store possible vin so we might only partial-final-fund the tx
     BOOST_FOREACH (const CTxIn& txIn, txToFund.vin)
     {
         vin.push_back(txIn);
     }
-    
+
     CReserveKey reservekey(this);
     CWalletTx wtx;
     return CreateTransaction(vecSend, vin, wtx, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, NULL, false);
@@ -1977,14 +1977,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<
                     strFailReason = _("Transaction too large");
                     return false;
                 }
-                
+
                 //remove signature if we used the signing only for the fee calculation
                 if(!sign)
                 {
                     BOOST_FOREACH (CTxIn& vin, txNew.vin)
-                    vin.scriptSig = CScript();
+                        vin.scriptSig = CScript();
                 }
-                
+
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
                 // Can we complete this as a free transaction?
@@ -2020,6 +2020,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<
             }
         }
     }
+
     return true;
 }
 

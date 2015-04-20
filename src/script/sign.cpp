@@ -26,7 +26,7 @@ bool TransactionSignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, 
         vchSig.resize(72);
         return true;
     }
-        
+
     CKey key;
     if (!keystore->GetKey(address, key))
         return false;
@@ -130,7 +130,7 @@ bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& fromPu
     // Test solution or skip in case of length-calculation/dummy-signing
     if (dummySign)
         return true;
-    
+
     return VerifyScript(scriptSig, fromPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, creator.Checker());
 }
 

@@ -625,7 +625,7 @@ public:
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
     bool FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason);
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend ,const std::vector<CTxIn> vInputs,
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, const std::vector<CTxIn> vInputs,
                            CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CreateTransaction(const std::vector<CRecipient>& vecSend,
                            CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);

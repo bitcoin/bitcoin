@@ -2351,7 +2351,7 @@ Value fundrawtransaction(const Array& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return Value::null;
-    
+
     if (fHelp || params.size() != 1)
         throw runtime_error(
                             "fundrawtransaction \"hexstring\"\n"
@@ -2377,24 +2377,24 @@ Value fundrawtransaction(const Array& params, bool fHelp)
                             "\nAs a json rpc call\n"
                             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                             );
-    
+
     RPCTypeCheck(params, boost::assign::list_of(str_type)(bool_type));
-    
+
     // parse hex string from parameter
     CTransaction tx;
     if (!DecodeHexTx(tx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
-    
+
     CMutableTransaction txNew;
     CAmount nFeeRet;
     string strFailReason;
     int nChangePosRet = -1;
     if(!pwalletMain->FundTransaction(tx, txNew, nFeeRet, nChangePosRet, strFailReason))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
-    
+
     Object result;
     result.push_back(Pair("hex", EncodeHexTx(txNew)));
     result.push_back(Pair("fee", nFeeRet));
-    
+
     return result;
 }

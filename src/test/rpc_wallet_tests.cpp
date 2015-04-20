@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     Array arr = retValue.get_array();
     BOOST_CHECK(arr.size() > 0);
     BOOST_CHECK(CBitcoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
-    
+
     /*********************************
      * 	     fundrawtransaction
      *********************************/
