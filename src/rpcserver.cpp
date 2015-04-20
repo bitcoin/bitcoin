@@ -868,8 +868,11 @@ static Object JSONRPCExecOne(const Value& req)
     JSONRequest jreq;
     try {
         jreq.parse(req);
+        LockObject(jreq.params);
 
         Value result = tableRPC.execute(jreq.strMethod, jreq.params);
+        UnlockObject(jreq.params);
+        
         rpc_result = JSONRPCReplyObj(result, Value::null, jreq.id);
     }
     catch (const Object& objError)
