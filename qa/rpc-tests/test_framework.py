@@ -128,10 +128,12 @@ class BitcoinTestFramework(object):
             print("Unexpected exception caught during testing: "+str(e))
             traceback.print_tb(sys.exc_info()[2])
 
+        print("Stopping nodes")
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+
         if not self.options.nocleanup:
             print("Cleaning up")
-            stop_nodes(self.nodes)
-            wait_bitcoinds()
             shutil.rmtree(self.options.tmpdir)
 
         if success:
