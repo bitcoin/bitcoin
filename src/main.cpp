@@ -16,7 +16,6 @@
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
-#include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"

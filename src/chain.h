@@ -265,6 +265,8 @@ public:
     const CBlockIndex* GetAncestor(int height) const;
 };
 
+arith_uint256 GetBlockProof(const CBlockIndex& block);
+
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
