@@ -2,15 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/validation.h"
 #include "data/sighash.json.h"
 #include "main.h"
 #include "random.h"
-#include "serialize.h"
-#include "script/script.h"
 #include "script/interpreter.h"
+#include "script/script.h"
+#include "serialize.h"
+#include "test/test_bitcoin.h"
 #include "util.h"
 #include "version.h"
-#include "test/test_bitcoin.h"
 
 #include <iostream>
 
