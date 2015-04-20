@@ -7,6 +7,7 @@
 #include "test_bitcoin.h"
 
 #include "main.h"
+#include "policy/policy.h"
 #include "random.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -32,6 +33,7 @@ BasicTestingSetup::BasicTestingSetup()
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(CBaseChainParams::MAIN);
+        SelectPolicy("standard");
 }
 BasicTestingSetup::~BasicTestingSetup()
 {
