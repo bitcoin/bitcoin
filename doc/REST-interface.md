@@ -5,6 +5,8 @@ The REST API can be enabled with the `-rest` option.
 
 Supported API
 -------------
+
+####Transactions
 `GET /rest/tx/TX-HASH.{bin|hex|json}`
 
 Given a transaction hash,
@@ -12,6 +14,7 @@ Returns a transaction, in binary, hex-encoded binary or JSON formats.
 
 For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
 
+####Blocks
 `GET /rest/block/BLOCK-HASH.{bin|hex|json}`
 `GET /rest/block/notxdetails/BLOCK-HASH.{bin|hex|json}`
 
@@ -22,6 +25,15 @@ The HTTP request and response are both handled entirely in-memory, thus making m
 
 With the /notxdetails/ option JSON response will only contain the transaction hash instead of the complete transaction details. The option only affects the JSON response.
 
+####Blockheaders
+`GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex>`
+
+Given a block hash,
+Returns <COUNT> amount of blockheaders in upward direction.
+
+JSON is not supported.
+
+####Chaininfos
 `GET /rest/chaininfo.json`
 
 Returns various state info regarding block chain processing.
