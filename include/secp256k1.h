@@ -328,6 +328,18 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
   const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
+/** Updates the context randomization.
+ *  Returns: 1: randomization successfully updated
+ *           0: error
+ *  In:      ctx:       pointer to a context object (cannot be NULL)
+ *           seed32:    pointer to a 32-byte random seed (NULL resets to initial state)
+ */
+SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
+  secp256k1_context_t* ctx,
+  const unsigned char *seed32
+) SECP256K1_ARG_NONNULL(1);
+
+
 # ifdef __cplusplus
 }
 # endif
