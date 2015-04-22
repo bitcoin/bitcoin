@@ -325,7 +325,8 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *
 }
 
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
-    /* Operations: 7 mul, 5 sqr, 5 normalize, 19 mul_int/add/negate */
+    /* Operations: 7 mul, 5 sqr, 5 normalize, 17 mul_int/add/negate/cmov */
+    static const secp256k1_fe_t fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_fe_t zz, u1, u2, s1, s2, z, t, m, n, q, rr;
     int infinity;
     VERIFY_CHECK(!b->infinity);
@@ -387,14 +388,11 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     secp256k1_fe_mul_int(&r->y, 4 * (1 - a->infinity)); /* r->y = Y3 = 4*R*(3*Q-2*R^2)-4*M^4 (4) */
 
     /** In case a->infinity == 1, the above code results in r->x, r->y, and r->z all equal to 0.
-     *  Add b->x to x, b->y to y, and 1 to z in that case.
+     *  Replace r with b->x, b->y, 1 in that case.
      */
-    t = b->x; secp256k1_fe_mul_int(&t, a->infinity);
-    secp256k1_fe_add(&r->x, &t);
-    t = b->y; secp256k1_fe_mul_int(&t, a->infinity);
-    secp256k1_fe_add(&r->y, &t);
-    secp256k1_fe_set_int(&t, a->infinity);
-    secp256k1_fe_add(&r->z, &t);
+    secp256k1_fe_cmov(&r->x, &b->x, a->infinity);
+    secp256k1_fe_cmov(&r->y, &b->y, a->infinity);
+    secp256k1_fe_cmov(&r->z, &fe_1, a->infinity);
     r->infinity = infinity;
 }
 
