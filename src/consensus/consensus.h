@@ -25,9 +25,23 @@ static const int COINBASE_MATURITY = 100;
 /** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 
+/**
+ * Consensus validations:
+ * Check_ means checking everything possible with the data provided.
+ * Verify_ means all data provided was enough for this level and its "consensus-verified".
+ */
 namespace Consensus {
 
 class Params;
+
+/** Transaction validation functions */
+ 
+/**
+ * Check whether all inputs of this transaction are valid (no double spends and amounts)
+ * This does not modify the UTXO set. This does not check scripts and sigs.
+ * Preconditions: tx.IsCoinBase() is false.
+ */
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight);
 
 } // namespace Consensus
 
