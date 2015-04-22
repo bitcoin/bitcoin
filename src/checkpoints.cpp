@@ -25,12 +25,12 @@ namespace Checkpoints {
 
     bool fEnabled = true;
 
-    bool CheckBlock(int nHeight, const uint256& hash)
+    bool CheckBlock(const CCheckpointData& data, int nHeight, const uint256& hash)
     {
         if (!fEnabled)
             return true;
 
-        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
         if (i == checkpoints.end()) return true;
@@ -38,7 +38,7 @@ namespace Checkpoints {
     }
 
     //! Guess how far we are in the verification process at the given block index
-    double GuessVerificationProgress(CBlockIndex *pindex, bool fSigchecks) {
+    double GuessVerificationProgress(const CCheckpointData& data, CBlockIndex *pindex, bool fSigchecks) {
         if (pindex==NULL)
             return 0.0;
 
@@ -49,8 +49,6 @@ namespace Checkpoints {
         double fWorkAfter = 0.0;  // Amount of work left after pindex (estimated)
         // Work is defined as: 1.0 per transaction before the last checkpoint, and
         // fSigcheckVerificationFactor per transaction after.
-
-        const CCheckpointData &data = Params().Checkpoints();
 
         if (pindex->nChainTx <= data.nTransactionsLastCheckpoint) {
             double nCheapBefore = pindex->nChainTx;
@@ -69,22 +67,22 @@ namespace Checkpoints {
         return fWorkBefore / (fWorkBefore + fWorkAfter);
     }
 
-    int GetTotalBlocksEstimate()
+    int GetTotalBlocksEstimate(const CCheckpointData& data)
     {
         if (!fEnabled)
             return 0;
 
-        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
         return checkpoints.rbegin()->first;
     }
 
-    CBlockIndex* GetLastCheckpoint()
+    CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
     {
         if (!fEnabled)
             return NULL;
 
-        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = data.mapCheckpoints;
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
