@@ -31,6 +31,7 @@ matrix:
         apt:
           packages:
             - gcc-multilib
+            - libgmp-dev:i386
     - compiler: clang
       env: HOST=i686-linux-gnu
       addons:
@@ -49,6 +50,7 @@ matrix:
         apt:
           packages:
             - gcc-multilib
+            - libgmp-dev:i386
 before_script: ./autogen.sh
 script:
  - if [ -n "$HOST" ]; then export USE_HOST="--host=$HOST"; fi
