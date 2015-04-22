@@ -3970,16 +3970,14 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 
     // reset states
     if(!readPersistence()) clear_all_state();
-    p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
-    t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
-    s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
+    p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
+    t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight-1); // deleteAboveBlock functions are non-inclusive (>blocknum not >=blocknum)
+    s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight-1);
     reorgRecoveryMaxHeight = 0;
-
 
     nWaterlineBlock = GENESIS_BLOCK - 1;
     if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
     if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
-
 
     if(readPersistence()) {
       int best_state_block = load_most_relevant_state();
