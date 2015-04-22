@@ -44,47 +44,69 @@ static int secp256k1_fe_sqrt_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_mul(&x3, &x3, a);
 
     x6 = x3;
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&x6, &x6);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&x6, &x6);
+    }
     secp256k1_fe_mul(&x6, &x6, &x3);
 
     x9 = x6;
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&x9, &x9);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&x9, &x9);
+    }
     secp256k1_fe_mul(&x9, &x9, &x3);
 
     x11 = x9;
-    for (j=0; j<2; j++) secp256k1_fe_sqr(&x11, &x11);
+    for (j=0; j<2; j++) {
+        secp256k1_fe_sqr(&x11, &x11);
+    }
     secp256k1_fe_mul(&x11, &x11, &x2);
 
     x22 = x11;
-    for (j=0; j<11; j++) secp256k1_fe_sqr(&x22, &x22);
+    for (j=0; j<11; j++) {
+        secp256k1_fe_sqr(&x22, &x22);
+    }
     secp256k1_fe_mul(&x22, &x22, &x11);
 
     x44 = x22;
-    for (j=0; j<22; j++) secp256k1_fe_sqr(&x44, &x44);
+    for (j=0; j<22; j++) {
+        secp256k1_fe_sqr(&x44, &x44);
+    }
     secp256k1_fe_mul(&x44, &x44, &x22);
 
     x88 = x44;
-    for (j=0; j<44; j++) secp256k1_fe_sqr(&x88, &x88);
+    for (j=0; j<44; j++) {
+        secp256k1_fe_sqr(&x88, &x88);
+    }
     secp256k1_fe_mul(&x88, &x88, &x44);
 
     x176 = x88;
-    for (j=0; j<88; j++) secp256k1_fe_sqr(&x176, &x176);
+    for (j=0; j<88; j++) {
+        secp256k1_fe_sqr(&x176, &x176);
+    }
     secp256k1_fe_mul(&x176, &x176, &x88);
 
     x220 = x176;
-    for (j=0; j<44; j++) secp256k1_fe_sqr(&x220, &x220);
+    for (j=0; j<44; j++) {
+        secp256k1_fe_sqr(&x220, &x220);
+    }
     secp256k1_fe_mul(&x220, &x220, &x44);
 
     x223 = x220;
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&x223, &x223);
+    }
     secp256k1_fe_mul(&x223, &x223, &x3);
 
     /* The final result is then assembled using a sliding window over the blocks. */
 
     t1 = x223;
-    for (j=0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
+    for (j=0; j<23; j++) {
+        secp256k1_fe_sqr(&t1, &t1);
+    }
     secp256k1_fe_mul(&t1, &t1, &x22);
-    for (j=0; j<6; j++) secp256k1_fe_sqr(&t1, &t1);
+    for (j=0; j<6; j++) {
+        secp256k1_fe_sqr(&t1, &t1);
+    }
     secp256k1_fe_mul(&t1, &t1, &x2);
     secp256k1_fe_sqr(&t1, &t1);
     secp256k1_fe_sqr(r, &t1);
@@ -111,51 +133,77 @@ static void secp256k1_fe_inv(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_mul(&x3, &x3, a);
 
     x6 = x3;
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&x6, &x6);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&x6, &x6);
+    }
     secp256k1_fe_mul(&x6, &x6, &x3);
 
     x9 = x6;
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&x9, &x9);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&x9, &x9);
+    }
     secp256k1_fe_mul(&x9, &x9, &x3);
 
     x11 = x9;
-    for (j=0; j<2; j++) secp256k1_fe_sqr(&x11, &x11);
+    for (j=0; j<2; j++) {
+        secp256k1_fe_sqr(&x11, &x11);
+    }
     secp256k1_fe_mul(&x11, &x11, &x2);
 
     x22 = x11;
-    for (j=0; j<11; j++) secp256k1_fe_sqr(&x22, &x22);
+    for (j=0; j<11; j++) {
+        secp256k1_fe_sqr(&x22, &x22);
+    }
     secp256k1_fe_mul(&x22, &x22, &x11);
 
     x44 = x22;
-    for (j=0; j<22; j++) secp256k1_fe_sqr(&x44, &x44);
+    for (j=0; j<22; j++) {
+        secp256k1_fe_sqr(&x44, &x44);
+    }
     secp256k1_fe_mul(&x44, &x44, &x22);
 
     x88 = x44;
-    for (j=0; j<44; j++) secp256k1_fe_sqr(&x88, &x88);
+    for (j=0; j<44; j++) {
+        secp256k1_fe_sqr(&x88, &x88);
+    }
     secp256k1_fe_mul(&x88, &x88, &x44);
 
     x176 = x88;
-    for (j=0; j<88; j++) secp256k1_fe_sqr(&x176, &x176);
+    for (j=0; j<88; j++) {
+        secp256k1_fe_sqr(&x176, &x176);
+    }
     secp256k1_fe_mul(&x176, &x176, &x88);
 
     x220 = x176;
-    for (j=0; j<44; j++) secp256k1_fe_sqr(&x220, &x220);
+    for (j=0; j<44; j++) {
+        secp256k1_fe_sqr(&x220, &x220);
+    }
     secp256k1_fe_mul(&x220, &x220, &x44);
 
     x223 = x220;
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&x223, &x223);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&x223, &x223);
+    }
     secp256k1_fe_mul(&x223, &x223, &x3);
 
     /* The final result is then assembled using a sliding window over the blocks. */
 
     t1 = x223;
-    for (j=0; j<23; j++) secp256k1_fe_sqr(&t1, &t1);
+    for (j=0; j<23; j++) {
+        secp256k1_fe_sqr(&t1, &t1);
+    }
     secp256k1_fe_mul(&t1, &t1, &x22);
-    for (j=0; j<5; j++) secp256k1_fe_sqr(&t1, &t1);
+    for (j=0; j<5; j++) {
+        secp256k1_fe_sqr(&t1, &t1);
+    }
     secp256k1_fe_mul(&t1, &t1, a);
-    for (j=0; j<3; j++) secp256k1_fe_sqr(&t1, &t1);
+    for (j=0; j<3; j++) {
+        secp256k1_fe_sqr(&t1, &t1);
+    }
     secp256k1_fe_mul(&t1, &t1, &x2);
-    for (j=0; j<2; j++) secp256k1_fe_sqr(&t1, &t1);
+    for (j=0; j<2; j++) {
+        secp256k1_fe_sqr(&t1, &t1);
+    }
     secp256k1_fe_mul(r, a, &t1);
 }
 
@@ -188,8 +236,9 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
 static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_t u;
     size_t i;
-    if (len < 1)
+    if (len < 1) {
         return;
+    }
 
     VERIFY_CHECK((r + len <= a) || (a + len <= r));
 

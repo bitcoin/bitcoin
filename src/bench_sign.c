@@ -9,6 +9,7 @@
 #include "bench.h"
 
 typedef struct {
+    secp256k1_context_t* ctx;
     unsigned char msg[32];
     unsigned char key[32];
 } bench_sign_t;
@@ -29,7 +30,7 @@ static void bench_sign(void* arg) {
     for (i = 0; i < 20000; i++) {
         int j;
         int recid = 0;
-        CHECK(secp256k1_ecdsa_sign_compact(data->msg, sig, data->key, NULL, NULL, &recid));
+        CHECK(secp256k1_ecdsa_sign_compact(data->ctx, data->msg, sig, data->key, NULL, NULL, &recid));
         for (j = 0; j < 32; j++) {
             data->msg[j] = sig[j];             /* Move former R to message. */
             data->key[j] = sig[j + 32];        /* Move former S to key.     */
@@ -39,10 +40,11 @@ static void bench_sign(void* arg) {
 
 int main(void) {
     bench_sign_t data;
-    secp256k1_start(SECP256K1_START_SIGN);
+
+    data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
 
     run_benchmark("ecdsa_sign", bench_sign, bench_sign_setup, NULL, &data, 10, 20000);
 
-    secp256k1_stop();
+    secp256k1_context_destroy(data.ctx);
     return 0;
 }

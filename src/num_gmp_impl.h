@@ -54,7 +54,9 @@ static void secp256k1_num_set_bin(secp256k1_num_t *r, const unsigned char *a, un
     VERIFY_CHECK(len <= NUM_LIMBS*2);
     r->limbs = len;
     r->neg = 0;
-    while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
+    while (r->limbs > 1 && r->data[r->limbs-1]==0) {
+        r->limbs--;
+    }
 }
 
 static void secp256k1_num_add_abs(secp256k1_num_t *r, const secp256k1_num_t *a, const secp256k1_num_t *b) {
@@ -70,7 +72,9 @@ static void secp256k1_num_sub_abs(secp256k1_num_t *r, const secp256k1_num_t *a, 
     mp_limb_t c = mpn_sub(r->data, a->data, a->limbs, b->data, b->limbs);
     VERIFY_CHECK(c == 0);
     r->limbs = a->limbs;
-    while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
+    while (r->limbs > 1 && r->data[r->limbs-1]==0) {
+        r->limbs--;
+    }
 }
 
 static void secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
@@ -82,7 +86,9 @@ static void secp256k1_num_mod(secp256k1_num_t *r, const secp256k1_num_t *m) {
         mpn_tdiv_qr(t, r->data, 0, r->data, r->limbs, m->data, m->limbs);
         memset(t, 0, sizeof(t));
         r->limbs = m->limbs;
-        while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
+        while (r->limbs > 1 && r->data[r->limbs-1]==0) {
+            r->limbs--;
+        }
     }
 
     if (r->neg && (r->limbs > 1 || r->data[0] != 0)) {
@@ -125,7 +131,9 @@ static void secp256k1_num_mod_inverse(secp256k1_num_t *r, const secp256k1_num_t 
     if (sn < 0) {
         mpn_sub(r->data, m->data, m->limbs, r->data, -sn);
         r->limbs = m->limbs;
-        while (r->limbs > 1 && r->data[r->limbs-1]==0) r->limbs--;
+        while (r->limbs > 1 && r->data[r->limbs-1]==0) {
+            r->limbs--;
+        }
     } else {
         r->limbs = sn;
     }
@@ -143,15 +151,25 @@ static int secp256k1_num_is_neg(const secp256k1_num_t *a) {
 }
 
 static int secp256k1_num_cmp(const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    if (a->limbs > b->limbs) return 1;
-    if (a->limbs < b->limbs) return -1;
+    if (a->limbs > b->limbs) {
+        return 1;
+    }
+    if (a->limbs < b->limbs) {
+        return -1;
+    }
     return mpn_cmp(a->data, b->data, a->limbs);
 }
 
 static int secp256k1_num_eq(const secp256k1_num_t *a, const secp256k1_num_t *b) {
-    if (a->limbs > b->limbs) return 0;
-    if (a->limbs < b->limbs) return 0;
-    if ((a->neg && !secp256k1_num_is_zero(a)) != (b->neg && !secp256k1_num_is_zero(b))) return 0;
+    if (a->limbs > b->limbs) {
+        return 0;
+    }
+    if (a->limbs < b->limbs) {
+        return 0;
+    }
+    if ((a->neg && !secp256k1_num_is_zero(a)) != (b->neg && !secp256k1_num_is_zero(b))) {
+        return 0;
+    }
     return mpn_cmp(a->data, b->data, a->limbs) == 0;
 }
 
@@ -198,12 +216,15 @@ static void secp256k1_num_mul(secp256k1_num_t *r, const secp256k1_num_t *a, cons
         r->data[0] = 0;
         return;
     }
-    if (a->limbs >= b->limbs)
+    if (a->limbs >= b->limbs) {
         mpn_mul(tmp, a->data, a->limbs, b->data, b->limbs);
-    else
+    } else {
         mpn_mul(tmp, b->data, b->limbs, a->data, a->limbs);
+    }
     r->limbs = a->limbs + b->limbs;
-    if (r->limbs > 1 && tmp[r->limbs - 1]==0) r->limbs--;
+    if (r->limbs > 1 && tmp[r->limbs - 1]==0) {
+        r->limbs--;
+    }
     VERIFY_CHECK(r->limbs <= 2*NUM_LIMBS);
     mpn_copyi(r->data, tmp, r->limbs);
     r->neg = a->neg ^ b->neg;
@@ -227,7 +248,9 @@ static void secp256k1_num_shift(secp256k1_num_t *r, int bits) {
             }
         }
     }
-    while (r->limbs>1 && r->data[r->limbs-1]==0) r->limbs--;
+    while (r->limbs>1 && r->data[r->limbs-1]==0) {
+        r->limbs--;
+    }
 }
 
 static void secp256k1_num_negate(secp256k1_num_t *r) {

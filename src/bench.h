@@ -48,7 +48,7 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     print_number(min * 1000000.0 / iter);
     printf("us / avg ");
     print_number((sum / count) * 1000000.0 / iter);
-    printf("us / avg ");
+    printf("us / max ");
     print_number(max * 1000000.0 / iter);
     printf("us\n");
 }
