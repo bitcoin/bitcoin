@@ -65,26 +65,6 @@ const std::string getTradeReturnType(MatchReturnType ret)
     }
 }
 
-bool operator==(XDOUBLE first, XDOUBLE second)
-{
-    return (first.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed) == second.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed));
-}
-
-bool operator!=(XDOUBLE first, XDOUBLE second)
-{
-    return !(first == second);
-}
-
-bool operator<=(XDOUBLE first, XDOUBLE second)
-{
-    return ((first.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed) < second.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed)) || (first == second));
-}
-
-bool operator>=(XDOUBLE first, XDOUBLE second)
-{
-    return ((first.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed) > second.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed)) || (first == second));
-}
-
 static void PriceCheck(const std::string& label, XDOUBLE left, XDOUBLE right)
 {
     const bool bOK = (left == right);
