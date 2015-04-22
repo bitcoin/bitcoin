@@ -20,7 +20,7 @@ namespace Checkpoints
 typedef std::map<int, uint256> MapCheckpoints;
 
 struct CCheckpointData {
-    const MapCheckpoints *mapCheckpoints;
+    MapCheckpoints mapCheckpoints;
     int64_t nTimeLastCheckpoint;
     int64_t nTransactionsLastCheckpoint;
     double fTransactionsPerDay;
