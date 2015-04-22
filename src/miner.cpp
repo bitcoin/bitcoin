@@ -1141,15 +1141,13 @@ bool CheckWork(Bitcredit_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bi
     	return false;
     }
 
-    uint256 hash = pblock->GetHash();
-    uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-
-    if (hash > hashTarget)
-        return false;
+    if(!Bitcredit_CheckProofOfWork(pblock->GetHash(), pblock->nBits, pblock->nTotalDepositBase, pblock->nDepositAmount)) {
+    	return false;
+    }
 
     //// debug print
     LogPrintf("BitcreditMiner:\n");
-    LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
+    LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", pblock->GetHash().GetHex(), uint256().SetCompact(pblock->nBits).GetHex());
     pblock->print();
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
