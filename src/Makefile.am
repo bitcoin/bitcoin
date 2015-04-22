@@ -159,6 +159,7 @@ OMNICORE_H = \
   mastercore_dex.h \
   mastercore_errors.h \
   mastercore_log.h \
+  mastercore_mdex.h \
   mastercore_parse_string.h \
   mastercore_rpc.h \
   mastercore_script.h \
@@ -171,6 +172,7 @@ OMNICORE_CPP = \
   mastercore_convert.cpp \
   mastercore_dex.cpp \
   mastercore_log.cpp \
+  mastercore_mdex.cpp \
   mastercore_parse_string.cpp \
   mastercore_rpc.cpp \
   mastercore_script.cpp \
