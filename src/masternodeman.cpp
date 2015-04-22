@@ -16,6 +16,12 @@ CCriticalSection cs_process_message;
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
+// Keep track of all broadcasts I've seen
+map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+
+// Keep track of all pings I've seen
+map<uint256, CMasternodePing> mapSeenMasternodePing;
+
 struct CompareValueOnly
 {
     bool operator()(const pair<int64_t, CTxIn>& t1,
@@ -385,6 +391,12 @@ CMasternode *CMasternodeMan::FindRandom()
     return &vMasternodes[GetRandInt(vMasternodes.size())];
 }
 
+void CMasternodeMan::DecrementVotedTimes()
+{
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+        if(--mn.nVotedTimes < 0) mn.nVotedTimes = 0; 
+}
+
 CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
 {
     unsigned int score = 0;
@@ -550,6 +562,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         bool fRequested; //specifically requested?
         vRecv >> mnb >> fRequested;
 
+        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) return; //seen
+        mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
+
         int nDoS = 0;
         if(!mnb.CheckAndUpdate(nDoS, fRequested)){
 
@@ -589,7 +604,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodePing mnp;
         vRecv >> mnp;
 
-        if(fDebug) LogPrintf("mnping - Received: vin: %s sigTime: %lld\n", mnp.vin.ToString().c_str(), mnp.sigTime);
+        if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
+        mapSeenMasternodePing[mnp.GetHash()] = mnp;
 
         int nDoS = 0;
         if(!mnp.CheckAndUpdate(nDoS))
@@ -616,40 +632,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         pfrom->PushMessage("dseg", mnp.vin);
         int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
         mWeAskedForMasternodeListEntry[mnp.vin.prevout] = askAgain;
-
-    } else if (strCommand == "mvote") { //Masternode Vote
-
-        CTxIn vin;
-        vector<unsigned char> vchSig;
-        int nVote;
-        vRecv >> vin >> vchSig >> nVote;
-
-        // see if we have this Masternode
-        CMasternode* pmn = this->Find(vin);
-        if(pmn != NULL)
-        {
-            if((GetAdjustedTime() - pmn->lastVote) > (60*60))
-            {
-                std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nVote);
-
-                std::string errorMessage = "";
-                if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
-                {
-                    LogPrintf("mvote - Got bad Masternode address signature %s \n", vin.ToString().c_str());
-                    return;
-                }
-
-                pmn->nVote = nVote;
-                pmn->lastVote = GetAdjustedTime();
-
-                //send to all peers
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    pnode->PushMessage("mvote", vin, vchSig, nVote);
-            }
-
-            return;
-        }
 
     } else if (strCommand == "dseg") { //Get Masternode list or specific entry
 

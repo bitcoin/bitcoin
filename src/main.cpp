@@ -16,6 +16,7 @@
 #include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-payments.h"
+#include "masternode-budget.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "pow.h"
@@ -1567,10 +1568,6 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
     if(nHeight > 158000+((576*30)* 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
     if(nHeight > 158000+((576*30)* 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
     if(nHeight > 158000+((576*30)* 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
-    if(nHeight > 158000+((576*30)*11)) ret += blockValue / 40; // 348080 - 52.5% - 2015-10-05
-    if(nHeight > 158000+((576*30)*13)) ret += blockValue / 40; // 382640 - 55.0% - 2015-12-07
-    if(nHeight > 158000+((576*30)*15)) ret += blockValue / 40; // 417200 - 57.5% - 2016-02-08
-    if(nHeight > 158000+((576*30)*17)) ret += blockValue / 40; // 451760 - 60.0% - 2016-04-11
 
     return ret;
 }
@@ -2928,72 +2925,17 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // ----------- masternode payments -----------
 
-    bool MasternodePayments = block.nTime > Params().StartMasternodePayments();
-
-    if(!IsSporkActive(SPORK_1_MASTERNODE_PAYMENTS_ENFORCEMENT)){
-        MasternodePayments = false;
-        if(fDebug) LogPrintf("CheckBlock() : Masternode payment enforcement is off\n");
-    }
-
-    if(MasternodePayments)
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev != NULL) 
     {
-        LOCK2(cs_main, mempool.cs);
-
-        CBlockIndex *pindex = chainActive.Tip();
-        if(pindex != NULL){
-            if(pindex->GetBlockHash() == block.hashPrevBlock){
-                int64_t masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, block.vtx[0].GetValueOut());
-                bool fIsInitialDownload = IsInitialBlockDownload();
-
-                // If we don't already have its previous block, skip masternode payment step
-                if (!fIsInitialDownload && pindex != NULL)
-                {
-                    bool foundPaymentAmount = false;
-                    bool foundPayee = false;
-                    bool foundPaymentAndPayee = false;
-
-                    CScript payee;
-                    CTxIn vin;
-                    if(!masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee, vin) || payee == CScript()){
-                        foundPayee = true; //doesn't require a specific payee
-                        foundPaymentAmount = true;
-                        foundPaymentAndPayee = true;
-                        LogPrintf("CheckBlock() : Using non-specific masternode payments %d\n", chainActive.Tip()->nHeight+1);
-                    }
-
-                    for (unsigned int i = 0; i < block.vtx[0].vout.size(); i++) {
-                        if(block.vtx[0].vout[i].nValue == masternodePaymentAmount )
-                            foundPaymentAmount = true;
-                        if(block.vtx[0].vout[i].scriptPubKey == payee )
-                            foundPayee = true;
-                        if(block.vtx[0].vout[i].nValue == masternodePaymentAmount && block.vtx[0].vout[i].scriptPubKey == payee)
-                            foundPaymentAndPayee = true;
-                    }
-
-
-                    CTxDestination address1;
-                    ExtractDestination(payee, address1);
-                    CBitcoinAddress address2(address1);
-
-                    if(!foundPaymentAndPayee) {
-                        LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                        if(Params().NetworkID() != CBaseChainParams::REGTEST) return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
-                    } else {
-                        LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), chainActive.Tip()->nHeight+1);
-                    }
-                } else {
-                    LogPrintf("CheckBlock() : Is initial download, skipping masternode payment check %d\n", chainActive.Tip()->nHeight+1);
-                }
-            } else {
-                LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", chainActive.Tip()->nHeight+1, block.GetHash().ToString().c_str());
-            }
-        } else {
-            LogPrintf("CheckBlock() : pindex is null, skipping masternode payment check\n");
+        if(masternodePayments.IsTransactionValid(block.vtx[0], pindexPrev->nHeight+1))
+        {
+            if(Params().NetworkID() != CBaseChainParams::REGTEST) 
+                return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
         }
-    } else {
-        LogPrintf("CheckBlock() : skipping masternode payment checks\n");
     }
 
+    // -------------------------------------------
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -3288,7 +3230,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
             CScript payee;
             CTxIn vin;
-            if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight, payee, vin)){
+            if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight, payee)){
                 //UPDATE MASTERNODE LAST PAID TIME
                 CMasternode* pmn = mnodeman.Find(vin);
                 if(pmn != NULL) pmn->nLastPaid = GetAdjustedTime(); 
@@ -3300,6 +3242,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
+            //budget.NewBlock();
         }
     }
 
@@ -3985,9 +3928,13 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
-        return mapSeenMasternodeVotes.count(inv.hash);
+        return true; // mapMasternodePayeeVotes.count(inv.hash);
     case MSG_MASTERNODE_SCANNING_ERROR:
         return mapMasternodeScanningErrors.count(inv.hash);
+    case MSG_MASTERNODE_ANNOUNCE:
+        return mapSeenMasternodeBroadcast.count(inv.hash);
+    case MSG_MASTERNODE_PING:
+        return mapSeenMasternodePing.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -4139,10 +4086,10 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_MASTERNODE_WINNER) {
-                    if(mapSeenMasternodeVotes.count(inv.hash)){
+                    if(mapMasternodePayeeVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeVotes[inv.hash];
+                        ss << mapMasternodePayeeVotes[inv.hash];
                         pfrom->PushMessage("mnw", ss);
                         pushed = true;
                     }
@@ -4153,6 +4100,26 @@ void static ProcessGetData(CNode* pfrom)
                         ss.reserve(1000);
                         ss << mapMasternodeScanningErrors[inv.hash];
                         pfrom->PushMessage("mnse", ss);
+                        pushed = true;
+                    }
+                }
+
+                if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
+                    if(mapSeenMasternodeBroadcast.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapSeenMasternodeBroadcast[inv.hash];
+                        pfrom->PushMessage("mnb", ss);
+                        pushed = true;
+                    }
+                }
+
+                if (!pushed && inv.type == MSG_MASTERNODE_PING) {
+                    if(mapSeenMasternodePing.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mapSeenMasternodePing[inv.hash];
+                        pfrom->PushMessage("mnp", ss);
                         pushed = true;
                     }
                 }
@@ -5022,7 +4989,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         //probably one the extensions
         darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
         mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
-        ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+        budget.ProcessMessage(pfrom, strCommand, vRecv);
+        //TODO
+        //ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
         ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);

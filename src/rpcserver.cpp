@@ -311,6 +311,7 @@ static const CRPCCommand vRPCCommands[] =
     /* Dash features */
     { "dash",               "spork",                  &spork,                  true,      false,      false },
     { "dash",               "masternode",             &masternode,             true,      false,      true  },
+    { "dash",               "mnbudget",               &mnbudget,               true,      false,      false },
     { "dash",               "masternodelist",         &masternodelist,         true,      false,      false },
 #ifdef ENABLE_WALLET
     { "dash",               "darksend",               &darksend,               false,     false,      true  },

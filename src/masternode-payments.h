@@ -6,59 +6,147 @@
 #ifndef MASTERNODE_PAYMENTS_H
 #define MASTERNODE_PAYMENTS_H
 
-#include "sync.h"
-#include "net.h"
+//#include "sync.h"
+//#include "net.h"
 #include "key.h"
-#include "util.h"
-#include "base58.h"
+//#include "util.h"
+//#include "base58.h"
 #include "main.h"
 #include "masternode.h"
-#include "masternode-pos.h"
-#include "timedata.h"
+//#include "masternode-pos.h"
+//#include "timedata.h"
 
 using namespace std;
 
 class CMasternodePayments;
 class CMasternodePaymentWinner;
+class CMasternodeBlockPayees;
 
 extern CMasternodePayments masternodePayments;
-extern map<uint256, CMasternodePaymentWinner> mapSeenMasternodeVotes;
+extern std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
+extern std::map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
+
+static const int MIN_MNPAYMENTS_PROTO_VERSION = 70066;
+#define MNPAYMENTS_SIGNATURES_REQUIRED           11
+#define MNPAYMENTS_SIGNATURES_TOTAL              20
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+bool IsReferenceNode(CTxIn& vin);
 
+class CMasternodePayee : public CTxOut
+{
+public:
+    int nVotes;
 
-// for storing the winning payments
-class CMasternodePaymentWinner
+    CMasternodePayee() {
+        scriptPubKey = CScript();
+        nValue = 0;
+        nVotes = 0;
+    }
+
+    CMasternodePayee(CAmount nValue, CScript payee) {
+        scriptPubKey = payee;
+        nValue = nValue;
+        nVotes = 0;
+    }
+};
+
+// Keep track of votes for payees from masternodes
+class CMasternodeBlockPayees
 {
 public:
     int nBlockHeight;
-    CTxIn vin;
-    CScript payee;
-    std::vector<unsigned char> vchSig;
-    uint64_t score;
+    std::vector<CMasternodePayee> vecPayments;
 
-    CMasternodePaymentWinner() {
+    CMasternodeBlockPayees(){
         nBlockHeight = 0;
-        score = 0;
-        vin = CTxIn();
-        payee = CScript();
+        vecPayments.clear();
+    }
+    CMasternodeBlockPayees(int nBlockHeightIn) {
+        nBlockHeight = nBlockHeightIn;
+        vecPayments.clear();
     }
 
-    uint256 GetHash(){
-        uint256 n2 = HashX11(BEGIN(nBlockHeight), END(nBlockHeight));
-        uint256 n3 = vin.prevout.hash > n2 ? (vin.prevout.hash - n2) : (n2 - vin.prevout.hash);
+    void AddPayee(CScript payeeIn, int64_t nAmount, int nIncrement){
+        BOOST_FOREACH(CMasternodePayee& payee, vecPayments){
+            if(payee.scriptPubKey == payeeIn && payee.nValue == nAmount) {
+                payee.nVotes += nIncrement;
+                return;
+            }
+        }
 
-        return n3;
+        CMasternodePayee c((CAmount)nAmount, payeeIn);
+        vecPayments.push_back(c);
     }
+
+    bool GetPayee(CScript& payee)
+    {
+        int nVotes = -1;
+        BOOST_FOREACH(CMasternodePayee& p, vecPayments){
+            if(p.nVotes > nVotes){
+                payee = p.scriptPubKey; 
+                nVotes = p.nVotes;
+            }
+        }        
+
+        return nVotes > -1;
+    }
+
+    bool IsTransactionValid(const CTransaction& txNew);
+    std::string GetRequiredPaymentsString();
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nBlockHeight);
+        READWRITE(vecPayments);
+     }
+};
+
+// for storing the winning payments
+class CMasternodePaymentWinner
+{
+public:
+    CTxIn vinMasternode;
+
+    int nBlockHeight;
+    CTxOut payee;
+    std::vector<unsigned char> vchSig;
+
+    CMasternodePaymentWinner() {
+        nBlockHeight = 0;
+        vinMasternode = CTxIn();
+        payee = CTxOut();
+    }
+
+    CMasternodePaymentWinner(CTxIn vinIn) {
+        nBlockHeight = 0;
+        vinMasternode = vinIn;
+        payee = CTxOut();
+    }
+
+    uint256 GetHash(){
+        return Hash(BEGIN(payee), END(payee));
+    }
+
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool IsValid();
+    bool SignatureValid();
+    void Relay();
+
+    void AddPayee(CScript payeeIn, int64_t nAmount){
+        payee.scriptPubKey = payeeIn;
+        payee.nValue = nAmount;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vinMasternode);
+        READWRITE(nBlockHeight);
         READWRITE(payee);
-        READWRITE(vin);
-        READWRITE(score);
         READWRITE(vchSig);
      }
 };
@@ -71,37 +159,29 @@ public:
 class CMasternodePayments
 {
 private:
-    std::vector<CMasternodePaymentWinner> vWinning;
     int nSyncedFromPeer;
-    std::string strMasterPrivKey;
-    bool enabled;
     int nLastBlockHeight;
 
 public:
 
     CMasternodePayments() {
-        enabled = false;
+        nSyncedFromPeer = 0;
+        nLastBlockHeight = 0;
     }
 
-    bool SetPrivKey(std::string strPrivKey);
-    bool CheckSignature(CMasternodePaymentWinner& winner);
-    bool Sign(CMasternodePaymentWinner& winner);
-
-    // Deterministically calculate a given "score" for a masternode depending on how close it's hash is
-    // to the blockHeight. The further away they are the better, the furthest will win the election
-    // and get paid this block
-    //
-
-    uint64_t CalculateScore(uint256 blockHash, CTxIn& vin);
-    bool GetWinningMasternode(int nBlockHeight, CTxIn& vinOut);
     bool AddWinningMasternode(CMasternodePaymentWinner& winner);
     bool ProcessBlock(int nBlockHeight);
-    void Relay(CMasternodePaymentWinner& winner);
+    
     void Sync(CNode* node);
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);
 
-    bool GetBlockPayee(int nBlockHeight, CScript& payee, CTxIn& vin);
+    bool GetBlockPayee(int nBlockHeight, CScript& payee);
+    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
+
+    void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    std::string GetRequiredPaymentsString(int nBlockHeight);
+
 };
 
 
