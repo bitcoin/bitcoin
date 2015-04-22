@@ -236,8 +236,9 @@ static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe_t *r) {
     z1 = z0 ^ 0x3D0UL;
 
     /* Fast return path should catch the majority of cases */
-    if ((z0 != 0UL) & (z1 != 0x3FFFFFFUL))
+    if ((z0 != 0UL) & (z1 != 0x3FFFFFFUL)) {
         return 0;
+    }
 
     t1 = r->n[1];
     t2 = r->n[2];
@@ -315,8 +316,12 @@ static int secp256k1_fe_cmp_var(const secp256k1_fe_t *a, const secp256k1_fe_t *b
     secp256k1_fe_verify(b);
 #endif
     for (i = 9; i >= 0; i--) {
-        if (a->n[i] > b->n[i]) return 1;
-        if (a->n[i] < b->n[i]) return -1;
+        if (a->n[i] > b->n[i]) {
+            return 1;
+        }
+        if (a->n[i] < b->n[i]) {
+            return -1;
+        }
     }
     return 0;
 }
@@ -1060,6 +1065,26 @@ static void secp256k1_fe_sqr(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     r->magnitude = 1;
     r->normalized = 0;
     secp256k1_fe_verify(r);
+#endif
+}
+
+static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag) {
+    uint32_t mask0, mask1;
+    mask0 = flag + ~((uint32_t)0);
+    mask1 = ~mask0;
+    r->n[0] = (r->n[0] & mask0) | (a->n[0] & mask1);
+    r->n[1] = (r->n[1] & mask0) | (a->n[1] & mask1);
+    r->n[2] = (r->n[2] & mask0) | (a->n[2] & mask1);
+    r->n[3] = (r->n[3] & mask0) | (a->n[3] & mask1);
+    r->n[4] = (r->n[4] & mask0) | (a->n[4] & mask1);
+    r->n[5] = (r->n[5] & mask0) | (a->n[5] & mask1);
+    r->n[6] = (r->n[6] & mask0) | (a->n[6] & mask1);
+    r->n[7] = (r->n[7] & mask0) | (a->n[7] & mask1);
+    r->n[8] = (r->n[8] & mask0) | (a->n[8] & mask1);
+    r->n[9] = (r->n[9] & mask0) | (a->n[9] & mask1);
+#ifdef VERIFY
+    r->magnitude = (r->magnitude & mask0) | (a->magnitude & mask1);
+    r->normalized = (r->normalized & mask0) | (a->normalized & mask1);
 #endif
 }
 
