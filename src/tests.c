@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Copyright (c) 2013, 2014, 2015 Pieter Wuille, Gregory Maxwell      *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -753,12 +753,22 @@ void run_field_misc(void) {
         CHECK(secp256k1_fe_equal_var(&x, &x));
         z = x;
         secp256k1_fe_add(&z,&y);
-        secp256k1_fe_normalize(&z);
+        /* Test fe conditional move; z is not normalized here. */
+        q = x;
+        secp256k1_fe_cmov(&x, &z, 0);
+        secp256k1_fe_cmov(&x, &x, 1);
+        CHECK(memcmp(&x, &z, sizeof(x)) != 0);
+        CHECK(memcmp(&x, &q, sizeof(x)) == 0);
+        secp256k1_fe_cmov(&q, &z, 1);
+        CHECK(memcmp(&q, &z, sizeof(q)) == 0);
         /* Test storage conversion and conditional moves. */
+        secp256k1_fe_normalize(&z);
+        CHECK(!secp256k1_fe_equal_var(&x, &z));
         secp256k1_fe_to_storage(&xs, &x);
         secp256k1_fe_to_storage(&ys, &y);
         secp256k1_fe_to_storage(&zs, &z);
         secp256k1_fe_storage_cmov(&zs, &xs, 0);
+        secp256k1_fe_storage_cmov(&zs, &zs, 1);
         CHECK(memcmp(&xs, &zs, sizeof(xs)) != 0);
         secp256k1_fe_storage_cmov(&ys, &xs, 1);
         CHECK(memcmp(&xs, &ys, sizeof(xs)) == 0);
