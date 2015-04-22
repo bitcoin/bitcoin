@@ -15,7 +15,6 @@ map<uint256, int> mapSeenMasternodeScanningErrors;
 // cache block hashes as we calculate them
 std::map<int64_t, uint256> mapCacheBlockHashes;
 
-
 struct CompareValueOnly
 {
     bool operator()(const pair<int64_t, CTxIn>& t1,
@@ -83,10 +82,9 @@ CMasternode::CMasternode()
     nLastDsq = 0;
     donationAddress = CScript();
     donationPercentage = 0;
-    nVote = 0;
-    lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
+    nVotedTimes = 0;
 
     //mark last paid as current for new entries
     nLastPaid = GetAdjustedTime();
@@ -112,11 +110,10 @@ CMasternode::CMasternode(const CMasternode& other)
     nLastDsq = other.nLastDsq;
     donationAddress = other.donationAddress;
     donationPercentage = other.donationPercentage;
-    nVote = other.nVote;
-    lastVote = other.lastVote;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
     nLastPaid = other.nLastPaid;
+    nVotedTimes = other.nVotedTimes;
 }
 
 CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
@@ -139,11 +136,10 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     nLastDsq = 0;
     donationAddress = newDonationAddress;
     donationPercentage = newDonationPercentage;
-    nVote = 0;
-    lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
     nLastPaid = GetAdjustedTime();    
+    nVotedTimes = 0;
 }
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
@@ -166,11 +162,10 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     nLastDsq = 0;
     donationAddress = mnb.donationAddress;
     donationPercentage = mnb.donationPercentage;
-    nVote = 0;
-    lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
     nLastPaid = mnb.nLastPaid;
+    nVotedTimes = 0;
 }
 
 //
@@ -272,8 +267,6 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     nLastDsq = 0;
     donationAddress = CScript();
     donationPercentage = 0;
-    nVote = 0;
-    lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
 
@@ -300,8 +293,6 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     nLastDsq = 0;
     donationAddress = newDonationAddress;
     donationPercentage = newDonationPercentage;
-    nVote = 0;
-    lastVote = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
     nLastPaid = GetAdjustedTime();  
@@ -326,8 +317,6 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& other)
     nLastDsq = other.nLastDsq;
     donationAddress = other.donationAddress;
     donationPercentage = other.donationPercentage;
-    nVote = other.nVote;
-    lastVote = other.lastVote;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
     nLastPaid = other.nLastPaid;
@@ -481,9 +470,14 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
 
 void CMasternodeBroadcast::Relay(bool fRequested)
 {
+    CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
+
+    vector<CInv> vInv;
+    vInv.push_back(inv);
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("mnb", (*this), fRequested);
+    BOOST_FOREACH(CNode* pnode, vNodes){
+        pnode->PushMessage("inv", vInv);
+    }
 }
 
 bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
@@ -591,9 +585,12 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
 
 void CMasternodePing::Relay()
 {
-    //const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop
+    CInv inv(MSG_MASTERNODE_PING, GetHash());
 
+    vector<CInv> vInv;
+    vInv.push_back(inv);
     LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage("mnp", (*this));
+    BOOST_FOREACH(CNode* pnode, vNodes){
+        pnode->PushMessage("inv", vInv);
+    }
 }

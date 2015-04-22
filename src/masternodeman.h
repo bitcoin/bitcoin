@@ -20,6 +20,12 @@ using namespace std;
 
 class CMasternodeMan;
 
+// Keep track of all broadcasts I've seen
+extern map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+
+// Keep track of all pings I've seen
+extern map<uint256, CMasternodePing> mapSeenMasternodePing;
+
 extern CMasternodeMan mnodeman;
 void DumpMasternodes();
 
@@ -107,6 +113,9 @@ public:
 
     /// Find a random entry
     CMasternode* FindRandom();
+
+    /// Decrement all masternode nVotedTimes, called 1/6 blocks (allowing for 100 votes each day)
+    void DecrementVotedTimes();
 
     /// Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);

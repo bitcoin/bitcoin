@@ -24,6 +24,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
+#include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternodeman.h"
 #include "spork.h"
@@ -164,6 +165,7 @@ void Shutdown()
 #endif
     StopNode();
     DumpMasternodes();
+    DumpBudgets();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -826,11 +828,9 @@ bool AppInit2(boost::thread_group& threadGroup)
             threadGroup.create_thread(&ThreadScriptCheck);
     }
 
-    if (mapArgs.count("-masternodepaymentskey")) // masternode payments priv key
+    if (mapArgs.count("-sporkkey")) // spork priv key
     {
-        if (!masternodePayments.SetPrivKey(GetArg("-masternodepaymentskey", "")))
-            return InitError(_("Unable to sign masternode payment winner, wrong key?"));
-        if (!sporkManager.SetPrivKey(GetArg("-masternodepaymentskey", "")))
+        if (!sporkManager.SetPrivKey(GetArg("-sporkkey", "")))
             return InitError(_("Unable to sign spork message, wrong key?"));
     }
 

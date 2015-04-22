@@ -230,6 +230,7 @@ extern json_spirit::Value darksend(const json_spirit::Array& params, bool fHelp)
 extern json_spirit::Value spork(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternode(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value masternodelist(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value mnbudget(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,
