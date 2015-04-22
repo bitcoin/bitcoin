@@ -30,7 +30,7 @@ namespace Checkpoints {
         if (!fEnabled)
             return true;
 
-        const MapCheckpoints& checkpoints = *Params().Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
 
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
         if (i == checkpoints.end()) return true;
@@ -74,7 +74,7 @@ namespace Checkpoints {
         if (!fEnabled)
             return 0;
 
-        const MapCheckpoints& checkpoints = *Params().Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
 
         return checkpoints.rbegin()->first;
     }
@@ -84,7 +84,7 @@ namespace Checkpoints {
         if (!fEnabled)
             return NULL;
 
-        const MapCheckpoints& checkpoints = *Params().Checkpoints().mapCheckpoints;
+        const MapCheckpoints& checkpoints = Params().Checkpoints().mapCheckpoints;
 
         BOOST_REVERSE_FOREACH(const MapCheckpoints::value_type& i, checkpoints)
         {
