@@ -157,15 +157,20 @@ class RawTransactionsTest(BitcoinTestFramework):
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
         outputs = { self.nodes[0].getnewaddress() : 1.0 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
+
+        # 4-byte version + 1-byte vin count + 36-byte prevout then script_len
+        rawtx = rawtx[:82] + "0100" + rawtx[84:]
+
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
+        assert_equal("00", dec_tx['vin'][0]['scriptSig']['hex'])
 
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
         totalOut = 0
         matchingOuts = 0
-        for out in dec_tx['vout']:
+        for i, out in enumerate(dec_tx['vout']):
             totalOut += out['value']
             if outputs.has_key(out['scriptPubKey']['addresses'][0]):
                 matchingOuts+=1
