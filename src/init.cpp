@@ -999,7 +999,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
         SetProxy(NET_TOR, addrProxy);
-        SetNameProxy(addrProxy);
         SetReachable(NET_TOR); // by default, -proxy sets onion as reachable, unless -noonion later
     }
 
