@@ -87,6 +87,7 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compressor.h \
+  consensus/consensus.h \
   consensus/params.h \
   core_io.h \
   wallet/db.h \
@@ -174,6 +175,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/txverify.cpp \
   init.cpp \
   leveldbwrapper.cpp \
   main.cpp \
