@@ -2363,8 +2363,9 @@ Value fundrawtransaction(const Array& params, bool fHelp)
                             "1. \"hexstring\"    (string, required) The hex string of the raw transaction\n"
                             "\nResult:\n"
                             "{\n"
-                            "  \"hex\": \"value\",   (string)  The resulting raw transaction (hex-encoded string)\n"
-                            "  \"fee\": n            (numeric) The fee added to the transaction\n"
+                            "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
+                            "  \"fee\":       n,         (numeric) The fee added to the transaction\n"
+                            "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
                             "}\n"
                             "\"hex\"             \n"
                             "\nExamples:\n"
@@ -2388,12 +2389,13 @@ Value fundrawtransaction(const Array& params, bool fHelp)
     CMutableTransaction txNew;
     CAmount nFeeRet;
     string strFailReason;
-    int nChangePosRet = -1;
-    if(!pwalletMain->FundTransaction(tx, txNew, nFeeRet, nChangePosRet, strFailReason))
+    int nChangePos = -1;
+    if(!pwalletMain->FundTransaction(tx, txNew, nFeeRet, nChangePos, strFailReason))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     Object result;
     result.push_back(Pair("hex", EncodeHexTx(txNew)));
+    result.push_back(Pair("changepos", nChangePos));
     result.push_back(Pair("fee", ValueFromAmount(nFeeRet)));
 
     return result;
