@@ -294,6 +294,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-forcednsseed", strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), 0));
     strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"));
     strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (default: %u)"), 125));
+    strUsage += HelpMessageOpt("-maxoutbound=<n>", strprintf(_("Establish at most <n> _outbound_ connections to peers (default: %u)"), 8));
     strUsage += HelpMessageOpt("-maxreceivebuffer=<n>", strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), 5000));
     strUsage += HelpMessageOpt("-maxsendbuffer=<n>", strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), 1000));
     strUsage += HelpMessageOpt("-onion=<ip:port>", strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy"));
@@ -673,6 +674,30 @@ bool AppInit2(boost::thread_group& threadGroup)
         return InitError(_("Not enough file descriptors available."));
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
+
+    // This option is useful for mining pools that want faster block propagation.
+    // Outbound connections will statistically have better overall network connectivity
+    // than incoming connections. This is due to most nodes that accept these
+    // outbound connections supporting a maximum of 125 connections.
+    // Inbound connections are often NAT restricted and will then only support 8
+    // connections. These NAT restricted connections are less desirable for pools.
+    // This can be demonstrated using the following example of a pool with 125 connections.
+    // This example makes the assumption that inbound connections are NAT restricted and 
+    // limited to 8 connections while outbound connections connect to nodes with the
+    // default connection limit of 125.
+    // Connection capacity within one hop of pool with default settings:
+    // (8 outbound connections * 125 connections per node) +
+    // (117 incoming connections * 8 connections per node) =
+    // 1936 Connections within one hop of the pool server
+    // (125 outbound connections * 125 connections per node) =
+    // 15625 Connections within one hop of the pool server
+    // Based off of these calculations a pool server can have about 8 times the
+    // overall network connections within one hop while establishing
+    // the same amount of connections itself. In reality it will likely be even more
+    // due to the bitcoin network having far more available connections slots on nodes
+    // than there are nodes trying to connect to those slots.
+    // This setting should only be used by pool operators.
+    nMaxOutboundConnections = GetArg("-maxoutbound", 8);
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
