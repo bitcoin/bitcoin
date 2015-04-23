@@ -6,7 +6,6 @@
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
-#include "arith_uint256.h"
 #include "chainparamsbase.h"
 #include "checkpoints.h"
 #include "consensus/params.h"
@@ -41,11 +40,9 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
-    const uint256& HashGenesisBlock() const { return consensus.hashGenesisBlock; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
-    const arith_uint256& ProofOfWorkLimit() const { return consensus.powLimit; }
     int SubsidyHalvingInterval() const { return consensus.nSubsidyHalvingInterval; }
     int EnforceBlockUpgradeMajority() const { return consensus.nMajorityEnforceBlockUpgrade; }
     int RejectBlockOutdatedMajority() const { return consensus.nMajorityRejectBlockOutdated; }
@@ -59,13 +56,8 @@ public:
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
-    /** Allow mining of a min-difficulty block */
-    bool AllowMinDifficultyBlocks() const { return consensus.fPowAllowMinDifficultyBlocks; }
     /** Make standard checks */
     bool RequireStandard() const { return fRequireStandard; }
-    int64_t TargetTimespan() const { return consensus.nPowTargetTimespan; }
-    int64_t TargetSpacing() const { return consensus.nPowTargetSpacing; }
-    int64_t DifficultyAdjustmentInterval() const { return consensus.nPowTargetTimespan / consensus.nPowTargetSpacing; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** In the future use NetworkIDString() for RPC fields */
