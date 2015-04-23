@@ -170,7 +170,7 @@ Value getrawmempool(const Array& params, bool fHelp)
             "        \"transactionid\",    (string) parent transaction id\n"
             "       ... ]\n"
             "  }, ...\n"
-            "]\n"
+            "}\n"
             "\nExamples\n"
             + HelpExampleCli("getrawmempool", "true")
             + HelpExampleRpc("getrawmempool", "true")
