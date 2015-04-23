@@ -89,8 +89,10 @@ class BitcoinTestFramework(object):
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
                           help="Leave bitcoinds and test.* datadir on exit or error")
+        parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
+                          help="Don't stop bitcoinds after the test execution")
         parser.add_option("--srcdir", dest="srcdir", default="../../src",
-                          help="Source directory containing bitcoind/bitcoin-cli (default: %default%)")
+                          help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
         parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
@@ -128,11 +130,14 @@ class BitcoinTestFramework(object):
             print("Unexpected exception caught during testing: "+str(e))
             traceback.print_tb(sys.exc_info()[2])
 
-        print("Stopping nodes")
-        stop_nodes(self.nodes)
-        wait_bitcoinds()
+        if not self.options.noshutdown:
+            print("Stopping nodes")
+            stop_nodes(self.nodes)
+            wait_bitcoinds()
+        else:
+            print("Note: bitcoinds were not stopped and may still be running")
 
-        if not self.options.nocleanup:
+        if not self.options.nocleanup and not self.options.noshutdown:
             print("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
 
