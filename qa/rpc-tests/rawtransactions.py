@@ -27,7 +27,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         print "Mining blocks..."
-        feeTolerance = 2 #if the fee's positive delta is higher than this value tests will fail, neg. delta always fail the tests
+        feeTolerance = Decimal(0.00000002) #if the fee's positive delta is higher than this value tests will fail, neg. delta always fail the tests
 
         self.nodes[2].generate(1)
         self.nodes[0].generate(101)
@@ -55,7 +55,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             totalOut += out['value']
 
         assert_equal(len(dec_tx['vin']), 1) #one vin coin
-        assert_equal(fee*0.00000001+float(totalOut), 1.5) #the 1.5BTC coin must be taken
+        assert_equal(fee + totalOut, 1.5) #the 1.5BTC coin must be taken
 
         ##############################
         # simple test with two coins #
@@ -73,7 +73,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             totalOut += out['value']
 
         assert_equal(len(dec_tx['vin']), 2) #one vin coin
-        assert_equal(fee*0.00000001+float(totalOut), 2.5) #the 1.5BTC+1.0BTC coins must have be taken
+        assert_equal(fee + totalOut, 2.5) #the 1.5BTC+1.0BTC coins must have be taken
 
         ##############################
         # simple test with two coins #
@@ -91,7 +91,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             totalOut += out['value']
 
         assert_equal(len(dec_tx['vin']), 1) #one vin coin
-        assert_equal(fee*0.00000001+float(totalOut), 5.0) #the 5.0BTC coin must have be taken
+        assert_equal(fee + totalOut, 5.0) #the 5.0BTC coin must have be taken
 
 
         ################################
@@ -110,7 +110,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             totalOut += out['value']
 
         assert_equal(len(dec_tx['vin']), 2) #one vin coin
-        assert_equal(fee*0.00000001+float(totalOut), 6.0) #the 5.0BTC + 1.0BTC coins must have be taken
+        assert_equal(fee + totalOut, 6.0) #the 5.0BTC + 1.0BTC coins must have be taken
 
 
 
@@ -139,7 +139,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for out in dec_tx['vout']:
             totalOut += out['value']
 
-        assert_equal(fee*0.00000001+float(totalOut), utx['amount']) #compare vin total and totalout+fee
+        assert_equal(fee + totalOut, utx['amount']) #compare vin total and totalout+fee
 
 
         #########################################################################
@@ -173,7 +173,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(matchingOuts, 1)
         assert_equal(len(dec_tx['vout']), 2)
 
-        assert_equal(fee*0.00000001+float(totalOut), 2.5) #this tx must use the 1.0BTC and the 1.5BTC coin
+        assert_equal(fee + totalOut, 2.5) #this tx must use the 1.0BTC and the 1.5BTC coin
 
 
         ###########################################
@@ -217,7 +217,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                     matchingIns+=1
 
         assert_equal(matchingIns, 2) #we now must see two vins identical to vins given as params
-        assert_equal(fee*0.00000001+float(totalOut), 7.5) #this tx must use the 1.0BTC and the 1.5BTC coin
+        assert_equal(fee + totalOut, 7.5) #this tx must use the 1.0BTC and the 1.5BTC coin
 
 
         #########################################################
@@ -253,7 +253,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         assert_equal(matchingOuts, 2)
         assert_equal(len(dec_tx['vout']), 3)
-        assert_equal(fee*0.00000001+float(totalOut), 7.5) #this tx must use the 1.0BTC and the 1.5BTC coin
+        assert_equal(fee + totalOut, 7.5) #this tx must use the 1.0BTC and the 1.5BTC coin
 
 
         ##############################################
@@ -284,7 +284,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1.1);
-        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
@@ -299,7 +299,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedTx = self.nodes[0].fundrawtransaction(rawTx)
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendmany("", outputs);
-        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
@@ -326,7 +326,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.1);
-        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
@@ -359,7 +359,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.1);
-        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']*100000000
+        signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);
@@ -467,7 +467,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #create same transaction over sendtoaddress
         txId = self.nodes[1].sendmany("", outputs);
-        signedFee = self.nodes[1].getrawmempool(True)[txId]['fee']*100000000
+        signedFee = self.nodes[1].getrawmempool(True)[txId]['fee']
 
         #compare fee
         feeDelta = Decimal(fundedTx['fee']) - Decimal(signedFee);

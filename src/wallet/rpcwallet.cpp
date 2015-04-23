@@ -2355,30 +2355,30 @@ Value fundrawtransaction(const Array& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
                             "fundrawtransaction \"hexstring\"\n"
-                            "\nAdd inputs to a raw transaction as well as a change output.\n"
-                            "\nAlso see createrawtransaction and signrawtransaction calls.\n"
+                            "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
+                            "This will not modify existing inputs, and will add one change output to the outputs.\n"
+                            "Note that inputs which were signed may need to be resigned after completion.\n"
+                            "The inputs added will not be signed, use signrawtransaction for that.\n"
                             "\nArguments:\n"
                             "1. \"hexstring\"    (string, required) The hex string of the raw transaction\n"
                             "\nResult:\n"
                             "{\n"
-                            "  \"hex\": \"value\",   (string) The raw transaction with vIns (hex-encoded string)\n"
-                            "  \"fee\": n       calculated fee\n"
+                            "  \"hex\": \"value\",   (string)  The resulting raw transaction (hex-encoded string)\n"
+                            "  \"fee\": n            (numeric) The fee added to the transaction\n"
                             "}\n"
                             "\"hex\"             \n"
                             "\nExamples:\n"
-                            "\nCreate a transaction with empty vIns\n"
+                            "\nCreate a transaction with no inputs\n"
                             + HelpExampleCli("createrawtransaction", "\"[]\" \"{\\\"myaddress\\\":0.01}\"") +
-                            "\nFund the transaction, and get back the hex\n"
-                            + HelpExampleCli("fundrawtransaction", "\"myhex\"") +
-                            "\nSign the transaction, and get back the hex\n"
-                            + HelpExampleCli("signrawtransaction", "\"myhex\"") +
-                            "\nSend the transaction (signed hex)\n"
-                            + HelpExampleCli("sendrawtransaction", "\"signedhex\"") +
-                            "\nAs a json rpc call\n"
-                            + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
+                            "\nAdd sufficient unsigned inputs to meet the output value\n"
+                            + HelpExampleCli("fundrawtransaction", "\"rawtransactionhex\"") +
+                            "\nSign the transaction\n"
+                            + HelpExampleCli("signrawtransaction", "\"fundedtransactionhex\"") +
+                            "\nSend the transaction\n"
+                            + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
                             );
 
-    RPCTypeCheck(params, boost::assign::list_of(str_type)(bool_type));
+    RPCTypeCheck(params, boost::assign::list_of(str_type));
 
     // parse hex string from parameter
     CTransaction tx;
@@ -2394,7 +2394,7 @@ Value fundrawtransaction(const Array& params, bool fHelp)
 
     Object result;
     result.push_back(Pair("hex", EncodeHexTx(txNew)));
-    result.push_back(Pair("fee", nFeeRet));
+    result.push_back(Pair("fee", ValueFromAmount(nFeeRet)));
 
     return result;
 }
