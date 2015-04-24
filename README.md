@@ -1,25 +1,25 @@
-![Bitcredit logotype](/doc/logo/logo_256.png?raw=true)
+![Credits logotype](/doc/logo/logo_256.png?raw=true)
 
-Bitcredit Core integration/staging tree
+Credits Core integration/staging tree
 =====================================
 
-http://www.bitcredit-currency.org
+http://www.credits-currency.org
 
-Copyright (c) 2013- Bitcredit Core Developers
+Copyright (c) 2013- Credits Core Developers
 
-What is Bitcredit?
+What is Credits?
 ----------------
 
-Bitcredit is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcredit uses peer-to-peer technology to operate
+Credits is an experimental new digital currency that enables instant payments to
+anyone, anywhere in the world. Credits uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcredit Core is the name of open source
+out collectively by the network. Credits Core is the name of open source
 software which enables the use of this currency.
 
 License
 -------
 
-Bitcredit Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Credits Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see http://opensource.org/licenses/MIT.
 
 Development process
@@ -28,7 +28,7 @@ Development process
 Developers work in their own trees, then submit pull requests when they think
 their feature or bug fix is ready.
 
-If it is a simple/trivial/non-controversial change, then one of the Bitcredit
+If it is a simple/trivial/non-controversial change, then one of the Credits
 development team members simply pulls it.
 
 The patch will be accepted if there is broad consensus that it is a good thing.
@@ -70,7 +70,7 @@ to see it.
 
 **testnet and regtest modes**
 
-Run with the -testnet option to run with "play bitcredits" on the test network, if you
+Run with the -testnet option to run with "play credits" on the test network, if you
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.
@@ -79,7 +79,7 @@ that run in -regest mode.
 
 **DEBUG_LOCKORDER**
 
-Bitcredit Core is a multithreaded application, and deadlocks or other multithreading bugs
+Credits Core is a multithreaded application, and deadlocks or other multithreading bugs
 can be very difficult to track down. Compiling with -DDEBUG_LOCKORDER (configure
 CXXFLAGS="-DDEBUG_LOCKORDER -g") inserts run-time checks to keep track of what locks
 are held, and adds warning to the debug.log file if inconsistencies are detected.
