@@ -121,7 +121,7 @@ Value bitcredit_getblockcount(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getblockcount\n"
-            "\nReturns the number of blocks in the longest bitcredit block chain.\n"
+            "\nReturns the number of blocks in the longest credits block chain.\n"
             "\nResult:\n"
             "n    (numeric) The current block count\n"
             "\nExamples:\n"

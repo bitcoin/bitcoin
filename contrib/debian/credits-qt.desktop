@@ -1,9 +1,9 @@
 [Desktop Entry]
 Encoding=UTF-8
 Name=Bitcredit
-Comment=Bitcredit P2P Cryptocurrency
-Comment[fr]=Bitcredit P2P Cryptocurrency
-Comment[tr]=Bitcredit P2P Cryptocurrency
+Comment=Credits P2P Cryptocurrency
+Comment[fr]=Credits P2P Cryptocurrency
+Comment[tr]=Credits P2P Cryptocurrency
 Exec=credits-qt %u
 Terminal=false
 Type=Application

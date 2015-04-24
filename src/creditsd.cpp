@@ -20,8 +20,8 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcredit (http://www.credits-currency.org/),
- * which enables instant payments to anyone, anywhere in the world. Bitcredit uses peer-to-peer technology to operate
+ * This is the developer documentation of the reference client for an experimental new digital currency called Credits (http://www.credits-currency.org/),
+ * which enables instant payments to anyone, anywhere in the world. Credits uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
  * The software is a community-driven open source project, released under the MIT license.
@@ -86,11 +86,11 @@ bool AppInit(int argc, char* argv[])
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to creditsd / RPC client
-            std::string strUsage = _("Bitcredit Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
+            std::string strUsage = _("Credits Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  creditsd [options]                     " + _("Start Bitcredit Core Daemon") + "\n" +
+                  "  creditsd [options]                     " + _("Start Credits Core Daemon") + "\n" +
                 _("Usage (deprecated, use credits-cli):") + "\n" +
-                  "  creditsd [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
+                  "  creditsd [options] <command> [params]  " + _("Send command to Credits Core") + "\n" +
                   "  creditsd [options] help                " + _("List commands") + "\n" +
                   "  creditsd [options] help <command>      " + _("Get help for a command") + "\n";
 
@@ -116,7 +116,7 @@ bool AppInit(int argc, char* argv[])
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
-            fprintf(stdout, "Bitcredit server starting\n");
+            fprintf(stdout, "Credits server starting\n");
 
             // Daemonize
             pid_t pid = fork();

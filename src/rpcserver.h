@@ -67,7 +67,7 @@ public:
 };
 
 /**
- * Bitcredit RPC command dispatcher.
+ * Credits RPC command dispatcher.
  */
 class CRPCTable
 {

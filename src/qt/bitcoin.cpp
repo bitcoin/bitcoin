@@ -154,7 +154,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 }
 #endif
 
-/** Class encapsulating Bitcredit Core startup and shutdown.
+/** Class encapsulating Credits Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class BitcreditCore: public QObject
@@ -179,7 +179,7 @@ private:
     void handleRunawayException(std::exception *e);
 };
 
-/** Main Bitcredit application object */
+/** Main Credits application object */
 class BitcreditApplication: public QApplication
 {
     Q_OBJECT
@@ -498,7 +498,7 @@ void BitcreditApplication::shutdownResult(int retval)
 
 void BitcreditApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcreditGUI::tr("A fatal error occurred. Bitcredit can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", BitcreditGUI::tr("A fatal error occurred. Credits can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(1);
 }
 
@@ -652,7 +652,7 @@ int main(int argc, char *argv[])
         app.createWindow(isaTestNet);
         app.requestInitialize();
 #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
-        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Bitcredit Core didn't yet exit safely..."), (HWND)app.getMainWinId());
+        WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("Credits Core didn't yet exit safely..."), (HWND)app.getMainWinId());
 #endif
         app.exec();
         app.requestShutdown();

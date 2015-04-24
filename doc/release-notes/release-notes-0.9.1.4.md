@@ -1,4 +1,4 @@
-Bitcredit Core version 0.9.1.4 is now available from:
+Credits Core version 0.9.1.4 is now available from:
 
   http://credits-currency.org
 
@@ -13,7 +13,7 @@ creditsd/credits-qt (on Linux).
 0.9.1.4 Release notes
 =======================
 
-0.9.1.4 is the initial release of the Bitcredit client and server software. 
+0.9.1.4 is the initial release of the Credits client and server software. 
 The version follows the Bitcoin versions to be able to tell, at a glance, which 
 version of the Bitcoin client that runs internally. The first three digits tracks
 Bitcoin client version, the fourth is an independent version of Bitcredit. 

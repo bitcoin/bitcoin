@@ -23,7 +23,7 @@ namespace Ui {
     class RPCConsole;
 }
 
-/** Local Bitcredit RPC console. */
+/** Local Credits RPC console. */
 class RPCConsole: public QDialog
 {
     Q_OBJECT

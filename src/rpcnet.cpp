@@ -22,7 +22,7 @@ Value bitcredit_getconnectioncount(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getconnectioncount\n"
-            "\nReturns the number of connections to other bitcredit nodes.\n"
+            "\nReturns the number of connections to other credits nodes.\n"
             "\nbResult:\n"
             "n          (numeric) The connection count\n"
             "\nExamples:\n"
@@ -659,7 +659,7 @@ Value bitcredit_getnetworkinfo(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getnetworkinfo\n"
-            "Returns an object containing various state info regarding bitcredit P2P networking.\n"
+            "Returns an object containing various state info regarding credits P2P networking.\n"
             "\nResult:\n"
             "{\n"
             "  \"version\": xxxxx,           (numeric) the server version\n"

@@ -20,7 +20,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "If the file does not exist, create it with owner-readable-only file "
 "permissions.\n"
 "It is also recommended to set alertnotify so you are notified of problems;\n"
-"for example: alertnotify=echo %%s | mail -s \"Bitcredit Alert\" admin@foo.com\n"),
+"for example: alertnotify=echo %%s | mail -s \"Credits Alert\" admin@foo.com\n"),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!"
 "3DES:@STRENGTH)"),
@@ -33,7 +33,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Bind to given address and always listen on it. Use [host]:port notation for "
 "IPv6"),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
-"Cannot obtain a lock on data directory %s. Bitcredit Core is probably already "
+"Cannot obtain a lock on data directory %s. Credits Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Continuously rate-limit free transactions to <n>*1000 bytes per minute "
@@ -93,7 +93,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
-"Unable to bind to %s on this computer. Bitcredit Core is probably already "
+"Unable to bind to %s on this computer. Credits Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -"
@@ -103,7 +103,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "pay if you send a transaction."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Warning: Please check that your computer's date and time are correct! If "
-"your clock is wrong Bitcredit will not work properly."),
+"your clock is wrong Credits will not work properly."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
@@ -131,8 +131,8 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Add a node to connect to and attempt to kee
 QT_TRANSLATE_NOOP("bitcredit-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Allow JSON-RPC connections from specified IP address"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Attempt to recover private keys from a corrupt wallet.dat"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Bitcredit Core Daemon"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Bitcredit Core RPC client version"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Credits Core Daemon"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Credits Core RPC client version"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Block creation options:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Cannot resolve -bind address: '%s'"),
@@ -211,7 +211,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Password for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Prepend debug output with timestamp (default: 1)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Print block on startup, if found in block index"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Print block tree on startup (default: 0)"),
-QT_TRANSLATE_NOOP("bitcredit-core", "RPC SSL options: (see the Bitcredit Wiki for SSL setup instructions)"),
+QT_TRANSLATE_NOOP("bitcredit-core", "RPC SSL options: (see the Credits Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "RPC client options:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "RPC server options:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Randomly drop 1 of every <n> network messages"),
@@ -221,9 +221,9 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Rescan the block chain for missing wallet t
 QT_TRANSLATE_NOOP("bitcredit-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("bitcredit-core", "Run a thread to flush wallet periodically (default: 1)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Run in the background as a daemon and accept commands"),
-QT_TRANSLATE_NOOP("bitcredit-core", "SSL options: (see the Bitcredit Wiki for SSL setup instructions)"),
+QT_TRANSLATE_NOOP("bitcredit-core", "SSL options: (see the Credits Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Select SOCKS version for -proxy (4 or 5, default: 5)"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Send command to Bitcredit Core"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Send command to Credits Core"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Send commands to node running on <ip> (default: 127.0.0.1)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Send trace/debug info to console instead of debug.log file"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Server certificate file (default: server.cert)"),
@@ -245,7 +245,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Specify pid file (default: creditsd.pid)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify wallet file (within data directory)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Spend unconfirmed change when sending transactions (default: 1)"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Start Bitcredit Core Daemon"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Start Credits Core Daemon"),
 QT_TRANSLATE_NOOP("bitcredit-core", "System error: "),
 QT_TRANSLATE_NOOP("bitcredit-core", "This help message"),
 QT_TRANSLATE_NOOP("bitcredit-core", "This is intended for regression testing tools and app development."),
@@ -269,7 +269,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("bitcredit-core", "Verifying wallet..."),
 QT_TRANSLATE_NOOP("bitcredit-core", "Wait for RPC server to start"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Wallet %s resides outside data directory %s"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Wallet needed to be rewritten: restart Bitcredit to complete"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Wallet needed to be rewritten: restart Credits to complete"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Wallet options:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Warning"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Warning: Deprecated argument -debugnet ignored, use -debug=net"),

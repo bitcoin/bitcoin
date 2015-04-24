@@ -96,7 +96,7 @@ public:
     )
 };
 
-/** Interface to Bitcredit wallet from Qt view code. */
+/** Interface to Credits wallet from Qt view code. */
 class Bitcredit_WalletModel : public QObject
 {
     Q_OBJECT

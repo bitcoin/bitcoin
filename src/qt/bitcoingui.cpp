@@ -83,7 +83,7 @@ BitcreditGUI::BitcreditGUI(bool fIsTestnet, QWidget *parent) :
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
-    QString windowTitle = tr("Bitcredit Core") + " - ";
+    QString windowTitle = tr("Credits Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
     bool enableWallet = !GetBoolArg("-disablewallet", false);
@@ -282,7 +282,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     tabGroup->addAction(overviewAction);
 
     sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Bitcredit address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a Credits address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
@@ -346,9 +346,9 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     if (!fIsTestnet)
-        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Bitcredit Core"), this);
+        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Credits Core"), this);
     else
-        aboutAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&About Bitcredit Core"), this);
+        aboutAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&About Credits Core"), this);
     aboutAction->setStatusTip(tr("Show information about Bitcredit"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
@@ -367,13 +367,13 @@ void BitcreditGUI::createActions(bool fIsTestnet)
         toggleHideAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
-    bitcredit_encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Bitcredit Wallet..."), this);
-    bitcredit_encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your Bitcredit wallet"));
+    bitcredit_encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Credits Wallet..."), this);
+    bitcredit_encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your Credits wallet"));
     bitcredit_encryptWalletAction->setCheckable(true);
-    bitcredit_backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Bitcredit Wallet..."), this);
-    bitcredit_backupWalletAction->setStatusTip(tr("Backup Bitcredit wallet to another location"));
-    bitcredit_changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Bitcredit Passphrase..."), this);
-    bitcredit_changePassphraseAction->setStatusTip(tr("Change the passphrase used for Bitcredit wallet encryption"));
+    bitcredit_backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Credits Wallet..."), this);
+    bitcredit_backupWalletAction->setStatusTip(tr("Backup Credits wallet to another location"));
+    bitcredit_changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Credits Passphrase..."), this);
+    bitcredit_changePassphraseAction->setStatusTip(tr("Change the passphrase used for Credits wallet encryption"));
 
     bitcoin_encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Bitcoin Wallet..."), this);
     bitcoin_encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your bitcoin wallet"));
@@ -384,11 +384,11 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     bitcoin_changePassphraseAction->setStatusTip(tr("Change the passphrase used for Bitcoin wallet encryption"));
 
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Bitcredit addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your Credits addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Bitcredit addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Credits addresses"));
 
-    bitcredit_openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Bitcredit debug window"), this);
+    bitcredit_openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Credits debug window"), this);
     bitcredit_openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
 
     bitcoin_openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Bitcoin info window"), this);
@@ -403,7 +403,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     openAction->setStatusTip(tr("Open a bitcredit: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
-    showHelpMessageAction->setStatusTip(tr("Show the Bitcredit Core help message to get a list with possible Bitcredit command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the Credits Core help message to get a list with possible Credits command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -612,12 +612,12 @@ void BitcreditGUI::createTrayIcon(bool fIsTestnet)
 
     if (!fIsTestnet)
     {
-        trayIcon->setToolTip(tr("Bitcredit client"));
+        trayIcon->setToolTip(tr("Credits client"));
         trayIcon->setIcon(QIcon(":/icons/toolbar"));
     }
     else
     {
-        trayIcon->setToolTip(tr("Bitcredit client") + " " + tr("[testnet]"));
+        trayIcon->setToolTip(tr("Credits client") + " " + tr("[testnet]"));
         trayIcon->setIcon(QIcon(":/icons/toolbar_testnet"));
     }
 
@@ -823,7 +823,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
     QDateTime currentDate = QDateTime::currentDateTime();
     int secs = lastBlockDate.secsTo(currentDate);
 
-    tooltip = tr("Processed %1 bitcredit blocks of transaction history.").arg(count);
+    tooltip = tr("Processed %1 credits blocks of transaction history.").arg(count);
 
     // Set icon state: spinning if catching up, tick otherwise
     if(secs < 90*60)
@@ -888,9 +888,9 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
 #endif
 
         tooltip += QString("<br>");
-        tooltip += tr("Last received bitcredit block was generated %1 ago.").arg(timeBehindText);
+        tooltip += tr("Last received credits block was generated %1 ago.").arg(timeBehindText);
         tooltip += QString("<br>");
-        tooltip += tr("Bitcredit transactions after this will not yet be visible.");
+        tooltip += tr("Credits transactions after this will not yet be visible.");
     }
 
     // Don't word-wrap this (fixed-width) tooltip
@@ -1028,7 +1028,7 @@ void BitcreditGUI::message(const QString &title, const QString &message, unsigne
             break;
         }
     }
-    // Append title to "Bitcredit - "
+    // Append title to "Credits - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
@@ -1171,7 +1171,7 @@ void BitcreditGUI::bitcredit_setEncryptionStatus(int status)
     case Bitcredit_WalletModel::Unlocked:
         bitcredit_labelEncryptionIcon->show();
         bitcredit_labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        bitcredit_labelEncryptionIcon->setToolTip(tr("Bitcredit wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
+        bitcredit_labelEncryptionIcon->setToolTip(tr("Credits wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
         bitcredit_encryptWalletAction->setChecked(true);
         bitcredit_changePassphraseAction->setEnabled(true);
         bitcredit_encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
@@ -1179,7 +1179,7 @@ void BitcreditGUI::bitcredit_setEncryptionStatus(int status)
     case Bitcredit_WalletModel::Locked:
         bitcredit_labelEncryptionIcon->show();
         bitcredit_labelEncryptionIcon->setPixmap(QIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        bitcredit_labelEncryptionIcon->setToolTip(tr("Bitcredit wallet is <b>encrypted</b> and currently <b>locked</b>"));
+        bitcredit_labelEncryptionIcon->setToolTip(tr("Credits wallet is <b>encrypted</b> and currently <b>locked</b>"));
         bitcredit_encryptWalletAction->setChecked(true);
         bitcredit_changePassphraseAction->setEnabled(true);
         bitcredit_encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported

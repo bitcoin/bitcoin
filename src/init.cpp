@@ -426,7 +426,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address. This option can be specified multiple times") + "\n";
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
 
-    strUsage += "\n" + _("RPC SSL options: (see the Bitcredit Wiki for SSL setup instructions)") + "\n";
+    strUsage += "\n" + _("RPC SSL options: (see the Credits Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
     strUsage += "  -rpcsslcertificatechainfile=<file.cert>  " + _("Server certificate file (default: server.cert)") + "\n";
     strUsage += "  -rpcsslprivatekeyfile=<file.pem>         " + _("Server private key (default: server.pem)") + "\n";
@@ -577,7 +577,7 @@ void Bitcoin_ThreadImport()
         }
     }
 
-    //Invoke bitcredit import from same thread
+    //Invoke credits import from same thread
     Bitcredit_ThreadImport();
 }
 
@@ -1197,7 +1197,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Bitcredit Core is probably already running."), strDataDir));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Credits Core is probably already running."), strDataDir));
 
     const boost::filesystem::path tmpDirPath = GetDataDir() / ".tmp";
 	TryRemoveDirectory(tmpDirPath);
@@ -1207,7 +1207,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
-    LogPrintf("Bitcredit version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+    LogPrintf("Credits version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
@@ -1217,7 +1217,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", strDataDir);
     LogPrintf("Bitcoin using at most %i connections\n", bitcoin_netParams->nMaxConnections);
-    LogPrintf("Bitcredit using at most %i connections\n", bitcredit_netParams->nMaxConnections);
+    LogPrintf("Credits using at most %i connections\n", bitcredit_netParams->nMaxConnections);
     std::ostringstream strErrors;
 
     if (bitcoin_nScriptCheckThreads) {
@@ -1226,7 +1226,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             threadGroup.create_thread(&Bitcoin_ThreadScriptCheck);
     }
     if (bitcredit_nScriptCheckThreads) {
-        LogPrintf("Bitcredit using %u threads for script verification\n", bitcredit_nScriptCheckThreads);
+        LogPrintf("Credits using %u threads for script verification\n", bitcredit_nScriptCheckThreads);
         for (int i=0; i<bitcredit_nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&Bitcredit_ThreadScriptCheck);
     }
@@ -1434,7 +1434,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
-    LogPrintf("bitcredit block index %15dms\n", GetTimeMillis() - nStart);
+    LogPrintf("credits block index %15dms\n", GetTimeMillis() - nStart);
 
     if (GetBoolArg("-bitcoin_printblockindex", false) || GetBoolArg("-bitcoin_printblocktree", false))
     {
@@ -1655,7 +1655,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                 strErrors << _("Error loading deposit_wallet.dat: Wallet requires newer version of Bitcredit") << "\n";
             else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
             {
-                strErrors << _("Deposit wallet needed to be rewritten: restart Bitcredit to complete") << "\n";
+                strErrors << _("Deposit wallet needed to be rewritten: restart Credits to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
                 return InitError(strErrors.str());
             }
@@ -1730,10 +1730,10 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #ifdef ENABLE_WALLET
     if (fDisableWallet) {
         bitcredit_pwalletMain = NULL;
-        LogPrintf("Bitcredit wallet disabled!\n");
+        LogPrintf("Credits wallet disabled!\n");
     } else {
         if (GetBoolArg("-zapwallettxes", false)) {
-            uiInterface.InitMessage(_("Zapping all transactions from bitcredit wallet..."));
+            uiInterface.InitMessage(_("Zapping all transactions from credits wallet..."));
 
             bitcredit_pwalletMain = new Bitcredit_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
             Bitcredit_DBErrors nZapWalletRet = bitcredit_pwalletMain->ZapWalletTx();
@@ -1746,7 +1746,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             bitcredit_pwalletMain = NULL;
         }
 
-        uiInterface.InitMessage(_("Loading bitcredit wallet..."));
+        uiInterface.InitMessage(_("Loading credits wallet..."));
 
         nStart = GetTimeMillis();
         bool fFirstRun = true;
@@ -1766,7 +1766,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                 strErrors << _("Error loading bitcredit_wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
             else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
             {
-                strErrors << _("Bitcredit wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
+                strErrors << _("Credits wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
                 return InitError(strErrors.str());
             }
@@ -1779,14 +1779,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             int nMaxVersion = GetArg("-upgradewallet", 0);
             if (nMaxVersion == 0) // the -upgradewallet without argument case
             {
-                LogPrintf("Performing bitcredit wallet upgrade to %i\n", BITCREDIT_FEATURE_LATEST);
+                LogPrintf("Performing credits wallet upgrade to %i\n", BITCREDIT_FEATURE_LATEST);
                 nMaxVersion = BITCREDIT_CLIENT_VERSION;
                 bitcredit_pwalletMain->SetMinVersion(BITCREDIT_FEATURE_LATEST); // permanently upgrade the wallet immediately
             }
             else
-                LogPrintf("Allowing bitcredit wallet upgrade up to %i\n", nMaxVersion);
+                LogPrintf("Allowing credits wallet upgrade up to %i\n", nMaxVersion);
             if (nMaxVersion < bitcredit_pwalletMain->GetVersion())
-                strErrors << _("Cannot downgrade bitcredit wallet") << "\n";
+                strErrors << _("Cannot downgrade credits wallet") << "\n";
             bitcredit_pwalletMain->SetMaxVersion(nMaxVersion);
         }
 
@@ -1799,14 +1799,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             if (bitcredit_pwalletMain->GetKeyFromPool(newDefaultKey)) {
                 bitcredit_pwalletMain->SetDefaultKey(newDefaultKey);
                 if (!bitcredit_pwalletMain->SetAddressBook(bitcredit_pwalletMain->vchDefaultKey.GetID(), "", "receive"))
-                    strErrors << _("Cannot write bitcredit default address") << "\n";
+                    strErrors << _("Cannot write credits default address") << "\n";
             }
 
             bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
         }
 
         LogPrintf("%s", strErrors.str());
-        LogPrintf("bitcredit wallet      %15dms\n", GetTimeMillis() - nStart);
+        LogPrintf("credits wallet      %15dms\n", GetTimeMillis() - nStart);
 
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
@@ -1824,17 +1824,17 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         }
         if (bitcredit_chainActive.Tip() && bitcredit_chainActive.Tip() != pindexRescan)
         {
-            uiInterface.InitMessage(_("Rescanning bitcredit wallet..."));
+            uiInterface.InitMessage(_("Rescanning credits wallet..."));
             LogPrintf("Bitcredit: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
             bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, pindexRescan, true);
-            LogPrintf("bitcredit rescan      %15dms\n", GetTimeMillis() - nStart);
+            LogPrintf("credits rescan      %15dms\n", GetTimeMillis() - nStart);
             bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
             bitcredit_bitdb.nWalletDBUpdated++;
         }
     } // (!fDisableWallet)
 #else // ENABLE_WALLET
-    LogPrintf("No bitcredit wallet compiled in!\n");
+    LogPrintf("No credits wallet compiled in!\n");
 #endif // !ENABLE_WALLET
 
 
@@ -1856,7 +1856,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     uiInterface.InitMessage(_("Loading bitcoin addresses..."));
     InitPeersFromNetParams(GetTimeMillis(), Bitcoin_NetParams());
 
-    uiInterface.InitMessage(_("Loading bitcredit addresses..."));
+    uiInterface.InitMessage(_("Loading credits addresses..."));
     InitPeersFromNetParams(GetTimeMillis(), Bitcredit_NetParams());
 
     // ********************************************************* Step 11: start node
@@ -1874,8 +1874,8 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     LogPrintf("bitcoin mapBlockIndex.size() = %u\n",   bitcoin_mapBlockIndex.size());
     LogPrintf("bitcoin nBestHeight = %d\n",                   bitcoin_chainActive.Height());
 
-    LogPrintf("bitcredit mapBlockIndex.size() = %u\n",   bitcredit_mapBlockIndex.size());
-    LogPrintf("bitcredit nBestHeight = %d\n",                   bitcredit_chainActive.Height());
+    LogPrintf("credits mapBlockIndex.size() = %u\n",   bitcredit_mapBlockIndex.size());
+    LogPrintf("credits nBestHeight = %d\n",                   bitcredit_chainActive.Height());
 
 #ifdef ENABLE_WALLET
     LogPrintf("bitcoin setKeyPool.size() = %u\n",      bitcoin_pwalletMain ? bitcoin_pwalletMain->setKeyPool.size() : 0);
@@ -1890,9 +1890,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #endif
 
 #ifdef ENABLE_WALLET
-    LogPrintf("bitcredit setKeyPool.size() = %u\n",      bitcredit_pwalletMain ? bitcredit_pwalletMain->setKeyPool.size() : 0);
-    LogPrintf("bitcredit mapWallet.size() = %u\n",       bitcredit_pwalletMain ? bitcredit_pwalletMain->mapWallet.size() : 0);
-    LogPrintf("bitcredit mapAddressBook.size() = %u\n",  bitcredit_pwalletMain ? bitcredit_pwalletMain->mapAddressBook.size() : 0);
+    LogPrintf("credits setKeyPool.size() = %u\n",      bitcredit_pwalletMain ? bitcredit_pwalletMain->setKeyPool.size() : 0);
+    LogPrintf("credits mapWallet.size() = %u\n",       bitcredit_pwalletMain ? bitcredit_pwalletMain->mapWallet.size() : 0);
+    LogPrintf("credits mapAddressBook.size() = %u\n",  bitcredit_pwalletMain ? bitcredit_pwalletMain->mapAddressBook.size() : 0);
 #endif
 
 

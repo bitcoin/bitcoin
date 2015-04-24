@@ -33,7 +33,7 @@ class QProgressDialog;
 QT_END_NAMESPACE
 
 /**
-  Bitcredit GUI main class. This class represents the main window of the Bitcredit UI. It communicates with both the client and
+  Credits GUI main class. This class represents the main window of the Credits UI. It communicates with both the client and
   wallet models to give the user an up-to-date view of the current core state.
 */
 class BitcreditGUI : public QMainWindow

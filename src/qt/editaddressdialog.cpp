@@ -107,7 +107,7 @@ void Bitcredit_EditAddressDialog::accept()
             break;
         case Bitcredit_AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid Bitcredit address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid Credits address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case Bitcredit_AddressTableModel::DUPLICATE_ADDRESS:

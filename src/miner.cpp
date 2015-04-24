@@ -468,12 +468,12 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
         }
 
         //Set up the new reference to the ->bitcoin<- blockchain
-        //Make sure that we are referencing a block deep enough. When the acceptance of bitcredit blocks is done we look
+        //Make sure that we are referencing a block deep enough. When the acceptance of credits blocks is done we look
         //10000 blocks down. Therefore we set our reference to 10000  + 1000 + 144.
         //144 is the approximate number of blocks in 24 hours and also the "unknown"
         //number of blocks that may cause the function Bitcoin_IsInitialBlockDownload to be false.
         //Bitcoin_IsInitialBlockDownload is used as the general  function indicating that the downloaded bitcoin blockchain
-        //is ready to be used by the bitcredit system.
+        //is ready to be used by the credits system.
         {
         LOCK(bitcoin_mainState.cs_main);
         const Bitcoin_CBlockIndex * activeBlockAtHeight = bitcoin_chainActive[nPrevLinkedHeight];
@@ -1191,7 +1191,7 @@ bool CheckWork(Bitcredit_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bi
 
 void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
-    LogPrintf("Bitcredit Miner started\n");
+    LogPrintf("Credits Miner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcredit-miner");
 
@@ -1211,7 +1211,7 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
     try { while (true) {
     	//Checkpoint that waits until the ->bitcoin<- blockchain is (reasonably) up to date
     	if(Bitcoin_IsInitialBlockDownload()) {
-            LogPrintf("Bitcredit Miner waiting for bitcoin blockchain to be up to date.\n");
+            LogPrintf("Credits Miner waiting for bitcoin blockchain to be up to date.\n");
 
             MilliSleep(10000);
     		continue;
@@ -1221,7 +1221,7 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
             while (netParams->vNodes.empty()) {
-                LogPrintf("Bitcredit Miner waiting for other nodes. No nodes online.\n");
+                LogPrintf("Credits Miner waiting for other nodes. No nodes online.\n");
 
             	MilliSleep(3000);
             }

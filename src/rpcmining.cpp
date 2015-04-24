@@ -344,10 +344,10 @@ Value getwork(const Array& params, bool fHelp)
     CNetParams * netParams = Bitcredit_NetParams();
 
     if (netParams->vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcredit is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Credits is not connected!");
 
     if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcredit is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Credits is downloading blocks...");
 
     typedef map<uint256, pair<Bitcredit_CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
@@ -539,10 +539,10 @@ Value getblocktemplate(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     if (netParams->vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Bitcredit is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Credits is not connected!");
 
     if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcredit is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Credits is downloading blocks...");
 
     // Update block
     static unsigned int nTransactionsUpdatedLast;

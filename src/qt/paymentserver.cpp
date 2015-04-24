@@ -425,7 +425,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
             }
             else
                 emit message(tr("URI handling"),
-                    tr("URI can not be parsed! This can be caused by an invalid Bitcredit address or malformed URI parameters."),
+                    tr("URI can not be parsed! This can be caused by an invalid Credits address or malformed URI parameters."),
                     CClientUIInterface::ICON_WARNING);
 
             return;
