@@ -1221,7 +1221,7 @@ void ThreadOpenConnections()
         int nTries = 0;
         while (true)
         {
-            CAddress addr = addrman.Select();
+            CAddrInfo addr = addrman.Select();
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
