@@ -5,6 +5,7 @@
 #include "mastercore.h"
 #include "mastercore_convert.h"
 #include "mastercore_dex.h"
+#include "mastercore_log.h"
 #include "mastercore_sp.h"
 
 #include "alert.h"

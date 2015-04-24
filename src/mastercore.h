@@ -10,8 +10,9 @@ class CBitcoinAddress;
 class CBlockIndex;
 class CTransaction;
 
+#include "mastercore_log.h"
+
 #include "sync.h"
-#include "tinyformat.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -22,7 +23,6 @@ class CTransaction;
 #include "json/json_spirit_value.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <map>
 #include <string>
@@ -31,11 +31,6 @@ class CTransaction;
 using json_spirit::Array;
 
 using std::string;
-
-
-#define LOG_FILENAME    "mastercore.log"
-#define INFO_FILENAME   "mastercore_crowdsales.log"
-#define OWNERS_FILENAME "mastercore_owners.log"
 
 int const MAX_STATE_HISTORY = 50;
 
@@ -160,50 +155,6 @@ enum FILETYPES {
 #define OMNI_PROPERTY_MSC   1
 #define OMNI_PROPERTY_TMSC  2
 
-int mp_LogPrintStr(const std::string &str);
-
-/* When we switch to C++11, this can be switched to variadic templates instead
- * of this macro-based construction (see tinyformat.h).
- */
-#define MP_MAKE_ERROR_AND_LOG_FUNC(n)                                        \
-    /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_category_log(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        if(!LogAcceptCategory(category)) return 0;                            \
-        return mp_LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_log(TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format("%s", TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_log(const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int file_log(const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int file_log(TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format("%s", TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    /*   Log error and return false */                                        \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline bool mp_error(const char* format, TINYFORMAT_VARARGS(n))                     \
-    {                                                                         \
-        mp_LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
-        return false;                                                         \
-    }
-
-TINYFORMAT_FOREACH_ARGNUM(MP_MAKE_ERROR_AND_LOG_FUNC)
-//--- CUT HERE ---
-
 // forward declarations
 std::string FormatPriceMP(double n);
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
@@ -218,11 +169,7 @@ const CBitcoinAddress ExodusAddress();
 /** Used to indicate, whether to automatically commit created transactions. */
 extern bool autoCommit;
 
-extern int msc_debug_ui;
-
 extern CCriticalSection cs_tally;
-
-extern const int msc_debug_dex;
 
 enum TallyType { BALANCE = 0, SELLOFFER_RESERVE = 1, ACCEPT_RESERVE = 2, PENDING = 3, METADEX_RESERVE = 4, TALLY_TYPE_COUNT };
 
@@ -318,12 +265,12 @@ public:
 
     if (bDivisible)
     {
-      printf("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
-       FormatDivisibleMP(money, true).c_str(), FormatDivisibleMP(so_r, true).c_str(), FormatDivisibleMP(a_r, true).c_str(), FormatDivisibleMP(pending, true).c_str());
+      PrintToConsole("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
+       FormatDivisibleMP(money, true), FormatDivisibleMP(so_r, true), FormatDivisibleMP(a_r, true), FormatDivisibleMP(pending, true));
     }
     else
     {
-      printf("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
+      PrintToConsole("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
     }
 
     return (money + so_r + a_r);
@@ -368,7 +315,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+      PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
     }
 
     ~CMPSTOList()
@@ -411,7 +358,7 @@ public:
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+      PrintToConsole("Loading trades database: %s\n", status.ToString());
     }
 
     ~CMPTradeList()
@@ -467,8 +414,7 @@ public:
       syncoptions.sync = true;
 
       leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+      PrintToConsole("Loading transactions database: %s\n", status.ToString());
     }
 
     ~CMPTxList()
@@ -511,7 +457,7 @@ public:
 
   void print(uint256 txid) const
   {
-    printf("%s : %s %d %ld %ld %s\n", txid.GetHex().c_str(), src.c_str(), prop, amount, type, desc.c_str());
+    PrintToConsole("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
   }
  
 };
@@ -524,8 +470,6 @@ extern uint64_t global_balance_reserved_maineco[100000];
 extern uint64_t global_balance_money_testeco[100000];
 extern uint64_t global_balance_reserved_testeco[100000];
 
-int mastercore_init(void);
-
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
@@ -533,6 +477,12 @@ bool isRangeOK(const uint64_t input);
 int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc);
 
 string getLabel(const string &address);
+
+/** Global handler to initialize Omni Core. */
+int mastercore_init();
+
+/** Global handler to shut down Omni Core. */
+int mastercore_shutdown();
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
