@@ -331,10 +331,10 @@ void CAddrMan::Attempt_(const CService& addr, int64_t nTime)
     info.nAttempts++;
 }
 
-CAddress CAddrMan::Select_()
+CAddrInfo CAddrMan::Select_()
 {
     if (size() == 0)
-        return CAddress();
+        return CAddrInfo();
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (nTried > 0 && (nNew == 0 || GetRandInt(2) == 0)) {
