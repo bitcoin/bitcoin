@@ -6,7 +6,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src \
   $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS)
 bin_PROGRAMS = credits-qt
-noinst_LIBRARIES = libbitcreditqt.a
+noinst_LIBRARIES = libcreditsqt.a
 SUBDIRS = . $(BUILD_TEST_QT)
 DIST_SUBDIRS = . test
 
@@ -307,15 +307,15 @@ RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
 BITCOIN_RC = res/credits-qt-res.rc
 
-libbitcreditqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+libcreditsqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
-libbitcreditqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+libcreditsqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
-nodist_libbitcreditqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_libcreditsqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP)
 
-BUILT_SOURCES = $(nodist_libbitcreditqt_a_SOURCES)
+BUILT_SOURCES = $(nodist_libcreditsqt_a_SOURCES)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
@@ -332,7 +332,7 @@ endif
 if TARGET_WINDOWS
   credits_qt_SOURCES += $(BITCOIN_RC)
 endif
-credits_qt_LDADD = libbitcreditqt.a $(LIBCREDITS_SERVER)
+credits_qt_LDADD = libcreditsqt.a $(LIBCREDITS_SERVER)
 if ENABLE_WALLET
 credits_qt_LDADD += $(LIBCREDITS_WALLET)
 endif

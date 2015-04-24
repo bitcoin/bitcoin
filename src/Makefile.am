@@ -3,11 +3,11 @@ include Makefile.include
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
-  libbitcredit_server.a \
-  libbitcredit_common.a \
+  libcredits_server.a \
+  libcredits_common.a \
   libcredits_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libbitcredit_wallet.a
+noinst_LIBRARIES += libcredits_wallet.a
 endif
 
 bin_PROGRAMS =
@@ -101,7 +101,7 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libbitcredit_server_a_SOURCES = \
+libcredits_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -133,7 +133,7 @@ libbitcredit_server_a_SOURCES = \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-libbitcredit_wallet_a_SOURCES = \
+libcredits_wallet_a_SOURCES = \
   db.cpp \
   bitcoin_db.cpp \
   crypter.cpp \
@@ -145,7 +145,7 @@ libbitcredit_wallet_a_SOURCES = \
   bitcoin_walletdb.cpp \
   $(BITCOIN_CORE_H)
 
-libbitcredit_common_a_SOURCES = \
+libcredits_common_a_SOURCES = \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
@@ -164,26 +164,26 @@ libbitcredit_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcredit_common_a_SOURCES += compat/glibc_compat.cpp
-libbitcredit_common_a_SOURCES += compat/glibcxx_compat.cpp
+libcredits_common_a_SOURCES += compat/glibc_compat.cpp
+libcredits_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
 libcredits_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libbitcredit_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libcredits_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # creditsd binary #
 creditsd_LDADD = \
-  libbitcredit_server.a \
+  libcredits_server.a \
   libcredits_cli.a \
-  libbitcredit_common.a \
+  libcredits_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-creditsd_LDADD += libbitcredit_wallet.a
+creditsd_LDADD += libcredits_wallet.a
 endif
 creditsd_SOURCES = creditsd.cpp
 #
@@ -198,7 +198,7 @@ creditsd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 # credits-cli binary #
 credits_cli_LDADD = \
   libcredits_cli.a \
-  libbitcredit_common.a \
+  libcredits_common.a \
   $(BOOST_LIBS)
 credits_cli_SOURCES = credits-cli.cpp
 #
@@ -215,7 +215,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libbitcredit_server_a_SOURCES) $(libbitcredit_common_a_SOURCES) $(libcredits_cli_a_SOURCES)
+qt/bitcoinstrings.cpp: $(libcredits_server_a_SOURCES) $(libcredits_common_a_SOURCES) $(libcredits_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
