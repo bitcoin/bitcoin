@@ -323,22 +323,22 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 # credits-qt binary #
-bitcredit_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
+credits_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
-bitcredit_qt_SOURCES = bitcoin.cpp
+credits_qt_SOURCES = bitcoin.cpp
 if TARGET_DARWIN
-  bitcredit_qt_SOURCES += $(BITCOIN_MM)
+  credits_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
-  bitcredit_qt_SOURCES += $(BITCOIN_RC)
+  credits_qt_SOURCES += $(BITCOIN_RC)
 endif
-bitcredit_qt_LDADD = libbitcreditqt.a $(LIBBITCREDIT_SERVER)
+credits_qt_LDADD = libbitcreditqt.a $(LIBBITCREDIT_SERVER)
 if ENABLE_WALLET
-bitcredit_qt_LDADD += $(LIBBITCREDIT_WALLET)
+credits_qt_LDADD += $(LIBBITCREDIT_WALLET)
 endif
-bitcredit_qt_LDADD += $(LIBBITCREDIT_CLI) $(LIBBITCREDIT_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+credits_qt_LDADD += $(LIBBITCREDIT_CLI) $(LIBBITCREDIT_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
-bitcredit_qt_LDFLAGS = $(QT_LDFLAGS)
+credits_qt_LDFLAGS = $(QT_LDFLAGS)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))

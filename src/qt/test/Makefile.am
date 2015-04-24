@@ -21,26 +21,26 @@ TEST_QT_H = \
 
 BUILT_SOURCES = $(TEST_QT_MOC_CPP)
 
-test_bitcredit_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) $(QT_TEST_INCLUDES)
+test_credits_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) $(QT_TEST_INCLUDES)
 
-test_bitcredit_qt_SOURCES = \
+test_credits_qt_SOURCES = \
   test_main.cpp \
   uritests.cpp \
   $(TEST_QT_H)
 if ENABLE_WALLET
-test_bitcredit_qt_SOURCES += \
+test_credits_qt_SOURCES += \
   paymentservertests.cpp
 endif
 
-nodist_test_bitcredit_qt_SOURCES = $(TEST_QT_MOC_CPP)
+nodist_test_credits_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-test_bitcredit_qt_LDADD = $(LIBBITCREDITQT) $(LIBBITCREDIT_SERVER)
+test_credits_qt_LDADD = $(LIBBITCREDITQT) $(LIBBITCREDIT_SERVER)
 if ENABLE_WALLET
-test_bitcredit_qt_LDADD += $(LIBBITCREDIT_WALLET)
+test_credits_qt_LDADD += $(LIBBITCREDIT_WALLET)
 endif
-test_bitcredit_qt_LDADD += $(LIBBITCREDIT_CLI) $(LIBBITCREDIT_COMMON) $(LIBLEVELDB) \
+test_credits_qt_LDADD += $(LIBBITCREDIT_CLI) $(LIBBITCREDIT_COMMON) $(LIBLEVELDB) \
   $(LIBMEMENV) $(BOOST_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) $(QT_LIBS) \
   $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS)
-test_bitcredit_qt_LDFLAGS = $(QT_LDFLAGS)
+test_credits_qt_LDFLAGS = $(QT_LDFLAGS)
 
 CLEANFILES = $(BUILT_SOURCES) *.gcda *.gcno
