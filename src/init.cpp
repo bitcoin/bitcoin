@@ -217,6 +217,7 @@ void HandleSIGTERM(int)
 void HandleSIGHUP(int)
 {
     fReopenDebugLog = true;
+    fReopenOmniCoreLog = true;
 }
 
 bool static InitError(const std::string &str)

@@ -37,6 +37,8 @@ extern std::string strMiscWarning;
 extern bool fLogTimestamps;
 extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
+/** Flag to indicate, whether the Omni Core log file should be reopened. */
+extern volatile bool fReopenOmniCoreLog;
 
 void SetupEnvironment();
 
