@@ -422,7 +422,7 @@ Value bitcredit_dumpprivkey(const Array& params, bool fHelp)
             "\nReveals the private key corresponding to 'bitcreditaddress'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
-            "1. \"bitcreditaddress\"   (string, required) The bitcredit address for the private key\n"
+            "1. \"bitcreditaddress\"   (string, required) The credits address for the private key\n"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"

@@ -850,7 +850,7 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
 
 			// are the actual inputs available?
 			if (!bitcredit_view.HaveInputs(tx))
-				return state.Invalid(error("Bitcredit: AcceptToMemoryPool : bitcredit inputs already spent"),
+				return state.Invalid(error("Bitcredit: AcceptToMemoryPool : credits inputs already spent"),
 									 BITCREDIT_REJECT_DUPLICATE, "bad-txns-bitcredit-inputs-spent");
         }
 
@@ -1625,7 +1625,7 @@ bool Bitcredit_CheckInputs(const Bitcredit_CTransaction& tx, CValidationState &s
 				return state.Invalid(error("Bitcredit: CheckInputs() : %s external bitcoin inputs unavailable", tx.GetHash().ToString()));
     	} else {
 			if (!bitcredit_inputs.HaveInputs(tx))
-				return state.Invalid(error("Bitcredit: CheckInputs() : %s bitcredit inputs unavailable", tx.GetHash().ToString()));
+				return state.Invalid(error("Bitcredit: CheckInputs() : %s credits inputs unavailable", tx.GetHash().ToString()));
     	}
 
 
@@ -3017,7 +3017,7 @@ bool Bitcredit_AcceptBitcoinBlockLinkage(Bitcredit_CBlockHeader& block, CValidat
 		{
 			const map<uint256, Bitcredit_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(block.hashPrevBlock);
 			if (mi == bitcredit_mapBlockIndex.end()) {
-				return state.Invalid(error("Bitcredit: AcceptBitcoinBlockLinkage() : Previous bitcredit block %s not found in bitcredit blockchain", block.hashPrevBlock.GetHex()), 0, "invalidlink");
+				return state.Invalid(error("Bitcredit: AcceptBitcoinBlockLinkage() : Previous credits block %s not found in credits blockchain", block.hashPrevBlock.GetHex()), 0, "invalidlink");
 			}
 			const Bitcredit_CBlockIndex* pPrevBlock = (*mi).second;
 

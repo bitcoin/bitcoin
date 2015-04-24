@@ -49,7 +49,7 @@ script: |
   cd ../build
 
   # Avoid exporting *any* symbols from the executable
-  # This avoids conflicts between the libraries statically linked into bitcredit and any
+  # This avoids conflicts between the libraries statically linked into credits and any
   # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
   # It also avoids start-up overhead to not export any unnecessary symbols.
   # To do this, build a linker script that marks all symbols as local.

@@ -456,7 +456,7 @@ void SelectParams(CChainParams::Network network) {
             break;
         case CChainParams::REGTEST:
             bitcredit_pCurrentParams = &bitcredit_regTestParams;
-        	//Setting bitcoin to always go for testNetParams when running bitcredit in regtest
+        	//Setting bitcoin to always go for testNetParams when running credits in regtest
             //If not, there would be no bitcoin blockchain to run in parallell with
         	bitcoin_pCurrentParams = &bitcoin_testNetParams;
             break;

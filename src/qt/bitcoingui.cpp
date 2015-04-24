@@ -823,7 +823,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
     QDateTime currentDate = QDateTime::currentDateTime();
     int secs = lastBlockDate.secsTo(currentDate);
 
-    tooltip = tr("Processed %1 bitcredit blocks of transaction history.").arg(count);
+    tooltip = tr("Processed %1 credits blocks of transaction history.").arg(count);
 
     // Set icon state: spinning if catching up, tick otherwise
     if(secs < 90*60)
@@ -888,7 +888,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
 #endif
 
         tooltip += QString("<br>");
-        tooltip += tr("Last received bitcredit block was generated %1 ago.").arg(timeBehindText);
+        tooltip += tr("Last received credits block was generated %1 ago.").arg(timeBehindText);
         tooltip += QString("<br>");
         tooltip += tr("Credits transactions after this will not yet be visible.");
     }

@@ -880,13 +880,13 @@ int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_
         while (pindex && nTimeFirstKey && (pindex->nTime < (nTimeFirstKey - 7200)))
             pindex = bitcredit_chainActive.Next(pindex);
 
-        ShowProgress(_("Rescanning bitcredit wallet..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -bitcredit_rescan on startup
+        ShowProgress(_("Rescanning credits wallet..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -bitcredit_rescan on startup
         double dProgressStart = Checkpoints::Bitcredit_GuessVerificationProgress(pindex, false);
         double dProgressTip = Checkpoints::Bitcredit_GuessVerificationProgress((Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip(), false);
         while (pindex)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
-                ShowProgress(_("Rescanning bitcredit wallet..."), std::max(1, std::min(99, (int)((Checkpoints::Bitcredit_GuessVerificationProgress(pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+                ShowProgress(_("Rescanning credits wallet..."), std::max(1, std::min(99, (int)((Checkpoints::Bitcredit_GuessVerificationProgress(pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
 
             Bitcredit_CBlock block;
             Bitcredit_ReadBlockFromDisk(block, pindex);
@@ -898,10 +898,10 @@ int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_
             pindex = bitcredit_chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LogPrintf("Still rescanning bitcredit wallet. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::Bitcredit_GuessVerificationProgress(pindex));
+                LogPrintf("Still rescanning credits wallet. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::Bitcredit_GuessVerificationProgress(pindex));
             }
         }
-        ShowProgress(_("Rescanning bitcredit wallet..."), 100); // hide progress dialog in GUI
+        ShowProgress(_("Rescanning credits wallet..."), 100); // hide progress dialog in GUI
     }
     return ret;
 }
@@ -1605,7 +1605,7 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 		return false;
 	}
 
-	//Add key to bitcredit wallet.
+	//Add key to credits wallet.
 	CPubKey pubkey = vchSecret.GetPubKey();
 	CKeyID vchAddress = pubkey.GetID();
 	{
@@ -1620,7 +1620,7 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 
 		// Don't throw error in case a key is already there
 		if (HaveKey(vchAddress)) {
-			LogPrintf("Key with address %s already exists in bitcredit wallet\n",  vchAddress.ToString());
+			LogPrintf("Key with address %s already exists in credits wallet\n",  vchAddress.ToString());
 			return true;
 		}
 
@@ -1637,13 +1637,13 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 //		     ScanForWalletTransactions(bitcredit_chainActive.Genesis(), true);
 //		 }
 
-		LogPrintf("Key with address %s was imported into bitcredit wallet\n",  vchAddress.ToString());
+		LogPrintf("Key with address %s was imported into credits wallet\n",  vchAddress.ToString());
 	}
 	return true;
 }
 
 //bool Bitcredit_CWallet::ImportKeyFromBitcreditWallet (CTxDestination & address, Bitcredit_CWallet * bitcreditWallet) {
-//	//Verify and fetch secret key from bitcredit wallet
+//	//Verify and fetch secret key from credits wallet
 //	CKeyID keyID;
 //	if (!CBitcoinAddress(address).GetKeyID(keyID)) {
 //		return false;
@@ -1656,7 +1656,7 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 //		return false;
 //	}
 //
-//	//Add key to bitcredit wallet.
+//	//Add key to credits wallet.
 //	CPubKey pubkey = vchSecret.GetPubKey();
 //	CKeyID vchAddress = pubkey.GetID();
 //	{
@@ -1671,7 +1671,7 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 //
 //		// Don't throw error in case a key is already there
 //		if (HaveKey(vchAddress)) {
-//			LogPrintf("Key with address %s already exists in bitcredit wallet\n",  vchAddress.ToString());
+//			LogPrintf("Key with address %s already exists in credits wallet\n",  vchAddress.ToString());
 //			return true;
 //		}
 //
@@ -1688,7 +1688,7 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 ////		     ScanForWalletTransactions(bitcredit_chainActive.Genesis(), true);
 ////		 }
 //
-//		LogPrintf("Key with address %s was imported into bitcredit wallet\n",  vchAddress.ToString());
+//		LogPrintf("Key with address %s was imported into credits wallet\n",  vchAddress.ToString());
 //	}
 //	return true;
 //}

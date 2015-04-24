@@ -577,7 +577,7 @@ void Bitcoin_ThreadImport()
         }
     }
 
-    //Invoke bitcredit import from same thread
+    //Invoke credits import from same thread
     Bitcredit_ThreadImport();
 }
 
@@ -1733,7 +1733,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         LogPrintf("Credits wallet disabled!\n");
     } else {
         if (GetBoolArg("-zapwallettxes", false)) {
-            uiInterface.InitMessage(_("Zapping all transactions from bitcredit wallet..."));
+            uiInterface.InitMessage(_("Zapping all transactions from credits wallet..."));
 
             bitcredit_pwalletMain = new Bitcredit_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
             Bitcredit_DBErrors nZapWalletRet = bitcredit_pwalletMain->ZapWalletTx();
@@ -1746,7 +1746,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             bitcredit_pwalletMain = NULL;
         }
 
-        uiInterface.InitMessage(_("Loading bitcredit wallet..."));
+        uiInterface.InitMessage(_("Loading credits wallet..."));
 
         nStart = GetTimeMillis();
         bool fFirstRun = true;
@@ -1779,14 +1779,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             int nMaxVersion = GetArg("-upgradewallet", 0);
             if (nMaxVersion == 0) // the -upgradewallet without argument case
             {
-                LogPrintf("Performing bitcredit wallet upgrade to %i\n", BITCREDIT_FEATURE_LATEST);
+                LogPrintf("Performing credits wallet upgrade to %i\n", BITCREDIT_FEATURE_LATEST);
                 nMaxVersion = BITCREDIT_CLIENT_VERSION;
                 bitcredit_pwalletMain->SetMinVersion(BITCREDIT_FEATURE_LATEST); // permanently upgrade the wallet immediately
             }
             else
-                LogPrintf("Allowing bitcredit wallet upgrade up to %i\n", nMaxVersion);
+                LogPrintf("Allowing credits wallet upgrade up to %i\n", nMaxVersion);
             if (nMaxVersion < bitcredit_pwalletMain->GetVersion())
-                strErrors << _("Cannot downgrade bitcredit wallet") << "\n";
+                strErrors << _("Cannot downgrade credits wallet") << "\n";
             bitcredit_pwalletMain->SetMaxVersion(nMaxVersion);
         }
 
@@ -1799,7 +1799,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             if (bitcredit_pwalletMain->GetKeyFromPool(newDefaultKey)) {
                 bitcredit_pwalletMain->SetDefaultKey(newDefaultKey);
                 if (!bitcredit_pwalletMain->SetAddressBook(bitcredit_pwalletMain->vchDefaultKey.GetID(), "", "receive"))
-                    strErrors << _("Cannot write bitcredit default address") << "\n";
+                    strErrors << _("Cannot write credits default address") << "\n";
             }
 
             bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
@@ -1824,7 +1824,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         }
         if (bitcredit_chainActive.Tip() && bitcredit_chainActive.Tip() != pindexRescan)
         {
-            uiInterface.InitMessage(_("Rescanning bitcredit wallet..."));
+            uiInterface.InitMessage(_("Rescanning credits wallet..."));
             LogPrintf("Bitcredit: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
             bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, pindexRescan, true);
@@ -1834,7 +1834,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         }
     } // (!fDisableWallet)
 #else // ENABLE_WALLET
-    LogPrintf("No bitcredit wallet compiled in!\n");
+    LogPrintf("No credits wallet compiled in!\n");
 #endif // !ENABLE_WALLET
 
 
@@ -1856,7 +1856,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     uiInterface.InitMessage(_("Loading bitcoin addresses..."));
     InitPeersFromNetParams(GetTimeMillis(), Bitcoin_NetParams());
 
-    uiInterface.InitMessage(_("Loading bitcredit addresses..."));
+    uiInterface.InitMessage(_("Loading credits addresses..."));
     InitPeersFromNetParams(GetTimeMillis(), Bitcredit_NetParams());
 
     // ********************************************************* Step 11: start node

@@ -468,12 +468,12 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
         }
 
         //Set up the new reference to the ->bitcoin<- blockchain
-        //Make sure that we are referencing a block deep enough. When the acceptance of bitcredit blocks is done we look
+        //Make sure that we are referencing a block deep enough. When the acceptance of credits blocks is done we look
         //10000 blocks down. Therefore we set our reference to 10000  + 1000 + 144.
         //144 is the approximate number of blocks in 24 hours and also the "unknown"
         //number of blocks that may cause the function Bitcoin_IsInitialBlockDownload to be false.
         //Bitcoin_IsInitialBlockDownload is used as the general  function indicating that the downloaded bitcoin blockchain
-        //is ready to be used by the bitcredit system.
+        //is ready to be used by the credits system.
         {
         LOCK(bitcoin_mainState.cs_main);
         const Bitcoin_CBlockIndex * activeBlockAtHeight = bitcoin_chainActive[nPrevLinkedHeight];

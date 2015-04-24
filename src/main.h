@@ -70,8 +70,8 @@ static const int BITCREDIT_DEFAULT_SCRIPTCHECK_THREADS = 0;
 static const int BITCREDIT_MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
 /** Timeout in seconds before considering a block download peer unresponsive. */
 static const unsigned int BITCREDIT_BLOCK_DOWNLOAD_TIMEOUT = 60;
-/** The highest a bitcoin block can be in the blockchain to be referenced from a bitcredit block.
- * 	Once that threshold has been passed bitcredit can run without a reference to the bitcoin blockchain.
+/** The highest a bitcoin block can be in the blockchain to be referenced from a credits block.
+ * 	Once that threshold has been passed credits can run without a reference to the bitcoin blockchain.
  * 	When that bitcoin block is mined, the total monetary base for bitcoin will be 18 000 000 BTC
  *  Block 600000 is approximately year 2020. */
 static const int BITCREDIT_MAX_BITCOIN_LINK_HEIGHT = 600000;
