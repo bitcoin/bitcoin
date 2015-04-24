@@ -15,8 +15,8 @@ reference_datetime: "2011-01-30 00:00:00"
 remotes: []
 files:
 - "qt-everywhere-opensource-src-5.2.0.tar.gz"
-- "bitcredit-deps-win32-gitian-r12.zip"
-- "bitcredit-deps-win64-gitian-r12.zip"
+- "credits-deps-win32-gitian-r12.zip"
+- "credits-deps-win64-gitian-r12.zip"
 script: |
   # Defines
   export TZ=UTC
@@ -46,9 +46,9 @@ script: |
     #
     mkdir -p $INSTALLPREFIX $INSTALLPREFIX/host/bin $DEPSDIR $BUILDDIR
     #
-    # Need mingw-compiled openssl from bitcredit-deps:
+    # Need mingw-compiled openssl from credits-deps:
     cd $DEPSDIR
-    unzip $INDIR/bitcredit-deps-win${BITS}-gitian-r12.zip
+    unzip $INDIR/credits-deps-win${BITS}-gitian-r12.zip
     #
     cd $BUILDDIR
     #
