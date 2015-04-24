@@ -43,7 +43,7 @@ static const int MAX_PAYMENT_REQUEST_SIZE = 50000; // bytes
 
 #define QAPP_ORG_NAME "Bitcredit"
 #define QAPP_ORG_DOMAIN "bitcredit-currency.org"
-#define QAPP_APP_NAME_DEFAULT "Bitcredit-Qt"
-#define QAPP_APP_NAME_TESTNET "Bitcredit-Qt-testnet"
+#define QAPP_APP_NAME_DEFAULT "Credits-Qt"
+#define QAPP_APP_NAME_TESTNET "Credits-Qt-testnet"
 
 #endif // GUICONSTANTS_H

@@ -52,7 +52,7 @@ src/qt/test/moc*.cpp
 *.qm
 Makefile
 bitcredit-qt
-Bitcredit-Qt.app
+Credits-Qt.app
 
 # Unit-tests
 Makefile.test

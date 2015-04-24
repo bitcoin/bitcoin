@@ -57,4 +57,4 @@ script: |
   export FAKETIME=$REFERENCE_DATETIME
   export TZ=UTC
   make deploy
-  dmg dmg Bitcredit-Qt.dmg $OUTDIR/Bitcredit-Qt.dmg
+  dmg dmg Credits-Qt.dmg $OUTDIR/Credits-Qt.dmg

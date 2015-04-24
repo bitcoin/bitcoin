@@ -14,7 +14,7 @@ The following are some helpful notes on how to run Bitcredit on your native plat
 
 ### Unix
 
-You need the Qt4 run-time libraries to run Bitcredit-Qt. On Debian or Ubuntu:
+You need the Qt4 run-time libraries to run Credits-Qt. On Debian or Ubuntu:
 
 	sudo apt-get install libqtgui4
 
@@ -31,7 +31,7 @@ Unpack the files into a directory, and then run bitcredit-qt.exe.
 
 ### OSX
 
-Drag Bitcredit-Qt to your applications folder, and then run Bitcredit-Qt.
+Drag Credits-Qt to your applications folder, and then run Credits-Qt.
 
 ### Need Help?
 

@@ -59,7 +59,7 @@ Optional: install Qt4
         git clone git@github.com:credits-currency/credits.git credits
         cd credits
 
-2.  Build bitcreditd (and Bitcredit-Qt, if configured):
+2.  Build bitcreditd (and Credits-Qt, if configured):
 
         ./autogen.sh
         ./configure
@@ -111,9 +111,9 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `bitcreditd` for your own use.
 
-bitcreditd/bitcredit-cli binaries are not included in the Bitcredit-Qt.app bundle.
+bitcreditd/bitcredit-cli binaries are not included in the Credits-Qt.app bundle.
 
-If you are building `bitcreditd` or `Bitcredit-Qt` for others, your build machine should be set up
+If you are building `bitcreditd` or `Credits-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -134,7 +134,7 @@ As of December 2012, the `boost` port does not obey `macosx_deployment_target`.
 Download `http://gavinandresen-bitcoin.s3.amazonaws.com/boost_macports_fix.zip`
 for a fix.
 
-Once dependencies are compiled, see release-process.md for how the Bitcredit-Qt.app
+Once dependencies are compiled, see release-process.md for how the Credits-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running

@@ -129,7 +129,7 @@ Release Process
     ./bin/gbuild --commit bitcredit=${VERSION} ../bitcredit/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
     ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcredit/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 	pushd build/out
-	mv Bitcredit-Qt.dmg ../../../
+	mv Credits-Qt.dmg ../../../
 	popd
 	popd
 
@@ -137,7 +137,7 @@ Release Process
 
   1. linux 32-bit and 64-bit binaries + source (bitcredit-${VERSION}-linux-gitian.zip)
   2. windows 32-bit and 64-bit binaries + installer + source (bitcredit-${VERSION}-win-gitian.zip)
-  3. OSX installer (Bitcredit-Qt.dmg)
+  3. OSX installer (Credits-Qt.dmg)
   4. Gitian signatures (in gitian.sigs/${VERSION}[-win|-osx]/(your gitian key)/
 
 repackage gitian builds for release as stand-alone zip/tar/installer exe
