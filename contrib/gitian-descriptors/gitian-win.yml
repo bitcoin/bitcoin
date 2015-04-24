@@ -83,7 +83,7 @@ script: |
     make $MAKEOPTS
     make deploy
     make install-strip
-    cp -f bitcredit-*setup*.exe $BINDIR/
+    cp -f credits-*setup*.exe $BINDIR/
     unset LD_PRELOAD
     unset FAKETIME
   done # for BITS in
