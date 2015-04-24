@@ -95,6 +95,9 @@ Value importprivkey(const Array& params, bool fHelp)
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
         );
 
+    if (fPruneMode)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Importing keys is disabled in pruned mode");
+
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     EnsureWalletIsUnlocked();
@@ -167,6 +170,9 @@ Value importaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("importaddress", "\"myaddress\", \"testing\", false")
         );
 
+    if (fPruneMode)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Importing addresses is disabled in pruned mode");
+
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CScript script;
@@ -236,6 +242,9 @@ Value importwallet(const Array& params, bool fHelp)
             "\nImport using the json rpc call\n"
             + HelpExampleRpc("importwallet", "\"test\"")
         );
+
+    if (fPruneMode)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
