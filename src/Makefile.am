@@ -3,21 +3,21 @@ include Makefile.include
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
-  libbitcredit_server.a \
-  libbitcredit_common.a \
-  libbitcredit_cli.a
+  libcredits_server.a \
+  libcredits_common.a \
+  libcredits_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libbitcredit_wallet.a
+noinst_LIBRARIES += libcredits_wallet.a
 endif
 
 bin_PROGRAMS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcreditd
+  bin_PROGRAMS += creditsd
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcredit-cli
+  bin_PROGRAMS += credits-cli
 endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
@@ -101,7 +101,7 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libbitcredit_server_a_SOURCES = \
+libcredits_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -133,7 +133,7 @@ libbitcredit_server_a_SOURCES = \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-libbitcredit_wallet_a_SOURCES = \
+libcredits_wallet_a_SOURCES = \
   db.cpp \
   bitcoin_db.cpp \
   crypter.cpp \
@@ -145,7 +145,7 @@ libbitcredit_wallet_a_SOURCES = \
   bitcoin_walletdb.cpp \
   $(BITCOIN_CORE_H)
 
-libbitcredit_common_a_SOURCES = \
+libcredits_common_a_SOURCES = \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
@@ -164,47 +164,47 @@ libbitcredit_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libbitcredit_common_a_SOURCES += compat/glibc_compat.cpp
-libbitcredit_common_a_SOURCES += compat/glibcxx_compat.cpp
+libcredits_common_a_SOURCES += compat/glibc_compat.cpp
+libcredits_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libbitcredit_cli_a_SOURCES = \
+libcredits_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libbitcredit_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libcredits_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
-# bitcreditd binary #
-bitcreditd_LDADD = \
-  libbitcredit_server.a \
-  libbitcredit_cli.a \
-  libbitcredit_common.a \
+# creditsd binary #
+creditsd_LDADD = \
+  libcredits_server.a \
+  libcredits_cli.a \
+  libcredits_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-bitcreditd_LDADD += libbitcredit_wallet.a
+creditsd_LDADD += libcredits_wallet.a
 endif
-bitcreditd_SOURCES = bitcreditd.cpp
+creditsd_SOURCES = creditsd.cpp
 #
 
 if TARGET_WINDOWS
-bitcreditd_SOURCES += bitcreditd-res.rc
+creditsd_SOURCES += creditsd-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
-bitcreditd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
+creditsd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
-# bitcredit-cli binary #
-bitcredit_cli_LDADD = \
-  libbitcredit_cli.a \
-  libbitcredit_common.a \
+# credits-cli binary #
+credits_cli_LDADD = \
+  libcredits_cli.a \
+  libcredits_common.a \
   $(BOOST_LIBS)
-bitcredit_cli_SOURCES = bitcredit-cli.cpp
+credits_cli_SOURCES = credits-cli.cpp
 #
 
 if TARGET_WINDOWS
-bitcredit_cli_SOURCES += bitcredit-cli-res.rc
+credits_cli_SOURCES += credits-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -215,7 +215,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libbitcredit_server_a_SOURCES) $(libbitcredit_common_a_SOURCES) $(libbitcredit_cli_a_SOURCES)
+qt/bitcoinstrings.cpp: $(libcredits_server_a_SOURCES) $(libcredits_common_a_SOURCES) $(libcredits_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 

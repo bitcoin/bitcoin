@@ -44,9 +44,9 @@ static bool AppInitRPC(int argc, char* argv[])
         // First part of help message is specific to RPC client
         std::string strUsage = _("Bitcredit Core RPC client version") + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +
-              "  bitcredit-cli [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
-              "  bitcredit-cli [options] help                " + _("List commands") + "\n" +
-              "  bitcredit-cli [options] help <command>      " + _("Get help for a command") + "\n";
+              "  credits-cli [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
+              "  credits-cli [options] help                " + _("List commands") + "\n" +
+              "  credits-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
         strUsage += "\n" + HelpMessageCli(true);
 

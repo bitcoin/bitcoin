@@ -25,8 +25,8 @@ remotes:
 - "url": "/opt/bit/bitcredit"
   "dir": "bitcredit"
 files:
-- "bitcredit-deps-linux32-gitian-r5.zip"
-- "bitcredit-deps-linux64-gitian-r5.zip"
+- "credits-deps-linux32-gitian-r5.zip"
+- "credits-deps-linux64-gitian-r5.zip"
 - "boost-linux32-1.55.0-gitian-r1.zip"
 - "boost-linux64-1.55.0-gitian-r1.zip"
 - "qt-linux32-4.6.4-gitian-r1.tar.gz"
@@ -43,7 +43,7 @@ script: |
   #
   mkdir -p $STAGING
   cd $STAGING
-  unzip ../build/bitcredit-deps-linux${GBUILD_BITS}-gitian-r5.zip
+  unzip ../build/credits-deps-linux${GBUILD_BITS}-gitian-r5.zip
   unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
   tar -zxf ../build/qt-linux${GBUILD_BITS}-4.6.4-gitian-r1.tar.gz
   cd ../build
@@ -66,7 +66,7 @@ script: |
   ./autogen.sh
   do_configure
   make dist
-  DISTNAME=`echo bitcredit-*.tar.gz`
+  DISTNAME=`echo credits-*.tar.gz`
 
   # Build dynamic versions of everything
   # (with static linking to boost and openssl as well a some non-OS deps)

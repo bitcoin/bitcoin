@@ -519,12 +519,12 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcredit.lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / "Credits.lnk";
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for Bitcredit.lnk
+    // check for Credits.lnk
     return boost::filesystem::exists(StartupShortcutPath());
 }
 

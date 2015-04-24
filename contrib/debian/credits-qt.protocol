@@ -1,5 +1,5 @@
 [Protocol]
-exec=bitcredit-qt '%u'
+exec=credits-qt '%u'
 protocol=bitcoin
 input=none
 output=none

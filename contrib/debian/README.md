@@ -1,21 +1,21 @@
 
 Debian
 ====================
-This directory contains files used to package bitcreditd/bitcredit-qt
-for Debian-based Linux systems. If you compile bitcreditd/bitcredit-qt yourself, there are some useful files here.
+This directory contains files used to package creditsd/credits-qt
+for Debian-based Linux systems. If you compile creditsd/credits-qt yourself, there are some useful files here.
 
 ## bitcredit: URI support ##
 
 
-bitcredit-qt.desktop  (Gnome / Open Desktop)
+credits-qt.desktop  (Gnome / Open Desktop)
 To install:
 
-	sudo desktop-file-install bitcredit-qt.desktop
+	sudo desktop-file-install credits-qt.desktop
 	sudo update-desktop-database
 
 If you build yourself, you will either need to modify the paths in
-the .desktop file or copy or symlink your bitcredit-qt binary to `/usr/bin`
+the .desktop file or copy or symlink your credits-qt binary to `/usr/bin`
 and the `../../share/pixmaps/bitcoin128.png` to `/usr/share/pixmaps`
 
-bitcredit-qt.protocol (KDE)
+credits-qt.protocol (KDE)
 

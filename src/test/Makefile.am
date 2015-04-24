@@ -2,9 +2,9 @@ include $(top_srcdir)/src/Makefile.include
 
 AM_CPPFLAGS += -I$(top_srcdir)/src
 
-bin_PROGRAMS = test_bitcredit
+bin_PROGRAMS = test_credits
 
-TESTS = test_bitcredit
+TESTS = test_credits
 
 JSON_TEST_FILES = \
   data/script_valid.json \
@@ -22,16 +22,16 @@ RAW_TEST_FILES = data/alertTests.raw
 
 BUILT_SOURCES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-# test_bitcredit binary #
-test_bitcredit_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
-test_bitcredit_LDADD = $(LIBBITCREDIT_SERVER) $(LIBBITCREDIT_CLI) $(LIBBITCREDIT_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+# test_credits binary #
+test_credits_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
+test_credits_LDADD = $(LIBCREDITS_SERVER) $(LIBCREDITS_CLI) $(LIBCREDITS_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 if ENABLE_WALLET
-test_bitcredit_LDADD += $(LIBBITCREDIT_WALLET)
+test_credits_LDADD += $(LIBCREDITS_WALLET)
 endif
-test_bitcredit_LDADD += $(BDB_LIBS)
+test_credits_LDADD += $(BDB_LIBS)
 
-test_bitcredit_SOURCES = \
+test_credits_SOURCES = \
   bignum.h \
   alert_tests.cpp \
   allocator_tests.cpp \
@@ -67,12 +67,12 @@ test_bitcredit_SOURCES = \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 if ENABLE_WALLET
-test_bitcredit_SOURCES += \
+test_credits_SOURCES += \
    accounting_tests.cpp \
    wallet_tests.cpp \
    rpc_wallet_tests.cpp
 endif
 
-nodist_test_bitcredit_SOURCES = $(BUILT_SOURCES)
+nodist_test_credits_SOURCES = $(BUILT_SOURCES)
 
 CLEANFILES = *.gcda *.gcno $(BUILT_SOURCES)

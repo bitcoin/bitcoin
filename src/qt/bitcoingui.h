@@ -70,7 +70,7 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    ClientModel *bitcredit_clientModel;
+    ClientModel *credits_clientModel;
     ClientModel *bitcoin_clientModel;
     WalletFrame *walletFrame;
 

@@ -1,14 +1,11 @@
-IDI_ICON1 ICON DISCARDABLE "icons/bitcredit.ico"
-IDI_ICON2 ICON DISCARDABLE "icons/bitcredit_testnet.ico"
-
 #include <windows.h>             // needed for VERSIONINFO
-#include "../../clientversion.h" // holds the needed client version information
+#include "clientversion.h"       // holds the needed client version information
 
 #define VER_PRODUCTVERSION     CLIENT_VERSION_MAJOR,CLIENT_VERSION_MINOR,CLIENT_VERSION_REVISION,CLIENT_VERSION_BUILD
 #define VER_PRODUCTVERSION_STR STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
 #define VER_FILEVERSION        VER_PRODUCTVERSION
 #define VER_FILEVERSION_STR    VER_PRODUCTVERSION_STR
-#define COPYRIGHT_STR          "2009-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcredit developers"
+#define COPYRIGHT_STR          "2013-" STRINGIZE(COPYRIGHT_YEAR) " The Credits Core developers"
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
@@ -20,14 +17,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcredit"
-            VALUE "FileDescription",    "Bitcredit Core (OSS GUI client for Bitcredit)"
+            VALUE "CompanyName",        "Credits"
+            VALUE "FileDescription",    "Creditsd (OSS daemon/client for Credits)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcredit-qt"
+            VALUE "InternalName",       "creditsd"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcredit-qt.exe"
-            VALUE "ProductName",        "Bitcredit Core"
+            VALUE "OriginalFilename",   "creditsd.exe"
+            VALUE "ProductName",        "Creditsd"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

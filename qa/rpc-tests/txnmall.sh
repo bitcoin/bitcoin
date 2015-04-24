@@ -13,8 +13,8 @@ fi
 
 set -f
 
-BITCOIND=${1}/bitcreditd
-CLI=${1}/bitcredit-cli
+BITCOIND=${1}/creditsd
+CLI=${1}/credits-cli
 
 DIR="${BASH_SOURCE%/*}"
 SENDANDWAIT="${DIR}/send.sh"

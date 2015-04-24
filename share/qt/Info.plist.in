@@ -29,10 +29,10 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Bitcredit-Qt</string>
+  <string>Credits-Qt</string>
 
   <key>CFBundleIdentifier</key>
-  <string>org.bitcreditfoundation.Bitcredit-Qt</string>
+  <string>org.bitcreditfoundation.Credits-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>

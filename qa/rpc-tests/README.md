@@ -39,5 +39,5 @@ to recover with:
 
 ```bash
 rm -rf cache
-killall bitcreditd
+killall creditsd
 ```

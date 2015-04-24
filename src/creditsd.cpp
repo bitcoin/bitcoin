@@ -20,7 +20,7 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcredit (http://www.bitcredit-currency.org/),
+ * This is the developer documentation of the reference client for an experimental new digital currency called Bitcredit (http://www.credits-currency.org/),
  * which enables instant payments to anyone, anywhere in the world. Bitcredit uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
@@ -85,14 +85,14 @@ bool AppInit(int argc, char* argv[])
 
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
-            // First part of help message is specific to bitcreditd / RPC client
+            // First part of help message is specific to creditsd / RPC client
             std::string strUsage = _("Bitcredit Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  bitcreditd [options]                     " + _("Start Bitcredit Core Daemon") + "\n" +
-                _("Usage (deprecated, use bitcredit-cli):") + "\n" +
-                  "  bitcreditd [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
-                  "  bitcreditd [options] help                " + _("List commands") + "\n" +
-                  "  bitcreditd [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  creditsd [options]                     " + _("Start Bitcredit Core Daemon") + "\n" +
+                _("Usage (deprecated, use credits-cli):") + "\n" +
+                  "  creditsd [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
+                  "  creditsd [options] help                " + _("List commands") + "\n" +
+                  "  creditsd [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_BITCOIND);
             strUsage += "\n" + HelpMessageCli(false);
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 {
     SetupEnvironment();
 
-    // Connect bitcreditd signal handlers
+    // Connect creditsd signal handlers
     noui_connect();
 
     return (AppInit(argc, argv) ? 0 : 1);

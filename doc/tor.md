@@ -51,7 +51,7 @@ config file):
 	HiddenServicePort 19333 127.0.0.1:19333
 
 The directory can be different of course, but (both) port numbers should be equal to
-your bitcreditd's P2P listen port (9333 by default).
+your creditsd's P2P listen port (9333 by default).
 
 	-externalip=X   You can tell bitcoin about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
@@ -73,13 +73,13 @@ your bitcreditd's P2P listen port (9333 by default).
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./bitcreditd -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+	./creditsd -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
 
 (obviously, replace the Onion address with your own). If you don't care too much
 about hiding your node, and want to be reachable on IPv4 as well, additionally
 specify:
 
-	./bitcreditd ... -discover
+	./creditsd ... -discover
 
 and open port 9333 on your firewall (or use -upnp).
 

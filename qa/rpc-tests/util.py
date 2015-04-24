@@ -56,18 +56,18 @@ def sync_mempools(rpc_connections):
         time.sleep(1)
         
 
-bitcreditd_processes = []
+creditsd_processes = []
 
 def initialize_chain(test_dir):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
-    bitcreditd and bitcredit-cli must be in search path.
+    creditsd and credits-cli must be in search path.
     """
 
     if not os.path.isdir(os.path.join("cache", "node0")):
         devnull = open("/dev/null", "w+")
-        # Create cache directories, run bitcreditds:
+        # Create cache directories, run creditsds:
         for i in range(4):
             datadir = os.path.join("cache", "node"+str(i))
             os.makedirs(datadir)
@@ -77,11 +77,11 @@ def initialize_chain(test_dir):
                 f.write("rpcpassword=rt\n");
                 f.write("port="+str(START_P2P_PORT+i)+"\n");
                 f.write("rpcport="+str(START_RPC_PORT+i)+"\n");
-            args = [ "bitcreditd", "-keypool=1", "-datadir="+datadir ]
+            args = [ "creditsd", "-keypool=1", "-datadir="+datadir ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(START_P2P_PORT))
-            bitcreditd_processes.append(subprocess.Popen(args))
-            subprocess.check_call([ "bitcredit-cli", "-datadir="+datadir,
+            creditsd_processes.append(subprocess.Popen(args))
+            subprocess.check_call([ "credits-cli", "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
         devnull.close()
         rpcs = []
@@ -104,7 +104,7 @@ def initialize_chain(test_dir):
 
         # Shut them down, and remove debug.logs:
         stop_nodes(rpcs)
-        wait_bitcreditds()
+        wait_creditsds()
         for i in range(4):
             os.remove(debug_log("cache", i))
 
@@ -134,15 +134,15 @@ def _rpchost_to_args(rpchost):
     return rv
 
 def start_nodes(num_nodes, dir, extra_args=None, rpchost=None):
-    # Start bitcreditds, and wait for RPC interface to be up and running:
+    # Start creditsds, and wait for RPC interface to be up and running:
     devnull = open("/dev/null", "w+")
     for i in range(num_nodes):
         datadir = os.path.join(dir, "node"+str(i))
-        args = [ "bitcreditd", "-datadir="+datadir ]
+        args = [ "creditsd", "-datadir="+datadir ]
         if extra_args is not None:
             args += extra_args[i]
-        bitcreditd_processes.append(subprocess.Popen(args))
-        subprocess.check_call([ "bitcredit-cli", "-datadir="+datadir] +
+        creditsd_processes.append(subprocess.Popen(args))
+        subprocess.check_call([ "credits-cli", "-datadir="+datadir] +
                                   _rpchost_to_args(rpchost)  +
                                   ["-rpcwait", "getblockcount"], stdout=devnull)
     devnull.close()
@@ -161,11 +161,11 @@ def stop_nodes(nodes):
         nodes[i].stop()
     del nodes[:] # Emptying array closes connections as a side effect
 
-def wait_bitcreditds():
-    # Wait for all bitcreditds to cleanly exit
-    for bitcreditd in bitcreditd_processes:
-        bitcreditd.wait()
-    del bitcreditd_processes[:]
+def wait_creditsds():
+    # Wait for all creditsds to cleanly exit
+    for creditsd in creditsd_processes:
+        creditsd.wait()
+    del creditsd_processes[:]
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(START_P2P_PORT+node_num)

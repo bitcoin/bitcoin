@@ -6,7 +6,7 @@ define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2015)
-AC_INIT([Bitcredit Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@bitcredit-currency.org],[bitcredit])
+AC_INIT([Credits Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[info@credits-currency.org],[credits])
 AC_CONFIG_AUX_DIR([src/build-aux])
 AC_CONFIG_MACRO_DIR([src/m4])
 AC_CANONICAL_HOST
@@ -499,14 +499,14 @@ fi
 AC_ARG_WITH([cli],
   [AS_HELP_STRING([--with-cli],
   [with CLI (default is yes)])],
-  [build_bitcredit_cli=$withval],
-  [build_bitcredit_cli=yes])
+  [build_credits_cli=$withval],
+  [build_credits_cli=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
   [with daemon (default is yes)])],
-  [build_bitcreditd=$withval],
-  [build_bitcreditd=yes])
+  [build_creditsd=$withval],
+  [build_creditsd=yes])
 
 BITCOIN_QT_INIT
 
@@ -544,13 +544,13 @@ fi
 
 BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
-AC_MSG_CHECKING([whether to build bitcreditd])
-AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcreditd = xyes])
-AC_MSG_RESULT($build_bitcreditd)
+AC_MSG_CHECKING([whether to build creditsd])
+AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_creditsd = xyes])
+AC_MSG_RESULT($build_creditsd)
 
-AC_MSG_CHECKING([whether to build bitcredit-cli])
-AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcredit_cli = xyes])
-AC_MSG_RESULT($build_bitcredit_cli)
+AC_MSG_CHECKING([whether to build credits-cli])
+AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_credits_cli = xyes])
+AC_MSG_RESULT($build_credits_cli)
 
 dnl sets $bitcredit_enable_qt, $bitcredit_enable_qt_test, $bitcredit_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
@@ -641,7 +641,7 @@ if test x$bitcredit_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_bitcredit-qt])
+  AC_MSG_CHECKING([whether to build test_credits-qt])
   if test x$use_tests$bitcredit_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="test"
@@ -650,7 +650,7 @@ if test x$bitcredit_enable_qt != xno; then
   fi
 fi
 
-AC_MSG_CHECKING([whether to build test_bitcredit])
+AC_MSG_CHECKING([whether to build test_credits])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="test"
@@ -658,7 +658,7 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test "x$use_tests$build_bitcreditd$use_qt" = "xnonono"; then
+if test "x$use_tests$build_creditsd$use_qt" = "xnonono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --enable-cli --enable-daemon --enable-gui or --enable-tests])
 fi
 
@@ -696,6 +696,6 @@ AC_SUBST(BUILD_TEST)
 AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_CONFIG_FILES([Makefile src/Makefile src/test/Makefile src/qt/Makefile src/qt/test/Makefile share/setup.nsi share/qt/Info.plist])
-AC_CONFIG_FILES([qa/pull-tester/run-bitcreditd-for-test.sh],[chmod +x qa/pull-tester/run-bitcreditd-for-test.sh])
+AC_CONFIG_FILES([qa/pull-tester/run-creditsd-for-test.sh],[chmod +x qa/pull-tester/run-creditsd-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/build-tests.sh],[chmod +x qa/pull-tester/build-tests.sh])
 AC_OUTPUT

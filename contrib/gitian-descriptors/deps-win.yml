@@ -1,5 +1,5 @@
 ---
-name: "bitcredit-deps"
+name: "credits-deps"
 suites:
 - "precise"
 architectures:
@@ -124,5 +124,5 @@ script: |
     done
     #
     cd $INSTALLPREFIX
-    find include lib | sort | zip -X@ $OUTDIR/bitcredit-deps-win$BITS-gitian-r12.zip
+    find include lib | sort | zip -X@ $OUTDIR/credits-deps-win$BITS-gitian-r12.zip
   done # for BITS in

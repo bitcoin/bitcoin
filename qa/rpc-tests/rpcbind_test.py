@@ -33,11 +33,11 @@ def run_bind_test(tmpdir, allow_ips, connect_to, addresses, expected):
     binds = ['-rpcbind='+addr for addr in addresses]
     nodes = start_nodes(1, tmpdir, [base_args + binds], connect_to)
     try:
-        pid = bitcreditd_processes[0].pid
+        pid = creditsd_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
     finally:
         stop_nodes(nodes)
-        wait_bitcreditds()
+        wait_creditsds()
 
 def run_allowip_test(tmpdir, allow_ips, rpchost):
     '''
@@ -54,7 +54,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost):
     finally:
         node = None # make sure connection will be garbage collected and closed
         stop_nodes(nodes)
-        wait_bitcreditds()
+        wait_creditsds()
 
 
 def run_test(tmpdir):
@@ -107,9 +107,9 @@ def main():
 
     parser = optparse.OptionParser(usage="%prog [options]")
     parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                      help="Leave bitcreditds and test.* datadir on exit or error")
+                      help="Leave creditsds and test.* datadir on exit or error")
     parser.add_option("--srcdir", dest="srcdir", default="../../src",
-                      help="Source directory containing bitcreditd/bitcredit-cli (default: %default%)")
+                      help="Source directory containing creditsd/credits-cli (default: %default%)")
     parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                       help="Root directory for datadirs")
     (options, args) = parser.parse_args()
@@ -138,7 +138,7 @@ def main():
 
     if not options.nocleanup:
         print("Cleaning up")
-        wait_bitcreditds()
+        wait_creditsds()
         shutil.rmtree(options.tmpdir)
 
     if success:

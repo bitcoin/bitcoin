@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build bitcreditd(headless client) for OSX.
+This guide will show you how to build creditsd(headless client) for OSX.
 
 Notes
 -----
@@ -52,14 +52,14 @@ Optional: install Qt4
 
     sudo port install qt4-mac qrencode protobuf-cpp
 
-### Building `bitcreditd`
+### Building `creditsd`
 
 1. Clone the github tree to get the source code and go into the directory.
 
         git clone git@github.com:credits-currency/credits.git credits
         cd credits
 
-2.  Build bitcreditd (and Bitcredit-Qt, if configured):
+2.  Build creditsd (and Credits-Qt, if configured):
 
         ./autogen.sh
         ./configure
@@ -90,14 +90,14 @@ Rerunning "openssl version" should now return the correct version. If it
 doesn't, make sure `/usr/local/bin` comes before `/usr/bin` in your
 PATH. 
 
-### Building `bitcreditd`
+### Building `creditsd`
 
 1. Clone the github tree to get the source code and go into the directory.
 
         git clone https://github.com/credits-currency/credits.git
         cd credits
 
-2.  Build bitcreditd:
+2.  Build creditsd:
 
         ./autogen.sh
         ./configure
@@ -109,11 +109,11 @@ PATH.
 
 Creating a release build
 ------------------------
-You can ignore this section if you are building `bitcreditd` for your own use.
+You can ignore this section if you are building `creditsd` for your own use.
 
-bitcreditd/bitcredit-cli binaries are not included in the Bitcredit-Qt.app bundle.
+creditsd/credits-cli binaries are not included in the Credits-Qt.app bundle.
 
-If you are building `bitcreditd` or `Bitcredit-Qt` for others, your build machine should be set up
+If you are building `creditsd` or `Credits-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -134,16 +134,16 @@ As of December 2012, the `boost` port does not obey `macosx_deployment_target`.
 Download `http://gavinandresen-bitcoin.s3.amazonaws.com/boost_macports_fix.zip`
 for a fix.
 
-Once dependencies are compiled, see release-process.md for how the Bitcredit-Qt.app
+Once dependencies are compiled, see release-process.md for how the Credits-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running
 -------
 
-It's now available at `./bitcreditd`, provided that you are still in the `src`
+It's now available at `./creditsd`, provided that you are still in the `src`
 directory. We have to first create the RPC configuration file, though.
 
-Run `./bitcreditd` to get the filename where it should be put, or just try these
+Run `./creditsd` to get the filename where it should be put, or just try these
 commands:
 
     echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Bitcredit/bitcredit.conf"
@@ -157,6 +157,6 @@ you can monitor its process by looking at the debug.log file, like this:
 
 Other commands:
 
-    ./bitcreditd -daemon # to start the credits daemon.
-    ./bitcredit-cli --help  # for a list of command-line options.
-    ./bitcredit-cli help    # When the daemon is running, to get a list of RPC commands
+    ./creditsd -daemon # to start the credits daemon.
+    ./credits-cli --help  # for a list of command-line options.
+    ./credits-cli help    # When the daemon is running, to get a list of RPC commands

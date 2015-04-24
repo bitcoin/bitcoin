@@ -1,9 +1,9 @@
 dnl Helper for cases where a qt dependency is not met.
 dnl Output: If qt version is auto, set bitcredit_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
-  if test "x$bitcredit_qt_want_version" = "xauto" && test x$bitcredit_qt_force != xyes; then
+  if test "x$credits_qt_want_version" = "xauto" && test x$credits_qt_force != xyes; then
     if test x$bitcredit_enable_qt != xno; then
-      AC_MSG_WARN([$1; bitcredit-qt frontend will not be built])
+      AC_MSG_WARN([$1; credits-qt frontend will not be built])
     fi
     bitcredit_enable_qt=no
   else
@@ -12,7 +12,7 @@ AC_DEFUN([BITCOIN_QT_FAIL],[
 ])
 
 AC_DEFUN([BITCOIN_QT_CHECK],[
-  if test "x$bitcredit_enable_qt" != "xno" && test x$bitcredit_qt_want_version != xno; then
+  if test "x$bitcredit_enable_qt" != "xno" && test x$credits_qt_want_version != xno; then
     true
     $1
   else
@@ -51,13 +51,13 @@ AC_DEFUN([BITCOIN_QT_INIT],[
     [AS_HELP_STRING([--with-gui],
     [with GUI (no|qt4|qt5|auto. default is auto, qt4 tried first.)])],
     [
-     bitcredit_qt_want_version=$withval
-     if test x$bitcredit_qt_want_version = xyes; then
-       bitcredit_qt_force=yes
-       bitcredit_qt_want_version=auto
+     credits_qt_want_version=$withval
+     if test x$credits_qt_want_version = xyes; then
+       credits_qt_force=yes
+       credits_qt_want_version=auto
      fi
     ],
-    [bitcredit_qt_want_version=auto])
+    [credits_qt_want_version=auto])
 
   AC_ARG_WITH([qt-incdir],[AS_HELP_STRING([--with-qt-incdir=INC_DIR],[specify qt include path (overridden by pkgconfig)])], [qt_include_path=$withval], [])
   AC_ARG_WITH([qt-libdir],[AS_HELP_STRING([--with-qt-libdir=LIB_DIR],[specify qt lib path (overridden by pkgconfig)])], [qt_lib_path=$withval], [])
@@ -94,11 +94,11 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     BITCOIN_QT_CHECK([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG])
   fi
 
-  BITCOIN_QT_PATH_PROGS([MOC], [moc-qt${bitcredit_qt_got_major_vers} moc${bitcredit_qt_got_major_vers} moc], $qt_bin_path)
-  BITCOIN_QT_PATH_PROGS([UIC], [uic-qt${bitcredit_qt_got_major_vers} uic${bitcredit_qt_got_major_vers} uic], $qt_bin_path)
-  BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt${bitcredit_qt_got_major_vers} rcc${bitcredit_qt_got_major_vers} rcc], $qt_bin_path)
-  BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt${bitcredit_qt_got_major_vers} lrelease${bitcredit_qt_got_major_vers} lrelease], $qt_bin_path)
-  BITCOIN_QT_PATH_PROGS([LUPDATE], [lupdate-qt${bitcredit_qt_got_major_vers} lupdate${bitcredit_qt_got_major_vers} lupdate],$qt_bin_path, yes)
+  BITCOIN_QT_PATH_PROGS([MOC], [moc-qt${credits_qt_got_major_vers} moc${credits_qt_got_major_vers} moc], $qt_bin_path)
+  BITCOIN_QT_PATH_PROGS([UIC], [uic-qt${credits_qt_got_major_vers} uic${credits_qt_got_major_vers} uic], $qt_bin_path)
+  BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt${credits_qt_got_major_vers} rcc${credits_qt_got_major_vers} rcc], $qt_bin_path)
+  BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt${credits_qt_got_major_vers} lrelease${credits_qt_got_major_vers} lrelease], $qt_bin_path)
+  BITCOIN_QT_PATH_PROGS([LUPDATE], [lupdate-qt${credits_qt_got_major_vers} lupdate${credits_qt_got_major_vers} lupdate],$qt_bin_path, yes)
 
   MOC_DEFS='-DHAVE_CONFIG_H -I$(top_srcdir)/src'
   case $host in
@@ -117,7 +117,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
 
 
   dnl enable qt support
-  AC_MSG_CHECKING(whether to build Bitcredit Core GUI)
+  AC_MSG_CHECKING(whether to build Credits Core GUI)
   BITCOIN_QT_CHECK([
     bitcredit_enable_qt=yes
     bitcredit_enable_qt_test=yes
@@ -137,7 +137,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   ],[
     bitcredit_enable_qt=no
   ])
-  AC_MSG_RESULT([$bitcredit_enable_qt (Qt${bitcredit_qt_got_major_vers})])
+  AC_MSG_RESULT([$bitcredit_enable_qt (Qt${credits_qt_got_major_vers})])
 
   AC_SUBST(QT_INCLUDES)
   AC_SUBST(QT_LIBS)
@@ -146,7 +146,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   AC_SUBST(QT_DBUS_LIBS)
   AC_SUBST(QT_TEST_INCLUDES)
   AC_SUBST(QT_TEST_LIBS)
-  AC_SUBST(QT_SELECT, qt${bitcredit_qt_got_major_vers})
+  AC_SUBST(QT_SELECT, qt${credits_qt_got_major_vers})
   AC_SUBST(MOC_DEFS)
 ])
 
@@ -216,12 +216,12 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGINS],[
 ])
 
 dnl Internal. Find Qt libraries using pkg-config.
-dnl Inputs: bitcredit_qt_want_version (from --with-gui=). The version to check
+dnl Inputs: credits_qt_want_version (from --with-gui=). The version to check
 dnl         first.
-dnl Inputs: $1: If bitcredit_qt_want_version is "auto", check for this version
+dnl Inputs: $1: If credits_qt_want_version is "auto", check for this version
 dnl         first.
 dnl Outputs: All necessary QT_* variables are set.
-dnl Outputs: bitcredit_qt_got_major_vers is set to "4" or "5".
+dnl Outputs: credits_qt_got_major_vers is set to "4" or "5".
 dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITH_PKGCONFIG],[
   m4_ifdef([PKG_CHECK_MODULES],[
@@ -229,28 +229,28 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITH_PKGCONFIG],[
   if test x$auto_priority_version == x; then
     auto_priority_version=qt5
   fi
-    if test x$bitcredit_qt_want_version == xqt5 ||  ( test x$bitcredit_qt_want_version == xauto && test x$auto_priority_version == xqt5 ); then
+    if test x$credits_qt_want_version == xqt5 ||  ( test x$credits_qt_want_version == xauto && test x$auto_priority_version == xqt5 ); then
       QT_LIB_PREFIX=Qt5
-      bitcredit_qt_got_major_vers=5
+      credits_qt_got_major_vers=5
     else
       QT_LIB_PREFIX=Qt
-      bitcredit_qt_got_major_vers=4
+      credits_qt_got_major_vers=4
     fi
     qt5_modules="Qt5Core Qt5Gui Qt5Network Qt5Widgets"
     qt4_modules="QtCore QtGui QtNetwork"
     BITCOIN_QT_CHECK([
-      if test x$bitcredit_qt_want_version == xqt5 || ( test x$bitcredit_qt_want_version == xauto && test x$auto_priority_version == xqt5 ); then
+      if test x$credits_qt_want_version == xqt5 || ( test x$credits_qt_want_version == xauto && test x$auto_priority_version == xqt5 ); then
         PKG_CHECK_MODULES([QT], [$qt5_modules], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes],[have_qt=no])
-      elif test x$bitcredit_qt_want_version == xqt4 || ( test x$bitcredit_qt_want_version == xauto && test x$auto_priority_version == xqt4 ); then
+      elif test x$credits_qt_want_version == xqt4 || ( test x$credits_qt_want_version == xauto && test x$auto_priority_version == xqt4 ); then
         PKG_CHECK_MODULES([QT], [$qt4_modules], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes], [have_qt=no])
       fi
 
       dnl qt version is set to 'auto' and the preferred version wasn't found. Now try the other.
-      if test x$have_qt == xno && test x$bitcredit_qt_want_version == xauto; then
+      if test x$have_qt == xno && test x$credits_qt_want_version == xauto; then
         if test x$auto_priority_version = x$qt5; then
-          PKG_CHECK_MODULES([QT], [$qt4_modules], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes; QT_LIB_PREFIX=Qt; bitcredit_qt_got_major_vers=4], [have_qt=no])
+          PKG_CHECK_MODULES([QT], [$qt4_modules], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes; QT_LIB_PREFIX=Qt; credits_qt_got_major_vers=4], [have_qt=no])
         else
-          PKG_CHECK_MODULES([QT], [$qt5_modules], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes; QT_LIB_PREFIX=Qt5; bitcredit_qt_got_major_vers=5], [have_qt=no])
+          PKG_CHECK_MODULES([QT], [$qt5_modules], [QT_INCLUDES="$QT_CFLAGS"; have_qt=yes; QT_LIB_PREFIX=Qt5; credits_qt_got_major_vers=5], [have_qt=no])
         fi
       fi
       if test x$have_qt != xyes; then
@@ -270,10 +270,10 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITH_PKGCONFIG],[
 
 dnl Internal. Find Qt libraries without using pkg-config. Version is deduced
 dnl from the discovered headers.
-dnl Inputs: bitcredit_qt_want_version (from --with-gui=). The version to use.
+dnl Inputs: credits_qt_want_version (from --with-gui=). The version to use.
 dnl         If "auto", the version will be discovered by _BITCOIN_QT_CHECK_QT5.
 dnl Outputs: All necessary QT_* variables are set.
-dnl Outputs: bitcredit_qt_got_major_vers is set to "4" or "5".
+dnl Outputs: credits_qt_got_major_vers is set to "4" or "5".
 dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   TEMP_CPPFLAGS="$CPPFLAGS"
@@ -290,15 +290,15 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   BITCOIN_QT_CHECK([AC_CHECK_HEADER([QLocalSocket],, BITCOIN_QT_FAIL(QtNetwork headers missing))])
 
   BITCOIN_QT_CHECK([
-    if test x$bitcredit_qt_want_version = xauto; then
+    if test x$credits_qt_want_version = xauto; then
       _BITCOIN_QT_CHECK_QT5
     fi
-    if test x$bitcoin_cv_qt5 == xyes || test x$bitcredit_qt_want_version = xqt5; then
+    if test x$bitcoin_cv_qt5 == xyes || test x$credits_qt_want_version = xqt5; then
       QT_LIB_PREFIX=Qt5
-      bitcredit_qt_got_major_vers=5
+      credits_qt_got_major_vers=5
     else
       QT_LIB_PREFIX=Qt
-      bitcredit_qt_got_major_vers=4
+      credits_qt_got_major_vers=4
     fi
   ])
 
@@ -309,7 +309,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
     fi
     if test x$qt_plugin_path != x; then
       LIBS="$LIBS -L$qt_plugin_path/accessible"
-      if test x$bitcredit_qt_got_major_vers == x5; then
+      if test x$credits_qt_got_major_vers == x5; then
         LIBS="$LIBS -L$qt_plugin_path/platforms"
       else
         LIBS="$LIBS -L$qt_plugin_path/codecs"
@@ -326,7 +326,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Core]   ,[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXCore not found)))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Gui]    ,[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXGui not found)))
   BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Network],[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXNetwork not found)))
-  if test x$bitcredit_qt_got_major_vers == x5; then
+  if test x$credits_qt_got_major_vers == x5; then
     BITCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}Widgets],[main],,BITCOIN_QT_FAIL(lib$QT_LIB_PREFIXWidgets not found)))
   fi
   QT_LIBS="$LIBS"
@@ -342,7 +342,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   dnl _BITCOIN_QT_CHECK_STATIC_PLUGINS does a quick link-check and appends the
   dnl results to QT_LIBS.
   BITCOIN_QT_CHECK([
-    if test x$bitcredit_qt_got_major_vers == x5; then
+    if test x$credits_qt_got_major_vers == x5; then
       _BITCOIN_QT_IS_STATIC
       if test x$bitcoin_cv_static_qt == xyes; then 
         AC_DEFINE(QT_STATICPLUGIN, 1, [Define this symbol if qt plugins are static])
