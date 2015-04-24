@@ -121,6 +121,7 @@ public:
         vAlertPubKey = ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
         nDefaultPort = 8333;
         nMinerThreads = 0;
+        nPruneAfterHeight = 100000;
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -198,6 +199,7 @@ public:
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 18333;
         nMinerThreads = 0;
+        nPruneAfterHeight = 1000;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1296688602;
@@ -257,6 +259,7 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18444;
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
+        nPruneAfterHeight = 1000;
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
