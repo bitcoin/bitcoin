@@ -10,6 +10,7 @@
 #include "mastercore_dex.h"
 #include "omnicore_createpayload.h"
 #include "rpcserver.h"
+#include "wallet.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/to_string.hpp>
@@ -270,10 +271,26 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
 
+    // retrieve the sell we're accepting and use new 0.10 custom fee to set the accept minimum fee appropriately
+    // WARNING: exploitable?  Is automatic fee retrieval and application appropriate or should we force the user
+    //          to specify explicitly what fee to use?  For now automatic fee includes hard limitation of 0.001 BTC.
+    CMPOffer *sellOffer = DEx_getOffer(toAddress, propertyId);
+    if (sellOffer == NULL) throw JSONRPCError(RPC_TYPE_ERROR, "Unable to load sell offer from the distributed exchange");
+    int64_t nMinimumAcceptFee = sellOffer->getMinFee();
+    if (nMinimumAcceptFee > 100000) throw JSONRPCError(RPC_TYPE_ERROR, "Minimum accept fee is above threshold");
+    CFeeRate payTxFeeOriginal = payTxFee;
+    bool fPayAtLeastCustomFeeOriginal = fPayAtLeastCustomFee;
+    payTxFee = CFeeRate(nMinimumAcceptFee, 1000);
+    fPayAtLeastCustomFee = true;
+
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit);
+
+    // set the custom fee back to original
+    payTxFee = payTxFeeOriginal;
+    fPayAtLeastCustomFee = fPayAtLeastCustomFeeOriginal;
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
