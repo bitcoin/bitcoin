@@ -499,8 +499,8 @@ fi
 AC_ARG_WITH([cli],
   [AS_HELP_STRING([--with-cli],
   [with CLI (default is yes)])],
-  [build_bitcredit_cli=$withval],
-  [build_bitcredit_cli=yes])
+  [build_credits_cli=$withval],
+  [build_credits_cli=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
@@ -549,8 +549,8 @@ AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_creditsd = xyes])
 AC_MSG_RESULT($build_creditsd)
 
 AC_MSG_CHECKING([whether to build credits-cli])
-AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcredit_cli = xyes])
-AC_MSG_RESULT($build_bitcredit_cli)
+AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_credits_cli = xyes])
+AC_MSG_RESULT($build_credits_cli)
 
 dnl sets $bitcredit_enable_qt, $bitcredit_enable_qt_test, $bitcredit_enable_qt_dbus
 BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])

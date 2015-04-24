@@ -225,7 +225,7 @@ bool ClientModel::isReleaseVersion() const
     return CLIENT_VERSION_IS_RELEASE;
 }
 
-QString ClientModel::bitcredit_clientName() const
+QString ClientModel::credits_clientName() const
 {
     return QString::fromStdString(BITCREDIT_CLIENT_NAME);
 }

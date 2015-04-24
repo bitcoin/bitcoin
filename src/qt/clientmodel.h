@@ -70,7 +70,7 @@ public:
     QString bitcoin_formatVersion() const;
     QString formatBuildDate() const;
     bool isReleaseVersion() const;
-    QString bitcredit_clientName() const;
+    QString credits_clientName() const;
     QString bitcoin_clientName() const;
     QString formatClientStartupTime() const;
 

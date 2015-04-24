@@ -61,7 +61,7 @@ const QString BitcreditGUI::DEFAULT_WALLET = "~Default";
 
 BitcreditGUI::BitcreditGUI(bool fIsTestnet, QWidget *parent) :
     QMainWindow(parent),
-    bitcredit_clientModel(0),
+    credits_clientModel(0),
     bitcoin_clientModel(0),
     walletFrame(0),
 
@@ -503,7 +503,7 @@ void BitcreditGUI::createToolBars()
 
 void BitcreditGUI::bitcredit_setClientModel(ClientModel *clientModel)
 {
-    this->bitcredit_clientModel = clientModel;
+    this->credits_clientModel = clientModel;
     if(clientModel)
     {
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
@@ -678,21 +678,21 @@ void BitcreditGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
 
 void BitcreditGUI::optionsClicked()
 {
-    if(!bitcredit_clientModel || !bitcredit_clientModel->getOptionsModel())
+    if(!credits_clientModel || !credits_clientModel->getOptionsModel())
         return;
 
     OptionsDialog dlg(this);
-    dlg.setModel(bitcredit_clientModel->getOptionsModel());
+    dlg.setModel(credits_clientModel->getOptionsModel());
     dlg.exec();
 }
 
 void BitcreditGUI::aboutClicked()
 {
-    if(!bitcredit_clientModel)
+    if(!credits_clientModel)
         return;
 
     AboutDialog dlg(this);
-    dlg.setModel(bitcredit_clientModel);
+    dlg.setModel(credits_clientModel);
     dlg.exec();
 }
 
@@ -800,7 +800,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
     statusBar()->clearMessage();
 
     // Acquire current block source
-    enum BlockSource blockSource = bitcredit_clientModel->getBlockSource();
+    enum BlockSource blockSource = credits_clientModel->getBlockSource();
     switch (blockSource) {
         case BLOCK_SOURCE_NETWORK:
             bitcredit_progressBarLabel->setText(tr("Bitcredit: Synchronizing with network..."));
@@ -819,7 +819,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
 
     QString tooltip;
 
-    QDateTime lastBlockDate = bitcredit_clientModel->getLastBlockDate();
+    QDateTime lastBlockDate = credits_clientModel->getLastBlockDate();
     QDateTime currentDate = QDateTime::currentDateTime();
     int secs = lastBlockDate.secsTo(currentDate);
 
@@ -869,7 +869,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
         bitcredit_progressBarLabel->setVisible(true);
         bitcredit_progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
         bitcredit_progressBar->setMaximum(1000000000);
-        bitcredit_progressBar->setValue(bitcredit_clientModel->getVerificationProgress() * 1000000000.0 + 0.5);
+        bitcredit_progressBar->setValue(credits_clientModel->getVerificationProgress() * 1000000000.0 + 0.5);
         bitcredit_progressBar->setVisible(true);
 
         tooltip = tr("Bitcredit: Catching up...") + QString("<br>") + tooltip;
@@ -1069,7 +1069,7 @@ void BitcreditGUI::changeEvent(QEvent *e)
 #ifndef Q_OS_MAC // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
-        if(bitcredit_clientModel && bitcredit_clientModel->getOptionsModel()->getMinimizeToTray())
+        if(credits_clientModel && credits_clientModel->getOptionsModel()->getMinimizeToTray())
         {
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
@@ -1084,11 +1084,11 @@ void BitcreditGUI::changeEvent(QEvent *e)
 
 void BitcreditGUI::closeEvent(QCloseEvent *event)
 {
-    if(bitcredit_clientModel)
+    if(credits_clientModel)
     {
 #ifndef Q_OS_MAC // Ignored on Mac
-        if(!bitcredit_clientModel->getOptionsModel()->getMinimizeToTray() &&
-           !bitcredit_clientModel->getOptionsModel()->getMinimizeOnClose())
+        if(!credits_clientModel->getOptionsModel()->getMinimizeToTray() &&
+           !credits_clientModel->getOptionsModel()->getMinimizeOnClose())
         {
             QApplication::quit();
         }

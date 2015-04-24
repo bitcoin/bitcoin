@@ -227,7 +227,7 @@ private:
     QThread *coreThread;
     OptionsModel *bitcredit_optionsModel;
     OptionsModel *bitcoin_optionsModel;
-    ClientModel *bitcredit_clientModel;
+    ClientModel *credits_clientModel;
     ClientModel *bitcoin_clientModel;
     BitcreditGUI *window;
     QTimer *pollShutdownTimer;
@@ -298,7 +298,7 @@ BitcreditApplication::BitcreditApplication(int &argc, char **argv):
     coreThread(0),
     bitcredit_optionsModel(0),
     bitcoin_optionsModel(0),
-    bitcredit_clientModel(0),
+    credits_clientModel(0),
     bitcoin_clientModel(0),
     window(0),
     pollShutdownTimer(0),
@@ -411,11 +411,11 @@ void BitcreditApplication::requestShutdown()
 #endif
 
     // Disconnect signals from client
-    uiInterface.NotifyBlocksChanged.disconnect(boost::bind(NotifyBlocksChanged, bitcredit_clientModel));
-    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, bitcredit_clientModel, _1, _2));
+    uiInterface.NotifyBlocksChanged.disconnect(boost::bind(NotifyBlocksChanged, credits_clientModel));
+    uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, credits_clientModel, _1, _2));
 
-    delete bitcredit_clientModel;
-    bitcredit_clientModel = 0;
+    delete credits_clientModel;
+    credits_clientModel = 0;
     delete bitcoin_clientModel;
     bitcoin_clientModel = 0;
 
@@ -440,15 +440,15 @@ void BitcreditApplication::initializeResult(int retval)
 
         emit splashFinished(window);
 
-        bitcredit_clientModel = new ClientModel(bitcredit_optionsModel, 0, Bitcredit_NetParams(), bitcredit_mainState, bitcredit_chainActive);
-        window->bitcredit_setClientModel(bitcredit_clientModel);
+        credits_clientModel = new ClientModel(bitcredit_optionsModel, 0, Bitcredit_NetParams(), bitcredit_mainState, bitcredit_chainActive);
+        window->bitcredit_setClientModel(credits_clientModel);
 
         bitcoin_clientModel = new ClientModel(bitcoin_optionsModel, 0, Bitcoin_NetParams(), bitcoin_mainState, bitcoin_chainActive);
         window->bitcoin_setClientModel(bitcoin_clientModel);
 
         // Connect signals to client
-        uiInterface.NotifyBlocksChanged.connect(boost::bind(NotifyBlocksChanged, bitcredit_clientModel));
-        uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, bitcredit_clientModel, _1, _2));
+        uiInterface.NotifyBlocksChanged.connect(boost::bind(NotifyBlocksChanged, credits_clientModel));
+        uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, credits_clientModel, _1, _2));
 
 #ifdef ENABLE_WALLET
         if(bitcredit_pwalletMain && bitcoin_pwalletMain && deposit_pwalletMain)

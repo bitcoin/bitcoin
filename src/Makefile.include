@@ -15,7 +15,7 @@ AM_LDFLAGS = $(PTHREAD_CFLAGS)
 LIBBITCREDIT_SERVER=$(top_builddir)/src/libbitcredit_server.a
 LIBBITCREDIT_WALLET=$(top_builddir)/src/libbitcredit_wallet.a
 LIBBITCREDIT_COMMON=$(top_builddir)/src/libbitcredit_common.a
-LIBBITCREDIT_CLI=$(top_builddir)/src/libbitcredit_cli.a
+LIBCREDITS_CLI=$(top_builddir)/src/libcredits_cli.a
 LIBBITCREDITQT=$(top_builddir)/src/qt/libbitcreditqt.a
 
 $(LIBBITCREDIT):

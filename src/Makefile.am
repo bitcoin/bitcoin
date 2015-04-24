@@ -5,7 +5,7 @@ AM_CPPFLAGS += -I$(builddir)
 noinst_LIBRARIES = \
   libbitcredit_server.a \
   libbitcredit_common.a \
-  libbitcredit_cli.a
+  libcredits_cli.a
 if ENABLE_WALLET
 noinst_LIBRARIES += libbitcredit_wallet.a
 endif
@@ -168,7 +168,7 @@ libbitcredit_common_a_SOURCES += compat/glibc_compat.cpp
 libbitcredit_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libbitcredit_cli_a_SOURCES = \
+libcredits_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
@@ -178,7 +178,7 @@ nodist_libbitcredit_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 # creditsd binary #
 creditsd_LDADD = \
   libbitcredit_server.a \
-  libbitcredit_cli.a \
+  libcredits_cli.a \
   libbitcredit_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
@@ -196,15 +196,15 @@ AM_CPPFLAGS += $(BDB_CPPFLAGS)
 creditsd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
 # credits-cli binary #
-bitcredit_cli_LDADD = \
-  libbitcredit_cli.a \
+credits_cli_LDADD = \
+  libcredits_cli.a \
   libbitcredit_common.a \
   $(BOOST_LIBS)
-bitcredit_cli_SOURCES = credits-cli.cpp
+credits_cli_SOURCES = credits-cli.cpp
 #
 
 if TARGET_WINDOWS
-bitcredit_cli_SOURCES += credits-cli-res.rc
+credits_cli_SOURCES += credits-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -215,7 +215,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libbitcredit_server_a_SOURCES) $(libbitcredit_common_a_SOURCES) $(libbitcredit_cli_a_SOURCES)
+qt/bitcoinstrings.cpp: $(libbitcredit_server_a_SOURCES) $(libbitcredit_common_a_SOURCES) $(libcredits_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
