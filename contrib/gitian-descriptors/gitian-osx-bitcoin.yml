@@ -50,7 +50,7 @@ script: |
   make dist
   mkdir -p distsrc
   cd distsrc
-  tar --strip-components=1 -xf ../bitcredit-*.tar*
+  tar --strip-components=1 -xf ../credits-*.tar*
   ./configure --host=${HOST} --with-boost=${PREFIX} CC=clang CXX=clang++ OBJC=clang OBJCXX=clang++ CFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" CXXFLAGS="-target ${HOST} -mmacosx-version-min=10.6 --sysroot ${SDK} -msse2 -Qunused-arguments" LDFLAGS="-B${NATIVEPREFIX}/bin -L${PREFIX}/lib -L${SDK}/usr/lib/i686-apple-darwin10/4.2.1" CPPFLAGS="-I${NATIVEPREFIX}/lib/clang/3.2/include -I${PREFIX}/include" SSL_LIBS="-lz -lssl -lcrypto" --disable-tests -with-gui=qt5 PKG_CONFIG_LIBDIR="${PREFIX}/lib/pkgconfig"  --disable-dependency-tracking --disable-maintainer-mode
   make $MAKEOPTS
   export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1

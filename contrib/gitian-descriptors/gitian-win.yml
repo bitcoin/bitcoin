@@ -69,7 +69,7 @@ script: |
       ./autogen.sh
       ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcredit ${OPTFLAGS}"
       make dist
-      DISTNAME=`echo bitcredit-*.tar.gz`
+      DISTNAME=`echo credits-*.tar.gz`
       NEEDDIST=0
     fi
     # Build platform-dependent executables from source archive
