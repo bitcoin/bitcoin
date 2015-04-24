@@ -1434,7 +1434,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
-    LogPrintf("bitcredit block index %15dms\n", GetTimeMillis() - nStart);
+    LogPrintf("credits block index %15dms\n", GetTimeMillis() - nStart);
 
     if (GetBoolArg("-bitcoin_printblockindex", false) || GetBoolArg("-bitcoin_printblocktree", false))
     {
@@ -1806,7 +1806,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         }
 
         LogPrintf("%s", strErrors.str());
-        LogPrintf("bitcredit wallet      %15dms\n", GetTimeMillis() - nStart);
+        LogPrintf("credits wallet      %15dms\n", GetTimeMillis() - nStart);
 
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
@@ -1828,7 +1828,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             LogPrintf("Bitcredit: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
             bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, pindexRescan, true);
-            LogPrintf("bitcredit rescan      %15dms\n", GetTimeMillis() - nStart);
+            LogPrintf("credits rescan      %15dms\n", GetTimeMillis() - nStart);
             bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
             bitcredit_bitdb.nWalletDBUpdated++;
         }
@@ -1874,8 +1874,8 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     LogPrintf("bitcoin mapBlockIndex.size() = %u\n",   bitcoin_mapBlockIndex.size());
     LogPrintf("bitcoin nBestHeight = %d\n",                   bitcoin_chainActive.Height());
 
-    LogPrintf("bitcredit mapBlockIndex.size() = %u\n",   bitcredit_mapBlockIndex.size());
-    LogPrintf("bitcredit nBestHeight = %d\n",                   bitcredit_chainActive.Height());
+    LogPrintf("credits mapBlockIndex.size() = %u\n",   bitcredit_mapBlockIndex.size());
+    LogPrintf("credits nBestHeight = %d\n",                   bitcredit_chainActive.Height());
 
 #ifdef ENABLE_WALLET
     LogPrintf("bitcoin setKeyPool.size() = %u\n",      bitcoin_pwalletMain ? bitcoin_pwalletMain->setKeyPool.size() : 0);
@@ -1890,9 +1890,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #endif
 
 #ifdef ENABLE_WALLET
-    LogPrintf("bitcredit setKeyPool.size() = %u\n",      bitcredit_pwalletMain ? bitcredit_pwalletMain->setKeyPool.size() : 0);
-    LogPrintf("bitcredit mapWallet.size() = %u\n",       bitcredit_pwalletMain ? bitcredit_pwalletMain->mapWallet.size() : 0);
-    LogPrintf("bitcredit mapAddressBook.size() = %u\n",  bitcredit_pwalletMain ? bitcredit_pwalletMain->mapAddressBook.size() : 0);
+    LogPrintf("credits setKeyPool.size() = %u\n",      bitcredit_pwalletMain ? bitcredit_pwalletMain->setKeyPool.size() : 0);
+    LogPrintf("credits mapWallet.size() = %u\n",       bitcredit_pwalletMain ? bitcredit_pwalletMain->mapWallet.size() : 0);
+    LogPrintf("credits mapAddressBook.size() = %u\n",  bitcredit_pwalletMain ? bitcredit_pwalletMain->mapAddressBook.size() : 0);
 #endif
 
 
