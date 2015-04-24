@@ -81,7 +81,7 @@ void SetupAllFromMeAllToMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsig
         CTxDestination address;
         if (ExtractDestination(wtx.vout[nOut].scriptPubKey, address))
         {
-            // Sent to Bitcredit Address
+            // Sent to Credits Address
             sub.address = CBitcoinAddress(address).ToString();
         }
         else
@@ -125,7 +125,7 @@ QList<Bitcredit_TransactionRecord> Bitcredit_TransactionRecord::decomposeTransac
                 sub.credit = txout.nValue;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*keyholder_wallet, address))
                 {
-                    // Received by Bitcredit Address
+                    // Received by Credits Address
                     sub.type = Bitcredit_TransactionRecord::RecvWithAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }
@@ -202,7 +202,7 @@ QList<Bitcredit_TransactionRecord> Bitcredit_TransactionRecord::decomposeTransac
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
                 {
-                    // Sent to Bitcredit Address
+                    // Sent to Credits Address
                     sub.type = Bitcredit_TransactionRecord::SendToAddress;
                     sub.address = CBitcoinAddress(address).ToString();
                 }

@@ -1,7 +1,7 @@
 Gitian building
 ================
 
-*Setup instructions for a gitian build of Bitcredit using a Debian VM or physical system.*
+*Setup instructions for a gitian build of Credits using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Bitcredit
 Core executables [1]. It provides a way to be reasonably sure that the
@@ -339,7 +339,7 @@ tail -f var/build.log
 Building Bitcredit
 ----------------
 
-To build Bitcredit (for Linux and/or Windows) just follow the steps under 'perform
+To build Credits (for Linux and/or Windows) just follow the steps under 'perform
 gitian builds' in [doc/release-process.md](release-process.md) in the credits repository.
 
 Output from `gbuild` will look something like

@@ -426,7 +426,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address. This option can be specified multiple times") + "\n";
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
 
-    strUsage += "\n" + _("RPC SSL options: (see the Bitcredit Wiki for SSL setup instructions)") + "\n";
+    strUsage += "\n" + _("RPC SSL options: (see the Credits Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
     strUsage += "  -rpcsslcertificatechainfile=<file.cert>  " + _("Server certificate file (default: server.cert)") + "\n";
     strUsage += "  -rpcsslprivatekeyfile=<file.pem>         " + _("Server private key (default: server.pem)") + "\n";
@@ -1655,7 +1655,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                 strErrors << _("Error loading deposit_wallet.dat: Wallet requires newer version of Bitcredit") << "\n";
             else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
             {
-                strErrors << _("Deposit wallet needed to be rewritten: restart Bitcredit to complete") << "\n";
+                strErrors << _("Deposit wallet needed to be rewritten: restart Credits to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
                 return InitError(strErrors.str());
             }

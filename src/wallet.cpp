@@ -2015,7 +2015,7 @@ string Bitcredit_CWallet::SendMoneyToDestination(Bitcoin_CWallet *bitcoin_wallet
     if (nValue + bitcredit_nTransactionFee > GetBalance(mapPreparedDepositTxInPoints))
         return _("Insufficient funds");
 
-    // Parse Bitcredit address
+    // Parse Credits address
     CScript scriptPubKey;
     scriptPubKey.SetDestination(address);
 

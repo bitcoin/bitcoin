@@ -13,7 +13,7 @@ QT_END_NAMESPACE
 
 class CNetParams;
 
-/** Interface from Qt to configuration data structure for Bitcredit client.
+/** Interface from Qt to configuration data structure for Credits client.
    To Qt, the options are presented as a list with the different options
    laid out vertically.
    This can be changed to a tree once the settings become sufficiently

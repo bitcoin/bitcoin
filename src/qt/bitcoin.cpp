@@ -179,7 +179,7 @@ private:
     void handleRunawayException(std::exception *e);
 };
 
-/** Main Bitcredit application object */
+/** Main Credits application object */
 class BitcreditApplication: public QApplication
 {
     Q_OBJECT
@@ -498,7 +498,7 @@ void BitcreditApplication::shutdownResult(int retval)
 
 void BitcreditApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", BitcreditGUI::tr("A fatal error occurred. Bitcredit can no longer continue safely and will quit.") + QString("\n\n") + message);
+    QMessageBox::critical(0, "Runaway exception", BitcreditGUI::tr("A fatal error occurred. Credits can no longer continue safely and will quit.") + QString("\n\n") + message);
     ::exit(1);
 }
 

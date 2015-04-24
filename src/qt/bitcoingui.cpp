@@ -282,7 +282,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     tabGroup->addAction(overviewAction);
 
     sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Bitcredit address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a Credits address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
@@ -367,13 +367,13 @@ void BitcreditGUI::createActions(bool fIsTestnet)
         toggleHideAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
-    bitcredit_encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Bitcredit Wallet..."), this);
-    bitcredit_encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your Bitcredit wallet"));
+    bitcredit_encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Credits Wallet..."), this);
+    bitcredit_encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your Credits wallet"));
     bitcredit_encryptWalletAction->setCheckable(true);
-    bitcredit_backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Bitcredit Wallet..."), this);
-    bitcredit_backupWalletAction->setStatusTip(tr("Backup Bitcredit wallet to another location"));
-    bitcredit_changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Bitcredit Passphrase..."), this);
-    bitcredit_changePassphraseAction->setStatusTip(tr("Change the passphrase used for Bitcredit wallet encryption"));
+    bitcredit_backupWalletAction = new QAction(QIcon(":/icons/filesave"), tr("&Backup Credits Wallet..."), this);
+    bitcredit_backupWalletAction->setStatusTip(tr("Backup Credits wallet to another location"));
+    bitcredit_changePassphraseAction = new QAction(QIcon(":/icons/key"), tr("&Change Credits Passphrase..."), this);
+    bitcredit_changePassphraseAction->setStatusTip(tr("Change the passphrase used for Credits wallet encryption"));
 
     bitcoin_encryptWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Encrypt Bitcoin Wallet..."), this);
     bitcoin_encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your bitcoin wallet"));
@@ -384,9 +384,9 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     bitcoin_changePassphraseAction->setStatusTip(tr("Change the passphrase used for Bitcoin wallet encryption"));
 
     signMessageAction = new QAction(QIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Bitcredit addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your Credits addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Bitcredit addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Credits addresses"));
 
     bitcredit_openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Bitcredit debug window"), this);
     bitcredit_openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
@@ -403,7 +403,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     openAction->setStatusTip(tr("Open a bitcredit: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
-    showHelpMessageAction->setStatusTip(tr("Show the Credits Core help message to get a list with possible Bitcredit command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the Credits Core help message to get a list with possible Credits command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));

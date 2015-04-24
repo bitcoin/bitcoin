@@ -26,7 +26,7 @@ public:
 
     enum ColumnIndex {
         Label = 0,   /**< User specified label */
-        Address = 1  /**< Bitcredit address */
+        Address = 1  /**< Credits address */
     };
 
     enum RoleIndex {

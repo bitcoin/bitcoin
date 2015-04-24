@@ -347,7 +347,7 @@ void WalletView::deposit_encryptWallet(bool status)
 void WalletView::bitcredit_backupWallet()
 {
     QString filename = GUIUtil::getSaveFileName(this,
-        tr("Backup Bitcredit Wallet"), QString(),
+        tr("Backup Credits Wallet"), QString(),
         tr("Bitcredit Wallet Data (*.dat)"), NULL);
 
     if (filename.isEmpty())

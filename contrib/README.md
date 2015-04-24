@@ -2,7 +2,7 @@ Wallet Tools
 ---------------------
 
 ### [BitRPC](/contrib/bitrpc) ###
-Allows for sending of all standard Bitcredit commands via RPC rather than as command line args.
+Allows for sending of all standard Credits commands via RPC rather than as command line args.
 
 ### [SpendFrom](/contrib/spendfrom) ###
 
@@ -25,7 +25,7 @@ This is a 'getwork' CPU mining client for Bitcredit. It is pure-python, and ther
 
 ### [Qos](/contrib/qos) ###
 
-A Linux bash script that will set up tc to limit the outgoing bandwidth for connections to the Bitcredit network. This means one can have an always-on creditsd instance running, and another local creditsd/credits-qt instance which connects to this node and receives blocks from it.
+A Linux bash script that will set up tc to limit the outgoing bandwidth for connections to the Credits network. This means one can have an always-on creditsd instance running, and another local creditsd/credits-qt instance which connects to this node and receives blocks from it.
 
 ### [Seeds](/contrib/seeds) ###
 Utility to generate the pnSeed[] array that is compiled into the client.
@@ -50,7 +50,7 @@ Test and Verify Tools
 ---------------------
 
 ### [TestGen](/contrib/testgen) ###
-Utilities to generate test vectors for the data-driven Bitcredit tests.
+Utilities to generate test vectors for the data-driven Credits tests.
 
 ### [Test Patches](/contrib/test-patches) ###
 These patches are applied when the automated pull-tester

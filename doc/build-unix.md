@@ -1,6 +1,6 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcredit in Unix. 
+Some notes on how to build Credits in Unix. 
 
 Note
 ---------------------
