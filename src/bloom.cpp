@@ -40,6 +40,17 @@ nFlags(nFlagsIn)
 {
 }
 
+// Private constructor used by CRollingBloomFilter
+CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn) :
+vData((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)) / 8),
+isFull(false),
+isEmpty(true),
+nHashFuncs((unsigned int)(vData.size() * 8 / nElements * LN2)),
+nTweak(nTweakIn),
+nFlags(BLOOM_UPDATE_NONE)
+{
+}
+
 inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const
 {
     // 0xFBA4C795 chosen as it guarantees a reasonable bit difference between nHashNum values.
@@ -196,4 +207,39 @@ void CBloomFilter::UpdateEmptyFull()
     }
     isFull = full;
     isEmpty = empty;
+}
+
+CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate, unsigned int nTweak) :
+    b1(nElements*2, fpRate, nTweak), b2(nElements*2, fpRate, nTweak)
+{
+    // Implemented using two bloom filters of nElements each.
+    // We fill them up, and clear them, staggered, every nElements
+    // inserted, so at least one always contains the last nElements
+    // inserted.
+    nBloomSize = nElements*2;
+    nInsertions = 0;
+}
+
+void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
+{
+    if (nInsertions%nBloomSize == 0)
+        b1.clear();
+    else if (nInsertions%nBloomSize == nBloomSize/2)
+        b2.clear();
+    b1.insert(vKey);
+    b2.insert(vKey);
+    ++nInsertions;
+}
+bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
+{
+    if (nInsertions%nBloomSize < nBloomSize/2)
+        return b2.contains(vKey);
+    return b1.contains(vKey);
+}
+
+void CRollingBloomFilter::clear()
+{
+    b1.clear();
+    b2.clear();
+    nInsertions = 0;
 }
