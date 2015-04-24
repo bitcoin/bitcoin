@@ -3,7 +3,7 @@ dnl Output: If qt version is auto, set bitcredit_enable_qt to false. Else, exit.
 AC_DEFUN([BITCOIN_QT_FAIL],[
   if test "x$bitcredit_qt_want_version" = "xauto" && test x$bitcredit_qt_force != xyes; then
     if test x$bitcredit_enable_qt != xno; then
-      AC_MSG_WARN([$1; bitcredit-qt frontend will not be built])
+      AC_MSG_WARN([$1; credits-qt frontend will not be built])
     fi
     bitcredit_enable_qt=no
   else

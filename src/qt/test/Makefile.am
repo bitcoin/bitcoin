@@ -5,8 +5,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/src \
   -I$(top_builddir)/src/qt \
   $(PROTOBUF_CFLAGS) \
     $(QR_CFLAGS)
-bin_PROGRAMS = test_bitcredit-qt
-TESTS = test_bitcredit-qt
+bin_PROGRAMS = test_credits-qt
+TESTS = test_credits-qt
 
 TEST_QT_MOC_CPP = moc_uritests.cpp
 

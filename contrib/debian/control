@@ -41,7 +41,7 @@ Description: peer-to-peer network based digital currency - daemon
  This package provides bitcreditd, a combined daemon and CLI tool to
  interact with the daemon.
 
-Package: bitcredit-qt
+Package: credits-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI

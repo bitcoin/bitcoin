@@ -5,7 +5,7 @@ src/bitcredit
 src/bitcreditd
 src/bitcredit-cli
 src/test/test_bitcredit
-src/qt/test/test_bitcredit-qt
+src/qt/test/test_credits-qt
 
 Makefile.in
 aclocal.m4
@@ -51,12 +51,12 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcredit-qt
+credits-qt
 Credits-Qt.app
 
 # Unit-tests
 Makefile.test
-bitcredit-qt_test
+credits-qt_test
 
 # Resources cpp
 qrc_*.cpp

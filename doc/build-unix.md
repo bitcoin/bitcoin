@@ -19,7 +19,7 @@ To Build
 	./configure
 	make
 
-This will build bitcredit-qt as well if the dependencies are met.
+This will build credits-qt as well if the dependencies are met.
 
 Dependencies
 ---------------------
@@ -122,7 +122,7 @@ libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a bitcredit-qt executable will be
+Once these are installed, they will be found by configure and a credits-qt executable will be
 built by default.
 
 Notes

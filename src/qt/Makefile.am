@@ -5,7 +5,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src \
   -I$(top_builddir)/src/qt/forms \
   $(PROTOBUF_CFLAGS) \
   $(QR_CFLAGS)
-bin_PROGRAMS = bitcredit-qt
+bin_PROGRAMS = credits-qt
 noinst_LIBRARIES = libbitcreditqt.a
 SUBDIRS = . $(BUILD_TEST_QT)
 DIST_SUBDIRS = . test
@@ -305,7 +305,7 @@ RES_IMAGES = \
 
 RES_MOVIES = $(wildcard res/movies/spinner-*.png)
 
-BITCOIN_RC = res/bitcredit-qt-res.rc
+BITCOIN_RC = res/credits-qt-res.rc
 
 libbitcreditqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
@@ -322,7 +322,7 @@ BUILT_SOURCES = $(nodist_libbitcreditqt_a_SOURCES)
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-# bitcredit-qt binary #
+# credits-qt binary #
 bitcredit_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
 bitcredit_qt_SOURCES = bitcoin.cpp

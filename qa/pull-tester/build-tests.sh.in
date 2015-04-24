@@ -60,11 +60,11 @@ if [ -d "$OUT_DIR" -a -w "$OUT_DIR" ]; then
   # Windows:
   cp @abs_top_srcdir@/win32-build/src/bitcreditd.exe $OUT_DIR/bitcreditd.exe
   cp @abs_top_srcdir@/win32-build/src/test/test_bitcredit.exe $OUT_DIR/test_bitcredit.exe
-  cp @abs_top_srcdir@/win32-build/src/qt/bitcreditd-qt.exe $OUT_DIR/bitcredit-qt.exe
+  cp @abs_top_srcdir@/win32-build/src/qt/bitcreditd-qt.exe $OUT_DIR/credits-qt.exe
   # Linux:
   cp @abs_top_srcdir@/linux-build/src/bitcreditd $OUT_DIR/bitcreditd
   cp @abs_top_srcdir@/linux-build/src/test/test_bitcredit $OUT_DIR/test_bitcredit
-  cp @abs_top_srcdir@/linux-build/src/qt/bitcreditd-qt $OUT_DIR/bitcredit-qt
+  cp @abs_top_srcdir@/linux-build/src/qt/bitcreditd-qt $OUT_DIR/credits-qt
   set -e
 fi
 

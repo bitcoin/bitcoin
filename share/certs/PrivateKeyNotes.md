@@ -17,7 +17,7 @@ Threat analysis
 --
 
 Gavin is a single point of failure. He could be coerced to divulge the secret signing keys,
-allowing somebody to distribute a Credits-Qt.app or bitcredit-qt-setup.exe with a valid
+allowing somebody to distribute a Credits-Qt.app or credits-qt-setup.exe with a valid
 signature but containing a malicious binary.
 
 Or the machine Gavin uses to sign the binaries could be compromised, either remotely or
@@ -34,7 +34,7 @@ or divulge the private keys).
 
 Windows binaries are reproducibly 'gitian-built', and the setup.exe file created
 by the NSIS installer system is a 7zip archive, so you could check to make sure
-that the bitcredit-qt.exe file inside the installer had not been tampered with.
+that the credits-qt.exe file inside the installer had not been tampered with.
 However, an attacker could modify the installer's code, so when the setup.exe
 was run it compromised users' systems. A volunteer to write an auditing tool
 that checks the setup.exe for tampering, and checks the files in it against

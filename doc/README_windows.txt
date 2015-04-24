@@ -19,7 +19,7 @@ with each other, with the help of a P2P network to check for double-spending.
 
 Setup
 -----
-Unpack the files into a directory and run bitcredit-qt.exe.
+Unpack the files into a directory and run credits-qt.exe.
 
 Bitcredit Core is the original Bitcredit client and it builds the backbone of the network.
 However, it downloads and stores the entire history of Bitcredit transactions;

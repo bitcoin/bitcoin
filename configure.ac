@@ -641,7 +641,7 @@ if test x$bitcredit_enable_qt != xno; then
     AC_MSG_WARN("xgettext is required to update qt translations")
   fi
 
-  AC_MSG_CHECKING([whether to build test_bitcredit-qt])
+  AC_MSG_CHECKING([whether to build test_credits-qt])
   if test x$use_tests$bitcredit_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="test"
