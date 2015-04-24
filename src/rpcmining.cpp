@@ -15,6 +15,7 @@ using namespace json_spirit;
 using namespace std;
 
 extern uint256 nPoWBase;
+extern uint64_t nStakeInputsMapSize;
 
 Value getsubsidy(const Array& params, bool fHelp)
 {
@@ -45,9 +46,6 @@ Value getmininginfo(const Array& params, bool fHelp)
             "getmininginfo\n"
             "Returns an object containing mining-related information.");
 
-    float nKernelsRate = 0, nCoinDaysRate = 0;
-    pwalletMain->GetStakeStats(nKernelsRate, nCoinDaysRate);
-
     Object obj, diff, weight;
     obj.push_back(Pair("blocks",        (int)nBestHeight));
     obj.push_back(Pair("currentblocksize",(uint64_t)nLastBlockSize));
@@ -64,11 +62,9 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("pooledtx",      (uint64_t)mempool.size()));
 
-    weight.push_back(Pair("kernelsrate",   nKernelsRate));
-    weight.push_back(Pair("cdaysrate",   nCoinDaysRate));
-    obj.push_back(Pair("stakestats", weight));
+    obj.push_back(Pair("stakeinputs", (uint64_t)nStakeInputsMapSize));
+    obj.push_back(Pair("stakeinterest",    (int64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
 
-    obj.push_back(Pair("stakeinterest",    (uint64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
 }

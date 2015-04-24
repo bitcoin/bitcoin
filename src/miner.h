@@ -9,8 +9,8 @@
 #include "main.h"
 #include "wallet.h"
 
-/* Generate a new block, without valid proof-of-work */
-CBlock* CreateNewBlock(CWallet* pwallet, bool fProofOfStake=false);
+/* Generate a new block, without valid proof-of-work/with provided proof-of-stake */
+CBlock* CreateNewBlock(CWallet* pwallet, CTransaction *txAdd=NULL);
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
