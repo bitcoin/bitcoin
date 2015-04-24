@@ -35,7 +35,7 @@ Drag Credits-Qt to your applications folder, and then run Credits-Qt.
 
 ### Need Help?
 
-* Ask for help on the [BitcreditTalk](https://bitcredit-currency.org/) forums.
+* Ask for help on the [BitcreditTalk](https://credits-currency.org/) forums.
 
 Building
 ---------------------

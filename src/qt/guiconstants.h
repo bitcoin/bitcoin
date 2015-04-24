@@ -41,8 +41,8 @@ static const int MAX_PAYMENT_REQUEST_SIZE = 50000; // bytes
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 35
 
-#define QAPP_ORG_NAME "Bitcredit"
-#define QAPP_ORG_DOMAIN "bitcredit-currency.org"
+#define QAPP_ORG_NAME "Credits"
+#define QAPP_ORG_DOMAIN "credits-currency.org"
 #define QAPP_APP_NAME_DEFAULT "Credits-Qt"
 #define QAPP_APP_NAME_TESTNET "Credits-Qt-testnet"
 

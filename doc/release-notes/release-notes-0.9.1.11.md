@@ -1,6 +1,6 @@
 Bitcredit Core version 0.9.1.11 is now available from:
 
-  http://bitcredit-currency.org
+  http://credits-currency.org
 
 How to Upgrade
 --------------
