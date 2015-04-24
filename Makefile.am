@@ -29,9 +29,9 @@ OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
   $(top_srcdir)/contrib/macdeploy/DS_Store
 
 COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
-  leveldb_baseline.info test_bitcredit_filtered.info total_coverage.info \
+  leveldb_baseline.info test_credits_filtered.info total_coverage.info \
   baseline_filtered.info block_test_filtered.info \
-  leveldb_baseline_filtered.info test_bitcredit_coverage.info test_bitcredit.info
+  leveldb_baseline_filtered.info test_credits_coverage.info test_credits.info
 
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
@@ -119,16 +119,16 @@ leveldb_baseline_filtered.info: leveldb_baseline.info
 baseline_filtered_combined.info: leveldb_baseline_filtered.info baseline_filtered.info
 	$(LCOV) -a leveldb_baseline_filtered.info -a baseline_filtered.info -o $@
 
-test_bitcredit.info: baseline_filtered_combined.info
+test_credits.info: baseline_filtered_combined.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c -d $(abs_builddir)/src -t test_bitcredit -o $@
+	$(LCOV) -c -d $(abs_builddir)/src -t test_credits -o $@
 	$(LCOV) -z -d $(abs_builddir)/src
 	$(LCOV) -z -d $(abs_builddir)/src/leveldb
 
-test_bitcredit_filtered.info: test_bitcredit.info
+test_credits_filtered.info: test_credits.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
-block_test.info: test_bitcredit_filtered.info
+block_test.info: test_credits_filtered.info
 	$(MKDIR_P) qa/tmp
 	-@TIMEOUT=15 qa/pull-tester/run-creditsd-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool 0
 	$(LCOV) -c -d $(abs_builddir)/src --t BitcoinJBlockTest -o $@
@@ -138,13 +138,13 @@ block_test.info: test_bitcredit_filtered.info
 block_test_filtered.info: block_test.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
-test_bitcredit_coverage.info: baseline_filtered_combined.info test_bitcredit_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcredit_filtered.info -o $@
+test_credits_coverage.info: baseline_filtered_combined.info test_credits_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_credits_filtered.info -o $@
 
-total_coverage.info:  baseline_filtered_combined.info test_bitcredit_filtered.info block_test_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcredit_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info:  baseline_filtered_combined.info test_credits_filtered.info block_test_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_credits_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
-test_bitcredit.coverage/.dirstamp:  test_bitcredit_coverage.info
+test_credits.coverage/.dirstamp:  test_credits_coverage.info
 	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
@@ -152,7 +152,7 @@ total.coverage/.dirstamp: total_coverage.info
 	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
-cov: test_bitcredit.coverage/.dirstamp total.coverage/.dirstamp
+cov: test_credits.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
@@ -169,4 +169,4 @@ CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 .INTERMEDIATE: $(COVERAGE_INFO)
 
 clean-local:
-	rm -rf test_bitcredit.coverage/ total.coverage/ $(OSX_APP)
+	rm -rf test_credits.coverage/ total.coverage/ $(OSX_APP)

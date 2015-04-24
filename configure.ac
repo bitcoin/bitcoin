@@ -650,7 +650,7 @@ if test x$bitcredit_enable_qt != xno; then
   fi
 fi
 
-AC_MSG_CHECKING([whether to build test_bitcredit])
+AC_MSG_CHECKING([whether to build test_credits])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
   BUILD_TEST="test"

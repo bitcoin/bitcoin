@@ -4,7 +4,7 @@
 src/bitcredit
 src/creditsd
 src/credits-cli
-src/test/test_bitcredit
+src/test/test_credits
 src/qt/test/test_credits-qt
 
 Makefile.in
@@ -71,7 +71,7 @@ build
 #lcov
 *.gcno
 /*.info
-test_bitcredit.coverage/
+test_credits.coverage/
 total.coverage/
 coverage_percent.txt
 
