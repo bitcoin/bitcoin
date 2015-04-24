@@ -336,7 +336,7 @@ QModelIndex Bitcredit_AddressTableModel::index(int row, int column, const QModel
 void Bitcredit_AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, const QString &purpose, int status)
 {
-    // Update address book model from Bitcredit Core
+    // Update address book model from Credits Core
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 

@@ -6,9 +6,9 @@ Source: http://sourceforge.net/projects/bitcoin/files/
  https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2013-, Bitcredit Core Developers
+Copyright: 2013-, Credits Core Developers
 License: Expat
-Comment: The Bitcredit Core Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Credits Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
 
 Files: src/json/*

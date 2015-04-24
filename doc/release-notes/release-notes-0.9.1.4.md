@@ -1,4 +1,4 @@
-Bitcredit Core version 0.9.1.4 is now available from:
+Credits Core version 0.9.1.4 is now available from:
 
   http://credits-currency.org
 

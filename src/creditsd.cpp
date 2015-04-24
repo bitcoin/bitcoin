@@ -86,11 +86,11 @@ bool AppInit(int argc, char* argv[])
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {
             // First part of help message is specific to creditsd / RPC client
-            std::string strUsage = _("Bitcredit Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
+            std::string strUsage = _("Credits Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  creditsd [options]                     " + _("Start Bitcredit Core Daemon") + "\n" +
+                  "  creditsd [options]                     " + _("Start Credits Core Daemon") + "\n" +
                 _("Usage (deprecated, use credits-cli):") + "\n" +
-                  "  creditsd [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
+                  "  creditsd [options] <command> [params]  " + _("Send command to Credits Core") + "\n" +
                   "  creditsd [options] help                " + _("List commands") + "\n" +
                   "  creditsd [options] help <command>      " + _("Get help for a command") + "\n";
 

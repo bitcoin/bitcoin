@@ -83,7 +83,7 @@ BitcreditGUI::BitcreditGUI(bool fIsTestnet, QWidget *parent) :
 {
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
 
-    QString windowTitle = tr("Bitcredit Core") + " - ";
+    QString windowTitle = tr("Credits Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
     bool enableWallet = !GetBoolArg("-disablewallet", false);
@@ -346,9 +346,9 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
     if (!fIsTestnet)
-        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Bitcredit Core"), this);
+        aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Credits Core"), this);
     else
-        aboutAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&About Bitcredit Core"), this);
+        aboutAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&About Credits Core"), this);
     aboutAction->setStatusTip(tr("Show information about Bitcredit"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
@@ -403,7 +403,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     openAction->setStatusTip(tr("Open a bitcredit: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
-    showHelpMessageAction->setStatusTip(tr("Show the Bitcredit Core help message to get a list with possible Bitcredit command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the Credits Core help message to get a list with possible Bitcredit command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));

@@ -33,7 +33,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Bind to given address and always listen on it. Use [host]:port notation for "
 "IPv6"),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
-"Cannot obtain a lock on data directory %s. Bitcredit Core is probably already "
+"Cannot obtain a lock on data directory %s. Credits Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Continuously rate-limit free transactions to <n>*1000 bytes per minute "
@@ -93,7 +93,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "mining or merchant applications"),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
-"Unable to bind to %s on this computer. Bitcredit Core is probably already "
+"Unable to bind to %s on this computer. Credits Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -"
@@ -131,8 +131,8 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Add a node to connect to and attempt to kee
 QT_TRANSLATE_NOOP("bitcredit-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Allow JSON-RPC connections from specified IP address"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Attempt to recover private keys from a corrupt wallet.dat"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Bitcredit Core Daemon"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Bitcredit Core RPC client version"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Credits Core Daemon"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Credits Core RPC client version"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Block creation options:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Cannot resolve -bind address: '%s'"),
@@ -223,7 +223,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Run a thread to flush wallet periodically (
 QT_TRANSLATE_NOOP("bitcredit-core", "Run in the background as a daemon and accept commands"),
 QT_TRANSLATE_NOOP("bitcredit-core", "SSL options: (see the Bitcredit Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Select SOCKS version for -proxy (4 or 5, default: 5)"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Send command to Bitcredit Core"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Send command to Credits Core"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Send commands to node running on <ip> (default: 127.0.0.1)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Send trace/debug info to console instead of debug.log file"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Server certificate file (default: server.cert)"),
@@ -245,7 +245,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Specify pid file (default: creditsd.pid)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify wallet file (within data directory)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Spend unconfirmed change when sending transactions (default: 1)"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Start Bitcredit Core Daemon"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Start Credits Core Daemon"),
 QT_TRANSLATE_NOOP("bitcredit-core", "System error: "),
 QT_TRANSLATE_NOOP("bitcredit-core", "This help message"),
 QT_TRANSLATE_NOOP("bitcredit-core", "This is intended for regression testing tools and app development."),

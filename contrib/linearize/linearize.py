@@ -3,7 +3,7 @@
 # linearize.py:  Construct a linear, no-fork, best version of the blockchain.
 #
 #
-# Copyright (c) 2013 The Bitcredit developers
+# Copyright (c) 2013 The Credits developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
