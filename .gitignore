@@ -3,7 +3,7 @@
 *.exe
 src/bitcredit
 src/bitcreditd
-src/bitcredit-cli
+src/credits-cli
 src/test/test_bitcredit
 src/qt/test/test_credits-qt
 

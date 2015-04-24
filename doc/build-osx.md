@@ -111,7 +111,7 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `bitcreditd` for your own use.
 
-bitcreditd/bitcredit-cli binaries are not included in the Credits-Qt.app bundle.
+bitcreditd/credits-cli binaries are not included in the Credits-Qt.app bundle.
 
 If you are building `bitcreditd` or `Credits-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
@@ -158,5 +158,5 @@ you can monitor its process by looking at the debug.log file, like this:
 Other commands:
 
     ./bitcreditd -daemon # to start the credits daemon.
-    ./bitcredit-cli --help  # for a list of command-line options.
-    ./bitcredit-cli help    # When the daemon is running, to get a list of RPC commands
+    ./credits-cli --help  # for a list of command-line options.
+    ./credits-cli help    # When the daemon is running, to get a list of RPC commands

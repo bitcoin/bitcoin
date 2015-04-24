@@ -5,7 +5,7 @@
 #define VER_PRODUCTVERSION_STR STRINGIZE(CLIENT_VERSION_MAJOR) "." STRINGIZE(CLIENT_VERSION_MINOR) "." STRINGIZE(CLIENT_VERSION_REVISION) "." STRINGIZE(CLIENT_VERSION_BUILD)
 #define VER_FILEVERSION        VER_PRODUCTVERSION
 #define VER_FILEVERSION_STR    VER_PRODUCTVERSION_STR
-#define COPYRIGHT_STR          "2013-" STRINGIZE(COPYRIGHT_YEAR) " The Bitcredit Core developers"
+#define COPYRIGHT_STR          "2013-" STRINGIZE(COPYRIGHT_YEAR) " The Credits Core developers"
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
@@ -17,14 +17,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcredit"
-            VALUE "FileDescription",    "Bitcredit-cli (OSS RPC client for Bitcredit)"
+            VALUE "CompanyName",        "Credits"
+            VALUE "FileDescription",    "Credits-cli (OSS RPC client for Credits)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcredit-cli"
+            VALUE "InternalName",       "credits-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcredit-cli.exe"
-            VALUE "ProductName",        "Bitcredit-cli"
+            VALUE "OriginalFilename",   "credits-cli.exe"
+            VALUE "ProductName",        "Credits-cli"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

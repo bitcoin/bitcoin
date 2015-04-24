@@ -78,7 +78,7 @@ Section -Main SEC0000
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
     File @abs_top_srcdir@/release/bitcreditd.exe
-    File @abs_top_srcdir@/release/bitcredit-cli.exe
+    File @abs_top_srcdir@/release/credits-cli.exe
     SetOutPath $INSTDIR\doc
     File /r @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR

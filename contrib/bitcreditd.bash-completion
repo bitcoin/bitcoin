@@ -1,4 +1,4 @@
-# bash programmable completion for bitcreditd(1) and bitcredit-cli(1)
+# bash programmable completion for bitcreditd(1) and credits-cli(1)
 # Copyright (c) 2012,2014 Christian von Roques <roques@mti.ag>
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -129,7 +129,7 @@ _bitcreditd() {
     esac
 }
 
-complete -F _bitcreditd bitcreditd bitcredit-cli
+complete -F _bitcreditd bitcreditd credits-cli
 }
 
 # Local variables:

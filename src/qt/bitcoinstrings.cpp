@@ -258,7 +258,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Unable to bind to %s on this computer (bind
 QT_TRANSLATE_NOOP("bitcredit-core", "Unknown -socks proxy version requested: %i"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Unknown network specified in -onlynet: '%s'"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Upgrade wallet to latest format"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Usage (deprecated, use bitcredit-cli):"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Usage (deprecated, use credits-cli):"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Usage:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Use OpenSSL (https) for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Use UPnP to map the listening port (default: 0)"),

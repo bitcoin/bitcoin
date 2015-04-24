@@ -17,7 +17,7 @@ if BUILD_BITCOIND
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += bitcredit-cli
+  bin_PROGRAMS += credits-cli
 endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_TEST)
@@ -195,16 +195,16 @@ endif
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
 bitcreditd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
-# bitcredit-cli binary #
+# credits-cli binary #
 bitcredit_cli_LDADD = \
   libbitcredit_cli.a \
   libbitcredit_common.a \
   $(BOOST_LIBS)
-bitcredit_cli_SOURCES = bitcredit-cli.cpp
+bitcredit_cli_SOURCES = credits-cli.cpp
 #
 
 if TARGET_WINDOWS
-bitcredit_cli_SOURCES += bitcredit-cli-res.rc
+bitcredit_cli_SOURCES += credits-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race

@@ -14,11 +14,11 @@ int CommandLineRPC(int argc, char *argv[]);
 
 json_spirit::Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams);
 
-/** Show help message for bitcredit-cli.
+/** Show help message for credits-cli.
  * The mainProgram argument is used to determine whether to show this message as main program
  * (and include some common options) or as sub-header of another help message.
  *
- * @note the argument can be removed once bitcredit-cli functionality is removed from bitcreditd
+ * @note the argument can be removed once credits-cli functionality is removed from bitcreditd
  */
 std::string HelpMessageCli(bool mainProgram);
 

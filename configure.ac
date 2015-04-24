@@ -548,7 +548,7 @@ AC_MSG_CHECKING([whether to build bitcreditd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcreditd = xyes])
 AC_MSG_RESULT($build_bitcreditd)
 
-AC_MSG_CHECKING([whether to build bitcredit-cli])
+AC_MSG_CHECKING([whether to build credits-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcredit_cli = xyes])
 AC_MSG_RESULT($build_bitcredit_cli)
 

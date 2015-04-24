@@ -89,7 +89,7 @@ bool AppInit(int argc, char* argv[])
             std::string strUsage = _("Bitcredit Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
                   "  bitcreditd [options]                     " + _("Start Bitcredit Core Daemon") + "\n" +
-                _("Usage (deprecated, use bitcredit-cli):") + "\n" +
+                _("Usage (deprecated, use credits-cli):") + "\n" +
                   "  bitcreditd [options] <command> [params]  " + _("Send command to Bitcredit Core") + "\n" +
                   "  bitcreditd [options] help                " + _("List commands") + "\n" +
                   "  bitcreditd [options] help <command>      " + _("Get help for a command") + "\n";

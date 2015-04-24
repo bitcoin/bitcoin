@@ -3859,7 +3859,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcredit Alert&quot; admin@fo
     </message>
     <message>
         <location line="+10"/>
-        <source>Usage (deprecated, use bitcredit-cli):</source>
+        <source>Usage (deprecated, use credits-cli):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
