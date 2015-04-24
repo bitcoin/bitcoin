@@ -56,8 +56,8 @@ Optional: install Qt4
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone git@github.com:bitcoin/bitcoin.git bitcoin
-        cd bitcoin
+        git clone git@github.com:credits-currency/credits.git credits
+        cd credits
 
 2.  Build bitcreditd (and Bitcredit-Qt, if configured):
 
@@ -94,8 +94,8 @@ PATH.
 
 1. Clone the github tree to get the source code and go into the directory.
 
-        git clone https://github.com/bitcoin/bitcoin.git
-        cd bitcoin
+        git clone https://github.com/credits-currency/credits.git
+        cd credits
 
 2.  Build bitcreditd:
 
@@ -157,6 +157,6 @@ you can monitor its process by looking at the debug.log file, like this:
 
 Other commands:
 
-    ./bitcreditd -daemon # to start the bitcoin daemon.
+    ./bitcreditd -daemon # to start the credits daemon.
     ./bitcredit-cli --help  # for a list of command-line options.
     ./bitcredit-cli help    # When the daemon is running, to get a list of RPC commands

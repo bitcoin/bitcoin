@@ -284,8 +284,8 @@ Clone the git repositories for bitcoin and gitian and then checkout the bitcoin 
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/bitcoin/bitcoin
-cd bitcoin
+git clone https://github.com/credits-currency/credits
+cd credits
 git checkout v${VERSION}
 cd ..
 ```
@@ -314,7 +314,7 @@ There will be a lot of warnings printed during build of the images. These can be
 Getting and building the inputs
 --------------------------------
 
-In [doc/release-process.md](release-process.md) in the bitcoin repository under 'Fetch and build inputs'.
+In [doc/release-process.md](release-process.md) in the credits repository under 'Fetch and build inputs'.
 you will find a list of `wget` commands that can be executed to get the dependencies.
 
 I needed to add `--no-check-certificate` to the OpenSSL wget line to make it work.
@@ -340,16 +340,16 @@ Building Bitcredit
 ----------------
 
 To build Bitcredit (for Linux and/or Windows) just follow the steps under 'perform
-gitian builds' in [doc/release-process.md](release-process.md) in the bitcoin repository.
+gitian builds' in [doc/release-process.md](release-process.md) in the credits repository.
 
 Output from `gbuild` will look something like
 
-    Initialized empty Git repository in /home/debian/gitian-builder/inputs/bitcoin/.git/
+    Initialized empty Git repository in /home/debian/gitian-builder/inputs/credits/.git/
     remote: Reusing existing pack: 35606, done.
     remote: Total 35606 (delta 0), reused 0 (delta 0)
     Receiving objects: 100% (35606/35606), 26.52 MiB | 4.28 MiB/s, done.
     Resolving deltas: 100% (25724/25724), done.
-    From https://github.com/bitcoin/bitcoin
+    From https://github.com/credits-currency/credits
     ... (new tags, new branch etc)
     --- Building for precise i386 ---
     Stopping target if it is up
@@ -378,10 +378,10 @@ and inputs.
 
 For example:
 ```bash
-URL=https://github.com/laanwj/bitcoin.git
+URL=https://github.com/laanwj/credits.git
 COMMIT=2014_03_windows_unicode_path
-./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+./bin/gbuild --commit credits=${COMMIT} --url credits=${URL} ../credits/contrib/gitian-descriptors/gitian-linux.yml
+./bin/gbuild --commit credits=${COMMIT} --url credits=${URL} ../credits/contrib/gitian-descriptors/gitian-win.yml
 ```
 
 Signing externally
