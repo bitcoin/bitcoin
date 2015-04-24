@@ -32,11 +32,11 @@ Release Process
 	PATH=$PATH:$(pwd)/libexec
 	export PATH=$PATH:/opt/local/libexec/gnubin
 
- From a directory containing the bitcredit source, gitian-builder and gitian.sigs
+ From a directory containing the credits source, gitian-builder and gitian.sigs
   
 	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
 	export VERSION=(new version, e.g. 0.8.0)
-	pushd ./bitcredit
+	pushd ./credits
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
@@ -74,25 +74,25 @@ Release Process
         wget 'https://raw.githubusercontent.com/theuni/osx-cross-depends/master/patches/cdrtools/genisoimage.diff' -O \
 	     cdrkit-deterministic.patch
 	cd ..
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/boost-linux.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/boost-linux.yml
 	mv build/out/boost-*.zip inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/deps-linux.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/deps-linux.yml
 	mv build/out/bitcredit-deps-*.zip inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/qt-linux.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/qt-linux.yml
 	mv build/out/qt-*.tar.gz inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/boost-win.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/boost-win.yml
 	mv build/out/boost-*.zip inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/deps-win.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/deps-win.yml
 	mv build/out/bitcredit-deps-*.zip inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/qt-win.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/qt-win.yml
 	mv build/out/qt-*.zip inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/protobuf-win.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/protobuf-win.yml
 	mv build/out/protobuf-*.zip inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/gitian-osx-native.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/gitian-osx-native.yml
 	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/gitian-osx-depends.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/gitian-osx-depends.yml
 	mv build/out/osx-*.tar.gz inputs/
-	./bin/gbuild ../bitcredit/contrib/gitian-descriptors/gitian-osx-qt.yml
+	./bin/gbuild ../credits/contrib/gitian-descriptors/gitian-osx-qt.yml
 	mv build/out/osx-*.tar.gz inputs/
 
  The expected SHA256 hashes of the intermediate inputs are:
@@ -114,20 +114,20 @@ Release Process
 
  Build creditsd and credits-qt on Linux32, Linux64, and Win32:
   
-	./bin/gbuild --commit bitcredit=${VERSION} ../bitcredit/contrib/gitian-descriptors/gitian-linux.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcredit/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gbuild --commit bitcredit=${VERSION} ../credits/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
-	zip -r bitcredit-${VERSION}-linux-gitian.zip *
-	mv bitcredit-${VERSION}-linux-gitian.zip ../../../
+	zip -r credits-${VERSION}-linux-gitian.zip *
+	mv credits-${VERSION}-linux-gitian.zip ../../../
 	popd
-	./bin/gbuild --commit bitcredit=${VERSION} ../bitcredit/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitcredit/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gbuild --commit bitcredit=${VERSION} ../credits/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-win.yml
 	pushd build/out
-	zip -r bitcredit-${VERSION}-win-gitian.zip *
-	mv bitcredit-${VERSION}-win-gitian.zip ../../../
+	zip -r credits-${VERSION}-win-gitian.zip *
+	mv credits-${VERSION}-win-gitian.zip ../../../
 	popd
-    ./bin/gbuild --commit bitcredit=${VERSION} ../bitcredit/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../bitcredit/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+    ./bin/gbuild --commit bitcredit=${VERSION} ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+    ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 	pushd build/out
 	mv Credits-Qt.dmg ../../../
 	popd
@@ -135,8 +135,8 @@ Release Process
 
   Build output expected:
 
-  1. linux 32-bit and 64-bit binaries + source (bitcredit-${VERSION}-linux-gitian.zip)
-  2. windows 32-bit and 64-bit binaries + installer + source (bitcredit-${VERSION}-win-gitian.zip)
+  1. linux 32-bit and 64-bit binaries + source (credits-${VERSION}-linux-gitian.zip)
+  2. windows 32-bit and 64-bit binaries + installer + source (credits-${VERSION}-win-gitian.zip)
   3. OSX installer (Credits-Qt.dmg)
   4. Gitian signatures (in gitian.sigs/${VERSION}[-win|-osx]/(your gitian key)/
 
@@ -144,16 +144,16 @@ repackage gitian builds for release as stand-alone zip/tar/installer exe
 
 **Linux .tar.gz:**
 
-	unzip bitcredit-${VERSION}-linux-gitian.zip -d bitcredit-${VERSION}-linux
-	tar czvf bitcredit-${VERSION}-linux.tar.gz bitcredit-${VERSION}-linux
-	rm -rf bitcredit-${VERSION}-linux
+	unzip credits-${VERSION}-linux-gitian.zip -d credits-${VERSION}-linux
+	tar czvf credits-${VERSION}-linux.tar.gz credits-${VERSION}-linux
+	rm -rf credits-${VERSION}-linux
 
 **Windows .zip and setup.exe:**
 
-	unzip bitcredit-${VERSION}-win-gitian.zip -d bitcredit-${VERSION}-win
-	mv bitcredit-${VERSION}-win/bitcredit-*-setup.exe .
-	zip -r bitcredit-${VERSION}-win.zip bitcredit-${VERSION}-win
-	rm -rf bitcredit-${VERSION}-win
+	unzip credits-${VERSION}-win-gitian.zip -d credits-${VERSION}-win
+	mv credits-${VERSION}-win/credits-*-setup.exe .
+	zip -r credits-${VERSION}-win.zip credits-${VERSION}-win
+	rm -rf credits-${VERSION}-win
 
 ###Next steps:
 
@@ -188,32 +188,32 @@ Commit your signature to gitian.sigs:
 
 ### After 3 or more people have gitian-built, repackage gitian-signed zips:
 
-From a directory containing bitcredit source, gitian.sigs and gitian zips
+From a directory containing credits source, gitian.sigs and gitian zips
 
 	export VERSION=(new version, e.g. 0.8.0)
-	mkdir bitcredit-${VERSION}-linux-gitian
-	pushd bitcredit-${VERSION}-linux-gitian
-	unzip ../bitcredit-${VERSION}-linux-gitian.zip
+	mkdir credits-${VERSION}-linux-gitian
+	pushd credits-${VERSION}-linux-gitian
+	unzip ../credits-${VERSION}-linux-gitian.zip
 	mkdir gitian
-	cp ../bitcredit/contrib/gitian-downloader/*.pgp ./gitian/
+	cp ../credits/contrib/gitian-downloader/*.pgp ./gitian/
 	for signer in $(ls ../gitian.sigs/${VERSION}/); do
 	 cp ../gitian.sigs/${VERSION}/${signer}/bitcoin-build.assert ./gitian/${signer}-build.assert
 	 cp ../gitian.sigs/${VERSION}/${signer}/bitcoin-build.assert.sig ./gitian/${signer}-build.assert.sig
 	done
-	zip -r bitcredit-${VERSION}-linux-gitian.zip *
-	cp bitcredit-${VERSION}-linux-gitian.zip ../
+	zip -r credits-${VERSION}-linux-gitian.zip *
+	cp credits-${VERSION}-linux-gitian.zip ../
 	popd
-	mkdir bitcredit-${VERSION}-win-gitian
-	pushd bitcredit-${VERSION}-win-gitian
-	unzip ../bitcredit-${VERSION}-win-gitian.zip
+	mkdir credits-${VERSION}-win-gitian
+	pushd credits-${VERSION}-win-gitian
+	unzip ../credits-${VERSION}-win-gitian.zip
 	mkdir gitian
-	cp ../bitcredit/contrib/gitian-downloader/*.pgp ./gitian/
+	cp ../credits/contrib/gitian-downloader/*.pgp ./gitian/
 	for signer in $(ls ../gitian.sigs/${VERSION}-win/); do
 	 cp ../gitian.sigs/${VERSION}-win/${signer}/bitcoin-build.assert ./gitian/${signer}-build.assert
 	 cp ../gitian.sigs/${VERSION}-win/${signer}/bitcoin-build.assert.sig ./gitian/${signer}-build.assert.sig
 	done
-	zip -r bitcredit-${VERSION}-win-gitian.zip *
-	cp bitcredit-${VERSION}-win-gitian.zip ../
+	zip -r credits-${VERSION}-win-gitian.zip *
+	cp credits-${VERSION}-win-gitian.zip ../
 	popd
 
 - Upload gitian zips to SourceForge
@@ -224,8 +224,8 @@ From a directory containing bitcredit source, gitian.sigs and gitian zips
 
   - Release sticky on bitcointalk: https://bitcointalk.org/index.php?board=1.0
 
-  - Bitcredit-development mailing list
+  - Credits-development mailing list
 
-  - Optionally reddit /r/Bitcredit, ...
+  - Optionally reddit /r/CreditsCrypto, ...
 
 - Celebrate 
