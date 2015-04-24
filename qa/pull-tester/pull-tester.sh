@@ -12,7 +12,7 @@ if [ $# -lt 1 ]; then
 fi
 
 killall -q credits-cli
-killall -q bitcreditd
+killall -q creditsd
 
 cd $1
 shift

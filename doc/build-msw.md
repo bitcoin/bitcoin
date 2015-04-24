@@ -80,4 +80,4 @@ MSYS shell:
 	sh autogen.sh
 	sh configure
 	mingw32-make
-	strip bitcreditd.exe
+	strip creditsd.exe

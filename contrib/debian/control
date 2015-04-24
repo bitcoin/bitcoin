@@ -25,7 +25,7 @@ Homepage: http://www.bitcoin.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
 Vcs-Browser: http://github.com/bitcoin/bitcoin
 
-Package: bitcreditd
+Package: creditsd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
@@ -38,7 +38,7 @@ Description: peer-to-peer network based digital currency - daemon
  Full transaction history is stored locally at each client.  This
  requires 20+ GB of space, slowly growing.
  .
- This package provides bitcreditd, a combined daemon and CLI tool to
+ This package provides creditsd, a combined daemon and CLI tool to
  interact with the daemon.
 
 Package: credits-qt

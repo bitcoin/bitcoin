@@ -2,7 +2,7 @@
 
 *.exe
 src/bitcredit
-src/bitcreditd
+src/creditsd
 src/credits-cli
 src/test/test_bitcredit
 src/qt/test/test_credits-qt
@@ -79,7 +79,7 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-bitcreditd-for-test.sh
+qa/pull-tester/run-creditsd-for-test.sh
 qa/pull-tester/build-tests.sh
 
 !src/leveldb*/Makefile

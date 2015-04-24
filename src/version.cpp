@@ -7,7 +7,7 @@
 #include <string>
 
 // Name of client reported in the 'version' message. Report the same name
-// for both bitcreditd and credits-qt, to make it harder for attackers to
+// for both creditsd and credits-qt, to make it harder for attackers to
 // target servers or GUI users specifically.
 const std::string BITCREDIT_CLIENT_NAME("Monterosa");
 const std::string BITCOIN_CLIENT_NAME("Satoshi");

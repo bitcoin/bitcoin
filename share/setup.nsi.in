@@ -77,7 +77,7 @@ Section -Main SEC0000
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File @abs_top_srcdir@/release/bitcreditd.exe
+    File @abs_top_srcdir@/release/creditsd.exe
     File @abs_top_srcdir@/release/credits-cli.exe
     SetOutPath $INSTDIR\doc
     File /r @abs_top_srcdir@/doc\*.*

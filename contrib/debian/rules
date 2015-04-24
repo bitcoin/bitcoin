@@ -2,11 +2,11 @@
 # -*- mode: makefile; coding: utf-8 -*-
 
 #DEB_MAKE_CHECK_TARGET = test_bitcredit
-#build/bitcreditd::
+#build/creditsd::
 #	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_bitcredit)
 
-DEB_INSTALL_EXAMPLES_bitcreditd += debian/examples/*
-DEB_INSTALL_MANPAGES_bitcreditd += debian/manpages/*
+DEB_INSTALL_EXAMPLES_creditsd += debian/examples/*
+DEB_INSTALL_MANPAGES_creditsd += debian/manpages/*
 
 %:
 	dh --with bash-completion $@

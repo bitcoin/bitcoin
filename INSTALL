@@ -1,5 +1,5 @@
 Building Bitcredit
 
-See doc/build-*.md for instructions on building bitcreditd,
+See doc/build-*.md for instructions on building creditsd,
 the intended-for-services, no-graphical-interface, reference
 implementation of Bitcredit.

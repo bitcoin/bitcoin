@@ -112,7 +112,7 @@ Release Process
     e2e403e1a08869c7eed4d4293bce13d51ec6a63592918b90ae215a0eceb44cb4  protobuf-win32-2.5.0-gitian-r4.zip
     a0999037e8b0ef9ade13efd88fee261ba401f5ca910068b7e0cd3262ba667db0  protobuf-win64-2.5.0-gitian-r4.zip
 
- Build bitcreditd and credits-qt on Linux32, Linux64, and Win32:
+ Build creditsd and credits-qt on Linux32, Linux64, and Win32:
   
 	./bin/gbuild --commit bitcredit=${VERSION} ../bitcredit/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../bitcredit/contrib/gitian-descriptors/gitian-linux.yml

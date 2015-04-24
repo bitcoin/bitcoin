@@ -20,8 +20,8 @@ You need the Qt4 run-time libraries to run Credits-Qt. On Debian or Ubuntu:
 
 Unpack the files into a directory and run:
 
-- bin/32/credits-qt (GUI, 32-bit) or bin/32/bitcreditd (headless, 32-bit)
-- bin/64/credits-qt (GUI, 64-bit) or bin/64/bitcreditd (headless, 64-bit)
+- bin/32/credits-qt (GUI, 32-bit) or bin/32/creditsd (headless, 32-bit)
+- bin/64/credits-qt (GUI, 64-bit) or bin/64/creditsd (headless, 64-bit)
 
 
 

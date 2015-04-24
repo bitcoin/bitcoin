@@ -3354,8 +3354,8 @@ Address: %4
     </message>
     <message>
         <location line="+3"/>
-        <source>Specify pid file (default: bitcreditd.pid)</source>
-        <translation>Specify pid file (default: bitcreditd.pid)</translation>
+        <source>Specify pid file (default: creditsd.pid)</source>
+        <translation>Specify pid file (default: creditsd.pid)</translation>
     </message>
     <message>
         <location line="-1"/>

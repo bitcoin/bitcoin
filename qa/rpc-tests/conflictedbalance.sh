@@ -23,7 +23,7 @@ fi
 
 set -f
 
-BITCOIND=${1}/bitcreditd
+BITCOIND=${1}/creditsd
 CLI=${1}/credits-cli
 
 DIR="${BASH_SOURCE%/*}"

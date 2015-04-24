@@ -13,7 +13,7 @@ endif
 bin_PROGRAMS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += bitcreditd
+  bin_PROGRAMS += creditsd
 endif
 
 if BUILD_BITCOIN_CLI
@@ -175,25 +175,25 @@ libbitcredit_cli_a_SOURCES = \
 nodist_libbitcredit_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
-# bitcreditd binary #
-bitcreditd_LDADD = \
+# creditsd binary #
+creditsd_LDADD = \
   libbitcredit_server.a \
   libbitcredit_cli.a \
   libbitcredit_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 if ENABLE_WALLET
-bitcreditd_LDADD += libbitcredit_wallet.a
+creditsd_LDADD += libbitcredit_wallet.a
 endif
-bitcreditd_SOURCES = bitcreditd.cpp
+creditsd_SOURCES = creditsd.cpp
 #
 
 if TARGET_WINDOWS
-bitcreditd_SOURCES += bitcreditd-res.rc
+creditsd_SOURCES += creditsd-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
-bitcreditd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
+creditsd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
 # credits-cli binary #
 bitcredit_cli_LDADD = \

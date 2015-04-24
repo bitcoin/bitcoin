@@ -295,7 +295,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + " " + _("on startup") + "\n";
     strUsage += "  -bitcoin_loadblock=<file>         " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -par=<n>               " + strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"), -(int)boost::thread::hardware_concurrency(), BITCREDIT_MAX_SCRIPTCHECK_THREADS, BITCREDIT_DEFAULT_SCRIPTCHECK_THREADS) + "\n";
-    strUsage += "  -pid=<file>            " + _("Specify pid file (default: bitcreditd.pid)") + "\n";
+    strUsage += "  -pid=<file>            " + _("Specify pid file (default: creditsd.pid)") + "\n";
     strUsage += "  -maxorphanblocks=<n>   " + strprintf(_("Keep at most <n> unconnectable blocks in memory (default: %u)"), BITCREDIT_DEFAULT_MAX_ORPHAN_BLOCKS) + "\n";
     strUsage += "  -bitcoin_maxorphanblocks=<n>         " + _("Same as above, for bitcoin") + "\n";
 

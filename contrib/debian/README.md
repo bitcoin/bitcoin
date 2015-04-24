@@ -1,8 +1,8 @@
 
 Debian
 ====================
-This directory contains files used to package bitcreditd/credits-qt
-for Debian-based Linux systems. If you compile bitcreditd/credits-qt yourself, there are some useful files here.
+This directory contains files used to package creditsd/credits-qt
+for Debian-based Linux systems. If you compile creditsd/credits-qt yourself, there are some useful files here.
 
 ## bitcredit: URI support ##
 

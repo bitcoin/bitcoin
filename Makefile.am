@@ -4,7 +4,7 @@ SUBDIRS = src
 
 GZIP_ENV="-9n"
 
-BITCOIND_BIN=$(top_builddir)/src/bitcreditd$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/creditsd$(EXEEXT)
 BITCOIN_QT_BIN=$(top_builddir)/src/qt/credits-qt$(EXEEXT)
 BITCOIN_CLI_BIN=$(top_builddir)/src/credits-cli$(EXEEXT)
 BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
@@ -130,7 +130,7 @@ test_bitcredit_filtered.info: test_bitcredit.info
 
 block_test.info: test_bitcredit_filtered.info
 	$(MKDIR_P) qa/tmp
-	-@TIMEOUT=15 qa/pull-tester/run-bitcreditd-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool 0
+	-@TIMEOUT=15 qa/pull-tester/run-creditsd-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool 0
 	$(LCOV) -c -d $(abs_builddir)/src --t BitcoinJBlockTest -o $@
 	$(LCOV) -z -d $(abs_builddir)/src
 	$(LCOV) -z -d $(abs_builddir)/src/leveldb
@@ -159,7 +159,7 @@ endif
 if USE_COMPARISON_TOOL
 check-local:
 	$(MKDIR_P) qa/tmp
-	@qa/pull-tester/run-bitcreditd-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS)
+	@qa/pull-tester/run-creditsd-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS)
 endif
 
 EXTRA_DIST = $(top_srcdir)/share/genbuild.sh qa/pull-tester/pull-tester.sh qa/rpc-tests $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING)
