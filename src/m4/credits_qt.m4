@@ -117,7 +117,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
 
 
   dnl enable qt support
-  AC_MSG_CHECKING(whether to build Bitcredit Core GUI)
+  AC_MSG_CHECKING(whether to build Credits Core GUI)
   BITCOIN_QT_CHECK([
     bitcredit_enable_qt=yes
     bitcredit_enable_qt_test=yes
