@@ -48,11 +48,11 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/bitcredit-${VERSION}-win@WINDOWS_BITS@-setup.exe
+OutFile @abs_top_srcdir@/credits-${VERSION}-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\Bitcredit
+InstallDir $PROGRAMFILES64\Credits
 !else
-InstallDir $PROGRAMFILES\Bitcredit
+InstallDir $PROGRAMFILES\Credits
 !endif
 CRCCheck on
 XPStyle on
@@ -85,7 +85,7 @@ Section -Main SEC0000
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 
     # Remove old wxwidgets-based-credits executable and locales:
-    Delete /REBOOTOK $INSTDIR\bitcredit.exe
+    Delete /REBOOTOK $INSTDIR\credits.exe
     RMDir /r /REBOOTOK $INSTDIR\locale
 SectionEnd
 
@@ -106,10 +106,10 @@ Section -post SEC0001
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" UninstallString $INSTDIR\uninstall.exe
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoModify 1
     WriteRegDWORD HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
-    WriteRegStr HKCR "bitcredit" "URL Protocol" ""
-    WriteRegStr HKCR "bitcredit" "" "URL:Bitcredit"
-    WriteRegStr HKCR "bitcredit\DefaultIcon" "" $INSTDIR\credits-qt.exe
-    WriteRegStr HKCR "bitcredit\shell\open\command" "" '"$INSTDIR\credits-qt.exe" "%1"'
+    WriteRegStr HKCR "credits" "URL Protocol" ""
+    WriteRegStr HKCR "credits" "" "URL:Bitcredit"
+    WriteRegStr HKCR "credits\DefaultIcon" "" $INSTDIR\credits-qt.exe
+    WriteRegStr HKCR "credits\shell\open\command" "" '"$INSTDIR\credits-qt.exe" "%1"'
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -139,7 +139,7 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
-    Delete /REBOOTOK "$SMSTARTUP\Bitcredit.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\Credits.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log
