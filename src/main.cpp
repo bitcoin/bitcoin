@@ -31,7 +31,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "Bitcredit cannot be compiled without assertions."
+# error "Credits cannot be compiled without assertions."
 #endif
 
 //
@@ -65,7 +65,7 @@ map<uint256, set<uint256> > bitcredit_mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 CScript BITCREDIT_COINBASE_FLAGS;
 
-const string bitcredit_strMessageMagic = "Bitcredit Signed Message:\n";
+const string bitcredit_strMessageMagic = "Credits Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1920,7 +1920,7 @@ bool Bitcredit_DisconnectBlock(Bitcredit_CBlock& block, CValidationState& state,
     if(nTotalClaimedCoinsForBlock > 0) {
 		const int64_t nTotalClaimedCoinsBefore = claim_view.GetTotalClaimedCoins();
 		if(!claim_view.SetTotalClaimedCoins(nTotalClaimedCoinsBefore - nTotalClaimedCoinsForBlock)) {
-			return state.Abort(_("Bitcredit total claimed coins for block could not be set while disconnecting block."));
+			return state.Abort(_("Credits total claimed coins for block could not be set while disconnecting block."));
 		}
 		assert(claim_view.GetTotalClaimedCoins() > 0);
     }
@@ -2149,7 +2149,7 @@ bool Bitcredit_ConnectBlock(Bitcredit_CBlock& block, CValidationState& state, Bi
     if(nClaimedCoinsForBlock > 0) {
 		const int64_t nTotalClaimedCoinsBefore = claim_view.GetTotalClaimedCoins();
 		if(!claim_view.SetTotalClaimedCoins(nTotalClaimedCoinsBefore + nClaimedCoinsForBlock)) {
-			return state.Abort(_("Bitcredit total claimed coins for block could not be set while connecting block."));
+			return state.Abort(_("Credits total claimed coins for block could not be set while connecting block."));
 		}
     }
 

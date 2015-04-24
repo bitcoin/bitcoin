@@ -29,7 +29,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "Bitcredit cannot be compiled without assertions."
+# error "Credits cannot be compiled without assertions."
 #endif
 
 uint256 CPartialMerkleTree::CalcHash(int height, unsigned int pos, const std::vector<uint256> &vTxid) {

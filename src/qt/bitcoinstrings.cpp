@@ -20,7 +20,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "If the file does not exist, create it with owner-readable-only file "
 "permissions.\n"
 "It is also recommended to set alertnotify so you are notified of problems;\n"
-"for example: alertnotify=echo %%s | mail -s \"Bitcredit Alert\" admin@foo.com\n"),
+"for example: alertnotify=echo %%s | mail -s \"Credits Alert\" admin@foo.com\n"),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!"
 "3DES:@STRENGTH)"),

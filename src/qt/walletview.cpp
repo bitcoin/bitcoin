@@ -348,7 +348,7 @@ void WalletView::bitcredit_backupWallet()
 {
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Backup Credits Wallet"), QString(),
-        tr("Bitcredit Wallet Data (*.dat)"), NULL);
+        tr("Credits Wallet Data (*.dat)"), NULL);
 
     if (filename.isEmpty())
         return;
@@ -384,7 +384,7 @@ void WalletView::deposit_backupWallet()
 {
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Backup Deposit Wallet"), QString(),
-        tr("Bitcredit Deposit Data (*.dat)"), NULL);
+        tr("Credits Deposit Data (*.dat)"), NULL);
 
     if (filename.isEmpty())
         return;

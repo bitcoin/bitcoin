@@ -2790,7 +2790,7 @@ bool Bitcoin_AlignClaimTip(const Bitcredit_CBlockIndex * expectedCurrentBitcredi
 	}
 
 	if(!view.SetBitcreditClaimTip(palignToBitcreditBlockIndex->GetBlockHeader().GetHash())) {
-		return state.Abort(_("Bitcredit claim tip could not be set."));
+		return state.Abort(_("Credits claim tip could not be set."));
 	}
 
     return true;

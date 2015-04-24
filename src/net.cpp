@@ -1142,7 +1142,7 @@ void InternalThreadMapPort(CNetParams * netParams)
             }
         }
 
-        string strDesc = "Bitcredit " + FormatFullVersion();
+        string strDesc = "Credits " + FormatFullVersion();
 
         try {
             while (true) {

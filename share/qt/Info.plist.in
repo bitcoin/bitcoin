@@ -54,7 +54,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.bitcredit.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Bitcredit payment request</string>
+      <string>Credits payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>

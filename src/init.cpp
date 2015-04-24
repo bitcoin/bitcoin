@@ -1207,7 +1207,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
-    LogPrintf("Bitcredit version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+    LogPrintf("Credits version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
@@ -1217,7 +1217,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", strDataDir);
     LogPrintf("Bitcoin using at most %i connections\n", bitcoin_netParams->nMaxConnections);
-    LogPrintf("Bitcredit using at most %i connections\n", bitcredit_netParams->nMaxConnections);
+    LogPrintf("Credits using at most %i connections\n", bitcredit_netParams->nMaxConnections);
     std::ostringstream strErrors;
 
     if (bitcoin_nScriptCheckThreads) {
@@ -1226,7 +1226,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             threadGroup.create_thread(&Bitcoin_ThreadScriptCheck);
     }
     if (bitcredit_nScriptCheckThreads) {
-        LogPrintf("Bitcredit using %u threads for script verification\n", bitcredit_nScriptCheckThreads);
+        LogPrintf("Credits using %u threads for script verification\n", bitcredit_nScriptCheckThreads);
         for (int i=0; i<bitcredit_nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&Bitcredit_ThreadScriptCheck);
     }
@@ -1730,7 +1730,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #ifdef ENABLE_WALLET
     if (fDisableWallet) {
         bitcredit_pwalletMain = NULL;
-        LogPrintf("Bitcredit wallet disabled!\n");
+        LogPrintf("Credits wallet disabled!\n");
     } else {
         if (GetBoolArg("-zapwallettxes", false)) {
             uiInterface.InitMessage(_("Zapping all transactions from bitcredit wallet..."));
@@ -1766,7 +1766,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                 strErrors << _("Error loading bitcredit_wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
             else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
             {
-                strErrors << _("Bitcredit wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
+                strErrors << _("Credits wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
                 return InitError(strErrors.str());
             }
