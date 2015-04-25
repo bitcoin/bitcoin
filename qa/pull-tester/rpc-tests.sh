@@ -30,7 +30,7 @@ testScripts=(
     'proxy_test.py'
 #    'forknotify.py'
 );
-if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
+if [ "x${ENABLE_BITCOIND}${ENABLE_CLI}${ENABLE_WALLET}" = "x111" ]; then
     for (( i = 0; i < ${#testScripts[@]}; i++ ))
     do
         if [ -z "$1" ] || [ "$1" == "${testScripts[$i]}" ] || [ "$1.py" == "${testScripts[$i]}" ]
