@@ -259,7 +259,7 @@ public:
   };
 
 private:
-  leveldb::DB *pDb;
+  leveldb::DB *pdb;
   boost::filesystem::path const path;
 
   // implied version of msc and tmsc so they don't hit the leveldb
@@ -269,12 +269,12 @@ private:
   unsigned int next_spid;
   unsigned int next_test_spid;
 
-  leveldb::Status openDB() {
+  leveldb::Status Open() {
     leveldb::Options options;
     options.paranoid_checks = true;
     options.create_if_missing = true;
 
-    leveldb::Status s = leveldb::DB::Open(options, path.string(), &pDb);
+    leveldb::Status s = leveldb::DB::Open(options, path.string(), &pdb);
 
      if (false == s.ok()) {
        PrintToConsole("Failed to create or read LevelDB for Smart Property at %s", path.string());
@@ -282,16 +282,16 @@ private:
      return s;
   }
 
-  void closeDB() {
-    delete pDb;
-    pDb = NULL;
+  void Close() {
+    delete pdb;
+    pdb = NULL;
   }
 
 public:
   CMPSPInfo(const boost::filesystem::path &_path)
     : path(_path)
   {
-    leveldb::Status status = openDB();
+    leveldb::Status status = Open();
     PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
     // special cases for constant SPs MSC and TMSC
@@ -317,7 +317,7 @@ public:
 
   ~CMPSPInfo()
   {
-    closeDB();
+    Close();
   }
 
   void init(unsigned int nextSPID = 0x3UL, unsigned int nextTestSPID = TEST_ECO_PROPERTY_1)
@@ -326,10 +326,10 @@ public:
     next_test_spid = nextTestSPID;
   }
 
-  void clear() {
-    closeDB();
+  void Clear() {
+    Close();
     leveldb::DestroyDB(path.string(), leveldb::Options());
-    openDB();
+    Open();
     init();
   }
 
@@ -369,7 +369,7 @@ public:
     leveldb::WriteBatch commitBatch;
     commitBatch.Delete(watermarkKey);
     commitBatch.Put(watermarkKey, watermark.ToString());
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(writeOptions, &commitBatch);
   }
 
   int getWatermark(uint256 &watermark)
@@ -377,7 +377,7 @@ public:
     leveldb::ReadOptions readOpts;
     readOpts.fill_cache = false;
     string watermarkVal;
-    if (pDb->Get(readOpts, watermarkKey, &watermarkVal).ok()) {
+    if (pdb->Get(readOpts, watermarkKey, &watermarkVal).ok()) {
       watermark.SetHex(watermarkVal);
       return 0;
     } else {
@@ -400,7 +400,7 @@ public:
 
     leveldb::ReadOptions readOpts;
     readOpts.fill_cache = false;
-    leveldb::Iterator *iter = pDb->NewIterator(readOpts);
+    leveldb::Iterator *iter = pdb->NewIterator(readOpts);
     for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
       if (iter->key().starts_with("sp-")) {
         std::vector<std::string> vstr;

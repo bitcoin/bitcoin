@@ -384,13 +384,13 @@ class CMPSTOList
     leveldb::ReadOptions iteroptions;
     leveldb::WriteOptions writeoptions;
     leveldb::WriteOptions syncoptions;
-    leveldb::DB *sdb;
+    leveldb::DB *pdb;
     // statistics
-    unsigned int sWritten;
-    unsigned int sRead;
+    unsigned int nWritten;
+    unsigned int nRead;
 
 public:
-    CMPSTOList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):sWritten(0),sRead(0)
+    CMPSTOList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):nWritten(0),nRead(0)
     {
       options.paranoid_checks = true;
       options.create_if_missing = true;
@@ -398,14 +398,14 @@ public:
       iteroptions.verify_checksums = true;
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
+      leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
       PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
     }
 
     ~CMPSTOList()
     {
-      delete sdb;
-      sdb = NULL;
+      delete pdb;
+      pdb = NULL;
     }
 
     void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee);
@@ -427,13 +427,13 @@ protected:
     leveldb::ReadOptions iteroptions;
     leveldb::WriteOptions writeoptions;
     leveldb::WriteOptions syncoptions;
-    leveldb::DB *tdb;
+    leveldb::DB *pdb;
     // statistics
-    unsigned int tWritten;
-    unsigned int tRead;
+    unsigned int nWritten;
+    unsigned int nRead;
 
 public:
-    CMPTradeList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):tWritten(0),tRead(0)
+    CMPTradeList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):nWritten(0),nRead(0)
     {
       options.paranoid_checks = true;
       options.create_if_missing = true;
@@ -441,14 +441,14 @@ public:
       iteroptions.verify_checksums = true;
       iteroptions.fill_cache = false;
       syncoptions.sync = true;
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
+      leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
       PrintToConsole("Loading trades database: %s\n", status.ToString());
     }
 
     ~CMPTradeList()
     {
-      delete tdb;
-      tdb = NULL;
+      delete pdb;
+      pdb = NULL;
     }
 
     void recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);

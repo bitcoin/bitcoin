@@ -2336,7 +2336,7 @@ static void clear_all_state() {
   my_offers.clear();
   my_accepts.clear();
   my_crowds.clear();
-  _my_sps->clear();
+  _my_sps->Clear();
   exodus_prev = 0;
 }
 
@@ -3461,12 +3461,12 @@ unsigned int n_found = 0;
 // MPSTOList here
 std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 {
-  if (!sdb) return "";
+  if (!pdb) return "";
   string mySTOReceipts = "";
 
   Slice skey, svalue;
   readoptions.fill_cache = false;
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = pdb->NewIterator(readoptions);
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3497,7 +3497,7 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 
 void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee)
 {
-  if (!sdb) return;
+  if (!pdb) return;
 
   bool filter = true; //default
   bool filterByWallet = true; //default
@@ -3515,7 +3515,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
 
   Slice skey, svalue;
   readoptions.fill_cache = false;
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = pdb->NewIterator(readoptions);
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3581,10 +3581,10 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
 
 bool CMPSTOList::exists(string address)
 {
-  if (!sdb) return false;
+  if (!pdb) return false;
 
   string strValue;
-  Status status = sdb->Get(readoptions, address, &strValue);
+  Status status = pdb->Get(readoptions, address, &strValue);
 
   if (!status.ok())
   {
@@ -3596,7 +3596,7 @@ bool CMPSTOList::exists(string address)
 
 void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBlock, unsigned int propertyId, uint64_t amount)
 {
-  if (!sdb) return;
+  if (!pdb) return;
 
   bool addressExists = s_stolistdb->exists(address);
   if (addressExists)
@@ -3604,7 +3604,7 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       //retrieve existing record
       std::vector<std::string> vstr;
       string strValue;
-      Status status = sdb->Get(readoptions, address, &strValue);
+      Status status = pdb->Get(readoptions, address, &strValue);
       if (status.ok())
       {
           // add details to record
@@ -3617,9 +3617,9 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
           strValue += newValue;
           // write updated record
           Status status;
-          if (sdb)
+          if (pdb)
           {
-              status = sdb->Put(writeoptions, key, strValue);
+              status = pdb->Put(writeoptions, key, strValue);
               file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
           }
       }
@@ -3629,9 +3629,9 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       const string key = address;
       const string value = strprintf("%s:%d:%u:%lu,", txid.ToString(), nBlock, propertyId, amount);
       Status status;
-      if (sdb)
+      if (pdb)
       {
-          status = sdb->Put(writeoptions, key, value);
+          status = pdb->Put(writeoptions, key, value);
           file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
       }
   }
@@ -3644,7 +3644,7 @@ void CMPSTOList::printAll()
 
   readoptions.fill_cache = false;
 
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = pdb->NewIterator(readoptions);
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3659,7 +3659,7 @@ void CMPSTOList::printAll()
 
 void CMPSTOList::printStats()
 {
-  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", sWritten, sRead);
+  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 // delete any STO receipts after blockNum
@@ -3669,7 +3669,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
   unsigned int count = 0;
   std::vector<std::string> vstr;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = sdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3696,9 +3696,9 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
         const string key = address;
         // write updated record
         Status status;
-        if (sdb)
+        if (pdb)
         {
-            status = sdb->Put(writeoptions, key, newValue);
+            status = pdb->Put(writeoptions, key, newValue);
             file_log("DEBUG STO - rewriting STO data after reorg\n");
             file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
         }
@@ -3715,12 +3715,12 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
 // MPTradeList here
 bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, uint64_t *totalSold, uint64_t *totalBought)
 {
-  if (!tdb) return false;
+  if (!pdb) return false;
   leveldb::Slice skey, svalue;
   unsigned int count = 0;
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
-  leveldb::Iterator* it = tdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3805,14 +3805,14 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
 
 void CMPTradeList::recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum)
 {
-  if (!tdb) return;
+  if (!pdb) return;
   const string key = txid1.ToString() + "+" + txid2.ToString();
   const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum);
   Status status;
-  if (tdb)
+  if (pdb)
   {
-    status = tdb->Put(writeoptions, key, value);
-    ++tWritten;
+    status = pdb->Put(writeoptions, key, value);
+    ++nWritten;
     if (msc_debug_tradedb) file_log("%s(): %s\n", __FUNCTION__, status.ToString().c_str());
   }
 }
@@ -3825,7 +3825,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
   std::vector<std::string> vstr;
   int block;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = tdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3842,7 +3842,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
       {
         ++n_found;
         file_log("%s() DELETING FROM TRADEDB: %s=%s\n", __FUNCTION__, skey.ToString().c_str(), svalue.ToString().c_str());
-        tdb->Delete(writeoptions, skey);
+        pdb->Delete(writeoptions, skey);
       }
     }
   }
@@ -3856,7 +3856,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
 
 void CMPTradeList::printStats()
 {
-  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", tWritten, tRead);
+  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 int CMPTradeList::getMPTradeCountTotal()
@@ -3864,7 +3864,7 @@ int CMPTradeList::getMPTradeCountTotal()
     int count = 0;
     Slice skey, svalue;
     readoptions.fill_cache = false;
-    Iterator* it = tdb->NewIterator(readoptions);
+    Iterator* it = pdb->NewIterator(readoptions);
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         ++count;
@@ -3880,7 +3880,7 @@ void CMPTradeList::printAll()
 
   readoptions.fill_cache = false;
 
-  Iterator* it = tdb->NewIterator(readoptions);
+  Iterator* it = pdb->NewIterator(readoptions);
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {

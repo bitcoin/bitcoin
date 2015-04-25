@@ -63,11 +63,11 @@ unsigned int CMPSPInfo::updateSP(unsigned int propertyID, Entry const &info)
     writeOptions.sync = true;
 
     // if a value exists move it to the old key
-    if (false == pDb->Get(readOpts, spKey, &spPrevValue).IsNotFound()) {
+    if (false == pdb->Get(readOpts, spKey, &spPrevValue).IsNotFound()) {
       commitBatch.Put(spPrevKey, spPrevValue);
     }
     commitBatch.Put(spKey, spValue);
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(writeOptions, &commitBatch);
 
     file_log("Updated LevelDB with SP data successfully\n");
     return res;
@@ -100,9 +100,9 @@ unsigned int CMPSPInfo::putSP(unsigned char ecosystem, Entry const &info)
     string existingEntry;
     leveldb::ReadOptions readOpts;
     readOpts.fill_cache = true;
-    if (false == pDb->Get(readOpts, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
+    if (false == pdb->Get(readOpts, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
       file_log("%s WRITING SP %d TO LEVELDB WHEN A DIFFERENT SP ALREADY EXISTS FOR THAT ID!!!\n", __FUNCTION__, res);
-    } else if (false == pDb->Get(readOpts, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
+    } else if (false == pdb->Get(readOpts, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
       file_log("%s WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!\n", __FUNCTION__, info.txid.ToString().c_str(), res);
     }
 
@@ -114,7 +114,7 @@ unsigned int CMPSPInfo::putSP(unsigned char ecosystem, Entry const &info)
     commitBatch.Put(spKey, spValue);
     commitBatch.Put(txIndexKey, txValue);
 
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(writeOptions, &commitBatch);
     return res;
 }
 
@@ -135,7 +135,7 @@ bool CMPSPInfo::getSP(unsigned int spid, Entry &info)
 
     string spKey = (boost::format(FORMAT_BOOST_SPKEY) % spid).str();
     string spInfoStr;
-    if (false == pDb->Get(readOpts, spKey, &spInfoStr).ok()) {
+    if (false == pdb->Get(readOpts, spKey, &spInfoStr).ok()) {
       return false;
     }
 
@@ -162,7 +162,7 @@ bool CMPSPInfo::hasSP(unsigned int spid)
     readOpts.fill_cache = true;
 
     string spKey = (boost::format(FORMAT_BOOST_SPKEY) % spid).str();
-    leveldb::Iterator *iter = pDb->NewIterator(readOpts);
+    leveldb::Iterator *iter = pdb->NewIterator(readOpts);
     iter->Seek(spKey);
     bool res = (iter->Valid() && iter->key().compare(spKey) == 0);
     // clean up the iterator
@@ -179,7 +179,7 @@ unsigned int CMPSPInfo::findSPByTX(uint256 const &txid)
 
     string txIndexKey = (boost::format(FORMAT_BOOST_TXINDEXKEY) % txid.ToString() ).str();
     string spidStr;
-    if (pDb->Get(readOpts, txIndexKey, &spidStr).ok()) {
+    if (pdb->Get(readOpts, txIndexKey, &spidStr).ok()) {
       res = boost::lexical_cast<unsigned int>(spidStr);
     }
 
@@ -194,7 +194,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
 
     leveldb::ReadOptions readOpts;
     readOpts.fill_cache = false;
-    leveldb::Iterator *iter = pDb->NewIterator(readOpts);
+    leveldb::Iterator *iter = pdb->NewIterator(readOpts);
     for (iter->Seek("sp-"); iter->Valid() && iter->key().starts_with("sp-"); iter->Next()) {
       // parse the encoded json, failing if it doesnt parse or is an object
       Value spInfoVal;
@@ -217,7 +217,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
             string spPrevKey = (boost::format("blk-%s:sp-%d") % info.update_block.ToString() % propertyID).str();
             string spPrevValue;
 
-            if (false == pDb->Get(readOpts, spPrevKey, &spPrevValue).IsNotFound()) {
+            if (false == pdb->Get(readOpts, spPrevKey, &spPrevValue).IsNotFound()) {
               // copy the prev state to the current state and delete the old state
               commitBatch.Put(iter->key(), spPrevValue);
               commitBatch.Delete(spPrevKey);
@@ -242,7 +242,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
     leveldb::WriteOptions writeOptions;
     writeOptions.sync = true;
 
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(writeOptions, &commitBatch);
 
     if (res < 0) {
       return res;
