@@ -42,8 +42,9 @@ using std::endl;
 using std::ofstream;
 using std::string;
 
-
-class CMPSPInfo
+/** LevelDB based storage for currencies, smart properties and tokens.
+ */
+class CMPSPInfo : public CDBBase
 {
 public:
   struct Entry {
@@ -259,9 +260,6 @@ public:
   };
 
 private:
-  leveldb::DB *pdb;
-  boost::filesystem::path const path;
-
   // implied version of msc and tmsc so they don't hit the leveldb
   Entry implied_msc;
   Entry implied_tmsc;
@@ -269,29 +267,10 @@ private:
   unsigned int next_spid;
   unsigned int next_test_spid;
 
-  leveldb::Status Open() {
-    leveldb::Options options;
-    options.paranoid_checks = true;
-    options.create_if_missing = true;
-
-    leveldb::Status s = leveldb::DB::Open(options, path.string(), &pdb);
-
-     if (false == s.ok()) {
-       PrintToConsole("Failed to create or read LevelDB for Smart Property at %s", path.string());
-     }
-     return s;
-  }
-
-  void Close() {
-    delete pdb;
-    pdb = NULL;
-  }
-
 public:
-  CMPSPInfo(const boost::filesystem::path &_path)
-    : path(_path)
+  CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
   {
-    leveldb::Status status = Open();
+    leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
     // special cases for constant SPs MSC and TMSC
@@ -315,22 +294,15 @@ public:
     init();
   }
 
-  ~CMPSPInfo()
+  virtual ~CMPSPInfo()
   {
-    Close();
+    PrintToConsole("CMPSPInfo destroyed\n");
   }
 
   void init(unsigned int nextSPID = 0x3UL, unsigned int nextTestSPID = TEST_ECO_PROPERTY_1)
   {
     next_spid = nextSPID;
     next_test_spid = nextTestSPID;
-  }
-
-  void Clear() {
-    Close();
-    leveldb::DestroyDB(path.string(), leveldb::Options());
-    Open();
-    init();
   }
 
   unsigned int peekNextSPID(unsigned char ecosystem)

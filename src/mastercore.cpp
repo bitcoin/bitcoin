@@ -2331,13 +2331,25 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   return 0;
 }
 
-static void clear_all_state() {
-  mp_tally_map.clear();
-  my_offers.clear();
-  my_accepts.clear();
-  my_crowds.clear();
-  _my_sps->Clear();
-  exodus_prev = 0;
+/**
+ * Clears the state of the system.
+ */
+static void clear_all_state()
+{
+    // Memory based storage
+    mp_tally_map.clear();
+    my_offers.clear();
+    my_accepts.clear();
+    my_crowds.clear();
+    metadex.clear();
+
+    // LevelDB based storage
+    _my_sps->Clear();
+    p_txlistdb->Clear();
+    s_stolistdb->Clear();
+    t_tradelistdb->Clear();
+
+    exodus_prev = 0;
 }
 
 /**
@@ -2392,11 +2404,19 @@ int mastercore_init()
           PrintToConsole("Exception deleting folders for --startclean option.\n");
       }
   }
+  
+  // TODO: the databases should be wiped, when reindexing, but currently,
+  // due to the block disconnect handlers, this results in different state,
+  // which is not correct. Util this is resolved, the original behavior is
+  // mirrored.
+  //
+  // See discussion: https://github.com/OmniLayer/omnicore/pull/25
 
-  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", 1<<20, false, fReindex);
-  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", 1<<20, false, fReindex);
-  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", 1<<20, false, fReindex);
-  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo");
+  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", false);
+  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", false);
+  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", false);
+  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
+
   MPPersistencePath = GetDataDir() / "MP_persist";
   boost::filesystem::create_directories(MPPersistencePath);
 
