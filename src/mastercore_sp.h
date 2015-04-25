@@ -7,12 +7,12 @@
 
 class CBlockIndex;
 
+#include "tinyformat.h"
 #include "uint256.h"
 #include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <openssl/sha.h>
@@ -39,8 +39,6 @@ using json_spirit::Value;
 using json_spirit::read_string;
 using json_spirit::obj_type;
 
-using std::endl;
-using std::ofstream;
 using std::string;
 
 /** LevelDB based storage for currencies, smart properties and tokens.
@@ -126,18 +124,18 @@ public:
       spInfo.push_back(Pair("fixed", fixed));
       spInfo.push_back(Pair("manual", manual));
 
-      spInfo.push_back(Pair("num_tokens", (boost::format("%d") % num_tokens).str()));
+      spInfo.push_back(Pair("num_tokens", strprintf("%d", num_tokens)));
       if (false == fixed && false == manual) {
         spInfo.push_back(Pair("property_desired", (uint64_t)property_desired));
-        spInfo.push_back(Pair("deadline", (boost::format("%d") % deadline).str()));
+        spInfo.push_back(Pair("deadline", strprintf("%d", deadline)));
         spInfo.push_back(Pair("early_bird", (int)early_bird));
         spInfo.push_back(Pair("percentage", (int)percentage));
 
         spInfo.push_back(Pair("close_early", (int)close_early));
         spInfo.push_back(Pair("max_tokens", (int)max_tokens));
         spInfo.push_back(Pair("missedTokens", (int) missedTokens));
-        spInfo.push_back(Pair("timeclosed", (boost::format("%d") % timeclosed).str()));
-        spInfo.push_back(Pair("txid_close", (boost::format("%s") % txid_close.ToString()).str()));
+        spInfo.push_back(Pair("timeclosed", strprintf("%d", timeclosed)));
+        spInfo.push_back(Pair("txid_close", txid_close.ToString()));
       }
 
       //Initialize values
@@ -164,9 +162,9 @@ public:
       }
 
       spInfo.push_back(Pair("historicalData", values_long));
-      spInfo.push_back(Pair("txid", (boost::format("%s") % txid.ToString()).str()));
-      spInfo.push_back(Pair("creation_block", (boost::format("%s") % creation_block.ToString()).str()));
-      spInfo.push_back(Pair("update_block", (boost::format("%s") % update_block.ToString()).str()));
+      spInfo.push_back(Pair("txid", txid.ToString()));
+      spInfo.push_back(Pair("creation_block", creation_block.ToString()));
+      spInfo.push_back(Pair("update_block", update_block.ToString()));
       return spInfo;
     }
 
@@ -435,31 +433,31 @@ public:
   void insertDatabase(std::string txhash, std::vector<uint64_t> txdata ) { txFundraiserData.insert(std::make_pair<std::string, std::vector<uint64_t>& >(txhash,txdata)); }
   std::map<std::string, std::vector<uint64_t> > getDatabase() const { return txFundraiserData; }
 
-  void print(const string & address, FILE *fp = stdout) const
+  void print(const std::string& address, FILE *fp = stdout) const
   {
     fprintf(fp, "%34s : id=%u=%X; prop=%u, value= %lu, deadline: %s (%lX)\n", address.c_str(), propertyId, propertyId,
      property_desired, nValue, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline).c_str(), deadline);
   }
 
-  void saveCrowdSale(ofstream &file, SHA256_CTX *shaCtx, string const &addr) const
+  void saveCrowdSale(std::ofstream &file, SHA256_CTX *shaCtx, std::string const &addr) const
   {
     // compose the outputline
     // addr,propertyId,nValue,property_desired,deadline,early_bird,percentage,created,mined
-    string lineOut = (boost::format("%s,%d,%d,%d,%d,%d,%d,%d,%d")
-      % addr
-      % propertyId
-      % nValue
-      % property_desired
-      % deadline
-      % (int)early_bird
-      % (int)percentage
-      % u_created
-      % i_created ).str();
+    std::string lineOut = strprintf("%s,%d,%d,%d,%d,%d,%d,%d,%d",
+      addr,
+      propertyId,
+      nValue,
+      property_desired,
+      deadline,
+      (int)early_bird,
+      (int)percentage,
+      u_created,
+      i_created);
 
     // append N pairs of address=nValue;blockTime for the database
     std::map<std::string, std::vector<uint64_t> >::const_iterator iter;
     for (iter = txFundraiserData.begin(); iter != txFundraiserData.end(); ++iter) {
-      lineOut.append((boost::format(",%s=") % (*iter).first).str());
+      lineOut.append(strprintf(",%s=", (*iter).first));
       std::vector<uint64_t> const &vals = (*iter).second;
 
       std::vector<uint64_t>::const_iterator valIter;
@@ -468,7 +466,7 @@ public:
           lineOut.append(";");
         }
 
-        lineOut.append((boost::format("%d") % (*valIter)).str());
+        lineOut.append(strprintf("%d", *valIter));
       }
     }
 
@@ -476,7 +474,7 @@ public:
     SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
 
     // write the line
-    file << lineOut << endl;
+    file << lineOut << std::endl;
   }
 };  // end of CMPCrowd class
 

@@ -46,7 +46,6 @@
 #include <boost/exception/to_string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -355,7 +354,7 @@ CMPPending pending;
 }
 
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
-std::map<string, CMPTally> mastercore::mp_tally_map;
+std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally *mastercore::getTally(const string & address)
 {
@@ -2040,8 +2039,9 @@ static int load_most_relevant_state()
     if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
-        const string filename = (MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % curTip->GetBlockHash().ToString()).str().c_str()).string();
-        success = msc_file_load(filename, i, true);
+        boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
+        const std::string strFile = path.string();
+        success = msc_file_load(strFile, i, true);
         if (success < 0) {
           break;
         }
@@ -2103,13 +2103,12 @@ static int write_msc_balances(ofstream &file, SHA256_CTX *shaCtx)
 
       emptyWallet = false;
 
-      lineOut.append((boost::format("%d:%d,%d,%d,%d;")
-          % prop
-          % balance
-          % sellReserved
-          % acceptReserved
-          % metadexReserve).str());
-
+      lineOut.append(strprintf("%d:%d,%d,%d,%d;",
+          prop,
+          balance,
+          sellReserved,
+          acceptReserved,
+          metadexReserve));
     }
 
     if (false == emptyWallet) {
@@ -2176,11 +2175,10 @@ static int write_globals_state(ofstream &file, SHA256_CTX *shaCtx)
 {
   unsigned int nextSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_MSC);
   unsigned int nextTestSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_TMSC);
-  string lineOut = (boost::format("%d,%d,%d")
-    % exodus_prev
-    % nextSPID
-    % nextTestSPID
-    ).str();
+  std::string lineOut = strprintf("%d,%d,%d",
+    exodus_prev,
+    nextSPID,
+    nextTestSPID);
 
   // add the line to the hash
   SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
@@ -2205,10 +2203,11 @@ static int write_mp_crowdsales(ofstream &file, SHA256_CTX *shaCtx)
 
 static int write_state_file( CBlockIndex const *pBlockIndex, int what )
 {
-  const char *blockHash = pBlockIndex->GetBlockHash().ToString().c_str();
-  boost::filesystem::path balancePath = MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[what] % blockHash).str();
-  ofstream file;
-  file.open(balancePath.string().c_str());
+  boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
+  const std::string strFile = path.string();
+
+  std::ofstream file;
+  file.open(strFile.c_str());
 
   SHA256_CTX shaCtx;
   SHA256_Init(&shaCtx);
@@ -2307,9 +2306,10 @@ static void prune_state_files( CBlockIndex const *topIndex )
      }
 
       // destroy the associated files!
-      const char *blockHashStr = (*iter).ToString().c_str();
+      std::string strBlockHash = iter->ToString();
       for (int i = 0; i < NUM_FILETYPES; ++i) {
-        boost::filesystem::remove(MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % blockHashStr).str());
+        boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
+        boost::filesystem::remove(path);
       }
     }
   }
@@ -2419,7 +2419,7 @@ int mastercore_init()
   _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
 
   MPPersistencePath = GetDataDir() / "MP_persist";
-  boost::filesystem::create_directories(MPPersistencePath);
+  TryCreateDirectory(MPPersistencePath);
 
   // legacy code, setting to pre-genesis-block
   static int snapshotHeight = (GENESIS_BLOCK - 1);
@@ -4509,13 +4509,13 @@ int rc = PKT_ERROR_STO -1000;
 
       totalTokens = 0;
 
-      typedef std::set<pair<int64_t, string>, SendToOwners_compare> OwnerAddrType;
+      typedef std::set<std::pair<int64_t, std::string>, SendToOwners_compare> OwnerAddrType;
       OwnerAddrType OwnerAddrSet;
 
       {
-        for(map<string, CMPTally>::reverse_iterator my_it = mp_tally_map.rbegin(); my_it != mp_tally_map.rend(); ++my_it)
+        for (std::map<std::string, CMPTally>::reverse_iterator my_it = mp_tally_map.rbegin(); my_it != mp_tally_map.rend(); ++my_it)
         {
-          const string address = (my_it->first).c_str();
+          const std::string address = my_it->first;
 
           // do not count the sender
           if (address == sender) continue;
@@ -4529,7 +4529,7 @@ int rc = PKT_ERROR_STO -1000;
 
           if (tokens)
           {
-            OwnerAddrSet.insert(make_pair(tokens, address));
+            OwnerAddrSet.insert(std::make_pair(tokens, address));
             totalTokens += tokens;
           }
         }
@@ -4547,11 +4547,11 @@ int rc = PKT_ERROR_STO -1000;
     { // two-iteration loop START
       // split up what was taken and distribute between all holders
       uint64_t sent_so_far = 0;
-      for(OwnerAddrType::reverse_iterator my_it = OwnerAddrSet.rbegin(); my_it != OwnerAddrSet.rend(); ++my_it)
+      for (OwnerAddrType::reverse_iterator my_it = OwnerAddrSet.rbegin(); my_it != OwnerAddrSet.rend(); ++my_it)
       { // owners loop
-      const string address = my_it->second;
+        const std::string address = my_it->second;
 
-        int128_t owns = my_it->first;
+        int128_t owns = int128_t(my_it->first);
         int128_t temp = owns * int128_t(nValue);
         int128_t piece = 1 + ((temp - 1) / int128_t(totalTokens));
 
