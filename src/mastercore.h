@@ -18,6 +18,7 @@ class CTransaction;
 #include <boost/filesystem/path.hpp>
 
 #include "leveldb/db.h"
+#include "leveldb/write_batch.h"
 
 #include "json/json_spirit_value.h"
 
@@ -273,6 +274,104 @@ public:
 
     return ret64;
   }
+};
+
+/** Base class for LevelDB based storage.
+ */
+class CDBBase
+{
+protected:
+    //! Database options used
+    leveldb::Options options;
+
+    //! Options used when reading from the database
+    leveldb::ReadOptions readoptions;
+
+    //! Options used when iterating over values of the database
+    leveldb::ReadOptions iteroptions;
+
+    //! Options used when writing to the database
+    leveldb::WriteOptions writeoptions;
+
+    //! Options used when sync writing to the database
+    leveldb::WriteOptions syncoptions;
+
+    //! The database itself
+    leveldb::DB* pdb;
+
+    //! Number of entries read
+    unsigned int nRead;
+
+    //! Number of entries written
+    unsigned int nWritten;
+
+    CDBBase() : nRead(0), nWritten(0)
+    {
+        options.paranoid_checks = true;
+        options.create_if_missing = true;
+        options.compression = leveldb::kNoCompression;
+        options.max_open_files = 64;
+        readoptions.verify_checksums = true;
+        iteroptions.verify_checksums = true;
+        iteroptions.fill_cache = false;
+        syncoptions.sync = true;
+        PrintToConsole("CDBBase created\n");
+    }
+
+    virtual ~CDBBase()
+    {
+        Close();
+        PrintToConsole("CDBBase destroyed\n");
+    }
+
+    leveldb::Iterator* NewIterator()
+    {
+        return pdb->NewIterator(iteroptions);
+    }
+
+    leveldb::Status Open(const boost::filesystem::path& path, bool fWipe = false)
+    {
+        if (fWipe) {
+            PrintToConsole("Wiping LevelDB in %s\n", path.string());
+            leveldb::DestroyDB(path.string(), options);
+        }
+        TryCreateDirectory(path);
+        PrintToConsole("Opening LevelDB in %s\n", path.string());
+        return leveldb::DB::Open(options, path.string(), &pdb);
+    }
+
+public:
+    void Clear()
+    {
+        int64_t nTimeStart = GetTimeMicros();
+        unsigned int n = 0;
+        leveldb::WriteBatch batch;
+        leveldb::Iterator* it = NewIterator();
+
+        for (it->SeekToFirst(); it->Valid(); it->Next()) {
+            batch.Delete(it->key());
+            ++n;
+        }
+
+        delete it;
+
+        leveldb::Status status = pdb->Write(writeoptions, &batch);
+        nRead = 0;
+        nWritten = 0;
+
+        int64_t nTime = GetTimeMicros() - nTimeStart;
+        PrintToConsole("Removed %d entries: %s [%.3f ms/entry, %.3f ms total]\n",
+                n, status.ToString(), (n > 0 ? (0.001 * nTime / n) : 0), 0.001 * nTime);
+    }
+
+    void Close()
+    {
+        if (pdb) {
+            delete pdb;
+            pdb = NULL;
+        }
+        PrintToConsole("CDBBase closed\n");
+    }
 };
 
 /* leveldb-based storage for sto recipients */
