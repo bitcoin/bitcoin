@@ -788,8 +788,7 @@ QString loadStyleSheet()
         settings.setValue("theme", "drkblue");
     }
     
-//    QFile qFile(cssName);      
-    QFile qFile("drkblue.css");
+    QFile qFile(cssName);      
     if (qFile.open(QFile::ReadOnly)) {
         styleSheet = QLatin1String(qFile.readAll());
     }
