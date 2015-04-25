@@ -335,21 +335,16 @@ public:
   static string const watermarkKey;
   void setWatermark(uint256 const &watermark)
   {
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
-
     leveldb::WriteBatch commitBatch;
     commitBatch.Delete(watermarkKey);
     commitBatch.Put(watermarkKey, watermark.ToString());
-    pdb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
   }
 
   int getWatermark(uint256 &watermark)
   {
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = false;
     string watermarkVal;
-    if (pdb->Get(readOpts, watermarkKey, &watermarkVal).ok()) {
+    if (pdb->Get(readoptions, watermarkKey, &watermarkVal).ok()) {
       watermark.SetHex(watermarkVal);
       return 0;
     } else {
@@ -370,9 +365,7 @@ public:
       }
     }
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = false;
-    leveldb::Iterator *iter = pdb->NewIterator(readOpts);
+    leveldb::Iterator *iter = NewIterator();
     for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
       if (iter->key().starts_with("sp-")) {
         std::vector<std::string> vstr;

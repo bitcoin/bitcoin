@@ -3030,8 +3030,7 @@ int CMPTxList::setLastAlert(int blockHeight)
     if (blockHeight > chainActive.Height()) blockHeight = chainActive.Height();
     if (!pdb) return 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     string lastAlertTxid;
     string lastAlertData;
     string itData;
@@ -3111,9 +3110,8 @@ uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
   Slice skey, svalue;
-  readoptions.fill_cache = false;
   uint256 cancelTxid;
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3175,8 +3173,7 @@ int CMPTxList::getMPTransactionCountTotal()
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         skey = it->key();
@@ -3190,8 +3187,7 @@ int CMPTxList::getMPTransactionCountBlock(int block)
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         skey = it->key();
@@ -3416,10 +3412,7 @@ void CMPTxList::printAll()
 {
 int count = 0;
 Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3443,7 +3436,7 @@ std::vector<std::string> vstr;
 int block;
 unsigned int n_found = 0;
 
-  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3485,8 +3478,7 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
   string mySTOReceipts = "";
 
   Slice skey, svalue;
-  readoptions.fill_cache = false;
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3534,8 +3526,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
   *stoFee = 0;
 
   Slice skey, svalue;
-  readoptions.fill_cache = false;
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3661,10 +3652,7 @@ void CMPSTOList::printAll()
 {
   int count = 0;
   Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3689,7 +3677,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
   unsigned int count = 0;
   std::vector<std::string> vstr;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3740,7 +3728,7 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
   unsigned int count = 0;
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
-  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3845,7 +3833,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
   std::vector<std::string> vstr;
   int block;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3883,8 +3871,7 @@ int CMPTradeList::getMPTradeCountTotal()
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         ++count;
@@ -3897,10 +3884,7 @@ void CMPTradeList::printAll()
 {
   int count = 0;
   Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {

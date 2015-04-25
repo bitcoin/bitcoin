@@ -56,18 +56,13 @@ unsigned int CMPSPInfo::updateSP(unsigned int propertyID, Entry const &info)
     string spPrevValue;
 
     leveldb::WriteBatch commitBatch;
-    
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = false;
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
 
     // if a value exists move it to the old key
-    if (false == pdb->Get(readOpts, spKey, &spPrevValue).IsNotFound()) {
+    if (false == pdb->Get(readoptions, spKey, &spPrevValue).IsNotFound()) {
       commitBatch.Put(spPrevKey, spPrevValue);
     }
     commitBatch.Put(spKey, spValue);
-    pdb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
 
     file_log("Updated LevelDB with SP data successfully\n");
     return res;
@@ -98,23 +93,18 @@ unsigned int CMPSPInfo::putSP(unsigned char ecosystem, Entry const &info)
 
     // sanity checking
     string existingEntry;
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
-    if (false == pdb->Get(readOpts, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
+    if (false == pdb->Get(readoptions, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
       file_log("%s WRITING SP %d TO LEVELDB WHEN A DIFFERENT SP ALREADY EXISTS FOR THAT ID!!!\n", __FUNCTION__, res);
-    } else if (false == pdb->Get(readOpts, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
+    } else if (false == pdb->Get(readoptions, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
       file_log("%s WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!\n", __FUNCTION__, info.txid.ToString().c_str(), res);
     }
 
     // atomically write both the the SP and the index to the database
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
-
     leveldb::WriteBatch commitBatch;
     commitBatch.Put(spKey, spValue);
     commitBatch.Put(txIndexKey, txValue);
 
-    pdb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
     return res;
 }
 
@@ -130,12 +120,9 @@ bool CMPSPInfo::getSP(unsigned int spid, Entry &info)
       return true;
     }
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
-
     string spKey = (boost::format(FORMAT_BOOST_SPKEY) % spid).str();
     string spInfoStr;
-    if (false == pdb->Get(readOpts, spKey, &spInfoStr).ok()) {
+    if (false == pdb->Get(readoptions, spKey, &spInfoStr).ok()) {
       return false;
     }
 
@@ -158,11 +145,8 @@ bool CMPSPInfo::hasSP(unsigned int spid)
       return true;
     }
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
-
     string spKey = (boost::format(FORMAT_BOOST_SPKEY) % spid).str();
-    leveldb::Iterator *iter = pdb->NewIterator(readOpts);
+    leveldb::Iterator *iter = pdb->NewIterator(readoptions);
     iter->Seek(spKey);
     bool res = (iter->Valid() && iter->key().compare(spKey) == 0);
     // clean up the iterator
@@ -174,12 +158,10 @@ bool CMPSPInfo::hasSP(unsigned int spid)
 unsigned int CMPSPInfo::findSPByTX(uint256 const &txid)
 {
     unsigned int res = 0;
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
 
     string txIndexKey = (boost::format(FORMAT_BOOST_TXINDEXKEY) % txid.ToString() ).str();
     string spidStr;
-    if (pdb->Get(readOpts, txIndexKey, &spidStr).ok()) {
+    if (pdb->Get(readoptions, txIndexKey, &spidStr).ok()) {
       res = boost::lexical_cast<unsigned int>(spidStr);
     }
 
@@ -192,9 +174,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
     int remainingSPs = 0;
     leveldb::WriteBatch commitBatch;
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = false;
-    leveldb::Iterator *iter = pdb->NewIterator(readOpts);
+    leveldb::Iterator *iter = NewIterator();
     for (iter->Seek("sp-"); iter->Valid() && iter->key().starts_with("sp-"); iter->Next()) {
       // parse the encoded json, failing if it doesnt parse or is an object
       Value spInfoVal;
@@ -217,7 +197,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
             string spPrevKey = (boost::format("blk-%s:sp-%d") % info.update_block.ToString() % propertyID).str();
             string spPrevValue;
 
-            if (false == pdb->Get(readOpts, spPrevKey, &spPrevValue).IsNotFound()) {
+            if (false == pdb->Get(readoptions, spPrevKey, &spPrevValue).IsNotFound()) {
               // copy the prev state to the current state and delete the old state
               commitBatch.Put(iter->key(), spPrevValue);
               commitBatch.Delete(spPrevKey);
@@ -239,10 +219,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
     // clean up the iterator
     delete iter;
 
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
-
-    pdb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
 
     if (res < 0) {
       return res;

@@ -280,15 +280,16 @@ public:
  */
 class CDBBase
 {
+private:
+    //! Options used when iterating over values of the database
+    leveldb::ReadOptions iteroptions;
+
 protected:
     //! Database options used
     leveldb::Options options;
 
     //! Options used when reading from the database
     leveldb::ReadOptions readoptions;
-
-    //! Options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
 
     //! Options used when writing to the database
     leveldb::WriteOptions writeoptions;
