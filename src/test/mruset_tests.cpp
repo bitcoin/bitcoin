@@ -17,82 +17,64 @@
 
 using namespace std;
 
-class mrutester
-{
-private:
-    mruset<int> mru;
-    std::set<int> set;
-
-public:
-    mrutester() : mru(MAX_SIZE) {}
-    int size() const { return set.size(); }
-
-    void insert(int n)
-    {
-        mru.insert(n);
-        set.insert(n);
-        BOOST_CHECK(mru == set);
-    }
-};
-
 BOOST_FIXTURE_TEST_SUITE(mruset_tests, BasicTestingSetup)
 
-// Test that an mruset behaves like a set, as long as no more than MAX_SIZE elements are in it
-BOOST_AUTO_TEST_CASE(mruset_like_set)
+BOOST_AUTO_TEST_CASE(mruset_test)
 {
+    // The mruset being tested.
+    mruset<int> mru(5000);
 
-    for (int nTest=0; nTest<NUM_TESTS; nTest++)
-    {
-        mrutester tester;
-        while (tester.size() < MAX_SIZE)
-            tester.insert(GetRandInt(2 * MAX_SIZE));
-    }
+    // Run the test 10 times.
+    for (int test = 0; test < 10; test++) {
+        // Reset mru.
+        mru.clear();
 
-}
+        // A deque + set to simulate the mruset.
+        std::deque<int> rep;
+        std::set<int> all;
 
-// Test that an mruset's size never exceeds its max_size
-BOOST_AUTO_TEST_CASE(mruset_limited_size)
-{
-    for (int nTest=0; nTest<NUM_TESTS; nTest++)
-    {
-        mruset<int> mru(MAX_SIZE);
-        for (int nAction=0; nAction<3*MAX_SIZE; nAction++)
-        {
-            int n = GetRandInt(2 * MAX_SIZE);
-            mru.insert(n);
-            BOOST_CHECK(mru.size() <= MAX_SIZE);
+        // Insert 10000 random integers below 15000.
+        for (int j=0; j<10000; j++) {
+            int add = GetRandInt(15000);
+            mru.insert(add);
+
+            // Add the number to rep/all as well.
+            if (all.count(add) == 0) {
+               all.insert(add);
+               rep.push_back(add);
+               if (all.size() == 5001) {
+                   all.erase(rep.front());
+                   rep.pop_front();
+               }
+            }
+
+            // Do a full comparison between mru and the simulated mru every 1000 and every 5001 elements.
+            if (j % 1000 == 0 || j % 5001 == 0) {
+                mruset<int> mru2 = mru; // Also try making a copy
+
+                // Check that all elements that should be in there, are in there.
+                BOOST_FOREACH(int x, rep) {
+                    BOOST_CHECK(mru.count(x));
+                    BOOST_CHECK(mru2.count(x));
+                }
+
+                // Check that all elements that are in there, should be in there.
+                BOOST_FOREACH(int x, mru) {
+                    BOOST_CHECK(all.count(x));
+                }
+
+                // Check that all elements that are in there, should be in there.
+                BOOST_FOREACH(int x, mru2) {
+                    BOOST_CHECK(all.count(x));
+                }
+
+                for (int t = 0; t < 10; t++) {
+                    int r = GetRandInt(15000);
+                    BOOST_CHECK(all.count(r) == mru.count(r));
+                    BOOST_CHECK(all.count(r) == mru2.count(r));
+                }
+            }
         }
-    }
-}
-
-// 16-bit permutation function
-int static permute(int n)
-{
-    // hexadecimals of pi; verified to be linearly independent
-    static const int table[16] = {0x243F, 0x6A88, 0x85A3, 0x08D3, 0x1319, 0x8A2E, 0x0370, 0x7344,
-                                  0xA409, 0x3822, 0x299F, 0x31D0, 0x082E, 0xFA98, 0xEC4E, 0x6C89};
-
-    int ret = 0;
-    for (int bit=0; bit<16; bit++)
-         if (n & (1<<bit))
-             ret ^= table[bit];
-
-    return ret;
-}
-
-// Test that an mruset acts like a moving window, if no duplicate elements are added
-BOOST_AUTO_TEST_CASE(mruset_window)
-{
-    mruset<int> mru(MAX_SIZE);
-    for (int n=0; n<10*MAX_SIZE; n++)
-    {
-        mru.insert(permute(n));
-
-        set<int> tester;
-        for (int m=max(0,n-MAX_SIZE+1); m<=n; m++)
-            tester.insert(permute(m));
-
-        BOOST_CHECK(mru == tester);
     }
 }
 
