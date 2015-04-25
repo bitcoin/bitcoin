@@ -24,7 +24,7 @@ private:
     std::set<int> set;
 
 public:
-    mrutester() { mru.max_size(MAX_SIZE); }
+    mrutester() : mru(MAX_SIZE) {}
     int size() const { return set.size(); }
 
     void insert(int n)
