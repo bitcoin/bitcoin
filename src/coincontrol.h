@@ -12,6 +12,8 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
+    //! If false, allows unselected inputs, but requires all selected inputs be used
+    bool fAllowOtherInputs;
 
     CCoinControl()
     {
@@ -21,6 +23,7 @@ public:
     void SetNull()
     {
         destChange = CNoDestination();
+        fAllowOtherInputs = false;
         setSelected.clear();
     }
 
@@ -50,7 +53,7 @@ public:
         setSelected.clear();
     }
 
-    void ListSelected(std::vector<COutPoint>& vOutpoints)
+    void ListSelected(std::vector<COutPoint>& vOutpoints) const
     {
         vOutpoints.assign(setSelected.begin(), setSelected.end());
     }
