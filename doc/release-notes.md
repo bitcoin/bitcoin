@@ -3,8 +3,7 @@ Bitcoin Core version 0.10.1 is now available from:
   <https://bitcoin.org/bin/bitcoin-core-0.10.1/>
 
 This is a new minor version release, bringing bug fixes and translation 
-updates. If you are using 0.10.0, it is recommended to upgrade to this
-version.
+updates. It is recommended to upgrade to this version.
 
 Please report bugs using the issue tracker at github:
 
@@ -109,7 +108,7 @@ Miscellaneous:
 Credits
 =======
 
-Thanks to everyone who contributed to this release:
+Thanks to everyone who directly contributed to this release:
 
 - Alex Morcos
 - Cory Fields
@@ -118,7 +117,6 @@ Thanks to everyone who contributed to this release:
 - Gavin Andresen
 - Gregory Maxwell
 - Ivan Pustogarov
-- Jonas Nick
 - Jonas Schnelli
 - Matt Corallo
 - mrbandrews
@@ -126,5 +124,20 @@ Thanks to everyone who contributed to this release:
 - Ruben de Vries
 - Suhas Daftuar
 - Wladimir J. van der Laan
+
+And all those who contributed additional code review and/or security research:
+- 21E14
+- Alison Kendler
+- Aviv Zohar
+- Ethan Heilman
+- Evil-Knievel
+- fanquake
+- Jeff Garzik
+- Jonas Nick
+- Luke Dashjr
+- Patrick Strateman
+- Philip Kaufmann
+- Sergio Demian Lerner
+- Sharon Goldberg
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
