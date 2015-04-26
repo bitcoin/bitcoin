@@ -480,13 +480,13 @@ void Bitcredit_ThreadImport()
             FILE *file = Bitcredit_OpenBlockFile(pos, true);
             if (!file)
                 break;
-            LogPrintf("Bitcredit: Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
+            LogPrintf("Credits: Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
             Bitcredit_LoadExternalBlockFile(file, &pos);
             nFile++;
         }
         bitcredit_pblocktree->WriteReindexing(false);
         bitcredit_mainState.fReindex = false;
-        LogPrintf("Bitcredit: Reindexing finished\n");
+        LogPrintf("Credits: Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         Bitcredit_InitBlockIndex();
     }
@@ -498,11 +498,11 @@ void Bitcredit_ThreadImport()
         if (file) {
             Bitcredit_CImportingNow imp;
             filesystem::path pathBootstrapOld = GetDataDir() / "bitcredit_bootstrap.dat.old";
-            LogPrintf("Bitcredit: Importing bitcredit_bootstrap.dat...\n");
+            LogPrintf("Credits: Importing bitcredit_bootstrap.dat...\n");
             Bitcredit_LoadExternalBlockFile(file);
             RenameOver(pathBootstrap, pathBootstrapOld);
         } else {
-            LogPrintf("Bitcredit: Warning: Could not open bitcredit_bootstrap.dat file %s\n", pathBootstrap.string());
+            LogPrintf("Credits: Warning: Could not open bitcredit_bootstrap.dat file %s\n", pathBootstrap.string());
         }
     }
 
@@ -511,10 +511,10 @@ void Bitcredit_ThreadImport()
         FILE *file = fopen(path.string().c_str(), "rb");
         if (file) {
             Bitcredit_CImportingNow imp;
-            LogPrintf("Bitcredit: Importing blocks file %s...\n", path.string());
+            LogPrintf("Credits: Importing blocks file %s...\n", path.string());
             Bitcredit_LoadExternalBlockFile(file);
         } else {
-            LogPrintf("Bitcredit: Warning: Could not open blocks file %s\n", path.string());
+            LogPrintf("Credits: Warning: Could not open blocks file %s\n", path.string());
         }
     }
 }
@@ -788,7 +788,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
         bool fReset = bitcredit_mainState.fReindex;
         std::string strLoadError;
 
-        uiInterface.InitMessage(_("Bitcredit: Loading block index..."));
+        uiInterface.InitMessage(_("Credits: Loading block index..."));
 
         nStart = GetTimeMillis();
         do {
@@ -806,39 +806,39 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                     bitcredit_pblocktree->WriteReindexing(true);
 
                 if (!Bitcredit_LoadBlockIndex()) {
-                    strLoadError = _("Bitcredit: Error loading block database");
+                    strLoadError = _("Credits: Error loading block database");
                     break;
                 }
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!bitcredit_mapBlockIndex.empty() && bitcredit_chainActive.Genesis() == NULL)
-                    return InitError(_("Bitcredit: Incorrect or no genesis block found. Wrong datadir for network?"));
+                    return InitError(_("Credits: Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 if (bitcredit_chainActive.Genesis() != NULL && bitcredit_chainActive.Genesis()->GetBlockHash() != Bitcredit_Params().GenesisBlock().GetHash())
-                    return InitError(_("Bitcredit: Genesis block not correct. Unable to start."));
+                    return InitError(_("Credits: Genesis block not correct. Unable to start."));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!Bitcredit_InitBlockIndex()) {
-                    strLoadError = _("Bitcredit: Error initializing block database");
+                    strLoadError = _("Credits: Error initializing block database");
                     break;
                 }
 
                 // Check for changed -txindex state
                 if (bitcredit_fTxIndex != GetBoolArg("-txindex", false)) {
-                    strLoadError = _("Bitcredit: You need to rebuild the database using -reindex to change -txindex");
+                    strLoadError = _("Credits: You need to rebuild the database using -reindex to change -txindex");
                     break;
                 }
 
-                uiInterface.InitMessage(_("Bitcredit: Verifying blocks..."));
+                uiInterface.InitMessage(_("Credits: Verifying blocks..."));
                 if (!Bitcredit_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
                               GetArg("-checkblocks", 288))) {
-                    strLoadError = _("Bitcredit: Corrupted block database detected");
+                    strLoadError = _("Credits: Corrupted block database detected");
                     break;
                 }
             } catch(std::exception &e) {
                 if (fDebug) LogPrintf("%s\n", e.what());
-                strLoadError = _("Bitcredit: Error opening block database");
+                strLoadError = _("Credits: Error opening block database");
                 break;
             }
 
@@ -849,13 +849,13 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeMessageBox(
-                    strLoadError + ".\n\n" + _("Bitcredit: Do you want to rebuild the block database now?"),
+                    strLoadError + ".\n\n" + _("Credits: Do you want to rebuild the block database now?"),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     bitcredit_mainState.fReindex = true;
                     fRequestShutdown = false;
                 } else {
-                    LogPrintf("Bitcredit: Aborted block database rebuild. Exiting.\n");
+                    LogPrintf("Credits: Aborted block database rebuild. Exiting.\n");
                     return false;
                 }
             } else {
@@ -1189,7 +1189,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #ifdef ENABLE_WALLET
     // Wallet file must be a plain filename without a directory
     if (bitcredit_strWalletFile != boost::filesystem::basename(bitcredit_strWalletFile) + boost::filesystem::extension(bitcredit_strWalletFile))
-        return InitError(strprintf(_("Bitcredit: Wallet %s resides outside data directory %s"), bitcredit_strWalletFile, strDataDir));
+        return InitError(strprintf(_("Credits: Wallet %s resides outside data directory %s"), bitcredit_strWalletFile, strDataDir));
 #endif
     // Make sure only a single Bitcoin process is using the data directory.
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
@@ -1334,8 +1334,8 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
 #ifdef ENABLE_WALLET
     if (!fDisableWallet) {
-        LogPrintf("Bitcredit: Using wallet %s\n", bitcredit_strWalletFile);
-        uiInterface.InitMessage(_("Bitcredit: Verifying wallet..."));
+        LogPrintf("Credits: Using wallet %s\n", bitcredit_strWalletFile);
+        uiInterface.InitMessage(_("Credits: Verifying wallet..."));
 
         if (!bitcredit_bitdb.Open(GetDataDir()))
         {
@@ -1344,7 +1344,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("bitcredit_database.%d.bak", GetTime());
             try {
                 boost::filesystem::rename(pathDatabase, pathDatabaseBak);
-                LogPrintf("Bitcredit: Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
+                LogPrintf("Credits: Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
             } catch(boost::filesystem::filesystem_error &error) {
                  // failure is ok (well, not really, but it's not worse than what we started with)
             }
@@ -1352,7 +1352,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             // try again
             if (!bitcredit_bitdb.Open(GetDataDir())) {
                 // if it still fails, it probably means we can't even create the database env
-                string msg = strprintf(_("Bitcredit: Error initializing wallet database environment %s!"), strDataDir);
+                string msg = strprintf(_("Credits: Error initializing wallet database environment %s!"), strDataDir);
                 return InitError(msg);
             }
         }
@@ -1369,7 +1369,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             Bitcredit_CDBEnv::VerifyResult r = bitcredit_bitdb.Verify(bitcredit_strWalletFile, bitcredit_nAccountingEntryNumber, Bitcredit_CWalletDB::Recover);
             if (r == Bitcredit_CDBEnv::RECOVER_OK)
             {
-                string msg = strprintf(_("Bitcredit: Warning: bitcredit_wallet.dat corrupt, data salvaged!"
+                string msg = strprintf(_("Credits: Warning: bitcredit_wallet.dat corrupt, data salvaged!"
                                          " Original bitcredit_wallet.dat saved as bitcredit_wallet.{timestamp}.bak in %s; if"
                                          " your balance or transactions are incorrect you should"
                                          " restore from a backup."), strDataDir);
@@ -1825,7 +1825,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         if (bitcredit_chainActive.Tip() && bitcredit_chainActive.Tip() != pindexRescan)
         {
             uiInterface.InitMessage(_("Rescanning credits wallet..."));
-            LogPrintf("Bitcredit: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
+            LogPrintf("Credits: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
             bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, pindexRescan, true);
             LogPrintf("credits rescan      %15dms\n", GetTimeMillis() - nStart);
@@ -1846,7 +1846,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         strErrors << "Bitcoin: Failed to connect best block";
     CValidationState bitcredit_state;
     if (!Bitcredit_ActivateBestChain(bitcredit_state))
-        strErrors << "Bitcredit: Failed to connect best block";
+        strErrors << "Credits: Failed to connect best block";
 
     //Will trigger Bitcredit_ThreadImport once done
     threadGroup.create_thread(boost::bind(&Bitcoin_ThreadImport));

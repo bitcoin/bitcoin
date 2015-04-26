@@ -536,7 +536,7 @@ bool Bitcredit_CWallet::AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFrom
                     wtx.nTimeSmart = std::max(latestEntry, std::min(blocktime, latestNow));
                 }
                 else
-                    LogPrintf("Bitcredit: AddToWallet() : found %s in block %s not in index\n",
+                    LogPrintf("Credits: AddToWallet() : found %s in block %s not in index\n",
                              wtxIn.GetHash().ToString(),
                              wtxIn.hashBlock.ToString());
             }
@@ -566,7 +566,7 @@ bool Bitcredit_CWallet::AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFrom
         }
 
         //// debug print
-        LogPrintf("Bitcredit: AddToWallet %s: %s  %s%s\n", pbitDb->dbName, wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+        LogPrintf("Credits: AddToWallet %s: %s  %s%s\n", pbitDb->dbName, wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
         if (fInsertedNew || fUpdated)

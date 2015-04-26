@@ -777,7 +777,7 @@ void BitcreditGUI::bitcredit_setNumConnections(int count)
     default: icon = ":/icons/connect_4"; break;
     }
     bitcredit_labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    bitcredit_labelConnectionsIcon->setToolTip(tr("Bitcredit: %n active connection(s) to network", "", count));
+    bitcredit_labelConnectionsIcon->setToolTip(tr("Credits: %n active connection(s) to network", "", count));
 }
 void BitcreditGUI::bitcoin_setNumConnections(int count)
 {
@@ -803,17 +803,17 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
     enum BlockSource blockSource = credits_clientModel->getBlockSource();
     switch (blockSource) {
         case BLOCK_SOURCE_NETWORK:
-            bitcredit_progressBarLabel->setText(tr("Bitcredit: Synchronizing with network..."));
+            bitcredit_progressBarLabel->setText(tr("Credits: Synchronizing with network..."));
             break;
         case BLOCK_SOURCE_DISK:
-            bitcredit_progressBarLabel->setText(tr("Bitcredit: Importing blocks from disk..."));
+            bitcredit_progressBarLabel->setText(tr("Credits: Importing blocks from disk..."));
             break;
         case BLOCK_SOURCE_REINDEX:
-            bitcredit_progressBarLabel->setText(tr("Bitcredit: Reindexing blocks on disk..."));
+            bitcredit_progressBarLabel->setText(tr("Credits: Reindexing blocks on disk..."));
             break;
         case BLOCK_SOURCE_NONE:
             // Case: not Importing, not Reindexing and no network connection
-            bitcredit_progressBarLabel->setText(tr("Bitcredit: No block source available..."));
+            bitcredit_progressBarLabel->setText(tr("Credits: No block source available..."));
             break;
     }
 
@@ -828,7 +828,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
     // Set icon state: spinning if catching up, tick otherwise
     if(secs < 90*60)
     {
-        tooltip = tr("Bitcredit: Up to date") + QString(".<br>") + tooltip;
+        tooltip = tr("Credits: Up to date") + QString(".<br>") + tooltip;
         bitcredit_labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
 #ifdef ENABLE_WALLET
@@ -872,7 +872,7 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
         bitcredit_progressBar->setValue(credits_clientModel->getVerificationProgress() * 1000000000.0 + 0.5);
         bitcredit_progressBar->setVisible(true);
 
-        tooltip = tr("Bitcredit: Catching up...") + QString("<br>") + tooltip;
+        tooltip = tr("Credits: Catching up...") + QString("<br>") + tooltip;
         if(count != bitcredit_prevBlocks)
         {
             bitcredit_labelBlocksIcon->setPixmap(QIcon(QString(

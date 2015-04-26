@@ -303,7 +303,7 @@ public:
         // Open history file to append
         CAutoFile fileout = CAutoFile(Bitcredit_OpenUndoFile(pos), SER_DISK, netParams->ClientVersion());
         if (!fileout)
-            return error("Bitcredit: CBlockUndo::WriteToDisk : OpenUndoFile failed");
+            return error("Credits: CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
@@ -312,7 +312,7 @@ public:
         // Write undo data
         long fileOutPos = ftell(fileout);
         if (fileOutPos < 0)
-            return error("Bitcredit: CBlockUndo::WriteToDisk : ftell failed");
+            return error("Credits: CBlockUndo::WriteToDisk : ftell failed");
         pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
@@ -335,7 +335,7 @@ public:
         // Open history file to read
         CAutoFile filein = CAutoFile(Bitcredit_OpenUndoFile(pos, true), SER_DISK, netParams->ClientVersion());
         if (!filein)
-            return error("Bitcredit: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
+            return error("Credits: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
         // Read block
         uint256 hashChecksum;
@@ -344,7 +344,7 @@ public:
             filein >> hashChecksum;
         }
         catch (std::exception &e) {
-            return error("Bitcredit: %s : Deserialize or I/O error - %s", __func__, e.what());
+            return error("Credits: %s : Deserialize or I/O error - %s", __func__, e.what());
         }
 
         // Verify checksum
@@ -352,7 +352,7 @@ public:
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
-            return error("Bitcredit: CBlockUndo::ReadFromDisk : Checksum mismatch");
+            return error("Credits: CBlockUndo::ReadFromDisk : Checksum mismatch");
 
         return true;
     }

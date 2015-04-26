@@ -260,13 +260,13 @@ public:
     }
     int64_t GetCredit(const CTxOut& txout) const
     {
-    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Bitcredit: CWallet::GetCredit() : value out of range");
+    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Credits: CWallet::GetCredit() : value out of range");
         return (IsMine(txout) ? txout.nValue : 0);
     }
     bool IsChange(const CTxOut& txout) const;
     int64_t GetChange(const CTxOut& txout) const
     {
-    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Bitcredit: CWallet::GetChange() : value out of range");
+    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Credits: CWallet::GetChange() : value out of range");
         return (IsChange(txout) ? txout.nValue : 0);
     }
     bool IsMine(const Bitcredit_CTransaction& tx) const
@@ -286,7 +286,7 @@ public:
         BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
         {
             nDebit += GetDebit(txin);
-            assert_with_stacktrace(Bitcredit_MoneyRange(nDebit), "Bitcredit: CWallet::GetDebit() : value out of range");
+            assert_with_stacktrace(Bitcredit_MoneyRange(nDebit), "Credits: CWallet::GetDebit() : value out of range");
         }
         return nDebit;
     }
@@ -298,7 +298,7 @@ public:
 			if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
 				const CTxOut& txout = tx.vout[i];
 				nCredit += GetCredit(txout);
-				assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Bitcredit: CWallet::GetCredit() : value out of range");
+				assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Credits: CWallet::GetCredit() : value out of range");
 			}
         }
         return nCredit;
@@ -309,7 +309,7 @@ public:
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
             nChange += GetChange(txout);
-            assert_with_stacktrace(Bitcredit_MoneyRange(nChange), "Bitcredit: CWallet::GetChange() : value out of range");
+            assert_with_stacktrace(Bitcredit_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
         }
         return nChange;
     }
@@ -582,7 +582,7 @@ public:
 		const CTxOut &txout = vout[n];
 		if (!pwallet->IsSpent(hashTx, n)) {
 			nCredit += pwallet->GetCredit(txout);
-			assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Bitcredit: CWalletTx::AddTxOutValue() : value out of range");
+			assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Credits: CWalletTx::AddTxOutValue() : value out of range");
 		}
 	}
 
@@ -669,7 +669,7 @@ public:
 				const CTxOut &txout = vout[i];
 				if (!pwallet->IsSpent(hashTx, i)) {
 					nCredit += txout.nValue;
-					assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Bitcredit: CWalletTx::GetImmatureCredit() : value out of range");
+					assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Credits: CWalletTx::GetImmatureCredit() : value out of range");
 				}
 			}
 

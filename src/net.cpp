@@ -51,7 +51,7 @@ public:
 		return Bitcredit_Params();
 	}
 	const std::string LogPrefix() {
-		return "Bitcredit:";
+		return "Credits:";
 	}
 	const char * DebugCategory() {
 		return "bitcredit_net";
