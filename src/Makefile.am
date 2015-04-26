@@ -87,6 +87,7 @@ BITCOIN_CORE_H = \
   coins.h \
   compat.h \
   compressor.h \
+  consensus/consensus.h \
   consensus/params.h \
   core_io.h \
   wallet/db.h \
