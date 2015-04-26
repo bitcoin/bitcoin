@@ -10,6 +10,7 @@ class CBlockIndex;
 class CTransaction;
 
 #include "mastercore_log.h"
+#include "mastercore_persistence.h"
 
 #include "sync.h"
 #include "uint256.h"
@@ -17,8 +18,7 @@ class CTransaction;
 
 #include <boost/filesystem/path.hpp>
 
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
+#include "leveldb/status.h"
 
 #include "json/json_spirit_value.h"
 
@@ -276,105 +276,6 @@ public:
   }
 };
 
-/** Base class for LevelDB based storage.
- */
-class CDBBase
-{
-private:
-    //! Options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-protected:
-    //! Database options used
-    leveldb::Options options;
-
-    //! Options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    //! Options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    //! Options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
-    //! The database itself
-    leveldb::DB* pdb;
-
-    //! Number of entries read
-    unsigned int nRead;
-
-    //! Number of entries written
-    unsigned int nWritten;
-
-    CDBBase() : nRead(0), nWritten(0)
-    {
-        options.paranoid_checks = true;
-        options.create_if_missing = true;
-        options.compression = leveldb::kNoCompression;
-        options.max_open_files = 64;
-        readoptions.verify_checksums = true;
-        iteroptions.verify_checksums = true;
-        iteroptions.fill_cache = false;
-        syncoptions.sync = true;
-        PrintToConsole("CDBBase created\n");
-    }
-
-    virtual ~CDBBase()
-    {
-        Close();
-        PrintToConsole("CDBBase destroyed\n");
-    }
-
-    leveldb::Iterator* NewIterator()
-    {
-        return pdb->NewIterator(iteroptions);
-    }
-
-    leveldb::Status Open(const boost::filesystem::path& path, bool fWipe = false)
-    {
-        if (fWipe) {
-            PrintToConsole("Wiping LevelDB in %s\n", path.string());
-            leveldb::DestroyDB(path.string(), options);
-        }
-        TryCreateDirectory(path);
-        PrintToConsole("Opening LevelDB in %s\n", path.string());
-        return leveldb::DB::Open(options, path.string(), &pdb);
-    }
-
-public:
-    void Clear()
-    {
-        int64_t nTimeStart = GetTimeMicros();
-        unsigned int n = 0;
-        leveldb::WriteBatch batch;
-        leveldb::Iterator* it = NewIterator();
-
-        for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            batch.Delete(it->key());
-            ++n;
-        }
-
-        delete it;
-
-        leveldb::Status status = pdb->Write(writeoptions, &batch);
-        nRead = 0;
-        nWritten = 0;
-
-        int64_t nTime = GetTimeMicros() - nTimeStart;
-        PrintToConsole("Removed %d entries: %s [%.3f ms/entry, %.3f ms total]\n",
-                n, status.ToString(), (n > 0 ? (0.001 * nTime / n) : 0), 0.001 * nTime);
-    }
-
-    void Close()
-    {
-        if (pdb) {
-            delete pdb;
-            pdb = NULL;
-        }
-        PrintToConsole("CDBBase closed\n");
-    }
-};
-
 /** LevelDB based storage for STO recipients.
  */
 class CMPSTOList : public CDBBase
@@ -388,7 +289,7 @@ public:
 
     virtual ~CMPSTOList()
     {
-        PrintToConsole("CMPSTOList destroyed\n");
+        if (msc_debug_persistence) file_log("CMPSTOList closed\n");
     }
 
     void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee);
@@ -413,7 +314,7 @@ public:
 
     virtual ~CMPTradeList()
     {
-        PrintToConsole("CMPTradeList destroyed\n");
+        if (msc_debug_persistence) file_log("CMPTradeList closed\n");
     }
 
     void recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
@@ -438,7 +339,7 @@ public:
 
     virtual ~CMPTxList()
     {
-        PrintToConsole("CMPTxList destroyed\n");
+        if (msc_debug_persistence) file_log("CMPTxList closed\n");
     }
 
     void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);

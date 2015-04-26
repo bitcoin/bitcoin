@@ -3,6 +3,7 @@
 
 #include "mastercore.h"
 #include "mastercore_log.h"
+#include "mastercore_persistence.h"
 
 class CBlockIndex;
 
@@ -296,7 +297,7 @@ public:
 
   virtual ~CMPSPInfo()
   {
-    PrintToConsole("CMPSPInfo destroyed\n");
+    if (msc_debug_persistence) file_log("CMPSPInfo closed\n");
   }
 
   void init(unsigned int nextSPID = 0x3UL, unsigned int nextTestSPID = TEST_ECO_PROPERTY_1)
