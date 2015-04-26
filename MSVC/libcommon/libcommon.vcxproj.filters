@@ -95,9 +95,6 @@
     <ClCompile Include="..\..\src\miner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\pbkdf2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\scrypt-intrin\scrypt-sse2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

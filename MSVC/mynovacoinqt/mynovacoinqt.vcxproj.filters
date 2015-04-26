@@ -598,21 +598,12 @@
     <ClCompile Include="build\moc_walletmodel.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <CustomBuild Include="build\overviewpage.moc">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
     <ClCompile Include="debug\qrc_bitcoin.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
     <ClCompile Include="release\qrc_bitcoin.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <CustomBuild Include="build\rpcconsole.moc">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="build\intro.moc">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
     <ClInclude Include="build\ui_aboutdialog.h">
       <Filter>Generated Files</Filter>
     </ClInclude>

@@ -49,8 +49,12 @@
     <ClCompile Include="..\..\src\walletdb.cpp" />
     <ClCompile Include="..\..\src\noui.cpp" />
     <ClCompile Include="..\..\src\kernel.cpp" />
-    <ClCompile Include="..\..\src\pbkdf2.cpp" />
-    <ClCompile Include="..\..\src\scrypt-intrin\scrypt-sse2.cpp" />
+    <ClCompile Include="..\..\src\scrypt-intrin\scrypt-sse2.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\addrman.h" />
