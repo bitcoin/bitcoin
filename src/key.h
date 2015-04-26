@@ -161,6 +161,9 @@ public:
 
     // Check whether an element of a signature (r or s) is valid.
     static bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
+
+    // Reserialize to DER
+    static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
 };
 
 #endif

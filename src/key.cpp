@@ -224,6 +224,32 @@ bool CKey::CheckSignatureElement(const unsigned char *vch, int len, bool half) {
         CompareBigEndian(vch, len, half ? vchMaxModHalfOrder : vchMaxModOrder, 32) <= 0;
 }
 
+bool CKey::ReserealizeSignature(std::vector<unsigned char>& vchSig)
+{
+    if (vchSig.empty())
+        return false;
+
+    unsigned char *pos = &vchSig[0];
+    ECDSA_SIG *sig = d2i_ECDSA_SIG(NULL, (const unsigned char **)&pos, vchSig.size());
+    if (sig == NULL)
+        return false;
+
+    bool ret = false;
+    int nSize = i2d_ECDSA_SIG(sig, NULL);
+    if (nSize > 0) {
+        vchSig.resize(nSize); // grow or shrink as needed
+
+        pos = &vchSig[0];
+        i2d_ECDSA_SIG(sig, &pos);
+
+        ret = true;
+    }
+
+    ECDSA_SIG_free(sig);
+
+    return ret;
+}
+
 void CKey::MakeNewKey(bool fCompressed)
 {
     if (!EC_KEY_generate_key(pkey))
