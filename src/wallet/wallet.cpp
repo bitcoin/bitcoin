@@ -1664,31 +1664,102 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     return true;
 }
 
-bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl* coinControl) const
+bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, vector<CTxIn> vPresetInputs, const CCoinControl* coinControl) const
 {
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl);
+
+    // create a empty set to store possible inputs
+    set<pair<const CWalletTx*,unsigned int> > setTempCoins;
+    CAmount nValueTroughInputs = 0;
 
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coinControl && coinControl->HasSelected())
     {
         BOOST_FOREACH(const COutput& out, vCoins)
         {
-            if(!out.fSpendable)
-                continue;
+            if (!out.fSpendable)
+                 continue;
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.insert(make_pair(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
     }
 
-    return (SelectCoinsMinConf(nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
-            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
+    // fill up the tx with possible predefined inputs
+    BOOST_FOREACH(const CTxIn& txin, vPresetInputs)
+    {
+        bool vinOk = false;
+        // search for VIN in available coins
+        for (vector<COutput>::iterator it = vCoins.begin() ; it != vCoins.end();)
+        {
+            const COutput& out = *it;
+            if (out.tx->GetHash() == txin.prevout.hash && txin.prevout.n == (uint32_t)out.i)
+            {
+                if (!out.fSpendable)
+                    continue;
+
+                nValueTroughInputs    += out.tx->vout[out.i].nValue;
+
+                // temporarily keep the coin to add them later after SelectCoinsMinConf has added some
+                setTempCoins.insert(make_pair(out.tx, out.i));
+                vinOk = true;
+
+                // remove the coins from available coins vector to avoid double use because of a upcomming SelectCoinsMinConf
+                it = vCoins.erase(it);
+            }
+            else
+                ++it;
+        }
+
+        if (!vinOk)
+            return false; // if vin was not an available coin, cancel (will return "Insufficient funds")
+    }
+
+    bool state = true;
+
+    // only select further coins if we need to
+    if (nTargetValue-nValueTroughInputs > 0)
+        state = (SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+            (bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue-nValueTroughInputs, 0, 1, vCoins, setCoinsRet, nValueRet)));
+
+    // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
+    setCoinsRet.insert(setTempCoins.begin(), setTempCoins.end());
+
+    // increase return value due of possible inputs
+    nValueRet+=nValueTroughInputs;
+
+    return state;
 }
 
-bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl)
+bool CWallet::FundTransaction(const CTransaction& txToFund, CMutableTransaction& txNew, CAmount &nFeeRet, int& nChangePosRet, std::string& strFailReason)
+{
+    unsigned int nSubtractFeeFromAmount = 0; //TODO: implement subtract fee from amount within fundrawtransaction
+    vector<CRecipient> vecSend;
+    vector<CTxIn> vin;
+
+    // Only keep the vouts from the existing transaction.
+    // Form a new CRecipient vector
+    BOOST_FOREACH (const CTxOut& txOut, txToFund.vout)
+    {
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, nSubtractFeeFromAmount};
+        vecSend.push_back(recipient);
+    }
+
+    // Store possible vin so we might only partial-final-fund the tx
+    BOOST_FOREACH (const CTxIn& txIn, txToFund.vin)
+    {
+        vin.push_back(txIn);
+    }
+
+    CReserveKey reservekey(this);
+    CWalletTx wtx;
+    return CreateTransaction(vecSend, vin, wtx, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, NULL, false);
+}
+
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, const vector<CTxIn> vInputs,
+                                CWalletTx& wtxNew, CMutableTransaction& txNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
 {
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;
@@ -1712,7 +1783,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
 
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
-    CMutableTransaction txNew;
 
     // Discourage fee sniping.
     //
@@ -1787,7 +1857,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl))
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn, vInputs, coinControl))
                 {
                     strFailReason = _("Insufficient funds");
                     return false;
@@ -1892,7 +1962,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                 // Sign
                 int nIn = 0;
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-                    if (!SignSignature(*this, *coin.first, txNew, nIn++))
+                    if (!SignSignature(*this, *coin.first, txNew, nIn++, SIGHASH_ALL, !sign))
                     {
                         strFailReason = _("Signing transaction failed");
                         return false;
@@ -1908,6 +1978,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                     strFailReason = _("Transaction too large");
                     return false;
                 }
+
+                //remove signature if we used the signing only for the fee calculation
+                if(!sign)
+                {
+                    BOOST_FOREACH (CTxIn& vin, txNew.vin)
+                        vin.scriptSig = CScript();
+                }
+
                 dPriority = wtxNew.ComputePriority(dPriority, nBytes);
 
                 // Can we complete this as a free transaction?
@@ -1945,6 +2023,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
     }
 
     return true;
+}
+
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+{
+    CMutableTransaction txNew;
+    vector<CTxIn> vInputs;
+    return CreateTransaction(vecSend, vInputs, wtxNew, txNew, reservekey, nFeeRet, nChangePosRet, strFailReason, coinControl, sign);
 }
 
 /**

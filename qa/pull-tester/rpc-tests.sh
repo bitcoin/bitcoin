@@ -28,6 +28,7 @@ testScripts=(
     'httpbasics.py'
     'zapwallettxes.py'
     'proxy_test.py'
+    'rawtransactions.py'
 #    'forknotify.py'
 );
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
