@@ -2650,26 +2650,23 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 // ppcoin: check block signature
 bool CBlock::CheckBlockSignature() const
 {
-    if (IsProofOfWork())
-        return true;
-
-    vector<valtype> vSolutions;
-    txnouttype whichType;
-
-    const CTxOut& txout = vtx[1].vout[1];
-
-    if (!Solver(txout.scriptPubKey, whichType, vSolutions))
+    if (vchBlockSig.empty())
         return false;
+
+    txnouttype whichType;
+    vector<valtype> vSolutions;
+    if (!Solver(vtx[1].vout[1].scriptPubKey, whichType, vSolutions))
+        return false;
+
     if (whichType == TX_PUBKEY)
     {
         valtype& vchPubKey = vSolutions[0];
         CKey key;
         if (!key.SetPubKey(vchPubKey))
             return false;
-        if (vchBlockSig.empty())
-            return false;
         return key.Verify(GetHash(), vchBlockSig);
     }
+
     return false;
 }
 
