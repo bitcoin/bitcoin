@@ -595,13 +595,13 @@ bool Bitcredit_CWallet::AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFrom
 // Add a transaction to the wallet, or update it.
 // pblock is optional, but should be provided if the transaction is known to be in a block.
 // If fUpdate is true, existing transactions will be updated.
-bool Bitcredit_CWallet::AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate)
+bool Bitcredit_CWallet::AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet,  const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate)
 {
     {
         AssertLockHeld(cs_wallet);
         bool fExisted = mapWallet.count(hash);
         if (fExisted && !fUpdate) return false;
-        if (fExisted || IsMine(tx) || IsFromMe(tx) || (tx.IsClaim() && bitcoin_wallet->IsFromMe(tx, claim_view)))
+        if (fExisted || IsMine(tx) || IsFromMe(tx) || (tx.IsClaim() && bitcoin_wallet->IsFromMe(tx)))
         {
             Bitcredit_CWalletTx wtx(this,tx);
             // Get merkle branch if transaction was found in a block
@@ -613,10 +613,10 @@ bool Bitcredit_CWallet::AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_
     return false;
 }
 
-void Bitcredit_CWallet::SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock)
+void Bitcredit_CWallet::SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock)
 {
     LOCK2(bitcredit_mainState.cs_main, cs_wallet);
-    if (!AddToWalletIfInvolvingMe(bitcoin_wallet, claim_view, hash, tx, pblock, true))
+    if (!AddToWalletIfInvolvingMe(bitcoin_wallet, hash, tx, pblock, true))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -866,7 +866,7 @@ bool Bitcredit_CWalletTx::WriteToDisk()
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
-int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate)
+int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
     int64_t nNow = GetTime();
@@ -892,7 +892,7 @@ int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_
             Bitcredit_ReadBlockFromDisk(block, pindex);
             BOOST_FOREACH(Bitcredit_CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(bitcoin_wallet, claim_view, tx.GetHash(), tx, &block, fUpdate))
+                if (AddToWalletIfInvolvingMe(bitcoin_wallet,  tx.GetHash(), tx, &block, fUpdate))
                     ret++;
             }
             pindex = bitcredit_chainActive.Next(pindex);
@@ -1693,7 +1693,7 @@ bool Bitcredit_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bi
 //	return true;
 //}
 
-bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const vector<pair<CScript, int64_t> >& vecSend,
+bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, const vector<pair<CScript, int64_t> >& vecSend,
                                 Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
 {
 	wtxNew.nTxType = TX_TYPE_EXTERNAL_BITCOIN;

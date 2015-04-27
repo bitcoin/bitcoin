@@ -122,7 +122,7 @@ void Bitcoin_UnregisterWallet(Bitcoin_CWalletInterface* pwalletIn);
 /** Unregister all wallets from core */
 void Bitcoin_UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
-void Bitcoin_SyncWithWallets(Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock = NULL);
+void Bitcoin_SyncWithWallets(const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock = NULL);
 
 /** Register with a network node to receive its signals */
 void Bitcoin_RegisterNodeSignals(CNodeSignals& nodeSignals);
@@ -931,7 +931,7 @@ public:
 
 class Bitcoin_CWalletInterface {
 protected:
-    virtual void SyncTransaction(Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcoin_CTransaction &tx, const Bitcoin_CBlock *pblock) =0;
+    virtual void SyncTransaction(const uint256 &hash, const Bitcoin_CTransaction &tx, const Bitcoin_CBlock *pblock) =0;
     virtual void EraseFromWallet(const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;

@@ -160,11 +160,9 @@ void ClaimCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
-
     // prepare transaction for getting txFee earlier
     Bitcredit_WalletModelTransaction currentTransaction(recipients);
-    Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareClaimTransaction(bitcoin_model, claim_view, currentTransaction, Bitcoin_CoinControlDialog::coinControl);
+    Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareClaimTransaction(bitcoin_model, bitcoin_pclaimCoinsTip, currentTransaction, Bitcoin_CoinControlDialog::coinControl);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -313,9 +311,7 @@ void ClaimCoinsDialog::refreshBalance()
     map<uint256, set<int> > mapClaimTxInPoints;
     bitcredit_model->wallet->ClaimTxInPoints(mapClaimTxInPoints);
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
-
-    setBalance(bitcoin_model->getBalance(claim_view, mapClaimTxInPoints), 0, 0);
+    setBalance(bitcoin_model->getBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints), 0, 0);
 }
 
 void ClaimCoinsDialog::updateDisplayUnit()

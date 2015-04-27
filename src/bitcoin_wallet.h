@@ -52,6 +52,9 @@ enum Bitcoin_WalletFeature
 
 //Checks if the passed in transactions vin is within the mapFilterTxInPoints map. Used for filtering out transactions
 inline bool IsInFilterPoints(const uint256 &txHash, const int &n, map<uint256, set<int> >& mapFilterTxInPoints) {
+	if(mapFilterTxInPoints.empty()) {
+		return false;
+	}
 	const map<uint256, set<int> >::iterator it = mapFilterTxInPoints.find(txHash);
 	if (it != mapFilterTxInPoints.end()) {
 		if (it->second.count(n) > 0) {
@@ -66,6 +69,9 @@ inline bool IsInFilterPoints(const uint256 &txHash, const int &n, map<uint256, s
 //Checks if the passed in transactions vin is within the mapFilterTxInPoints map. Used for filtering out transactions that
 //for example overlaps with already prepared deposits
 inline bool IsAnyTxInInFilterPoints(const Bitcredit_CTransaction& tx,  map<uint256, set<int> >& mapFilterTxInPoints) {
+	if(mapFilterTxInPoints.empty()) {
+		return false;
+	}
 	BOOST_FOREACH (const Bitcredit_CTxIn & ctxIn, tx.vin) {
 		const uint256 &hash = ctxIn.prevout.hash;
 		const unsigned int &n = ctxIn.prevout.n;
@@ -149,7 +155,7 @@ private:
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
 public:
-    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
     /// Main wallet lock.
     /// This lock protects all the fields added by CWallet
     ///   except for:
@@ -209,10 +215,10 @@ public:
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum Bitcoin_WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
-    int GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache& claim_view) const;
+    int GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache* claim_view) const;
 
-    void AvailableCoins(std::vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxPoints, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
-    bool SelectCoinsMinConf(Bitcoin_CClaimCoinsViewCache& claim_view, int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<Bitcoin_COutput> vCoins, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
+    void AvailableCoins(std::vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxPoints, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<Bitcoin_COutput> vCoins, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n, unsigned int claimBestBlockDepth) const;
 
@@ -272,15 +278,15 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const Bitcoin_CWalletTx& wtxIn, bool fFromLoadWallet=false);
-    void SyncTransaction(Bitcoin_CClaimCoinsViewCache& claim_view, const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock);
-    bool AddToWalletIfInvolvingMe(Bitcoin_CClaimCoinsViewCache& claim_view, const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock, bool fUpdate);
+    void SyncTransaction(const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock);
+    bool AddToWalletIfInvolvingMe(const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock, bool fUpdate);
     void EraseFromWallet(const uint256 &hash);
-    int ScanForWalletTransactions(Bitcoin_CClaimCoinsViewCache& claim_view, Bitcoin_CBlockIndex* pindexStart, Bitcoin_CBlockIndex* pindexStop, bool fUpdate = false);
+    int ScanForWalletTransactions(Bitcoin_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
 //    void ResendWalletTransactions();
-    int64_t GetBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    int64_t GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    int64_t GetImmatureBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
 //    bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
 //                           Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
 //    bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
@@ -299,14 +305,13 @@ public:
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
-    std::map<CTxDestination, int64_t> GetAddressBalances(Bitcoin_CClaimCoinsViewCache& claim_view);
+    std::map<CTxDestination, int64_t> GetAddressBalances(Bitcoin_CClaimCoinsViewCache* claim_view);
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
     bool IsMine(const Bitcoin_CTxIn& txin) const;
-    int64_t GetDebit(const Bitcoin_CTxIn& txin, Bitcoin_CClaimCoinsViewCache &claim_view) const;
-    int64_t GetDebitWithoutClaimed(const Bitcoin_CTxIn& txin) const;
-    int64_t GetDebit(const Bitcredit_CTxIn& txin, Bitcoin_CClaimCoinsViewCache &claim_view) const;
+    int64_t GetDebit(const Bitcoin_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
+    int64_t GetDebit(const Bitcredit_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
     bool IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
@@ -329,15 +334,15 @@ public:
                 return true;
         return false;
     }
-    bool IsFromMe(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache &claim_view) const
+    bool IsFromMe(const Bitcoin_CTransaction& tx) const
     {
-        return (GetDebit(tx, claim_view) > 0);
+        return (GetDebit(tx, NULL) > 0);
     }
-    bool IsFromMe(const Bitcredit_CTransaction& tx, Bitcoin_CClaimCoinsViewCache &claim_view) const
+    bool IsFromMe(const Bitcredit_CTransaction& tx) const
     {
-        return (GetDebit(tx, claim_view) > 0);
+        return (GetDebit(tx, NULL) > 0);
     }
-    int64_t GetDebit(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache &claim_view) const
+    int64_t GetDebit(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache *claim_view) const
     {
         int64_t nDebit = 0;
         BOOST_FOREACH(const Bitcoin_CTxIn& txin, tx.vin)
@@ -347,17 +352,7 @@ public:
         }
         return nDebit;
     }
-    int64_t GetDebitWithoutClaimed(const Bitcoin_CTransaction& tx) const
-    {
-        int64_t nDebit = 0;
-        BOOST_FOREACH(const Bitcoin_CTxIn& txin, tx.vin)
-        {
-            nDebit += GetDebitWithoutClaimed(txin);
-            assert_with_stacktrace(Bitcoin_MoneyRange(nDebit), "Bitcoin: CWallet::GetDebit() : value out of range");
-        }
-        return nDebit;
-    }
-    int64_t GetDebit(const Bitcredit_CTransaction& tx, Bitcoin_CClaimCoinsViewCache &claim_view) const
+    int64_t GetDebit(const Bitcredit_CTransaction& tx, Bitcoin_CClaimCoinsViewCache *claim_view) const
     {
         int64_t nDebit = 0;
         BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
@@ -368,49 +363,69 @@ public:
         return nDebit;
     }
 
-    int64_t GetCredit(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+    int64_t GetCredit(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
     {
     	const uint256 &hashTx = tx.GetHash();
         int64_t nCredit = 0;
-        if(claim_view.HaveCoins(hashTx)) {
-			const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(hashTx);
+    	if(claim_view == NULL) {
+    		for(unsigned int i = 0; i < tx.vout.size(); i++) {
+    			if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
+    				const CTxOut& txout = tx.vout[i];
+    				nCredit += GetCredit(txout, txout.nValue);
+    				assert_with_stacktrace(Bitcoin_MoneyRange(nCredit), "Bitcoin: CWallet::GetCredit() : value out of range");
+    			}
+            }
+    	} else {
+    		if(claim_view->HaveCoins(hashTx)) {
+    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
 
-			for(unsigned int i = 0; i < tx.vout.size(); i++) {
-				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
-					if(claimCoins.HasClaimable(i)) {
-						const CTxOut& txout = tx.vout[i];
-						const CTxOutClaim &txoutClaim = claimCoins.vout[i];
+    			for(unsigned int i = 0; i < tx.vout.size(); i++) {
+    				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
+    					if(claimCoins.HasClaimable(i)) {
+    						const CTxOut& txout = tx.vout[i];
+    						const CTxOutClaim &txoutClaim = claimCoins.vout[i];
 
-						assert_with_stacktrace(txout.nValue == txoutClaim.nValueOriginal, strprintf("CWallet:GetCreditForTx() : value not equal to valueOriginal: %d:%d, \nTx:\n%s, \nclaimcoins:\n%s", txout.nValue, txoutClaim.nValueOriginal, tx.ToString(), claimCoins.ToString()));
-						assert_with_stacktrace(Bitcoin_MoneyRange(txoutClaim.nValueClaimable), strprintf("CWallet:GetCreditForTx() : value out of range: %d:%d, Hash: %s", txout.nValue, txoutClaim.nValueClaimable, hashTx.ToString()));
+    						assert_with_stacktrace(txout.nValue == txoutClaim.nValueOriginal, strprintf("CWallet:GetCreditForTx() : value not equal to valueOriginal: %d:%d, \nTx:\n%s, \nclaimcoins:\n%s", txout.nValue, txoutClaim.nValueOriginal, tx.ToString(), claimCoins.ToString()));
+    						assert_with_stacktrace(Bitcoin_MoneyRange(txoutClaim.nValueClaimable), strprintf("CWallet:GetCreditForTx() : value out of range: %d:%d, Hash: %s", txout.nValue, txoutClaim.nValueClaimable, hashTx.ToString()));
 
-						nCredit += GetCredit(txout, txoutClaim.nValueClaimable);
+    						nCredit += GetCredit(txout, txoutClaim.nValueClaimable);
 
-						assert_with_stacktrace(Bitcoin_MoneyRange(nCredit), "Bitcoin: CWallet::GetCreditForTx() : value out of range");
-					}
-				}
-			}
-        }
+    						assert_with_stacktrace(Bitcoin_MoneyRange(nCredit), "Bitcoin: CWallet::GetCreditForTx() : value out of range");
+    					}
+    				}
+    			}
+    		}
+    	}
         return nCredit;
     }
-    int64_t GetChange(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache& claim_view) const
+    int64_t GetChange(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache* claim_view) const
     {
     	const uint256 &hashTx = tx.GetHash();
         int64_t nChange = 0;
-        if(claim_view.HaveCoins(hashTx)) {
-			const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(hashTx);
-
+    	if(claim_view == NULL) {
 			for(unsigned int i = 0; i < tx.vout.size(); i++) {
-				if(claimCoins.HasClaimable(i)) {
-					const CTxOut& txout = tx.vout[i];
+				const CTxOut& txout = tx.vout[i];
 
-					nChange += GetChange(txout, claimCoins.vout[i].nValueClaimable);
-					assert_with_stacktrace(Bitcoin_MoneyRange(nChange), "Bitcoin: CWallet::GetChange() : value out of range");
-				}
-			}
-        }
+                nChange += GetChange(txout, txout.nValue);
+                assert_with_stacktrace(Bitcredit_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
+            }
+    	} else {
+    		if(claim_view->HaveCoins(hashTx)) {
+    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+
+    			for(unsigned int i = 0; i < tx.vout.size(); i++) {
+    				if(claimCoins.HasClaimable(i)) {
+    					const CTxOut& txout = tx.vout[i];
+
+    					nChange += GetChange(txout, claimCoins.vout[i].nValueClaimable);
+    					assert_with_stacktrace(Bitcoin_MoneyRange(nChange), "Bitcoin: CWallet::GetChange() : value out of range");
+    				}
+    			}
+    		}
+    	}
         return nChange;
     }
+
     void SetBestChain(const CBlockLocator& loc);
 
     Bitcoin_DBErrors LoadWallet(bool& fFirstRunRet);
@@ -535,18 +550,26 @@ public:
     int64_t nOrderPos;  // position in ordered transaction list
 
     // memory only
-    mutable bool fDebitCached;
-    mutable bool fDebitCachedWithoutClaimed;
-    mutable bool fCreditCached;
-    mutable bool fImmatureCreditCached;
-    mutable bool fAvailableCreditCached;
-    mutable bool fChangeCached;
-    mutable int64_t nDebitCached;
-    mutable int64_t nDebitCachedWithoutClaimed;
-    mutable int64_t nCreditCached;
-    mutable int64_t nImmatureCreditCached;
-    mutable int64_t nAvailableCreditCached;
-    mutable int64_t nChangeCached;
+    mutable bool claim_fDebitCached;
+    mutable bool bitcoin_fDebitCached;
+    mutable bool claim_fCreditCached;
+    mutable bool bitcoin_fCreditCached;
+    mutable bool claim_fImmatureCreditCached;
+    mutable bool bitcoin_fImmatureCreditCached;
+    mutable bool claim_fAvailableCreditCached;
+    mutable bool bitcoin_fAvailableCreditCached;
+    mutable bool claim_fChangeCached;
+    mutable bool bitcoin_fChangeCached;
+    mutable int64_t claim_nDebitCached;
+    mutable int64_t bitcoin_nDebitCached;
+    mutable int64_t claim_nCreditCached;
+    mutable int64_t bitcoin_nCreditCached;
+    mutable int64_t claim_nImmatureCreditCached;
+    mutable int64_t bitcoin_nImmatureCreditCached;
+    mutable int64_t claim_nAvailableCreditCached;
+    mutable int64_t bitcoin_nAvailableCreditCached;
+    mutable int64_t claim_nChangeCached;
+    mutable int64_t bitcoin_nChangeCached;
 
     Bitcoin_CWalletTx()
     {
@@ -578,18 +601,26 @@ public:
         nTimeSmart = 0;
         fFromMe = false;
         strFromAccount.clear();
-        fDebitCached = false;
-        fDebitCachedWithoutClaimed = false;
-        fCreditCached = false;
-        fImmatureCreditCached = false;
-        fAvailableCreditCached = false;
-        fChangeCached = false;
-        nDebitCached = 0;
-        nDebitCachedWithoutClaimed = 0;
-        nCreditCached = 0;
-        nImmatureCreditCached = 0;
-        nAvailableCreditCached = 0;
-        nChangeCached = 0;
+        claim_fDebitCached = false;
+        bitcoin_fDebitCached = false;
+        claim_fCreditCached = false;
+        bitcoin_fCreditCached = false;
+        claim_fImmatureCreditCached = false;
+        bitcoin_fImmatureCreditCached = false;
+        claim_fAvailableCreditCached = false;
+        bitcoin_fAvailableCreditCached = false;
+        claim_fChangeCached = false;
+        bitcoin_fChangeCached = false;
+        claim_nDebitCached = 0;
+        bitcoin_nDebitCached = 0;
+        claim_nCreditCached = 0;
+        bitcoin_nCreditCached = 0;
+        claim_nImmatureCreditCached = 0;
+        bitcoin_nImmatureCreditCached = 0;
+        claim_nAvailableCreditCached = 0;
+        bitcoin_nAvailableCreditCached = 0;
+        claim_nChangeCached = 0;
+        bitcoin_nChangeCached = 0;
         nOrderPos = -1;
     }
 
@@ -639,11 +670,14 @@ public:
     // make sure balances are recalculated
     void MarkDirty()
     {
-        fCreditCached = false;
-        fAvailableCreditCached = false;
-        fDebitCached = false;
-        fDebitCachedWithoutClaimed = false;
-        fChangeCached = false;
+    	claim_fCreditCached = false;
+        bitcoin_fCreditCached = false;
+        claim_fAvailableCreditCached = false;
+        bitcoin_fAvailableCreditCached = false;
+        claim_fDebitCached = false;
+        bitcoin_fDebitCached = false;
+        claim_fChangeCached = false;
+        bitcoin_fChangeCached = false;
     }
 
     void BindWallet(Bitcoin_CWallet *pwalletIn)
@@ -652,57 +686,83 @@ public:
         MarkDirty();
     }
 
-    int64_t GetDebit(Bitcoin_CClaimCoinsViewCache& claim_view) const
+    int64_t Claim_GetDebit(Bitcoin_CClaimCoinsViewCache* claim_view) const
     {
         if (vin.empty())
             return 0;
-        if (fDebitCached)
-            return nDebitCached;
-        nDebitCached = pwallet->GetDebit(*this, claim_view);
-        fDebitCached = true;
-        return nDebitCached;
+        if (claim_fDebitCached)
+            return claim_nDebitCached;
+        claim_nDebitCached = pwallet->GetDebit(*this, claim_view);
+        claim_fDebitCached = true;
+        return claim_nDebitCached;
     }
 
-    int64_t GetDebitWithoutClaimed() const
+    int64_t Bitcoin_GetDebit() const
     {
         if (vin.empty())
             return 0;
-        if (fDebitCachedWithoutClaimed)
-            return nDebitCachedWithoutClaimed;
-        nDebitCachedWithoutClaimed = pwallet->GetDebitWithoutClaimed(*this);
-        fDebitCachedWithoutClaimed = true;
-        return nDebitCachedWithoutClaimed;
+        if (bitcoin_fDebitCached)
+            return bitcoin_nDebitCached;
+        bitcoin_nDebitCached = pwallet->GetDebit(*this, NULL);
+        bitcoin_fDebitCached = true;
+        return bitcoin_nDebitCached;
     }
 
-    int64_t GetCredit(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    int64_t Claim_GetCredit(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
             return 0;
 
         // GetBalance can assume transactions in mapWallet won't change
-        if (fUseCache && fCreditCached)
-            return nCreditCached;
-        nCreditCached = pwallet->GetCredit(*this, claim_view, mapFilterTxInPoints);
-        fCreditCached = true;
-        return nCreditCached;
+        if (fUseCache && claim_fCreditCached)
+            return claim_nCreditCached;
+        claim_nCreditCached = pwallet->GetCredit(*this, claim_view, mapFilterTxInPoints);
+        claim_fCreditCached = true;
+        return claim_nCreditCached;
+    }
+    int64_t Bitcoin_GetCredit(map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    {
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+            return 0;
+
+        // GetBalance can assume transactions in mapWallet won't change
+        if (fUseCache && bitcoin_fCreditCached)
+            return bitcoin_nCreditCached;
+        bitcoin_nCreditCached = pwallet->GetCredit(*this, NULL, mapFilterTxInPoints);
+        bitcoin_fCreditCached = true;
+        return bitcoin_nCreditCached;
     }
 
-    int64_t GetImmatureCredit(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    int64_t Claim_GetImmatureCredit(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
         {
-            if (fUseCache && fImmatureCreditCached)
-                return nImmatureCreditCached;
-            nImmatureCreditCached = pwallet->GetCredit(*this, claim_view, mapFilterTxInPoints);
-            fImmatureCreditCached = true;
-            return nImmatureCreditCached;
+            if (fUseCache && claim_fImmatureCreditCached)
+                return claim_nImmatureCreditCached;
+            claim_nImmatureCreditCached = pwallet->GetCredit(*this, claim_view, mapFilterTxInPoints);
+            claim_fImmatureCreditCached = true;
+            return claim_nImmatureCreditCached;
+        }
+
+        return 0;
+    }
+    int64_t Bitcoin_GetImmatureCredit(map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    {
+        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
+        {
+            if (fUseCache && bitcoin_fImmatureCreditCached)
+                return bitcoin_nImmatureCreditCached;
+            bitcoin_nImmatureCreditCached = pwallet->GetCredit(*this, NULL, mapFilterTxInPoints);
+            bitcoin_fImmatureCreditCached = true;
+            return bitcoin_nImmatureCreditCached;
         }
 
         return 0;
     }
 
-    int64_t GetAvailableCredit(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    int64_t Claim_GetAvailableCredit(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         if (pwallet == 0)
             return 0;
@@ -711,18 +771,17 @@ public:
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
             return 0;
 
-        if (fUseCache && fAvailableCreditCached)
-            return nAvailableCreditCached;
-
-		const int nClaimBestBlockDepth = pwallet->GetBestBlockClaimDepth(claim_view);
+        if (fUseCache && claim_fAvailableCreditCached)
+            return claim_nAvailableCreditCached;
 
         int64_t nCredit = 0;
         const uint256 &hashTx = GetHash();
-        if(claim_view.HaveCoins(hashTx)) {
-			const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(hashTx);
+		if(claim_view->HaveCoins(hashTx)) {
+			const int nClaimBestBlockDepth = pwallet->GetBestBlockClaimDepth(claim_view);
+			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
 
 			for(unsigned int i = 0; i < vout.size(); i++) {
-	    		if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
+				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
 					if(claimCoins.HasClaimable(i)) {
 						if (!pwallet->IsSpent(hashTx, i, nClaimBestBlockDepth))
 						{
@@ -734,37 +793,79 @@ public:
 							assert_with_stacktrace(Bitcoin_MoneyRange(nCredit), "Bitcoin: CWalletTx::GetAvailableCredit() : value out of range");
 						}
 					}
-	    		}
+				}
 			}
-        }
+		}
 
-        nAvailableCreditCached = nCredit;
-        fAvailableCreditCached = true;
+        claim_nAvailableCreditCached = nCredit;
+        claim_fAvailableCreditCached = true;
+        return nCredit;
+    }
+
+    int64_t Bitcoin_GetAvailableCredit(map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    {
+        if (pwallet == 0)
+            return 0;
+
+        // Must wait until coinbase is safely deep enough in the chain before valuing it
+        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+            return 0;
+
+        if (fUseCache && bitcoin_fAvailableCreditCached)
+            return bitcoin_nAvailableCreditCached;
+
+        int64_t nCredit = 0;
+        const uint256 &hashTx = GetHash();
+		for (unsigned int i = 0; i < vout.size(); i++) {
+			//TODO - Should this be zero?
+			if (!pwallet->IsSpent(hashTx, i, 0))
+			{
+				const CTxOut &txout = vout[i];
+				assert_with_stacktrace(Bitcoin_MoneyRange(txout.nValue), strprintf("CWalletTx:GetAvailableCredit() : value out of range: %d, Hash: %s", txout.nValue, hashTx.ToString()));
+				nCredit += pwallet->GetCredit(txout, txout.nValue);
+				assert_with_stacktrace(Bitcoin_MoneyRange(nCredit), "Bitcoin: CWalletTx::GetAvailableCredit() : value out of range");
+			}
+		}
+
+        bitcoin_nAvailableCreditCached = nCredit;
+        bitcoin_fAvailableCreditCached = true;
         return nCredit;
     }
 
 
-    int64_t GetChange(Bitcoin_CClaimCoinsViewCache& claim_view) const
+    int64_t Claim_GetChange(Bitcoin_CClaimCoinsViewCache* claim_view) const
     {
-        if (fChangeCached)
-            return nChangeCached;
-        nChangeCached = pwallet->GetChange(*this, claim_view);
-        fChangeCached = true;
-        return nChangeCached;
+        if (claim_fChangeCached)
+            return claim_nChangeCached;
+        claim_nChangeCached = pwallet->GetChange(*this, claim_view);
+        claim_fChangeCached = true;
+        return claim_nChangeCached;
+    }
+    int64_t Bitcoin_GetChange() const
+    {
+        if (bitcoin_fChangeCached)
+            return bitcoin_nChangeCached;
+        bitcoin_nChangeCached = pwallet->GetChange(*this, NULL);
+        bitcoin_fChangeCached = true;
+        return bitcoin_nChangeCached;
     }
 
-    void GetAmounts(Bitcoin_CClaimCoinsViewCache& claim_view, std::list<std::pair<CTxDestination, int64_t> >& listReceived,
+    void Claim_GetAmounts(Bitcoin_CClaimCoinsViewCache* claim_view, std::list<std::pair<CTxDestination, int64_t> >& listReceived,
+                    std::list<std::pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount) const;
+    void Bitcoin_GetAmounts(std::list<std::pair<CTxDestination, int64_t> >& listReceived,
                     std::list<std::pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount) const;
 
-    void GetAccountAmounts(Bitcoin_CClaimCoinsViewCache& claim_view, const std::string& strAccount, int64_t& nReceived,
+    void Claim_GetAccountAmounts(Bitcoin_CClaimCoinsViewCache* claim_view, const std::string& strAccount, int64_t& nReceived,
+                           int64_t& nSent, int64_t& nFee) const;
+    void Bitcoin_GetAccountAmounts(const std::string& strAccount, int64_t& nReceived,
                            int64_t& nSent, int64_t& nFee) const;
 
-    bool IsFromMe(Bitcoin_CClaimCoinsViewCache& claim_view) const
+    bool IsFromMe() const
     {
-        return (GetDebit(claim_view) > 0);
+        return (Bitcoin_GetDebit() > 0);
     }
 
-    bool IsTrusted(Bitcoin_CClaimCoinsViewCache& claim_view) const
+    bool IsTrusted() const
     {
         // Quick answer in most cases
         if (!Bitcoin_IsFinalTx(*this))
@@ -774,7 +875,7 @@ public:
             return true;
         if (nDepth < 0)
             return false;
-        if (!bitcoin_bSpendZeroConfChange || !IsFromMe(claim_view)) // using wtx's cached debit
+        if (!bitcoin_bSpendZeroConfChange || !IsFromMe()) // using wtx's cached debit
             return false;
 
         // Trusted if all inputs are from us and are in the mempool:

@@ -214,10 +214,10 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFromLoadWallet=false);
-    void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock);
-    bool AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate);
+    void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock);
+    bool AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate);
     void EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, const uint256 &hash);
-    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate = false);
+    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
     int64_t GetBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
@@ -231,7 +231,7 @@ public:
                            Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CreateDepositTransaction(Bitcredit_CWallet *deposit_wallet, const std::pair<CScript, int64_t>& vecSend,
                            Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, const int64_t & nTotalIn, std::string& strFailReason, const Bitcredit_COutput& coin, Bitcredit_CCoinsViewCache &bitcredit_view, Bitcoin_CClaimCoinsViewCache &claim_view);
-    bool CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const std::vector<std::pair<CScript, int64_t> >& vecSend,
+    bool CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, const std::vector<std::pair<CScript, int64_t> >& vecSend,
                            Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CommitTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, std::vector<Bitcredit_CReserveKey *> &keyRecipients);
     bool CommitDepositTransaction(Bitcredit_CWallet *bitcredit_wallet, Bitcredit_CWalletTx& wtxNew, Bitcredit_CReserveKey& reservekey, std::vector<Bitcredit_CReserveKey *> &keyRecipients);

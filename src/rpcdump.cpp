@@ -128,7 +128,7 @@ Value bitcredit_importprivkey(const Array& params, bool fHelp)
         bitcredit_pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, bitcredit_chainActive.Genesis(), true);
+            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, bitcredit_chainActive.Genesis(), true);
         }
     }
 
@@ -197,14 +197,7 @@ Value bitcoin_importprivkey(const Array& params, bool fHelp)
         bitcoin_pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-        	//Find best claim block
-            Bitcoin_CBlockIndex *pindexClaimBestBlock = NULL;
-        	std::map<uint256, Bitcoin_CBlockIndex*>::iterator it = bitcoin_mapBlockIndex.find(bitcoin_pclaimCoinsTip->GetBestBlock());
-        	if (it != bitcoin_mapBlockIndex.end()) {
-        		pindexClaimBestBlock = it->second;
-        	}
-
-            bitcoin_pwalletMain->ScanForWalletTransactions(*bitcoin_pclaimCoinsTip, bitcoin_chainActive.Genesis(), pindexClaimBestBlock, true);
+            bitcoin_pwalletMain->ScanForWalletTransactions(bitcoin_chainActive.Genesis(), true);
         }
     }
 
@@ -300,7 +293,7 @@ Value bitcredit_importwallet(const Array& params, bool fHelp)
         bitcredit_pwalletMain->nTimeFirstKey = nTimeBegin;
 
     LogPrintf("Rescanning last %i blocks\n", bitcredit_chainActive.Height() - pindex->nHeight + 1);
-    bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, pindex);
+    bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, pindex);
     bitcredit_pwalletMain->MarkDirty();
 
     if (!fGood)
@@ -397,15 +390,8 @@ Value bitcoin_importwallet(const Array& params, bool fHelp)
     if (!bitcoin_pwalletMain->nTimeFirstKey || nTimeBegin < bitcoin_pwalletMain->nTimeFirstKey)
         bitcoin_pwalletMain->nTimeFirstKey = nTimeBegin;
 
-	//Find best claim block
-    Bitcoin_CBlockIndex *pindexClaimBestBlock = NULL;
-	std::map<uint256, Bitcoin_CBlockIndex*>::iterator it = bitcoin_mapBlockIndex.find(bitcoin_pclaimCoinsTip->GetBestBlock());
-	if (it != bitcoin_mapBlockIndex.end()) {
-		pindexClaimBestBlock = it->second;
-	}
-
     LogPrintf("Rescanning last %i blocks\n", bitcoin_chainActive.Height() - pindex->nHeight + 1);
-    bitcoin_pwalletMain->ScanForWalletTransactions(*bitcoin_pclaimCoinsTip, pindex, pindexClaimBestBlock);
+    bitcoin_pwalletMain->ScanForWalletTransactions(pindex);
     bitcoin_pwalletMain->MarkDirty();
 
     if (!fGood)

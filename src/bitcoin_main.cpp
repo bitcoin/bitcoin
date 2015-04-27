@@ -116,7 +116,7 @@ namespace {
 namespace {
 struct Bitcoin_CMainSignals {
     // Notifies listeners of updated transaction data (passing hash, transaction, and optionally the block it is found in.
-    boost::signals2::signal<void (Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &, const Bitcoin_CTransaction &, const Bitcoin_CBlock *)> SyncTransaction;
+    boost::signals2::signal<void (const uint256 &, const Bitcoin_CTransaction &, const Bitcoin_CBlock *)> SyncTransaction;
     // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
     boost::signals2::signal<void (const uint256 &)> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
@@ -131,7 +131,7 @@ struct Bitcoin_CMainSignals {
 }
 
 void Bitcoin_RegisterWallet(Bitcoin_CWalletInterface* pwalletIn) {
-    bitcoin_g_signals.SyncTransaction.connect(boost::bind(&Bitcoin_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3, _4));
+    bitcoin_g_signals.SyncTransaction.connect(boost::bind(&Bitcoin_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
     bitcoin_g_signals.EraseTransaction.connect(boost::bind(&Bitcoin_CWalletInterface::EraseFromWallet, pwalletIn, _1));
     bitcoin_g_signals.UpdatedTransaction.connect(boost::bind(&Bitcoin_CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     bitcoin_g_signals.SetBestChain.connect(boost::bind(&Bitcoin_CWalletInterface::SetBestChain, pwalletIn, _1));
@@ -145,7 +145,7 @@ void Bitcoin_UnregisterWallet(Bitcoin_CWalletInterface* pwalletIn) {
     bitcoin_g_signals.SetBestChain.disconnect(boost::bind(&Bitcoin_CWalletInterface::SetBestChain, pwalletIn, _1));
     bitcoin_g_signals.UpdatedTransaction.disconnect(boost::bind(&Bitcoin_CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     bitcoin_g_signals.EraseTransaction.disconnect(boost::bind(&Bitcoin_CWalletInterface::EraseFromWallet, pwalletIn, _1));
-    bitcoin_g_signals.SyncTransaction.disconnect(boost::bind(&Bitcoin_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3, _4));
+    bitcoin_g_signals.SyncTransaction.disconnect(boost::bind(&Bitcoin_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 }
 
 void Bitcoin_UnregisterAllWallets() {
@@ -157,8 +157,8 @@ void Bitcoin_UnregisterAllWallets() {
     bitcoin_g_signals.SyncTransaction.disconnect_all_slots();
 }
 
-void Bitcoin_SyncWithWallets(Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcoin_CTransaction &tx, const Bitcoin_CBlock *pblock) {
-    bitcoin_g_signals.SyncTransaction(claim_view, hash, tx, pblock);
+void Bitcoin_SyncWithWallets(const uint256 &hash, const Bitcoin_CTransaction &tx, const Bitcoin_CBlock *pblock) {
+    bitcoin_g_signals.SyncTransaction(hash, tx, pblock);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -904,8 +904,7 @@ bool Bitcoin_AcceptToMemoryPool(Bitcoin_CTxMemPool& pool, CValidationState &stat
         pool.addUnchecked(hash, entry);
     }
 
-    //Disabled, only used in *Claim functions
-    //bitcoin_g_signals.SyncTransaction(hash, tx, NULL);
+    bitcoin_g_signals.SyncTransaction(hash, tx, NULL);
 
     return true;
 }
@@ -2213,17 +2212,11 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
         //Claim tip set to 1 to indicate credits non-aligned chainstate. Only happens on bitcoin initial download
     	ret = claim_view.SetBitcreditClaimTip(uint256(1));
     	assert(ret);
-
-    	//TODO - IS bitcoin_pclaimCoinsTip the correct reference here? It hasn't been flushed yet?
-    	// Watch for transactions paying to me
-		for (unsigned int i = 0; i < block.vtx.size(); i++)
-			bitcoin_g_signals.SyncTransaction(*bitcoin_pclaimCoinsTip, block.GetTxHash(i), block.vtx[i], &block);
     }
 
-    //Disabled, only used in *Claim functions
-//    // Watch for transactions paying to me
-//    for (unsigned int i = 0; i < block.vtx.size(); i++)
-//        bitcoin_g_signals.SyncTransaction(block.GetTxHash(i), block.vtx[i], &block);
+    // Watch for transactions paying to me
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+        bitcoin_g_signals.SyncTransaction(block.GetTxHash(i), block.vtx[i], &block);
 
     return true;
 }
@@ -2305,10 +2298,6 @@ bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state
     ret = view.SetBestBlock(pindex->GetBlockHash());
     assert(ret);
 
-    // Watch for transactions paying to me
-    for (unsigned int i = 0; i < block.vtx.size(); i++)
-        bitcoin_g_signals.SyncTransaction(*bitcoin_pclaimCoinsTip, block.GetTxHash(i), block.vtx[i], &block);
-
     return true;
 }
 
@@ -2356,8 +2345,8 @@ void static Bitcoin_UpdateTip(Bitcoin_CBlockIndex *pindexNew) {
 
 //    // Update best block in wallet (so we can detect restored wallets)
     bool fIsInitialDownload = Bitcoin_IsInitialBlockDownload();
-//    if ((bitcoin_chainActive.Height() % 20160) == 0 || (!fIsInitialDownload && (bitcoin_chainActive.Height() % 144) == 0))
-//        bitcoin_g_signals.SetBestChain(bitcoin_chainActive.GetLocator());
+    if ((bitcoin_chainActive.Height() % 20160) == 0 || (!fIsInitialDownload && (bitcoin_chainActive.Height() % 144) == 0))
+        bitcoin_g_signals.SetBestChain(bitcoin_chainActive.GetLocator());
 
     // New best block
     bitcoin_nTimeBestReceived = GetTime();
@@ -2383,16 +2372,6 @@ void static Bitcoin_UpdateTip(Bitcoin_CBlockIndex *pindexNew) {
         if (nUpgraded > 100/2)
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
-    }
-}
-
-// Update chainActive and related internal data structures.
-void static Bitcoin_UpdateTipForClaim(Bitcoin_CBlockIndex *pindexNew) {
-	//TODO - This should be removed?
-    // Update best block in wallet (so we can detect restored wallets)
-    bool fIsInitialDownload = Bitcoin_IsInitialBlockDownload();
-    if ((bitcoin_chainActive.Height() % 20160) == 0 || (!fIsInitialDownload && (bitcoin_chainActive.Height() % 144) == 0)) {
-    	bitcoin_g_signals.SetBestChain(bitcoin_chainActive.GetLocator(pindexNew));
     }
 }
 
@@ -2436,12 +2415,11 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     // Update chainActive and related variables.
     Bitcoin_UpdateTip((Bitcoin_CBlockIndex*)pindexDelete->pprev);
 
-    //Disabled, only used in *Claimfunctions
-//    // Let wallets know transactions went from 1-confirmed to
-//    // 0-confirmed or conflicted:
-//    BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
-//        Bitcoin_SyncWithWallets(tx.GetHash(), tx, NULL);
-//    }
+    // Let wallets know transactions went from 1-confirmed to
+    // 0-confirmed or conflicted:
+    BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
+        Bitcoin_SyncWithWallets(tx.GetHash(), tx, NULL);
+    }
 
     return true;
 }
@@ -2460,14 +2438,6 @@ bool static Bitcoin_DisconnectTipForClaim(CValidationState &state, Bitcoin_CClai
     if (bitcoin_fBenchmark)
         LogPrintf("Bitcoin: - Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
-    // Update chainActive and related variables.
-    Bitcoin_UpdateTipForClaim((Bitcoin_CBlockIndex*)pindex->pprev);
-
-    // Let wallets know transactions went from 1-confirmed to
-    // 0-confirmed or conflicted:
-    BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
-        Bitcoin_SyncWithWallets(view, tx.GetHash(), tx, NULL);
-    }
     return true;
 }
 
@@ -2513,16 +2483,15 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
     // Update chainActive & related variables.
     Bitcoin_UpdateTip(pindexNew);
 
-    //Disabled, only used in *Claim functions
-//    // Tell wallet about transactions that went from mempool
-//    // to conflicted:
-//    BOOST_FOREACH(const Bitcoin_CTransaction &tx, txConflicted) {
-//        Bitcoin_SyncWithWallets(tx.GetHash(), tx, NULL);
-//    }
-//    // ... and about transactions that got confirmed:
-//    BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
-//        Bitcoin_SyncWithWallets(tx.GetHash(), tx, &block);
-//    }
+    // Tell wallet about transactions that went from mempool
+    // to conflicted:
+    BOOST_FOREACH(const Bitcoin_CTransaction &tx, txConflicted) {
+        Bitcoin_SyncWithWallets(tx.GetHash(), tx, NULL);
+    }
+    // ... and about transactions that got confirmed:
+    BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
+        Bitcoin_SyncWithWallets(tx.GetHash(), tx, &block);
+    }
     return true;
 }
 
@@ -2548,17 +2517,6 @@ bool static Bitcoin_ConnectTipForClaim(CValidationState &state, Bitcoin_CClaimCo
 
     if (bitcoin_fBenchmark)
         LogPrintf("Bitcoin: - Claim: Connect: %.2fms, height: %d\n", (GetTimeMicros() - nStart) * 0.001, pindex->nHeight);
-
-    // Update chainActive & related variables.
-    Bitcoin_UpdateTipForClaim(pindex);
-
-    //Only inform wallet if we are doing a "live" update and not a test run
-    if(updateUndo) {
-		//Tell wallet about transactions that got confirmed:
-		BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
-			Bitcoin_SyncWithWallets(view, tx.GetHash(), tx, &block);
-		}
-    }
 
     return true;
 }

@@ -123,9 +123,9 @@ public:
     OptionsModel *getOptionsModel();
     Bitcoin_AddressTableModel *getAddressTableModel();
 
-    qint64 getBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
-    qint64 getUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    qint64 getImmatureBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
+    qint64 getUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
@@ -177,9 +177,9 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CClaimCoinsViewCache &claim_view);
-    bool isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache &claim_view) const;
-    void listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache &claim_view) const;
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CClaimCoinsViewCache *claim_view);
+    bool isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache *claim_view) const;
+    void listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache *claim_view) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);

@@ -45,7 +45,7 @@ Bitcoin_WalletModel::~Bitcoin_WalletModel()
     unsubscribeFromCoreSignals();
 }
 
-qint64 Bitcoin_WalletModel::getBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl) const
+qint64 Bitcoin_WalletModel::getBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl) const
 {
     wallet->MarkDirty();
 
@@ -63,13 +63,13 @@ qint64 Bitcoin_WalletModel::getBalance(Bitcoin_CClaimCoinsViewCache& claim_view,
     return wallet->GetBalance(claim_view, mapFilterTxInPoints);
 }
 
-qint64 Bitcoin_WalletModel::getUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+qint64 Bitcoin_WalletModel::getUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
 	wallet->MarkDirty();
     return wallet->GetUnconfirmedBalance(claim_view, mapFilterTxInPoints);
 }
 
-qint64 Bitcoin_WalletModel::getImmatureBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+qint64 Bitcoin_WalletModel::getImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
 	wallet->MarkDirty();
     return wallet->GetImmatureBalance(claim_view, mapFilterTxInPoints);
@@ -122,11 +122,9 @@ void Bitcoin_WalletModel::checkBalanceChanged()
     map<uint256, set<int> > mapClaimTxInPoints;
     bitcredit_wallet->ClaimTxInPoints(mapClaimTxInPoints);
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
-
-    qint64 newBalance = getBalance(claim_view, mapClaimTxInPoints);
-    qint64 newUnconfirmedBalance = getUnconfirmedBalance(claim_view, mapClaimTxInPoints);
-    qint64 newImmatureBalance = getImmatureBalance(claim_view, mapClaimTxInPoints);
+    qint64 newBalance = getBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints);
+    qint64 newUnconfirmedBalance = getUnconfirmedBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints);
+    qint64 newImmatureBalance = getImmatureBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints);
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
     {
@@ -521,7 +519,7 @@ bool Bitcoin_WalletModel::getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut
 }
 
 // returns a list of COutputs from COutPoints
-void Bitcoin_WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CClaimCoinsViewCache &claim_view)
+void Bitcoin_WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CClaimCoinsViewCache *claim_view)
 {
     LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
     BOOST_FOREACH(const COutPoint& outpoint, vOutpoints)
@@ -533,17 +531,22 @@ void Bitcoin_WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, s
         int nDepth = wallet->mapWallet[hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
 
-        if(claim_view.HaveCoins(hash)) {
-			const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(hash);
-			if(claimCoins.HasClaimable(n)) {
-				Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, claimCoins.vout[n].nValueClaimable);
-				vOutputs.push_back(out);
-			}
+        if(claim_view == NULL) {
+			Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, wallet->mapWallet[hash].vout[n].nValue);
+			vOutputs.push_back(out);
+        } else {
+            if(claim_view->HaveCoins(hash)) {
+    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hash);
+    			if(claimCoins.HasClaimable(n)) {
+    				Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, claimCoins.vout[n].nValueClaimable);
+    				vOutputs.push_back(out);
+    			}
+            }
         }
     }
 }
 
-bool Bitcoin_WalletModel::isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache &claim_view) const
+bool Bitcoin_WalletModel::isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache *claim_view) const
 {
     LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
 	const int nClaimBestBlockDepth = wallet->GetBestBlockClaimDepth(claim_view);
@@ -551,7 +554,7 @@ bool Bitcoin_WalletModel::isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoins
 }
 
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
-void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache &claim_view) const
+void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache *claim_view) const
 {
     wallet->MarkDirty();
 
@@ -576,11 +579,16 @@ void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutpu
         int nDepth = wallet->mapWallet[hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
 
-        if(claim_view.HaveCoins(hash)) {
-			const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(hash);
-			if(claimCoins.HasClaimable(n)) {
-				Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, claimCoins.vout[n].nValueClaimable);
-				vCoins.push_back(out);
+        if(claim_view == NULL) {
+			Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, wallet->mapWallet[hash].vout[n].nValue);
+			vCoins.push_back(out);
+        } else {
+			if(claim_view->HaveCoins(hash)) {
+				const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hash);
+				if(claimCoins.HasClaimable(n)) {
+					Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, claimCoins.vout[n].nValueClaimable);
+					vCoins.push_back(out);
+				}
 			}
         }
     }
