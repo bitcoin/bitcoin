@@ -404,7 +404,7 @@ Value getwork(const Array& params, bool fHelp)
 
         // Pre-build hash buffers
         char pmidstate[32];
-        char pdata[128];
+        char pdata[336];
         char phash1[64];
         FormatHashBuffers(pblock, pmidstate, pdata, phash1);
 
@@ -421,12 +421,12 @@ Value getwork(const Array& params, bool fHelp)
     {
         // Parse parameters
         vector<unsigned char> vchData = ParseHex(params[0].get_str());
-        if (vchData.size() != 128)
+        if (vchData.size() != 168)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
         Bitcredit_CBlock* pdata = (Bitcredit_CBlock*)&vchData[0];
 
         // Byte reverse
-        for (int i = 0; i < 128/4; i++)
+        for (int i = 0; i < 168/4; i++)
             ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
 
         // Get saved block
