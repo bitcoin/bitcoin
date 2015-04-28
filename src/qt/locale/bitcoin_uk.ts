@@ -1,9 +1,9 @@
-<TS language="uk" version="2.0">
+<TS language="uk" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Двічі клікніть на адресу чи назву для їх зміни</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Клік правою кнопкою для редагування адреси або мітки</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1289,6 +1289,10 @@ Address: %4
         <translation>Відшкодування з %1</translation>
     </message>
     <message>
+        <source>Payment request DoS protection</source>
+        <translation>Оплата потребує захисту DoS</translation>
+    </message>
+    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Помилка зв'язку з %1: %2</translation>
     </message>
@@ -1830,7 +1834,7 @@ Address: %4
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Після комісії</translation>
+        <translation>Після комісії:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -1910,7 +1914,7 @@ Address: %4
     </message>
     <message>
         <source>Send as zero-fee transaction if possible</source>
-        <translation>Надіслати як нульовий плата за передачу, якщо це можливо</translation>
+        <translation>Надіслати транзакцію без сплати комісії, якщо це можливо</translation>
     </message>
     <message>
         <source>(confirmation may take longer)</source>
@@ -2807,30 +2811,6 @@ Address: %4
         <translation>Приймати підключення ззовні (типово: 1 за відсутності -proxy чи -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, ви повинні встановити rpcpassword в файлі конфігурації:
-%s
-Рекомендується використати такий випадковий пароль:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(ви не повинні пам'ятати цей пароль)
-Ім’я користувача та пароль ПОВИННІ бути різними.
-Якщо файлу не існує, створіть його, обмеживши доступ правом читання для власника.
-Також рекомендується використовувати alertnotify для того, щоб отримувати сповіщення про проблеми;
-наприклад: alertnotify=echo %%s | mail -s "Сповіщення Bitcoin" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Прив'язатися до даної адреси та прослуховувати її. Використовуйте запис виду [хост]:порт для IPv6</translation>
     </message>
@@ -2845,14 +2825,6 @@ rpcpassword=%s
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Ввійти в режим регресивного тестування, що використовує спеціальний ланцюг з миттєвим знаходженням блоків.</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Помилка: транзакцію було відхилено. Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця (wallet.dat), а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Помилка: Ця транзакція потребує додавання комісії щонайменше в %s через її розмір, складність, або внаслідок використання недавно отриманих коштів!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2965,10 +2937,6 @@ rpcpassword=%s
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Помилка: Мало вільного місця на диску!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Помилка: Гаманець заблокований, неможливо створити транзакцію!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3095,8 +3063,16 @@ rpcpassword=%s
         <translation>Комісії (в BTC/КБ), що менші за вказану, вважатимуться нульовими (для створення транзакції) (типово: %s)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Якщо параметр paytxfee не встановлено, включити комісію для отримання перших підтверджень транзакцій протягом n блоків (типово: %u)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Максимальний розмір даних в транзакціях носіїв даних, що ми передаємо і добуваємо (за замовчуванням: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Максимальна загальна плата для використання в одній транзакції, установка занадто низької може перервати великі транзакції(стандартно: %s)</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3115,12 +3091,44 @@ rpcpassword=%s
         <translation>Цей продукт включає в себе програмне забезпечення, розроблене в рамках проекту OpenSSL &lt;https://www.openssl.org/&gt;, криптографічне програмне забезпечення, написане Еріком Янгом, та функції для роботи з UPnP, написані Томасом Бернардом.</translation>
     </message>
     <message>
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>Для використання bitcoind, або bitcoin-qt з параметром -server, ви повинні встановити rpcpassword в файлі конфігурації:
+%s
+Рекомендується використати такий випадковий пароль:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(вам не треба запам'ятовувати цей пароль)
+Ім'я користувача та пароль ПОВИННІ бути різними.
+Якщо файлу не існує, створіть його, обмеживши доступ правом читання для власника.
+Також рекомендується використовувати alertnotify для того, щоб отримувати сповіщення про проблеми;
+наприклад: alertnotify=echo %%s | mail -s "Сповіщення Bitcoin" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Увага: установлено дуже велике значення -maxtxfee! Такі великі комісії можуть бути сплачені в окремій транзакції.</translation>
+    </message>
+    <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
         <translation>Увага: будь ласка, перевірте дату і час на своєму комп'ютері! Якщо ваш годинник йде неправильно, Bitcoin Core може працювати некоректно.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Учасники, що знаходяться в білому списку, не можуть бути заблоковані за DoS та їхні транзакції завжди ретранслюватимуться (навіть якщо вони є в пам'яті), що може бути корисним, наприклад, для шлюзу</translation>
+    </message>
+    <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Приймати публічні REST-запити (типово: %u)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3159,6 +3167,10 @@ rpcpassword=%s
         <translation>Не вдалося пройти базові перевірки під час ініціалізації. Bitcoin Core буде вимкнено.</translation>
     </message>
     <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Вказано некоректну суму для параметру -minrelaytxfee: «%s»</translation>
     </message>
@@ -3175,10 +3187,6 @@ rpcpassword=%s
         <translation>Вказано неправильну маску підмережі для -whitelist: «%s»</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation>Утримувати в пам'яті щонайбільше &lt;n&gt; блоків, не під'єднаних до основного ланцюжка (типово: %u)</translation>
-    </message>
-    <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation>Утримувати в пам'яті щонайбільше &lt;n&gt; транзакцій, що споживають невідомі входи (типово: %u)</translation>
     </message>
@@ -3189,10 +3197,6 @@ rpcpassword=%s
     <message>
         <source>Node relay options:</source>
         <translation>Параметри вузла ретрансляції:</translation>
-    </message>
-    <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation>Роздрукувати блок під час запуску (якщо він буде знайдений в індексі)</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3216,7 +3220,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
-        <translation>Встановити операцію надсилання, як неоплатну операцію, якщо це можливо (за замовчуванням: %u)</translation>
+        <translation>Не сплачувати комісію за надсилання транзакцій, якщо це можливо (типово: %u)</translation>
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
@@ -3241,6 +3245,10 @@ rpcpassword=%s
     <message>
         <source>Transaction amounts must be positive</source>
         <translation>Суми монет у транзакції мають бути позитивними</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Транзакція занадто велика для правил комісії</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3339,10 +3347,6 @@ rpcpassword=%s
         <translation>Рівень ретельності перевірки блоків (0-4, типово: %u)</translation>
     </message>
     <message>
-        <source>If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: %u)</source>
-        <translation>Якщо параметр paytxfee не встановлено, включити комісію, достатню для підтвердження транзакцій протягом n блоків (типово: %u)</translation>
-    </message>
-    <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
         <translation>Записувати в лог-файл пріоритет транзакції та комісію за кБ під час добування блоків (типово: %u)</translation>
     </message>
@@ -3435,10 +3439,6 @@ rpcpassword=%s
         <translation>Доповнювати налагоджувальний вивід відміткою часу (типово: %u)</translation>
     </message>
     <message>
-        <source>Print block tree on startup (default: %u)</source>
-        <translation>Роздрукувати дерево блоків під час запуску (типово: %u)</translation>
-    </message>
-    <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
         <translation>Ретранслювати та створювати транзакції носіїв даних (типово: %u)</translation>
     </message>
@@ -3515,10 +3515,6 @@ rpcpassword=%s
         <translation>Помилка у величині комісії -paytxfee=&lt;amount&gt;: «%s»</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Некоректна кількість</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Недостатньо коштів</translation>
     </message>
@@ -3549,10 +3545,6 @@ rpcpassword=%s
     <message>
         <source>Done loading</source>
         <translation>Завантаження завершене</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Щоб використати опцію %s</translation>
     </message>
     <message>
         <source>Error</source>
