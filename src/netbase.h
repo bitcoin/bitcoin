@@ -91,7 +91,7 @@ class CNetAddr
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         /** XOR address with a fixed xor key */
-        void XORAddress();
+        void XORAddress(int keyIndex);
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b);
