@@ -272,7 +272,7 @@ def send_zeropri_transaction(from_node, to_node, amount, fee):
     Create&broadcast a zero-priority transaction.
     Returns (txid, hex-encoded-txdata)
     Ensures transaction is zero-priority by first creating a send-to-self,
-    then using it's output
+    then using its output
     """
 
     # Create a send-to-self with confirmed inputs:

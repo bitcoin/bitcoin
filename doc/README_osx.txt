@@ -1,6 +1,6 @@
 Deterministic OSX Dmg Notes.
 
-Working OSX DMG's are created in Linux by combining a recent clang,
+Working OSX DMGs are created in Linux by combining a recent clang,
 the Apple's binutils (ld, ar, etc), and DMG authoring tools.
 
 Apple uses clang extensively for development and has upstreamed the necessary
@@ -58,7 +58,7 @@ libdmg-hfsplus project is used to compress it. There are several bugs in this
 tool and its maintainer has seemingly abandoned the project. It has been forked
 and is available (with fixes) here: https://github.com/theuni/libdmg-hfsplus .
 
-The 'dmg' tool has the ability to create DMG's from scratch as well, but this
+The 'dmg' tool has the ability to create DMGs from scratch as well, but this
 functionality is broken. Only the compression feature is currently used.
 Ideally, the creation could be fixed and genisoimage would no longer be necessary.
 

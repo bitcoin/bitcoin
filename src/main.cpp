@@ -941,7 +941,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
-        // only helps filling in pfMissingInputs (to determine missing vs spent).
+        // and only helps with filling in pfMissingInputs (to determine missing vs spent).
         BOOST_FOREACH(const CTxIn txin, tx.vin) {
             if (!view.HaveCoins(txin.prevout.hash)) {
                 if (pfMissingInputs)
@@ -1277,8 +1277,8 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
         pfork = pfork->pprev;
     }
 
-    // We define a condition which we should warn the user about as a fork of at least 7 blocks
-    // who's tip is within 72 blocks (+/- 12 hours if no one mines it) of ours
+    // We define a condition where we should warn the user about as a fork of at least 7 blocks
+    // with a tip within 72 blocks (+/- 12 hours if no one mines it) of ours
     // We use 7 blocks rather arbitrarily as it represents just under 10% of sustained network
     // hash rate operating on the fork.
     // or a chain that is entirely longer than ours and invalid (note that this should be detected by both)
@@ -1719,7 +1719,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // See BIP30 and http://r6.ca/blog/20120206T005236Z.html for more information.
     // This logic is not necessary for memory pool transactions, as AcceptToMemoryPool
     // already refuses previously-known transaction ids entirely.
-    // This rule was originally applied all blocks whose timestamp was after March 15, 2012, 0:00 UTC.
+    // This rule was originally applied to all blocks with a timestamp after March 15, 2012, 0:00 UTC.
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes in their
     // initial block download.
@@ -1984,7 +1984,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         if (nUpgraded > 100/2)
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-            strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
+            strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
             fWarned = true;
         }
@@ -3732,7 +3732,7 @@ void static ProcessGetData(CNode* pfrom)
                             pfrom->PushMessage("merkleblock", merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
-                            // Note that there is currently no way for a node to request any single transactions we didnt send here -
+                            // Note that there is currently no way for a node to request any single transactions we didn't send here -
                             // they must either disconnect and retry or request the full block.
                             // Thus, the protocol spec specified allows for us to provide duplicate txn here,
                             // however we MUST always provide at least what the remote peer needs
@@ -4059,7 +4059,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
                 if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
-                    // First request the headers preceeding the announced block. In the normal fully-synced
+                    // First request the headers preceding the announced block. In the normal fully-synced
                     // case where a new block is announced that succeeds the current tip (no reorganization),
                     // there are no such headers.
                     // Secondly, and only when we are close to being synced, we request the announced block directly,
@@ -4466,7 +4466,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     // Nonce mismatches are normal when pings are overlapping
                     sProblem = "Nonce mismatch";
                     if (nonce == 0) {
-                        // This is most likely a bug in another implementation somewhere, cancel this ping
+                        // This is most likely a bug in another implementation somewhere; cancel this ping
                         bPingFinished = true;
                         sProblem = "Nonce zero";
                     }
@@ -4475,7 +4475,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 sProblem = "Unsolicited pong without ping";
             }
         } else {
-            // This is most likely a bug in another implementation somewhere, cancel this ping
+            // This is most likely a bug in another implementation somewhere; cancel this ping
             bPingFinished = true;
             sProblem = "Short payload";
         }
@@ -4918,7 +4918,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // In case there is a block that has been in flight from this peer for (2 + 0.5 * N) times the block interval
         // (with N the number of validated blocks that were in flight at the time it was requested), disconnect due to
         // timeout. We compensate for in-flight blocks to prevent killing off peers due to our own downstream link
-        // being saturated. We only count validated in-flight blocks so peers can't advertize nonexisting block hashes
+        // being saturated. We only count validated in-flight blocks so peers can't advertise non-existing block hashes
         // to unreasonably increase our timeout.
         if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0 && state.vBlocksInFlight.front().nTime < nNow - 500000 * consensusParams.nPowTargetSpacing * (4 + state.vBlocksInFlight.front().nValidatedQueuedBefore)) {
             LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", state.vBlocksInFlight.front().hash.ToString(), pto->id);
