@@ -19,6 +19,7 @@
 #include "mastercore_dex.h"
 #include "mastercore_errors.h"
 #include "mastercore_log.h"
+#include "mastercore_mdex.h"
 #include "mastercore_script.h"
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
