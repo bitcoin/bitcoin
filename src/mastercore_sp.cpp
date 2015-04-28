@@ -3,6 +3,7 @@
 #include "mastercore_sp.h"
 
 #include "mastercore.h"
+#include "mastercore_log.h"
 
 #include "main.h"
 #include "uint256.h"
@@ -318,7 +319,6 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
   uint64_t numProps, unsigned char issuerPerc, const std::map<std::string, std::vector<uint64_t> > txFundraiserData, 
   const uint64_t amountPremined  )
 {
-
   //initialize variables
   double totalCreated = 0;
   double issuerPercentage = (double) (issuerPerc * 0.01);
@@ -334,14 +334,14 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
 
     //make calc for bonus given in sec
     uint64_t bonusSeconds = fundraiserSecs - currentSecs;
-  
+
     //turn it into weeks
     double weeks = bonusSeconds / (double) 604800;
-    
+
     //make it a %
     double ebPercentage = weeks * bonusPerc;
     double bonusPercentage = ( ebPercentage / 100 ) + 1;
-  
+
     //init var
     double createdTokens;
 
@@ -349,17 +349,13 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
     if( MSC_PROPERTY_TYPE_DIVISIBLE == propType ) {
       //calculate tokens
       createdTokens = (amtTransfer/1e8) * (double) numProps * bonusPercentage ;
-      
-      //printf("prop 2: is %Lf, and %Lf \n", createdTokens, issuerTokens);
-      
+
       //add totals up
       totalCreated += createdTokens;
     } else {
-      //printf("amount xfer %Lf and props %f and bonus percs %Lf \n", amtTransfer, (double) numProps, bonusPercentage);
-      
       //same here
       createdTokens = (uint64_t) ( (amtTransfer/1e8) * (double) numProps * bonusPercentage);
-      
+
       totalCreated += createdTokens;
     }
   };
@@ -476,31 +472,30 @@ bool mastercore::isCrowdsalePurchase(uint256 txid, string address, int64_t *prop
 void mastercore::eraseMaxedCrowdsale(const string &address, uint64_t blockTime, int block)
 {
     CrowdMap::iterator it = my_crowds.find(address);
-    
+
     if (it != my_crowds.end()) {
 
       CMPCrowd &crowd = it->second;
       file_log("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address.c_str());
 
       dumpCrowdsaleInfo(address, crowd);
-      
+
       CMPSPInfo::Entry sp;
-      
+
       //get sp from data struct
       _my_sps->getSP(crowd.getPropertyId(), sp);
-      
+
       //get txdata
       sp.historicalData = crowd.getDatabase();
       sp.close_early = 1;
       sp.max_tokens = 1;
       sp.timeclosed = blockTime;
-      
+
       //update SP with this data
       sp.update_block = chainActive[block]->GetBlockHash();
       _my_sps->updateSP(crowd.getPropertyId() , sp);
-      
+
       //No calculate fractional calls here, no more tokens (at MAX)
-      
       my_crowds.erase(it);
     }
 }
@@ -513,9 +508,6 @@ CrowdMap::iterator my_it = my_crowds.begin();
 
   while (my_crowds.end() != my_it)
   {
-    // my_it->first = key
-    // my_it->second = value
-
     CMPCrowd &crowd = my_it->second;
 
     if (blockTime > (int64_t)crowd.getDeadline())
@@ -524,14 +516,12 @@ CrowdMap::iterator my_it = my_crowds.begin();
 
       // TODO: dump the info about this crowdsale being delete into a TXT file (JSON perhaps)
       dumpCrowdsaleInfo(my_it->first, my_it->second, true);
-      
+
       // Begin calculate Fractional 
       CMPSPInfo::Entry sp;
-      
+
       //get sp from data struct
       _my_sps->getSP(crowd.getPropertyId(), sp);
-
-      //file_log("\nValues going into calculateFractional(): hexid %s earlyBird %d deadline %lu numProps %lu issuerPerc %d, issuerCreated %ld \n", sp.txid.GetHex().c_str(), sp.early_bird, sp.deadline, sp.num_tokens, sp.percentage, crowd.getIssuerCreated());
 
       //find missing tokens
       double missedTokens = calculateFractional(sp.prop_type,
@@ -541,9 +531,6 @@ CrowdMap::iterator my_it = my_crowds.begin();
                           sp.percentage,
                           crowd.getDatabase(),
                           crowd.getIssuerCreated());
-
-
-      //file_log("\nValues coming out of calculateFractional(): Total tokens, Tokens created, Tokens for issuer, amountMissed: issuer %s %lu %lu %lu %f\n",sp.issuer.c_str(), crowd.getUserCreated() + crowd.getIssuerCreated(), crowd.getUserCreated(), crowd.getIssuerCreated(), missedTokens);
 
       //get txdata
       sp.historicalData = crowd.getDatabase();
@@ -556,7 +543,7 @@ CrowdMap::iterator my_it = my_crowds.begin();
       //update values
       update_tally_map(sp.issuer, crowd.getPropertyId(), missedTokens, BALANCE);
       //End
-                     
+
       my_crowds.erase(my_it++);
 
       ++how_many_erased;
@@ -578,5 +565,4 @@ char *mastercore::c_strPropertyType(int i)
 
   return (char *) "*** property type error ***";
 }
-
 

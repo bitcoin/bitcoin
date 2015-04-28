@@ -5,6 +5,7 @@
 #include "mastercore.h"
 #include "mastercore_convert.h"
 #include "mastercore_errors.h"
+#include "mastercore_log.h"
 #include "mastercore_tx.h"
 
 #include "main.h"
@@ -31,8 +32,6 @@ using std::string;
 
 using namespace mastercore;
 
-
-extern int msc_debug_metadex1, msc_debug_metadex2, msc_debug_metadex3;
 
 md_PropertiesMap mastercore::metadex;
 
@@ -320,7 +319,7 @@ void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
       {
       CMPMetaDEx obj = *it;
 
-        if (bDisplay) printf("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed).c_str() , obj.ToString().c_str());
+        if (bDisplay) PrintToConsole("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) , obj.ToString());
         else file_log("%s= %s\n", price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) , obj.ToString());
 
         // extra checks: price or either of the amounts is 0
