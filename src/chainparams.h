@@ -93,8 +93,8 @@ protected:
 };
 
 /**
- * Return the currently selected parameters. This won't change after app startup
- * outside of the unit tests.
+ * Return the currently selected parameters. This won't change after app
+ * startup, except for unit tests.
  */
 const CChainParams &Params();
 

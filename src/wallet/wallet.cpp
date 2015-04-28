@@ -35,8 +35,8 @@ bool bSpendZeroConfChange = true;
 bool fSendFreeTransactions = false;
 bool fPayAtLeastCustomFee = true;
 
-/** 
- * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) 
+/**
+ * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
  * Override with -mintxfee
  */
 CFeeRate CWallet::minTxFee = CFeeRate(1000);
@@ -529,7 +529,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 delete pwalletdbEncryption;
             }
             // We now probably have half of our keys encrypted in memory, and half not...
-            // die and let the user reload their unencrypted wallet.
+            // die and let the user reload the unencrypted wallet.
             assert(false);
         }
 
@@ -541,7 +541,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             if (!pwalletdbEncryption->TxnCommit()) {
                 delete pwalletdbEncryption;
                 // We now have keys encrypted in memory, but not on disk...
-                // die to avoid confusion and let the user reload their unencrypted wallet.
+                // die to avoid confusion and let the user reload the unencrypted wallet.
                 assert(false);
             }
 
@@ -1097,7 +1097,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate)
 
 void CWallet::ReacceptWalletTransactions()
 {
-    // If transcations aren't broadcasted, don't let them into local mempool either
+    // If transactions aren't being broadcasted, don't let them into local mempool either
     if (!fBroadcastTransactions)
         return;
     LOCK2(cs_main, cs_wallet);

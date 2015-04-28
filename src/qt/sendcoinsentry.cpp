@@ -216,7 +216,7 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
 
         ui->addAsLabel->clear();
         ui->payTo->setText(recipient.address); // this may set a label from addressbook
-        if (!recipient.label.isEmpty()) // if a label had been set from the addressbook, dont overwrite with an empty label
+        if (!recipient.label.isEmpty()) // if a label had been set from the addressbook, don't overwrite with an empty label
             ui->addAsLabel->setText(recipient.label);
         ui->payAmount->setValue(recipient.amount);
     }
