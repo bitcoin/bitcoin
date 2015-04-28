@@ -32,14 +32,14 @@ enum bloomflags
 
 /**
  * BloomFilter is a probabilistic filter which SPV clients provide
- * so that we can filter the transactions we sends them.
+ * so that we can filter the transactions we send them.
  * 
  * This allows for significantly more efficient transaction and block downloads.
  * 
- * Because bloom filters are probabilistic, an SPV node can increase the false-
- * positive rate, making us send them transactions which aren't actually theirs, 
+ * Because bloom filters are probabilistic, a SPV node can increase the false-
+ * positive rate, making us send it transactions which aren't actually its,
  * allowing clients to trade more bandwidth for more privacy by obfuscating which
- * keys are owned by them.
+ * keys are controlled by them.
  */
 class CBloomFilter
 {

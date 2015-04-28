@@ -17,8 +17,8 @@
 #include <stdint.h>
 #include <vector>
 
-/** 
- * Extended statistics about a CAddress 
+/**
+ * Extended statistics about a CAddress
  */
 class CAddrInfo : public CAddress
 {
@@ -112,7 +112,7 @@ public:
  *  * Addresses are organized into buckets.
  *    * Address that have not yet been tried go into 1024 "new" buckets.
  *      * Based on the address range (/16 for IPv4) of source of the information, 64 buckets are selected at random
- *      * The actual bucket is chosen from one of these, based on the range the address itself is located.
+ *      * The actual bucket is chosen from one of these, based on the range in which the address itself is located.
  *      * One single address can occur in up to 8 different buckets, to increase selection chances for addresses that
  *        are seen frequently. The chance for increasing this multiplicity decreases exponentially.
  *      * When adding a new address to a full bucket, a randomly chosen entry (with a bias favoring less recently seen
