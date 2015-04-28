@@ -293,7 +293,7 @@ struct ProxyCredentials
 };
 
 /** Connect using SOCKS5 (as described in RFC1928) */
-bool static Socks5(string strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
+static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
     LogPrintf("SOCKS5 connecting %s\n", strDest);
     if (strDest.size() > 255) {
@@ -558,7 +558,7 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-static bool ConnectThroughProxy(const proxyType &proxy, const std::string strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
+static bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
 {
     SOCKET hSocket = INVALID_SOCKET;
     // first connect to proxy server
