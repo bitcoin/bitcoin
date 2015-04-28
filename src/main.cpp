@@ -142,8 +142,9 @@ namespace {
     uint32_t nBlockSequenceId = 1;
 
     /**
-     * Sources of received blocks, to be able to send them reject messages or ban
-     * them, if processing happens afterwards. Protected by cs_main.
+     * Sources of received blocks, saved to be able to send them reject
+     * messages or ban them when processing happens afterwards. Protected by
+     * cs_main.
      */
     map<uint256, NodeId> mapBlockSource;
 
@@ -389,7 +390,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
     }
 
     // If the peer reorganized, our previous pindexLastCommonBlock may not be an ancestor
-    // of their current tip anymore. Go back enough to fix that.
+    // of its current tip anymore. Go back enough to fix that.
     state->pindexLastCommonBlock = LastCommonAncestor(state->pindexLastCommonBlock, state->pindexBestKnownBlock);
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
@@ -1721,7 +1722,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // already refuses previously-known transaction ids entirely.
     // This rule was originally applied to all blocks with a timestamp after March 15, 2012, 0:00 UTC.
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
-    // two in the chain that violate it. This prevents exploiting the issue against nodes in their
+    // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
     bool fEnforceBIP30 = (!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
                           !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
@@ -2315,7 +2316,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
     }
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
-    // add them again.
+    // add it again.
     BlockMap::iterator it = mapBlockIndex.begin();
     while (it != mapBlockIndex.end()) {
         if (it->second->IsValid(BLOCK_VALID_TRANSACTIONS) && it->second->nChainTx && !setBlockIndexCandidates.value_comp()(it->second, chainActive.Tip())) {
@@ -3745,7 +3746,7 @@ void static ProcessGetData(CNode* pfrom)
                             // no response
                     }
 
-                    // Trigger them to send a getblocks request for the next batch of inventory
+                    // Trigger the peer node to send a getblocks request for the next batch of inventory
                     if (inv.hash == pfrom->hashContinue)
                     {
                         // Bypass PushInventory, this must send even if redundant,
@@ -4141,8 +4142,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
             if (--nLimit <= 0)
             {
-                // When this block is requested, we'll send an inv that'll make them
-                // getblocks the next batch of inventory.
+                // When this block is requested, we'll send an inv that'll
+                // trigger the peer to getblocks the next batch of inventory.
                 LogPrint("net", "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 pfrom->hashContinue = pindex->GetBlockHash();
                 break;
@@ -4379,9 +4380,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     // This asymmetric behavior for inbound and outbound connections was introduced
     // to prevent a fingerprinting attack: an attacker can send specific fake addresses
-    // to users' AddrMan and later request them by sending getaddr messages. 
-    // Making users (which are behind NAT and can only make outgoing connections) ignore 
-    // getaddr message mitigates the attack.
+    // to users' AddrMan and later request them by sending getaddr messages.
+    // Making nodes which are behind NAT and can only make outgoing connections ignore
+    // the getaddr message mitigates the attack.
     else if ((strCommand == "getaddr") && (pfrom->fInbound))
     {
         pfrom->vAddrToSend.clear();
@@ -4734,7 +4735,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
-        // Don't send anything until we get their version message
+        // Don't send anything until we get its version message
         if (pto->nVersion == 0)
             return true;
 

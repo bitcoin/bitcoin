@@ -164,4 +164,4 @@ Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spur
 
 - Add release notes for the new version to the directory `doc/release-notes` in git master
 
-- Celebrate 
+- Celebrate

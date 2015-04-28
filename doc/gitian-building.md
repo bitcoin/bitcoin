@@ -393,4 +393,4 @@ Uploading signatures
 
 After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
 [bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if that's not possible create a pull
-request. You can also mail the files to me (laanwj@gmail.com) and I'll commit them.
+request. You can also mail the files to Wladimir (laanwj@gmail.com) and he will commit them.
