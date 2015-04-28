@@ -137,6 +137,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "senddexsell_OMNI", 4 },
     { "senddexsell_OMNI", 6 },
     { "senddexaccept_OMNI", 2 },
+    { "senddexaccept_OMNI", 4 },
     { "sendclosecrowdsale_OMNI", 1 },
     { "sendgrant_OMNI", 2 },
     { "sendrevoke_OMNI", 1 },

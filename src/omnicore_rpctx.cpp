@@ -237,7 +237,7 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
 // senddexaccept_OMNI - DEx accept offer
 Value senddexaccept_OMNI(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 4 )
+    if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
             "senddexaccept_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\"\n"
             "\nCreates and broadcasts an accept offer for a given amount and currency/property ID.\n"
@@ -246,6 +246,7 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
             "ToAddress     : the address to send the accept to\n"
             "PropertyID    : the id of the property to accept\n"
             "Amount        : the amount to accept\n"
+            "Override      : override minimum accept fee and payment window checks (use with caution!)\n"
             "Result:\n"
             "txid    (string) The transaction ID of the sent transaction\n"
             "\nExamples:\n"
@@ -257,6 +258,8 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
     std::string toAddress = (params[1].get_str());
     unsigned int propertyId = int64Touint32Safe(params[2].get_int64());
     string strAmount = params[3].get_str();
+    bool override = false;
+    if (params.size() > 4) override = params[4].get_bool();
 
     // perform conversions
     int64_t amount = 0;
@@ -268,20 +271,25 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
     if (!isRangeOK(amount)) throw JSONRPCError(RPC_TYPE_ERROR, "Input not in range");
     if (!DEx_offerExists(toAddress, propertyId)) throw JSONRPCError(RPC_TYPE_ERROR, "There is no matching sell offer on the distributed exchange");
 
-    // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
-
-    // retrieve the sell we're accepting and use new 0.10 custom fee to set the accept minimum fee appropriately
-    // WARNING: exploitable?  Is automatic fee retrieval and application appropriate or should we force the user
-    //          to specify explicitly what fee to use?  For now automatic fee includes hard limitation of 0.001 BTC.
+    // retrieve the sell we're accepting and obtain the required minimum fee and payment window
     CMPOffer *sellOffer = DEx_getOffer(toAddress, propertyId);
     if (sellOffer == NULL) throw JSONRPCError(RPC_TYPE_ERROR, "Unable to load sell offer from the distributed exchange");
     int64_t nMinimumAcceptFee = sellOffer->getMinFee();
-    if (nMinimumAcceptFee > 100000) throw JSONRPCError(RPC_TYPE_ERROR, "Minimum accept fee is above threshold");
+    unsigned char nBlockTimeLimit = sellOffer->getBlockTimeLimit();
+
+    if (!override) { // reject unsafe accepts - note client maximum tx fee will always be respected regardless of override here
+        if (nMinimumAcceptFee > 1000000) throw JSONRPCError(RPC_TYPE_ERROR, "Unsafe trade protection - minimum accept fee is above 0.01 BTC");
+        if (nBlockTimeLimit < 10) throw JSONRPCError(RPC_TYPE_ERROR, "Unsafe trade protection - payment time limit is less than 10 blocks");
+    }
+
+    // use new 0.10 custom fee to set the accept minimum fee appropriately
     CFeeRate payTxFeeOriginal = payTxFee;
     bool fPayAtLeastCustomFeeOriginal = fPayAtLeastCustomFee;
     payTxFee = CFeeRate(nMinimumAcceptFee, 1000);
     fPayAtLeastCustomFee = true;
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
