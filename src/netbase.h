@@ -92,7 +92,7 @@ class CNetAddr
 
         /** XOR address with a fixed xor key */
         void XORAddress();
-    
+
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
         friend bool operator!=(const CNetAddr& a, const CNetAddr& b);
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);

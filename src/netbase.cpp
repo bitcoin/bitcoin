@@ -1073,7 +1073,7 @@ void CNetAddr::XORAddress()
     int offset = 0;
     if (IsIPv4())
         offset = 12;
-   
+
     for (int i=offset; i<16; i++) {
         ip[i]=ip[i]^xorKey[i-offset];
     }

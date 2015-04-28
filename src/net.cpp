@@ -1109,7 +1109,7 @@ void ThreadDNSAddressSeed()
                 {
                     if (seed.fXoredIPs)
                         ip.XORAddress();
-                    
+
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
