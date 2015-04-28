@@ -105,6 +105,11 @@ private:
     QAction *optionsAction;
     QAction *toggleHideAction;
 
+    QAction *bitcoin_overviewAction;
+    QAction *bitcoin_historyAction;
+    QAction *bitcoin_sendCoinsAction;
+    QAction *bitcoin_receiveCoinsAction;
+
     QAction *bitcredit_encryptWalletAction;
     QAction *bitcredit_backupWalletAction;
     QAction *bitcredit_changePassphraseAction;

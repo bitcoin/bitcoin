@@ -4,6 +4,7 @@
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
+        <file alias="bitcoin_send">res/icons/bitcoin_send.png</file>
         <file alias="toolbar">res/icons/toolbar.png</file>
         <file alias="connect_0">res/icons/connect0_16.png</file>
         <file alias="connect_1">res/icons/connect1_16.png</file>
@@ -20,6 +21,7 @@
         <file alias="transaction_5">res/icons/clock5.png</file>
         <file alias="options">res/icons/configure.png</file>
         <file alias="receiving_addresses">res/icons/receive.png</file>
+        <file alias="bitcoin_receiving_addresses">res/icons/bitcoin_receive.png</file>
         <file alias="mining">res/icons/mining.png</file>
         <file alias="mining_deposits">res/icons/mining_deposits.png</file>
         <file alias="claim">res/icons/claim.png</file>
@@ -30,7 +32,9 @@
         <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
         <file alias="edit">res/icons/edit.png</file>
         <file alias="history">res/icons/history.png</file>
+        <file alias="bitcoin_history">res/icons/bitcoin_history.png</file>
         <file alias="overview">res/icons/overview.png</file>
+        <file alias="bitcoin_overview">res/icons/bitcoin_overview.png</file>
         <file alias="export">res/icons/export.png</file>
         <file alias="synced">res/icons/synced.png</file>
         <file alias="remove">res/icons/remove.png</file>
@@ -38,6 +42,7 @@
         <file alias="tx_input">res/icons/tx_input.png</file>
         <file alias="tx_output">res/icons/tx_output.png</file>
         <file alias="tx_inout">res/icons/tx_inout.png</file>
+        <file alias="bitcoin_tx_inout">res/icons/bitcoin_tx_inout.png</file>
         <file alias="tx_deposit">res/icons/tx_deposit.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
