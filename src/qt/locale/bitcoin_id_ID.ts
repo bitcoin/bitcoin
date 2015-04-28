@@ -1,10 +1,6 @@
-<TS language="id_ID" version="2.0">
+<TS language="id_ID" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Klik-ganda untuk mengubah alamat atau label</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Buat alamat baru</translation>
@@ -2307,10 +2303,6 @@ Alamat: %4
         <translation>Terima hubungan dari luar (standar: 1 kalau -proxy atau -connect tidak dipilih)</translation>
     </message>
     <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Gagal: Transaksi ditolak. Ini mungkin terjadi jika beberapa dari koin dalam dompet Anda telah digunakan, seperti ketika Anda menggunakan salinan wallet.dat dan beberapa koin telah dibelanjakan dalam salinan tersebut tetapi disini tidak tertandai sebagai terpakai.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Jalankan perintah ketika perubahan transaksi dompet (%s di cmd digantikan oleh TxID)</translation>
     </message>
@@ -2389,10 +2381,6 @@ Alamat: %4
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Gagal: Hard disk hampir terisi!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Gagal: Dompet terkunci, transaksi tidak bisa dibuat!</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2567,10 +2555,6 @@ Alamat: %4
         <translation>Nilai salah untuk -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Nilai salah</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Saldo tidak mencukupi</translation>
     </message>
@@ -2601,10 +2585,6 @@ Alamat: %4
     <message>
         <source>Done loading</source>
         <translation>Memuat selesai</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Gunakan pilihan %s</translation>
     </message>
     <message>
         <source>Error</source>

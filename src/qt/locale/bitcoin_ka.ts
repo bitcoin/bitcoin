@@ -1,10 +1,6 @@
-<TS language="ka" version="2.0">
+<TS language="ka" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>დააკლიკეთ ორჯერ მისამართის ან ნიშნულის შესაცვლელად</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>ახალი მისამართის შექმნა</translation>
@@ -2331,44 +2327,12 @@ Address: %4
         <translation>გარედან შეერთებების დაშვება (ნაგულისხმევი: 1 თუ არ გამოიყენება -proxy ან -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, მიუთითეთ rpcpassword საკონფიგურაციო ფაილში:
-%s
-რეკომენდებულია შემდეგი შემთხვევითი პაროლი:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(ამის დამახსოვრება არ გჭირდებათ)
-სახელი და პაროლი ერთმანეთს არ უნდა ემთხვეოდეს.
-თუ ფაილი არ არსებობს, შექმენით იგი უფლებებით owner-readable-only.
-ასევე რეკომენდებულია დააყენოთ alertnotify რათა მიიღოთ შეტყობინებები პრობლემების შესახებ;
-მაგალითად: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>მოცემულ მისამართზე მიჯაჭვა მუდმივად მასზე მიყურადებით. გამოიყენეთ [host]:port ფორმა IPv6-სათვის</translation>
     </message>
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>გადასვლა რეგრესული ტესტირების რეჟიმში, რომელიც იყენებს სპეციალურ ჯაჭვს ბლოკების დაუყოვნებლივი პოვნის შესაძლებლობით.</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>შეცდომა: ტრანსაქცია უარყოფილია! შესაძლოა მონეტების ნაწილი თქვენი საფულიდან უკვე გამოყენებულია, რაც შეიძლება მოხდეს wallet.dat-ის ასლის გამოყენებისას, როცა მონეტები გაიგზავნა სხვა ასლიდან, აქ კი არ არის გაგზავნილად მონიშნული.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>შეცდომა: ტრანსაქცია მოითხოვს საკომისიოს მინიმუმ %s რაოდენობის, სირთულის ან ბოლოს მიღებული თანხების შესაბამისად!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2449,10 +2413,6 @@ rpcpassword=%s
     <message>
         <source>Error: Disk space is low!</source>
         <translation>შეცდომა: დისზე არ არის ადგილი!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>შეცდომა: საფულე დაბლოკილია, ტრანსაქცია ვერ შეიქმნება!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -2643,10 +2603,6 @@ rpcpassword=%s
         <translation>დაუშვებელი მნიშვნელობა -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>დაუშვებელი თანხა</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>არ არის საკმარისი თანხა</translation>
     </message>
@@ -2677,10 +2633,6 @@ rpcpassword=%s
     <message>
         <source>Done loading</source>
         <translation>ჩატვირთვა დასრულებულია</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>%s ოპციის გამოსაყენებლად</translation>
     </message>
     <message>
         <source>Error</source>

@@ -1,10 +1,6 @@
-<TS language="be_BY" version="2.0">
+<TS language="be_BY" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Двайны клік для рэдагавання адрасу ці пазнакі</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Стварыць новы адрас</translation>
@@ -953,10 +949,6 @@ Address: %4
     <message>
         <source>Error loading wallet.dat</source>
         <translation>Памылка загрузкі wallet.dat</translation>
-    </message>
-    <message>
-        <source>Invalid amount</source>
-        <translation>Памылковая колькасць</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

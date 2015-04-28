@@ -1,10 +1,6 @@
-<TS language="lv_LV" version="2.0">
+<TS language="lv_LV" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Adresi vai nosaukumu rediģē ar dubultklikšķi</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Izveidot jaunu adresi</translation>
@@ -2235,10 +2231,6 @@ Adrese: %4
         <translation>Kļūda: Zema diska vieta!</translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Kļūda: Maciņš ir aizslēgts, nevar izveidot transakciju!</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
         <translation>Ja &lt;category&gt; nav norādīta, izvadīt visu atkļūdošanas informāciju.</translation>
     </message>
@@ -2371,10 +2363,6 @@ Adrese: %4
         <translation>Nederīgs daudzums priekš -paytxfree=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Nederīgs daudzums</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Nepietiek bitkoinu</translation>
     </message>
@@ -2405,10 +2393,6 @@ Adrese: %4
     <message>
         <source>Done loading</source>
         <translation>Ielāde pabeigta</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Izmantot opciju %s</translation>
     </message>
     <message>
         <source>Error</source>

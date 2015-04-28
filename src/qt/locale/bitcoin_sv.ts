@@ -1,9 +1,9 @@
-<TS language="sv" version="2.0">
+<TS language="sv" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dubbelklicka för att ändra adressen eller etiketten</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Högerklicka för att ändra adressen eller etiketten.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1284,6 +1284,14 @@ Adress: %4
     <message>
         <source>Refund from %1</source>
         <translation>Återbetalning från %1</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Betalningsbegäran %1 är för stor (%2 bytes, tillåten %3 bytes)</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation>Betalningsbegäran begär DoS-skydd</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -2800,30 +2808,6 @@ Adress: %4
         <translation>Acceptera anslutningar utifrån (förvalt: 1 om ingen -proxy eller -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, du behöver sätta ett rpclösensord i konfigurationsfilen:
-%s
-Det är rekommenderat att använda följande slumpade lösenord:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(du behöver inte komma ihåg lösenordet)
-Användarnamnet och lösenordet FÅR INTE bara detsamma.
-Om filen inte existerar, skapa den med enbart ägarläsbara filrättigheter.
-Det är också rekommenderat att sätta alertnotify så du meddelas om problem;
-till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bind till given adress och lyssna alltid på den. Använd [värd]:port notation för IPv6</translation>
     </message>
@@ -2838,14 +2822,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Ange regressiontestläge, som använder en speciell kedja i vilka block kan lösas omedelbart.</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fel: Transaktionen avslogs! Detta kan hända om några av mynten i plånboken redan spenderats, t.ex om du använt en kopia av wallet.dat och mynt spenderades i kopian men inte markerats som spenderas här.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Fel: Denna transaktion kräver en transaktionsavgift på minst %s på grund av dess storlek, komplexitet, eller användning av senast mottagna bitcoins!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2958,10 +2934,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Fel: Hårddiskutrymme är lågt!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Fel: Plånboken är låst, det går ej att skapa en transaktion!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3088,12 +3060,29 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Avgifter (i BTC/Kb) mindre än detta betraktas som nollavgift för transaktionsskapande (förvalt: %s)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Om paytxfee inte är satt, inkludera tillräcklig avgift så att transaktionen börjar att konfirmeras inom n blocks (förvalt: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Otillåtet belopp för -maxtxfee=&lt;belopp&gt;: '%s' (måste åtminstånde vara minrelay avgift %s för att förhindra stoppade transkationer)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximal storlek på data i databärartransaktioner som vi reläar och bryter (förvalt: %u) </translation>
     </message>
     <message>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Maximum total avgift att använda i en plånbok transaktion, sätts den för lågt kan stora transaktioner avbrytas (förvalt: %s)</translation>
+    </message>
+    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Sök efter klientadresser med DNS sökningen, om det finns otillräckligt med adresser (förvalt: 1 om inte -connect)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Begär hög-prioritet för relätrafik eller lågavgifts transaktioner
+(förvalt: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3104,12 +3093,44 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användning i OpenSSL Toolkit &lt;https://www.openssl.org/&gt; och kryptografisk mjukvara utvecklad av Eric Young samt UPnP-mjukvara skriven av Thomas Bernard.</translation>
     </message>
     <message>
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>För att använda bitconid,eller -server optionen till bitcoin-qt så mäste du sätta ett rpclösensord i konfigurationsfilen:
+%s
+Det är rekommenderat att använda följande slumpade lösenord:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(du behöver inte komma ihåg lösenordet)
+Användarnamnet och lösenordet FÅR INTE vara detsamma.
+Om filen inte existerar, skapa den med enbart ägarläsbara filrättigheter.
+Det är också rekommenderat att sätta alertnotify så du meddelas om problem;
+till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Varning: -maxtxfee är satt väldigt hög! Så höga avgifter kan betalas för en enstaka transaktion.</translation>
+    </message>
+    <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
         <translation>Varning: Vänligen kolla så att din dators datum och tid är korrekt! Om din klocka går fel kommer Bitcoin Core inte att fungera korrekt.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Vitlistade klienter kan inte bli DoS bannade och deras transaktioner reläas alltid, även om dom redan är i mempoolen, användbart för t.ex en gateway  </translation>
+    </message>
+    <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Acceptera publika REST förfrågningar (förvalt: %u)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3132,6 +3153,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fel vid inläsningen av wallet.dat: Kontofilen kräver en senare version av Bitcoin Core</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Fel vid läsning från databas, avslutar.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fel: Argumentet -tor stöds inte, använd -onion.</translation>
     </message>
@@ -3146,6 +3171,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
         <translation>Initieringschecken fallerade. Bitcoin Core stängs av...</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Otillåtet belopp för -maxtxfee=&lt;belopp&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -3164,10 +3193,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Ogiltig nätmask angiven i -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation>Håll som mest &lt;n&gt; oanslutningsbara block i minnet (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation>Håll som mest &lt;n&gt; oanslutningsbara transaktioner i minnet (förvalt: %u)</translation>
     </message>
@@ -3180,16 +3205,16 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Nodreläoptioner:</translation>
     </message>
     <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation>Skriv ut block vid uppstart, om det hittas i blockindexet</translation>
-    </message>
-    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC SSL optioner: (se Bitcoin Wiki för SSL inställningsinstruktioner)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
         <translation>RPC serveroptioner:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC support för HTTP permanent anslutning (förvalt: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
@@ -3230,6 +3255,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Transaction amounts must be positive</source>
         <translation>Transaktionens belopp måste vara positiva</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Transaktionen är för stor för avgiftspolicyn</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3328,10 +3357,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Hur grundlig blockverifikationen vid -checkblocks är (0-4, förvalt: %u)</translation>
     </message>
     <message>
-        <source>If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: %u)</source>
-        <translation>Om paytxfee inte är satt, inkludera tillräcklig avgift så att transaktionen konfirmeras inom n blocks (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
         <translation>Logga transaktionsprioritet och avgift per kB vid blockbrytning (förvalt: %u)</translation>
     </message>
@@ -3424,10 +3449,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Skriv ut tidsstämpel i avlusningsinformationen (förvalt: %u)</translation>
     </message>
     <message>
-        <source>Print block tree on startup (default: %u)</source>
-        <translation>Skriv ut blockträdet vid uppstart (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
         <translation>Reläa och bearbeta databärartransaktioner (förvalt: %u) </translation>
     </message>
@@ -3504,10 +3525,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Ogiltigt belopp för -paytxfee=&lt;belopp&gt;:'%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Ogiltig mängd</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Otillräckligt med bitcoins</translation>
     </message>
@@ -3538,10 +3555,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Klar med laddning</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Att använda %s alternativet</translation>
     </message>
     <message>
         <source>Error</source>
