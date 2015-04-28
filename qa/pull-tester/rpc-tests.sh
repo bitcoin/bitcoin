@@ -31,6 +31,7 @@ testScripts=(
     'merkle_blocks.py'
 #    'forknotify.py'
     'maxblocksinflight.py'
+    'invalidblockrequest.py'
 );
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
     for (( i = 0; i < ${#testScripts[@]}; i++ ))
