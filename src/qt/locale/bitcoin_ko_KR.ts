@@ -1,10 +1,6 @@
-<TS language="ko_KR" version="2.0">
+<TS language="ko_KR" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>지갑 주소나 이름을 수정하려면 더블클릭하세요.</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>새 주소 만들기</translation>
@@ -2347,16 +2343,6 @@ Address: %4
         <translation>선택된 주소로 고정하며 항상 리슨(Listen)합니다. IPv6 프로토콜인 경우  [host]:port 방식의 명령어 표기법을 사용합니다.</translation>
     </message>
     <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>에러: 거래가 거부되었습니다! 이런 일이 생길 수 있습니다 만약 몇개의 코인들을 지갑에서 이미 사용했다면요, 예를 들어 만약 당신이 wallet.dat를 복사해서 사용했거나 코인들을 사용 후에 복사했다면 여기선 표시가 안되서 사용할 수 없습니다
-
--번역은 했으나 약간 이상한점이 있어서 수정해야함-</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>오류 : 해당 거래는 송금액, 다중 거래, 최근 수령한 금액의 사용 등의 이유로 최소 %s 이상의 송금 수수료가 필요합니다.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>지갑 거래가 바뀌면 명령을 실행합니다.(%s 안의 명령어가 TxID로 바뀝니다)</translation>
     </message>
@@ -2439,10 +2425,6 @@ Address: %4
     <message>
         <source>Error: Disk space is low!</source>
         <translation>오류: 디스크 공간이 부족합니다!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>오류: 지갑이 잠금상태여서 거래를 생성할 수 없습니다!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -2531,10 +2513,6 @@ Address: %4
     <message>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
         <translation>최저 거래 수수료가 부족합니다. -mintxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation>블럭 색인을 발견하면 구동 시 블럭을 출력합니다.</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -2665,10 +2643,6 @@ Address: %4
         <translation>-paytxfee=&lt;amount&gt;에 대한 양이 잘못되었습니다: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>효력없는 금액</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>자금 부족</translation>
     </message>
@@ -2699,10 +2673,6 @@ Address: %4
     <message>
         <source>Done loading</source>
         <translation>로딩 완료</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>%s 옵션을 사용하려면</translation>
     </message>
     <message>
         <source>Error</source>

@@ -1,10 +1,6 @@
-<TS language="ur_PK" version="2.0">
+<TS language="ur_PK" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>ایڈریس یا لیبل میں ترمیم کرنے پر ڈبل کلک کریں</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>نیا ایڈریس بنائیں</translation>
@@ -325,10 +321,6 @@
     <message>
         <source>This help message</source>
         <translation>یہ مدد کا پیغام</translation>
-    </message>
-    <message>
-        <source>Invalid amount</source>
-        <translation>غلط رقم</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -1,10 +1,6 @@
-<TS language="et" version="2.0">
+<TS language="et" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Topeltklõps aadressi või märgise muutmiseks</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Loo uus aadress</translation>
@@ -12,6 +8,10 @@
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopeeri märgistatud aadress vahemällu</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Kopeeri</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -495,6 +495,10 @@ Aadress: %4⏎</translation>
     <message>
         <source>version</source>
         <translation>versioon</translation>
+    </message>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>Kirjeldus Bitcoini Tuumast</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -1088,6 +1092,10 @@ Aadress: %4⏎</translation>
         <translation>Bitcoini tuumik</translation>
     </message>
     <message>
+        <source>The Bitcoin Core developers</source>
+        <translation>Bitcoini Tuuma arendajad</translation>
+    </message>
+    <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
@@ -1498,40 +1506,8 @@ Aadress: %4⏎</translation>
         <translation>Luba välisühendusi (vaikeväärtus: 1 kui puudub -proxy või -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, sul tuleb rpcpassword määrata seadete failis:
-%s
-Soovitatav on kasutada järgmist juhuslikku parooli:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(seda parooli ei pea meeles pidama)
-Kasutajanimi ning parool EI TOHI kattuda.
-Kui faili ei leita, loo see ainult-omaniku-loetavas failiõigustes .
-Soovitatav on seadistada tõrgete puhul teavitus;
-nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Määratud aadressiga sidumine ning sellelt kuulamine. IPv6 jaoks kasuta vormingut [host]:port</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Tõrge: Tehingust keelduti! Põhjuseks võib olla juba kulutatud mündid, nt kui wallet.dat fail koopias kulutatid mündid, kuid ei märgitud neid siin vastavalt.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Tõrge: Selle tehingu jaoks on nõutav lisatasu vähemalt %s. Põhjuseks võib olla summa suurus, keerukus või hiljuti saadud summade kasutamine!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -1596,10 +1572,6 @@ nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Tõrge: liiga vähe kettaruumi!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Tõrge: Rahakott on lukus, tehingu loomine ei ole võimalik!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -1714,10 +1686,6 @@ nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
         <translation>-paytxfee=&lt;amount&gt; jaoks vigane kogus: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Kehtetu summa</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Liiga suur summa</translation>
     </message>
@@ -1748,10 +1716,6 @@ nt: alertnotify=echo %%s | email -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Laetud</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>%s valiku kasutamine</translation>
     </message>
     <message>
         <source>Error</source>

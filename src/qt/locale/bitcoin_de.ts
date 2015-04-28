@@ -1,9 +1,9 @@
-<TS language="de" version="2.0">
+<TS language="de" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Doppelklick zum Bearbeiten der Adresse oder der Bezeichnung</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Rechtsklick zum Bearbeiten der Adresse oder der Bezeichnung</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -478,6 +478,10 @@
         <source>Up to date</source>
         <translation>Auf aktuellem Stand</translation>
     </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>%n Block des Transaktionsverlaufs verarbeitet.</numerusform><numerusform>%n Blöcke des Transaktionsverlaufs verarbeitet.</numerusform></translation>
+    </message>
     <message>
         <source>Catching up...</source>
         <translation>Hole auf...</translation>
@@ -862,7 +866,7 @@ Adresse: %4</translation>
     </message>
     <message>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>SSL-Wurzelzertifikate für Zahlungsanforderungen festlegen (Standard: Systemstandard)</translation>
+        <translation>SSL-Wurzelzertifikate für Zahlungsanforderungen festlegen (Standard: -system-)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
@@ -1282,6 +1286,14 @@ Adresse: %4</translation>
     <message>
         <source>Refund from %1</source>
         <translation>Rücküberweisung von %1</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Zahlungsanforderung %1 ist zu groß (%2 Byte, erlaubt sind %3 Byte).</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation>Zahlungsanforderungs-DoS-Schutz</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -2802,30 +2814,6 @@ Adresse: %4</translation>
         <translation>Eingehende Verbindungen annehmen (Standard: 1, wenn nicht -proxy oder -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, Sie müssen den Wert rpcpasswort in dieser Konfigurationsdatei angeben:
-%s
-Es wird empfohlen das folgende Zufallspasswort zu verwenden:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(Sie müssen sich dieses Passwort nicht merken!)
-Der Benutzername und das Passwort dürfen NICHT identisch sein.
-Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Leserechten nur für den Dateibesitzer.
-Es wird ebenfalls empfohlen alertnotify anzugeben, um im Problemfall benachrichtig zu werden;
-zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>An die angegebene Adresse binden und immer abhören. Für IPv6 "[Host]:Port"-Notation verwenden</translation>
     </message>
@@ -2840,14 +2828,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
     <message>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Regressionstest-Modus aktivieren, der eine spezielle Blockkette nutzt, in der Blöcke sofort gelöst werden können.</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Fehler: Die Transaktion wurde abgelehnt! Dies kann passieren, wenn einige Bitcoins aus Ihrer Wallet bereits ausgegeben wurden. Beispielsweise weil Sie eine Kopie Ihrer wallet.dat genutzt, die Bitcoins dort ausgegeben haben und dies daher in der derzeit aktiven Wallet nicht vermerkt ist.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Fehler: Diese Transaktion benötigt aufgrund Ihres Betrags, Ihrer Komplexität oder der Nutzung erst kürzlich erhaltener Zahlungen eine Transaktionsgebühr in Höhe von mindestens %s!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2960,10 +2940,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Fehler: Zu wenig freier Speicherplatz auf dem Datenträger!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Fehler: Wallet gesperrt, Transaktion kann nicht erstellt werden!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -3090,12 +3066,28 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Niedrigere Gebühren (in BTC/Kb) als diese werden bei der Transaktionserstellung als gebührenfrei angesehen (Standard: %s)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Wenn -paytxfee nicht festgelegt wurde Gebühren einschließen, so dass mit der Bestätigung von Transaktionen im Schnitt innerhalb von n Blöcken begonnen wird (Standard: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Ungültiger Betrag für -maxtxfee=&lt;amount&gt;: '%s' (muss mindestens die minimale Weiterleitungsgebühr in Höhe von %s sein, um zu verhindern dass Transaktionen nicht bearbeitet werden)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximale Datengröße in "Data Carrier"-Transaktionen die weitergeleitet und erarbeitet werden (Standard: %u)</translation>
     </message>
     <message>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Maximale Gesamtgebühren je Wallet-Transaktion, ein zu niedriger Wert kann große Transaktionen abbrechen (Standard: %s)</translation>
+    </message>
+    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Adressen von Gegenstellen via DNS-Namensauflösung finden, falls zu wenige Adressen verfügbar sind (Standard: 1, außer bei -connect)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Zum Weiterleiten von freien Transaktionen oder Transaktionen mit niedrigen Gebühren eine hohe Priorität voraussetzen (Standard: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3110,12 +3102,44 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Dieses Produkt enthält Software, die vom OpenSSL-Projekt zur Verwendung im OpenSSL-Toolkit &lt;https://www.openssl.org/&gt; entwickelt wird, sowie von Eric Young geschriebene kryptographische Software und von Thomas Bernard geschriebene UPnP-Software.</translation>
     </message>
     <message>
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>Um bitcoind oder die Option -server mit bitcoin-qt verwenden zu können, müssen Sie rpcpassword in der Konfigurationsdatei angeben:
+%s
+Es wird empfohlen das folgende Zufallspasswort zu verwenden.
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(Sie müssen sich dieses Passwort nicht merken!)
+Der Benutzername und das Passwort dürfen NICHT identisch sein.
+Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Leserechten nur für den Dateibesitzer.
+Es wird ebenfalls empfohlen alertnotify anzugeben, um im Problemfall benachrichtigt zu werden.
+Beispiel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Warnung: -maxtxfee ist auf einen sehr hohen Wert festgelegt! Gebühren dieser Höhe könnten für eine einzelne Transaktion bezahlt werden.</translation>
+    </message>
+    <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
         <translation>Warnung: Bitte korrigieren Sie die Datums- und Uhrzeiteinstellungen Ihres Computers, da Bitcoin Core ansonsten nicht ordnungsgemäß funktionieren wird.</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Erlaubte Gegenstellen werden nicht für DoS-Attacken gesperrt und ihre Transkationen werden immer weitergeleitet, auch wenn sie sich bereits im Speicherpool befinden, was z.B. für Gateways sinnvoll ist.</translation>
+    </message>
+    <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Öffentliche REST-Anfragen annehmen (Standard: %u)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3138,6 +3162,10 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Fehler beim Laden von wallet.dat: Wallet benötigt neuere Version von Bitcoin Core</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Fehler beim lesen der Datenbank, Ausführung wird beendet.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fehler: Nicht unterstütztes Argument -tor gefunden, bitte -onion verwenden.</translation>
     </message>
@@ -3152,6 +3180,10 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
     <message>
         <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
         <translation>Initialisierungsplausibilitätsprüfung fehlgeschlagen. Bitcoin Core wird beendet.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ungültiger Betrag für -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -3170,10 +3202,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Ungültige Netzmaske angegeben in -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation>Maximal &lt;n&gt; nicht-verbindbare Blöcke im Speicher halten (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
         <translation>Maximal &lt;n&gt; nicht-verbindbare Transaktionen im Speicher halten (Standard: %u)</translation>
     </message>
@@ -3186,16 +3214,16 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Knoten-Weiterleitungsoptionen:</translation>
     </message>
     <message>
-        <source>Print block on startup, if found in block index</source>
-        <translation>Block beim Starten ausgeben, wenn dieser im Blockindex gefunden wurde.</translation>
-    </message>
-    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC-SSL-Optionen (siehe Bitcoin-Wiki für SSL-Einrichtung):</translation>
     </message>
     <message>
         <source>RPC server options:</source>
         <translation>RPC-Serveroptionen:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>Unterstützung für persistente HTTP-Verbindungen bei RPC (Standard: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
@@ -3236,6 +3264,10 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
     <message>
         <source>Transaction amounts must be positive</source>
         <translation>Transaktionsbeträge müssen positiv sein</translation>
+    </message>
+    <message>
+        <source>Transaction too large for fee policy</source>
+        <translation>Transaktion ist für die Gebührenrichtlinie zu groß</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3334,10 +3366,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Legt fest, wie gründlich die Blockverifikation von -checkblocks ist (0-4, Standard: %u)</translation>
     </message>
     <message>
-        <source>If paytxfee is not set, include enough fee so transactions are confirmed on average within n blocks (default: %u)</source>
-        <translation>Wenn keine Transaktionsgebühr festgelegt wurde eine Gebühr einbeziehen, sodass Transaktionen im Schnitt innerhalb von &lt;n&gt; Blöcken bestätigt werden (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
         <translation>Transaktionspriorität und Gebühr pro kB beim Erzeugen von Blöcken protokollieren (Standard: %u)</translation>
     </message>
@@ -3426,10 +3454,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Debugausgaben einen Zeitstempel voranstellen (Standard: %u)</translation>
     </message>
     <message>
-        <source>Print block tree on startup (default: %u)</source>
-        <translation>Blockbaum beim Starten ausgeben (Standard: %u)</translation>
-    </message>
-    <message>
         <source>Relay and mine data carrier transactions (default: %u)</source>
         <translation>"Data Carrier"-Transaktionen weiterleiten und erarbeiten (Standard: %u)</translation>
     </message>
@@ -3506,10 +3530,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
         <translation>Ungültiger Betrag für -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Ungültiger Betrag</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Unzureichender Kontostand</translation>
     </message>
@@ -3540,10 +3560,6 @@ zum Beispiel: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Laden abgeschlossen</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Zur Nutzung der %s-Option</translation>
     </message>
     <message>
         <source>Error</source>

@@ -1,10 +1,6 @@
-<TS language="el_GR" version="2.0">
+<TS language="el_GR" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Διπλό-κλικ για επεξεργασία της διεύθυνσης ή της ετικέτας</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Δημιουργία νέας διεύθυνσης</translation>
@@ -2477,41 +2473,8 @@ Address: %4
         <translation>Να δέχεσαι συνδέσεις από έξω(προεπιλογή:1)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Αποθηκευση σε συγκεκριμένη διεύθυνση. Χρησιμοποιήστε τα πλήκτρα [Host] : συμβολισμός θύρα για IPv6</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Σφάλμα: Η συναλλαγή απορρίφθηκε.
-Αυτό ίσως οφείλεται στο ότι τα νομίσματά σας έχουν ήδη ξοδευτεί, π.χ. με την αντιγραφή του wallet.dat σε άλλο σύστημα και την χρήση τους εκεί, χωρίς η συναλλαγή να έχει καταγραφεί στο παρόν σύστημα.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Σφάλμα: Αυτή η συναλλαγή απαιτεί αμοιβή συναλλαγής τουλάχιστον %s λόγω του μεγέθους, πολυπλοκότητας ή της χρήσης πρόσφατης παραλαβής κεφαλαίου</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2588,10 +2551,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Προειδοποίηση: Χαμηλός χώρος στο δίσκο  </translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Σφάλμα: το πορτοφόλι είναι κλειδωμένο, δεν μπορεί να δημιουργηθεί συναλλαγή</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -2798,10 +2757,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή: '%s'</translation>
     </message>
     <message>
-        <source>Print block tree on startup (default: %u)</source>
-        <translation>Εκτύπωση μπλοκ δέντρου κατά την εκκίνηση (προεπιλογή: %u)</translation>
-    </message>
-    <message>
         <source>Server certificate file (default: %s)</source>
         <translation>Αρχείο πιστοποιητικού του διακομιστή  (προεπιλογή: %s)</translation>
     </message>
@@ -2834,10 +2789,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Λάθος ποσότητα</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Ανεπαρκές κεφάλαιο</translation>
     </message>
@@ -2868,10 +2819,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Η φόρτωση ολοκληρώθηκε</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Χρήση της %s επιλογής</translation>
     </message>
     <message>
         <source>Error</source>

@@ -1,10 +1,6 @@
-<TS language="hi_IN" version="2.0">
+<TS language="hi_IN" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>दो बार क्लिक करे पता या लेबल संपादन करने के लिए !</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>नया पता लिखिए !</translation>
@@ -875,10 +871,6 @@ Address: %4
     <message>
         <source>Loading addresses...</source>
         <translation>पता पुस्तक आ रही है...</translation>
-    </message>
-    <message>
-        <source>Invalid amount</source>
-        <translation>राशि ग़लत है</translation>
     </message>
     <message>
         <source>Loading block index...</source>
