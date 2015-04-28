@@ -2034,8 +2034,11 @@ static int load_most_relevant_state()
   // using the SP's watermark after its fixed-up as the tip
   // walk backwards until we find a valid and full set of persisted state files
   // for each block we discard, roll back the SP database
+  // Note: to avoid rolling back all the way to the genesis block (which appears as if client is hung) abort after MAX_STATE_HISTORY attempts
   CBlockIndex const *curTip = spBlockIndex;
-  while (NULL != curTip && persistedBlocks.size() > 0) {
+  int abortRollBackBlock;
+  if (curTip != NULL) abortRollBackBlock = curTip->nHeight - MAX_STATE_HISTORY+1;
+  while (NULL != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock) {
     if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
@@ -2434,6 +2437,8 @@ int mastercore_init()
   if (readPersistence())
   {
     nWaterlineBlock = load_most_relevant_state();
+    PrintToConsole("Loading persistent state: %s\n", nWaterlineBlock>0 ?
+        "OK" : "FAILED (this is normal if this is the first time OmniCore is being run)");
     if (nWaterlineBlock < 0) {
       // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
       clear_all_state();
