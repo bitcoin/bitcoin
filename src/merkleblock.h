@@ -139,6 +139,11 @@ public:
      */
     CMerkleBlock(const CBlock& block, CBloomFilter& filter);
 
+    // Create from a CBlock, matching the txids in the set
+    CMerkleBlock(const CBlock& block, const std::set<uint256>& txids);
+
+    CMerkleBlock() {}
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
