@@ -209,7 +209,7 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
         if (senderBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance");
         if (senderAvailableBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance (due to pending transactions)");
     }
-    if (minAcceptFee <= 0) throw JSONRPCError(RPC_TYPE_ERROR, "Mininmum accept mining fee invalid");
+    if (minAcceptFee < 0) throw JSONRPCError(RPC_TYPE_ERROR, "Mininmum accept mining fee invalid");
     if ((paymentWindow <= 0) || (paymentWindow > 255)) throw JSONRPCError(RPC_TYPE_ERROR, "Payment window invalid");
     if ((action == 1) && (DEx_offerExists(fromAddress, propertyIdForSale))) throw JSONRPCError(RPC_TYPE_ERROR, "There is already a sell offer from this address on the distributed exchange, use update instead");
 
