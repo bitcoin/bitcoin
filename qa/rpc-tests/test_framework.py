@@ -155,9 +155,11 @@ class ComparisonTestFramework(BitcoinTestFramework):
         self.num_nodes = 2
 
     def add_options(self, parser):
-        parser.add_option("--testbinary", dest="testbinary", default="bitcoind",
+        parser.add_option("--testbinary", dest="testbinary",
+                          default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to test")
-        parser.add_option("--refbinary", dest="refbinary", default="bitcoind",
+        parser.add_option("--refbinary", dest="refbinary",
+                          default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_chain(self):
