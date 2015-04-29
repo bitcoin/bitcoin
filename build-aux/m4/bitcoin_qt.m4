@@ -6,6 +6,7 @@ AC_DEFUN([BITCOIN_QT_FAIL],[
       AC_MSG_WARN([$1; bitcoin-qt frontend will not be built])
     fi
     bitcoin_enable_qt=no
+    bitcoin_enable_qt_test=no
   else
     AC_MSG_ERROR([$1])
   fi
