@@ -91,6 +91,11 @@ void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, 
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 {
+    LOCK(cs_main);
+    // Are we in sync enough to even try creating a block? Otherwise TestBlockValidity will fail.
+    if (chainActive.Height() < Checkpoints::GetTotalBlocksEstimate())
+        return NULL;
+
     // Create new block
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
@@ -133,7 +138,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     CAmount nFees = 0;
 
     {
-        LOCK2(cs_main, mempool.cs);
+        LOCK(mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         CCoinsViewCache view(pcoinsTip);
@@ -453,8 +458,15 @@ void static BitcoinMiner(CWallet *pwallet)
             if (chainparams.MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
-                while (vNodes.empty())
+                do {
+                    bool fvNodesEmpty;
+                    {
+                        LOCK(cs_vNodes);
+                        fvNodesEmpty = vNodes.empty();
+                    }
+                    if (!fvNodesEmpty && !IsInitialBlockDownload()) break;
                     MilliSleep(1000);
+                } while(true);
             }
 
             //
