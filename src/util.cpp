@@ -7,7 +7,7 @@
 #include "config/bitcoin-config.h"
 #endif
 
-#if (defined(__FreeBSD__) || defined(__OpenBSD__))
+#if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
 #include <pthread_np.h>
 #endif
@@ -712,7 +712,7 @@ void RenameThread(const char* name)
 #if defined(PR_SET_NAME)
     // Only the first 15 characters are used (16 - NUL terminator)
     ::prctl(PR_SET_NAME, name, 0, 0, 0);
-#elif (defined(__FreeBSD__) || defined(__OpenBSD__))
+#elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
     pthread_set_name_np(pthread_self(), name);
 
 #elif defined(MAC_OSX)
