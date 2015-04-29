@@ -37,7 +37,6 @@ Release Process
 	git checkout v${VERSION}
 	popd
 	pushd ./gitian-builder
-        mkdir -p inputs; cd inputs/
 
 ###fetch and build inputs: (first time, or when dependency versions change)
  
