@@ -61,6 +61,7 @@ struct TestingSetup {
         threadGroup.interrupt_all();
         threadGroup.join_all();
         UnregisterNodeSignals(GetNodeSignals());
+        mastercore_shutdown();
 #ifdef ENABLE_WALLET
         delete pwalletMain;
         pwalletMain = NULL;
@@ -68,11 +69,15 @@ struct TestingSetup {
         delete pcoinsTip;
         delete pcoinsdbview;
         delete pblocktree;
-        mastercore_shutdown();
 #ifdef ENABLE_WALLET
         bitdb.Flush(true);
 #endif
-        boost::filesystem::remove_all(pathTemp);
+        boost::system::error_code ec;
+        boost::filesystem::remove_all(pathTemp, ec);
+        if (ec) {
+            uiInterface.ThreadSafeMessageBox("Could not cleanup temporary test directory "
+                                + pathTemp.string(), "", CClientUIInterface::MSG_WARNING);
+        }
     }
 };
 
