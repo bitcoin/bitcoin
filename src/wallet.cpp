@@ -1172,6 +1172,40 @@ CAmount CWallet::GetBalance() const
     return nTotal;
 }
 
+CAmount CWallet::GetAnonymizableBalance(bool includeAlreadyAnonymized) const
+{
+    if(fLiteMode) return 0;
+
+    CAmount nTotal = 0;
+    {
+        LOCK2(cs_main, cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+
+            if (pcoin->IsTrusted())
+            {
+                uint256 hash = (*it).first;
+                for (unsigned int i = 0; i < pcoin->vout.size(); i++)
+                {
+                    CTxIn vin = CTxIn(hash, i);
+
+                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i])) continue;
+                    if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0) continue; // do not count immature
+                    if(pcoin->vout[i].nValue == 1000*COIN) continue; // do not count MN-like outputs
+
+                    int rounds = GetInputDarksendRounds(vin);
+                    if(rounds >=-2 && (rounds < nDarksendRounds || (includeAlreadyAnonymized && rounds >= nDarksendRounds))) {
+                        nTotal += pcoin->vout[i].nValue;
+                    }
+                }
+            }
+        }
+    }
+
+    return nTotal;
+}
+
 CAmount CWallet::GetAnonymizedBalance() const
 {
     if(fLiteMode) return 0;
@@ -1268,7 +1302,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) const
+CAmount CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed, bool includeAlreadyAnonymized) const
 {
     CAmount nTotal = 0;
     {
@@ -1291,6 +1325,10 @@ CAmount CWallet::GetDenominatedBalance(bool onlyDenom, bool onlyUnconfirmed) con
                 if(IsSpent(hash, i)) continue;
                 if(!IsMine(pcoin->vout[i])) continue;
                 if(onlyDenom != IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
+
+                CTxIn vin = CTxIn(hash, i);
+                int rounds = GetInputDarksendRounds(vin);
+                if(!includeAlreadyAnonymized && rounds >= nDarksendRounds) continue;
 
                 nTotal += pcoin->vout[i].nValue;
             }
@@ -1749,7 +1787,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, int64_t nValueMin, int64_t 
     return (nValueRet >= nValueMin && fFound100 && fFound10 && fFound1 && fFoundDot1);
 }
 
-bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<CTxIn>& setCoinsRet, int64_t& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
+bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
 {
     CCoinControl *coinControl=NULL;
 
@@ -1766,8 +1804,10 @@ bool CWallet::SelectCoinsDark(int64_t nValueMin, int64_t nValueMax, std::vector<
 
     BOOST_FOREACH(const COutput& out, vCoins)
     {
-        //there's no reason to allow inputs less than 1 COIN into DS (other than denominations smaller than that amount)
-        if(out.tx->vout[out.i].nValue < 1*COIN && !IsDenominatedAmount(out.tx->vout[out.i].nValue)) continue;
+        //do not allow inputs less than 1 CENT
+        if(out.tx->vout[out.i].nValue < CENT) continue;
+        //do not allow collaterals to be selected
+        if(IsCollateralAmount(out.tx->vout[out.i].nValue)) continue;
         if(fMasterNode && out.tx->vout[out.i].nValue == 1000*COIN) continue; //masternode input
 
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
