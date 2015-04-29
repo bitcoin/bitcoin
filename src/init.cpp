@@ -1318,7 +1318,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             if (fPruneMode)
             {
                 CBlockIndex *block = chainActive.Tip();
-                while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && pindexRescan != block)
+                while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
                     block = block->pprev;
 
                 if (pindexRescan != block)
