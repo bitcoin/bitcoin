@@ -7,7 +7,6 @@
 
 #include "rpcprotocol.h"
 #include "util.h"
-#include "ui_interface.h"
 
 #include <set>
 #include <stdint.h>

@@ -12,8 +12,6 @@
 
 #include <boost/filesystem/operations.hpp>
 
-#define _(x) std::string(x) /* Keep the _() around in case gettext or such will be used later to translate non-UI */
-
 using namespace std;
 using namespace json_spirit;
 
