@@ -352,7 +352,7 @@ bool CWallet::Verify(string& warningString, string& errorString)
 {
     const std::string walletFile = CWallet::GetWalletFile();
     LogPrintf("Using wallet %s\n", walletFile);
-    
+
     if (!bitdb.Open(GetDataDir()))
     {
         // try moving the database env out of the way
@@ -380,7 +380,7 @@ bool CWallet::Verify(string& warningString, string& errorString)
         if (!CWalletDB::Recover(bitdb, walletFile, true))
             return false;
     }
-    
+
     if (boost::filesystem::exists(GetDataDir() / walletFile))
     {
         CDBEnv::VerifyResult r = bitdb.Verify(walletFile, CWalletDB::Recover);
@@ -914,7 +914,10 @@ void CWallet::MapParameters(string& warningString, string& errorString)
         if (ParseMoney(mapArgs["-mintxfee"], n) && n > 0)
             CWallet::minTxFee = CFeeRate(n);
         else
-            return InitError(strprintf(_("Invalid amount for -mintxfee=<amount>: '%s'"), mapArgs["-mintxfee"]));
+        {
+            errorString += strprintf(_("Invalid amount for -mintxfee=<amount>: '%s'"), mapArgs["-mintxfee"]);
+            return;
+        }
     }
     if (mapArgs.count("-paytxfee"))
     {
@@ -2135,24 +2138,24 @@ bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
     
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
-    
+
     if (GetBoolArg("-zapwallettxes", false)) {
         uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
-        
+
         CWallet *tmpWallet = new CWallet(strWalletFile);
         DBErrors nZapWalletRet = tmpWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DB_LOAD_OK) {
             uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
             return false;
         }
-        
+
         delete tmpWallet;
         tmpWallet = NULL;
     }
-    
+
     int64_t nStart = GetTimeMillis();
     DBErrors nLoadWallet;
-    
+
     if (!fFileBacked)
         nLoadWallet = DB_LOAD_OK;
     bool fFirstRun = false;
@@ -2191,7 +2194,7 @@ bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
     }
     fFirstRun = !vchDefaultKey.IsValid();
     uiInterface.LoadWallet(this);
-    
+
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = GetArg("-upgradewallet", 0);
@@ -2207,27 +2210,27 @@ bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
             errorString += _("Cannot downgrade wallet") + "\n";
         this->SetMaxVersion(nMaxVersion);
     }
-    
+
     if (fFirstRun)
     {
         // Create new keyUser and set as default key
         RandAddSeedPerfmon();
-        
+
         CPubKey newDefaultKey;
         if (this->GetKeyFromPool(newDefaultKey)) {
             this->SetDefaultKey(newDefaultKey);
             if (!this->SetAddressBook(this->vchDefaultKey.GetID(), "", "receive"))
                 errorString += _("Cannot write default address") + "\n";
         }
-        
+
         this->SetBestChain(chainActive.GetLocator());
     }
-    
+
     LogPrintf("%s", errorString);
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
-    
+
     RegisterValidationInterface(this);
-    
+
     CBlockIndex *pindexRescan = chainActive.Tip();
     if (GetBoolArg("-rescan", false))
         pindexRescan = chainActive.Genesis();
@@ -2265,12 +2268,12 @@ bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
         LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
         this->SetBestChain(chainActive.GetLocator());
         nWalletDBUpdated++;
-        
+
         // Restore wallet transaction metadata after -zapwallettxes=1
         if (GetBoolArg("-zapwallettxes", false) && GetArg("-zapwallettxes", "1") != "2")
         {
             CWalletDB walletdb(strWalletFile);
-            
+
             BOOST_FOREACH(const CWalletTx& wtxOld, vWtx)
             {
                 uint256 hash = wtxOld.GetHash();
@@ -2292,7 +2295,7 @@ bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
         }
     }
     this->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", true));
-    
+
     return true;
 }
 

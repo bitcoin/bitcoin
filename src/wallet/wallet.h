@@ -494,7 +494,7 @@ public:
     CWallet()
     {
         SetNull();
-        
+
         strWalletFile = GetWalletFile();
         fFileBacked = true;
     }
@@ -708,24 +708,23 @@ public:
     //! Dump wallet infos to log
     void LogInfos() const;
     static void LogGeneralInfos();
-    
+
     //! Verify the wallet database and perform salvage if required
     static bool Verify(std::string& warningString, std::string& errorString);
 
     static bool IsDisabled();
-    
+
     //! Map parameters to internal vars
     static void MapParameters(std::string& warningString, std::string& errorString);
-    
+
     //! Get user defined wallet file
     static std::string GetWalletFile();
-    
+
     //! Performs sanity check and appends possible errors to given string
     static void SanityCheck(std::string& errorString);
-    
+
     //! append help text to existing string
     static void AppendHelpMessageString(std::string& strUsage, bool debug = false);
-    
     /** 
      * Address book entry changed.
      * @note called with lock cs_wallet held.

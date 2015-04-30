@@ -795,9 +795,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 #ifdef ENABLE_WALLET
     std::string warningString, errorString;
-    
+
     CWallet::MapParameters(warningString, errorString);
-    
+
     if (!warningString.empty())
         InitWarning(warningString);
     if (!errorString.empty())
@@ -1175,12 +1175,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     } else {
         uiInterface.InitMessage(_("Loading wallet..."));
         pwalletMain = new CWallet();
-        
+
         std::string warningString, errorString;
-        
+
         if(!pwalletMain->LoadWallet(warningString, errorString))
             return false;
-        
+
         if (!warningString.empty())
             InitWarning(warningString);
         if (!errorString.empty())
