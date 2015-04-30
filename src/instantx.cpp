@@ -1,12 +1,10 @@
 
 
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "protocol.h"
 #include "instantx.h"
@@ -518,7 +516,7 @@ bool CConsensusVote::SignatureValid()
     //LogPrintf("verify addr %d %s \n", n, vecMasternodes[n].addr.ToString().c_str());
 
     CScript pubkey;
-    pubkey.SetDestination(pmn->pubkey2.GetID());
+    pubkey = GetScriptForDestination(pmn->pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
     CBitcoinAddress address2(address1);
@@ -549,7 +547,7 @@ bool CConsensusVote::Sign()
     }
 
     CScript pubkey;
-    pubkey.SetDestination(pubkey2.GetID());
+    pubkey = GetScriptForDestination(pubkey2.GetID());
     CTxDestination address1;
     ExtractDestination(pubkey, address1);
     CBitcoinAddress address2(address1);

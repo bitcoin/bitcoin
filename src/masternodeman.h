@@ -5,13 +5,10 @@
 #ifndef MASTERNODEMAN_H
 #define MASTERNODEMAN_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
@@ -68,22 +65,17 @@ public:
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
-    IMPLEMENT_SERIALIZE
-    (
-        // serialized format:
-        // * version byte (currently 0)
-        // * masternodes vector
-        {
-                LOCK(cs);
-                unsigned char nVersion = 0;
-                READWRITE(nVersion);
-                READWRITE(vMasternodes);
-                READWRITE(mAskedUsForMasternodeList);
-                READWRITE(mWeAskedForMasternodeList);
-                READWRITE(mWeAskedForMasternodeListEntry);
-                READWRITE(nDsqCount);
-        }
-    )
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            LOCK(cs);
+            READWRITE(vMasternodes);
+            READWRITE(mAskedUsForMasternodeList);
+            READWRITE(mWeAskedForMasternodeList);
+            READWRITE(mWeAskedForMasternodeListEntry);
+            READWRITE(nDsqCount);
+    }
 
     CMasternodeMan();
     CMasternodeMan(CMasternodeMan& other);
@@ -111,7 +103,7 @@ public:
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
     /// Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds);
+    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge);
 
     /// Find a random entry
     CMasternode* FindRandom();
@@ -133,13 +125,6 @@ public:
     int size() { return vMasternodes.size(); }
 
     std::string ToString() const;
-
-    //
-    // Relay Masternode Messages
-    //
-
-    void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage);
-    void RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
 
     void Remove(CTxIn vin);
 

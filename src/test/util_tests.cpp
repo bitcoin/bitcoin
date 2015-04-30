@@ -4,7 +4,12 @@
 
 #include "util.h"
 
+#include "clientversion.h"
+#include "primitives/transaction.h"
+#include "random.h"
 #include "sync.h"
+#include "utilstrencodings.h"
+#include "utilmoneystr.h"
 
 #include <stdint.h>
 #include <vector>
@@ -33,31 +38,6 @@ BOOST_AUTO_TEST_CASE(util_criticalsection)
 
         BOOST_ERROR("break was swallowed!");
     } while(0);
-}
-
-BOOST_AUTO_TEST_CASE(util_MedianFilter)
-{
-    CMedianFilter<int> filter(5, 15);
-
-    BOOST_CHECK_EQUAL(filter.median(), 15);
-
-    filter.input(20); // [15 20]
-    BOOST_CHECK_EQUAL(filter.median(), 17);
-
-    filter.input(30); // [15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 20);
-
-    filter.input(3); // [3 15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 17);
-
-    filter.input(7); // [3 7 15 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 15);
-
-    filter.input(18); // [3 7 18 20 30]
-    BOOST_CHECK_EQUAL(filter.median(), 18);
-
-    filter.input(0); // [0 3 7 18 30]
-    BOOST_CHECK_EQUAL(filter.median(), 7);
 }
 
 static const unsigned char ParseHex_expected[65] = {
@@ -163,17 +143,6 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(GetBoolArg("booltest4", false), true);
 }
 
-BOOST_AUTO_TEST_CASE(util_WildcardMatch)
-{
-    BOOST_CHECK(WildcardMatch("127.0.0.1", "*"));
-    BOOST_CHECK(WildcardMatch("127.0.0.1", "127.*"));
-    BOOST_CHECK(WildcardMatch("abcdef", "a?cde?"));
-    BOOST_CHECK(!WildcardMatch("abcdef", "a?cde??"));
-    BOOST_CHECK(WildcardMatch("abcdef", "a*f"));
-    BOOST_CHECK(!WildcardMatch("abcdef", "a*x"));
-    BOOST_CHECK(WildcardMatch("", "*"));
-}
-
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0, false), "0.00");
@@ -203,7 +172,7 @@ BOOST_AUTO_TEST_CASE(util_FormatMoney)
 
 BOOST_AUTO_TEST_CASE(util_ParseMoney)
 {
-    int64_t ret = 0;
+    CAmount ret = 0;
     BOOST_CHECK(ParseMoney("0.0", ret));
     BOOST_CHECK_EQUAL(ret, 0);
 
@@ -340,4 +309,49 @@ BOOST_AUTO_TEST_CASE(gettime)
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
 }
 
+BOOST_AUTO_TEST_CASE(test_ParseInt32)
+{
+    int32_t n;
+    // Valid values
+    BOOST_CHECK(ParseInt32("1234", NULL));
+    BOOST_CHECK(ParseInt32("0", &n) && n == 0);
+    BOOST_CHECK(ParseInt32("1234", &n) && n == 1234);
+    BOOST_CHECK(ParseInt32("01234", &n) && n == 1234); // no octal
+    BOOST_CHECK(ParseInt32("2147483647", &n) && n == 2147483647);
+    BOOST_CHECK(ParseInt32("-2147483648", &n) && n == -2147483648);
+    BOOST_CHECK(ParseInt32("-1234", &n) && n == -1234);
+    // Invalid values
+    BOOST_CHECK(!ParseInt32("1a", &n));
+    BOOST_CHECK(!ParseInt32("aap", &n));
+    BOOST_CHECK(!ParseInt32("0x1", &n)); // no hex
+    // Overflow and underflow
+    BOOST_CHECK(!ParseInt32("-2147483649", NULL));
+    BOOST_CHECK(!ParseInt32("2147483648", NULL));
+    BOOST_CHECK(!ParseInt32("-32482348723847471234", NULL));
+    BOOST_CHECK(!ParseInt32("32482348723847471234", NULL));
+}
+
+BOOST_AUTO_TEST_CASE(test_FormatParagraph)
+{
+    BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
+    BOOST_CHECK_EQUAL(FormatParagraph("test", 79, 0), "test");
+    BOOST_CHECK_EQUAL(FormatParagraph(" test", 79, 0), "test");
+    BOOST_CHECK_EQUAL(FormatParagraph("test test", 79, 0), "test test");
+    BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 0), "test\ntest");
+    BOOST_CHECK_EQUAL(FormatParagraph("testerde test ", 4, 0), "testerde\ntest");
+    BOOST_CHECK_EQUAL(FormatParagraph("test test", 4, 4), "test\n    test");
+    BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string. This is a second sentence in the very long test string."), "This is a very long test string. This is a second sentence in the very long\ntest string.");
+}
+
+BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
+{
+    std::vector<std::string> comments;
+    comments.push_back(std::string("comment1"));
+    std::vector<std::string> comments2;
+    comments2.push_back(std::string("comment1"));
+    comments2.push_back(std::string("comment2"));
+    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, std::vector<std::string>()),std::string("/Test:0.9.99/"));
+    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:0.9.99(comment1)/"));
+    BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments2),std::string("/Test:0.9.99(comment1; comment2)/"));
+}
 BOOST_AUTO_TEST_SUITE_END()

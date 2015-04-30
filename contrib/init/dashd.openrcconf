@@ -1,0 +1,27 @@
+# /etc/conf.d/dashd: config file for /etc/init.d/dashd
+
+# Config file location
+#BITCOIND_CONFIGFILE="/etc/dash/dash.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
+#BITCOIND_PIDDIR="/var/run/dashd"
+
+# What filename to give the pidfile
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/dashd.pid"
+
+# Where to write dashd data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/dashd"
+
+# User and group to own dashd process
+#BITCOIND_USER="dash"
+#BITCOIND_GROUP="dash"
+
+# Path to dashd executable
+#BITCOIND_BIN="/usr/bin/dashd"
+
+# Nice value to run dashd under
+#BITCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+BITCOIND_OPTS="-disablewallet"
+
