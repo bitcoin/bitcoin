@@ -147,3 +147,34 @@ class BitcoinTestFramework(object):
         else:
             print("Failed")
             sys.exit(1)
+
+
+# Test framework for doing p2p comparison testing, which sets up some bitcoind
+# binaries:
+# 1 binary: test binary
+# 2 binaries: 1 test binary, 1 ref binary
+# n>2 binaries: 1 test binary, n-1 ref binaries
+
+class ComparisonTestFramework(BitcoinTestFramework):
+
+    # Can override the num_nodes variable to indicate how many nodes to run.
+    def __init__(self):
+        self.num_nodes = 2
+
+    def add_options(self, parser):
+        parser.add_option("--testbinary", dest="testbinary",
+                          default=os.getenv("BITCOIND", "bitcoind"),
+                          help="bitcoind binary to test")
+        parser.add_option("--refbinary", dest="refbinary",
+                          default=os.getenv("BITCOIND", "bitcoind"),
+                          help="bitcoind binary to use for reference nodes (if any)")
+
+    def setup_chain(self):
+        print "Initializing test directory "+self.options.tmpdir
+        initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+
+    def setup_network(self):
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
+                                    extra_args=[['-debug', '-whitelist=127.0.0.1']] * self.num_nodes,
+                                    binary=[self.options.testbinary] +
+                                           [self.options.refbinary]*(self.num_nodes-1))
