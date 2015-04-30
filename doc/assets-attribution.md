@@ -100,5 +100,4 @@ Jonas Schnelli
 	src/qt/res/icons/bitcoin.icns, src/qt/res/src/bitcoin.svg,
 	src/qt/res/src/bitcoin.ico, src/qt/res/src/bitcoin.png,
 	src/qt/res/src/bitcoin_testnet.png, docs/bitcoin_logo_doxygen.png,
-	src/qt/res/icons/toolbar.png, src/qt/res/icons/toolbar_testnet.png,
 	src/qt/res/images/splash.png, src/qt/res/images/splash_testnet.png

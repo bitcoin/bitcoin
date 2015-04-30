@@ -5,14 +5,13 @@
 #ifndef ACTIVEMASTERNODE_H
 #define ACTIVEMASTERNODE_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "init.h"
 #include "wallet.h"
 #include "darksend.h"
+#include "masternode.h"
 
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
@@ -38,16 +37,9 @@ public:
     void ManageStatus(); 
 
     /// Ping for main Masternode
-    bool Dseep(std::string& errorMessage); 
+    bool Mnping(std::string& errorMessage); 
     /// Ping for any Masternode
-    bool Dseep(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string &retErrorMessage, bool stop); 
-
-    /// Stop main Masternode
-    bool StopMasterNode(std::string& errorMessage); 
-    /// Stop remote Masternode
-    bool StopMasterNode(std::string strService, std::string strKeyMasternode, std::string& errorMessage); 
-    /// Stop any Masternode
-    bool StopMasterNode(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string& errorMessage); 
+    bool Mnping(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string &retErrorMessage); 
 
     /// Register remote Masternode
     bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string strDonationAddress, std::string strDonationPercentage, std::string& errorMessage); 

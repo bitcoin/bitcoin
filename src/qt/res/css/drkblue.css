@@ -655,6 +655,10 @@ min-height:25px;
 min-width:180px;
 }
 
+QDialog#RPCConsole QWidget#tab_peers  QLabel#peerHeading { /* Peers Info Header */
+color:#3398CC;
+}
+
 QDialog#RPCConsole QPushButton#openDebugLogfileButton {
 max-width:60px;
 }
@@ -876,7 +880,7 @@ color:#818181;
 
 QWidget .QFrame#frameDarksend #formLayoutWidget .QProgressBar#darksendProgress::chunk {
 background-color: #3398CC;
-width:10px;
+width:1px;
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#labelAnonymizedText { /* Darksend Balance Label */

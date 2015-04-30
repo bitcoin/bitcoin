@@ -5,11 +5,11 @@
 #ifndef DARKSEND_H
 #define DARKSEND_H
 
-#include "core.h"
 #include "main.h"
 #include "sync.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "darksend-relay.h"
 
 class CTxIn;
@@ -22,8 +22,6 @@ class CDarksendBroadcastTx;
 class CActiveMasternode;
 
 // pool states for mixing
-#define POOL_MAX_TRANSACTIONS                  3 // wait for X transactions to merge and publish
-#define POOL_MAX_TRANSACTIONS_TESTNET          2 // wait for X transactions to merge and publish
 #define POOL_STATUS_UNKNOWN                    0 // waiting for update
 #define POOL_STATUS_IDLE                       1 // waiting for update
 #define POOL_STATUS_QUEUE                      2 // waiting in a queue
@@ -46,6 +44,9 @@ class CActiveMasternode;
 #define DARKSEND_RELAY_IN                 1
 #define DARKSEND_RELAY_OUT                2
 #define DARKSEND_RELAY_SIG                3
+
+static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
+static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
@@ -174,14 +175,16 @@ public:
         ready = false;
     }
 
-    IMPLEMENT_SERIALIZE
-    (
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nDenom);
         READWRITE(vin);
         READWRITE(time);
         READWRITE(ready);
         READWRITE(vchSig);
-    )
+    }
 
     bool GetAddress(CService &addr)
     {
@@ -259,10 +262,33 @@ public:
 class CDarksendPool
 {
 public:
+    enum messages {
+        ERR_ALREADY_HAVE,
+        ERR_DENOM,
+        ERR_ENTRIES_FULL,
+        ERR_EXISTING_TX,
+        ERR_FEES,
+        ERR_INVALID_COLLATERAL,
+        ERR_INVALID_INPUT,
+        ERR_INVALID_SCRIPT,
+        ERR_INVALID_TX,
+        ERR_MAXIMUM,
+        ERR_MN_LIST,
+        ERR_MODE,
+        ERR_NON_STANDARD_PUBKEY,
+        ERR_NOT_A_MN,
+        ERR_QUEUE_FULL,
+        ERR_RECENT,
+        ERR_SESSION,
+        ERR_MISSING_TX,
+        ERR_VERSION,
+        MSG_NOERR,
+        MSG_SUCCESS
+    };
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
     std::vector<CDarkSendEntry> entries; // Masternode entries
-    CTransaction finalTransaction; // the finalized transaction ready for signing
+    CMutableTransaction finalTransaction; // the finalized transaction ready for signing
 
     int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
     int64_t lastAutoDenomination; // TODO; not used - Delete?
@@ -294,7 +320,7 @@ public:
     int cachedLastSuccess;
     int cachedNumBlocks; //used for the overview screen
     int minBlockSpacing; //required blocks between mixes
-    CTransaction txCollateral;
+    CMutableTransaction txCollateral;
 
     int64_t lastNewBlock;
 
@@ -309,7 +335,7 @@ public:
         cachedLastSuccess = 0;
         cachedNumBlocks = 0;
         unitTest = false;
-        txCollateral = CTransaction();
+        txCollateral = CMutableTransaction();
         minBlockSpacing = 1;
         lastNewBlock = 0;
 
@@ -334,13 +360,7 @@ public:
     void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void InitCollateralAddress(){
-        std::string strAddress = "";
-        if(Params().NetworkID() == CChainParams::MAIN) {
-            strAddress = "Xq19GqFvajRrEdDHYRKGYjTsQfpV5jyipF";
-        } else {
-            strAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
-        }
-        SetCollateralAddress(strAddress);
+        SetCollateralAddress(Params().DarksendPoolDummyAddress());
     }
 
     void SetMinBlockSpacing(int minBlockSpacingIn){
@@ -411,11 +431,7 @@ public:
     /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions()
     {
-        //if we're on testnet, just use two transactions per merge
-        if(Params().NetworkID() == CChainParams::TESTNET || Params().NetworkID() == CChainParams::REGTEST) return POOL_MAX_TRANSACTIONS_TESTNET;
-
-        //use the production amount
-        return POOL_MAX_TRANSACTIONS;
+        return Params().PoolMaxTransactions();
     }
 
     /// Do we have enough users to take entries?
@@ -427,7 +443,7 @@ public:
     bool IsCompatibleWithEntries(std::vector<CTxOut>& vout);
 
     /// Is this amount compatible with other client in the pool?
-    bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, std::string& strReason);
+    bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, int &errorID);
 
     /// Passively run Darksend in the background according to the configuration in settings (only for QT)
     bool DoAutomaticDenominating(bool fDryRun=false, bool ready=false);
@@ -447,7 +463,7 @@ public:
     /// If the collateral is valid given by a client
     bool IsCollateralValid(const CTransaction& txCollateral);
     /// Add a clients entry to the pool
-    bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, std::string& error);
+    bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID);
     /// Add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
@@ -455,7 +471,7 @@ public:
     /// As a client, send a transaction to a Masternode to start the denomination process
     void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount);
     /// Get Masternode updates about the progress of Darksend
-    bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, std::string& error, int newSessionID=0);
+    bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, int &errorID, int newSessionID=0);
 
     /// As a client, check and sign the final transaction
     bool SignFinalTransaction(CTransaction& finalTransactionNew, CNode* node);
@@ -483,6 +499,7 @@ public:
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0);
     int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
 
+    std::string GetMessageByID(int messageID);
 
     //
     // Relay Darksend Messages
@@ -492,8 +509,8 @@ public:
     void RelaySignaturesAnon(std::vector<CTxIn>& vin);
     void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
     void RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
-    void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const std::string error="");
-    void RelayCompletedTransaction(const int sessionID, const bool error, const std::string errorMessage);
+    void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const int errorID=MSG_NOERR);
+    void RelayCompletedTransaction(const int sessionID, const bool error, const int errorID);
 };
 
 void ThreadCheckDarkSendPool();
