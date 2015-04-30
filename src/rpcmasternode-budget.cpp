@@ -166,11 +166,15 @@ Value mnbudget(const Array& params, bool fHelp)
         {
             nTotalAlloted += prop->GetAlloted();
 
+            CTxDestination address1;
+            ExtractDestination(prop->GetPayee(), address1);
+            CBitcoinAddress address2(address1);
+
             Object bObj;
             bObj.push_back(Pair("Name",  prop->GetName().c_str()));
             bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-            bObj.push_back(Pair("PaymentAddress",  prop->GetPaymentAddress()));
+            bObj.push_back(Pair("PaymentAddress",  address2.ToString().c_str()));
             bObj.push_back(Pair("Ratio",  prop->GetRatio()));
             bObj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
             bObj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
@@ -194,11 +198,15 @@ Value mnbudget(const Array& params, bool fHelp)
 
         if(prop == NULL) return "Unknown proposal name";
 
+        CTxDestination address1;
+        ExtractDestination(prop->GetPayee(), address1);
+        CBitcoinAddress address2(address1);
+
         Object obj;
         obj.push_back(Pair("Name",  prop->GetName().c_str()));
         obj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
         obj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-        obj.push_back(Pair("PaymentAddress",  prop->GetPaymentAddress()));
+        obj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
         obj.push_back(Pair("Ratio",  prop->GetRatio()));
         obj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
         obj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));

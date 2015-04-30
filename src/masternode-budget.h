@@ -28,7 +28,7 @@ class CBudgetVote;
 extern CBudgetManager budget;
 
 void DumpBudgets();
-
+uint256 GetBudgetProposalHash(std::string strProposalName);
 
 /** Save Budget Manager (budget.dat)
  */
@@ -78,13 +78,12 @@ public:
     CBudgetProposal *Find(const std::string &strProposalName);
     inline void NewBlock();
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
-    uint256 GetBudgetProposalHash(std::string strProposalName);
+    
     void CleanUp();
 
     int64_t GetTotalBudget();
     std::vector<CBudgetProposal*> GetBudget();
     bool IsBudgetPaymentBlock(int nHeight);
-    void FillBlockTx(CMutableTransaction& txNew, int& payments);
     void AddOrUpdateProposal(CBudgetVote& vote);
 
     void Clear(){
@@ -114,7 +113,7 @@ class CBudgetProposal
 {
 private:
     // critical section to protect the inner data structures
-    //mutable CCriticalSection cs;
+    mutable CCriticalSection cs;
     int64_t nAlloted;
 
 public:
@@ -124,6 +123,7 @@ public:
     //cache object
 
     CBudgetProposal();  
+    CBudgetProposal(const CBudgetProposal& other);
     CBudgetProposal(std::string strProposalNameIn);
 
     void Sync(CNode* node);
@@ -136,7 +136,7 @@ public:
     std::string GetName();
     int GetBlockStart();
     int GetBlockEnd();
-    std::string GetPaymentAddress();
+    CScript GetPayee();
     double GetRatio();
     int GetYeas();
     int GetNays();

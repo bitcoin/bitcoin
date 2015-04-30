@@ -308,31 +308,31 @@ bool CBudgetVote::SignatureValid()
 
 void CBudgetManager::AddOrUpdateProposal(CBudgetVote& vote)
 {
-   // LOCK(cs);
+    LOCK(cs);
 
-   //  uint256 hash = GetBudgetProposalHash(vote.strProposalName);
+    uint256 hash = GetBudgetProposalHash(vote.strProposalName);
 
-   //  if(!mapProposals.count(hash)){
-   //  	CBudgetProposal prop(vote.strProposalName);
-   //  	mapProposals.insert(make_pair(hash, prop));
-   //  	return;
-   //  }
+    if(!mapProposals.count(hash)){
+    	CBudgetProposal prop(vote.strProposalName);
+    	//mapProposals.insert(make_pair(hash, prop));
+    	return;
+    }
 
-  	// mapProposals[hash].AddOrUpdateVote(vote);
+  	mapProposals[hash].AddOrUpdateVote(vote);
 }
 
 void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
 {
-    // LOCK(cs);
+    LOCK(cs);
 
-    // uint256 hash = vote.vin.prevout.GetHash();
+    uint256 hash = vote.vin.prevout.GetHash();
 
-    // if(!mapProposals.count(hash)){
-    //     mapProposals.insert(make_pair(hash, vote));
-    //     return;
-    // }
+    if(!mapVotes.count(hash)){
+        mapVotes.insert(make_pair(hash, vote));
+        return;
+    }
 
-    // vote[hash] = vote;    
+    mapVotes[hash] = vote;    
 }
 
 inline void CBudgetManager::NewBlock()
@@ -345,11 +345,11 @@ inline void CBudgetManager::NewBlock()
 
 CBudgetProposal *CBudgetManager::Find(const std::string &strProposalName)
 {
-    // uint256 hash = GetBudgetProposalHash(vote.strProposalName);
+    uint256 hash = GetBudgetProposalHash(strProposalName);
 
-    // if(mapProposals.count(hash)){
-    // 	return &mapProposals[hash];
-    // }
+    if(mapProposals.count(hash)){
+    	return &mapProposals[hash];
+    }
 
     return NULL;
 }
@@ -357,6 +357,11 @@ CBudgetProposal *CBudgetManager::Find(const std::string &strProposalName)
 CBudgetProposal::CBudgetProposal()
 {
     strProposalName = "";
+}
+
+CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
+{
+    strProposalName = other.strProposalName;
 }
 
 CBudgetProposal::CBudgetProposal(std::string strProposalNameIn)
@@ -371,38 +376,43 @@ std::string CBudgetProposal::GetName()
 
 int CBudgetProposal::GetBlockStart()
 {
-	/*std::map<int, int> mapList;
+	std::map<int, int> mapList;
 
-    map<uint256, CBudgetVote>::iterator it;
-    for(it=mapVotes.begin();it<mapVotes.end();it++){
-        if ((*it)->second.mapVotes.nVote != VOTE_YEA) continue;
 
-        if(mapList.count((*it).nBlockStart)){
-        	mapList[(*it).nBlockStart]++;
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+
+    while(it != mapVotes.end()) {
+        if ((*it).second.nVote != VOTE_YES) continue;
+
+        if(mapList.count((*it).second.nBlockStart)){
+        	mapList[(*it).second.nBlockStart]++;
         } else {
-        	mapList[(*it)].insert(make_pair<(*it).nBlockStart, 1>);
+            mapList[(*it).second.nBlockStart] = 1;
         }
-    }*/
+    }
+
 
 	//sort(mapList.begin(), mapList.end());
-	// return myMap.begin()->second;
+	//return myMap.begin()->second;
+
     return 0;
 }
 
 int CBudgetProposal::GetBlockEnd()
 {
 	std::map<int, int> mapList;
+    
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=mapVotes.begin();it<mapVotes.end();it++){
-    //     if ((*it)->second.nVote != VOTE_YEA) continue;
+    while(it != mapVotes.end()) {
+        if ((*it).second.nVote != VOTE_YES) continue;
 
-    //     if(mapList.count((*it).nBlockEnd)){
-    //     	mapList[(*it).nBlockEnd]++;
-    //     } else {
-    //     	mapList[(*it).nBlockEnd] = 1;
-    //     }
-    // }
+        if(mapList.count((*it).second.nBlockEnd)){
+            mapList[(*it).second.nBlockEnd]++;
+        } else {
+            mapList[(*it).second.nBlockEnd] = 1;
+        }
+    }
 
 	// sort(mapList.begin(), mapList.end());
 	// return myMap.begin()->first;
@@ -413,44 +423,47 @@ int64_t CBudgetProposal::GetAmount()
 {
 	std::map<int64_t, int> mapList;
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=mapVotes.begin();it<mapVotes.end();it++){
-    //     if ((*it)->second.nVote != VOTE_YEA) continue;
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
 
-    //     if(mapList.count((*it).nAmount)){
-    //     	mapList[(*it).nAmount]++;
-    //     } else {
-    //     	mapList[(*it).nAmount] = 1;
-    //     }
-    // }
+    while(it != mapVotes.end()) {
+        if ((*it).second.nVote != VOTE_YES) continue;
+
+        if(mapList.count((*it).second.nAmount)){
+            mapList[(*it).second.nAmount]++;
+        } else {
+            mapList[(*it).second.nAmount] = 1;
+        }
+    }
 
 	// sort(mapList.begin(), mapList.end());
 	// return myMap.begin()->first;
     return 0;
 }
 
-std::string CBudgetProposal::GetPaymentAddress()
+CScript CBudgetProposal::GetPayee()
 {
-	std::map<std::string, int> mapList;
+	std::map<CScript, int> mapList;
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=prop->mapVotes.begin();it<prop->mapVotes.end();it++){
-    //     if ((*it)->second.nVote != VOTE_YEA) continue;
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
 
-    //     CTxDestination address1;
-    //     ExtractDestination((*it)->second.payee, address1);
-    //     CBitcoinAddress address2(address1);
+    while(it != mapVotes.end()) {
+        if ((*it).second.nVote != VOTE_YES) continue;
 
-    //     if(mapList.count(address2){
-    //     	mapList[address2]++;
-    //     } else {
-    //     	mapList[address2] = 1;
-    //     }
-    // }
+        CTxDestination address1;
+        ExtractDestination((*it).second.address, address1);
+        CBitcoinAddress address2(address1);
 
+        if(mapList.count((*it).second.address)){
+            mapList[(*it).second.address]++;
+        } else {
+            mapList[(*it).second.address] = 1;
+        }
+
+    }
+    
 	// sort(mapList.begin(), mapList.end());
 	// return myMap.begin()->first;
-    return 0;
+    return CScript();
 }
 
 double CBudgetProposal::GetRatio()
@@ -458,11 +471,12 @@ double CBudgetProposal::GetRatio()
 	int yeas = 0;
 	int nays = 0;
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=mapVotes.begin();it<mapVotes.end();it++){
-    //     if ((*it)->second.prop->mapVotes.nVote != VOTE_YEA) yeas++;
-    //     if ((*it)->second.nVote != VOTE_NAY) nays++;
-    // }
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+
+    while(it != mapVotes.end()) {
+        if ((*it).second.nVote == VOTE_YES) yeas++;
+        if ((*it).second.nVote == VOTE_NO) nays++;
+    }
 
     return ((double)yeas / (double)yeas+nays);
 }
@@ -471,9 +485,9 @@ int CBudgetProposal::GetYeas()
 {
 	int ret = 0;
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=mapVotes.begin();it<mapVotes.end();it++)
-    //     if ((*it)->second.mapVotes.nVote != VOTE_YEA) ret++;
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+    while(it != mapVotes.end())
+        if ((*it).second.nVote == VOTE_YES) ret++;
 
     return ret;
 }
@@ -482,9 +496,9 @@ int CBudgetProposal::GetNays()
 {
 	int ret = 0;
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=mapVotes.begin();it<mapVotes.end();it++)
-    //     if ((*it)->second.nVote != VOTE_NAY) ret++;
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+    while(it != mapVotes.end())
+        if ((*it).second.nVote == VOTE_NO) ret++;
 
     return ret;
 }
@@ -493,9 +507,9 @@ int CBudgetProposal::GetAbstains()
 {
 	int ret = 0;
 
-    // map<uint256, CBudgetVote>::iterator it;
-    // for(it=mapVotes.begin();it<mapVotes.end();it++)
-    //     if ((*it)->second.mapVotes.nVote != VOTE_ABSTAIN) ret++;
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+    while(it != mapVotes.end())
+        if ((*it).second.nVote == VOTE_ABSTAIN) ret++;
 
     return ret;
 }
@@ -511,28 +525,6 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nHeight)
     return false;
 }
 
-void CBudgetManager::FillBlockTx(CMutableTransaction& txNew, int& payments)
-{
-/*	std::vector<CBudgetProposal*> budget = GetBudget();
-
-    LogPrintf("Masternode Budget payment to");
-
-	BOOST_FOREACH(CBudgetProposal* prop, budget){
-		payments++;
-	    txNew.vout.resize(payments);
-
-	    txNew.vout[payments-1].scriptPubKey = prop.GetPayee();
-	    txNew.vout[payments-1].nValue = prop.GetAmount();
-
-        CTxDestination address1;
-        ExtractDestination(pblock->payee, address1);
-        CBitcoinAddress address2(address1);
-
-        LogPrintf(" (%s|%d)", address2.ToString().c_str(), prop.GetAmount());
-	}
-	LogPrintf("\n");*/
-}
-
 int64_t CBudgetManager::GetTotalBudget()
 {
 	if(chainActive.Tip() == NULL) return 0;
@@ -541,40 +533,41 @@ int64_t CBudgetManager::GetTotalBudget()
 	return (GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, 0)/100)*15;
 }
 
+//Need to review this function
 std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 {
-/*	std::map<uint256, int> mapList;
+	std::map<uint256, int> mapList;
 
-    map<uint256, CBudgetProposal>::iterator it;
-    for(it=prop->mapProposals.begin();it<prop->mapProposals.end();it++){
-    	uint256 hash = GetBudgetProposalHash((*it)->second.strProposalName);
-        if(!mapList.count(hash)){
-        	mapList[hash] = (*it)->second.GetYeas();
-        }
+/*    std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
+    while(it != mapProposals.end())
+    	uint256 hash = GetBudgetProposalHash((*it).second.strProposalName);
+        mapList[hash] = (*it).second.GetYeas();
     }
 
     //sort by yeas
-	sort(mapList.begin(), mapList.end());*/
+	sort(mapList.begin(), mapList.end());
 
+    */
 	std::vector<CBudgetProposal*> ret;
-
-/*	int64_t nBudgetAllocated = 0;
+    /*
+	int64_t nBudgetAllocated = 0;
 	int64_t nTotalBudget = GetTotalBudget();
 
-    map<uint256, CBudgetProposal>::iterator it;
-    for(it=prop->mapProposals.begin();it<prop->mapProposals.end();it++){
+    std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
+    while(it != mapProposals.end())
+    {
     	if(nTotalBudget == nBudgetAllocated){
-    		(*it).SetAllotted(0);
-    	} else if((*it).GetAmount() + nBudgetAllocated <= nTotalBudget()) {
-    		(*it).SetAllotted((*it).GetAmount());
-    		nBudgetAllocated += (*it).GetAmount();
+    		(*it).second.SetAllotted(0);
+    	} else if((*it).second.GetAmount() + nBudgetAllocated <= nTotalBudget()) {
+    		(*it).second..SetAllotted((*it).GetAmount());
+    		nBudgetAllocated += (*it).second.GetAmount();
     	} else {
     		//couldn't pay for the entire budget, so it'll be partially paid.
-    		(*it).SetAllotted(nTotalBudget - nBudgetAllocated);
+    		(*it).second.SetAllotted(nTotalBudget - nBudgetAllocated);
     		nBudgetAllocated = nTotalBudget;
     	}
 
-    	ret.insert(make_pair((*it).strProposalName, &(*it)))
+    	ret.insert(make_pair((*it).second.strProposalName, &(*it)))
     }*/
 	return ret;
 }
@@ -582,16 +575,15 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 
 void CBudgetManager::Sync(CNode* node)
 {
-    // map<uint256, CBudgetProposal>::iterator it;
-    // for(it=prop->mapProposals.begin();it<prop->mapProposals.end();it++){
-    // 	(*it)->second.Sync(node);
-    // }
+    std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
+    while(it != mapProposals.end())
+     	(*it).second.Sync(node);
+
 }
 
 void CBudgetProposal::Sync(CNode* node)
 {
-  //   map<uint256, CBudgetVote>::iterator it;
-  //   for(it=mapVotes.begin();it<mapVotes.end();it++){
-		// node->PushMessage("mvote", mapVotes[(*it)->first]);    
-  //   }
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+    while(it != mapVotes.end())
+        node->PushMessage("mvote", (*it).second);    
 }
