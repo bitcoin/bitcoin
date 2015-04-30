@@ -88,8 +88,12 @@ def initialize_chain(test_dir):
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
+            if os.getenv("PYTHON_DEBUG", ""):
+                print "initialize_chain: bitcoind started, calling bitcoin-cli -rpcwait getblockcount"
             subprocess.check_call([ os.getenv("BITCOINCLI", "bitcoin-cli"), "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
+            if os.getenv("PYTHON_DEBUG", ""):
+                print "initialize_chain: bitcoin-cli -rpcwait getblockcount completed"
         devnull.close()
         rpcs = []
         for i in range(4):
@@ -158,18 +162,24 @@ def _rpchost_to_args(rpchost):
         rv += ['-rpcport=' + rpcport]
     return rv
 
-def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None):
+def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
     """
     Start a bitcoind and return RPC connection to it
     """
     datadir = os.path.join(dirname, "node"+str(i))
-    args = [ os.getenv("BITCOIND", "bitcoind"), "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
+    if binary is None:
+        binary = os.getenv("BITCOIND", "bitcoind")
+    args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     devnull = open("/dev/null", "w+")
+    if os.getenv("PYTHON_DEBUG", ""):
+        print "start_node: bitcoind started, calling bitcoin-cli -rpcwait getblockcount"
     subprocess.check_call([ os.getenv("BITCOINCLI", "bitcoin-cli"), "-datadir="+datadir] +
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)
+    if os.getenv("PYTHON_DEBUG", ""):
+        print "start_node: calling bitcoin-cli -rpcwait getblockcount returned"
     devnull.close()
     url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
     if timewait is not None:
@@ -179,12 +189,13 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None):
     proxy.url = url # store URL on proxy for info
     return proxy
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     """
     Start multiple bitcoinds, return RPC connections to them
     """
     if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
-    return [ start_node(i, dirname, extra_args[i], rpchost) for i in range(num_nodes) ]
+    if binary is None: binary = [ None for i in range(num_nodes) ]
+    return [ start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]) for i in range(num_nodes) ]
 
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
