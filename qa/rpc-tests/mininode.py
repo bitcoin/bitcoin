@@ -37,6 +37,11 @@ MY_SUBVERSION = "/python-mininode-tester:0.0.1/"
 
 MAX_INV_SZ = 50000
 
+# Keep our own socket map for asyncore, so that we can track disconnects
+# ourselves (to workaround an issue with closing an asyncore socket when 
+# using select)
+mininode_socket_map = dict()
+
 # Serialization/deserialization tools
 def sha256(s):
     return hashlib.new('sha256', s).digest()
@@ -1076,7 +1081,7 @@ class NodeConn(asyncore.dispatcher):
     }
 
     def __init__(self, dstaddr, dstport, rpc, callback, net="regtest"):
-        asyncore.dispatcher.__init__(self)
+        asyncore.dispatcher.__init__(self, map=mininode_socket_map)
         self.log = logging.getLogger("NodeConn(%s:%d)" % (dstaddr, dstport))
         self.dstaddr = dstaddr
         self.dstport = dstport
@@ -1140,14 +1145,10 @@ class NodeConn(asyncore.dispatcher):
         return True
 
     def writable(self):
-        if self.disconnect:
-            self.handle_close()
-            return False
-        else:
-            self.sendbufLock.acquire()
-            length = len(self.sendbuf)
-            self.sendbufLock.release()
-            return (length > 0)
+        self.sendbufLock.acquire()
+        length = len(self.sendbuf)
+        self.sendbufLock.release()
+        return (length > 0)
 
     def handle_write(self):
         self.sendbufLock.acquire()
@@ -1229,12 +1230,20 @@ class NodeConn(asyncore.dispatcher):
 
     def disconnect_node(self):
         self.disconnect = True
-        self.send_message(self.messagemap['ping']())
 
 
 class NetworkThread(Thread):
     def run(self):
-        asyncore.loop(0.1, True)
+        while mininode_socket_map:
+            # We check for whether to disconnect outside of the asyncore
+            # loop to workaround the behavior of asyncore when using
+            # select
+            disconnected = []
+            for fd, obj in mininode_socket_map.items():
+                if obj.disconnect:
+                    disconnected.append(obj)
+            [ obj.handle_close() for obj in disconnected ]
+            asyncore.loop(0.1, use_poll=True, map=mininode_socket_map, count=1)
 
 
 # An exception we can raise if we detect a potential disconnect
