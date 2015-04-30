@@ -40,7 +40,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *c
         VERIFY_CHECK(secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0));
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);
         /* Add G to make the bits in x uniformly distributed. */
-        secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, &secp256k1_ge_const_g);
+        secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, &secp256k1_ge_const_g, NULL);
     }
 
     /* compute prec. */
@@ -54,18 +54,18 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *c
             /* Set precj[j*16 .. j*16+15] to (numsbase, numsbase + gbase, ..., numsbase + 15*gbase). */
             precj[j*16] = numsbase;
             for (i = 1; i < 16; i++) {
-                secp256k1_gej_add_var(&precj[j*16 + i], &precj[j*16 + i - 1], &gbase);
+                secp256k1_gej_add_var(&precj[j*16 + i], &precj[j*16 + i - 1], &gbase, NULL);
             }
             /* Multiply gbase by 16. */
             for (i = 0; i < 4; i++) {
-                secp256k1_gej_double_var(&gbase, &gbase);
+                secp256k1_gej_double_var(&gbase, &gbase, NULL);
             }
             /* Multiply numbase by 2. */
-            secp256k1_gej_double_var(&numsbase, &numsbase);
+            secp256k1_gej_double_var(&numsbase, &numsbase, NULL);
             if (j == 62) {
                 /* In the last iteration, numsbase is (1 - 2^j) * nums instead. */
                 secp256k1_gej_neg(&numsbase, &numsbase);
-                secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej);
+                secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej, NULL);
             }
         }
         secp256k1_ge_set_all_gej_var(1024, prec, precj);

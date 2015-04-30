@@ -62,6 +62,17 @@ static void secp256k1_ge_set_gej(secp256k1_ge_t *r, secp256k1_gej_t *a);
 /** Set a batch of group elements equal to the inputs given in jacobian coordinates */
 static void secp256k1_ge_set_all_gej_var(size_t len, secp256k1_ge_t *r, const secp256k1_gej_t *a);
 
+/** Set a batch of group elements equal to the inputs given in jacobian
+ *  coordinates (with known z-ratios). zr must contain the known z-ratios such
+ *  that mul(a[i].z, zr[i+1]) == a[i+1].z. zr[0] is ignored. */
+static void secp256k1_ge_set_table_gej_var(size_t len, secp256k1_ge_t *r, const secp256k1_gej_t *a, const secp256k1_fe_t *zr);
+
+/** Bring a batch inputs given in jacobian coordinates (with known z-ratios) to
+ *  the same global z "denominator". zr must contain the known z-ratios such
+ *  that mul(a[i].z, zr[i+1]) == a[i+1].z. zr[0] is ignored. The x and y
+ *  coordinates of the result are stored in r, the common z coordinate is
+ *  stored in globalz. */
+static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge_t *r, secp256k1_fe_t *globalz, const secp256k1_gej_t *a, const secp256k1_fe_t *zr);
 
 /** Set a group element (jacobian) equal to the point at infinity. */
 static void secp256k1_gej_set_infinity(secp256k1_gej_t *r);
@@ -81,23 +92,26 @@ static void secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a);
 /** Check whether a group element is the point at infinity. */
 static int secp256k1_gej_is_infinity(const secp256k1_gej_t *a);
 
-/** Set r equal to the double of a. */
-static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a);
+/** Set r equal to the double of a. If rzr is not-NULL, r->z = a->z * *rzr (where infinity means an implicit z = 0). */
+static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, secp256k1_fe_t *rzr);
 
-/** Set r equal to the sum of a and b. */
-static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b);
+/** Set r equal to the sum of a and b. If rzr is non-NULL, r->z = a->z * *rzr (a cannot be infinity in that case). */
+static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b, secp256k1_fe_t *rzr);
 
 /** Set r equal to the sum of a and b (with b given in affine coordinates, and not infinity). */
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
 
 /** Set r equal to the sum of a and b (with b given in affine coordinates). This is more efficient
     than secp256k1_gej_add_var. It is identical to secp256k1_gej_add_ge but without constant-time
-    guarantee, and b is allowed to be infinity. */
-static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b);
+    guarantee, and b is allowed to be infinity. If rzr is non-NULL, r->z = a->z * *rzr (a cannot be infinity in that case). */
+static void secp256k1_gej_add_ge_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b, secp256k1_fe_t *rzr);
+
+/** Set r equal to the sum of a and b (with the inverse of b's Z coordinate passed as bzinv). */
+static void secp256k1_gej_add_zinv_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b, const secp256k1_fe_t *bzinv);
 
 #ifdef USE_ENDOMORPHISM
 /** Set r to be equal to lambda times a, where lambda is chosen in a way such that this is very fast. */
-static void secp256k1_gej_mul_lambda(secp256k1_gej_t *r, const secp256k1_gej_t *a);
+static void secp256k1_ge_mul_lambda(secp256k1_ge_t *r, const secp256k1_ge_t *a);
 #endif
 
 /** Clear a secp256k1_gej_t to prevent leaking sensitive information. */
