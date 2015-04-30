@@ -14,7 +14,7 @@
 class OptionsModel;
 
 namespace Ui {
-    class ReceiveRequestDialog;
+    class Credits_ReceiveRequestDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -44,13 +44,13 @@ private:
     QMenu *contextMenu;
 };
 
-class ReceiveRequestDialog : public QDialog
+class Credits_ReceiveRequestDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ReceiveRequestDialog(QWidget *parent = 0);
-    ~ReceiveRequestDialog();
+    explicit Credits_ReceiveRequestDialog(QWidget *parent = 0);
+    ~Credits_ReceiveRequestDialog();
 
     void setModel(OptionsModel *model);
     void setInfo(const Bitcredit_SendCoinsRecipient &info);
@@ -62,7 +62,7 @@ private slots:
     void update();
 
 private:
-    Ui::ReceiveRequestDialog *ui;
+    Ui::Credits_ReceiveRequestDialog *ui;
     OptionsModel *model;
     Bitcredit_SendCoinsRecipient info;
 };

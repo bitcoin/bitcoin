@@ -34,7 +34,7 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
-TransactionView::TransactionView(QWidget *parent) :
+Credits_TransactionView::Credits_TransactionView(QWidget *parent) :
     QWidget(parent), model(0), transactionProxyModel(0),
     transactionView(0)
 {
@@ -73,16 +73,16 @@ TransactionView::TransactionView(QWidget *parent) :
     typeWidget->setFixedWidth(120);
 #endif
 
-    typeWidget->addItem(tr("All"), Bitcredit_TransactionFilterProxy::ALL_TYPES);
-    typeWidget->addItem(tr("Received with"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::RecvWithAddress) |
-                                        Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::RecvFromOther));
-    typeWidget->addItem(tr("Sent to"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::SendToAddress) |
-                                  Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::SendToOther));
-    typeWidget->addItem(tr("To yourself"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::SendToSelf));
-    typeWidget->addItem(tr("Mined"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Generated));
-    typeWidget->addItem(tr("Deposit"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Deposit));
-    typeWidget->addItem(tr("Deposit change"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::DepositChange));
-    typeWidget->addItem(tr("Other"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Other));
+    typeWidget->addItem(tr("All"), Credits_TransactionFilterProxy::ALL_TYPES);
+    typeWidget->addItem(tr("Received with"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::RecvWithAddress) |
+                                        Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::RecvFromOther));
+    typeWidget->addItem(tr("Sent to"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::SendToAddress) |
+                                  Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::SendToOther));
+    typeWidget->addItem(tr("To yourself"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::SendToSelf));
+    typeWidget->addItem(tr("Mined"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::Generated));
+    typeWidget->addItem(tr("Deposit"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::Deposit));
+    typeWidget->addItem(tr("Deposit change"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::DepositChange));
+    typeWidget->addItem(tr("Other"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::Other));
 
     hlayout->addWidget(typeWidget);
 
@@ -164,12 +164,12 @@ TransactionView::TransactionView(QWidget *parent) :
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
 
-void TransactionView::setModel(Bitcredit_WalletModel *model)
+void Credits_TransactionView::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
     if(model)
     {
-        transactionProxyModel = new Bitcredit_TransactionFilterProxy(this);
+        transactionProxyModel = new Credits_TransactionFilterProxy(this);
         transactionProxyModel->setSourceModel(model->getTransactionTableModel());
         transactionProxyModel->setDynamicSortFilter(true);
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
@@ -214,7 +214,7 @@ void TransactionView::setModel(Bitcredit_WalletModel *model)
     }
 }
 
-void TransactionView::chooseDate(int idx)
+void Credits_TransactionView::chooseDate(int idx)
 {
     if(!transactionProxyModel)
         return;
@@ -224,26 +224,26 @@ void TransactionView::chooseDate(int idx)
     {
     case All:
         transactionProxyModel->setDateRange(
-                Bitcredit_TransactionFilterProxy::MIN_DATE,
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MIN_DATE,
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case Today:
         transactionProxyModel->setDateRange(
                 QDateTime(current),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case ThisWeek: {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
         transactionProxyModel->setDateRange(
                 QDateTime(startOfWeek),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
 
         } break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), current.month(), 1)),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case LastMonth:
         transactionProxyModel->setDateRange(
@@ -253,7 +253,7 @@ void TransactionView::chooseDate(int idx)
     case ThisYear:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), 1, 1)),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
@@ -262,7 +262,7 @@ void TransactionView::chooseDate(int idx)
     }
 }
 
-void TransactionView::chooseType(int idx)
+void Credits_TransactionView::chooseType(int idx)
 {
     if(!transactionProxyModel)
         return;
@@ -270,14 +270,14 @@ void TransactionView::chooseType(int idx)
         typeWidget->itemData(idx).toInt());
 }
 
-void TransactionView::changedPrefix(const QString &prefix)
+void Credits_TransactionView::changedPrefix(const QString &prefix)
 {
     if(!transactionProxyModel)
         return;
     transactionProxyModel->setAddressPrefix(prefix);
 }
 
-void TransactionView::changedAmount(const QString &amount)
+void Credits_TransactionView::changedAmount(const QString &amount)
 {
     if(!transactionProxyModel)
         return;
@@ -292,7 +292,7 @@ void TransactionView::changedAmount(const QString &amount)
     }
 }
 
-void TransactionView::exportClicked()
+void Credits_TransactionView::exportClicked()
 {
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
@@ -324,7 +324,7 @@ void TransactionView::exportClicked()
     }
 }
 
-void TransactionView::contextualMenu(const QPoint &point)
+void Credits_TransactionView::contextualMenu(const QPoint &point)
 {
     QModelIndex index = transactionView->indexAt(point);
     if(index.isValid())
@@ -333,27 +333,27 @@ void TransactionView::contextualMenu(const QPoint &point)
     }
 }
 
-void TransactionView::copyAddress()
+void Credits_TransactionView::copyAddress()
 {
     GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::AddressRole);
 }
 
-void TransactionView::copyLabel()
+void Credits_TransactionView::copyLabel()
 {
     GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::LabelRole);
 }
 
-void TransactionView::copyAmount()
+void Credits_TransactionView::copyAmount()
 {
     GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::FormattedAmountRole);
 }
 
-void TransactionView::copyTxID()
+void Credits_TransactionView::copyTxID()
 {
     GUIUtil::copyEntryData(transactionView, 0, Bitcredit_TransactionTableModel::TxIDRole);
 }
 
-void TransactionView::editLabel()
+void Credits_TransactionView::editLabel()
 {
     if(!transactionView->selectionModel() ||!model)
         return;
@@ -379,10 +379,10 @@ void TransactionView::editLabel()
             // Determine type of address, launch appropriate editor dialog type
             QString type = modelIdx.data(Bitcredit_AddressTableModel::TypeRole).toString();
 
-            Bitcredit_EditAddressDialog dlg(
+            Credits_EditAddressDialog dlg(
                 type == Bitcredit_AddressTableModel::Receive
-                ? Bitcredit_EditAddressDialog::EditReceivingAddress
-                : Bitcredit_EditAddressDialog::EditSendingAddress, this);
+                ? Credits_EditAddressDialog::EditReceivingAddress
+                : Credits_EditAddressDialog::EditSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.loadRow(idx);
             dlg.exec();
@@ -390,7 +390,7 @@ void TransactionView::editLabel()
         else
         {
             // Add sending address
-            Bitcredit_EditAddressDialog dlg(Bitcredit_EditAddressDialog::NewSendingAddress,
+            Credits_EditAddressDialog dlg(Credits_EditAddressDialog::NewSendingAddress,
                 this);
             dlg.setModel(addressBook);
             dlg.setAddress(address);
@@ -399,19 +399,19 @@ void TransactionView::editLabel()
     }
 }
 
-void TransactionView::showDetails()
+void Credits_TransactionView::showDetails()
 {
     if(!transactionView->selectionModel())
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        TransactionDescDialog dlg(selection.at(0));
+        Credits_TransactionDescDialog dlg(selection.at(0));
         dlg.exec();
     }
 }
 
-void TransactionView::openThirdPartyTxUrl(QString url)
+void Credits_TransactionView::openThirdPartyTxUrl(QString url)
 {
     if(!transactionView || !transactionView->selectionModel())
         return;
@@ -420,7 +420,7 @@ void TransactionView::openThirdPartyTxUrl(QString url)
          QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(Bitcredit_TransactionTableModel::TxHashRole).toString())));
 }
 
-QWidget *TransactionView::createDateRangeWidget()
+QWidget *Credits_TransactionView::createDateRangeWidget()
 {
     dateRangeWidget = new QFrame();
     dateRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -456,7 +456,7 @@ QWidget *TransactionView::createDateRangeWidget()
     return dateRangeWidget;
 }
 
-void TransactionView::dateRangeChanged()
+void Credits_TransactionView::dateRangeChanged()
 {
     if(!transactionProxyModel)
         return;
@@ -465,7 +465,7 @@ void TransactionView::dateRangeChanged()
             QDateTime(dateTo->date()).addDays(1));
 }
 
-void TransactionView::focusTransaction(const QModelIndex &idx)
+void Credits_TransactionView::focusTransaction(const QModelIndex &idx)
 {
     if(!transactionProxyModel)
         return;
@@ -477,7 +477,7 @@ void TransactionView::focusTransaction(const QModelIndex &idx)
 
 // We override the virtual resizeEvent of the QWidget to adjust tables column
 // sizes as the tables width is proportional to the dialogs width.
-void TransactionView::resizeEvent(QResizeEvent* event)
+void Credits_TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     columnResizingFixer->stretchColumnWidth(Bitcredit_TransactionTableModel::ToAddress);

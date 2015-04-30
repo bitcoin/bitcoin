@@ -31,7 +31,7 @@ X509 *parse_b64der_cert(const char* cert_data)
 static Bitcredit_SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsigned char>& data)
 {
     RecipientCatcher sigCatcher;
-    QObject::connect(server, SIGNAL(receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
+    QObject::connect(server, SIGNAL(credits_receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
                      &sigCatcher, SLOT(getRecipient(Bitcredit_SendCoinsRecipient)));
 
     // Write data to a temp file:
@@ -49,7 +49,7 @@ static Bitcredit_SendCoinsRecipient handleRequest(PaymentServer* server, std::ve
     // which will lead to a test failure anyway.
     QCoreApplication::sendEvent(&object, &event);
 
-    QObject::disconnect(server, SIGNAL(receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
+    QObject::disconnect(server, SIGNAL(credits_receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
                         &sigCatcher, SLOT(getRecipient(Bitcredit_SendCoinsRecipient)));
 
     // Return results from sigCatcher

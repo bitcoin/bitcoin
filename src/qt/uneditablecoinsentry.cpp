@@ -39,7 +39,7 @@ void UneditableCoinsEntry::on_addressBookButton_clicked()
 {
     if(!model)
         return;
-    AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+    Credits_AddressBookPage dlg(Credits_AddressBookPage::ForSelection, Credits_AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
     {

@@ -46,10 +46,11 @@ bool WalletFrame::addWallet(const QString& name, Bitcredit_WalletModel *bitcredi
     walletView->setBitcreditGUI(gui);
     walletView->setClientModel(clientModel);
     walletView->setWalletModel(bitcredit_model, bitcoin_model, deposit_model);
-    walletView->showOutOfSyncWarning(bOutOfSync);
+    walletView->credits_showOutOfSyncWarning(credits_bOutOfSync);
+    walletView->bitcoin_showOutOfSyncWarning(bitcoin_bOutOfSync);
 
      /* TODO we should goto the currently selected page once dynamically adding wallets is supported */
-    walletView->gotoOverviewPage();
+    walletView->credits_gotoOverviewPage();
     walletStack->addWidget(walletView);
     mapWalletViews[name] = walletView;
 
@@ -88,28 +89,49 @@ void WalletFrame::removeAllWallets()
     mapWalletViews.clear();
 }
 
-bool WalletFrame::handlePaymentRequest(const Bitcredit_SendCoinsRecipient &recipient)
+bool WalletFrame::credits_handlePaymentRequest(const Bitcredit_SendCoinsRecipient &recipient)
 {
     WalletView *walletView = currentWalletView();
     if (!walletView)
         return false;
 
-    return walletView->handlePaymentRequest(recipient);
+    return walletView->credits_handlePaymentRequest(recipient);
+}
+bool WalletFrame::bitcoin_handlePaymentRequest(const Bitcoin_SendCoinsRecipient &recipient)
+{
+    WalletView *walletView = currentWalletView();
+    if (!walletView)
+        return false;
+
+    return walletView->bitcoin_handlePaymentRequest(recipient);
 }
 
-void WalletFrame::showOutOfSyncWarning(bool fShow)
+void WalletFrame::credits_showOutOfSyncWarning(bool fShow)
 {
-    bOutOfSync = fShow;
+	credits_bOutOfSync = fShow;
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->showOutOfSyncWarning(fShow);
+        i.value()->credits_showOutOfSyncWarning(fShow);
+}
+void WalletFrame::bitcoin_showOutOfSyncWarning(bool fShow)
+{
+	bitcoin_bOutOfSync = fShow;
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->bitcoin_showOutOfSyncWarning(fShow);
 }
 
-void WalletFrame::gotoOverviewPage()
+void WalletFrame::credits_gotoOverviewPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoOverviewPage();
+        i.value()->credits_gotoOverviewPage();
+}
+void WalletFrame::bitcoin_gotoOverviewPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->bitcoin_gotoOverviewPage();
 }
 
 void WalletFrame::gotoClaimCoinsPage()
@@ -119,11 +141,17 @@ void WalletFrame::gotoClaimCoinsPage()
         i.value()->gotoClaimCoinsPage();
 }
 
-void WalletFrame::gotoHistoryPage()
+void WalletFrame::credits_gotoHistoryPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoHistoryPage();
+        i.value()->credits_gotoHistoryPage();
+}
+void WalletFrame::bitcoin_gotoHistoryPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->bitcoin_gotoHistoryPage();
 }
 
 void WalletFrame::gotoMinerDepositsPage()
@@ -133,18 +161,30 @@ void WalletFrame::gotoMinerDepositsPage()
         i.value()->gotoMinerDepositsPage();
 }
 
-void WalletFrame::gotoReceiveCoinsPage()
+void WalletFrame::credits_gotoReceiveCoinsPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoReceiveCoinsPage();
+        i.value()->credits_gotoReceiveCoinsPage();
+}
+void WalletFrame::bitcoin_gotoReceiveCoinsPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->bitcoin_gotoReceiveCoinsPage();
 }
 
-void WalletFrame::gotoSendCoinsPage(QString addr)
+void WalletFrame::credits_gotoSendCoinsPage(QString addr)
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoSendCoinsPage(addr);
+        i.value()->credits_gotoSendCoinsPage(addr);
+}
+void WalletFrame::bitcoin_gotoSendCoinsPage(QString addr)
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->bitcoin_gotoSendCoinsPage(addr);
 }
 
 void WalletFrame::gotoMinerCoinsPage(QString addr)
@@ -244,18 +284,30 @@ void WalletFrame::deposit_unlockWallet()
         walletView->deposit_unlockWallet();
 }
 
-void WalletFrame::usedSendingAddresses()
+void WalletFrame::credits_usedSendingAddresses()
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->usedSendingAddresses();
+        walletView->credits_usedSendingAddresses();
+}
+void WalletFrame::bitcoin_usedSendingAddresses()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcoin_usedSendingAddresses();
 }
 
-void WalletFrame::usedReceivingAddresses()
+void WalletFrame::credits_usedReceivingAddresses()
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->usedReceivingAddresses();
+        walletView->credits_usedReceivingAddresses();
+}
+void WalletFrame::bitcoin_usedReceivingAddresses()
+{
+    WalletView *walletView = currentWalletView();
+    if (walletView)
+        walletView->bitcoin_usedReceivingAddresses();
 }
 
 void WalletFrame::bitcredit_setNumBlocks(int count) {

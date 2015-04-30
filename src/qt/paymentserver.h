@@ -5,7 +5,7 @@
 #ifndef PAYMENTSERVER_H
 #define PAYMENTSERVER_H
 // This class handles payment requests from clicking on
-// bitcredit: URIs
+// bitcredit: URIs and bitcoin: URIs
 //
 // This is somewhat tricky, because we have to deal with
 // the situation where the user clicks on a link during
@@ -50,6 +50,7 @@ class QUrl;
 QT_END_NAMESPACE
 
 class Bitcredit_CWallet;
+class Bitcoin_CWallet;
 
 class PaymentServer : public QObject
 {
@@ -86,7 +87,8 @@ public:
 
 signals:
     // Fired when a valid payment request is received
-    void receivedPaymentRequest(Bitcredit_SendCoinsRecipient);
+    void credits_receivedPaymentRequest(Bitcredit_SendCoinsRecipient);
+    void bitcoin_receivedPaymentRequest(Bitcoin_SendCoinsRecipient);
 
     // Fired when a valid PaymentACK is received
     void receivedPaymentACK(const QString &paymentACKMsg);
@@ -100,7 +102,8 @@ public slots:
     void uiReady();
 
     // Submit Payment message to a merchant, get back PaymentACK:
-    void fetchPaymentACK(Bitcredit_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
+    void credits_fetchPaymentACK(Bitcredit_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
+    void bitcoin_fetchPaymentACK(Bitcoin_CWallet* wallet, Bitcoin_SendCoinsRecipient recipient, QByteArray transaction);
 
     // Handle an incoming URI, URI with local file scheme or file
     void handleURIOrFile(const QString& s);
@@ -119,7 +122,8 @@ protected:
 private:
     static bool readPaymentRequest(const QString& filename, PaymentRequestPlus& request);
     bool processPaymentRequest(PaymentRequestPlus& request, Bitcredit_SendCoinsRecipient& recipient);
-    void fetchRequest(const QUrl& url);
+    void credits_fetchRequest(const QUrl& url);
+    void bitcoin_fetchRequest(const QUrl& url);
 
     // Setup networking
     void initNetManager();

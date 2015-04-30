@@ -21,9 +21,9 @@
 #include <QScrollBar>
 #include <QTextDocument>
 
-SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
+Credits_SendCoinsDialog::Credits_SendCoinsDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SendCoinsDialog),
+    ui(new Ui::Credits_SendCoinsDialog),
     bitcredit_model(0),
     deposit_model(0)
 {
@@ -76,7 +76,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     fNewRecipientAllowed = true;
 }
 
-void SendCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
+void Credits_SendCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
 {
     this->bitcredit_model = bitcredit_model;
     this->deposit_model = deposit_model;
@@ -85,7 +85,7 @@ void SendCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit
     {
         for(int i = 0; i < ui->entries->count(); ++i)
         {
-            SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+            Credits_SendCoinsEntry *entry = qobject_cast<Credits_SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
             if(entry)
             {
                 entry->setModel(bitcredit_model);
@@ -109,12 +109,12 @@ void SendCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit
     }
 }
 
-SendCoinsDialog::~SendCoinsDialog()
+Credits_SendCoinsDialog::~Credits_SendCoinsDialog()
 {
     delete ui;
 }
 
-void SendCoinsDialog::on_sendButton_clicked()
+void Credits_SendCoinsDialog::on_sendButton_clicked()
 {
     if(!bitcredit_model || !bitcredit_model->getOptionsModel())
         return;
@@ -124,7 +124,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        Credits_SendCoinsEntry *entry = qobject_cast<Credits_SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
         {
             if(entry->validate())
@@ -259,7 +259,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     fNewRecipientAllowed = true;
 }
 
-void SendCoinsDialog::clear()
+void Credits_SendCoinsDialog::clear()
 {
     // Remove entries until only one left
     while(ui->entries->count())
@@ -271,22 +271,22 @@ void SendCoinsDialog::clear()
     updateTabsAndLabels();
 }
 
-void SendCoinsDialog::reject()
+void Credits_SendCoinsDialog::reject()
 {
     clear();
 }
 
-void SendCoinsDialog::accept()
+void Credits_SendCoinsDialog::accept()
 {
     clear();
 }
 
-SendCoinsEntry *SendCoinsDialog::addEntry()
+Credits_SendCoinsEntry *Credits_SendCoinsDialog::addEntry()
 {
-    SendCoinsEntry *entry = new SendCoinsEntry(this);
+    Credits_SendCoinsEntry *entry = new Credits_SendCoinsEntry(this);
     entry->setModel(bitcredit_model);
     ui->entries->addWidget(entry);
-    connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
+    connect(entry, SIGNAL(removeEntry(Credits_SendCoinsEntry*)), this, SLOT(removeEntry(Credits_SendCoinsEntry*)));
     connect(entry, SIGNAL(payAmountChanged()), this, SLOT(coinControlUpdateLabels()));
 
     updateTabsAndLabels();
@@ -302,13 +302,13 @@ SendCoinsEntry *SendCoinsDialog::addEntry()
     return entry;
 }
 
-void SendCoinsDialog::updateTabsAndLabels()
+void Credits_SendCoinsDialog::updateTabsAndLabels()
 {
     setupTabChain(0);
     coinControlUpdateLabels();
 }
 
-void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
+void Credits_SendCoinsDialog::removeEntry(Credits_SendCoinsEntry* entry)
 {
     entry->hide();
 
@@ -321,11 +321,11 @@ void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
     updateTabsAndLabels();
 }
 
-QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
+QWidget *Credits_SendCoinsDialog::setupTabChain(QWidget *prev)
 {
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        Credits_SendCoinsEntry *entry = qobject_cast<Credits_SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
         {
             prev = entry->setupTabChain(prev);
@@ -337,13 +337,13 @@ QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)
     return ui->addButton;
 }
 
-void SendCoinsDialog::setAddress(const QString &address)
+void Credits_SendCoinsDialog::setAddress(const QString &address)
 {
-    SendCoinsEntry *entry = 0;
+    Credits_SendCoinsEntry *entry = 0;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)
     {
-        SendCoinsEntry *first = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+        Credits_SendCoinsEntry *first = qobject_cast<Credits_SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
         if(first->isClear())
         {
             entry = first;
@@ -357,16 +357,16 @@ void SendCoinsDialog::setAddress(const QString &address)
     entry->setAddress(address);
 }
 
-void SendCoinsDialog::pasteEntry(const Bitcredit_SendCoinsRecipient &rv)
+void Credits_SendCoinsDialog::pasteEntry(const Bitcredit_SendCoinsRecipient &rv)
 {
     if(!fNewRecipientAllowed)
         return;
 
-    SendCoinsEntry *entry = 0;
+    Credits_SendCoinsEntry *entry = 0;
     // Replace the first entry if it is still unused
     if(ui->entries->count() == 1)
     {
-        SendCoinsEntry *first = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
+        Credits_SendCoinsEntry *first = qobject_cast<Credits_SendCoinsEntry*>(ui->entries->itemAt(0)->widget());
         if(first->isClear())
         {
             entry = first;
@@ -381,7 +381,7 @@ void SendCoinsDialog::pasteEntry(const Bitcredit_SendCoinsRecipient &rv)
     updateTabsAndLabels();
 }
 
-bool SendCoinsDialog::handlePaymentRequest(const Bitcredit_SendCoinsRecipient &rv)
+bool Credits_SendCoinsDialog::handlePaymentRequest(const Bitcredit_SendCoinsRecipient &rv)
 {
     // Just paste the entry, all pre-checks
     // are done in paymentserver.cpp.
@@ -389,7 +389,7 @@ bool SendCoinsDialog::handlePaymentRequest(const Bitcredit_SendCoinsRecipient &r
     return true;
 }
 
-void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance)
+void Credits_SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance)
 {
     Q_UNUSED(unconfirmedBalance);
     Q_UNUSED(immatureBalance);
@@ -402,7 +402,7 @@ void SendCoinsDialog::setBalance(qint64 balance, qint64 unconfirmedBalance, qint
     }
 }
 
-void SendCoinsDialog::updateDisplayUnit()
+void Credits_SendCoinsDialog::updateDisplayUnit()
 {
     //Find all prepared deposit transactions
     map<uint256, set<int> > mapPreparedDepositTxInPoints;
@@ -411,13 +411,13 @@ void SendCoinsDialog::updateDisplayUnit()
     setBalance(bitcredit_model->getBalance(mapPreparedDepositTxInPoints), 0, 0, 0, 0);
 }
 
-void SendCoinsDialog::processSendCoinsReturn(const Bitcredit_WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
+void Credits_SendCoinsDialog::processSendCoinsReturn(const Bitcredit_WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
 {
     QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
     // Default to a warning message, override if error message is needed
     msgParams.second = CClientUIInterface::MSG_WARNING;
 
-    // This comment is specific to SendCoinsDialog usage of WalletModel::SendCoinsReturn.
+    // This comment is specific to Credits_SendCoinsDialog usage of WalletModel::SendCoinsReturn.
     // WalletModel::TransactionCommitFailed is used only in WalletModel::sendCoins()
     // all others are used only in WalletModel::prepareTransaction()
     switch(sendCoinsReturn.status)
@@ -455,55 +455,55 @@ void SendCoinsDialog::processSendCoinsReturn(const Bitcredit_WalletModel::SendCo
 }
 
 // Coin Control: copy label "Quantity" to clipboard
-void SendCoinsDialog::coinControlClipboardQuantity()
+void Credits_SendCoinsDialog::coinControlClipboardQuantity()
 {
     GUIUtil::setClipboard(ui->labelCoinControlQuantity->text());
 }
 
 // Coin Control: copy label "Amount" to clipboard
-void SendCoinsDialog::coinControlClipboardAmount()
+void Credits_SendCoinsDialog::coinControlClipboardAmount()
 {
     GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
 }
 
 // Coin Control: copy label "Fee" to clipboard
-void SendCoinsDialog::coinControlClipboardFee()
+void Credits_SendCoinsDialog::coinControlClipboardFee()
 {
     GUIUtil::setClipboard(ui->labelCoinControlFee->text().left(ui->labelCoinControlFee->text().indexOf(" ")));
 }
 
 // Coin Control: copy label "After fee" to clipboard
-void SendCoinsDialog::coinControlClipboardAfterFee()
+void Credits_SendCoinsDialog::coinControlClipboardAfterFee()
 {
     GUIUtil::setClipboard(ui->labelCoinControlAfterFee->text().left(ui->labelCoinControlAfterFee->text().indexOf(" ")));
 }
 
 // Coin Control: copy label "Bytes" to clipboard
-void SendCoinsDialog::coinControlClipboardBytes()
+void Credits_SendCoinsDialog::coinControlClipboardBytes()
 {
     GUIUtil::setClipboard(ui->labelCoinControlBytes->text());
 }
 
 // Coin Control: copy label "Priority" to clipboard
-void SendCoinsDialog::coinControlClipboardPriority()
+void Credits_SendCoinsDialog::coinControlClipboardPriority()
 {
     GUIUtil::setClipboard(ui->labelCoinControlPriority->text());
 }
 
 // Coin Control: copy label "Low output" to clipboard
-void SendCoinsDialog::coinControlClipboardLowOutput()
+void Credits_SendCoinsDialog::coinControlClipboardLowOutput()
 {
     GUIUtil::setClipboard(ui->labelCoinControlLowOutput->text());
 }
 
 // Coin Control: copy label "Change" to clipboard
-void SendCoinsDialog::coinControlClipboardChange()
+void Credits_SendCoinsDialog::coinControlClipboardChange()
 {
     GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")));
 }
 
 // Coin Control: settings menu - coin control enabled/disabled by user
-void SendCoinsDialog::coinControlFeatureChanged(bool checked)
+void Credits_SendCoinsDialog::coinControlFeatureChanged(bool checked)
 {
     ui->frameCoinControl->setVisible(checked);
 
@@ -515,7 +515,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 }
 
 // Coin Control: button inputs -> show actual coin control dialog
-void SendCoinsDialog::coinControlButtonClicked()
+void Credits_SendCoinsDialog::coinControlButtonClicked()
 {
     Bitcredit_CoinControlDialog dlg;
     dlg.setModel(bitcredit_model, deposit_model);
@@ -524,7 +524,7 @@ void SendCoinsDialog::coinControlButtonClicked()
 }
 
 // Coin Control: checkbox custom change address
-void SendCoinsDialog::coinControlChangeChecked(int state)
+void Credits_SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
@@ -539,7 +539,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 }
 
 // Coin Control: custom change address changed
-void SendCoinsDialog::coinControlChangeEdited(const QString& text)
+void Credits_SendCoinsDialog::coinControlChangeEdited(const QString& text)
 {
     if (bitcredit_model && bitcredit_model->getAddressTableModel())
     {
@@ -584,7 +584,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
 }
 
 // Coin Control: update labels
-void SendCoinsDialog::coinControlUpdateLabels()
+void Credits_SendCoinsDialog::coinControlUpdateLabels()
 {
     if (!bitcredit_model || !bitcredit_model->getOptionsModel() || !bitcredit_model->getOptionsModel()->getCoinControlFeatures())
         return;
@@ -593,7 +593,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
     Bitcredit_CoinControlDialog::payAmounts.clear();
     for(int i = 0; i < ui->entries->count(); ++i)
     {
-        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
+        Credits_SendCoinsEntry *entry = qobject_cast<Credits_SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
             Bitcredit_CoinControlDialog::payAmounts.append(entry->getValue().amount);
     }

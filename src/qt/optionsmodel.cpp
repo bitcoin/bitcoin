@@ -104,6 +104,18 @@ void OptionsModel::Init()
     if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
 #endif
+#ifdef ENABLE_WALLET
+    if (!settings.contains("bitcoin_nTransactionFee"))
+        settings.setValue("bitcoin_nTransactionFee", (qint64)BITCOIN_DEFAULT_TRANSACTION_FEE);
+    bitcoin_nTransactionFee = settings.value("bitcoin_nTransactionFee").toLongLong(); // if -bitcoin_paytxfee is set, this will be overridden later in init.cpp
+    if (mapArgs.count("-bitcoin_paytxfee"))
+        addOverriddenOption("-bitcoin_paytxfee");
+
+    if (!settings.contains("bitcoin_bSpendZeroConfChange"))
+        settings.setValue("bitcoin_bSpendZeroConfChange", true);
+    if (!SoftSetBoolArg("-bitcoin_spendzeroconfchange", settings.value("bitcoin_bSpendZeroConfChange").toBool()))
+        addOverriddenOption("-bitcoin_spendzeroconfchange");
+#endif
 
     // Network
     if (!settings.contains("fUseUPnP"))

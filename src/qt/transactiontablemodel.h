@@ -8,7 +8,7 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
-class Bitcredit_TransactionRecord;
+class Credits_TransactionRecord;
 class Bitcredit_TransactionTablePriv;
 class Bitcredit_WalletModel;
 
@@ -59,7 +59,7 @@ public:
         FormattedAmountRole,
         /** Formatted amount, without brackets when unconfirmed */
 		FormattedDepositAmountRole,
-        /** Transaction status (Bitcredit_TransactionRecord::Status) */
+        /** Transaction status (Credits_TransactionRecord::Status) */
         StatusRole
     };
 
@@ -78,17 +78,17 @@ private:
     bool isForDepositWallet;
 
     QString lookupAddress(const std::string &address, bool tooltip) const;
-    QVariant addressColor(const Bitcredit_TransactionRecord *wtx) const;
-    QString formatTxStatus(const Bitcredit_TransactionRecord *wtx) const;
-    QString formatTxDate(const Bitcredit_TransactionRecord *wtx) const;
-    QString formatTxType(const Bitcredit_TransactionRecord *wtx) const;
-    QString formatTxToAddress(const Bitcredit_TransactionRecord *wtx, bool tooltip) const;
-    QString formatTxAmount(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed=true) const;
-    QString formatTxAmountWithDeposit(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed=true) const;
-    QString formatTxDepositAmount(const Bitcredit_TransactionRecord *wtx) const;
-    QString formatTooltip(const Bitcredit_TransactionRecord *rec) const;
-    QVariant txStatusDecoration(const Bitcredit_TransactionRecord *wtx) const;
-    QVariant txAddressDecoration(const Bitcredit_TransactionRecord *wtx) const;
+    QVariant addressColor(const Credits_TransactionRecord *wtx) const;
+    QString formatTxStatus(const Credits_TransactionRecord *wtx) const;
+    QString formatTxDate(const Credits_TransactionRecord *wtx) const;
+    QString formatTxType(const Credits_TransactionRecord *wtx) const;
+    QString formatTxToAddress(const Credits_TransactionRecord *wtx, bool tooltip) const;
+    QString formatTxAmount(const Credits_TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTxAmountWithDeposit(const Credits_TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTxDepositAmount(const Credits_TransactionRecord *wtx) const;
+    QString formatTooltip(const Credits_TransactionRecord *rec) const;
+    QVariant txStatusDecoration(const Credits_TransactionRecord *wtx) const;
+    QVariant txAddressDecoration(const Credits_TransactionRecord *wtx) const;
 
 public slots:
     void updateTransaction(const QString &hash, int status);

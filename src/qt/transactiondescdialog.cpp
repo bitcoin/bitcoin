@@ -9,16 +9,16 @@
 
 #include <QModelIndex>
 
-TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
+Credits_TransactionDescDialog::Credits_TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::TransactionDescDialog)
+    ui(new Ui::Credits_TransactionDescDialog)
 {
     ui->setupUi(this);
     QString desc = idx.data(Bitcredit_TransactionTableModel::LongDescriptionRole).toString();
     ui->detailText->setHtml(desc);
 }
 
-TransactionDescDialog::~TransactionDescDialog()
+Credits_TransactionDescDialog::~Credits_TransactionDescDialog()
 {
     delete ui;
 }

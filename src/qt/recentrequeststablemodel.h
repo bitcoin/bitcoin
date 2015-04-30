@@ -13,10 +13,10 @@
 
 class Bitcredit_CWallet;
 
-class Bitcredit_RecentRequestEntry
+class Credits_RecentRequestEntry
 {
 public:
-    Bitcredit_RecentRequestEntry() : nVersion(Bitcredit_RecentRequestEntry::CURRENT_VERSION), id(0) { }
+    Credits_RecentRequestEntry() : nVersion(Credits_RecentRequestEntry::CURRENT_VERSION), id(0) { }
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
@@ -26,7 +26,7 @@ public:
 
     IMPLEMENT_SERIALIZE
     (
-        Bitcredit_RecentRequestEntry* pthis = const_cast<Bitcredit_RecentRequestEntry*>(this);
+        Credits_RecentRequestEntry* pthis = const_cast<Credits_RecentRequestEntry*>(this);
 
         unsigned int nDate = date.toTime_t();
 
@@ -41,12 +41,12 @@ public:
     )
 };
 
-class Bitcredit_RecentRequestEntryLessThan
+class Credits_RecentRequestEntryLessThan
 {
 public:
-    Bitcredit_RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
+    Credits_RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
         column(nColumn), order(fOrder) {}
-    bool operator()(Bitcredit_RecentRequestEntry &left, Bitcredit_RecentRequestEntry &right) const;
+    bool operator()(Credits_RecentRequestEntry &left, Credits_RecentRequestEntry &right) const;
 
 private:
     int column;
@@ -84,10 +84,10 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
 
-    const Bitcredit_RecentRequestEntry &entry(int row) const { return list[row]; }
+    const Credits_RecentRequestEntry &entry(int row) const { return list[row]; }
     void addNewRequest(const Bitcredit_SendCoinsRecipient &recipient);
     void addNewRequest(const std::string &recipient);
-    void addNewRequest(Bitcredit_RecentRequestEntry &recipient);
+    void addNewRequest(Credits_RecentRequestEntry &recipient);
 
 public slots:
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder);
@@ -95,7 +95,7 @@ public slots:
 private:
     Bitcredit_WalletModel *walletModel;
     QStringList columns;
-    QList<Bitcredit_RecentRequestEntry> list;
+    QList<Credits_RecentRequestEntry> list;
     int64_t nReceiveRequestsMaxId;
 };
 

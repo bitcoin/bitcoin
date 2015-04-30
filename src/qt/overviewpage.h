@@ -8,12 +8,12 @@
 #include <QWidget>
 
 class ClientModel;
-class Bitcredit_TransactionFilterProxy;
-class TxViewDelegate;
+class Credits_TransactionFilterProxy;
+class Bitcredit_TxViewDelegate;
 class Bitcredit_WalletModel;
 
 namespace Ui {
-    class OverviewPage;
+    class Credits_OverviewPage;
 }
 
 QT_BEGIN_NAMESPACE
@@ -21,13 +21,13 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Overview ("home") page widget */
-class OverviewPage : public QWidget
+class Credits_OverviewPage : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit OverviewPage(QWidget *parent = 0);
-    ~OverviewPage();
+    explicit Credits_OverviewPage(QWidget *parent = 0);
+    ~Credits_OverviewPage();
 
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model);
@@ -41,7 +41,7 @@ signals:
     void transactionClicked(const QModelIndex &index);
 
 private:
-    Ui::OverviewPage *ui;
+    Ui::Credits_OverviewPage *ui;
     ClientModel *clientModel;
     Bitcredit_WalletModel *bitcredit_model;
     Bitcredit_WalletModel *deposit_model;
@@ -51,8 +51,8 @@ private:
     qint64 currentPreparedDepositBalance;
     qint64 currentInDepositBalance;
 
-    TxViewDelegate *txdelegate;
-    Bitcredit_TransactionFilterProxy *filter;
+    Bitcredit_TxViewDelegate *txdelegate;
+    Credits_TransactionFilterProxy *filter;
 
 private slots:
     void updateDisplayUnit();

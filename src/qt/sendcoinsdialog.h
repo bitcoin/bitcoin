@@ -11,7 +11,7 @@
 #include <QString>
 
 class OptionsModel;
-class SendCoinsEntry;
+class Credits_SendCoinsEntry;
 class Bitcredit_SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
@@ -19,17 +19,17 @@ class QUrl;
 QT_END_NAMESPACE
 
 namespace Ui {
-    class SendCoinsDialog;
+    class Credits_SendCoinsDialog;
 }
 
 /** Dialog for sending bitcoins */
-class SendCoinsDialog : public QDialog
+class Credits_SendCoinsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(QWidget *parent = 0);
-    ~SendCoinsDialog();
+    explicit Credits_SendCoinsDialog(QWidget *parent = 0);
+    ~Credits_SendCoinsDialog();
 
     void setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model);
 
@@ -45,12 +45,12 @@ public slots:
     void clear();
     void reject();
     void accept();
-    SendCoinsEntry *addEntry();
+    Credits_SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
     void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance);
 
 private:
-    Ui::SendCoinsDialog *ui;
+    Ui::Credits_SendCoinsDialog *ui;
     Bitcredit_WalletModel *bitcredit_model;
     Bitcredit_WalletModel *deposit_model;
     bool fNewRecipientAllowed;
@@ -62,7 +62,7 @@ private:
 
 private slots:
     void on_sendButton_clicked();
-    void removeEntry(SendCoinsEntry* entry);
+    void removeEntry(Credits_SendCoinsEntry* entry);
     void updateDisplayUnit();
     void coinControlFeatureChanged(bool);
     void coinControlButtonClicked();

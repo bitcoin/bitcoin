@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>OverviewPage</class>
- <widget class="QWidget" name="OverviewPage">
+ <class>Credits_OverviewPage</class>
+ <widget class="QWidget" name="Credits_OverviewPage">
   <property name="geometry">
    <rect>
     <x>0</x>

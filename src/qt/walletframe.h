@@ -11,6 +11,7 @@
 class BitcreditGUI;
 class ClientModel;
 class Bitcredit_SendCoinsRecipient;
+class Bitcoin_SendCoinsRecipient;
 class Bitcredit_WalletModel;
 class Bitcoin_WalletModel;
 class WalletView;
@@ -34,9 +35,11 @@ public:
     bool removeWallet(const QString &name);
     void removeAllWallets();
 
-    bool handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
+    bool credits_handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
+    bool bitcoin_handlePaymentRequest(const Bitcoin_SendCoinsRecipient& recipient);
 
-    void showOutOfSyncWarning(bool fShow);
+    void credits_showOutOfSyncWarning(bool fShow);
+    void bitcoin_showOutOfSyncWarning(bool fShow);
 
 private:
     QStackedWidget *walletStack;
@@ -44,23 +47,28 @@ private:
     ClientModel *clientModel;
     QMap<QString, WalletView*> mapWalletViews;
 
-    bool bOutOfSync;
+    bool credits_bOutOfSync;
+    bool bitcoin_bOutOfSync;
 
     WalletView *currentWalletView();
 
 public slots:
     /** Switch to overview (home) page */
-    void gotoOverviewPage();
+    void credits_gotoOverviewPage();
+    void bitcoin_gotoOverviewPage();
     /** Switch to new claim coins page */
     void gotoClaimCoinsPage();
     /** Switch to history (transactions) page */
-    void gotoHistoryPage();
+    void credits_gotoHistoryPage();
+    void bitcoin_gotoHistoryPage();
     /** Switch to miner deposits page */
     void gotoMinerDepositsPage();
     /** Switch to receive coins page */
-    void gotoReceiveCoinsPage();
+    void credits_gotoReceiveCoinsPage();
+    void bitcoin_gotoReceiveCoinsPage();
     /** Switch to send coins page */
-    void gotoSendCoinsPage(QString addr = "");
+    void credits_gotoSendCoinsPage(QString addr = "");
+    void bitcoin_gotoSendCoinsPage(QString addr = "");
     /** Switch to send coins page */
     void gotoMinerCoinsPage(QString addr = "");
 
@@ -87,9 +95,11 @@ public slots:
     void deposit_unlockWallet();
 
     /** Show used sending addresses */
-    void usedSendingAddresses();
+    void credits_usedSendingAddresses();
+    void bitcoin_usedSendingAddresses();
     /** Show used receiving addresses */
-    void usedReceivingAddresses();
+    void credits_usedReceivingAddresses();
+    void bitcoin_usedReceivingAddresses();
 
     void bitcredit_setNumBlocks(int count);
 };

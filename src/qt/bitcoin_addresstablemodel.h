@@ -92,4 +92,4 @@ public slots:
     friend class Bitcoin_AddressTablePriv;
 };
 
-#endif // ADDRESSTABLEMODEL_H
+#endif // BITCOIN_ADDRESSTABLEMODEL_H

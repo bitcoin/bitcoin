@@ -14,9 +14,9 @@
 #include <QApplication>
 #include <QClipboard>
 
-SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
+Credits_SendCoinsEntry::Credits_SendCoinsEntry(QWidget *parent) :
     QStackedWidget(parent),
-    ui(new Ui::SendCoinsEntry),
+    ui(new Ui::Credits_SendCoinsEntry),
     model(0)
 {
     ui->setupUi(this);
@@ -36,22 +36,22 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     ui->payTo_is->setFont(GUIUtil::bitcoinAddressFont());
 }
 
-SendCoinsEntry::~SendCoinsEntry()
+Credits_SendCoinsEntry::~Credits_SendCoinsEntry()
 {
     delete ui;
 }
 
-void SendCoinsEntry::on_pasteButton_clicked()
+void Credits_SendCoinsEntry::on_pasteButton_clicked()
 {
     // Paste text from clipboard into recipient field
     ui->payTo->setText(QApplication::clipboard()->text());
 }
 
-void SendCoinsEntry::on_addressBookButton_clicked()
+void Credits_SendCoinsEntry::on_addressBookButton_clicked()
 {
     if(!model)
         return;
-    AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+    Credits_AddressBookPage dlg(Credits_AddressBookPage::ForSelection, Credits_AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
     {
@@ -60,12 +60,12 @@ void SendCoinsEntry::on_addressBookButton_clicked()
     }
 }
 
-void SendCoinsEntry::on_payTo_textChanged(const QString &address)
+void Credits_SendCoinsEntry::on_payTo_textChanged(const QString &address)
 {
     updateLabel(address);
 }
 
-void SendCoinsEntry::setModel(Bitcredit_WalletModel *model)
+void Credits_SendCoinsEntry::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
 
@@ -80,7 +80,7 @@ void SendCoinsEntry::setModel(Bitcredit_WalletModel *model)
     clear();
 }
 
-void SendCoinsEntry::clear()
+void Credits_SendCoinsEntry::clear()
 {
     // clear UI elements for normal payment
     ui->payTo->clear();
@@ -102,12 +102,12 @@ void SendCoinsEntry::clear()
     updateDisplayUnit();
 }
 
-void SendCoinsEntry::deleteClicked()
+void Credits_SendCoinsEntry::deleteClicked()
 {
     emit removeEntry(this);
 }
 
-bool SendCoinsEntry::validate()
+bool Credits_SendCoinsEntry::validate()
 {
     if (!model)
         return false;
@@ -139,7 +139,7 @@ bool SendCoinsEntry::validate()
     return retval;
 }
 
-Bitcredit_SendCoinsRecipient SendCoinsEntry::getValue()
+Bitcredit_SendCoinsRecipient Credits_SendCoinsEntry::getValue()
 {
     // Payment request
     if (recipient.paymentRequest.IsInitialized())
@@ -154,7 +154,7 @@ Bitcredit_SendCoinsRecipient SendCoinsEntry::getValue()
     return recipient;
 }
 
-QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
+QWidget *Credits_SendCoinsEntry::setupTabChain(QWidget *prev)
 {
     QWidget::setTabOrder(prev, ui->payTo);
     QWidget::setTabOrder(ui->payTo, ui->addAsLabel);
@@ -165,7 +165,7 @@ QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
     return ui->deleteButton;
 }
 
-void SendCoinsEntry::setValue(const Bitcredit_SendCoinsRecipient &value)
+void Credits_SendCoinsEntry::setValue(const Bitcredit_SendCoinsRecipient &value)
 {
     recipient = value;
 
@@ -203,23 +203,23 @@ void SendCoinsEntry::setValue(const Bitcredit_SendCoinsRecipient &value)
     }
 }
 
-void SendCoinsEntry::setAddress(const QString &address)
+void Credits_SendCoinsEntry::setAddress(const QString &address)
 {
     ui->payTo->setText(address);
     ui->payAmount->setFocus();
 }
 
-bool SendCoinsEntry::isClear()
+bool Credits_SendCoinsEntry::isClear()
 {
     return ui->payTo->text().isEmpty() && ui->payTo_is->text().isEmpty() && ui->payTo_s->text().isEmpty();
 }
 
-void SendCoinsEntry::setFocus()
+void Credits_SendCoinsEntry::setFocus()
 {
     ui->payTo->setFocus();
 }
 
-void SendCoinsEntry::updateDisplayUnit()
+void Credits_SendCoinsEntry::updateDisplayUnit()
 {
     if(model && model->getOptionsModel())
     {
@@ -230,7 +230,7 @@ void SendCoinsEntry::updateDisplayUnit()
     }
 }
 
-bool SendCoinsEntry::updateLabel(const QString &address)
+bool Credits_SendCoinsEntry::updateLabel(const QString &address)
 {
     if(!model)
         return false;

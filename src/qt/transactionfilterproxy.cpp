@@ -12,11 +12,11 @@
 #include <QDateTime>
 
 // Earliest date that can be represented (far in the past)
-const QDateTime Bitcredit_TransactionFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
+const QDateTime Credits_TransactionFilterProxy::MIN_DATE = QDateTime::fromTime_t(0);
 // Last date that can be represented (far in the future)
-const QDateTime Bitcredit_TransactionFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFFFFF);
+const QDateTime Credits_TransactionFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFFFFF);
 
-Bitcredit_TransactionFilterProxy::Bitcredit_TransactionFilterProxy(QObject *parent) :
+Credits_TransactionFilterProxy::Credits_TransactionFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
@@ -28,7 +28,7 @@ Bitcredit_TransactionFilterProxy::Bitcredit_TransactionFilterProxy(QObject *pare
 {
 }
 
-bool Bitcredit_TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+bool Credits_TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
@@ -53,43 +53,43 @@ bool Bitcredit_TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QMo
     return true;
 }
 
-void Bitcredit_TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime &to)
+void Credits_TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime &to)
 {
     this->dateFrom = from;
     this->dateTo = to;
     invalidateFilter();
 }
 
-void Bitcredit_TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
+void Credits_TransactionFilterProxy::setAddressPrefix(const QString &addrPrefix)
 {
     this->addrPrefix = addrPrefix;
     invalidateFilter();
 }
 
-void Bitcredit_TransactionFilterProxy::setTypeFilter(quint32 modes)
+void Credits_TransactionFilterProxy::setTypeFilter(quint32 modes)
 {
     this->typeFilter = modes;
     invalidateFilter();
 }
 
-void Bitcredit_TransactionFilterProxy::setMinAmount(qint64 minimum)
+void Credits_TransactionFilterProxy::setMinAmount(qint64 minimum)
 {
     this->minAmount = minimum;
     invalidateFilter();
 }
 
-void Bitcredit_TransactionFilterProxy::setLimit(int limit)
+void Credits_TransactionFilterProxy::setLimit(int limit)
 {
     this->limitRows = limit;
 }
 
-void Bitcredit_TransactionFilterProxy::setShowInactive(bool showInactive)
+void Credits_TransactionFilterProxy::setShowInactive(bool showInactive)
 {
     this->showInactive = showInactive;
     invalidateFilter();
 }
 
-int Bitcredit_TransactionFilterProxy::rowCount(const QModelIndex &parent) const
+int Credits_TransactionFilterProxy::rowCount(const QModelIndex &parent) const
 {
     if(limitRows != -1)
     {
