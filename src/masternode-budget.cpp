@@ -375,9 +375,8 @@ std::string CBudgetProposal::GetName()
 }
 
 int CBudgetProposal::GetBlockStart()
-{
+{   
 	std::map<int, int> mapList;
-
 
     std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
 
@@ -391,11 +390,10 @@ int CBudgetProposal::GetBlockStart()
         }
     }
 
-
-	//sort(mapList.begin(), mapList.end());
-	//return myMap.begin()->second;
-
-    return 0;
+    //sort the map and grab the highest count item
+    std::vector<std::pair<int,int> > vecList(mapList.begin(), mapList.end());
+    std::sort(vecList.begin(),vecList.end());
+	return vecList.begin()->second;
 }
 
 int CBudgetProposal::GetBlockEnd()
@@ -414,9 +412,10 @@ int CBudgetProposal::GetBlockEnd()
         }
     }
 
-	// sort(mapList.begin(), mapList.end());
-	// return myMap.begin()->first;
-    return 0;
+    //sort the map and grab the highest count item
+    std::vector<std::pair<int,int> > vecList(mapList.begin(), mapList.end());
+    std::sort(vecList.begin(),vecList.end());
+    return vecList.begin()->second;
 }
 
 int64_t CBudgetProposal::GetAmount()
@@ -435,9 +434,10 @@ int64_t CBudgetProposal::GetAmount()
         }
     }
 
-	// sort(mapList.begin(), mapList.end());
-	// return myMap.begin()->first;
-    return 0;
+    //sort the map and grab the highest count item
+    std::vector<std::pair<int64_t,int> > vecList(mapList.begin(), mapList.end());
+    std::sort(vecList.begin(),vecList.end());
+    return vecList.begin()->second;
 }
 
 CScript CBudgetProposal::GetPayee()
@@ -461,9 +461,10 @@ CScript CBudgetProposal::GetPayee()
 
     }
     
-	// sort(mapList.begin(), mapList.end());
-	// return myMap.begin()->first;
-    return CScript();
+    //sort the map and grab the highest count item
+    std::vector<std::pair<CScript,int> > vecList(mapList.begin(), mapList.end());
+    std::sort(vecList.begin(),vecList.end());
+    return vecList.begin()->second;
 }
 
 double CBudgetProposal::GetRatio()
@@ -536,39 +537,44 @@ int64_t CBudgetManager::GetTotalBudget()
 //Need to review this function
 std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 {
+    // ------- Sort budgets by Yes Count
+
 	std::map<uint256, int> mapList;
-
-/*    std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
-    while(it != mapProposals.end())
-    	uint256 hash = GetBudgetProposalHash((*it).second.strProposalName);
-        mapList[hash] = (*it).second.GetYeas();
-    }
-
-    //sort by yeas
-	sort(mapList.begin(), mapList.end());
-
-    */
-	std::vector<CBudgetProposal*> ret;
-    /*
-	int64_t nBudgetAllocated = 0;
-	int64_t nTotalBudget = GetTotalBudget();
 
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end())
-    {
-    	if(nTotalBudget == nBudgetAllocated){
-    		(*it).second.SetAllotted(0);
-    	} else if((*it).second.GetAmount() + nBudgetAllocated <= nTotalBudget()) {
-    		(*it).second..SetAllotted((*it).GetAmount());
-    		nBudgetAllocated += (*it).second.GetAmount();
-    	} else {
-    		//couldn't pay for the entire budget, so it'll be partially paid.
-    		(*it).second.SetAllotted(nTotalBudget - nBudgetAllocated);
-    		nBudgetAllocated = nTotalBudget;
-    	}
+        mapList[GetBudgetProposalHash((*it).second.strProposalName)] = (*it).second.GetYeas();
 
-    	ret.insert(make_pair((*it).second.strProposalName, &(*it)))
-    }*/
+    //sort the map and grab the highest count item
+    std::vector<std::pair<uint256,int> > vecList(mapList.begin(), mapList.end());
+    std::sort(vecList.begin(),vecList.end());
+
+    // ------- Grab The Budgets In Order
+    
+	std::vector<CBudgetProposal*> ret;
+    
+	int64_t nBudgetAllocated = 0;
+	int64_t nTotalBudget = GetTotalBudget();
+
+    std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
+    while(it2 != mapProposals.end())
+    {
+        CBudgetProposal prop = (*it2).second;
+
+        if(nTotalBudget == nBudgetAllocated){
+            prop.SetAllotted(0);
+        } else if(prop.GetAmount() + nBudgetAllocated <= nTotalBudget) {
+            prop.SetAllotted(prop.GetAmount());
+            nBudgetAllocated += prop.GetAmount();
+        } else {
+            //couldn't pay for the entire budget, so it'll be partially paid.
+            prop.SetAllotted(nTotalBudget - nBudgetAllocated);
+            nBudgetAllocated = nTotalBudget;
+        }
+
+    	ret.push_back(&prop);
+    }
+
 	return ret;
 }
 

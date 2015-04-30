@@ -143,8 +143,8 @@ public:
     int GetAbstains();
     int64_t GetAmount();
 
-    void SetAlloted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
-    int64_t GetAlloted() {return nAlloted;}
+    void SetAllotted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
+    int64_t GetAllotted() {return nAlloted;}
 
     ADD_SERIALIZE_METHODS;
 

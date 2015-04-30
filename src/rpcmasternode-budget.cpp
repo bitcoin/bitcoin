@@ -159,12 +159,12 @@ Value mnbudget(const Array& params, bool fHelp)
         if(prop == NULL) return "Unknown proposal name";
 
         Object resultObj;
-        int64_t nTotalAlloted = 0;
+        int64_t nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetBudget();
         BOOST_FOREACH(CBudgetProposal* prop, winningProps)
         {
-            nTotalAlloted += prop->GetAlloted();
+            nTotalAllotted += prop->GetAllotted();
 
             CTxDestination address1;
             ExtractDestination(prop->GetPayee(), address1);
@@ -179,8 +179,8 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
             bObj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
             bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
-            bObj.push_back(Pair("Alloted",  (int64_t)prop->GetAlloted()));
-            bObj.push_back(Pair("TotalBudgetAlloted",  nTotalAlloted));
+            bObj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
+            bObj.push_back(Pair("TotalBudgetAlloted",  nTotalAllotted));
             resultObj.push_back(Pair("masternode", bObj));
         }
 
@@ -211,7 +211,7 @@ Value mnbudget(const Array& params, bool fHelp)
         obj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
         obj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
         obj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
-        obj.push_back(Pair("Alloted",  (int64_t)prop->GetAlloted()));
+        obj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
 
         return obj;
     }
@@ -232,10 +232,10 @@ Value mnbudget(const Array& params, bool fHelp)
    
         int c = 0;
 
-  /*      map<uint256, CBudgetVote>::iterator it = prop->mapVotes.begin();
-        for(it != prop->mapVotes.end()){
-            obj.push_back(Pair((*it).second.nProposalName.c_str(),  (*it).second.GetVoteString().c_str()));
-        }*/
+        std::map<uint256, CBudgetVote>::iterator it = prop->mapVotes.begin();
+        while(it != prop->mapVotes.end())
+            obj.push_back(Pair((*it).second.strProposalName.c_str(),  (*it).second.GetVoteString().c_str()));
+        
 
         return obj;
     }
