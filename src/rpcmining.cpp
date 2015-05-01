@@ -5,11 +5,12 @@
 
 #include "amount.h"
 #include "chainparams.h"
+#include "consensus/consensus.h"
 #include "core_io.h"
 #include "init.h"
-#include "net.h"
 #include "main.h"
 #include "miner.h"
+#include "net.h"
 #include "pow.h"
 #include "rpcserver.h"
 #include "util.h"
@@ -196,6 +197,8 @@ Value setgenerate(const Array& params, bool fHelp)
 
     if (pwalletMain == NULL)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
+    if (Params().MineBlocksOnDemand())
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Use the generate method instead of setgenerate on this network");
 
     bool fGenerate = true;
     if (params.size() > 0)

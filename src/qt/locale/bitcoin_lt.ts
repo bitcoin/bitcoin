@@ -1,10 +1,6 @@
-<TS language="lt" version="2.0">
+<TS language="lt" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Spragtelėkite, kad pakeistumėte adresą arba žymę</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Sukurti naują adresą</translation>
@@ -1732,10 +1728,6 @@ Adresas: %4</translation>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Neteisinga suma -paytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount</source>
-        <translation>Neteisinga suma</translation>
     </message>
     <message>
         <source>Insufficient funds</source>

@@ -22,15 +22,16 @@
  */
 class CAddrInfo : public CAddress
 {
+public:
+    //! last try whatsoever by us (memory only)
+    int64_t nLastTry;
+
 private:
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
     int64_t nLastSuccess;
-
-    //! last try whatsoever by us:
-    // int64_t CAddress::nLastTry
 
     //! connection attempts since last successful attempt
     int nAttempts;
@@ -230,7 +231,7 @@ protected:
     void Attempt_(const CService &addr, int64_t nTime);
 
     //! Select an address to connect to.
-    CAddress Select_();
+    CAddrInfo Select_();
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
@@ -531,9 +532,9 @@ public:
     /**
      * Choose an address to connect to.
      */
-    CAddress Select()
+    CAddrInfo Select()
     {
-        CAddress addrRet;
+        CAddrInfo addrRet;
         {
             LOCK(cs);
             Check();

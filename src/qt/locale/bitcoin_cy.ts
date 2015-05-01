@@ -1,10 +1,6 @@
-<TS language="cy" version="2.0">
+<TS language="cy" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Clicio dwywaith i olygu cyfeiriad neu label</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Creu cyfeiriad newydd</translation>

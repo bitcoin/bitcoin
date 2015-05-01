@@ -1,10 +1,6 @@
-<TS language="hr" version="2.0">
+<TS language="hr" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dvostruki klik za uređivanje adrese ili oznake</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Dodajte novu adresu</translation>
@@ -1501,10 +1497,6 @@ Adresa:%4
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Nevaljali iznos za opciju -paytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount</source>
-        <translation>Nevaljali iznos za opciju</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
