@@ -26,7 +26,7 @@ import sys
 import random
 import cStringIO
 import hashlib
-from threading import Lock
+from threading import RLock
 from threading import Thread
 import logging
 import copy
@@ -41,6 +41,14 @@ MAX_INV_SZ = 50000
 # ourselves (to workaround an issue with closing an asyncore socket when 
 # using select)
 mininode_socket_map = dict()
+
+# One lock for synchronizing all data access between the networking thread (see
+# NetworkThread below) and the thread running the test logic.  For simplicity,
+# NodeConn acquires this lock whenever delivering a message to to a NodeConnCB,
+# and whenever adding anything to the send buffer (in send_message()).  This
+# lock should be acquired in the thread running the test logic to synchronize
+# access to any data shared with the NodeConnCB or NodeConn.
+mininode_lock = RLock()
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -980,10 +988,6 @@ class msg_reject(object):
 # Reimplement the on_* functions to provide handling for events
 class NodeConnCB(object):
     def __init__(self):
-        # Acquire on all callbacks -- overkill for now since asyncore is
-        # single-threaded, but may be useful for synchronizing access to
-        # member variables in derived classes.
-        self.cbLock = Lock()
         self.verack_received = False
 
     # Derived classes should call this function once to set the message map
@@ -1009,7 +1013,7 @@ class NodeConnCB(object):
         }
 
     def deliver(self, conn, message):
-        with self.cbLock:
+        with mininode_lock:
             try:
                 self.cbmap[message.command](conn, message)
             except:
@@ -1094,7 +1098,6 @@ class NodeConn(asyncore.dispatcher):
         self.state = "connecting"
         self.network = net
         self.cb = callback
-        self.sendbufLock = Lock()  # for protecting the sendbuffer
         self.disconnect = False
 
         # stuff version msg into sendbuf
@@ -1145,20 +1148,18 @@ class NodeConn(asyncore.dispatcher):
         return True
 
     def writable(self):
-        self.sendbufLock.acquire()
-        length = len(self.sendbuf)
-        self.sendbufLock.release()
+        with mininode_lock:
+            length = len(self.sendbuf)
         return (length > 0)
 
     def handle_write(self):
-        self.sendbufLock.acquire()
-        try:
-            sent = self.send(self.sendbuf)
-        except:
-            self.handle_close()
-            return
-        self.sendbuf = self.sendbuf[sent:]
-        self.sendbufLock.release()
+        with mininode_lock:
+            try:
+                sent = self.send(self.sendbuf)
+            except:
+                self.handle_close()
+                return
+            self.sendbuf = self.sendbuf[sent:]
 
     def got_data(self):
         while True:
@@ -1202,7 +1203,6 @@ class NodeConn(asyncore.dispatcher):
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
             return
-        self.sendbufLock.acquire()
         self.show_debug_msg("Send %s" % repr(message))
         command = message.command
         data = message.serialize()
@@ -1215,9 +1215,9 @@ class NodeConn(asyncore.dispatcher):
             h = sha256(th)
             tmsg += h[:4]
         tmsg += data
-        self.sendbuf += tmsg
-        self.last_sent = time.time()
-        self.sendbufLock.release()
+        with mininode_lock:
+            self.sendbuf += tmsg
+            self.last_sent = time.time()
 
     def got_message(self, message):
         if message.command == "version":
