@@ -2037,7 +2037,7 @@ static int load_most_relevant_state()
   // Note: to avoid rolling back all the way to the genesis block (which appears as if client is hung) abort after MAX_STATE_HISTORY attempts
   CBlockIndex const *curTip = spBlockIndex;
   int abortRollBackBlock;
-  if (curTip != NULL) abortRollBackBlock = curTip->nHeight - MAX_STATE_HISTORY+1;
+  if (curTip != NULL) abortRollBackBlock = curTip->nHeight - (MAX_STATE_HISTORY+1);
   while (NULL != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock) {
     if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
