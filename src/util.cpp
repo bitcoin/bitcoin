@@ -738,7 +738,9 @@ void SetupEnvironment()
 #endif
     // The path locale is lazy initialized and to avoid deinitialization errors 
     // in multithreading environments, it is set explicitly by the main thread.
+#if !defined(WIN32)
     boost::filesystem::path::imbue(loc);
+#endif
 }
 
 void SetThreadPriority(int nPriority)
