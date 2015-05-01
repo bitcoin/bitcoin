@@ -313,7 +313,7 @@ class TestManager(object):
                         invqueue.append(CInv(1, tx.sha256))
                 # Ensure we're not overflowing the inv queue
                 if len(invqueue) == MAX_INV_SZ:
-                    [ c.sb.send_message(msg_inv(invqueue)) for c in self.connections ]
+                    [ c.send_message(msg_inv(invqueue)) for c in self.connections ]
                     invqueue = []
 
             # Do final sync if we weren't syncing on every block or every tx.
