@@ -6,6 +6,8 @@
 #ifndef BITCOIN_SERIALIZE_H
 #define BITCOIN_SERIALIZE_H
 
+#include "compat/endian.h"
+
 #include <algorithm>
 #include <assert.h>
 #include <ios>
@@ -17,8 +19,6 @@
 #include <string.h>
 #include <utility>
 #include <vector>
-
-#include "compat/endian.h"
 
 class CScript;
 
