@@ -18,6 +18,9 @@
 #include "mastercore_convert.h"
 #include "mastercore_dex.h"
 #include "mastercore_errors.h"
+#include "mastercore_log.h"
+#include "mastercore_mdex.h"
+#include "mastercore_persistence.h"
 #include "mastercore_script.h"
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
@@ -43,10 +46,8 @@
 #include <boost/exception/to_string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <openssl/sha.h>
 
@@ -114,29 +115,6 @@ static uint64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
 
-const int msc_debug_parser_data = 0;
-const int msc_debug_parser= 0;
-const int msc_debug_verbose=0;
-const int msc_debug_verbose2=0;
-const int msc_debug_verbose3=0;
-const int msc_debug_vin   = 0;
-const int msc_debug_script= 0;
-const int msc_debug_dex   = 1;
-const int msc_debug_send  = 1;
-const int msc_debug_tokens= 0;
-const int msc_debug_spec  = 1;
-const int msc_debug_exo   = 0;
-const int msc_debug_tally = 1;
-const int msc_debug_sp    = 1;
-const int msc_debug_sto   = 1;
-const int msc_debug_txdb  = 0;
-const int msc_debug_tradedb = 1;
-const int msc_debug_persistence = 0;
-// disable all flags for metadex for the immediate tag, then turn back on 0 & 2 at least
-int msc_debug_metadex1= 0;
-int msc_debug_metadex2= 0;
-int msc_debug_metadex3= 0;  // enable this to see the orderbook before & after each TX
-
 const static int disable_Divs = 0;
 const static int disableLevelDB = 0;
 
@@ -201,74 +179,6 @@ CBlockIndex* mastercore::GetBlockIndex(const uint256& hash)
     return pBlockIndex;
 }
 
-
-//--- CUT HERE --- mostly copied from util.h & util.cpp
-// LogPrintf() has been broken a couple of times now
-// by well-meaning people adding mutexes in the most straightforward way.
-// It breaks because it may be called by global destructors during shutdown.
-// Since the order of destruction of static/global objects is undefined,
-// defining a mutex as a global object doesn't work (the mutex gets
-// destroyed, and then some later destructor calls OutputDebugStringF,
-// maybe indirectly, and you get a core dump at shutdown trying to lock
-// the mutex).
-static boost::once_flag mp_debugPrintInitFlag = BOOST_ONCE_INIT;
-// We use boost::call_once() to make sure these are initialized in
-// in a thread-safe manner the first time it is called:
-static FILE* fileout = NULL;
-static boost::mutex* mutexDebugLog = NULL;
-
-static void mp_DebugPrintInit()
-{
-    assert(fileout == NULL);
-    assert(mutexDebugLog == NULL);
-
-    boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME ;
-    fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // unbuffered
-
-    mutexDebugLog = new boost::mutex();
-}
-
-int mp_LogPrintStr(const std::string &str)
-{
-    int ret = 0; // Returns total number of characters written
-    if (fPrintToConsole)
-    {
-        // print to console
-        ret = fwrite(str.data(), 1, str.size(), stdout);
-    }
-    else if (fPrintToDebugLog)
-    {
-        static bool fStartedNewLine = true;
-        boost::call_once(&mp_DebugPrintInit, mp_debugPrintInitFlag);
-
-        if (fileout == NULL)
-            return ret;
-
-        boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
-
-        // reopen the log file, if requested
-        if (fReopenDebugLog) {
-            fReopenDebugLog = false;
-            boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME ;
-            if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
-                setbuf(fileout, NULL); // unbuffered
-        }
-
-        // Debug print useful for profiling
-        if (fLogTimestamps && fStartedNewLine)
-            ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-        if (!str.empty() && str[str.size()-1] == '\n')
-            fStartedNewLine = true;
-        else
-            fStartedNewLine = false;
-
-        ret = fwrite(str.data(), 1, str.size(), fileout);
-    }
-
-    return ret;
-}
-
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
 static bool readPersistence()
@@ -288,39 +198,6 @@ static bool writePersistence(int block_now)
   if (GetHeight() > (block_now + MAX_STATE_HISTORY)) return false;
 
   return true;
-}
-
-// copied from ShrinkDebugFile, util.cpp
-static void shrinkDebugFile()
-{
-    // Scroll log if it's getting too big
-    const int buffer_size = 8000000;  // 8MBytes
-    boost::filesystem::path pathLog = GetDataDir() / LOG_FILENAME;
-    FILE* file = fopen(pathLog.string().c_str(), "r");
-
-    if (file && boost::filesystem::file_size(pathLog) > 50000000) // 50MBytes
-    {
-      // Restart the file with some of the end
-      char *pch = new char[buffer_size];
-      if (NULL != pch)
-      {
-        fseek(file, -buffer_size, SEEK_END);
-        int nBytes = fread(pch, 1, buffer_size, file);
-        fclose(file); file = NULL;
-
-        file = fopen(pathLog.string().c_str(), "w");
-        if (file)
-        {
-            fwrite(pch, 1, nBytes, file);
-            fclose(file); file = NULL;
-        }
-        delete [] pch;
-      }
-    }
-    else
-    {
-      if (NULL != file) fclose(file);
-    }
 }
 
 string mastercore::strMPProperty(unsigned int i)
@@ -477,7 +354,7 @@ CMPPending pending;
 }
 
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
-std::map<string, CMPTally> mastercore::mp_tally_map;
+std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally *mastercore::getTally(const string & address)
 {
@@ -533,8 +410,6 @@ static bool isRangeOK(const uint64_t input)
 // call just before multiplying large numbers
 bool isMultiplicationOK(const uint64_t a, const uint64_t b)
 {
-//  printf("%s(%lu, %lu): ", __FUNCTION__, a, b);
-
   if (!a || !b) return true;
 
   if (MAX_INT_8_BYTES < a) return false;
@@ -702,8 +577,8 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                      {
                          // we know we have transactions live we don't understand
                          // can't be trusted to provide valid data, shutdown
-                         file_log("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n",global_alert_message.c_str());
-                         printf("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n",global_alert_message.c_str()); //echo to screen
+                         file_log("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
+                         PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
                          if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode("Shutting down due to alert: " + getMasterCoreAlertTextOnly());
                          return false;
                      }
@@ -815,23 +690,12 @@ uint64_t before, after;
   return bRet;
 }
 
-std::string p128(int128_t quantity)
-{
-    //printf("\nTest # was %s\n", boost::lexical_cast<std::string>(quantity).c_str() );
-   return boost::lexical_cast<std::string>(quantity);
-}
-std::string p_arb(cpp_int quantity)
-{
-    //printf("\nTest # was %s\n", boost::lexical_cast<std::string>(quantity).c_str() );
-   return boost::lexical_cast<std::string>(quantity);
-}
 //calculateFundraiser does token calculations per transaction
 //calcluateFractional does calculations for missed tokens
 void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsigned char bonusPerc, 
   uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens, 
   std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale )
 {
-  //uint64_t weeks_sec = 604800;
   int128_t weeks_sec_ = 604800L;
   //define weeks in seconds
   int128_t precision_ = 1000000000000L;
@@ -839,84 +703,32 @@ void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsi
   int128_t percentage_precision = 100L;
   //define precision for all percentages (10/100 = 10%)
 
-  //uint64_t bonusSeconds = fundraiserSecs - currentSecs;
   //calcluate the bonusseconds
-  //printf("\n bonus sec %lu\n", bonusSeconds);
   int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
 
-  //double weeks_d = bonusSeconds / (double) weeks_sec;
-  //debugging
-  
   int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_ + ( (bonusSeconds_ % weeks_sec_ ) * precision_) / weeks_sec_;
   //calculate the whole number of weeks to apply bonus
-
-  //printf("\n weeks_d: %.8lf \n weeks: %s + (%s / %s) =~ %.8lf \n", weeks_d, p128(bonusSeconds_ / weeks_sec_).c_str(), p128(bonusSeconds_ % weeks_sec_).c_str(), p128(weeks_sec_).c_str(), boost::lexical_cast<double>(bonusSeconds_ / weeks_sec_) + boost::lexical_cast<double> (bonusSeconds_ % weeks_sec_) / boost::lexical_cast<double>(weeks_sec_) );
-  //debugging lines
-
-  //double ebPercentage_d = weeks_d * bonusPerc;
-  //debugging lines
 
   int128_t ebPercentage_ = weeks_ * bonusPerc;
   //calculate the earlybird percentage to be applied
 
-  //printf("\n ebPercentage_d: %.8lf \n ebPercentage: %s + (%s / %s ) =~ %.8lf \n", ebPercentage_d, p128(ebPercentage_ / precision_).c_str(), p128( (ebPercentage_) % precision_).c_str() , p128(precision_).c_str(), boost::lexical_cast<double>(ebPercentage_ / precision_) + boost::lexical_cast<double>(ebPercentage_ % precision_) / boost::lexical_cast<double>(precision_));
-  //debugging
-  
-  //double bonusPercentage_d = ( ebPercentage_d / 100 ) + 1;
-  //debugging
-
   int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision) ) / percentage_precision; 
   //calcluate the bonus percentage to apply up to 'percentage_precision' number of digits
 
-  //printf("\n bonusPercentage_d: %.18lf \n bonusPercentage: %s + (%s / %s) =~ %.11lf \n", bonusPercentage_d, p128(bonusPercentage_ / precision_).c_str(), p128(bonusPercentage_ % precision_).c_str(), p128(precision_).c_str(), boost::lexical_cast<double>(bonusPercentage_ / precision_) + boost::lexical_cast<double>(bonusPercentage_ % precision_) / boost::lexical_cast<double>(precision_));
-  //debugging
-
-  //double issuerPercentage_d = (double) (issuerPerc * 0.01);
-  //debugging
-
   int128_t issuerPercentage_ = (int128_t)issuerPerc * precision_ / percentage_precision;
-
-  //printf("\n issuerPercentage_d: %.8lf \n issuerPercentage: %s + (%s / %s) =~ %.8lf \n", issuerPercentage_d, p128(issuerPercentage_ / precision_ ).c_str(), p128(issuerPercentage_ % precision_).c_str(), p128( precision_ ).c_str(), boost::lexical_cast<double>(issuerPercentage_ / precision_) + boost::lexical_cast<double>(issuerPercentage_ % precision_) / boost::lexical_cast<double>(precision_));
-  //debugging
 
   int128_t satoshi_precision_ = 100000000;
   //define the precision for bitcoin amounts (satoshi)
-  //uint64_t createdTokens, createdTokens_decimal;
   //declare used variables for total created tokens
 
-  //uint64_t issuerTokens, issuerTokens_decimal;
   //declare used variables for total issuer tokens
-
-  //printf("\n NUMBER OF PROPERTIES %ld", numProps); 
-  //printf("\n AMOUNT INVESTED: %ld BONUS PERCENTAGE: %.11f and %s", amtTransfer,bonusPercentage_d, p128(bonusPercentage_).c_str());
-  
-  //long double ct = ((amtTransfer/1e8) * (long double) numProps * bonusPercentage_d);
-
-  //int128_t createdTokens_ = (int128_t)amtTransfer*(int128_t)numProps* bonusPercentage_;
 
   cpp_int createdTokens = boost::lexical_cast<cpp_int>((int128_t)amtTransfer*(int128_t)numProps)* boost::lexical_cast<cpp_int>(bonusPercentage_);
 
-  //printf("\n CREATED TOKENS UINT %s \n", p_arb(createdTokens).c_str());
-
-  //printf("\n CREATED TOKENS %.8Lf, %s + (%s / %s) ~= %.8lf",ct, p128(createdTokens_ / (precision_ * satoshi_precision_) ).c_str(), p128(createdTokens_ % (precision_ * satoshi_precision_) ).c_str() , p128( precision_*satoshi_precision_ ).c_str(), boost::lexical_cast<double>(createdTokens_ / (precision_ * satoshi_precision_) ) + boost::lexical_cast<double>(createdTokens_ % (precision_ * satoshi_precision_)) / boost::lexical_cast<double>(precision_*satoshi_precision_));
-
-  //long double it = (uint64_t) ct * issuerPercentage_d;
-
-  //int128_t issuerTokens_ = (createdTokens_ / (satoshi_precision_ * precision_ )) * (issuerPercentage_ / 100) * precision_;
-  
   cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_ )) * (issuerPercentage_ / 100) * precision_;
 
-  //printf("\n ISSUER TOKENS: %.8Lf, %s + (%s / %s ) ~= %.8lf \n",it, p128(issuerTokens_ / (precision_ * satoshi_precision_ * 100 ) ).c_str(), p128( issuerTokens_ % (precision_ * satoshi_precision_ * 100 ) ).c_str(), p128(precision_*satoshi_precision_*100).c_str(), boost::lexical_cast<double>(issuerTokens_ / (precision_ * satoshi_precision_ * 100))  + boost::lexical_cast<double>(issuerTokens_ % (satoshi_precision_*precision_*100) )/ boost::lexical_cast<double>(satoshi_precision_*precision_*100)); 
-  
-  //printf("\n UINT %s \n", p_arb(issuerTokens).c_str());
   //total tokens including remainders
 
-  //printf("\n DIVISIBLE TOKENS (UI LAYER) CREATED: is ~= %.8lf, and %.8lf\n",(double)createdTokens + (double)createdTokens_decimal/(satoshi_precision *precision), (double) issuerTokens + (double)issuerTokens_decimal/(satoshi_precision*precision*percentage_precision) );
-  //if (2 == propType)
-    //printf("\n DIVISIBLE TOKENS (UI LAYER) CREATED: is ~= %.8lf, and %.8lf\n", (uint64_t) (boost::lexical_cast<double>(createdTokens_ / (precision_ * satoshi_precision_) ) + boost::lexical_cast<double>(createdTokens_ % (precision_ * satoshi_precision_)) / boost::lexical_cast<double>(precision_*satoshi_precision_) )/1e8, (uint64_t) (boost::lexical_cast<double>(issuerTokens_ / (precision_ * satoshi_precision_ * 100))  + boost::lexical_cast<double>(issuerTokens_ % (satoshi_precision_*precision_*100) )/ boost::lexical_cast<double>(satoshi_precision_*precision_*100)) / 1e8  );
-  //else
-    //printf("\n INDIVISIBLE TOKENS (UI LAYER) CREATED: is = %lu, and %lu\n", boost::lexical_cast<uint64_t>(createdTokens_ / (precision_ * satoshi_precision_ ) ), boost::lexical_cast<uint64_t>(issuerTokens_ / (precision_ * satoshi_precision_ * 100)));
-  
   cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
   cpp_int issuerTokens_int = issuerTokens / (precision_ * satoshi_precision_ * 100 );
   cpp_int newTotalCreated = totalTokens + createdTokens_int  + issuerTokens_int;
@@ -926,17 +738,12 @@ void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsi
 
     cpp_int created = createdTokens_int + issuerTokens_int;
     cpp_int ratio = (created * precision_ * satoshi_precision_) / maxCreatable;
-
-    //printf("\n created %s, ratio %s, maxCreatable %s, totalTokens %s, createdTokens_int %s, issuerTokens_int %s \n", p_arb(created).c_str(), p_arb(ratio).c_str(), p_arb(maxCreatable).c_str(), p_arb(totalTokens).c_str(), p_arb(createdTokens_int).c_str(), p_arb(issuerTokens_int).c_str() );
-    //debugging
   
     issuerTokens_int = (issuerTokens_int * precision_ * satoshi_precision_)/ratio;
     //calcluate the ratio of tokens for what we can create and apply it
     createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int ;
     //give the rest to the user
 
-    //printf("\n created %s, ratio %s, maxCreatable %s, totalTokens %s, createdTokens_int %s, issuerTokens_int %s \n", p_arb(created).c_str(), p_arb(ratio).c_str(), p_arb(maxCreatable).c_str(), p_arb(totalTokens).c_str(), p_arb(createdTokens_int).c_str(), p_arb(issuerTokens_int).c_str() );
-    //debugging
     close_crowdsale = true; //close up the crowdsale after assigning all tokens
   }
   tokens = std::make_pair(boost::lexical_cast<uint64_t>(createdTokens_int) , boost::lexical_cast<uint64_t>(issuerTokens_int));
@@ -1072,8 +879,6 @@ int mastercore::set_wallet_totals()
        }
     }
   }
-  //printf("Global MSC totals: MSC_total= %lu, MSC_RESERVED_total= %lu\n", global_balance_money_maineco[1], global_balance_reserved_maineco[1]);
-  //std::cout << t.elapsed() << std::endl;
   return (my_addresses_count);
 }
 
@@ -1113,7 +918,6 @@ int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t Ex
 {
   if ((nBlock >= GENESIS_BLOCK && nBlock <= LAST_EXODUS_BLOCK) || (isNonMainNet()))
   { //Exodus Fundraiser start/end blocks
-    //printf("transaction: %s\n", wtx.ToString().c_str() );
     int deadline_timeleft=1377993600-nTime;
     double bonus= 1 + std::max( 0.10 * deadline_timeleft / (60 * 60 * 24 * 7), 0.0 );
 
@@ -1697,57 +1501,100 @@ uint64_t txFee = 0;
   return 0;
 }
 
-
-// parse blocks, potential right from Mastercoin's Exodus
-int msc_initial_scan(int nHeight)
+/**
+ * Reports the progress of the initial transaction scanning.
+ *
+ * The progress is printed to the console, written to the debug log file, and
+ * the RPC status, as well as the splash screen progress label, are updated.
+ *
+ * @see msc_initial_scan()
+ *
+ * @param nFirst[in]    The first block
+ * @param nCurrent[in]  The current block
+ * @param nLast[in]     The last block
+ */
+static void ReportScanProgress(int nFirst, int nCurrent, int nLast)
 {
-int n_total = 0, n_found = 0;
-const int max_block = GetHeight();
+    double dProgress = 100.0 * (nCurrent - nFirst) / (nLast - nFirst);
+    std::string strProgress = strprintf(
+            "Still scanning.. at block %d of %d. Progress: %.2f %%", nCurrent, nLast, dProgress);
 
-  // this function is useless if there are not enough blocks in the blockchain yet!
-  if ((0 >= nHeight) || (max_block < nHeight)) return -1;
+    PrintToConsole(strProgress + "\n");
+    uiInterface.InitMessage(strProgress);
+}
 
-  printf("starting block= %d, max_block= %d\n", nHeight, max_block);
+/**
+ * Scans the blockchain for meta transactions.
+ *
+ * It scans the blockchain, starting at the given block index, to the current
+ * tip, much like as if new block were arriving and being processed on the fly.
+ *
+ * Every 30 seconds the progress of the scan is reported.
+ *
+ * In case the current block being processed is not part of the active chain, or
+ * if a block could not be retrieved from the disk, then the scan stops early.
+ * Likewise, global shutdown requests are honored, and stop the scan progress.
+ *
+ * @see mastercore_handler_block_begin()
+ * @see mastercore_handler_tx()
+ * @see mastercore_handler_block_end()
+ *
+ * @param nFirstBlock[in]  The index of the first block to scan
+ * @return An exit code, indicating success or failure
+ */
+static int msc_initial_scan(int nFirstBlock)
+{
+    int64_t nNow = GetTime();
+    unsigned int nTotal = 0;
+    unsigned int nFound = 0;
+    int nBlock = 999999;
+    const int nLastBlock = GetHeight();
 
-  CBlock block;
-  for (int blockNum = nHeight;blockNum<=max_block;blockNum++)
-  {
-    CBlockIndex* pblockindex = chainActive[blockNum];
-    string strBlockHash = pblockindex->GetBlockHash().GetHex();
+    // this function is useless if there are not enough blocks in the blockchain yet!
+    if (nFirstBlock < 0 || nLastBlock < nFirstBlock) return -1;
+    PrintToConsole("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
 
-    if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
-     __FUNCTION__, blockNum, max_block, strBlockHash.c_str(), __LINE__, __FILE__);
-
-    ReadBlockFromDisk(block, pblockindex);
-
-    int tx_count = 0;
-    mastercore_handler_block_begin(blockNum, pblockindex);
-    BOOST_FOREACH(const CTransaction&tx, block.vtx)
+    for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
-      if (0 == mastercore_handler_tx(tx, blockNum, tx_count, pblockindex)) n_found++;
+        if (ShutdownRequested()) {
+            file_log("Shutdown requested, stop scan at block %d of %d\n", nBlock, nLastBlock);
+            break;
+        }
 
-      ++tx_count;
+        if (GetTime() >= nNow + 30) { // seconds
+            ReportScanProgress(nFirstBlock, nBlock, nLastBlock);
+            nNow = GetTime();
+        }
+
+        CBlockIndex* pblockindex = chainActive[nBlock];
+        if (NULL == pblockindex) break;
+        std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
+
+        if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
+            __FUNCTION__, nBlock, nLastBlock, strBlockHash, __LINE__, __FILE__);
+
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pblockindex)) break;
+
+        unsigned int nTxNum = 0;
+        mastercore_handler_block_begin(nBlock, pblockindex);
+
+        BOOST_FOREACH(const CTransaction&tx, block.vtx) {
+            if (0 == mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) nFound++;
+            ++nTxNum;
+        }
+
+        nTotal += nTxNum;
+        mastercore_handler_block_end(nBlock, pblockindex, nFound);
     }
-    
-    n_total += tx_count;
 
-    mastercore_handler_block_end(blockNum, pblockindex, n_found);
-  }
+    if (nBlock < nLastBlock) {
+        PrintToConsole("Scan stopped early at block %d of block %d\n", nBlock, nLastBlock);
+    }
 
-  printf("\n");
-  for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-  {
-    // my_it->first = key
-    // my_it->second = value
+    PrintToConsole("%d transactions processed, %d meta transactions found\n", nTotal, nFound);
 
-    printf("%34s => ", (my_it->first).c_str());
-    (my_it->second).print();
-  }
-
-  printf("starting block= %d, max_block= %d\n", nHeight, max_block);
-  printf("n_total= %d, n_found= %d\n", n_total, n_found);
-
-  return 0;
+    return 0;
 }
 
 int input_msc_balances_string(const string &s)
@@ -2192,8 +2039,9 @@ static int load_most_relevant_state()
     if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
-        const string filename = (MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % curTip->GetBlockHash().ToString()).str().c_str()).string();
-        success = msc_file_load(filename, i, true);
+        boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
+        const std::string strFile = path.string();
+        success = msc_file_load(strFile, i, true);
         if (success < 0) {
           break;
         }
@@ -2255,13 +2103,12 @@ static int write_msc_balances(ofstream &file, SHA256_CTX *shaCtx)
 
       emptyWallet = false;
 
-      lineOut.append((boost::format("%d:%d,%d,%d,%d;")
-          % prop
-          % balance
-          % sellReserved
-          % acceptReserved
-          % metadexReserve).str());
-
+      lineOut.append(strprintf("%d:%d,%d,%d,%d;",
+          prop,
+          balance,
+          sellReserved,
+          acceptReserved,
+          metadexReserve));
     }
 
     if (false == emptyWallet) {
@@ -2328,11 +2175,10 @@ static int write_globals_state(ofstream &file, SHA256_CTX *shaCtx)
 {
   unsigned int nextSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_MSC);
   unsigned int nextTestSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_TMSC);
-  string lineOut = (boost::format("%d,%d,%d")
-    % exodus_prev
-    % nextSPID
-    % nextTestSPID
-    ).str();
+  std::string lineOut = strprintf("%d,%d,%d",
+    exodus_prev,
+    nextSPID,
+    nextTestSPID);
 
   // add the line to the hash
   SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
@@ -2357,10 +2203,11 @@ static int write_mp_crowdsales(ofstream &file, SHA256_CTX *shaCtx)
 
 static int write_state_file( CBlockIndex const *pBlockIndex, int what )
 {
-  const char *blockHash = pBlockIndex->GetBlockHash().ToString().c_str();
-  boost::filesystem::path balancePath = MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[what] % blockHash).str();
-  ofstream file;
-  file.open(balancePath.string().c_str());
+  boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
+  const std::string strFile = path.string();
+
+  std::ofstream file;
+  file.open(strFile.c_str());
 
   SHA256_CTX shaCtx;
   SHA256_Init(&shaCtx);
@@ -2459,9 +2306,10 @@ static void prune_state_files( CBlockIndex const *topIndex )
      }
 
       // destroy the associated files!
-      const char *blockHashStr = (*iter).ToString().c_str();
+      std::string strBlockHash = iter->ToString();
       for (int i = 0; i < NUM_FILETYPES; ++i) {
-        boost::filesystem::remove(MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % blockHashStr).str());
+        boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
+        boost::filesystem::remove(path);
       }
     }
   }
@@ -2484,16 +2332,32 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   return 0;
 }
 
-static void clear_all_state() {
-  mp_tally_map.clear();
-  my_offers.clear();
-  my_accepts.clear();
-  my_crowds.clear();
-  _my_sps->clear();
-  exodus_prev = 0;
+/**
+ * Clears the state of the system.
+ */
+static void clear_all_state()
+{
+    // Memory based storage
+    mp_tally_map.clear();
+    my_offers.clear();
+    my_accepts.clear();
+    my_crowds.clear();
+    metadex.clear();
+
+    // LevelDB based storage
+    _my_sps->Clear();
+    p_txlistdb->Clear();
+    s_stolistdb->Clear();
+    t_tradelistdb->Clear();
+
+    exodus_prev = 0;
 }
 
-// called from init.cpp of Bitcoin Core
+/**
+ * Global handler to initialize Omni Core.
+ *
+ * @return An exit code, indicating success or failure
+ */
 int mastercore_init()
 {
   if (mastercoreInitialized) {
@@ -2501,9 +2365,9 @@ int mastercore_init()
     return 0;
   }
 
-  printf("%s()%s, line %d, file: %s\n", __FUNCTION__, isNonMainNet() ? "TESTNET":"", __LINE__, __FILE__);
+  PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
 
-  shrinkDebugFile();
+  ShrinkDebugLog();
 
   file_log("\n%s OMNICORE INIT, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 
@@ -2538,16 +2402,24 @@ int mastercore_init()
       catch(boost::filesystem::filesystem_error const & e)
       {
           file_log("Exception deleting folders for --startclean option.\n");
-          printf("Exception deleting folders for --startclean option.\n");
+          PrintToConsole("Exception deleting folders for --startclean option.\n");
       }
   }
+  
+  // TODO: the databases should be wiped, when reindexing, but currently,
+  // due to the block disconnect handlers, this results in different state,
+  // which is not correct. Util this is resolved, the original behavior is
+  // mirrored.
+  //
+  // See discussion: https://github.com/OmniLayer/omnicore/pull/25
 
-  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", 1<<20, false, fReindex);
-  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", 1<<20, false, fReindex);
-  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", 1<<20, false, fReindex);
-  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo");
+  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", false);
+  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", false);
+  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", false);
+  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
+
   MPPersistencePath = GetDataDir() / "MP_persist";
-  boost::filesystem::create_directories(MPPersistencePath);
+  TryCreateDirectory(MPPersistencePath);
 
   // legacy code, setting to pre-genesis-block
   static int snapshotHeight = (GENESIS_BLOCK - 1);
@@ -2616,7 +2488,7 @@ int mastercore_init()
   // collect the real Exodus balances available at the snapshot time
   // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  printf("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance).c_str());
+  file_log("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
   // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
   (void) p_txlistdb->setLastAlert(nWaterlineBlock);
@@ -2625,35 +2497,45 @@ int mastercore_init()
 
   // display Exodus balance
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  printf("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance).c_str());
+  file_log("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+
+  PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
+  PrintToConsole("Omni Core initialization completed\n");
 
   return 0;
 }
 
+/**
+ * Global handler to shut down Omni Core.
+ *
+ * In particular, the LevelDB databases of the global state objects are closed
+ * properly.
+ *
+ * @return An exit code, indicating success or failure
+ */
 int mastercore_shutdown()
 {
-  printf("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+    if (p_txlistdb) {
+        delete p_txlistdb;
+        p_txlistdb = NULL;
+    }
+    if (t_tradelistdb) {
+        delete t_tradelistdb;
+        t_tradelistdb = NULL;
+    }
+    if (s_stolistdb) {
+        delete s_stolistdb;
+        s_stolistdb = NULL;
+    }
+    if (_my_sps) {
+        delete _my_sps;
+        _my_sps = NULL;
+    }
 
-  if (p_txlistdb)
-  {
-    delete p_txlistdb; p_txlistdb = NULL;
-  }
-  if (t_tradelistdb)
-  {
-    delete t_tradelistdb; t_tradelistdb = NULL;
-  }
-  if (s_stolistdb)
-  {
-    delete s_stolistdb; s_stolistdb = NULL;
-  }
-  file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+    file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToConsole("Omni Core shutdown completed\n");
 
-  if (_my_sps)
-  {
-    delete _my_sps; _my_sps = NULL;
-  }
-
-  return 0;
+    return 0;
 }
 
 // this is called for every new transaction that comes in (actually in block parsing loop)
@@ -3149,8 +3031,7 @@ int CMPTxList::setLastAlert(int blockHeight)
     if (blockHeight > chainActive.Height()) blockHeight = chainActive.Height();
     if (!pdb) return 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     string lastAlertTxid;
     string lastAlertData;
     string itData;
@@ -3230,9 +3111,8 @@ uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
   Slice skey, svalue;
-  readoptions.fill_cache = false;
   uint256 cancelTxid;
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3294,8 +3174,7 @@ int CMPTxList::getMPTransactionCountTotal()
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         skey = it->key();
@@ -3309,8 +3188,7 @@ int CMPTxList::getMPTransactionCountBlock(int block)
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         skey = it->key();
@@ -3535,17 +3413,14 @@ void CMPTxList::printAll()
 {
 int count = 0;
 Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
     svalue = it->value();
     ++count;
-    printf("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
   }
 
   delete it;
@@ -3562,7 +3437,7 @@ std::vector<std::string> vstr;
 int block;
 unsigned int n_found = 0;
 
-  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3570,8 +3445,6 @@ unsigned int n_found = 0;
     svalue = it->value();
 
     ++count;
-
-//    printf("%5u:%s=%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
 
     string strvalue = it->value().ToString();
 
@@ -3592,7 +3465,7 @@ unsigned int n_found = 0;
     }
   }
 
-  printf("%s(%d, %d); n_found= %d\n", __FUNCTION__, starting_block, ending_block, n_found);
+  PrintToConsole("%s(%d, %d); n_found= %d\n", __FUNCTION__, starting_block, ending_block, n_found);
 
   delete it;
 
@@ -3602,12 +3475,11 @@ unsigned int n_found = 0;
 // MPSTOList here
 std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 {
-  if (!sdb) return "";
+  if (!pdb) return "";
   string mySTOReceipts = "";
 
   Slice skey, svalue;
-  readoptions.fill_cache = false;
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3638,7 +3510,7 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 
 void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee)
 {
-  if (!sdb) return;
+  if (!pdb) return;
 
   bool filter = true; //default
   bool filterByWallet = true; //default
@@ -3655,8 +3527,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
   *stoFee = 0;
 
   Slice skey, svalue;
-  readoptions.fill_cache = false;
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3722,10 +3593,10 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
 
 bool CMPSTOList::exists(string address)
 {
-  if (!sdb) return false;
+  if (!pdb) return false;
 
   string strValue;
-  Status status = sdb->Get(readoptions, address, &strValue);
+  Status status = pdb->Get(readoptions, address, &strValue);
 
   if (!status.ok())
   {
@@ -3737,7 +3608,7 @@ bool CMPSTOList::exists(string address)
 
 void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBlock, unsigned int propertyId, uint64_t amount)
 {
-  if (!sdb) return;
+  if (!pdb) return;
 
   bool addressExists = s_stolistdb->exists(address);
   if (addressExists)
@@ -3745,7 +3616,7 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       //retrieve existing record
       std::vector<std::string> vstr;
       string strValue;
-      Status status = sdb->Get(readoptions, address, &strValue);
+      Status status = pdb->Get(readoptions, address, &strValue);
       if (status.ok())
       {
           // add details to record
@@ -3758,9 +3629,9 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
           strValue += newValue;
           // write updated record
           Status status;
-          if (sdb)
+          if (pdb)
           {
-              status = sdb->Put(writeoptions, key, strValue);
+              status = pdb->Put(writeoptions, key, strValue);
               file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
           }
       }
@@ -3770,9 +3641,9 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       const string key = address;
       const string value = strprintf("%s:%d:%u:%lu,", txid.ToString(), nBlock, propertyId, amount);
       Status status;
-      if (sdb)
+      if (pdb)
       {
-          status = sdb->Put(writeoptions, key, value);
+          status = pdb->Put(writeoptions, key, value);
           file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
       }
   }
@@ -3782,17 +3653,14 @@ void CMPSTOList::printAll()
 {
   int count = 0;
   Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
     svalue = it->value();
     ++count;
-    printf("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
   }
 
   delete it;
@@ -3800,7 +3668,7 @@ void CMPSTOList::printAll()
 
 void CMPSTOList::printStats()
 {
-  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", sWritten, sRead);
+  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 // delete any STO receipts after blockNum
@@ -3810,7 +3678,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
   unsigned int count = 0;
   std::vector<std::string> vstr;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = sdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3837,16 +3705,16 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
         const string key = address;
         // write updated record
         Status status;
-        if (sdb)
+        if (pdb)
         {
-            status = sdb->Put(writeoptions, key, newValue);
+            status = pdb->Put(writeoptions, key, newValue);
             file_log("DEBUG STO - rewriting STO data after reorg\n");
             file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
         }
     }
   }
 
-  printf("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToConsole("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 
@@ -3856,12 +3724,12 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
 // MPTradeList here
 bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, uint64_t *totalSold, uint64_t *totalBought)
 {
-  if (!tdb) return false;
+  if (!pdb) return false;
   leveldb::Slice skey, svalue;
   unsigned int count = 0;
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
-  leveldb::Iterator* it = tdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3946,14 +3814,14 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
 
 void CMPTradeList::recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum)
 {
-  if (!tdb) return;
+  if (!pdb) return;
   const string key = txid1.ToString() + "+" + txid2.ToString();
   const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum);
   Status status;
-  if (tdb)
+  if (pdb)
   {
-    status = tdb->Put(writeoptions, key, value);
-    ++tWritten;
+    status = pdb->Put(writeoptions, key, value);
+    ++nWritten;
     if (msc_debug_tradedb) file_log("%s(): %s\n", __FUNCTION__, status.ToString().c_str());
   }
 }
@@ -3966,7 +3834,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
   std::vector<std::string> vstr;
   int block;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = tdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3983,12 +3851,12 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
       {
         ++n_found;
         file_log("%s() DELETING FROM TRADEDB: %s=%s\n", __FUNCTION__, skey.ToString().c_str(), svalue.ToString().c_str());
-        tdb->Delete(writeoptions, skey);
+        pdb->Delete(writeoptions, skey);
       }
     }
   }
 
-  printf("%s(%d); tradedb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToConsole("%s(%d); tradedb n_found= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 
@@ -3997,15 +3865,14 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
 
 void CMPTradeList::printStats()
 {
-  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", tWritten, tRead);
+  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 int CMPTradeList::getMPTradeCountTotal()
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = tdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         ++count;
@@ -4018,17 +3885,14 @@ void CMPTradeList::printAll()
 {
   int count = 0;
   Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = tdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
     svalue = it->value();
     ++count;
-    printf("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
   }
 
   delete it;
@@ -4645,13 +4509,13 @@ int rc = PKT_ERROR_STO -1000;
 
       totalTokens = 0;
 
-      typedef std::set<pair<int64_t, string>, SendToOwners_compare> OwnerAddrType;
+      typedef std::set<std::pair<int64_t, std::string>, SendToOwners_compare> OwnerAddrType;
       OwnerAddrType OwnerAddrSet;
 
       {
-        for(map<string, CMPTally>::reverse_iterator my_it = mp_tally_map.rbegin(); my_it != mp_tally_map.rend(); ++my_it)
+        for (std::map<std::string, CMPTally>::reverse_iterator my_it = mp_tally_map.rbegin(); my_it != mp_tally_map.rend(); ++my_it)
         {
-          const string address = (my_it->first).c_str();
+          const std::string address = my_it->first;
 
           // do not count the sender
           if (address == sender) continue;
@@ -4665,7 +4529,7 @@ int rc = PKT_ERROR_STO -1000;
 
           if (tokens)
           {
-            OwnerAddrSet.insert(make_pair(tokens, address));
+            OwnerAddrSet.insert(std::make_pair(tokens, address));
             totalTokens += tokens;
           }
         }
@@ -4683,11 +4547,11 @@ int rc = PKT_ERROR_STO -1000;
     { // two-iteration loop START
       // split up what was taken and distribute between all holders
       uint64_t sent_so_far = 0;
-      for(OwnerAddrType::reverse_iterator my_it = OwnerAddrSet.rbegin(); my_it != OwnerAddrSet.rend(); ++my_it)
+      for (OwnerAddrType::reverse_iterator my_it = OwnerAddrSet.rbegin(); my_it != OwnerAddrSet.rend(); ++my_it)
       { // owners loop
-      const string address = my_it->second;
+        const std::string address = my_it->second;
 
-        int128_t owns = my_it->first;
+        int128_t owns = int128_t(my_it->first);
         int128_t temp = owns * int128_t(nValue);
         int128_t piece = 1 + ((temp - 1) / int128_t(totalTokens));
 

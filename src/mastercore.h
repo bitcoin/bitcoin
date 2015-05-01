@@ -9,19 +9,20 @@
 class CBlockIndex;
 class CTransaction;
 
+#include "mastercore_log.h"
+#include "mastercore_persistence.h"
+
 #include "sync.h"
-#include "tinyformat.h"
 #include "uint256.h"
 #include "util.h"
 
 #include <boost/filesystem/path.hpp>
 
-#include "leveldb/db.h"
+#include "leveldb/status.h"
 
 #include "json/json_spirit_value.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <map>
 #include <string>
@@ -30,11 +31,6 @@ class CTransaction;
 using json_spirit::Array;
 
 using std::string;
-
-
-#define LOG_FILENAME    "mastercore.log"
-#define INFO_FILENAME   "mastercore_crowdsales.log"
-#define OWNERS_FILENAME "mastercore_owners.log"
 
 int const MAX_STATE_HISTORY = 50;
 
@@ -149,50 +145,6 @@ enum FILETYPES {
 #define OMNI_PROPERTY_MSC   1
 #define OMNI_PROPERTY_TMSC  2
 
-int mp_LogPrintStr(const std::string &str);
-
-/* When we switch to C++11, this can be switched to variadic templates instead
- * of this macro-based construction (see tinyformat.h).
- */
-#define MP_MAKE_ERROR_AND_LOG_FUNC(n)                                        \
-    /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_category_log(const char* category, const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        if(!LogAcceptCategory(category)) return 0;                            \
-        return mp_LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_log(TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format("%s", TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int mp_log(const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int file_log(const char* format, TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format(format, TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline int file_log(TINYFORMAT_VARARGS(n))  \
-    {                                                                         \
-        return mp_LogPrintStr(tfm::format("%s", TINYFORMAT_PASSARGS(n))); \
-    }                                                                         \
-    /*   Log error and return false */                                        \
-    template<TINYFORMAT_ARGTYPES(n)>                                          \
-    static inline bool mp_error(const char* format, TINYFORMAT_VARARGS(n))                     \
-    {                                                                         \
-        mp_LogPrintStr("ERROR: " + tfm::format(format, TINYFORMAT_PASSARGS(n)) + "\n"); \
-        return false;                                                         \
-    }
-
-TINYFORMAT_FOREACH_ARGNUM(MP_MAKE_ERROR_AND_LOG_FUNC)
-//--- CUT HERE ---
-
 // forward declarations
 std::string FormatPriceMP(double n);
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
@@ -203,11 +155,7 @@ int64_t feeCheck(const string &address);
 
 const std::string ExodusAddress();
 
-extern int msc_debug_ui;
-
 extern CCriticalSection cs_tally;
-
-extern const int msc_debug_dex;
 
 enum TallyType { BALANCE = 0, SELLOFFER_RESERVE = 1, ACCEPT_RESERVE = 2, PENDING = 3, METADEX_RESERVE = 4, TALLY_TYPE_COUNT };
 
@@ -303,12 +251,12 @@ public:
 
     if (bDivisible)
     {
-      printf("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
-       FormatDivisibleMP(money, true).c_str(), FormatDivisibleMP(so_r, true).c_str(), FormatDivisibleMP(a_r, true).c_str(), FormatDivisibleMP(pending, true).c_str());
+      PrintToConsole("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
+       FormatDivisibleMP(money, true), FormatDivisibleMP(so_r, true), FormatDivisibleMP(a_r, true), FormatDivisibleMP(pending, true));
     }
     else
     {
-      printf("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
+      PrintToConsole("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
     }
 
     return (money + so_r + a_r);
@@ -328,38 +276,20 @@ public:
   }
 };
 
-/* leveldb-based storage for sto recipients */
-class CMPSTOList
+/** LevelDB based storage for STO recipients.
+ */
+class CMPSTOList : public CDBBase
 {
-    protected:
-    // datebase options reused from MPTxList
-    leveldb::Options options;
-    leveldb::ReadOptions readoptions;
-    leveldb::ReadOptions iteroptions;
-    leveldb::WriteOptions writeoptions;
-    leveldb::WriteOptions syncoptions;
-    leveldb::DB *sdb;
-    // statistics
-    unsigned int sWritten;
-    unsigned int sRead;
-
 public:
-    CMPSTOList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):sWritten(0),sRead(0)
+    CMPSTOList(const boost::filesystem::path& path, bool fWipe)
     {
-      options.paranoid_checks = true;
-      options.create_if_missing = true;
-      readoptions.verify_checksums = true;
-      iteroptions.verify_checksums = true;
-      iteroptions.fill_cache = false;
-      syncoptions.sync = true;
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
     }
 
-    ~CMPSTOList()
+    virtual ~CMPSTOList()
     {
-      delete sdb;
-      sdb = NULL;
+        if (msc_debug_persistence) file_log("CMPSTOList closed\n");
     }
 
     void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee);
@@ -371,38 +301,20 @@ public:
     void recordSTOReceive(std::string, const uint256&, int, unsigned int, uint64_t);
 };
 
-/* leveldb-based storage for trade history - trades will be listed here atomically with key txid1:txid2 */
-class CMPTradeList
+/** LevelDB based storage for the trade history. Trades are listed with key "txid1+txid2".
+ */
+class CMPTradeList : public CDBBase
 {
-protected:
-    // datebase options reused from MPTxList
-    leveldb::Options options;
-    leveldb::ReadOptions readoptions;
-    leveldb::ReadOptions iteroptions;
-    leveldb::WriteOptions writeoptions;
-    leveldb::WriteOptions syncoptions;
-    leveldb::DB *tdb;
-    // statistics
-    unsigned int tWritten;
-    unsigned int tRead;
-
 public:
-    CMPTradeList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):tWritten(0),tRead(0)
+    CMPTradeList(const boost::filesystem::path& path, bool fWipe)
     {
-      options.paranoid_checks = true;
-      options.create_if_missing = true;
-      readoptions.verify_checksums = true;
-      iteroptions.verify_checksums = true;
-      iteroptions.fill_cache = false;
-      syncoptions.sync = true;
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading trades database: %s\n", status.ToString());
     }
 
-    ~CMPTradeList()
+    virtual ~CMPTradeList()
     {
-      delete tdb;
-      tdb = NULL;
+        if (msc_debug_persistence) file_log("CMPTradeList closed\n");
     }
 
     void recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
@@ -414,52 +326,20 @@ public:
     int getMPTradeCountTotal();
 };
 
-/* leveldb-based storage for the list of ALL Master Protocol TXIDs (key) with validity bit & other misc data as value */
-class CMPTxList
+/** LevelDB based storage for transactions, with txid as key and validity bit, and other data as value.
+ */
+class CMPTxList : public CDBBase
 {
-protected:
-    // database options used
-    leveldb::Options options;
-
-    // options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    // options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-    // options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    // options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
-    // the database itself
-    leveldb::DB *pdb;
-
-    // statistics
-    unsigned int nWritten;
-    unsigned int nRead;
-
 public:
-    CMPTxList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):nWritten(0),nRead(0)
+    CMPTxList(const boost::filesystem::path& path, bool fWipe)
     {
-      options.paranoid_checks = true;
-      options.create_if_missing = true;
-
-      readoptions.verify_checksums = true;
-      iteroptions.verify_checksums = true;
-      iteroptions.fill_cache = false;
-      syncoptions.sync = true;
-
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-
-      printf("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading transactions database: %s\n", status.ToString());
     }
 
-    ~CMPTxList()
+    virtual ~CMPTxList()
     {
-      delete pdb;
-      pdb = NULL;
+        if (msc_debug_persistence) file_log("CMPTxList closed\n");
     }
 
     void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
@@ -496,7 +376,7 @@ public:
 
   void print(uint256 txid) const
   {
-    printf("%s : %s %d %ld %ld %s\n", txid.GetHex().c_str(), src.c_str(), prop, amount, type, desc.c_str());
+    PrintToConsole("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
   }
  
 };
@@ -509,13 +389,17 @@ extern uint64_t global_balance_reserved_maineco[100000];
 extern uint64_t global_balance_money_testeco[100000];
 extern uint64_t global_balance_reserved_testeco[100000];
 
-int mastercore_init(void);
-
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
 
 string getLabel(const string &address);
+
+/** Global handler to initialize Omni Core. */
+int mastercore_init();
+
+/** Global handler to shut down Omni Core. */
+int mastercore_shutdown();
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);

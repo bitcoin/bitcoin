@@ -3,14 +3,15 @@
 #include "mastercore_sp.h"
 
 #include "mastercore.h"
+#include "mastercore_log.h"
 
 #include "main.h"
+#include "tinyformat.h"
 #include "uint256.h"
 #include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "leveldb/db.h"
@@ -43,30 +44,23 @@ unsigned int CMPSPInfo::updateSP(unsigned int propertyID, Entry const &info)
       return propertyID;
     }
 
-    std::string nextIdStr;
     unsigned int res = propertyID;
-
     Object spInfo = info.toJSON();
 
     // generate the SP id
-    string spKey = (boost::format(FORMAT_BOOST_SPKEY) % propertyID).str();
+    string spKey = strprintf(FORMAT_BOOST_SPKEY, propertyID);
     string spValue = write_string(Value(spInfo), false);
-    string spPrevKey = (boost::format("blk-%s:sp-%d") % info.update_block.ToString() % propertyID).str();
+    string spPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyID);
     string spPrevValue;
 
     leveldb::WriteBatch commitBatch;
-    
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = false;
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
 
     // if a value exists move it to the old key
-    if (false == pDb->Get(readOpts, spKey, &spPrevValue).IsNotFound()) {
+    if (false == pdb->Get(readoptions, spKey, &spPrevValue).IsNotFound()) {
       commitBatch.Put(spPrevKey, spPrevValue);
     }
     commitBatch.Put(spKey, spValue);
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
 
     file_log("Updated LevelDB with SP data successfully\n");
     return res;
@@ -74,7 +68,6 @@ unsigned int CMPSPInfo::updateSP(unsigned int propertyID, Entry const &info)
 
 unsigned int CMPSPInfo::putSP(unsigned char ecosystem, Entry const &info)
 {
-    std::string nextIdStr;
     unsigned int res = 0;
     switch(ecosystem) {
     case OMNI_PROPERTY_MSC: // mastercoin ecosystem, MSC: 1, TMSC: 2, First available SP = 3
@@ -90,30 +83,25 @@ unsigned int CMPSPInfo::putSP(unsigned char ecosystem, Entry const &info)
     Object spInfo = info.toJSON();
 
     // generate the SP id
-    string spKey = (boost::format(FORMAT_BOOST_SPKEY) % res).str();
+    string spKey = strprintf(FORMAT_BOOST_SPKEY, res);
     string spValue = write_string(Value(spInfo), false);
-    string txIndexKey = (boost::format(FORMAT_BOOST_TXINDEXKEY) % info.txid.ToString() ).str();
-    string txValue = (boost::format("%d") % res).str();
+    string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
+    string txValue = strprintf("%d", res);
 
     // sanity checking
     string existingEntry;
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
-    if (false == pDb->Get(readOpts, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
+    if (false == pdb->Get(readoptions, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
       file_log("%s WRITING SP %d TO LEVELDB WHEN A DIFFERENT SP ALREADY EXISTS FOR THAT ID!!!\n", __FUNCTION__, res);
-    } else if (false == pDb->Get(readOpts, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
-      file_log("%s WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!\n", __FUNCTION__, info.txid.ToString().c_str(), res);
+    } else if (false == pdb->Get(readoptions, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
+      file_log("%s WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!\n", __FUNCTION__, info.txid.ToString(), res);
     }
 
     // atomically write both the the SP and the index to the database
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
-
     leveldb::WriteBatch commitBatch;
     commitBatch.Put(spKey, spValue);
     commitBatch.Put(txIndexKey, txValue);
 
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
     return res;
 }
 
@@ -129,12 +117,9 @@ bool CMPSPInfo::getSP(unsigned int spid, Entry &info)
       return true;
     }
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
-
-    string spKey = (boost::format(FORMAT_BOOST_SPKEY) % spid).str();
+    string spKey = strprintf(FORMAT_BOOST_SPKEY, spid);
     string spInfoStr;
-    if (false == pDb->Get(readOpts, spKey, &spInfoStr).ok()) {
+    if (false == pdb->Get(readoptions, spKey, &spInfoStr).ok()) {
       return false;
     }
 
@@ -157,11 +142,8 @@ bool CMPSPInfo::hasSP(unsigned int spid)
       return true;
     }
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
-
-    string spKey = (boost::format(FORMAT_BOOST_SPKEY) % spid).str();
-    leveldb::Iterator *iter = pDb->NewIterator(readOpts);
+    string spKey = strprintf(FORMAT_BOOST_SPKEY, spid);
+    leveldb::Iterator *iter = pdb->NewIterator(readoptions);
     iter->Seek(spKey);
     bool res = (iter->Valid() && iter->key().compare(spKey) == 0);
     // clean up the iterator
@@ -173,12 +155,10 @@ bool CMPSPInfo::hasSP(unsigned int spid)
 unsigned int CMPSPInfo::findSPByTX(uint256 const &txid)
 {
     unsigned int res = 0;
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = true;
 
-    string txIndexKey = (boost::format(FORMAT_BOOST_TXINDEXKEY) % txid.ToString() ).str();
+    string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, txid.ToString());
     string spidStr;
-    if (pDb->Get(readOpts, txIndexKey, &spidStr).ok()) {
+    if (pdb->Get(readoptions, txIndexKey, &spidStr).ok()) {
       res = boost::lexical_cast<unsigned int>(spidStr);
     }
 
@@ -191,9 +171,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
     int remainingSPs = 0;
     leveldb::WriteBatch commitBatch;
 
-    leveldb::ReadOptions readOpts;
-    readOpts.fill_cache = false;
-    leveldb::Iterator *iter = pDb->NewIterator(readOpts);
+    leveldb::Iterator *iter = NewIterator();
     for (iter->Seek("sp-"); iter->Valid() && iter->key().starts_with("sp-"); iter->Next()) {
       // parse the encoded json, failing if it doesnt parse or is an object
       Value spInfoVal;
@@ -204,7 +182,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
           // need to roll this SP back
           if (info.update_block == info.creation_block) {
             // this is the block that created this SP, so delete the SP and the tx index entry
-            string txIndexKey = (boost::format(FORMAT_BOOST_TXINDEXKEY) % info.txid.ToString() ).str();
+            string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
             commitBatch.Delete(iter->key());
             commitBatch.Delete(txIndexKey);
           } else {
@@ -213,10 +191,10 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
             boost::split(vstr, key, boost::is_any_of("-"), token_compress_on);
             unsigned int propertyID = boost::lexical_cast<unsigned int>(vstr[1]);
 
-            string spPrevKey = (boost::format("blk-%s:sp-%d") % info.update_block.ToString() % propertyID).str();
+            string spPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyID);
             string spPrevValue;
 
-            if (false == pDb->Get(readOpts, spPrevKey, &spPrevValue).IsNotFound()) {
+            if (false == pdb->Get(readoptions, spPrevKey, &spPrevValue).IsNotFound()) {
               // copy the prev state to the current state and delete the old state
               commitBatch.Put(iter->key(), spPrevValue);
               commitBatch.Delete(spPrevKey);
@@ -238,10 +216,7 @@ int CMPSPInfo::popBlock(uint256 const &block_hash)
     // clean up the iterator
     delete iter;
 
-    leveldb::WriteOptions writeOptions;
-    writeOptions.sync = true;
-
-    pDb->Write(writeOptions, &commitBatch);
+    pdb->Write(syncoptions, &commitBatch);
 
     if (res < 0) {
       return res;
@@ -318,7 +293,6 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
   uint64_t numProps, unsigned char issuerPerc, const std::map<std::string, std::vector<uint64_t> > txFundraiserData, 
   const uint64_t amountPremined  )
 {
-
   //initialize variables
   double totalCreated = 0;
   double issuerPercentage = (double) (issuerPerc * 0.01);
@@ -334,14 +308,14 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
 
     //make calc for bonus given in sec
     uint64_t bonusSeconds = fundraiserSecs - currentSecs;
-  
+
     //turn it into weeks
     double weeks = bonusSeconds / (double) 604800;
-    
+
     //make it a %
     double ebPercentage = weeks * bonusPerc;
     double bonusPercentage = ( ebPercentage / 100 ) + 1;
-  
+
     //init var
     double createdTokens;
 
@@ -349,17 +323,13 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
     if( MSC_PROPERTY_TYPE_DIVISIBLE == propType ) {
       //calculate tokens
       createdTokens = (amtTransfer/1e8) * (double) numProps * bonusPercentage ;
-      
-      //printf("prop 2: is %Lf, and %Lf \n", createdTokens, issuerTokens);
-      
+
       //add totals up
       totalCreated += createdTokens;
     } else {
-      //printf("amount xfer %Lf and props %f and bonus percs %Lf \n", amtTransfer, (double) numProps, bonusPercentage);
-      
       //same here
       createdTokens = (uint64_t) ( (amtTransfer/1e8) * (double) numProps * bonusPercentage);
-      
+
       totalCreated += createdTokens;
     }
   };
@@ -398,7 +368,7 @@ bool mastercore::isCrowdsalePurchase(uint256 txid, string address, int64_t *prop
       for(it = database.begin(); it != database.end(); it++)
       {
           string tmpTxid = it->first; //uint256 txid = it->first;
-          string compTxid = txid.GetHex().c_str(); //convert to string to compare since this is how stored in levelDB
+          string compTxid = txid.GetHex(); //convert to string to compare since this is how stored in levelDB
           if (tmpTxid == compTxid)
           {
               int64_t tmpUserTokens = it->second.at(2);
@@ -428,7 +398,7 @@ bool mastercore::isCrowdsalePurchase(uint256 txid, string address, int64_t *prop
                for(it = database.begin(); it != database.end(); it++)
                {
                    string tmpTxid = it->first; //uint256 txid = it->first;
-                   string compTxid = txid.GetHex().c_str(); //convert to string to compare since this is how stored in levelDB
+                   string compTxid = txid.GetHex(); //convert to string to compare since this is how stored in levelDB
                    if (tmpTxid == compTxid)
                    {
                        int64_t tmpUserTokens = it->second.at(2);
@@ -454,7 +424,7 @@ bool mastercore::isCrowdsalePurchase(uint256 txid, string address, int64_t *prop
                for(it = database.begin(); it != database.end(); it++)
                {
                    string tmpTxid = it->first; //uint256 txid = it->first;
-                   string compTxid = txid.GetHex().c_str(); //convert to string to compare since this is how stored in levelDB
+                   string compTxid = txid.GetHex(); //convert to string to compare since this is how stored in levelDB
                    if (tmpTxid == compTxid)
                    {
                        int64_t tmpUserTokens = it->second.at(2);
@@ -476,31 +446,30 @@ bool mastercore::isCrowdsalePurchase(uint256 txid, string address, int64_t *prop
 void mastercore::eraseMaxedCrowdsale(const string &address, uint64_t blockTime, int block)
 {
     CrowdMap::iterator it = my_crowds.find(address);
-    
+
     if (it != my_crowds.end()) {
 
       CMPCrowd &crowd = it->second;
-      file_log("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address.c_str());
+      file_log("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
 
       dumpCrowdsaleInfo(address, crowd);
-      
+
       CMPSPInfo::Entry sp;
-      
+
       //get sp from data struct
       _my_sps->getSP(crowd.getPropertyId(), sp);
-      
+
       //get txdata
       sp.historicalData = crowd.getDatabase();
       sp.close_early = 1;
       sp.max_tokens = 1;
       sp.timeclosed = blockTime;
-      
+
       //update SP with this data
       sp.update_block = chainActive[block]->GetBlockHash();
       _my_sps->updateSP(crowd.getPropertyId() , sp);
-      
+
       //No calculate fractional calls here, no more tokens (at MAX)
-      
       my_crowds.erase(it);
     }
 }
@@ -513,25 +482,20 @@ CrowdMap::iterator my_it = my_crowds.begin();
 
   while (my_crowds.end() != my_it)
   {
-    // my_it->first = key
-    // my_it->second = value
-
     CMPCrowd &crowd = my_it->second;
 
     if (blockTime > (int64_t)crowd.getDeadline())
     {
-      file_log("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, (my_it->first).c_str());
+      file_log("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, my_it->first);
 
       // TODO: dump the info about this crowdsale being delete into a TXT file (JSON perhaps)
       dumpCrowdsaleInfo(my_it->first, my_it->second, true);
-      
+
       // Begin calculate Fractional 
       CMPSPInfo::Entry sp;
-      
+
       //get sp from data struct
       _my_sps->getSP(crowd.getPropertyId(), sp);
-
-      //file_log("\nValues going into calculateFractional(): hexid %s earlyBird %d deadline %lu numProps %lu issuerPerc %d, issuerCreated %ld \n", sp.txid.GetHex().c_str(), sp.early_bird, sp.deadline, sp.num_tokens, sp.percentage, crowd.getIssuerCreated());
 
       //find missing tokens
       double missedTokens = calculateFractional(sp.prop_type,
@@ -541,9 +505,6 @@ CrowdMap::iterator my_it = my_crowds.begin();
                           sp.percentage,
                           crowd.getDatabase(),
                           crowd.getIssuerCreated());
-
-
-      //file_log("\nValues coming out of calculateFractional(): Total tokens, Tokens created, Tokens for issuer, amountMissed: issuer %s %lu %lu %lu %f\n",sp.issuer.c_str(), crowd.getUserCreated() + crowd.getIssuerCreated(), crowd.getUserCreated(), crowd.getIssuerCreated(), missedTokens);
 
       //get txdata
       sp.historicalData = crowd.getDatabase();
@@ -556,7 +517,7 @@ CrowdMap::iterator my_it = my_crowds.begin();
       //update values
       update_tally_map(sp.issuer, crowd.getPropertyId(), missedTokens, BALANCE);
       //End
-                     
+
       my_crowds.erase(my_it++);
 
       ++how_many_erased;
@@ -578,5 +539,4 @@ char *mastercore::c_strPropertyType(int i)
 
   return (char *) "*** property type error ***";
 }
-
 
