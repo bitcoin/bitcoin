@@ -60,26 +60,24 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
 {
-    CMPSPInfo::Entry spProperty;
-    CMPSPInfo::Entry spDesProperty;
+    // temp commentary - Z rewrite to be more similar to existing calls
 
-    _my_sps->getSP(obj.getProperty(), spProperty);
-    _my_sps->getSP(obj.getDesProperty(), spDesProperty);
-
-    std::string strAmountOriginal = FormatMP(obj.getProperty(), obj.getAmountForSale());
-    std::string strAmountDesired = FormatMP(obj.getDesProperty(), obj.getAmountDesired());
-    std::string strEcosystem = isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main";
-
+    bool propertyIdForSaleIsDivisible = isPropertyDivisible(obj.getProperty());
+    bool propertyIdDesiredIsDivisible = isPropertyDivisible(obj.getDesProperty());
+    std::string strAmountForSale = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountForSale());
+    std::string strAmountRemaining = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountRemaining());
+    std::string strAmountDesired = FormatMP(propertyIdDesiredIsDivisible, obj.getAmountDesired());
     // add data to JSON object
     metadex_obj.push_back(Pair("address", obj.getAddr()));
     metadex_obj.push_back(Pair("txid", obj.getHash().GetHex()));
-    metadex_obj.push_back(Pair("ecosystem", strEcosystem));
-    metadex_obj.push_back(Pair("property_owned", (uint64_t) obj.getProperty()));
-    metadex_obj.push_back(Pair("property_desired", (uint64_t) obj.getDesProperty()));
-    metadex_obj.push_back(Pair("property_owned_divisible", spProperty.isDivisible()));
-    metadex_obj.push_back(Pair("property_desired_divisible", spDesProperty.isDivisible()));
-    metadex_obj.push_back(Pair("amount_original", strAmountOriginal));
-    metadex_obj.push_back(Pair("amount_desired", strAmountDesired));
+    if (obj.getAction() == 4) metadex_obj.push_back(Pair("ecosystem", isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main"));
+    metadex_obj.push_back(Pair("propertyidforsale", (uint64_t) obj.getProperty()));
+    metadex_obj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
+    metadex_obj.push_back(Pair("amountforsale", strAmountForSale));
+    metadex_obj.push_back(Pair("amountremaining", strAmountRemaining));
+    metadex_obj.push_back(Pair("propertyiddesired", (uint64_t) obj.getDesProperty()));
+    metadex_obj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
+    metadex_obj.push_back(Pair("amountdesired", strAmountDesired));
     metadex_obj.push_back(Pair("action", (int) obj.getAction()));
     metadex_obj.push_back(Pair("block", obj.getBlock()));
     metadex_obj.push_back(Pair("blocktime", obj.getBlockTime()));
