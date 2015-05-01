@@ -314,79 +314,78 @@ bool MetaDEx_compare::operator()(const CMPMetaDEx &lhs, const CMPMetaDEx &rhs) c
     else return lhs.getBlock() < rhs.getBlock();
 }
 
+bool mastercore::MetaDEx_INSERT(CMPMetaDEx objMetaDEx)
+{
+    // Create an empty price map (to use in case price map for this property does not already exist)
+    md_PricesMap temp_prices;
+    // Attempt to obtain the price map for the property
+    md_PricesMap *p_prices = get_Prices(objMetaDEx.getProperty());
+
+    // Create an empty set of metadex objects (to use in case no set currently exists at this price)
+    md_Set temp_indexes;
+    md_Set *p_indexes = NULL;
+
+    // Prepare for return code
+    std::pair <md_Set::iterator, bool> ret;
+
+    // Attempt to obtain a set of metadex objects for this price from the price map
+    if (p_prices) p_indexes = get_Indexes(p_prices, objMetaDEx.effectivePrice());
+    // See if the set was populated, if not no set exists at this price level, use the empty set that we created earlier
+    if (!p_indexes) p_indexes = &temp_indexes;
+
+    // Attempt to insert the metadex object into the set
+    ret = p_indexes->insert(objMetaDEx);
+    if (false == ret.second) return false;
+
+    // If a prices map did not exist for this property, set p_prices to the temp empty price map
+    if (!p_prices) p_prices = &temp_prices;
+
+    // Update the prices map with the new set at this price
+    (*p_prices)[objMetaDEx.effectivePrice()] = *p_indexes;
+
+    // Set the metadex map for the property to the updated (or new if it didn't exist) price map
+    metadex[objMetaDEx.getProperty()] = *p_prices;
+
+    return true;
+}
+
 // pretty much directly linked to the ADD TX21 command off the wire
 int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64_t amount, int block, uint32_t property_desired, int64_t amount_desired, const uint256& txid, unsigned int idx)
 {
     int rc = METADEX_ERROR -1;
 
-    // MetaDEx implementation phase 1 check
+    // Ensure that one side of the trade is MSC/TMSC (phase 1 check)
     if ((prop != OMNI_PROPERTY_MSC) && (property_desired != OMNI_PROPERTY_MSC) &&
-            (prop != OMNI_PROPERTY_TMSC) && (property_desired != OMNI_PROPERTY_TMSC)) {
-        return METADEX_ERROR -800;
-    }
+        (prop != OMNI_PROPERTY_TMSC) && (property_desired != OMNI_PROPERTY_TMSC)) return METADEX_ERROR -800;
 
-    // store the data into the temp MetaDEx object here
+    // Create a MetaDEx object from paremeters
     CMPMetaDEx new_mdex(sender_addr, block, prop, amount, property_desired, amount_desired, txid, idx, CMPTransaction::ADD);
-    XDOUBLE neworder_buyersprice = new_mdex.effectivePrice();
-
     if (msc_debug_metadex1) file_log("%s(); buyer obj: %s\n", __FUNCTION__, new_mdex.ToString());
 
-    // given the property and the price find the proper place for insertion
+    // Ensure this is not a badly priced trade (for example due to zero amounts)
+    if (0 >= new_mdex.effectivePrice()) return METADEX_ERROR -66;
 
-    if (0 >= neworder_buyersprice) {
-        // do not work with 0 prices
-        return METADEX_ERROR -66;
-    }
-
+    // Match against existing trades, remainder of the order will be put into the order book
     if (msc_debug_metadex3) MetaDEx_debug_print();
-
-    // TRADE, check matches, remainder of the order will be put into the order book
     x_Trade(&new_mdex);
-
     if (msc_debug_metadex3) MetaDEx_debug_print();
 
-    // plain insert
-    if (0 < new_mdex.getAmountForSale()) { // not added nor subtracted, insert as new or post-traded amounts
-        md_PricesMap temp_prices, *p_prices = get_Prices(prop);
-        md_Set temp_indexes, *p_indexes = NULL;
-        std::pair<md_Set::iterator, bool> ret;
-
-        if (p_prices) {
-            p_indexes = get_Indexes(p_prices, neworder_buyersprice);
-        }
-
-        if (!p_indexes) p_indexes = &temp_indexes;
-
-        ret = p_indexes->insert(new_mdex);
-
-        if (false == ret.second) {
+    // Insert the remaining order into the MetaDEx maps
+    if (0 < new_mdex.getAmountForSale()) { //switch to getAmountRemaining() when ready
+        if (!MetaDEx_INSERT(new_mdex)) {
             file_log("%s() ERROR: ALREADY EXISTS, line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+            return METADEX_ERROR -70;
         } else {
-            // TODO: think about failure scenarios
-            // FIXME
-            if (update_tally_map(sender_addr, prop, -new_mdex.getAmountForSale(), BALANCE)) // subtract from what's available
-            {
-                // TODO: think about failure scenarios
-                // FIXME
-                update_tally_map(sender_addr, prop, new_mdex.getAmountForSale(), METADEX_RESERVE); // put in reserve
+            // TODO: think about failure scenarios // FIXME
+            if (update_tally_map(sender_addr, prop, -new_mdex.getAmountForSale(), BALANCE)) { // move from balance to reserve
+                update_tally_map(sender_addr, prop, new_mdex.getAmountForSale(), METADEX_RESERVE);
             }
-
-            PriceCheck("Insert", neworder_buyersprice, new_mdex.effectivePrice());
-
-            if (msc_debug_metadex1) file_log("==== INSERTED: %s= %s\n", xToString(neworder_buyersprice), new_mdex.ToString());
+            if (msc_debug_metadex1) file_log("==== INSERTED: %s= %s\n", xToString(new_mdex.effectivePrice()), new_mdex.ToString());
+            if (msc_debug_metadex3) MetaDEx_debug_print();
         }
-
-        if (!p_prices) p_prices = &temp_prices;
-
-        (*p_prices)[neworder_buyersprice] = *p_indexes;
-
-        metadex[prop] = *p_prices;
     }
 
     rc = 0;
-
-    if (msc_debug_metadex3) MetaDEx_debug_print();
-
     return rc;
 }
 

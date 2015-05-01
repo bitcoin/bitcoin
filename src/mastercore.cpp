@@ -1685,55 +1685,17 @@ int input_mp_offers_string(const string &s)
   blocktimelimit = atoi(vstr[i++]); // metadex: index of tx in block
   txidStr = vstr[i++];
 
-  if (OMNI_PROPERTY_BTC == prop_desired)
-  {
-  const string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr);
-  CMPOffer newOffer(offerBlock, amountOriginal, prop, btcDesired, minFee, blocktimelimit, uint256(txidStr));
-
-    if (my_offers.insert(std::make_pair(combo, newOffer)).second)
-    {
-      return 0;
-    }
-    else
-    {
-      return -1;
-    }
+  if (OMNI_PROPERTY_BTC == prop_desired) {
+      const string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr);
+      CMPOffer newOffer(offerBlock, amountOriginal, prop, btcDesired, minFee, blocktimelimit, uint256(txidStr));
+      if (my_offers.insert(std::make_pair(combo, newOffer)).second) { return 0; } else { return -1; }
+  } else {
+      assert(10 == vstr.size());
+      left_forsale = boost::lexical_cast<uint64_t>(vstr[i++]);
+      CMPMetaDEx new_mdex(sellerAddr, offerBlock, prop, amountOriginal, prop_desired,
+          btcDesired, uint256(txidStr), blocktimelimit, (unsigned char) minFee, left_forsale );
+      if (MetaDEx_INSERT(new_mdex)) { return 0; } else { return -1; }
   }
-  else
-  {
-    assert(10 == vstr.size());
-
-    left_forsale = boost::lexical_cast<uint64_t>(vstr[i++]);
-
-    CMPMetaDEx new_mdex(sellerAddr, offerBlock, prop, amountOriginal, prop_desired, 
-    btcDesired, uint256(txidStr), blocktimelimit, (unsigned char) minFee, left_forsale );
-
-    XDOUBLE neworder_price = (XDOUBLE)amountOriginal / (XDOUBLE)btcDesired;
-
-    if (0 >= neworder_price) return METADEX_ERROR -66;
-
-    md_PricesMap temp_prices, *p_prices = get_Prices(prop);
-    md_Set temp_indexes, *p_indexes = NULL;
-
-    std::pair<md_Set::iterator,bool> ret;
-
-    if (p_prices) p_indexes = get_Indexes(p_prices, neworder_price);
-
-    if (!p_indexes) p_indexes = &temp_indexes;
-    {
-      ret = p_indexes->insert(new_mdex);
-
-      if (false == ret.second) return -1;
-    }
-
-    if (!p_prices) p_prices = &temp_prices;
-
-    (*p_prices)[neworder_price] = *p_indexes;
-
-    metadex[prop] = *p_prices;
-  }
-
-  return 0;
 }
 
 // seller-address, property, buyer-address, amount, fee, block
