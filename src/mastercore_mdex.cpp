@@ -259,6 +259,13 @@ XDOUBLE CMPMetaDEx::effectivePrice() const
     return (effective_price);
 }
 
+XDOUBLE CMPMetaDEx::inversePrice() const
+{
+    XDOUBLE inverse_price = 0;
+    if (amount_desired) inverse_price = (XDOUBLE) amount_forsale / (XDOUBLE) amount_desired;
+    return inverse_price;
+}
+
 void CMPMetaDEx::Set(const std::string& sa, int b, unsigned int c, uint64_t nValue, unsigned int cd, uint64_t ad, const uint256& tx, unsigned int i, unsigned char suba)
 {
     addr = sa;
