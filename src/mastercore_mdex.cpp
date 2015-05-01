@@ -24,7 +24,7 @@ using namespace mastercore;
 
 md_PropertiesMap mastercore::metadex;
 
-md_PricesMap* mastercore::get_Prices(unsigned int prop)
+md_PricesMap* mastercore::get_Prices(uint32_t prop)
 {
     md_PropertiesMap::iterator it = metadex.find(prop);
 
@@ -95,8 +95,8 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
 {
     const CMPMetaDEx* p_older = NULL;
     md_PricesMap* prices = NULL;
-    const unsigned int prop = newo->getProperty();
-    const unsigned int desprop = newo->getDesProperty();
+    const uint32_t prop = newo->getProperty();
+    const uint32_t desprop = newo->getDesProperty();
     MatchReturnType NewReturn = NOTHING;
     bool bBuyerSatisfied = false;
     const XDOUBLE buyersprice = newo->effectivePrice();
@@ -266,7 +266,7 @@ XDOUBLE CMPMetaDEx::inversePrice() const
     return inverse_price;
 }
 
-void CMPMetaDEx::Set(const std::string& sa, int b, unsigned int c, uint64_t nValue, unsigned int cd, uint64_t ad, const uint256& tx, unsigned int i, unsigned char suba)
+void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, unsigned char suba)
 {
     addr = sa;
     block = b;
@@ -298,7 +298,7 @@ void CMPMetaDEx::saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const
         (unsigned int) subaction,
         idx,
         txid.ToString(),
-        still_left_forsale
+        amount_remaining
     );
 
     // add the line to the hash
@@ -315,7 +315,7 @@ bool MetaDEx_compare::operator()(const CMPMetaDEx &lhs, const CMPMetaDEx &rhs) c
 }
 
 // pretty much directly linked to the ADD TX21 command off the wire
-int mastercore::MetaDEx_ADD(const std::string& sender_addr, unsigned int prop, uint64_t amount, int block, unsigned int property_desired, uint64_t amount_desired, const uint256& txid, unsigned int idx)
+int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64_t amount, int block, uint32_t property_desired, int64_t amount_desired, const uint256& txid, unsigned int idx)
 {
     int rc = METADEX_ERROR -1;
 
@@ -390,7 +390,7 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, unsigned int prop, u
     return rc;
 }
 
-int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned int prop, uint64_t amount, unsigned int property_desired, uint64_t amount_desired)
+int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block, const std::string& sender_addr, uint32_t prop, int64_t amount, uint32_t property_desired, int64_t amount_desired)
 {
     int rc = METADEX_ERROR -20;
     CMPMetaDEx mdex(sender_addr, 0, prop, amount, property_desired, amount_desired, 0, 0, CMPTransaction::CANCEL_AT_PRICE);
@@ -444,7 +444,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
     return rc;
 }
 
-int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned int prop, unsigned int property_desired)
+int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int block, const std::string& sender_addr, uint32_t prop, uint32_t property_desired)
 {
     int rc = METADEX_ERROR -30;
     md_PricesMap* prices = get_Prices(prop);
@@ -556,7 +556,7 @@ void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
 {
     file_log("<<<\n");
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-        unsigned int prop = my_it->first;
+        uint32_t prop = my_it->first;
 
         file_log(" ## property: %u\n", prop);
         md_PricesMap& prices = my_it->second;
