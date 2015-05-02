@@ -814,16 +814,16 @@ unsigned short version_TopAllowed;
 // 10) need a locking mechanism between Core & Qt -- to retrieve the tally, for instance, this and similar to this: LOCK(wallet->cs_wallet);
 //
 
-uint64_t calculate_and_update_devmsc(unsigned int nTime)
+int64_t calculate_and_update_devmsc(unsigned int nTime)
 {
-//do nothing if before end of fundraiser 
+//do nothing if before end of fundraiser
 if (nTime < 1377993874) return -9919;
 
 // taken mainly from msc_validate.py: def get_available_reward(height, c)
-uint64_t devmsc = 0;
+int64_t devmsc = 0;
 int64_t exodus_delta;
 // spec constants:
-const uint64_t all_reward = 5631623576222;
+const int64_t all_reward = 5631623576222;
 const double seconds_in_one_year = 31556926;
 const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
 const double years = seconds_passed/seconds_in_one_year;
@@ -837,6 +837,9 @@ const double available_reward=all_reward * part_available;
 
   // skip if a block's timestamp is older than that of a previous one!
   if (0>exodus_delta) return 0;
+
+  // sanity check that devmsc isn't an impossible value
+  if (devmsc > all_reward || 0 > devmsc) return -9918;
 
   update_tally_map(exodus_address, OMNI_PROPERTY_MSC, exodus_delta, BALANCE);
   exodus_prev = devmsc;
