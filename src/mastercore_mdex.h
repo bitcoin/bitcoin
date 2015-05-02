@@ -1,8 +1,6 @@
 #ifndef MASTERCORE_MDEX_H
 #define MASTERCORE_MDEX_H
 
-#include "mastercore_log.h"
-
 #include "chain.h"
 #include "main.h"
 #include "uint256.h"
@@ -50,14 +48,7 @@ public:
     int64_t getAmountDesired() const;
     int64_t getAmountRemaining() const { return amount_remaining; }
 
-    void setAmountRemaining(int64_t ar, const std::string& label = "")
-    {
-        amount_remaining = ar;
-        file_log("setAmountRemaining(%ld %s):%s\n", ar, label, ToString());
-
-        int64_t ad = getAmountDesired();
-        file_log("setAmountDesired(%ld %s):%s\n", ad, label, ToString());
-    }
+    void setAmountRemaining(int64_t ar, const std::string& label = "");
 
     unsigned char getAction() const { return subaction; }
 

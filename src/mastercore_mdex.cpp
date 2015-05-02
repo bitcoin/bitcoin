@@ -262,6 +262,15 @@ int64_t CMPMetaDEx::getAmountDesired() const
     return xToInt64(xStillDesired);
 }
 
+void CMPMetaDEx::setAmountRemaining(int64_t ar, const std::string& label)
+{
+    amount_remaining = ar;
+    file_log("setAmountRemaining(%ld %s):%s\n", ar, label, ToString());
+
+    int64_t ad = getAmountDesired();
+    file_log("setAmountDesired(%ld %s):%s\n", ad, label, ToString());
+}
+
 void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, unsigned char suba)
 {
     addr = sa;
