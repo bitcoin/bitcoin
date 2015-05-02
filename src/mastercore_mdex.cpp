@@ -99,11 +99,9 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
     const uint32_t desprop = newo->getDesProperty();
     MatchReturnType NewReturn = NOTHING;
     bool bBuyerSatisfied = false;
-    const XDOUBLE buyersprice = newo->effectivePrice();
-    const XDOUBLE desprice = (1 / buyersprice); // inverse, to be matched against that of the existing older order
 
     if (msc_debug_metadex1) file_log("%s(%s: prop=%u, desprop=%u, desprice= %s);newo: %s\n",
-        __FUNCTION__, newo->getAddr(), prop, desprop, xToString(desprice), newo->ToString());
+        __FUNCTION__, newo->getAddr(), prop, desprop, xToString(newo->inversePrice()), newo->ToString());
 
     prices = get_Prices(desprop);
 
@@ -118,10 +116,10 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
         XDOUBLE sellers_price = my_it->first;
 
         if (msc_debug_metadex2) file_log("comparing prices: desprice %s needs to be GREATER THAN OR EQUAL TO %s\n",
-            xToString(desprice), xToString(sellers_price));
+            xToString(newo->inversePrice()), xToString(sellers_price));
 
         // Is the desired price check satisfied? The buyer's inverse price must be larger than that of the seller.
-        if (desprice < sellers_price) continue;
+        if (newo->inversePrice() < sellers_price) continue;
 
         md_Set* indexes = &(my_it->second);
         
@@ -199,7 +197,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             if (0 < buyer_amountStillForSale) {
                 NewReturn = TRADED_MOREINBUYER;
 
-                PriceCheck(getTradeReturnType(NewReturn), buyersprice, newo->effectivePrice());
+                PriceCheck(getTradeReturnType(NewReturn), newo->effectivePrice(), newo->effectivePrice());
             } else {
                 bBuyerSatisfied = true;
             }
