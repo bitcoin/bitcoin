@@ -47,18 +47,12 @@ public:
     unsigned int getDesProperty() const { return desired_property; }
 
     int64_t getAmountForSale() const { return amount_forsale; }
-    int64_t getAmountDesired() const { return amount_desired; }
+    int64_t getAmountDesired() const;
     int64_t getAmountRemaining() const { return amount_remaining; }
-
-    void setAmountForSale(int64_t ao, const std::string& label = "")
-    {
-        amount_forsale = ao;
-        file_log("%s(%ld %s):%s\n", __FUNCTION__, ao, label, ToString());
-    }
 
     void setAmountDesired(int64_t ad, const std::string& label = "")
     {
-        amount_desired = ad;
+        // amount_desired = ad;
         file_log("%s(%ld %s):%s\n", __FUNCTION__, ad, label, ToString());
     }
 
@@ -88,7 +82,12 @@ public:
         amount_remaining(0), subaction(0) {}
 
     CMPMetaDEx(const std::string& addr, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad,
-               const uint256& tx, uint32_t i, unsigned char suba, int64_t ar = 0)
+               const uint256& tx, uint32_t i, unsigned char suba)
+      : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
+        amount_remaining(nValue), subaction(suba), addr(addr) {}
+
+    CMPMetaDEx(const std::string& addr, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad,
+               const uint256& tx, uint32_t i, unsigned char suba, int64_t ar)
       : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
         amount_remaining(ar), subaction(suba), addr(addr) {}
 

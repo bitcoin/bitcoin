@@ -145,9 +145,9 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             // p_older is the old order pointer
             // newo is the new order pointer
             // the price in the older order is used
-            const int64_t seller_amountForSale = p_older->getAmountForSale();
+            const int64_t seller_amountForSale = p_older->getAmountRemaining();
             const int64_t seller_amountWanted = p_older->getAmountDesired();
-            const int64_t buyer_amountOffered = newo->getAmountForSale();
+            const int64_t buyer_amountOffered = newo->getAmountRemaining();
 
             if (msc_debug_metadex1) file_log("$$ trading using price: %s; seller: forsale= %ld, wanted= %ld, buyer amount offered= %ld\n",
                 xToString(sellers_price), seller_amountForSale, seller_amountWanted, buyer_amountOffered);
@@ -166,7 +166,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             XDOUBLE x_buyer_got = (XDOUBLE) seller_amountGot / sellers_price;
             const int64_t buyer_amountGot = xToInt64(x_buyer_got);
 
-            const int64_t seller_amountLeft = p_older->getAmountForSale() - buyer_amountGot;
+            const int64_t seller_amountLeft = p_older->getAmountRemaining() - buyer_amountGot;
 
             if (msc_debug_metadex1) file_log("$$ buyer_got= %ld, seller_got= %ld, seller_left_for_sale= %ld, buyer_still_for_sale= %ld\n",
                 buyer_amountGot, seller_amountGot, seller_amountLeft, buyer_amountStillForSale);
@@ -177,7 +177,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             ///////////////////////////
             CMPMetaDEx seller_replacement = *p_older;
 
-            seller_replacement.setAmountForSale(seller_amountLeft, "seller_replacement");
+            seller_replacement.setAmountRemaining(seller_amountLeft, "seller_replacement");
             seller_replacement.setAmountDesired(seller_amountStillDesired, "seller_replacement");
 
             // transfer the payment property from buyer to seller
@@ -202,7 +202,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             XDOUBLE will_pay = (XDOUBLE) buyer_amountStillForSale * newo->effectivePrice();
             const int64_t buyer_amountStillDesired = xToInt64(will_pay);
 
-            newo->setAmountForSale(buyer_amountStillForSale, "buyer");
+            newo->setAmountRemaining(buyer_amountStillForSale, "buyer");
             newo->setAmountDesired(buyer_amountStillDesired, "buyer");
 
             if (0 < buyer_amountStillForSale) {
@@ -233,7 +233,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
 
             if (bBuyerSatisfied) {
                 // insert the updated one in place of the old
-                if (0 < seller_replacement.getAmountForSale()) {
+                if (0 < seller_replacement.getAmountRemaining()) {
                     file_log("++ inserting seller_replacement: %s\n", seller_replacement.ToString());
                     indexes->insert(seller_replacement);
                 }
@@ -264,6 +264,13 @@ XDOUBLE CMPMetaDEx::inversePrice() const
     XDOUBLE inverse_price = 0;
     if (amount_desired) inverse_price = (XDOUBLE) amount_forsale / (XDOUBLE) amount_desired;
     return inverse_price;
+}
+
+int64_t CMPMetaDEx::getAmountDesired() const
+{
+    XDOUBLE xStillDesired = (XDOUBLE) getAmountRemaining() * effectivePrice();
+
+    return xToInt64(xStillDesired);
 }
 
 void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, unsigned char suba)
@@ -371,14 +378,14 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
     if (msc_debug_metadex3) MetaDEx_debug_print();
 
     // Insert the remaining order into the MetaDEx maps
-    if (0 < new_mdex.getAmountForSale()) { //switch to getAmountRemaining() when ready
+    if (0 < new_mdex.getAmountRemaining()) { //switch to getAmountRemaining() when ready
         if (!MetaDEx_INSERT(new_mdex)) {
             file_log("%s() ERROR: ALREADY EXISTS, line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
             return METADEX_ERROR -70;
         } else {
             // TODO: think about failure scenarios // FIXME
-            if (update_tally_map(sender_addr, prop, -new_mdex.getAmountForSale(), BALANCE)) { // move from balance to reserve
-                update_tally_map(sender_addr, prop, new_mdex.getAmountForSale(), METADEX_RESERVE);
+            if (update_tally_map(sender_addr, prop, -new_mdex.getAmountRemaining(), BALANCE)) { // move from balance to reserve
+                update_tally_map(sender_addr, prop, new_mdex.getAmountRemaining(), METADEX_RESERVE);
             }
             if (msc_debug_metadex1) file_log("==== INSERTED: %s= %s\n", xToString(new_mdex.effectivePrice()), new_mdex.ToString());
             if (msc_debug_metadex3) MetaDEx_debug_print();
@@ -427,12 +434,12 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
             file_log("%s(): REMOVING %s\n", __FUNCTION__, p_mdex->ToString());
 
             // move from reserve to main
-            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountForSale(), METADEX_RESERVE);
-            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountForSale(), BALANCE);
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE);
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE);
 
             // record the cancellation
             bool bValid = true;
-            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountForSale());
+            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
             indexes->erase(iitt++);
         }
@@ -476,12 +483,12 @@ int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int bl
             file_log("%s(): REMOVING %s\n", __FUNCTION__, p_mdex->ToString());
 
             // move from reserve to main
-            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountForSale(), METADEX_RESERVE);
-            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountForSale(), BALANCE);
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE);
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE);
 
             // record the cancellation
             bool bValid = true;
-            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountForSale());
+            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
             indexes->erase(iitt++);
         }
@@ -533,12 +540,12 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
                 file_log("%s(): REMOVING %s\n", __FUNCTION__, it->ToString());
 
                 // move from reserve to balance
-                update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountForSale(), METADEX_RESERVE);
-                update_tally_map(it->getAddr(), it->getProperty(), it->getAmountForSale(), BALANCE);
+                update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE);
+                update_tally_map(it->getAddr(), it->getProperty(), it->getAmountRemaining(), BALANCE);
 
                 // record the cancellation
                 bool bValid = true;
-                p_txlistdb->recordMetaDExCancelTX(txid, it->getHash(), bValid, block, it->getProperty(), it->getAmountForSale());
+                p_txlistdb->recordMetaDExCancelTX(txid, it->getHash(), bValid, block, it->getProperty(), it->getAmountRemaining());
 
                 indexes.erase(it++);
             }
