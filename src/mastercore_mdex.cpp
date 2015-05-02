@@ -5,6 +5,8 @@
 #include "mastercore_log.h"
 #include "mastercore_tx.h"
 
+#include "chain.h"
+#include "main.h"
 #include "tinyformat.h"
 #include "uint256.h"
 
@@ -260,6 +262,12 @@ int64_t CMPMetaDEx::getAmountDesired() const
     XDOUBLE xStillDesired = (XDOUBLE) getAmountRemaining() * effectivePrice();
 
     return xToInt64(xStillDesired);
+}
+
+uint64_t CMPMetaDEx::getBlockTime() const
+{
+    CBlockIndex* pblockindex = chainActive[block];
+    return pblockindex->GetBlockTime();
 }
 
 void CMPMetaDEx::setAmountRemaining(int64_t ar, const std::string& label)

@@ -1,8 +1,6 @@
 #ifndef MASTERCORE_MDEX_H
 #define MASTERCORE_MDEX_H
 
-#include "chain.h"
-#include "main.h"
 #include "uint256.h"
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
@@ -57,11 +55,7 @@ public:
     int getBlock() const { return block; }
     unsigned int getIdx() const { return idx; }
 
-    uint64_t getBlockTime() const
-    {
-        CBlockIndex* pblockindex = chainActive[block];
-        return pblockindex->GetBlockTime();
-    }
+    uint64_t getBlockTime() const;
 
     // needed only by the RPC functions
     // needed only by the RPC functions
