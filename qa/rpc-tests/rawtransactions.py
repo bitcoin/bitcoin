@@ -8,8 +8,8 @@
 # that spend (directly or indirectly) coinbase transactions.
 #
 
-from test_framework import BitcoinTestFramework
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 from pprint import pprint
 from time import sleep
 

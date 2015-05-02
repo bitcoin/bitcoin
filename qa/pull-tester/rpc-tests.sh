@@ -37,7 +37,7 @@ testScriptsExt=(
     'bipdersig.py'
     'getblocktemplate_longpoll.py'
     'getblocktemplate_proposals.py'
-    'prune.py'
+    'pruning.py'
     'forknotify.py'
     'invalidateblock.py'
     'keypool.py'
@@ -51,21 +51,25 @@ testScriptsExt=(
     'rawtransactions.py'
 #    'forknotify.py'
 );
+
+extArg="-extended"
+passOn=${@#$extArg}
+
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
     for (( i = 0; i < ${#testScripts[@]}; i++ ))
     do
-        if [ -z "$1" ] || [ "$1" == "-extended" ] || [ "$1" == "${testScripts[$i]}" ] || [ "$1.py" == "${testScripts[$i]}" ]
+        if [ -z "$1" ] || [ "${1:0:1}" == "-" ] || [ "$1" == "${testScripts[$i]}" ] || [ "$1.py" == "${testScripts[$i]}" ]
         then
             echo -e "Running testscript \033[1m${testScripts[$i]}...\033[0m"
-            ${BUILDDIR}/qa/rpc-tests/${testScripts[$i]} --srcdir "${BUILDDIR}/src"
+            ${BUILDDIR}/qa/rpc-tests/${testScripts[$i]} --srcdir "${BUILDDIR}/src" ${passOn}
         fi
     done
     for (( i = 0; i < ${#testScriptsExt[@]}; i++ ))
     do
-        if [ "$1" == "-extended" ] || [ "$1" == "${testScriptsExt[$i]}" ] || [ "$1.py" == "${testScriptsExt[$i]}" ]
+        if [ "$1" == $extArg ] || [ "$1" == "${testScriptsExt[$i]}" ] || [ "$1.py" == "${testScriptsExt[$i]}" ]
         then
-            echo -e "Running testscript \033[1m${testScriptsExt[$i]}...\033[0m"
-            ${BUILDDIR}/qa/rpc-tests/${testScriptsExt[$i]} --srcdir "${BUILDDIR}/src"
+            echo -e "Running \033[1m2nd level\033[0m testscript \033[1m${testScriptsExt[$i]}...\033[0m"
+            ${BUILDDIR}/qa/rpc-tests/${testScriptsExt[$i]} --srcdir "${BUILDDIR}/src" ${passOn}
         fi
     done
 else
