@@ -19,12 +19,12 @@ that flag, we use a block time before the switchover date).
 NOTE: This test is very slow and may take more than 40 minutes to run.
 '''
 
-from test_framework import ComparisonTestFramework
-from util import *
-from comptool import TestInstance, TestManager
-from mininode import *
-from blocktools import *
-from script import *
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import *
+from test_framework.comptool import TestInstance, TestManager
+from test_framework.mininode import *
+from test_framework.blocktools import *
+from test_framework.script import *
 import logging
 import copy
 import json
@@ -42,7 +42,7 @@ class ScriptTestFile(object):
 
     def load_files(self):
         for f in self.files:
-            self.data.extend(json.loads(open(f).read()))
+            self.data.extend(json.loads(open(os.path.dirname(os.path.abspath(__file__))+"/"+f).read()))
 
     # Skip over records that are not long enough to be tests
     def get_records(self):

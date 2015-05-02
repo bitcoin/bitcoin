@@ -7,10 +7,9 @@
 # Test proper accounting with malleable transactions
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 from decimal import Decimal
-from util import *
 import os
 import shutil
 

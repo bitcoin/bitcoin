@@ -8,9 +8,8 @@
 # the blockchain is re-organized.
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 import os
 import shutil
 
@@ -34,7 +33,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()
-
         # Spend block 1/2/3's coinbase transactions
         # Mine a block.
         # Create three more transactions, spending the spends

@@ -16,9 +16,8 @@ import subprocess
 import tempfile
 import traceback
 
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
-from netutil import *
+from test_framework.util import *
+from test_framework.netutil import *
 
 def run_bind_test(tmpdir, allow_ips, connect_to, addresses, expected):
     '''

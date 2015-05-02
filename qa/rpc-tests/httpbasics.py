@@ -7,8 +7,8 @@
 # Test REST interface
 #
 
-from test_framework import BitcoinTestFramework
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 import base64
 
 try:
