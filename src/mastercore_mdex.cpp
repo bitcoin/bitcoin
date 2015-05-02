@@ -272,7 +272,7 @@ void CMPMetaDEx::setAmountRemaining(int64_t ar, const std::string& label)
     file_log("setAmountDesired(%ld %s):%s\n", ad, label, ToString());
 }
 
-void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, unsigned char suba)
+void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, uint8_t suba)
 {
     addr = sa;
     block = b;
@@ -301,7 +301,7 @@ void CMPMetaDEx::saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const
         property,
         amount_desired,
         desired_property,
-        (unsigned int) subaction,
+        subaction,
         idx,
         txid.ToString(),
         amount_remaining

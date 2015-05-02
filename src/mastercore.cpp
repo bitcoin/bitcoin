@@ -1661,41 +1661,34 @@ int input_msc_balances_string(const string &s)
 
 // seller-address, offer_block, amount, property, desired BTC , property_desired, fee, blocktimelimit
 // 13z1JFtDMGTYQvtMq5gs4LmCztK3rmEZga,299076,76375000,1,6415500,0,10000,6
-int input_mp_offers_string(const string &s)
+int input_mp_offers_string(const std::string& s)
 {
-  int offerBlock;
-  uint64_t amountOriginal, btcDesired, minFee, left_forsale;
-  unsigned int prop, prop_desired;
-  unsigned char blocktimelimit;
-  std::vector<std::string> vstr;
-  boost::split(vstr, s, boost::is_any_of(" ,="), token_compress_on);
-  string sellerAddr;
-  string txidStr;
-  int i = 0;
+    std::vector<std::string> vstr;
+    boost::split(vstr, s, boost::is_any_of(" ,="), boost::token_compress_on);
 
-  if ((10 != vstr.size()) && (9 != vstr.size())) return -1;
+    if (9 != vstr.size()) return -1;
 
-  sellerAddr = vstr[i++];
-  offerBlock = atoi(vstr[i++]);
-  amountOriginal = boost::lexical_cast<uint64_t>(vstr[i++]);
-  prop = boost::lexical_cast<unsigned int>(vstr[i++]);
-  btcDesired = boost::lexical_cast<uint64_t>(vstr[i++]); // metadex: amount of desired property
-  prop_desired = boost::lexical_cast<unsigned int>(vstr[i++]);
-  minFee = boost::lexical_cast<uint64_t>(vstr[i++]);  // metadex: subaction
-  blocktimelimit = atoi(vstr[i++]); // metadex: index of tx in block
-  txidStr = vstr[i++];
+    int i = 0;
 
-  if (OMNI_PROPERTY_BTC == prop_desired) {
-      const string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr);
-      CMPOffer newOffer(offerBlock, amountOriginal, prop, btcDesired, minFee, blocktimelimit, uint256(txidStr));
-      if (my_offers.insert(std::make_pair(combo, newOffer)).second) { return 0; } else { return -1; }
-  } else {
-      assert(10 == vstr.size());
-      left_forsale = boost::lexical_cast<uint64_t>(vstr[i++]);
-      CMPMetaDEx new_mdex(sellerAddr, offerBlock, prop, amountOriginal, prop_desired,
-          btcDesired, uint256(txidStr), blocktimelimit, (unsigned char) minFee, left_forsale );
-      if (MetaDEx_INSERT(new_mdex)) { return 0; } else { return -1; }
-  }
+    std::string sellerAddr = vstr[i++];
+    int offerBlock = boost::lexical_cast<int>(vstr[i++]);
+    int64_t amountOriginal = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint32_t prop = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t btcDesired = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint32_t prop_desired = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t minFee = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint8_t blocktimelimit = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
+    uint256 txid = uint256(vstr[i++]);
+
+    // TODO: should this be here? There are usually no sanity checks..
+    if (OMNI_PROPERTY_BTC != prop_desired) return -1;
+
+    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr);
+    CMPOffer newOffer(offerBlock, amountOriginal, prop, btcDesired, minFee, blocktimelimit, txid);
+
+    if (!my_offers.insert(std::make_pair(combo, newOffer)).second) return -1;
+
+    return 0;
 }
 
 // seller-address, property, buyer-address, amount, fee, block
@@ -1812,6 +1805,35 @@ int input_mp_crowdsale_string(const string &s)
   return 0;
 }
 
+// address, block, amount for sale, property, amount desired, property desired, subaction, idx, txid, amount remaining
+int input_mp_mdexorder_string(const std::string& s)
+{
+    std::vector<std::string> vstr;
+    boost::split(vstr, s, boost::is_any_of(" ,="), boost::token_compress_on);
+
+    if (10 != vstr.size()) return -1;
+
+    int i = 0;
+
+    std::string addr = vstr[i++];
+    int block = boost::lexical_cast<int>(vstr[i++]);
+    int64_t amount_forsale = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint32_t property = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t amount_desired = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint32_t desired_property = boost::lexical_cast<uint32_t>(vstr[i++]);
+    uint8_t subaction = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
+    unsigned int idx = boost::lexical_cast<unsigned int>(vstr[i++]);
+    uint256 txid = uint256(vstr[i++]);
+    int64_t amount_remaining = boost::lexical_cast<int64_t>(vstr[i++]);
+
+    CMPMetaDEx mdexObj(addr, block, property, amount_forsale, desired_property,
+            amount_desired, txid, idx, subaction, amount_remaining);
+
+    if (!MetaDEx_INSERT(mdexObj)) return -1;
+
+    return 0;
+}
+
 static int msc_file_load(const string &filename, int what, bool verifyHash = false)
 {
   int lines = 0;
@@ -1829,13 +1851,6 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
 
     case FILETYPE_OFFERS:
       my_offers.clear();
-
-      // FIXME
-      // memory leak ... gotta unallocate inner layers first....
-      // TODO
-      // ...
-      metadex.clear();
-
       inputLineFunc = input_mp_offers_string;
       break;
 
@@ -1851,6 +1866,15 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
     case FILETYPE_CROWDSALES:
       my_crowds.clear();
       inputLineFunc = input_mp_crowdsale_string;
+      break;
+
+    case FILETYPE_MDEXORDERS:
+      // FIXME
+      // memory leak ... gotta unallocate inner layers first....
+      // TODO
+      // ...
+      metadex.clear();
+      inputLineFunc = input_mp_mdexorder_string;
       break;
 
     default:
@@ -1931,6 +1955,7 @@ static char const * const statePrefix[NUM_FILETYPES] = {
     "accepts",
     "globals",
     "crowdsales",
+    "mdexorders",
 };
 
 // returns the height of the state loaded
@@ -2183,7 +2208,6 @@ static int write_state_file( CBlockIndex const *pBlockIndex, int what )
 
   case FILETYPE_OFFERS:
     result = write_mp_offers(file, &shaCtx);
-    result += write_mp_metadex(file, &shaCtx);
     break;
 
   case FILETYPE_ACCEPTS:
@@ -2196,6 +2220,10 @@ static int write_state_file( CBlockIndex const *pBlockIndex, int what )
 
   case FILETYPE_CROWDSALES:
       result = write_mp_crowdsales(file, &shaCtx);
+      break;
+
+  case FILETYPE_MDEXORDERS:
+      result = write_mp_metadex(file, &shaCtx);
       break;
   }
 
@@ -2285,6 +2313,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   write_state_file(pBlockIndex, FILETYPE_ACCEPTS);
   write_state_file(pBlockIndex, FILETYPE_GLOBALS);
   write_state_file(pBlockIndex, FILETYPE_CROWDSALES);
+  write_state_file(pBlockIndex, FILETYPE_MDEXORDERS);
 
   // clean-up the directory
   prune_state_files(pBlockIndex);

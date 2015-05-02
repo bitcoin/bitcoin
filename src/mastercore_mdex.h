@@ -32,7 +32,7 @@ private:
     uint32_t desired_property;
     int64_t amount_desired;
     int64_t amount_remaining;
-    unsigned char subaction;
+    uint8_t subaction;
     std::string addr;
 
 public:
@@ -48,7 +48,7 @@ public:
 
     void setAmountRemaining(int64_t ar, const std::string& label = "");
 
-    unsigned char getAction() const { return subaction; }
+    uint8_t getAction() const { return subaction; }
 
     const std::string& getAddr() const { return addr; }
 
@@ -64,16 +64,16 @@ public:
         amount_remaining(0), subaction(0) {}
 
     CMPMetaDEx(const std::string& addr, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad,
-               const uint256& tx, uint32_t i, unsigned char suba)
+               const uint256& tx, uint32_t i, uint8_t suba)
       : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
         amount_remaining(nValue), subaction(suba), addr(addr) {}
 
     CMPMetaDEx(const std::string& addr, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad,
-               const uint256& tx, uint32_t i, unsigned char suba, int64_t ar)
+               const uint256& tx, uint32_t i, uint8_t suba, int64_t ar)
       : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
         amount_remaining(ar), subaction(suba), addr(addr) {}
 
-    void Set(const std::string&, int, uint32_t, int64_t, uint32_t, int64_t, const uint256&, uint32_t, unsigned char);
+    void Set(const std::string&, int, uint32_t, int64_t, uint32_t, int64_t, const uint256&, uint32_t, uint8_t);
 
     std::string ToString() const;
 
