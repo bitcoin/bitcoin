@@ -19,9 +19,8 @@
 #   k) test ResendWalletTransactions - create transactions, startup fourth node, make sure it syncs
 #
 
-from test_framework import BitcoinTestFramework
-from util import *
-
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 class WalletTest (BitcoinTestFramework):
 

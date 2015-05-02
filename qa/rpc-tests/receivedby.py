@@ -5,9 +5,8 @@
 
 # Exercise the listreceivedbyaddress API
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 
 def get_sub_array_from_array(object_array, to_match):

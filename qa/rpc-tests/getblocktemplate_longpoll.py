@@ -3,9 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 
 def check_array_result(object_array, to_match, expected):
