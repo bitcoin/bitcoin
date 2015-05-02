@@ -130,6 +130,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
         md_Set::iterator iitt;
         for (iitt = indexes->begin(); iitt != indexes->end();) { // specific price, check all properties
             p_older = &(*iitt);
+            assert(p_older->effectivePrice() == sellers_price);
 
             if (msc_debug_metadex1) file_log("Looking at existing: %s (its prop= %u, its des prop= %u) = %s\n",
                 xToString(sellers_price), p_older->getProperty(), p_older->getDesProperty(), p_older->ToString());
