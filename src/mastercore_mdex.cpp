@@ -171,14 +171,9 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             if (msc_debug_metadex1) file_log("$$ buyer_got= %ld, seller_got= %ld, seller_left_for_sale= %ld, buyer_still_for_sale= %ld\n",
                 buyer_amountGot, seller_amountGot, seller_amountLeft, buyer_amountStillForSale);
 
-            XDOUBLE seller_amount_stilldesired = (XDOUBLE) seller_amountLeft * sellers_price;
-            const int64_t seller_amountStillDesired = xToInt64(seller_amount_stilldesired);
-
             ///////////////////////////
             CMPMetaDEx seller_replacement = *p_older;
-
             seller_replacement.setAmountRemaining(seller_amountLeft, "seller_replacement");
-            seller_replacement.setAmountDesired(seller_amountStillDesired, "seller_replacement");
 
             // transfer the payment property from buyer to seller
             // TODO: do something when failing here............
@@ -199,11 +194,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
 
             NewReturn = TRADED;
 
-            XDOUBLE will_pay = (XDOUBLE) buyer_amountStillForSale * newo->effectivePrice();
-            const int64_t buyer_amountStillDesired = xToInt64(will_pay);
-
             newo->setAmountRemaining(buyer_amountStillForSale, "buyer");
-            newo->setAmountDesired(buyer_amountStillDesired, "buyer");
 
             if (0 < buyer_amountStillForSale) {
                 NewReturn = TRADED_MOREINBUYER;

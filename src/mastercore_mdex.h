@@ -50,16 +50,13 @@ public:
     int64_t getAmountDesired() const;
     int64_t getAmountRemaining() const { return amount_remaining; }
 
-    void setAmountDesired(int64_t ad, const std::string& label = "")
-    {
-        // amount_desired = ad;
-        file_log("%s(%ld %s):%s\n", __FUNCTION__, ad, label, ToString());
-    }
-
     void setAmountRemaining(int64_t ar, const std::string& label = "")
     {
         amount_remaining = ar;
-        file_log("%s(%ld %s):%s\n", __FUNCTION__, ar, label, ToString());
+        file_log("setAmountRemaining(%ld %s):%s\n", ar, label, ToString());
+
+        int64_t ad = getAmountDesired();
+        file_log("setAmountDesired(%ld %s):%s\n", ad, label, ToString());
     }
 
     unsigned char getAction() const { return subaction; }
