@@ -61,15 +61,27 @@ class ProxyTest(BitcoinTestFramework):
         self.serv3 = Socks5Server(self.conf3)
         self.serv3.start()
 
-    def setup_nodes(self):
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+        args.extend(["-listen", "-debug=net", "-debug=proxy"])
+
         # Note: proxies are not used to connect to local nodes
         # this is because the proxy to use is based on CService.GetNetwork(), which return NET_UNROUTABLE for localhost
-        return start_nodes(4, self.options.tmpdir, extra_args=[
-            ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf1.addr),'-proxyrandomize=1'], 
-            ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),'-proxyrandomize=0'], 
-            ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf2.addr),'-proxyrandomize=1'], 
-            ['-listen', '-debug=net', '-debug=proxy', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0']
-            ])
+        if n == 0:
+            args.append("-proxy=%s:%i" % self.conf1.addr)
+            args.append("-proxyrandomize=1")
+        elif n == 1:
+            args.append("-proxy=%s:%i" % self.conf1.addr)
+            args.append("-onion=%s:%i" % self.conf2.addr)
+            args.append("-proxyrandomize=0")
+        elif n == 2:
+            args.append("-proxy=%s:%i" % self.conf2.addr)
+            args.append("-proxyrandomize=1")
+        elif n == 3:
+            args.append("-proxy=[%s]:%i" % self.conf3.addr)
+            args.append("-proxyrandomize=0")
+
+        return args
 
     def node_test(self, node, proxies, auth):
         rv = []

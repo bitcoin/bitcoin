@@ -29,12 +29,28 @@ class BitcoinTestFramework(object):
     def add_options(self, parser):
         pass
 
+    def get_node_args(self, n):
+        """
+        Provide extra args to pass to node n when starting it.  This can be
+        overridden by subclasses to provide custom node configurations.
+        """
+
+        return []
+
+    def get_extra_args(self):
+        extra_args = []
+        for i in range(num_nodes):
+            extra_args.append(self.get_node_args(i))
+        return extra_args
+
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+        extra_args = self.get_extra_args()
+        initialize_chain(self.options.tmpdir, extra_args)
 
     def setup_nodes(self):
-        return start_nodes(4, self.options.tmpdir)
+        extra_args = self.get_extra_args()
+        return start_nodes(num_nodes, self.options.tmpdir, extra_args)
 
     def setup_network(self, split = False):
         self.nodes = self.setup_nodes()
@@ -169,12 +185,17 @@ class ComparisonTestFramework(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+        args.extend(['-debug', '-whitelist=127.0.0.1'])
+        return args
+
     def setup_chain(self):
         print "Initializing test directory "+self.options.tmpdir
         initialize_chain_clean(self.options.tmpdir, self.num_nodes)
 
     def setup_network(self):
         self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
-                                    extra_args=[['-debug', '-whitelist=127.0.0.1']] * self.num_nodes,
+                                    self.get_extra_args(),
                                     binary=[self.options.testbinary] +
                                            [self.options.refbinary]*(self.num_nodes-1))

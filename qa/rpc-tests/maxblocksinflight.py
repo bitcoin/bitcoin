@@ -85,9 +85,14 @@ class MaxBlocksInFlightTest(BitcoinTestFramework):
         print "Initializing test directory "+self.options.tmpdir
         initialize_chain_clean(self.options.tmpdir, 1)
 
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+        args.extend(['-debug', '-whitelist=127.0.0.1'])
+        return args
+
     def setup_network(self):
         self.nodes = start_nodes(1, self.options.tmpdir, 
-                                 extra_args=[['-debug', '-whitelist=127.0.0.1']],
+                                 extra_args=self.get_extra_args(),
                                  binary=[self.options.testbinary])
 
     def run_test(self):

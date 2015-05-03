@@ -21,6 +21,8 @@ import re
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
+num_nodes = 4
+
 def p2p_port(n):
     return 11000 + n + os.getpid()%999
 def rpc_port(n):
@@ -72,19 +74,24 @@ def initialize_datadir(dirname, n):
         f.write("rpcport="+str(rpc_port(n))+"\n");
     return datadir
 
-def initialize_chain(test_dir):
+def initialize_chain(test_dir, extra_args=None):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
     bitcoind and bitcoin-cli must be in search path.
     """
 
+    if extra_args is not None:
+        assert len(extra_args) == num_nodes
+
     if not os.path.isdir(os.path.join("cache", "node0")):
         devnull = open("/dev/null", "w+")
         # Create cache directories, run bitcoinds:
-        for i in range(4):
+        for i in range(num_nodes):
             datadir=initialize_datadir("cache", i)
             args = [ os.getenv("BITCOIND", "bitcoind"), "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            if extra_args is not None:
+                args.extend(extra_args[i])
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
@@ -96,7 +103,7 @@ def initialize_chain(test_dir):
                 print "initialize_chain: bitcoin-cli -rpcwait getblockcount completed"
         devnull.close()
         rpcs = []
-        for i in range(4):
+        for i in range(num_nodes):
             try:
                 url = "http://rt:rt@127.0.0.1:%d"%(rpc_port(i),)
                 rpcs.append(AuthServiceProxy(url))
@@ -110,7 +117,7 @@ def initialize_chain(test_dir):
         # at 1 Jan 2014
         block_time = 1388534400
         for i in range(2):
-            for peer in range(4):
+            for peer in range(num_nodes):
                 for j in range(25):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
@@ -121,13 +128,13 @@ def initialize_chain(test_dir):
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
         wait_bitcoinds()
-        for i in range(4):
+        for i in range(num_nodes):
             os.remove(log_filename("cache", i, "debug.log"))
             os.remove(log_filename("cache", i, "db.log"))
             os.remove(log_filename("cache", i, "peers.dat"))
             os.remove(log_filename("cache", i, "fee_estimates.dat"))
 
-    for i in range(4):
+    for i in range(num_nodes):
         from_dir = os.path.join("cache", "node"+str(i))
         to_dir = os.path.join(test_dir,  "node"+str(i))
         shutil.copytree(from_dir, to_dir)
@@ -162,7 +169,7 @@ def _rpchost_to_args(rpchost):
         rv += ['-rpcport=' + rpcport]
     return rv
 
-def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
+def start_node(i, dirname, extra_args=[], rpchost=None, timewait=None, binary=None):
     """
     Start a bitcoind and return RPC connection to it
     """
@@ -170,7 +177,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
     args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
-    if extra_args is not None: args.extend(extra_args)
+    args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     devnull = open("/dev/null", "w+")
     if os.getenv("PYTHON_DEBUG", ""):
@@ -193,7 +200,7 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     """
     Start multiple bitcoinds, return RPC connections to them
     """
-    if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
+    if extra_args is None: extra_args = [ [] for i in range(num_nodes) ]
     if binary is None: binary = [ None for i in range(num_nodes) ]
     return [ start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]) for i in range(num_nodes) ]
 

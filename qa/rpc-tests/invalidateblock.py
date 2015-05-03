@@ -13,17 +13,21 @@ from util import *
 
 class InvalidateTest(BitcoinTestFramework):
     
-        
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 3)
+
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+        args.append("-debug")
+        return args
                  
     def setup_network(self):
         self.nodes = []
         self.is_network_split = False 
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug"]))
+        for i in range(3):
+            self.nodes.append(start_node(i, self.options.tmpdir,
+                                         self.get_node_args(i)))
         
     def run_test(self):
         print "Make sure we repopulate setBlockIndexCandidates after InvalidateBlock:"
