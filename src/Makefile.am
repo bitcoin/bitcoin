@@ -102,12 +102,7 @@ BITCOIN_CORE_H = \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
-  throne.h \
-  throne-payments.h \
-  throne-budget.h \
-  throne-sync.h \
-  throneman.h \
-  throneconfig.h \
+  memusage.h \
   merkleblock.h \
   miner.h \
   mruset.h \
@@ -138,6 +133,12 @@ BITCOIN_CORE_H = \
   support/pagelocker.h \
   support/cleanse.h \
   sync.h \
+  throne.h \
+  throne-payments.h \
+  throne-budget.h \
+  throne-sync.h \
+  throneman.h \
+  throneconfig.h \
   threadsafety.h \
   timedata.h \
   tinyformat.h \
