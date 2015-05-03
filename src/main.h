@@ -119,7 +119,7 @@ extern bool fTxIndex;
 extern bool fIsBareMultisigStd;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
-extern unsigned int nCoinCacheSize;
+extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
