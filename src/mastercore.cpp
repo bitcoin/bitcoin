@@ -2046,51 +2046,51 @@ static int load_most_relevant_state()
   return res;
 }
 
-static int write_msc_balances(ofstream &file, SHA256_CTX *shaCtx)
+static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-  LOCK(cs_tally);
+    LOCK(cs_tally);
 
-  map<string, CMPTally>::iterator iter;
-  for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
-    bool emptyWallet = true;
+    std::map<std::string, CMPTally>::iterator iter;
+    for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
+        bool emptyWallet = true;
 
-    string lineOut = (*iter).first;
-    lineOut.append("=");
-    CMPTally &curAddr = (*iter).second;
-    curAddr.init();
-    unsigned int prop = 0;
-    while (0 != (prop = curAddr.next())) {
-      uint64_t balance = (*iter).second.getMoney(prop, BALANCE);
-      uint64_t sellReserved = (*iter).second.getMoney(prop, SELLOFFER_RESERVE);
-      uint64_t acceptReserved = (*iter).second.getMoney(prop, ACCEPT_RESERVE);
-      const uint64_t metadexReserve = (*iter).second.getMoney(prop, METADEX_RESERVE);
+        std::string lineOut = (*iter).first;
+        lineOut.append("=");
+        CMPTally& curAddr = (*iter).second;
+        curAddr.init();
+        uint32_t propertyId = 0;
+        while (0 != (propertyId = curAddr.next())) {
+            int64_t balance = (*iter).second.getMoney(propertyId, BALANCE);
+            int64_t sellReserved = (*iter).second.getMoney(propertyId, SELLOFFER_RESERVE);
+            int64_t acceptReserved = (*iter).second.getMoney(propertyId, ACCEPT_RESERVE);
+            int64_t metadexReserved = (*iter).second.getMoney(propertyId, METADEX_RESERVE);
 
-      // we don't allow 0 balances to read in, so if we don't write them
-      // it makes things match up better between persisted state and processed state
-      if ( 0 == balance && 0 == sellReserved && 0 == acceptReserved  && 0 == metadexReserve ) {
-        continue;
-      }
+            // we don't allow 0 balances to read in, so if we don't write them
+            // it makes things match up better between persisted state and processed state
+            if (0 == balance && 0 == sellReserved && 0 == acceptReserved && 0 == metadexReserved) {
+                continue;
+            }
 
-      emptyWallet = false;
+            emptyWallet = false;
 
-      lineOut.append(strprintf("%d:%d,%d,%d,%d;",
-          prop,
-          balance,
-          sellReserved,
-          acceptReserved,
-          metadexReserve));
+            lineOut.append(strprintf("%d:%d,%d,%d,%d;",
+                    propertyId,
+                    balance,
+                    sellReserved,
+                    acceptReserved,
+                    metadexReserved));
+        }
+
+        if (false == emptyWallet) {
+            // add the line to the hash
+            SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+
+            // write the line
+            file << lineOut << endl;
+        }
     }
 
-    if (false == emptyWallet) {
-      // add the line to the hash
-      SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
-
-      // write the line
-      file << lineOut << endl;
-    }
-  }
-
-  return 0;
+    return 0;
 }
 
 static int write_mp_offers(ofstream &file, SHA256_CTX *shaCtx)
