@@ -59,6 +59,24 @@ public:
 
     bool GetStats(CCoinsStats& stats) const { return false; }
 };
+
+class CCoinsViewCacheTest : public CCoinsViewCache
+{
+public:
+    CCoinsViewCacheTest(CCoinsView* base) : CCoinsViewCache(base) {}
+
+    void SelfTest() const
+    {
+        // Manually recompute the dynamic usage of the whole data, and compare it.
+        size_t ret = memusage::DynamicUsage(cacheCoins);
+        for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); it++) {
+            ret += memusage::DynamicUsage(it->second.coins);
+        }
+        BOOST_CHECK_EQUAL(memusage::DynamicUsage(*this), ret);
+    }
+
+};
+
 }
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
@@ -90,8 +108,8 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
 
     // The cache stack.
     CCoinsViewTest base; // A CCoinsViewTest at the bottom.
-    std::vector<CCoinsViewCache*> stack; // A stack of CCoinsViewCaches on top.
-    stack.push_back(new CCoinsViewCache(&base)); // Start with one cache.
+    std::vector<CCoinsViewCacheTest*> stack; // A stack of CCoinsViewCaches on top.
+    stack.push_back(new CCoinsViewCacheTest(&base)); // Start with one cache.
 
     // Use a limited set of random transaction ids, so we do test overwriting entries.
     std::vector<uint256> txids;
@@ -136,6 +154,9 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                     missed_an_entry = true;
                 }
             }
+            BOOST_FOREACH(const CCoinsViewCacheTest *test, stack) {
+                test->SelfTest();
+            }
         }
 
         if (insecure_rand() % 100 == 0) {
@@ -152,7 +173,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
                 } else {
                     removed_all_caches = true;
                 }
-                stack.push_back(new CCoinsViewCache(tip));
+                stack.push_back(new CCoinsViewCacheTest(tip));
                 if (stack.size() == 4) {
                     reached_4_caches = true;
                 }
