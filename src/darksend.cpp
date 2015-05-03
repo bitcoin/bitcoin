@@ -1418,25 +1418,28 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
-    int64_t nValueMin = CENT;
-    int64_t nValueIn = 0;
+    CAmount nValueMin = CENT;
+    CAmount nValueIn = 0;
+
+    CAmount nOnlyDenominatedBalance;
+    CAmount nBalanceNeedsDenominated;
 
     // should not be less than fees in DARKSEND_COLLATERAL + few (lets say 5) smallest denoms
-    int64_t nLowestDenom = DARKSEND_COLLATERAL + darkSendDenominations[darkSendDenominations.size() - 1]*5;
+    CAmount nLowestDenom = DARKSEND_COLLATERAL + darkSendDenominations[darkSendDenominations.size() - 1]*5;
 
     // if there are no DS collateral inputs yet
     if(!pwalletMain->HasCollateralInputs())
         // should have some additional amount for them
         nLowestDenom += DARKSEND_COLLATERAL*4;
 
-    int64_t nBalanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
+    CAmount nBalanceNeedsAnonymized = nAnonymizeDarkcoinAmount*COIN - pwalletMain->GetAnonymizedBalance();
 
     // if balanceNeedsAnonymized is more than pool max, take the pool max
     if(nBalanceNeedsAnonymized > DARKSEND_POOL_MAX) nBalanceNeedsAnonymized = DARKSEND_POOL_MAX;
 
     // if balanceNeedsAnonymized is more than non-anonymized, take non-anonymized
-    int64_t nBalanceNotYetAnonymized = pwalletMain->GetBalance() - pwalletMain->GetAnonymizedBalance();
-    if(nBalanceNeedsAnonymized > nBalanceNotYetAnonymized) nBalanceNeedsAnonymized = nBalanceNotYetAnonymized;
+    CAmount nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
+    if(nBalanceNeedsAnonymized > nAnonymizableBalance) nBalanceNeedsAnonymized = nAnonymizableBalance;
 
     if(nBalanceNeedsAnonymized < nLowestDenom)
     {
@@ -1455,7 +1458,13 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
         if (pwalletMain->SelectCoinsDark(nValueMin, 9999999*COIN, vCoins, nValueIn, -2, 0))
         {
-            if(!fDryRun) return CreateDenominated(nBalanceNeedsAnonymized);
+            nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true, false, false);
+            nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
+
+            if(nBalanceNeedsDenominated > nValueIn) nBalanceNeedsDenominated = nValueIn;
+
+            if(!fDryRun) return CreateDenominated(nBalanceNeedsDenominated);
+
             return true;
         } else {
             LogPrintf("DoAutomaticDenominating : Can't denominate - no compatible inputs left\n");
@@ -1464,6 +1473,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         }
 
     }
+
+    nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true, false, false);
+    nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
+
+    if(!fDryRun && nBalanceNeedsDenominated > nOnlyDenominatedBalance) return CreateDenominated(nBalanceNeedsDenominated);
 
     //check to see if we have the collateral sized inputs, it requires these
     if(!pwalletMain->HasCollateralInputs()){
@@ -1622,7 +1636,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     pSubmittedToMasternode = pmn;
                     vecMasternodesUsed.push_back(pmn->vin);
 
-                    std::vector<int64_t> vecAmounts;
+                    std::vector<CAmount> vecAmounts;
                     pwalletMain->ConvertList(vCoins, vecAmounts);
                     sessionDenom = GetDenominationsByAmounts(vecAmounts);
 

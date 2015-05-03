@@ -2942,12 +2942,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         CBlockIndex *pindex = chainActive.Tip();
         if(pindex != NULL){
             if(pindex->GetBlockHash() == block.hashPrevBlock){
-                int64_t masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, block.vtx[0].GetValueOut());
                 bool fIsInitialDownload = IsInitialBlockDownload();
 
                 // If we don't already have its previous block, skip masternode payment step
-                if (!fIsInitialDownload && pindex != NULL)
+                if (!fIsInitialDownload)
                 {
+                    int64_t masternodePaymentAmount = GetMasternodePayment(pindex->nHeight+1, block.vtx[0].GetValueOut());
                     bool foundPaymentAmount = false;
                     bool foundPayee = false;
                     bool foundPaymentAndPayee = false;
@@ -3023,10 +3023,30 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     int nHeight = pindexPrev->nHeight+1;
 
     // Check proof of work
-    if ((!Params().SkipProofOfWorkCheck()) &&
-       (block.nBits != GetNextWorkRequired(pindexPrev, &block)))
-        return state.DoS(100, error("%s : incorrect proof of work", __func__),
-                         REJECT_INVALID, "bad-diffbits");
+//    if ((!Params().SkipProofOfWorkCheck()) &&
+//       (block.nBits != GetNextWorkRequired(pindexPrev, &block)))
+//        return state.DoS(100, error("%s : incorrect proof of work", __func__),
+//                         REJECT_INVALID, "bad-diffbits");
+    if(Params().NetworkID() == CBaseChainParams::TESTNET) {
+        if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
+            return state.DoS(100, error("%s : incorrect proof of work at %d", __func__, nHeight),
+                             REJECT_INVALID, "bad-diffbits");
+    } else {
+        // Check proof of work (Here for the architecture issues with DGW v1 and v2)
+        if(nHeight <= 68589){
+            unsigned int nBitsNext = GetNextWorkRequired(pindexPrev, &block);
+            double n1 = ConvertBitsToDouble(block.nBits);
+            double n2 = ConvertBitsToDouble(nBitsNext);
+
+            if (abs(n1-n2) > n1*0.5)
+                return state.DoS(100, error("%s : incorrect proof of work (DGW pre-fork) - %f %f %f at %d", __func__, abs(n1-n2), n1, n2, nHeight),
+                                REJECT_INVALID, "bad-diffbits");
+        } else {
+            if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
+                return state.DoS(100, error("%s : incorrect proof of work at %d", __func__, nHeight),
+                                REJECT_INVALID, "bad-diffbits");
+        }
+    }
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -3125,27 +3145,6 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 
     if (ppindex)
         *ppindex = pindex;
-
-    // ***TODO*** probably not the right place
-    if(Params().NetworkID() == CBaseChainParams::TESTNET) {
-        if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
-            return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
-                             REJECT_INVALID, "bad-diffbits");
-    } else {
-        // Check proof of work (Here for the architecture issues with DGW v1 and v2)
-        if(pindexPrev->nHeight+1 <= 68589){
-            unsigned int nBitsNext = GetNextWorkRequired(pindexPrev, &block);
-            double n1 = ConvertBitsToDouble(block.nBits);
-            double n2 = ConvertBitsToDouble(nBitsNext);
-            if (abs(n1-n2) > n1*0.5)
-                return state.DoS(100, error("AcceptBlock() : incorrect proof of work (DGW pre-fork) - %f", abs(n1-n2)),
-                                REJECT_INVALID, "bad-diffbits");
-        } else {
-            if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
-                return state.DoS(100, error("AcceptBlock() : incorrect proof of work"),
-                                REJECT_INVALID, "bad-diffbits");
-        }
-    }
 
     return true;
 }
@@ -3293,7 +3292,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
                 CMasternode* pmn = mnodeman.Find(vin);
                 if(pmn != NULL) pmn->nLastPaid = GetAdjustedTime(); 
 
-                LogPrintf("ProcessBlock() : Update Masternode Last Paid Time - %d\n", chainActive.Tip()->nHeight);
+                LogPrintf("%s : Update Masternode Last Paid Time - %d\n", __func__, chainActive.Tip()->nHeight);
             }
 
 
@@ -3303,7 +3302,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         }
     }
 
-    LogPrintf("ProcessBlock: ACCEPTED\n");
+    LogPrintf("%s : ACCEPTED\n", __func__);
     return true;
 }
 
