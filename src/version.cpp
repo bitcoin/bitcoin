@@ -17,6 +17,25 @@ const std::string CLIENT_NAME("Satoshi");
 #define CLIENT_VERSION_SUFFIX   "-bdb"
 #endif
 
+// Compiler name
+#ifdef __GNUC__
+/*code for GNU C compiler */
+#define CL_NAME   "-gcc"
+#elif _MSC_VER
+/*usually has the version number in _MSC_VER*/
+/*code specific to MSVC compiler*/
+#define CL_NAME   "-msvc"
+#elif __clang__
+/*code specific to clang compilers*/
+#define CL_NAME   "-clang"
+#elif __MINGW32__
+/*code specific to mingw compilers*/
+#define CL_NAME   "-mingw"
+#else
+#define CL_NAME   "-genericcl"
+/*overs*/
+#endif
+
 // The following part of the code determines the CLIENT_BUILD variable.
 // Several mechanisms are used for this:
 // * first, if HAVE_BUILD_INFO is defined, include build.h, a file that is
@@ -69,5 +88,5 @@ const std::string CLIENT_NAME("Satoshi");
 #    endif
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX);
+const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX CL_NAME);
 const std::string CLIENT_DATE(BUILD_DATE);
