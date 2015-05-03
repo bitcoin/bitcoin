@@ -1597,66 +1597,49 @@ static int msc_initial_scan(int nFirstBlock)
     return 0;
 }
 
-int input_msc_balances_string(const string &s)
+int input_msc_balances_string(const std::string& s)
 {
-  std::vector<std::string> addrData;
-  boost::split(addrData, s, boost::is_any_of("="), token_compress_on);
-  if (addrData.size() != 2) {
-    return -1;
-  }
+    // "address=propertybalancedata"
+    std::vector<std::string> addrData;
+    boost::split(addrData, s, boost::is_any_of("="), boost::token_compress_on);
+    if (addrData.size() != 2) return -1;
 
-  string strAddress = addrData[0];
+    std::string strAddress = addrData[0];
 
-  // split the tuples of properties
-  std::vector<std::string> vProperties;
-  boost::split(vProperties, addrData[1], boost::is_any_of(";"), token_compress_on);
+    // split the tuples of properties
+    std::vector<std::string> vProperties;
+    boost::split(vProperties, addrData[1], boost::is_any_of(";"), boost::token_compress_on);
 
-  std::vector<std::string>::const_iterator iter;
-  for (iter = vProperties.begin(); iter != vProperties.end(); ++iter) {
-    if ((*iter).empty()) {
-      continue;
+    std::vector<std::string>::const_iterator iter;
+    for (iter = vProperties.begin(); iter != vProperties.end(); ++iter) {
+        if ((*iter).empty()) {
+            continue;
+        }
+
+        // "propertyid:balancedata"
+        std::vector<std::string> curProperty;
+        boost::split(curProperty, *iter, boost::is_any_of(":"), boost::token_compress_on);
+        if (curProperty.size() != 2) return -1;
+
+        // "balance,sellreserved,acceptreserved,metadexreserved"
+        std::vector<std::string> curBalance;
+        boost::split(curBalance, curProperty[1], boost::is_any_of(","), boost::token_compress_on);
+        if (curBalance.size() != 4) return -1;
+
+        uint32_t propertyId = boost::lexical_cast<uint32_t>(curProperty[0]);
+
+        int64_t balance = boost::lexical_cast<int64_t>(curBalance[0]);
+        int64_t sellReserved = boost::lexical_cast<int64_t>(curBalance[1]);
+        int64_t acceptReserved = boost::lexical_cast<int64_t>(curBalance[2]);
+        int64_t metadexReserved = boost::lexical_cast<int64_t>(curBalance[3]);
+
+        update_tally_map(strAddress, propertyId, balance, BALANCE);
+        update_tally_map(strAddress, propertyId, sellReserved, SELLOFFER_RESERVE);
+        update_tally_map(strAddress, propertyId, acceptReserved, ACCEPT_RESERVE);
+        update_tally_map(strAddress, propertyId, metadexReserved, METADEX_RESERVE);
     }
 
-    std::vector<std::string> curData;
-    boost::split(curData, *iter, boost::is_any_of(","), token_compress_on);
-    if (curData.size() < 1) {
-      // malformed property entry
-       return -1;
-    }
-
-    size_t delimPos = curData[0].find(':');
-    int property = OMNI_PROPERTY_MSC;
-    uint64_t balance = 0, sellReserved = 0, acceptReserved = 0;
-
-    if (delimPos != curData[0].npos) {
-      property = atoi(curData[0].substr(0,delimPos));
-      balance = boost::lexical_cast<boost::uint64_t>(curData[0].substr(delimPos + 1, curData[0].npos));
-    } else {
-      balance = boost::lexical_cast<boost::uint64_t>(curData[0]);
-    }
-
-    if (curData.size() >= 2) {
-      sellReserved = boost::lexical_cast<boost::uint64_t>(curData[1]);
-    }
-
-    if (curData.size() >= 3) {
-      acceptReserved = boost::lexical_cast<boost::uint64_t>(curData[2]);
-    }
-
-    if (balance == 0 && sellReserved == 0 && acceptReserved == 0) {
-      continue;
-    }
-
-    if (balance) update_tally_map(strAddress, property, balance, BALANCE);
-    if (sellReserved) update_tally_map(strAddress, property, sellReserved, SELLOFFER_RESERVE);
-    if (acceptReserved) update_tally_map(strAddress, property, acceptReserved, ACCEPT_RESERVE);
-
-    // FIXME
-    const uint64_t metadexReserve = 0;
-    if (metadexReserve) update_tally_map(strAddress, property, sellReserved, METADEX_RESERVE);
-  }
-
-  return 1;
+    return 0;
 }
 
 // seller-address, offer_block, amount, property, desired BTC , property_desired, fee, blocktimelimit
