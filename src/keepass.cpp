@@ -5,10 +5,10 @@
 #include "keepass.h"
 
 #include <exception>
-#include <openssl/rand.h>
+// #include <openssl/rand.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
-//#include <boost/asio.hpp>
+// #include <boost/asio.hpp>
 
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_reader_template.h"

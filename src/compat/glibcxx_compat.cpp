@@ -65,8 +65,6 @@ out_of_range::~out_of_range() _GLIBCXX_USE_NOEXCEPT {}
 
 length_error::~length_error() _GLIBCXX_USE_NOEXCEPT {}
 
-length_error::~length_error() _GLIBCXX_USE_NOEXCEPT { }
-
 // Used with permission.
 // See: https://github.com/madlib/madlib/commit/c3db418c0d34d6813608f2137fef1012ce03043d
 
