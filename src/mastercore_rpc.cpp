@@ -2073,45 +2073,39 @@ Value gettrade_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    // Prepare a few vars
     uint256 hash;
-    hash.SetHex(params[0].get_str());
     Object tradeobj;
     Object txobj;
     CMPMetaDEx temp_metadexoffer;
-
-    //get sender & propId
-    string senderAddress;
-    unsigned int propertyId = 0;
     CTransaction wtx;
     uint256 blockHash = 0;
-    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+    string senderAddress;
+    unsigned int propertyId = 0;
     CMPTransaction mp_obj;
+
+    // Obtain the transaction
+    hash.SetHex(params[0].get_str());
+    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+
+    // Ensure it can be parsed OK
     int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
-    if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sa$
-    {
-        if (0<=mp_obj.step1())
-        {
+    if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
+        if (0<=mp_obj.step1()) {
             senderAddress = mp_obj.getSender();
-            if (0 == mp_obj.step2_Value())
-            {
-                propertyId = mp_obj.getProperty();
-            }
+            if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
         }
     }
-    if (propertyId == 0) // something went wrong, couldn't decode property ID - bad packet?
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
-    if (senderAddress.empty()) // something went wrong, couldn't decode transaction
+    if ((0 > parseRC) || (propertyId == 0) || (senderAddress.empty()) // something went wrong, couldn't decode - bad packet?
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
 
-    // make a request to new RPC populator function to populate a transaction object
+    // make a request to RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, &txobj);
 
     // check the response, throw any error codes if false
-    if (0>populateResult)
-    {
+    if (0>populateResult) {
         // TODO: consider throwing other error codes, check back with Bitcoin Core
-        switch (populateResult)
-        {
+        switch (populateResult) {
             case MP_TX_NOT_FOUND:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
             case MP_TX_UNCONFIRMED:
@@ -2141,7 +2135,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
     int actionByte = 0;
     if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
 
-    // everything seems ok, now add status and get an array of matches to add to the object
+    // everything seems ok, now add status and add array of matches to the object
     // work out status
     bool orderOpen = isMetaDExOfferActive(hash, propertyId);
     bool partialFilled = false;
@@ -2158,36 +2152,29 @@ Value gettrade_MP(const Array& params, bool fHelp)
     if(actionByte==1) txobj.push_back(Pair("status", statusText)); // no status for cancel txs
 
     // add cancels array to object and set status as cancelled only if cancel type
-    if(actionByte != 1)
-    {
+    if(actionByte != 1) {
         Array cancelArray;
         int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(hash);
-        if (0<numberOfCancels)
-        {
-            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++)
-            {
+        if (0<numberOfCancels) {
+            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
                 Object cancelTx;
                 string strValue = p_txlistdb->getKeyValue(hash.ToString() + "-C" + to_string(refNumber));
-                if (!strValue.empty())
-                {
+                if (!strValue.empty()) {
                     std::vector<std::string> vstr;
                     boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-                    if (3 <= vstr.size())
-                    {
+                    if (3 <= vstr.size()) {
                         uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
                         uint64_t amountUnreserved = boost::lexical_cast<uint64_t>(vstr[2]);
                         cancelTx.push_back(Pair("txid", vstr[0]));
                         cancelTx.push_back(Pair("propertyid", propId));
                         cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, amountUnreserved)));
-                    cancelArray.push_back(cancelTx);
+                        cancelArray.push_back(cancelTx);
                     }
                 }
             }
         }
         txobj.push_back(Pair("cancelledtransactions", cancelArray));
-    }
-    else
-    {
+    } else {
         // if cancelled, show cancellation txid
         if((statusText == "cancelled") || (statusText == "cancelled part filled")) { txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(hash).GetHex())); }
         // add matches array to object
