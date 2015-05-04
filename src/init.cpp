@@ -1376,10 +1376,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 10: setup DarkSend
 
-    //string strNode = "23.23.186.131";
-    //CAddress addr;
-    //ConnectNode(addr, strNode.c_str(), true);
-
     uiInterface.InitMessage(_("Loading masternode cache..."));
 
     CMasternodeDB mndb;
@@ -1394,6 +1390,22 @@ bool AppInit2(boost::thread_group& threadGroup)
         else
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
+
+    uiInterface.InitMessage(_("Loading budget cache..."));
+
+    CBudgetDB budgetdb;
+    CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
+    if (readResult2 == CBudgetDB::FileError)
+        LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
+    else if (readResult2 != CBudgetDB::Ok)
+    {
+        LogPrintf("Error reading budget.dat: ");
+        if(readResult2 == CBudgetDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
 
     fMasterNode = GetBoolArg("-masternode", false);
     if(fMasterNode) {

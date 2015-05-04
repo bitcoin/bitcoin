@@ -25,6 +25,7 @@ static const char* ppszTypeName[] =
     "masternode winner",
     "masternode scan",
     "masternode vote",
+    "masternode proposal",
     "masternode quorum",
     "masternode announce",
     "masternode ping",

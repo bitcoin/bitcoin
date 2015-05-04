@@ -473,7 +473,7 @@ Value masternodelist(const Array& params, bool fHelp)
     if (params.size() == 2) strFilter = params[1].get_str();
 
     if (fHelp ||
-            (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank"
+            (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank" && strMode != "addr"
                 && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose" && strMode != "lastpaid"))
     {
         throw runtime_error(

@@ -108,8 +108,8 @@ public:
     CMasternode* Find(const CTxIn& vin);
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
-    /// Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge);
+    /// Find an entry in the masternode list that is next to be paid
+    CMasternode* GetNextMasternodeInQueueForPayment();
 
     /// Find a random entry
     CMasternode* FindRandom();
