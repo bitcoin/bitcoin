@@ -314,7 +314,7 @@ bool MetaDEx_compare::operator()(const CMPMetaDEx &lhs, const CMPMetaDEx &rhs) c
     else return lhs.getBlock() < rhs.getBlock();
 }
 
-bool mastercore::MetaDEx_INSERT(CMPMetaDEx objMetaDEx)
+bool mastercore::MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx)
 {
     // Create an empty price map (to use in case price map for this property does not already exist)
     md_PricesMap temp_prices;
