@@ -6,15 +6,9 @@
 #ifndef MASTERNODE_PAYMENTS_H
 #define MASTERNODE_PAYMENTS_H
 
-//#include "sync.h"
-//#include "net.h"
 #include "key.h"
-//#include "util.h"
-//#include "base58.h"
 #include "main.h"
 #include "masternode.h"
-//#include "masternode-pos.h"
-//#include "timedata.h"
 
 using namespace std;
 

@@ -3242,7 +3242,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
-            //budget.NewBlock();
+            budget.NewBlock();
         }
     }
 
@@ -4990,8 +4990,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
         mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
         budget.ProcessMessage(pfrom, strCommand, vRecv);
-        //TODO
-        //ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+        masternodePayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
         ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);

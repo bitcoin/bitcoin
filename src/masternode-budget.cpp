@@ -341,7 +341,7 @@ void CBudgetManager::AddOrUpdateProposal(CBudgetVote& vote)
 
     if(!mapProposals.count(hash)){
     	CBudgetProposal prop(vote.strProposalName);
-    	//mapProposals.insert(make_pair(hash, prop));
+    	mapProposals.insert(make_pair(hash, prop));
     	return;
     }
 
@@ -353,16 +353,10 @@ void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
-
-    if(!mapVotes.count(hash)){
-        mapVotes.insert(make_pair(hash, vote));
-        return;
-    }
-
     mapVotes[hash] = vote;    
 }
 
-inline void CBudgetManager::NewBlock()
+void CBudgetManager::NewBlock()
 {
 	//this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
 	if(chainActive.Height() % 6 != 0) return;
