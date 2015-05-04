@@ -98,7 +98,8 @@ json_spirit::Value ValueFromParams(const json_spirit::Array& params, const std::
 ///////////////////////////
 json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    Wallet *wallet = WalletFromParams(params);
+    if (fHelp || !wallet)
         throw RPCHelpException(
                             "getnewaddress\n"
                             "\nReturns a new Bitcoin address for receiving payments.\n"
@@ -110,7 +111,6 @@ json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
                             );
     
 
-    Wallet *wallet = WalletFromParams(params);
     json_spirit::Value value = ValueFromParams(params, "chainpath");
     json_spirit::Value valueIndex = ValueFromParams(params, "index");
     
@@ -164,7 +164,8 @@ json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
     
 json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
 {
-    if (fHelp)
+    Wallet *wallet = WalletFromParams(params);
+    if (fHelp || !wallet)
         throw RPCHelpException(
                             "listaddresses\n"
                             "\nResult:\n"
@@ -176,7 +177,6 @@ json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
                             + HelpExampleCli("getaddressesbyaccount", "\"tabby\"")
                             + HelpExampleRpc("getaddressesbyaccount", "\"tabby\"")
                             );
-    Wallet *wallet = WalletFromParams(params);
     json_spirit::Array ret;
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookMetadata)& item, wallet->mapAddressBook)
     {
@@ -205,9 +205,10 @@ json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
 ///////////////////////////
 json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    json_spirit::Value walletIDValue = ValueFromParams(params, "walletid");
+    if (fHelp || walletIDValue.is_null())
         throw RPCHelpException(
-                             "addwallet \"walletid\"\n"
+                             "addwallet walletid=<walletid>\n"
                              "\nArguments:\n"
                              "  \"walletid\"    (string, required) allowed characters: A-Za-z0-9._-\n"
                              "\nExamples:\n"
@@ -215,7 +216,7 @@ json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
                              + HelpExampleRpc("addwallet", "\"anotherwallet\"")
                              );
     
-    std::string walletID = params[0].get_str();
+    std::string walletID = walletIDValue.get_str();
     CoreWallet::GetManager()->AddNewWallet(walletID);
     
     return json_spirit::Value::null;
@@ -223,7 +224,7 @@ json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
     
 json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp)
         throw RPCHelpException(
                                  "listwallets\n"
                                  "\nResult:\n"
