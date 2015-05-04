@@ -197,6 +197,33 @@ CBudgetVote::CBudgetVote(CTxIn vinIn, std::string strProposalNameIn, int nBlockS
 	nTime = GetAdjustedTime();
 }
 
+
+CBudgetVote::CBudgetVote(CTxIn vinIn, std::string strProposalNameIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nVoteIn)
+{
+    vin = vinIn;
+    strProposalName = strProposalNameIn;
+
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev != NULL) 
+    {
+        //calculate beginning of payment cycle
+        nBlockStart = (pindexPrev->nHeight-(pindexPrev->nHeight % PAYMENT_CYCLE_BLOCKS));
+        //calculate the end of the cycle for this vote
+        nBlockEnd = nBlockStart + (PAYMENT_CYCLE_BLOCKS*nPaymentCount);
+        // These numbers don't require being all the same across the network due to the way 
+        // they are sampled from the votes. 
+    } else {
+        nBlockStart = 0;
+        nBlockEnd = 0;
+    }
+
+    address = addressIn;
+    nAmount = nAmountIn;
+    nVote = nVoteIn;
+    nTime = GetAdjustedTime();
+}
+
+
 bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
     // Choose coins to use
