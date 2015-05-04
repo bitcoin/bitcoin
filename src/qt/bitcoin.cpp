@@ -461,7 +461,9 @@ void BitcreditApplication::initializeResult(int retval)
             window->setCurrentWallet("~Default");
 
             connect(bitcredit_model, SIGNAL(coinsSent(CWallet*,Bitcredit_SendCoinsRecipient,QByteArray)),
-                             paymentServer, SLOT(fetchPaymentACK(CWallet*,const Bitcredit_SendCoinsRecipient&,QByteArray)));
+                             paymentServer, SLOT(credits_fetchPaymentACK(Bitcredit_CWallet*,const Bitcredit_SendCoinsRecipient&,QByteArray)));
+            connect(bitcoin_model, SIGNAL(coinsSent(CWallet*,Bitcoin_SendCoinsRecipient,QByteArray)),
+                             paymentServer, SLOT(bitcoin_fetchPaymentACK(Bitcoin_CWallet*,const Bitcoin_SendCoinsRecipient&,QByteArray)));
         }
 #endif
 
@@ -476,9 +478,11 @@ void BitcreditApplication::initializeResult(int retval)
         }
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
-        // bitcredit: URIs or payment requests:
-        connect(paymentServer, SIGNAL(receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
-                         window, SLOT(handlePaymentRequest(Bitcredit_SendCoinsRecipient)));
+        // bitcredit: URIs or bitcoin: URIs or payment requests:
+        connect(paymentServer, SIGNAL(credits_receivedPaymentRequest(Bitcredit_SendCoinsRecipient)),
+                         window, SLOT(credits_handlePaymentRequest(Bitcredit_SendCoinsRecipient)));
+        connect(paymentServer, SIGNAL(bitcoin_receivedPaymentRequest(Bitcoin_SendCoinsRecipient)),
+                         window, SLOT(bitcoin_handlePaymentRequest(Bitcoin_SendCoinsRecipient)));
         connect(window, SIGNAL(receivedURI(QString)),
                          paymentServer, SLOT(handleURIOrFile(QString)));
         connect(paymentServer, SIGNAL(message(QString,QString,unsigned int)),
@@ -619,7 +623,7 @@ int main(int argc, char *argv[])
         exit(0);
 
     // Start up the payment server early, too, so impatient users that click on
-    // bitcredit: links repeatedly have their payment requests routed to this process:
+    // bitcredit: links and bitcoin: links repeatedly have their payment requests routed to this process:
     app.createPaymentServer();
 #endif
 

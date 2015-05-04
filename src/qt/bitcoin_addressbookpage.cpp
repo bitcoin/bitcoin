@@ -6,13 +6,13 @@
 #include "bitcredit-config.h"
 #endif
 
-#include "addressbookpage.h"
-#include "ui_addressbookpage.h"
+#include "bitcoin_addressbookpage.h"
+#include "ui_bitcoin_addressbookpage.h"
 
-#include "addresstablemodel.h"
+#include "bitcoin_addresstablemodel.h"
 #include "bitcoingui.h"
 #include "csvmodelwriter.h"
-#include "editaddressdialog.h"
+#include "bitcoin_editaddressdialog.h"
 #include "guiutil.h"
 
 #include <QIcon>
@@ -20,9 +20,9 @@
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 
-Credits_AddressBookPage::Credits_AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
+Bitcoin_AddressBookPage::Bitcoin_AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::Credits_AddressBookPage),
+    ui(new Ui::Bitcoin_AddressBookPage),
     model(0),
     mode(mode),
     tab(tab)
@@ -61,11 +61,11 @@ Credits_AddressBookPage::Credits_AddressBookPage(Mode mode, Tabs tab, QWidget *p
     switch(tab)
     {
     case SendingTab:
-        ui->labelExplanation->setText(tr("These are your Credits addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins."));
         ui->deleteAddress->setVisible(true);
         break;
     case ReceivingTab:
-        ui->labelExplanation->setText(tr("These are your Credits addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
+        ui->labelExplanation->setText(tr("These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
         ui->deleteAddress->setVisible(false);
         break;
     }
@@ -96,12 +96,12 @@ Credits_AddressBookPage::Credits_AddressBookPage(Mode mode, Tabs tab, QWidget *p
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(accept()));
 }
 
-Credits_AddressBookPage::~Credits_AddressBookPage()
+Bitcoin_AddressBookPage::~Bitcoin_AddressBookPage()
 {
     delete ui;
 }
 
-void Credits_AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
+void Bitcoin_AddressBookPage::setModel(Bitcoin_AddressTableModel *model)
 {
     this->model = model;
     if(!model)
@@ -116,13 +116,13 @@ void Credits_AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
     {
     case ReceivingTab:
         // Receive filter
-        proxyModel->setFilterRole(Bitcredit_AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(Bitcredit_AddressTableModel::Receive);
+        proxyModel->setFilterRole(Bitcoin_AddressTableModel::TypeRole);
+        proxyModel->setFilterFixedString(Bitcoin_AddressTableModel::Receive);
         break;
     case SendingTab:
         // Send filter
-        proxyModel->setFilterRole(Bitcredit_AddressTableModel::TypeRole);
-        proxyModel->setFilterFixedString(Bitcredit_AddressTableModel::Send);
+        proxyModel->setFilterRole(Bitcoin_AddressTableModel::TypeRole);
+        proxyModel->setFilterFixedString(Bitcoin_AddressTableModel::Send);
         break;
     }
     ui->tableView->setModel(proxyModel);
@@ -130,11 +130,11 @@ void Credits_AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
 
     // Set column widths
 #if QT_VERSION < 0x050000
-    ui->tableView->horizontalHeader()->setResizeMode(Bitcredit_AddressTableModel::Label, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setResizeMode(Bitcredit_AddressTableModel::Address, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(Bitcoin_AddressTableModel::Label, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setResizeMode(Bitcoin_AddressTableModel::Address, QHeaderView::ResizeToContents);
 #else
-    ui->tableView->horizontalHeader()->setSectionResizeMode(Bitcredit_AddressTableModel::Label, QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(Bitcredit_AddressTableModel::Address, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(Bitcoin_AddressTableModel::Label, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(Bitcoin_AddressTableModel::Address, QHeaderView::ResizeToContents);
 #endif
 
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
@@ -146,17 +146,17 @@ void Credits_AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
     selectionChanged();
 }
 
-void Credits_AddressBookPage::on_copyAddress_clicked()
+void Bitcoin_AddressBookPage::on_copyAddress_clicked()
 {
-    GUIUtil::copyEntryData(ui->tableView, Bitcredit_AddressTableModel::Address);
+    GUIUtil::copyEntryData(ui->tableView, Bitcoin_AddressTableModel::Address);
 }
 
-void Credits_AddressBookPage::onCopyLabelAction()
+void Bitcoin_AddressBookPage::onCopyLabelAction()
 {
-    GUIUtil::copyEntryData(ui->tableView, Bitcredit_AddressTableModel::Label);
+    GUIUtil::copyEntryData(ui->tableView, Bitcoin_AddressTableModel::Label);
 }
 
-void Credits_AddressBookPage::onEditAction()
+void Bitcoin_AddressBookPage::onEditAction()
 {
     if(!model)
         return;
@@ -167,25 +167,25 @@ void Credits_AddressBookPage::onEditAction()
     if(indexes.isEmpty())
         return;
 
-    Credits_EditAddressDialog dlg(
+    Bitcoin_EditAddressDialog dlg(
         tab == SendingTab ?
-        Credits_EditAddressDialog::EditSendingAddress :
-        Credits_EditAddressDialog::EditReceivingAddress, this);
+        Bitcoin_EditAddressDialog::EditSendingAddress :
+        Bitcoin_EditAddressDialog::EditReceivingAddress, this);
     dlg.setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
     dlg.exec();
 }
 
-void Credits_AddressBookPage::on_newAddress_clicked()
+void Bitcoin_AddressBookPage::on_newAddress_clicked()
 {
     if(!model)
         return;
 
-    Credits_EditAddressDialog dlg(
+    Bitcoin_EditAddressDialog dlg(
         tab == SendingTab ?
-        Credits_EditAddressDialog::NewSendingAddress :
-        Credits_EditAddressDialog::NewReceivingAddress, this);
+        Bitcoin_EditAddressDialog::NewSendingAddress :
+        Bitcoin_EditAddressDialog::NewReceivingAddress, this);
     dlg.setModel(model);
     if(dlg.exec())
     {
@@ -193,7 +193,7 @@ void Credits_AddressBookPage::on_newAddress_clicked()
     }
 }
 
-void Credits_AddressBookPage::on_deleteAddress_clicked()
+void Bitcoin_AddressBookPage::on_deleteAddress_clicked()
 {
     QTableView *table = ui->tableView;
     if(!table->selectionModel())
@@ -206,7 +206,7 @@ void Credits_AddressBookPage::on_deleteAddress_clicked()
     }
 }
 
-void Credits_AddressBookPage::selectionChanged()
+void Bitcoin_AddressBookPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
     QTableView *table = ui->tableView;
@@ -239,14 +239,14 @@ void Credits_AddressBookPage::selectionChanged()
     }
 }
 
-void Credits_AddressBookPage::done(int retval)
+void Bitcoin_AddressBookPage::done(int retval)
 {
     QTableView *table = ui->tableView;
     if(!table->selectionModel() || !table->model())
         return;
 
     // Figure out which address was selected, and return it
-    QModelIndexList indexes = table->selectionModel()->selectedRows(Bitcredit_AddressTableModel::Address);
+    QModelIndexList indexes = table->selectionModel()->selectedRows(Bitcoin_AddressTableModel::Address);
 
     foreach (QModelIndex index, indexes)
     {
@@ -263,7 +263,7 @@ void Credits_AddressBookPage::done(int retval)
     QDialog::done(retval);
 }
 
-void Credits_AddressBookPage::on_exportButton_clicked()
+void Bitcoin_AddressBookPage::on_exportButton_clicked()
 {
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
@@ -277,8 +277,8 @@ void Credits_AddressBookPage::on_exportButton_clicked()
 
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Label", Bitcredit_AddressTableModel::Label, Qt::EditRole);
-    writer.addColumn("Address", Bitcredit_AddressTableModel::Address, Qt::EditRole);
+    writer.addColumn("Label", Bitcoin_AddressTableModel::Label, Qt::EditRole);
+    writer.addColumn("Address", Bitcoin_AddressTableModel::Address, Qt::EditRole);
 
     if(!writer.write()) {
         QMessageBox::critical(this, tr("Exporting Failed"),
@@ -286,7 +286,7 @@ void Credits_AddressBookPage::on_exportButton_clicked()
     }
 }
 
-void Credits_AddressBookPage::contextualMenu(const QPoint &point)
+void Bitcoin_AddressBookPage::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->tableView->indexAt(point);
     if(index.isValid())
@@ -295,9 +295,9 @@ void Credits_AddressBookPage::contextualMenu(const QPoint &point)
     }
 }
 
-void Credits_AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int /*end*/)
+void Bitcoin_AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int /*end*/)
 {
-    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, Bitcredit_AddressTableModel::Address, parent));
+    QModelIndex idx = proxyModel->mapFromSource(model->index(begin, Bitcoin_AddressTableModel::Address, parent));
     if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newAddressToSelect))
     {
         // Select row of newly created address, once

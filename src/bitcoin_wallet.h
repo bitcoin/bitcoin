@@ -27,9 +27,9 @@
 extern int64_t bitcoin_nTransactionFee;
 extern bool bitcoin_bSpendZeroConfChange;
 
-// -paytxfee default
+// -bitcoin_paytxfee default
 static const int64_t BITCOIN_DEFAULT_TRANSACTION_FEE = 0;
-// -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
+// -bitcoin_paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
 static const int bitcoin_nHighTransactionFeeWarning = 0.01 * COIN;
 
 class CAccountingEntry;
@@ -283,17 +283,17 @@ public:
     void EraseFromWallet(const uint256 &hash);
     int ScanForWalletTransactions(Bitcoin_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
-//    void ResendWalletTransactions();
+    void ResendWalletTransactions();
     int64_t GetBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
     int64_t GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
     int64_t GetImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-//    bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
-//                           Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
-//    bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
-//                           Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
-//    bool CommitTransaction(Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey);
-//    std::string SendMoney(CScript scriptPubKey, int64_t nValue, Bitcoin_CWalletTx& wtxNew);
-//    std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, Bitcoin_CWalletTx& wtxNew);
+    bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
+                           Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
+                           Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool CommitTransaction(Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey);
+    std::string SendMoney(CScript scriptPubKey, int64_t nValue, Bitcoin_CWalletTx& wtxNew);
+    std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, Bitcoin_CWalletTx& wtxNew);
 
     bool NewKeyPool();
     bool TopUpKeyPool(unsigned int kpSize = 0);
@@ -897,7 +897,7 @@ public:
     int64_t GetTxTime() const;
     int GetRequestCount() const;
 
-//    void RelayWalletTransaction();
+    void RelayWalletTransaction();
 
     std::set<uint256> GetConflicts() const;
 };

@@ -2,19 +2,19 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "minerdepositsview.h"
+#include "bitcoin_transactionview.h"
 
-#include "addresstablemodel.h"
-#include "bitcreditunits.h"
+#include "bitcoin_addresstablemodel.h"
+#include "bitcoinunits.h"
 #include "csvmodelwriter.h"
-#include "editaddressdialog.h"
+#include "bitcoin_editaddressdialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "transactiondescdialog.h"
-#include "transactionfilterproxy.h"
-#include "transactionrecord.h"
-#include "transactiontablemodel.h"
-#include "walletmodel.h"
+#include "bitcoin_transactiondescdialog.h"
+#include "bitcoin_transactionfilterproxy.h"
+#include "bitcoin_transactionrecord.h"
+#include "bitcoin_transactiontablemodel.h"
+#include "bitcoin_walletmodel.h"
 
 #include "ui_interface.h"
 
@@ -33,11 +33,10 @@
 #include <QTableView>
 #include <QUrl>
 #include <QVBoxLayout>
-#include <QMessageBox>
 
-MinerDepositsView::MinerDepositsView(QWidget *parent) :
-    QWidget(parent), bitcredit_model(0), deposit_model(0), transactionProxyModel(0),
-    minerDepositView(0)
+Bitcoin_TransactionView::Bitcoin_TransactionView(QWidget *parent) :
+    QWidget(parent), model(0), transactionProxyModel(0),
+    transactionView(0)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -74,9 +73,14 @@ MinerDepositsView::MinerDepositsView(QWidget *parent) :
     typeWidget->setFixedWidth(120);
 #endif
 
-    typeWidget->addItem(tr("All"), Credits_TransactionFilterProxy::ALL_TYPES);
-    typeWidget->addItem(tr("Deposit"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::Deposit));
-    typeWidget->addItem(tr("Deposit change"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::DepositChange));
+    typeWidget->addItem(tr("All"), Bitcoin_TransactionFilterProxy::ALL_TYPES);
+    typeWidget->addItem(tr("Received with"), Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::RecvWithAddress) |
+                                        Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::RecvFromOther));
+    typeWidget->addItem(tr("Sent to"), Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::SendToAddress) |
+                                  Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::SendToOther));
+    typeWidget->addItem(tr("To yourself"), Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::SendToSelf));
+    typeWidget->addItem(tr("Mined"), Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::Generated));
+    typeWidget->addItem(tr("Other"), Bitcoin_TransactionFilterProxy::TYPE(Bitcoin_TransactionRecord::Other));
 
     hlayout->addWidget(typeWidget);
 
@@ -119,7 +123,7 @@ MinerDepositsView::MinerDepositsView(QWidget *parent) :
     view->setTabKeyNavigation(false);
     view->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    minerDepositView = view;
+    transactionView = view;
 
     // Actions
     QAction *copyAddressAction = new QAction(tr("Copy address"), this);
@@ -128,7 +132,6 @@ MinerDepositsView::MinerDepositsView(QWidget *parent) :
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *editLabelAction = new QAction(tr("Edit label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
-    QAction *deleteDepositAction = new QAction(tr("Delete deposit"), this);
 
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
@@ -137,7 +140,6 @@ MinerDepositsView::MinerDepositsView(QWidget *parent) :
     contextMenu->addAction(copyTxIDAction);
     contextMenu->addAction(editLabelAction);
     contextMenu->addAction(showDetailsAction);
-    contextMenu->addAction(deleteDepositAction);
 
     mapperThirdPartyTxUrls = new QSignalMapper(this);
 
@@ -158,43 +160,41 @@ MinerDepositsView::MinerDepositsView(QWidget *parent) :
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(editLabelAction, SIGNAL(triggered()), this, SLOT(editLabel()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
-    connect(deleteDepositAction, SIGNAL(triggered()), this, SLOT(deleteDeposit()));
 }
 
-void MinerDepositsView::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
+void Bitcoin_TransactionView::setModel(Bitcoin_WalletModel *model)
 {
-    this->bitcredit_model = bitcredit_model;
-    this->deposit_model = deposit_model;
-    if(deposit_model)
+    this->model = model;
+    if(model)
     {
-        transactionProxyModel = new Credits_TransactionFilterProxy(this);
-        transactionProxyModel->setSourceModel(deposit_model->getTransactionTableModel());
+        transactionProxyModel = new Bitcoin_TransactionFilterProxy(this);
+        transactionProxyModel->setSourceModel(model->getTransactionTableModel());
         transactionProxyModel->setDynamicSortFilter(true);
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
 
         transactionProxyModel->setSortRole(Qt::EditRole);
 
-        minerDepositView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        minerDepositView->setModel(transactionProxyModel);
-        minerDepositView->setAlternatingRowColors(true);
-        minerDepositView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        minerDepositView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-        minerDepositView->setSortingEnabled(true);
-        minerDepositView->sortByColumn(Bitcredit_TransactionTableModel::Status, Qt::DescendingOrder);
-        minerDepositView->verticalHeader()->hide();
+        transactionView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        transactionView->setModel(transactionProxyModel);
+        transactionView->setAlternatingRowColors(true);
+        transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        transactionView->setSortingEnabled(true);
+        transactionView->sortByColumn(Bitcoin_TransactionTableModel::Status, Qt::DescendingOrder);
+        transactionView->verticalHeader()->hide();
 
-        minerDepositView->setColumnWidth(Bitcredit_TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
-        minerDepositView->setColumnWidth(Bitcredit_TransactionTableModel::Date, DATE_COLUMN_WIDTH);
-        minerDepositView->setColumnWidth(Bitcredit_TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
-        minerDepositView->setColumnWidth(Bitcredit_TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcoin_TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcoin_TransactionTableModel::Date, DATE_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcoin_TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
+        transactionView->setColumnWidth(Bitcoin_TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
 
-        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(minerDepositView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
+        columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
 
-        if (deposit_model->getOptionsModel())
+        if (model->getOptionsModel())
         {
             // Add third party transaction URLs to context menu
-            QStringList listUrls = deposit_model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
+            QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
             for (int i = 0; i < listUrls.size(); ++i)
             {
                 QString host = QUrl(listUrls[i].trimmed(), QUrl::StrictMode).host();
@@ -212,7 +212,7 @@ void MinerDepositsView::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcred
     }
 }
 
-void MinerDepositsView::chooseDate(int idx)
+void Bitcoin_TransactionView::chooseDate(int idx)
 {
     if(!transactionProxyModel)
         return;
@@ -222,26 +222,26 @@ void MinerDepositsView::chooseDate(int idx)
     {
     case All:
         transactionProxyModel->setDateRange(
-                Credits_TransactionFilterProxy::MIN_DATE,
-                Credits_TransactionFilterProxy::MAX_DATE);
+                Bitcoin_TransactionFilterProxy::MIN_DATE,
+                Bitcoin_TransactionFilterProxy::MAX_DATE);
         break;
     case Today:
         transactionProxyModel->setDateRange(
                 QDateTime(current),
-                Credits_TransactionFilterProxy::MAX_DATE);
+                Bitcoin_TransactionFilterProxy::MAX_DATE);
         break;
     case ThisWeek: {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
         transactionProxyModel->setDateRange(
                 QDateTime(startOfWeek),
-                Credits_TransactionFilterProxy::MAX_DATE);
+                Bitcoin_TransactionFilterProxy::MAX_DATE);
 
         } break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), current.month(), 1)),
-                Credits_TransactionFilterProxy::MAX_DATE);
+                Bitcoin_TransactionFilterProxy::MAX_DATE);
         break;
     case LastMonth:
         transactionProxyModel->setDateRange(
@@ -251,7 +251,7 @@ void MinerDepositsView::chooseDate(int idx)
     case ThisYear:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), 1, 1)),
-                Credits_TransactionFilterProxy::MAX_DATE);
+                Bitcoin_TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
@@ -260,7 +260,7 @@ void MinerDepositsView::chooseDate(int idx)
     }
 }
 
-void MinerDepositsView::chooseType(int idx)
+void Bitcoin_TransactionView::chooseType(int idx)
 {
     if(!transactionProxyModel)
         return;
@@ -268,19 +268,19 @@ void MinerDepositsView::chooseType(int idx)
         typeWidget->itemData(idx).toInt());
 }
 
-void MinerDepositsView::changedPrefix(const QString &prefix)
+void Bitcoin_TransactionView::changedPrefix(const QString &prefix)
 {
     if(!transactionProxyModel)
         return;
     transactionProxyModel->setAddressPrefix(prefix);
 }
 
-void MinerDepositsView::changedAmount(const QString &amount)
+void Bitcoin_TransactionView::changedAmount(const QString &amount)
 {
     if(!transactionProxyModel)
         return;
     qint64 amount_parsed = 0;
-    if(BitcreditUnits::parse(deposit_model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
+    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
     {
         transactionProxyModel->setMinAmount(amount_parsed);
     }
@@ -290,46 +290,78 @@ void MinerDepositsView::changedAmount(const QString &amount)
     }
 }
 
-void MinerDepositsView::contextualMenu(const QPoint &point)
+void Bitcoin_TransactionView::exportClicked()
 {
-    QModelIndex index = minerDepositView->indexAt(point);
+    // CSV is currently the only supported format
+    QString filename = GUIUtil::getSaveFileName(this,
+        tr("Export Transaction History"), QString(),
+        tr("Comma separated file (*.csv)"), NULL);
+
+    if (filename.isNull())
+        return;
+
+    CSVModelWriter writer(filename);
+
+    // name, column, role
+    writer.setModel(transactionProxyModel);
+    writer.addColumn(tr("Confirmed"), 0, Bitcoin_TransactionTableModel::ConfirmedRole);
+    writer.addColumn(tr("Date"), 0, Bitcoin_TransactionTableModel::DateRole);
+    writer.addColumn(tr("Type"), Bitcoin_TransactionTableModel::Type, Qt::EditRole);
+    writer.addColumn(tr("Label"), 0, Bitcoin_TransactionTableModel::LabelRole);
+    writer.addColumn(tr("Address"), 0, Bitcoin_TransactionTableModel::AddressRole);
+    writer.addColumn(tr("Amount"), 0, Bitcoin_TransactionTableModel::FormattedAmountRole);
+    writer.addColumn(tr("ID"), 0, Bitcoin_TransactionTableModel::TxIDRole);
+
+    if(!writer.write()) {
+        emit message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
+            CClientUIInterface::MSG_ERROR);
+    }
+    else {
+        emit message(tr("Exporting Successful"), tr("The transaction history was successfully saved to %1.").arg(filename),
+            CClientUIInterface::MSG_INFORMATION);
+    }
+}
+
+void Bitcoin_TransactionView::contextualMenu(const QPoint &point)
+{
+    QModelIndex index = transactionView->indexAt(point);
     if(index.isValid())
     {
         contextMenu->exec(QCursor::pos());
     }
 }
 
-void MinerDepositsView::copyAddress()
+void Bitcoin_TransactionView::copyAddress()
 {
-    GUIUtil::copyEntryData(minerDepositView, 0, Bitcredit_TransactionTableModel::AddressRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcoin_TransactionTableModel::AddressRole);
 }
 
-void MinerDepositsView::copyLabel()
+void Bitcoin_TransactionView::copyLabel()
 {
-    GUIUtil::copyEntryData(minerDepositView, 0, Bitcredit_TransactionTableModel::LabelRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcoin_TransactionTableModel::LabelRole);
 }
 
-void MinerDepositsView::copyAmount()
+void Bitcoin_TransactionView::copyAmount()
 {
-    GUIUtil::copyEntryData(minerDepositView, 0, Bitcredit_TransactionTableModel::FormattedDepositAmountRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcoin_TransactionTableModel::FormattedAmountRole);
 }
 
-void MinerDepositsView::copyTxID()
+void Bitcoin_TransactionView::copyTxID()
 {
-    GUIUtil::copyEntryData(minerDepositView, 0, Bitcredit_TransactionTableModel::TxIDRole);
+    GUIUtil::copyEntryData(transactionView, 0, Bitcoin_TransactionTableModel::TxIDRole);
 }
 
-void MinerDepositsView::editLabel()
+void Bitcoin_TransactionView::editLabel()
 {
-    if(!minerDepositView->selectionModel() ||!deposit_model)
+    if(!transactionView->selectionModel() ||!model)
         return;
-    QModelIndexList selection = minerDepositView->selectionModel()->selectedRows();
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        Bitcredit_AddressTableModel *addressBook = deposit_model->getAddressTableModel();
+        Bitcoin_AddressTableModel *addressBook = model->getAddressTableModel();
         if(!addressBook)
             return;
-        QString address = selection.at(0).data(Bitcredit_TransactionTableModel::AddressRole).toString();
+        QString address = selection.at(0).data(Bitcoin_TransactionTableModel::AddressRole).toString();
         if(address.isEmpty())
         {
             // If this transaction has no associated address, exit
@@ -343,12 +375,12 @@ void MinerDepositsView::editLabel()
             // Edit sending / receiving address
             QModelIndex modelIdx = addressBook->index(idx, 0, QModelIndex());
             // Determine type of address, launch appropriate editor dialog type
-            QString type = modelIdx.data(Bitcredit_AddressTableModel::TypeRole).toString();
+            QString type = modelIdx.data(Bitcoin_AddressTableModel::TypeRole).toString();
 
-            Credits_EditAddressDialog dlg(
-                type == Bitcredit_AddressTableModel::Receive
-                ? Credits_EditAddressDialog::EditReceivingAddress
-                : Credits_EditAddressDialog::EditSendingAddress, this);
+            Bitcoin_EditAddressDialog dlg(
+                type == Bitcoin_AddressTableModel::Receive
+                ? Bitcoin_EditAddressDialog::EditReceivingAddress
+                : Bitcoin_EditAddressDialog::EditSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.loadRow(idx);
             dlg.exec();
@@ -356,7 +388,7 @@ void MinerDepositsView::editLabel()
         else
         {
             // Add sending address
-            Credits_EditAddressDialog dlg(Credits_EditAddressDialog::NewSendingAddress,
+            Bitcoin_EditAddressDialog dlg(Bitcoin_EditAddressDialog::NewSendingAddress,
                 this);
             dlg.setModel(addressBook);
             dlg.setAddress(address);
@@ -365,54 +397,28 @@ void MinerDepositsView::editLabel()
     }
 }
 
-void MinerDepositsView::showDetails()
+void Bitcoin_TransactionView::showDetails()
 {
-    if(!minerDepositView->selectionModel())
+    if(!transactionView->selectionModel())
         return;
-    QModelIndexList selection = minerDepositView->selectionModel()->selectedRows();
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        Credits_TransactionDescDialog dlg(selection.at(0));
+        Bitcoin_TransactionDescDialog dlg(selection.at(0));
         dlg.exec();
     }
 }
-void MinerDepositsView::deleteDeposit()
+
+void Bitcoin_TransactionView::openThirdPartyTxUrl(QString url)
 {
-    if(!minerDepositView->selectionModel())
+    if(!transactionView || !transactionView->selectionModel())
         return;
-    QModelIndexList selection = minerDepositView->selectionModel()->selectedRows();
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
     if(!selection.isEmpty())
-    {
-    	QString questionString = tr("Are you sure you want to delete this deposit?");
-        questionString.append(tr("<br /><br />Deleting the deposit does NOT remove the related coins but simply returns them to a spendable state."));
-        QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm delete deposit"),
-            questionString,
-            QMessageBox::Yes | QMessageBox::Cancel,
-            QMessageBox::Cancel);
-
-        if(retval != QMessageBox::Yes)
-        {
-            return;
-        }
-
-        const QString hashString = selection.at(0).data(Bitcredit_TransactionTableModel::TxHashRole).toString();
-        const uint256 hashTx = uint256(hashString.toStdString());
-
-        deposit_model->wallet->EraseFromWallet(bitcredit_model->wallet, hashTx);
-        deposit_model->checkBalanceChanged();
-    }
+         QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(Bitcoin_TransactionTableModel::TxHashRole).toString())));
 }
 
-void MinerDepositsView::openThirdPartyTxUrl(QString url)
-{
-    if(!minerDepositView || !minerDepositView->selectionModel())
-        return;
-    QModelIndexList selection = minerDepositView->selectionModel()->selectedRows(0);
-    if(!selection.isEmpty())
-         QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(Bitcredit_TransactionTableModel::TxHashRole).toString())));
-}
-
-QWidget *MinerDepositsView::createDateRangeWidget()
+QWidget *Bitcoin_TransactionView::createDateRangeWidget()
 {
     dateRangeWidget = new QFrame();
     dateRangeWidget->setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -448,7 +454,7 @@ QWidget *MinerDepositsView::createDateRangeWidget()
     return dateRangeWidget;
 }
 
-void MinerDepositsView::dateRangeChanged()
+void Bitcoin_TransactionView::dateRangeChanged()
 {
     if(!transactionProxyModel)
         return;
@@ -457,20 +463,20 @@ void MinerDepositsView::dateRangeChanged()
             QDateTime(dateTo->date()).addDays(1));
 }
 
-void MinerDepositsView::focusTransaction(const QModelIndex &idx)
+void Bitcoin_TransactionView::focusTransaction(const QModelIndex &idx)
 {
     if(!transactionProxyModel)
         return;
     QModelIndex targetIdx = transactionProxyModel->mapFromSource(idx);
-    minerDepositView->scrollTo(targetIdx);
-    minerDepositView->setCurrentIndex(targetIdx);
-    minerDepositView->setFocus();
+    transactionView->scrollTo(targetIdx);
+    transactionView->setCurrentIndex(targetIdx);
+    transactionView->setFocus();
 }
 
 // We override the virtual resizeEvent of the QWidget to adjust tables column
 // sizes as the tables width is proportional to the dialogs width.
-void MinerDepositsView::resizeEvent(QResizeEvent* event)
+void Bitcoin_TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(Bitcredit_TransactionTableModel::ToAddress);
+    columnResizingFixer->stretchColumnWidth(Bitcoin_TransactionTableModel::ToAddress);
 }

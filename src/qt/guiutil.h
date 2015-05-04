@@ -15,6 +15,7 @@
 
 class QValidatedLineEdit;
 class Bitcredit_SendCoinsRecipient;
+class Bitcoin_SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
 class QAbstractItemView;
@@ -44,6 +45,10 @@ namespace GUIUtil
     bool parseBitcreditURI(const QUrl &uri, Bitcredit_SendCoinsRecipient *out);
     bool parseBitcreditURI(QString uri, Bitcredit_SendCoinsRecipient *out);
     QString formatBitcreditURI(const Bitcredit_SendCoinsRecipient &info);
+    // Parse "bitcoin:" URI into recipient object, return true on successful parsing
+    bool parseBitcoinURI(const QUrl &uri, Bitcoin_SendCoinsRecipient *out);
+    bool parseBitcoinURI(QString uri, Bitcoin_SendCoinsRecipient *out);
+    QString formatBitcoinURI(const Bitcoin_SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, qint64 amount);

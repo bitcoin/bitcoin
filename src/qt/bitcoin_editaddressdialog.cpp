@@ -2,18 +2,18 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "editaddressdialog.h"
-#include "ui_editaddressdialog.h"
+#include "bitcoin_editaddressdialog.h"
+#include "ui_bitcoin_editaddressdialog.h"
 
-#include "addresstablemodel.h"
+#include "bitcoin_addresstablemodel.h"
 #include "guiutil.h"
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
-Credits_EditAddressDialog::Credits_EditAddressDialog(Mode mode, QWidget *parent) :
+Bitcoin_EditAddressDialog::Bitcoin_EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::Credits_EditAddressDialog),
+    ui(new Ui::Bitcoin_EditAddressDialog),
     mapper(0),
     mode(mode),
     model(0)
@@ -44,28 +44,28 @@ Credits_EditAddressDialog::Credits_EditAddressDialog(Mode mode, QWidget *parent)
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 
-Credits_EditAddressDialog::~Credits_EditAddressDialog()
+Bitcoin_EditAddressDialog::~Bitcoin_EditAddressDialog()
 {
     delete ui;
 }
 
-void Credits_EditAddressDialog::setModel(Bitcredit_AddressTableModel *model)
+void Bitcoin_EditAddressDialog::setModel(Bitcoin_AddressTableModel *model)
 {
     this->model = model;
     if(!model)
         return;
 
     mapper->setModel(model);
-    mapper->addMapping(ui->labelEdit, Bitcredit_AddressTableModel::Label);
-    mapper->addMapping(ui->addressEdit, Bitcredit_AddressTableModel::Address);
+    mapper->addMapping(ui->labelEdit, Bitcoin_AddressTableModel::Label);
+    mapper->addMapping(ui->addressEdit, Bitcoin_AddressTableModel::Address);
 }
 
-void Credits_EditAddressDialog::loadRow(int row)
+void Bitcoin_EditAddressDialog::loadRow(int row)
 {
     mapper->setCurrentIndex(row);
 }
 
-bool Credits_EditAddressDialog::saveCurrentRow()
+bool Bitcoin_EditAddressDialog::saveCurrentRow()
 {
     if(!model)
         return false;
@@ -75,7 +75,7 @@ bool Credits_EditAddressDialog::saveCurrentRow()
     case NewReceivingAddress:
     case NewSendingAddress:
         address = model->addRow(
-                mode == NewSendingAddress ? Bitcredit_AddressTableModel::Send : Bitcredit_AddressTableModel::Receive,
+                mode == NewSendingAddress ? Bitcoin_AddressTableModel::Send : Bitcoin_AddressTableModel::Receive,
                 ui->labelEdit->text(),
                 ui->addressEdit->text());
         break;
@@ -90,7 +90,7 @@ bool Credits_EditAddressDialog::saveCurrentRow()
     return !address.isEmpty();
 }
 
-void Credits_EditAddressDialog::accept()
+void Bitcoin_EditAddressDialog::accept()
 {
     if(!model)
         return;
@@ -99,28 +99,28 @@ void Credits_EditAddressDialog::accept()
     {
         switch(model->getEditStatus())
         {
-        case Bitcredit_AddressTableModel::OK:
+        case Bitcoin_AddressTableModel::OK:
             // Failed with unknown reason. Just reject.
             break;
-        case Bitcredit_AddressTableModel::NO_CHANGES:
+        case Bitcoin_AddressTableModel::NO_CHANGES:
             // No changes were made during edit operation. Just reject.
             break;
-        case Bitcredit_AddressTableModel::INVALID_ADDRESS:
+        case Bitcoin_AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid Credits address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid Bitcoin address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case Bitcredit_AddressTableModel::DUPLICATE_ADDRESS:
+        case Bitcoin_AddressTableModel::DUPLICATE_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
                 tr("The entered address \"%1\" is already in the address book.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case Bitcredit_AddressTableModel::WALLET_UNLOCK_FAILURE:
+        case Bitcoin_AddressTableModel::WALLET_UNLOCK_FAILURE:
             QMessageBox::critical(this, windowTitle(),
                 tr("Could not unlock wallet."),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
-        case Bitcredit_AddressTableModel::KEY_GENERATION_FAILURE:
+        case Bitcoin_AddressTableModel::KEY_GENERATION_FAILURE:
             QMessageBox::critical(this, windowTitle(),
                 tr("New key generation failed."),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -132,12 +132,12 @@ void Credits_EditAddressDialog::accept()
     QDialog::accept();
 }
 
-QString Credits_EditAddressDialog::getAddress() const
+QString Bitcoin_EditAddressDialog::getAddress() const
 {
     return address;
 }
 
-void Credits_EditAddressDialog::setAddress(const QString &address)
+void Bitcoin_EditAddressDialog::setAddress(const QString &address)
 {
     this->address = address;
     ui->addressEdit->setText(address);

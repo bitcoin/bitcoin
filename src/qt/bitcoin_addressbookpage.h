@@ -2,16 +2,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ADDRESSBOOKPAGE_H
-#define ADDRESSBOOKPAGE_H
+#ifndef BITCOIN_ADDRESSBOOKPAGE_H
+#define BITCOIN_ADDRESSBOOKPAGE_H
 
 #include <QDialog>
 
-class Bitcredit_AddressTableModel;
+class Bitcoin_AddressTableModel;
 class OptionsModel;
 
 namespace Ui {
-    class Credits_AddressBookPage;
+    class Bitcoin_AddressBookPage;
 }
 
 QT_BEGIN_NAMESPACE
@@ -24,7 +24,7 @@ QT_END_NAMESPACE
 
 /** Widget that shows a list of sending or receiving addresses.
   */
-class Credits_AddressBookPage : public QDialog
+class Bitcoin_AddressBookPage : public QDialog
 {
     Q_OBJECT
 
@@ -39,18 +39,18 @@ public:
         ForEditing  /**< Open address book for editing */
     };
 
-    explicit Credits_AddressBookPage(Mode mode, Tabs tab, QWidget *parent);
-    ~Credits_AddressBookPage();
+    explicit Bitcoin_AddressBookPage(Mode mode, Tabs tab, QWidget *parent);
+    ~Bitcoin_AddressBookPage();
 
-    void setModel(Bitcredit_AddressTableModel *model);
+    void setModel(Bitcoin_AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
 
 public slots:
     void done(int retval);
 
 private:
-    Ui::Credits_AddressBookPage *ui;
-    Bitcredit_AddressTableModel *model;
+    Ui::Bitcoin_AddressBookPage *ui;
+    Bitcoin_AddressTableModel *model;
     Mode mode;
     Tabs tab;
     QString returnValue;
@@ -84,4 +84,4 @@ signals:
     void sendCoins(QString addr);
 };
 
-#endif // ADDRESSBOOKPAGE_H
+#endif // BITCOIN_ADDRESSBOOKPAGE_H

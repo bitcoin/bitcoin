@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Credits_AddressBookPage</class>
- <widget class="QWidget" name="Credits_AddressBookPage">
+ <class>Bitcoin_AddressBookPage</class>
+ <widget class="QWidget" name="Bitcoin_AddressBookPage">
   <property name="geometry">
    <rect>
     <x>0</x>

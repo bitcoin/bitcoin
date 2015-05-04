@@ -344,10 +344,12 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "\n" + _("Wallet options:") + "\n";
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
+    strUsage += "  -bitcoin_paytxfee=<amt>       " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -bitcredit_rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -bitcoin_rescan                " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
     strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
+    strUsage += "  -bitcoin_spendzeroconfchange   " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + " " + _("on startup") + "\n";
     strUsage += "  -bitcredit_wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
     strUsage += "  -bitcoin_wallet=<file>         " + _("Same as above, for bitcoin") + "\n";
@@ -1147,7 +1149,15 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     }
 
 #ifdef ENABLE_WALLET
-    //There are no such thing as tx fees to set because transactions can not be sent to the bitcoin network
+    if (mapArgs.count("-bitcoin_paytxfee"))
+    {
+        if (!ParseMoney(mapArgs["-bitcoin_paytxfee"], bitcoin_nTransactionFee))
+            return InitError(strprintf(_("Invalid amount for -bitcoin_paytxfee=<amount>: '%s'"), mapArgs["-bitcoin_paytxfee"]));
+        if (bitcoin_nTransactionFee > bitcoin_nHighTransactionFeeWarning)
+            InitWarning(_("Warning: -bitcoin_paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
+    }
+    bitcoin_bSpendZeroConfChange = GetArg("-bitcoin_spendzeroconfchange", true);
+
     bitcoin_strWalletFile = GetArg("-bitcoin_wallet", "bitcoin_wallet.dat");
 #endif
 #ifdef ENABLE_WALLET
@@ -1899,7 +1909,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #ifdef ENABLE_WALLET
     if (bitcoin_pwalletMain) {
         // Add wallet transactions that aren't already in a block to mapTransactions
- //       bitcoin_pwalletMain->ReacceptWalletTransactions();
+        bitcoin_pwalletMain->ReacceptWalletTransactions();
 
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&Bitcoin_ThreadFlushWalletDB, boost::ref(bitcoin_pwalletMain->strWalletFile)));

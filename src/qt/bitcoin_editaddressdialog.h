@@ -2,15 +2,15 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EDITADDRESSDIALOG_H
-#define EDITADDRESSDIALOG_H
+#ifndef BITCOIN_EDITADDRESSDIALOG_H
+#define BITCOIN_EDITADDRESSDIALOG_H
 
 #include <QDialog>
 
-class Bitcredit_AddressTableModel;
+class Bitcoin_AddressTableModel;
 
 namespace Ui {
-    class Credits_EditAddressDialog;
+    class Bitcoin_EditAddressDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -19,7 +19,7 @@ QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
  */
-class Credits_EditAddressDialog : public QDialog
+class Bitcoin_EditAddressDialog : public QDialog
 {
     Q_OBJECT
 
@@ -31,10 +31,10 @@ public:
         EditSendingAddress
     };
 
-    explicit Credits_EditAddressDialog(Mode mode, QWidget *parent);
-    ~Credits_EditAddressDialog();
+    explicit Bitcoin_EditAddressDialog(Mode mode, QWidget *parent);
+    ~Bitcoin_EditAddressDialog();
 
-    void setModel(Bitcredit_AddressTableModel *model);
+    void setModel(Bitcoin_AddressTableModel *model);
     void loadRow(int row);
 
     QString getAddress() const;
@@ -46,12 +46,12 @@ public slots:
 private:
     bool saveCurrentRow();
 
-    Ui::Credits_EditAddressDialog *ui;
+    Ui::Bitcoin_EditAddressDialog *ui;
     QDataWidgetMapper *mapper;
     Mode mode;
-    Bitcredit_AddressTableModel *model;
+    Bitcoin_AddressTableModel *model;
 
     QString address;
 };
 
-#endif // EDITADDRESSDIALOG_H
+#endif // BITCOIN_EDITADDRESSDIALOG_H

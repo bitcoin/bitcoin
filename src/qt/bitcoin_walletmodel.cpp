@@ -6,6 +6,8 @@
 
 #include "bitcoin_addresstablemodel.h"
 #include "guiconstants.h"
+#include "bitcoin_recentrequeststablemodel.h"
+#include "bitcoin_transactiontablemodel.h"
 
 #include "base58.h"
 #include "bitcoin_db.h"
@@ -25,12 +27,16 @@
 
 Bitcoin_WalletModel::Bitcoin_WalletModel(Bitcoin_CWallet *wallet, Bitcredit_CWallet *bitcredit_wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), bitcredit_wallet(bitcredit_wallet), optionsModel(optionsModel), addressTableModel(0),
+    transactionTableModel(0),
+    recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
     cachedNumTransactions(0),
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(0)
 {
     addressTableModel = new Bitcoin_AddressTableModel(wallet, this);
+    transactionTableModel = new Bitcoin_TransactionTableModel(wallet, this);
+    recentRequestsTableModel = new Bitcoin_RecentRequestsTableModel(wallet, this);
 
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
@@ -113,6 +119,8 @@ void Bitcoin_WalletModel::pollBalanceChanged()
         cachedNumBlocks = bitcoin_chainActive.Height();
 
         checkBalanceChanged();
+        if(transactionTableModel)
+            transactionTableModel->updateConfirmations();
     }
 }
 
@@ -137,6 +145,9 @@ void Bitcoin_WalletModel::checkBalanceChanged()
 
 void Bitcoin_WalletModel::updateTransaction(const QString &hash, int status)
 {
+    if(transactionTableModel)
+        transactionTableModel->updateTransaction(hash, status);
+
     // Balance and number of transactions might have changed
     checkBalanceChanged();
 
@@ -161,170 +172,172 @@ bool Bitcoin_WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
-//Bitcoin_WalletModel::SendCoinsReturn Bitcoin_WalletModel::prepareTransaction(Bitcoin_WalletModelTransaction &transaction, const CCoinControl *coinControl)
-//{
-//    qint64 total = 0;
-//    QList<Bitcoin_SendCoinsRecipient> recipients = transaction.getRecipients();
-//    std::vector<std::pair<CScript, int64_t> > vecSend;
-//
-//    if(recipients.empty())
-//    {
-//        return OK;
-//    }
-//
-//    QSet<QString> setAddress; // Used to detect duplicates
-//    int nAddresses = 0;
-//
-//    // Pre-check input data for validity
-//    foreach(const Bitcoin_SendCoinsRecipient &rcp, recipients)
-//    {
-//        if (rcp.paymentRequest.IsInitialized())
-//        {   // PaymentRequest...
-//            int64_t subtotal = 0;
-//            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-//            for (int i = 0; i < details.outputs_size(); i++)
-//            {
-//                const payments::Output& out = details.outputs(i);
-//                if (out.amount() <= 0) continue;
-//                subtotal += out.amount();
-//                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-//                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-//                vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, out.amount()));
-//            }
-//            if (subtotal <= 0)
-//            {
-//                return InvalidAmount;
-//            }
-//            total += subtotal;
-//        }
-//        else
-//        {   // User-entered bitcoin address / amount:
-//            if(!validateAddress(rcp.address))
-//            {
-//                return InvalidAddress;
-//            }
-//            if(rcp.amount <= 0)
-//            {
-//                return InvalidAmount;
-//            }
-//            setAddress.insert(rcp.address);
-//            ++nAddresses;
-//
-//            CScript scriptPubKey;
-//            scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
-//            vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, rcp.amount));
-//
-//            total += rcp.amount;
-//        }
-//    }
-//    if(setAddress.size() != nAddresses)
-//    {
-//        return DuplicateAddress;
-//    }
-//
-//    qint64 nBalance = getBalance(coinControl);
-//
-//    if(total > nBalance)
-//    {
-//        return AmountExceedsBalance;
-//    }
-//
-//    if((total + bitcoin_nTransactionFee) > nBalance)
-//    {
-//        transaction.setTransactionFee(bitcoin_nTransactionFee);
-//        return SendCoinsReturn(AmountWithFeeExceedsBalance);
-//    }
-//
-//    {
-//        LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
-//
-//        transaction.newPossibleKeyChange(wallet);
-//        int64_t nFeeRequired = 0;
-//        std::string strFailReason;
-//
-//        Bitcoin_CWalletTx *newTx = transaction.getTransaction();
-//        Bitcoin_CReserveKey *keyChange = transaction.getPossibleKeyChange();
-//        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl);
-//        transaction.setTransactionFee(nFeeRequired);
-//
-//        if(!fCreated)
-//        {
-//            if((total + nFeeRequired) > nBalance)
-//            {
-//                return SendCoinsReturn(AmountWithFeeExceedsBalance);
-//            }
-//            emit message(tr("Send Coins"), QString::fromStdString(strFailReason),
-//                         CClientUIInterface::MSG_ERROR);
-//            return TransactionCreationFailed;
-//        }
-//    }
-//
-//    return SendCoinsReturn(OK);
-//}
-//
-//Bitcoin_WalletModel::SendCoinsReturn Bitcoin_WalletModel::sendCoins(Bitcoin_WalletModelTransaction &transaction)
-//{
-//    QByteArray transaction_array; /* store serialized transaction */
-//
-//    {
-//        LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
-//        Bitcoin_CWalletTx *newTx = transaction.getTransaction();
-//
-//        // Store PaymentRequests in wtx.vOrderForm in wallet.
-//        foreach(const Bitcoin_SendCoinsRecipient &rcp, transaction.getRecipients())
-//        {
-//            if (rcp.paymentRequest.IsInitialized())
-//            {
-//                std::string key("PaymentRequest");
-//                std::string value;
-//                rcp.paymentRequest.SerializeToString(&value);
-//                newTx->vOrderForm.push_back(make_pair(key, value));
-//            }
-//            else if (!rcp.message.isEmpty()) // Message from normal bitcredit:URI (bitcredit:123...?message=example)
-//                newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
-//        }
-//
-//        Bitcoin_CReserveKey *keyChange = transaction.getPossibleKeyChange();
-//        if(!wallet->CommitTransaction(*newTx, *keyChange))
-//            return TransactionCommitFailed;
-//
-//        Bitcoin_CTransaction* t = (Bitcoin_CTransaction*)newTx;
-//        CDataStream ssTx(SER_NETWORK, BITCOIN_PROTOCOL_VERSION);
-//        ssTx << *t;
-//        transaction_array.append(&(ssTx[0]), ssTx.size());
-//    }
-//
-//    // Add addresses / update labels that we've sent to to the address book,
-//    // and emit coinsSent signal for each recipient
-//    foreach(const Bitcoin_SendCoinsRecipient &rcp, transaction.getRecipients())
-//    {
-//        // Don't touch the address book when we have a payment request
-//        if (!rcp.paymentRequest.IsInitialized())
-//        {
-//            std::string strAddress = rcp.address.toStdString();
-//            CTxDestination dest = CBitcoinAddress(strAddress).Get();
-//            std::string strLabel = rcp.label.toStdString();
-//            {
-//                LOCK(wallet->cs_wallet);
-//
-//                std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
-//
-//                // Check if we have a new address or an updated label
-//                if (mi == wallet->mapAddressBook.end())
-//                {
-//                    wallet->SetAddressBook(dest, strLabel, "send");
-//                }
-//                else if (mi->second.name != strLabel)
-//                {
-//                    wallet->SetAddressBook(dest, strLabel, ""); // "" means don't change purpose
-//                }
-//            }
-//        }
-//        emit coinsSent(wallet, rcp, transaction_array);
-//    }
-//
-//    return SendCoinsReturn(OK);
-//}
+Bitcoin_WalletModel::SendCoinsReturn Bitcoin_WalletModel::prepareTransaction(Bitcoin_WalletModelTransaction &transaction, const CCoinControl *coinControl)
+{
+    qint64 total = 0;
+    QList<Bitcoin_SendCoinsRecipient> recipients = transaction.getRecipients();
+    std::vector<std::pair<CScript, int64_t> > vecSend;
+
+    if(recipients.empty())
+    {
+        return OK;
+    }
+
+    QSet<QString> setAddress; // Used to detect duplicates
+    int nAddresses = 0;
+
+    // Pre-check input data for validity
+    foreach(const Bitcoin_SendCoinsRecipient &rcp, recipients)
+    {
+        if (rcp.paymentRequest.IsInitialized())
+        {   // PaymentRequest...
+            int64_t subtotal = 0;
+            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
+            for (int i = 0; i < details.outputs_size(); i++)
+            {
+                const payments::Output& out = details.outputs(i);
+                if (out.amount() <= 0) continue;
+                subtotal += out.amount();
+                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
+                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
+                vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, out.amount()));
+            }
+            if (subtotal <= 0)
+            {
+                return InvalidAmount;
+            }
+            total += subtotal;
+        }
+        else
+        {   // User-entered bitcoin address / amount:
+            if(!validateAddress(rcp.address))
+            {
+                return InvalidAddress;
+            }
+            if(rcp.amount <= 0)
+            {
+                return InvalidAmount;
+            }
+            setAddress.insert(rcp.address);
+            ++nAddresses;
+
+            CScript scriptPubKey;
+            scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, rcp.amount));
+
+            total += rcp.amount;
+        }
+    }
+    if(setAddress.size() != nAddresses)
+    {
+        return DuplicateAddress;
+    }
+
+    map<uint256, set<int> > mapEmptyTxInPoints;
+
+    qint64 nBalance = getBalance(NULL, mapEmptyTxInPoints, coinControl);
+
+    if(total > nBalance)
+    {
+        return AmountExceedsBalance;
+    }
+
+    if((total + bitcoin_nTransactionFee) > nBalance)
+    {
+        transaction.setTransactionFee(bitcoin_nTransactionFee);
+        return SendCoinsReturn(AmountWithFeeExceedsBalance);
+    }
+
+    {
+        LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
+
+        transaction.newPossibleKeyChange(wallet);
+        int64_t nFeeRequired = 0;
+        std::string strFailReason;
+
+        Bitcoin_CWalletTx *newTx = transaction.getTransaction();
+        Bitcoin_CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        bool fCreated = wallet->CreateTransaction(vecSend, *newTx, *keyChange, nFeeRequired, strFailReason, coinControl);
+        transaction.setTransactionFee(nFeeRequired);
+
+        if(!fCreated)
+        {
+            if((total + nFeeRequired) > nBalance)
+            {
+                return SendCoinsReturn(AmountWithFeeExceedsBalance);
+            }
+            emit message(tr("Send Coins"), QString::fromStdString(strFailReason),
+                         CClientUIInterface::MSG_ERROR);
+            return TransactionCreationFailed;
+        }
+    }
+
+    return SendCoinsReturn(OK);
+}
+
+Bitcoin_WalletModel::SendCoinsReturn Bitcoin_WalletModel::sendCoins(Bitcoin_WalletModelTransaction &transaction)
+{
+    QByteArray transaction_array; /* store serialized transaction */
+
+    {
+        LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
+        Bitcoin_CWalletTx *newTx = transaction.getTransaction();
+
+        // Store PaymentRequests in wtx.vOrderForm in wallet.
+        foreach(const Bitcoin_SendCoinsRecipient &rcp, transaction.getRecipients())
+        {
+            if (rcp.paymentRequest.IsInitialized())
+            {
+                std::string key("PaymentRequest");
+                std::string value;
+                rcp.paymentRequest.SerializeToString(&value);
+                newTx->vOrderForm.push_back(make_pair(key, value));
+            }
+            else if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+                newTx->vOrderForm.push_back(make_pair("Message", rcp.message.toStdString()));
+        }
+
+        Bitcoin_CReserveKey *keyChange = transaction.getPossibleKeyChange();
+        if(!wallet->CommitTransaction(*newTx, *keyChange))
+            return TransactionCommitFailed;
+
+        Bitcoin_CTransaction* t = (Bitcoin_CTransaction*)newTx;
+        CDataStream ssTx(SER_NETWORK, BITCOIN_PROTOCOL_VERSION);
+        ssTx << *t;
+        transaction_array.append(&(ssTx[0]), ssTx.size());
+    }
+
+    // Add addresses / update labels that we've sent to to the address book,
+    // and emit coinsSent signal for each recipient
+    foreach(const Bitcoin_SendCoinsRecipient &rcp, transaction.getRecipients())
+    {
+        // Don't touch the address book when we have a payment request
+        if (!rcp.paymentRequest.IsInitialized())
+        {
+            std::string strAddress = rcp.address.toStdString();
+            CTxDestination dest = CBitcoinAddress(strAddress).Get();
+            std::string strLabel = rcp.label.toStdString();
+            {
+                LOCK(wallet->cs_wallet);
+
+                std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(dest);
+
+                // Check if we have a new address or an updated label
+                if (mi == wallet->mapAddressBook.end())
+                {
+                    wallet->SetAddressBook(dest, strLabel, "send");
+                }
+                else if (mi->second.name != strLabel)
+                {
+                    wallet->SetAddressBook(dest, strLabel, ""); // "" means don't change purpose
+                }
+            }
+        }
+        emit coinsSent(wallet, rcp, transaction_array);
+    }
+
+    return SendCoinsReturn(OK);
+}
 
 OptionsModel *Bitcoin_WalletModel::getOptionsModel()
 {
@@ -334,6 +347,16 @@ OptionsModel *Bitcoin_WalletModel::getOptionsModel()
 Bitcoin_AddressTableModel *Bitcoin_WalletModel::getAddressTableModel()
 {
     return addressTableModel;
+}
+
+Bitcoin_TransactionTableModel *Bitcoin_WalletModel::getTransactionTableModel()
+{
+    return transactionTableModel;
+}
+
+Bitcoin_RecentRequestsTableModel *Bitcoin_WalletModel::getRecentRequestsTableModel()
+{
+    return recentRequestsTableModel;
 }
 
 Bitcoin_WalletModel::EncryptionStatus Bitcoin_WalletModel::getEncryptionStatus() const

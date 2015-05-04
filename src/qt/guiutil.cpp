@@ -6,8 +6,10 @@
 
 #include "bitcoinaddressvalidator.h"
 #include "bitcreditunits.h"
+#include "bitcoinunits.h"
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
+#include "bitcoin_walletmodel.h"
 
 #include "core.h"
 #include "init.h"
@@ -162,6 +164,62 @@ bool parseBitcreditURI(const QUrl &uri, Bitcredit_SendCoinsRecipient *out)
     }
     return true;
 }
+bool parseBitcoinURI(const QUrl &uri, Bitcoin_SendCoinsRecipient *out)
+{
+    // return if URI is not valid or is no bitcoin: URI
+    if(!uri.isValid() || uri.scheme() != QString("bitcoin"))
+        return false;
+
+    Bitcoin_SendCoinsRecipient rv;
+    rv.address = uri.path();
+    rv.amount = 0;
+
+#if QT_VERSION < 0x050000
+    QList<QPair<QString, QString> > items = uri.queryItems();
+#else
+    QUrlQuery uriQuery(uri);
+    QList<QPair<QString, QString> > items = uriQuery.queryItems();
+#endif
+    for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
+    {
+        bool fShouldReturnFalse = false;
+        if (i->first.startsWith("req-"))
+        {
+            i->first.remove(0, 4);
+            fShouldReturnFalse = true;
+        }
+
+        if (i->first == "label")
+        {
+            rv.label = i->second;
+            fShouldReturnFalse = false;
+        }
+        if (i->first == "message")
+        {
+            rv.message = i->second;
+            fShouldReturnFalse = false;
+        }
+        else if (i->first == "amount")
+        {
+            if(!i->second.isEmpty())
+            {
+                if(!BitcoinUnits::parse(BitcoinUnits::BTC, i->second, &rv.amount))
+                {
+                    return false;
+                }
+            }
+            fShouldReturnFalse = false;
+        }
+
+        if (fShouldReturnFalse)
+            return false;
+    }
+    if(out)
+    {
+        *out = rv;
+    }
+    return true;
+}
 
 bool parseBitcreditURI(QString uri, Bitcredit_SendCoinsRecipient *out)
 {
@@ -176,6 +234,19 @@ bool parseBitcreditURI(QString uri, Bitcredit_SendCoinsRecipient *out)
     QUrl uriInstance(uri);
     return parseBitcreditURI(uriInstance, out);
 }
+bool parseBitcoinURI(QString uri, Bitcoin_SendCoinsRecipient *out)
+{
+    // Convert bitcoin:// to bitcoin:
+    //
+    //    Cannot handle this later, because bitcoin:// will cause Qt to see the part after // as host,
+    //    which will lower-case it (and thus invalidate the address).
+    if(uri.startsWith("bitcoin://", Qt::CaseInsensitive))
+    {
+        uri.replace(0, 12, "bitcoin:");
+    }
+    QUrl uriInstance(uri);
+    return parseBitcoinURI(uriInstance, out);
+}
 
 QString formatBitcreditURI(const Bitcredit_SendCoinsRecipient &info)
 {
@@ -185,6 +256,33 @@ QString formatBitcreditURI(const Bitcredit_SendCoinsRecipient &info)
     if (info.amount)
     {
         ret += QString("?amount=%1").arg(BitcreditUnits::format(BitcreditUnits::CRE, info.amount));
+        paramCount++;
+    }
+
+    if (!info.label.isEmpty())
+    {
+        QString lbl(QUrl::toPercentEncoding(info.label));
+        ret += QString("%1label=%2").arg(paramCount == 0 ? "?" : "&").arg(lbl);
+        paramCount++;
+    }
+
+    if (!info.message.isEmpty())
+    {
+        QString msg(QUrl::toPercentEncoding(info.message));;
+        ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
+        paramCount++;
+    }
+
+    return ret;
+}
+QString formatBitcoinURI(const Bitcoin_SendCoinsRecipient &info)
+{
+    QString ret = QString("bitcoin:%1").arg(info.address);
+    int paramCount = 0;
+
+    if (info.amount)
+    {
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::BTC, info.amount));
         paramCount++;
     }
 
