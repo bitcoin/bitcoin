@@ -362,7 +362,7 @@ dashd_SOURCES = dashd.cpp
 #
 
 if TARGET_WINDOWS
-dashd_SOURCES += dash-res.rc
+dashd_SOURCES += dashd-res.rc
 endif
 
 dashd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
@@ -406,6 +406,7 @@ dash_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libbitcoinconsensus_la_SOURCES = \
+  allocators.cpp \
   primitives/transaction.cpp \
   crypto/hmac_sha512.cpp \
   crypto/sha1.cpp \
