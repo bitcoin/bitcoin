@@ -30,6 +30,9 @@ inline bool AllowFree(double dPriority)
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
+/** CMinerPolicyEstimator bucket count */
+static const unsigned int MEMPOOL_ESTIMATE_MAXTARGET = 25;
+
 /**
  * CTxMemPool stores these:
  */

@@ -590,12 +590,12 @@ void SendCoinsDialog::updateGlobalFeeVariables()
 {
     if (ui->radioSmartFee->isChecked())
     {
-        nTxConfirmTarget = (int)25 - (int)std::max(0, std::min(24, ui->sliderSmartFee->value()));
+        nTxConfirmTarget = MEMPOOL_ESTIMATE_MAXTARGET - (unsigned int)std::max((unsigned int)0, std::min((MEMPOOL_ESTIMATE_MAXTARGET - 1), (unsigned int)ui->sliderSmartFee->value()));
         payTxFee = CFeeRate(0);
     }
     else
     {
-        nTxConfirmTarget = 25;
+        nTxConfirmTarget = MEMPOOL_ESTIMATE_MAXTARGET;
         payTxFee = CFeeRate(ui->customFee->value());
         fPayAtLeastCustomFee = ui->radioCustomAtLeast->isChecked();
     }

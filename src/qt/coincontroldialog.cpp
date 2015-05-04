@@ -538,7 +538,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
 
         // Priority
-        double mempoolEstimatePriority = mempool.estimatePriority(nTxConfirmTarget);
+        double mempoolEstimatePriority = mempool.estimatePriority(MEMPOOL_ESTIMATE_MAXTARGET);
         dPriority = dPriorityInputs / (nBytes - nBytesInputs + (nQuantityUncompressed * 29)); // 29 = 180 - 151 (uncompressed public keys are over the limit. max 151 bytes of the input are ignored for priority)
         sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority, mempoolEstimatePriority);
 
@@ -551,7 +551,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
 
         // Allow free?
-        double dPriorityNeeded = mempoolEstimatePriority;
+        double dPriorityNeeded = mempool.estimatePriority(nTxConfirmTarget);
         if (dPriorityNeeded <= 0)
             dPriorityNeeded = AllowFreeThreshold(); // not enough data, back to hard-coded
         fAllowFree = (dPriority >= dPriorityNeeded);
@@ -640,7 +640,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     toolTip1 += tr("Can vary +/- 1 byte per input.");
 
     QString toolTip2 = tr("Transactions with higher priority are more likely to get included into a block.") + "<br /><br />";
-    toolTip2 += tr("This label turns red, if the priority is smaller than \"medium\".") + "<br /><br />";
+    toolTip2 += tr("This label turns red, if the priority is too low to send as zero-fee transaction.") + "<br /><br />";
     toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CWallet::minTxFee.GetFeePerK()));
 
     QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, ::minRelayTxFee.GetFee(546)));
@@ -686,7 +686,7 @@ void CoinControlDialog::updateView()
     QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsTristate;
 
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
-    double mempoolEstimatePriority = mempool.estimatePriority(nTxConfirmTarget);
+    double mempoolEstimatePriority = mempool.estimatePriority(MEMPOOL_ESTIMATE_MAXTARGET);
 
     map<QString, vector<COutput> > mapCoins;
     model->listCoins(mapCoins);
