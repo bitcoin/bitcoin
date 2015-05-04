@@ -30,13 +30,13 @@ void SetMockTime(int64_t nMockTimeIn)
 
 int64_t GetTimeMillis()
 {
-    return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
+    return (boost::posix_time::microsec_clock::universal_time() -
             boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_milliseconds();
 }
 
 int64_t GetTimeMicros()
 {
-    return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time()) -
+    return (boost::posix_time::microsec_clock::universal_time() -
             boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
 }
 
