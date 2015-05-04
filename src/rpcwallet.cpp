@@ -43,11 +43,11 @@ void WalletTxToJSON(const CWalletTx& wtx, Object& entry)
     {
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", (boost::int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
+        entry.push_back(Pair("blocktime", (int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
     }
     entry.push_back(Pair("txid", wtx.GetHash().GetHex()));
-    entry.push_back(Pair("time", (boost::int64_t)wtx.GetTxTime()));
-    entry.push_back(Pair("timereceived", (boost::int64_t)wtx.nTimeReceived));
+    entry.push_back(Pair("time", (int64_t)wtx.GetTxTime()));
+    entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
     BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
@@ -79,7 +79,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("newmint",       ValueFromAmount(pwalletMain->GetNewMint())));
     obj.push_back(Pair("stake",         ValueFromAmount(pwalletMain->GetStake())));
     obj.push_back(Pair("blocks",        (int)nBestHeight));
-    obj.push_back(Pair("timeoffset",    (boost::int64_t)GetTimeOffset()));
+    obj.push_back(Pair("timeoffset",    (int64_t)GetTimeOffset()));
     obj.push_back(Pair("moneysupply",   ValueFromAmount(pindexBest->nMoneySupply)));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
@@ -90,12 +90,12 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("difficulty",    diff));
 
     obj.push_back(Pair("testnet",       fTestNet));
-    obj.push_back(Pair("keypoololdest", (boost::int64_t)pwalletMain->GetOldestKeyPoolTime()));
+    obj.push_back(Pair("keypoololdest", (int64_t)pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
     obj.push_back(Pair("mininput",      ValueFromAmount(nMinimumInputValue)));
     if (pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime / 1000));
+        obj.push_back(Pair("unlocked_until", (int64_t)nWalletUnlockTime / 1000));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
@@ -1126,7 +1126,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
         Object entry;
         entry.push_back(Pair("account", acentry.strAccount));
         entry.push_back(Pair("category", "move"));
-        entry.push_back(Pair("time", (boost::int64_t)acentry.nTime));
+        entry.push_back(Pair("time", (int64_t)acentry.nTime));
         entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
         entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
         entry.push_back(Pair("comment", acentry.strComment));
