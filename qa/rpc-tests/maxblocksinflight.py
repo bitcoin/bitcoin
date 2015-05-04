@@ -61,10 +61,11 @@ class TestManager(NodeConnCB):
                 time.sleep(2)
 
                 total_requests = 0
-                for key in self.blockReqCounts:
-                    total_requests += self.blockReqCounts[key]
-                    if self.blockReqCounts[key] > 1:
-                        raise AssertionError("Error, test failed: block %064x requested more than once" % key)
+                with mininode_lock:
+                    for key in self.blockReqCounts:
+                        total_requests += self.blockReqCounts[key]
+                        if self.blockReqCounts[key] > 1:
+                            raise AssertionError("Error, test failed: block %064x requested more than once" % key)
                 if total_requests > MAX_REQUESTS:
                     raise AssertionError("Error, too many blocks (%d) requested" % total_requests)
                 print "Round %d: success (total requests: %d)" % (count, total_requests)
