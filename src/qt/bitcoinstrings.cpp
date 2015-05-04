@@ -109,7 +109,10 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "isolation (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Reduce storage requirements by pruning (deleting) old blocks. This mode "
-"disables wallet support and is incompatible with -txindex."),
+"disables wallet support and is incompatible with -txindex. Warning: "
+"Reverting this setting requires re-downloading the entire blockchain. "
+"(default: 0 = disable pruning blocks, >%u = target size in MiB to use for "
+"block files)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Require high priority for relaying free or low-fee transactions (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -158,9 +161,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: Please check that your computer's date and time are correct! If "
 "your clock is wrong Bitcoin Core will not work properly."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Warning: Reverting this setting requires re-downloading the entire "
-"blockchain."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -184,14 +184,13 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "mode.  This will redownload the entire blockchain"),
 QT_TRANSLATE_NOOP("bitcoin-core", "(default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "(default: %u)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "(default: 0 = disable pruning blocks,"),
 QT_TRANSLATE_NOOP("bitcoin-core", "(default: 1)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "<category> can be:"),
-QT_TRANSLATE_NOOP("bitcoin-core", ">%u = target size in MiB to use for block files)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept command line and JSON-RPC commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept connections from outside (default: 1 if no -proxy or -connect)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Accept public REST requests (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Acceptable ciphers (default: %s)"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Activating best chain..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Add a node to connect to and attempt to keep the connection open"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Allow self signed root certificates (default: 0)"),
@@ -276,7 +275,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "RPC server options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC support for HTTP persistent connections (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Randomly drop 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Randomly fuzz 1 of every <n> network messages"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Rebuild block chain index from current blk000??.dat files"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay and mine data carrier transactions (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescan the block chain for missing wallet transactions"),
