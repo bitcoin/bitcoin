@@ -11,7 +11,7 @@
 
 class CBlockIndex;
 
-/** 
+/**
  * Block-chain checkpoints are compiled-in sanity checks.
  * They are updated every release or three.
  */

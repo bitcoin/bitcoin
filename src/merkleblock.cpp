@@ -119,8 +119,8 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
         if (pos*2+1 < CalcTreeWidth(height-1)) {
             right = TraverseAndExtract(height-1, pos*2+1, nBitsUsed, nHashUsed, vMatch);
             if (right == left) {
-                // If the left and right branch should never be identical as the transaction
-                // hashes covered by them must be unique.
+                // The left and right branches should never be identical, as the transaction
+                // hashes covered by them must each be unique.
                 fBad = true;
             }
         } else {
