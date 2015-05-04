@@ -1396,8 +1396,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     bool mdex_propertyId_Div = false;
     uint64_t mdex_propertyWanted = 0;
     uint64_t mdex_amountWanted = 0;
+    uint64_t mdex_amountRemaining = 0;
     bool mdex_propertyWanted_Div = false;
     unsigned int mdex_action = 0;
+    string mdex_unitPriceStr;
     string mdex_actionStr;
 
     if (0 == blockHash) { return MP_TX_UNCONFIRMED; }
@@ -1503,7 +1505,18 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                      mdex_propertyWanted = temp_metadexoffer.getDesProperty();
                                      mdex_propertyWanted_Div = isPropertyDivisible(mdex_propertyWanted);
                                      mdex_amountWanted = temp_metadexoffer.getAmountDesired();
+                                     mdex_amountRemaining = temp_metadexoffer.getAmountRemaining();
                                      mdex_action = temp_metadexoffer.getAction();
+                                     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
+                                     XDOUBLE tempUnitPrice = 0;
+                                     if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
+                                         tempUnitPrice = temp_metadexoffer.inversePrice();
+                                         if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                     } else {
+                                         tempUnitPrice = temp_metadexoffer.effectivePrice();
+                                         if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                     }
+                                     mdex_unitPriceStr = tempUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
                                      if(1 == mdex_action) mdex_actionStr = "new sell";
                                      if(2 == mdex_action) mdex_actionStr = "cancel price";
                                      if(3 == mdex_action) mdex_actionStr = "cancel pair";
@@ -1688,18 +1701,17 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
         }
         if (MSC_TYPE_METADEX == MPTxTypeInt)
         {
-            txobj->push_back(Pair("amountoffered", FormatMP(propertyId, amount)));
-            txobj->push_back(Pair("propertyoffered", propertyId));
-            txobj->push_back(Pair("propertyofferedisdivisible", mdex_propertyId_Div));
+            txobj->push_back(Pair("propertyidforsale", propertyId));
+            txobj->push_back(Pair("propertyidforsaleisdivisible", mdex_propertyId_Div));
+            txobj->push_back(Pair("amountforsale", FormatMP(propertyId, amount)));
+            txobj->push_back(Pair("amountremaining", FormatMP(propertyId, mdex_amountRemaining)));
+            txobj->push_back(Pair("propertyiddesired", mdex_propertyWanted));
+            txobj->push_back(Pair("propertyiddesiredisdivisible", mdex_propertyWanted_Div));
             txobj->push_back(Pair("amountdesired", FormatMP(mdex_propertyWanted, mdex_amountWanted)));
-            txobj->push_back(Pair("propertydesired", mdex_propertyWanted));
-            txobj->push_back(Pair("propertydesiredisdivisible", mdex_propertyWanted_Div));
+            txobj->push_back(Pair("unitprice", mdex_unitPriceStr));
             txobj->push_back(Pair("action", mdex_actionStr));
-            //txobj->push_back(Pair("unit_price", mdex_unitPrice ) );
-            //txobj->push_back(Pair("inverse_unit_price", mdex_invUnitPrice ) );
-            //active?
-            //txobj->push_back(Pair("amount_original", FormatDivisibleMP(mdex_amt_orig_sale)));
-            //txobj->push_back(Pair("amount_desired", FormatDivisibleMP(mdex_amt_des)));
+            if (mdex_actionStr == "cancel all") txobj->push_back(Pair("ecosystem",
+                isTestEcosystemProperty(propertyId) ? "Test" : "Main"));
         }
         txobj->push_back(Pair("valid", valid));
     }
