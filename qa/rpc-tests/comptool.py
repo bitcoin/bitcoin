@@ -25,6 +25,8 @@ generator that returns TestInstance objects.  See below for definition.
 # on_getheaders: provide headers via BlockStore
 # on_getdata: provide blocks via BlockStore
 
+global mininode_lock
+
 class TestNode(NodeConnCB):
 
     def __init__(self, block_store, tx_store):
@@ -148,10 +150,11 @@ class TestManager(object):
         max_tries = 10 / sleep_time  # Wait at most 10 seconds
         while max_tries > 0:
             done = True
-            for c in self.connections:
-                if c.cb.verack_received is False:
-                    done = False
-                    break
+            with mininode_lock:
+                for c in self.connections:
+                    if c.cb.verack_received is False:
+                        done = False
+                        break
             if done:
                 break
             time.sleep(sleep_time)
@@ -161,10 +164,11 @@ class TestManager(object):
         while received_pongs is not True:
             time.sleep(0.05)
             received_pongs = True
-            for c in self.connections:
-                if c.cb.received_ping_response(counter) is not True:
-                    received_pongs = False
-                    break
+            with mininode_lock:
+                for c in self.connections:
+                    if c.cb.received_ping_response(counter) is not True:
+                        received_pongs = False
+                        break
 
     # sync_blocks: Wait for all connections to request the blockhash given
     # then send get_headers to find out the tip of each node, and synchronize
@@ -173,8 +177,9 @@ class TestManager(object):
         # Wait for nodes to request block (50ms sleep * 20 tries * num_blocks)
         max_tries = 20*num_blocks
         while max_tries > 0:
-            results = [ blockhash in c.cb.block_request_map and
-                        c.cb.block_request_map[blockhash] for c in self.connections ]
+            with mininode_lock:
+                results = [ blockhash in c.cb.block_request_map and
+                            c.cb.block_request_map[blockhash] for c in self.connections ]
             if False not in results:
                 break
             time.sleep(0.05)
@@ -199,8 +204,9 @@ class TestManager(object):
         # Wait for nodes to request transaction (50ms sleep * 20 tries * num_events)
         max_tries = 20*num_events
         while max_tries > 0:
-            results = [ txhash in c.cb.tx_request_map and
-                        c.cb.tx_request_map[txhash] for c in self.connections ]
+            with mininode_lock:
+                results = [ txhash in c.cb.tx_request_map and
+                            c.cb.tx_request_map[txhash] for c in self.connections ]
             if False not in results:
                 break
             time.sleep(0.05)
@@ -221,19 +227,21 @@ class TestManager(object):
         self.ping_counter += 1
 
         # Sort inv responses from each node
-        [ c.cb.lastInv.sort() for c in self.connections ]
+        with mininode_lock:
+            [ c.cb.lastInv.sort() for c in self.connections ]
 
     # Verify that the tip of each connection all agree with each other, and
     # with the expected outcome (if given)
     def check_results(self, blockhash, outcome):
-        for c in self.connections:
-            if outcome is None:
-                if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
+        with mininode_lock:
+            for c in self.connections:
+                if outcome is None:
+                    if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
+                        return False
+                elif ((c.cb.bestblockhash == blockhash) != outcome):
+                    # print c.cb.bestblockhash, blockhash, outcome
                     return False
-            elif ((c.cb.bestblockhash == blockhash) != outcome):
-                # print c.cb.bestblockhash, blockhash, outcome
-                return False
-        return True
+            return True
 
     # Either check that the mempools all agree with each other, or that
     # txhash's presence in the mempool matches the outcome specified.
@@ -242,16 +250,17 @@ class TestManager(object):
     # perhaps it would be useful to add the ability to check explicitly that
     # a particular tx's existence in the mempool is the same across all nodes.
     def check_mempool(self, txhash, outcome):
-        for c in self.connections:
-            if outcome is None:
-                # Make sure the mempools agree with each other
-                if c.cb.lastInv != self.connections[0].cb.lastInv:
-                    # print c.rpc.getrawmempool()
+        with mininode_lock:
+            for c in self.connections:
+                if outcome is None:
+                    # Make sure the mempools agree with each other
+                    if c.cb.lastInv != self.connections[0].cb.lastInv:
+                        # print c.rpc.getrawmempool()
+                        return False
+                elif ((txhash in c.cb.lastInv) != outcome):
+                    # print c.rpc.getrawmempool(), c.cb.lastInv
                     return False
-            elif ((txhash in c.cb.lastInv) != outcome):
-                # print c.rpc.getrawmempool(), c.cb.lastInv
-                return False
-        return True
+            return True
 
     def run(self):
         # Wait until verack is received
@@ -272,9 +281,10 @@ class TestManager(object):
                     block = b_or_t
                     block_outcome = outcome
                     # Add to shared block_store, set as current block
-                    self.block_store.add_block(block)
-                    for c in self.connections:
-                        c.cb.block_request_map[block.sha256] = False
+                    with mininode_lock:
+                        self.block_store.add_block(block)
+                        for c in self.connections:
+                            c.cb.block_request_map[block.sha256] = False
                     # Either send inv's to each node and sync, or add
                     # to invqueue for later inv'ing.
                     if (test_instance.sync_every_block):
@@ -288,10 +298,11 @@ class TestManager(object):
                     assert(isinstance(b_or_t, CTransaction))
                     tx = b_or_t
                     tx_outcome = outcome
-                    # Add to shared tx store
-                    self.tx_store.add_transaction(tx)
-                    for c in self.connections:
-                        c.cb.tx_request_map[tx.sha256] = False
+                    # Add to shared tx store and clear map entry
+                    with mininode_lock:
+                        self.tx_store.add_transaction(tx)
+                        for c in self.connections:
+                            c.cb.tx_request_map[tx.sha256] = False
                     # Again, either inv to all nodes or save for later
                     if (test_instance.sync_every_tx):
                         [ c.cb.send_inv(tx) for c in self.connections ]
@@ -302,7 +313,7 @@ class TestManager(object):
                         invqueue.append(CInv(1, tx.sha256))
                 # Ensure we're not overflowing the inv queue
                 if len(invqueue) == MAX_INV_SZ:
-                    [ c.sb.send_message(msg_inv(invqueue)) for c in self.connections ]
+                    [ c.send_message(msg_inv(invqueue)) for c in self.connections ]
                     invqueue = []
 
             # Do final sync if we weren't syncing on every block or every tx.
