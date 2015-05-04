@@ -1880,6 +1880,8 @@ enum FlushStateMode {
 bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
     LOCK2(cs_main, cs_LastBlockFile);
     static int64_t nLastWrite = 0;
+    static int64_t nLastFlush = 0;
+    static int64_t nLastSetChain = 0;
     std::set<int> setFilesToPrune;
     bool fFlushForPrune = false;
     try {
@@ -1893,16 +1895,36 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
             }
         }
     }
-    if ((mode == FLUSH_STATE_ALWAYS) ||
-        ((mode == FLUSH_STATE_PERIODIC || mode == FLUSH_STATE_IF_NEEDED) && pcoinsTip->DynamicMemoryUsage() > nCoinCacheUsage) ||
-        (mode == FLUSH_STATE_PERIODIC && GetTimeMicros() > nLastWrite + DATABASE_WRITE_INTERVAL * 1000000) ||
-        fFlushForPrune) {
-        // Typical CCoins structures on disk are around 100 bytes in size.
+    int64_t nNow = GetTimeMicros();
+    // Avoid writing/flushing immediately after startup.
+    if (nLastWrite == 0) {
+        nLastWrite = nNow;
+    }
+    if (nLastFlush == 0) {
+        nLastFlush = nNow;
+    }
+    if (nLastSetChain == 0) {
+        nLastSetChain = nNow;
+    }
+    size_t cacheSize = pcoinsTip->DynamicMemoryUsage();
+    // The cache is large and close to the limit, but we have time now (not in the middle of a block processing).
+    bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize * (10.0/9) > nCoinCacheUsage;
+    // The cache is over the limit, we have to write now.
+    bool fCacheCritical = mode == FLUSH_STATE_IF_NEEDED && cacheSize > nCoinCacheUsage;
+    // It's been a while since we wrote the block index to disk. Do this frequently, so we don't need to redownload after a crash.
+    bool fPeriodicWrite = mode == FLUSH_STATE_PERIODIC && nNow > nLastWrite + (int64_t)DATABASE_WRITE_INTERVAL * 1000000;
+    // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
+    bool fPeriodicFlush = mode == FLUSH_STATE_PERIODIC && nNow > nLastFlush + (int64_t)DATABASE_FLUSH_INTERVAL * 1000000;
+    // Combine all conditions that result in a full cache flush.
+    bool fDoFullFlush = (mode == FLUSH_STATE_ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
+    // Write blocks and block index to disk.
+    if (fDoFullFlush || fPeriodicWrite) {
+        // Typical CCoins structures on disk are around 128 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-        if (!CheckDiskSpace(100 * 2 * 2 * pcoinsTip->GetCacheSize()))
+        if (fDoFullFlush && !CheckDiskSpace(128 * 2 * 2 * pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
         // First make sure all block and undo data is flushed to disk.
         FlushBlockFile();
@@ -1924,21 +1946,24 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
                 return state.Abort("Files to write to block index database");
             }
         }
-        // Flush the chainstate (which may refer to block index entries).
-        if (!pcoinsTip->Flush())
-            return state.Abort("Failed to write to coin database");
-
         // Finally remove any pruned files
         if (fFlushForPrune) {
             UnlinkPrunedFiles(setFilesToPrune);
             fCheckForPruning = false;
         }
-
+        nLastWrite = nNow;
+    }
+    // Flush best chain related state. This can only be done if the blocks / block index write was also done.
+    if (fDoFullFlush) {
+        // Flush the chainstate (which may refer to block index entries).
+        if (!pcoinsTip->Flush())
+            return state.Abort("Failed to write to coin database");
+        nLastFlush = nNow;
+    }
+    if ((mode == FLUSH_STATE_ALWAYS || mode == FLUSH_STATE_PERIODIC) && nNow > nLastSetChain + (int64_t)DATABASE_WRITE_INTERVAL * 1000000) {
         // Update best block in wallet (so we can detect restored wallets).
-        if (mode != FLUSH_STATE_IF_NEEDED) {
-            GetMainSignals().SetBestChain(chainActive.GetLocator());
-        }
-        nLastWrite = GetTimeMicros();
+        GetMainSignals().SetBestChain(chainActive.GetLocator());
+        nLastSetChain = nNow;
     }
     } catch (const std::runtime_error& e) {
         return state.Abort(std::string("System error while flushing: ") + e.what());
