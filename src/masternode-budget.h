@@ -79,7 +79,7 @@ public:
     void Calculate();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     CBudgetProposal *Find(const std::string &strProposalName);
-    inline void NewBlock();
+    void NewBlock();
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
     
     void CleanUp();
