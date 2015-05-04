@@ -684,7 +684,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
     QDateTime currentDate = QDateTime::currentDateTime();
     qint64 secs = blockDate.secsTo(currentDate);
 
-    tooltip = tr("Processed %n blocks of transaction history.", "", count);
+    tooltip = tr("Processed %n block(s) of transaction history.", "", count);
 
     // Set icon state: spinning if catching up, tick otherwise
     if(secs < 90*60)
