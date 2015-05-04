@@ -1474,6 +1474,7 @@ void ThreadMessageHandler()
             boost::this_thread::interruption_point();
         }
 
+
         {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodesCopy)
@@ -1481,7 +1482,10 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            MilliSleep(100);
+            MilliSleep(1);
+
+        boost::this_thread::interruption_point();
+
     }
 }
 
@@ -1678,6 +1682,7 @@ void StartNode(boost::thread_group& threadGroup)
 
     // Dump network addresses
     threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, DUMP_ADDRESSES_INTERVAL * 1000));
+
 }
 
 bool StopNode()
