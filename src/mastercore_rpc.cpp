@@ -2096,7 +2096,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
             if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
         }
     }
-    if ((0 > parseRC) || (propertyId == 0) || (senderAddress.empty()) // something went wrong, couldn't decode - bad packet?
+    if ((0 > parseRC) || (propertyId == 0) || (senderAddress.empty())) // something went wrong, couldn't decode - bad packet?
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
 
     // make a request to RPC populator function to populate a transaction object
