@@ -1,9 +1,9 @@
-<TS language="sv" version="2.0">
+<TS language="sv" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Höger-klicka för att ändra adressen eller etiketten.</translation>
+        <translation>Högerklicka för att ändra adressen eller etiketten.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1286,8 +1286,8 @@ Adress: %4
         <translation>Återbetalning från %1</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>Betalningsbegäran %2 är för stor (%3 bytes, tillåten %4 bytes)</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Betalningsbegäran %1 är för stor (%2 bytes, tillåten %3 bytes)</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3080,6 +3080,11 @@ Adress: %4
         <translation>Sök efter klientadresser med DNS sökningen, om det finns otillräckligt med adresser (förvalt: 1 om inte -connect)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Begär hög-prioritet för relätrafik eller lågavgifts transaktioner
+(förvalt: %u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Sätt den maximala storleken av hög-prioriterade/låg-avgifts transaktioner i byte (förvalt: %d)</translation>
     </message>
@@ -3148,6 +3153,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fel vid inläsningen av wallet.dat: Kontofilen kräver en senare version av Bitcoin Core</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Fel vid läsning från databas, avslutar.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fel: Argumentet -tor stöds inte, använd -onion.</translation>
     </message>
@@ -3202,6 +3211,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>RPC server options:</source>
         <translation>RPC serveroptioner:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC support för HTTP permanent anslutning (förvalt: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

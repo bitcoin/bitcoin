@@ -1,4 +1,4 @@
-<TS language="tr" version="2.0">
+<TS language="tr" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1287,10 +1287,6 @@ Adres: %4
     <message>
         <source>Refund from %1</source>
         <translation>%1 öğesinden iade</translation>
-    </message>
-    <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>%2 ödeme talebi çok büyüktür (%3 bayt, müsaade edilen %4 bayt).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>

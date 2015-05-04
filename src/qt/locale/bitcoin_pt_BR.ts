@@ -1,4 +1,4 @@
-<TS language="pt_BR" version="2.0">
+<TS language="pt_BR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -296,7 +296,7 @@
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>Cliente Bitcoin Core</translation>
+        <translation>Cliente Bitcoin</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -352,7 +352,7 @@
     </message>
     <message>
         <source>Show information about Bitcoin Core</source>
-        <translation>Mostrar informações sobre Bitcoin Core</translation>
+        <translation>Mostrar informações sobre Bitcoin</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -368,7 +368,7 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Assine mensagems com seus endereços Bitcoin para provar que você é dono deles</translation>
+        <translation>Assine mensagens com seus endereços Bitcoin para provar que você é dono delas</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -392,7 +392,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Núcleo Bitcoin</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -400,7 +400,7 @@
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;A respeito do Bitcoin Core</translation>
+        <translation>&amp;Sobre Bitcoin</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -420,7 +420,7 @@
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Mostra a mensagem de ajuda do Bitcoin Core para pegar a lista com os comandos possíveis</translation>
+        <translation>Mostra a mensagem de ajuda do Bitcoin para pegar a lista com os comandos possíveis</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -822,7 +822,7 @@ Endereço: %4</translation>
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Núcleo Bitcoin</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>version</source>
@@ -834,7 +834,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>About Bitcoin Core</source>
-        <translation>Sobre o Bitcoin Core</translation>
+        <translation>Sobre o Bitcoin</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -881,15 +881,15 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation>Bem vindo ao Bitcoin Core.</translation>
+        <translation>Bem vindo ao Bitcoin.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>A primeira vez que o programa é aberto você pode escolher onde o Bitcoin Core vai guardar os dados.</translation>
+        <translation>A primeira vez que o programa é aberto você pode escolher onde o Bitcoin vai guardar os dados.</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin Core vai fazer download e guardar uma cópia da longa e única cadeia de blocos do Bitcoin: Blockchain. Pelo menos %1 GB de dados serão armazenados nesse diretório e isso aumentará ao longo do tempo. Sua carteira também será armazenada nesse diretório.</translation>
+        <translation>O Bitcoin vai fazer download e salvar uma cópia da cadeia de blocos do Bitcoin: Blockchain. Pelo menos %1 GB de dados serão armazenados nesse diretório e isso aumentará ao longo do tempo. Sua carteira também será armazenada nesse diretório.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -901,7 +901,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Núcleo Bitcoin</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -991,7 +991,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
-        <translation>URLs da transação de terceiros</translation>
+        <translation>URLs de transação de terceiros:</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
@@ -1087,7 +1087,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>&amp;Língua da interface com usuário:</translation>
+        <translation>&amp;Linguagem da interface:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
@@ -1154,7 +1154,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation>Apenas visualizar:</translation>
+        <translation>Monitorados:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1270,10 +1270,6 @@ Endereço: %4</translation>
     <message>
         <source>Refund from %1</source>
         <translation>Reembolso de %1</translation>
-    </message>
-    <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>Solicitação de pagamento %2 muito grande (%3 bytes, %4 bytes permitido).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -1848,8 +1844,28 @@ Endereço: %4</translation>
         <translation>Minimizar</translation>
     </message>
     <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Se a taxa personalizada for definida em 1000 satoshis e a transação tiver somente 250 bytes, então "por kilobyte" somente paga 250 satoshis de taxa, enquanto "pelo menos" paga 1000 satoshis. Se a transação for maior que 1 kilobyte, ambos pagam por kilobyte.</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>por kilobyte</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Se a taxa personalizada for definida em 1000 satoshis e a transação tiver somente 250 bytes, então "por kilobyte" somente paga 250 satoshis de taxa, enquanto "pelo menos" paga 1000 satoshis. Se a transação for maior que 1 kilobyte, ambos pagam por kilobyte.</translation>
+    </message>
+    <message>
+        <source>total at least</source>
+        <translation>pelo menos</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Pagando apenas a taxa mínima é bom, desde que haja pouco volume de transações. Mas esteja ciente de que isso pode acabar em uma transação nunca confirmanda uma vez que há mais demanda por transações do que a rede pode processar.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(Leia o popup)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -2103,7 +2119,7 @@ Endereço: %4</translation>
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>Bitcoin Core está desligando...</translation>
+        <translation>Bitcoin está desligando...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2122,7 +2138,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Você pode assinar mensagens com seus endereços para provar que você é o dono deles. Seja cuidadoso para não assinar algo vago, pois ataques de pishing podem tentar te enganar para dar sua assinatura de identidade para eles. Apenas assine afirmações completamente detalhadas com as quais você concorda.</translation>
+        <translation>Você pode assinar mensagens com seus endereços para provar que você é o dono delas. Seja cuidadoso para não assinar algo vago, pois ataques de phishing podem tentar te enganar para dar sua assinatura de identidade para eles. Apenas assine afirmações completamente detalhadas com as quais você concorda.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2253,11 +2269,11 @@ Endereço: %4</translation>
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Núcleo Bitcoin</translation>
+        <translation>Bitcoin</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation>Programadores do Bitcoin Core</translation>
+        <translation>Programadores do Bitcoin</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2327,7 +2343,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>Vizualização apenas</translation>
+        <translation>monitorado</translation>
     </message>
     <message>
         <source>label</source>
@@ -2497,7 +2513,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Enviado para</translation>
+        <translation>Enviado</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
@@ -2509,7 +2525,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>watch-only</source>
-        <translation>Vizualização apenas</translation>
+        <translation>monitorado</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -2572,7 +2588,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Enviado para</translation>
+        <translation>Enviado</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -2624,7 +2640,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Watch-only</source>
-        <translation>Vizualização apenas</translation>
+        <translation>Monitorado</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -2803,7 +2819,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
-        <translation>Impossível ouvir em %s neste computador. Bitcoin Core já está sendo executado provavelmente.</translation>
+        <translation>Impossível ouvir em %s neste computador. Provavelmente o Bitcoin já está sendo executado.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2979,7 +2995,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>Não foi possível obter acesso exclusivo ao diretório de dados %s. Bitcoin Core já está sendo executado provavelmente.</translation>
+        <translation>Não foi possível obter acesso exclusivo ao diretório de dados %s. Provavelmente Bitcoin já está sendo executado.</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -3043,7 +3059,11 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
-        <translation>Erro carregando wallet.dat: A carteira requer a nova versão do Bitcoin Core</translation>
+        <translation>Erro ao carregar wallet.dat: A carteira requer a nova versão do Bitcoin</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Erro ao ler o banco de dados. Finalizando.</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
@@ -3102,6 +3122,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
         <translation>Mandar informação de trace/debug para o console em vez de para o arquivo debug.log</translation>
     </message>
     <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>Enviar transação sem taxa, se possível (padrão: %u)</translation>
+    </message>
+    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Exibir todas opções de debug (uso: --help -help-debug)</translation>
     </message>
@@ -3155,7 +3179,7 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Atenção: Esta versão está obsoleta, atualização exigida!</translation>
+        <translation>Atenção: Esta versão está obsoleta, atualização necessária!</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3236,6 +3260,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Aguardar por conexões na porta &lt;port&gt; (padrão: %u ou testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>Arquivo de certificado do servidor (padrão: %s)</translation>
     </message>
     <message>
         <source>Server private key (default: %s)</source>

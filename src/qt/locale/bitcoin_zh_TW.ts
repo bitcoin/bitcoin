@@ -1,4 +1,4 @@
-<TS language="zh_TW" version="2.0">
+<TS language="zh_TW" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -344,11 +344,11 @@
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>付款</translation>
+        <translation>已傳送</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>收款</translation>
+        <translation>已接收</translation>
     </message>
     <message>
         <source>Show information about Bitcoin Core</source>
@@ -804,7 +804,7 @@ Address: %4
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>就要造出新的資料目錄。</translation>
+        <translation>就要產生新的資料目錄。</translation>
     </message>
     <message>
         <source>name</source>
@@ -1289,8 +1289,8 @@ Address: %4
         <translation>來自 %1 的退款</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>付款要求 %2 過大 (%3 位元組, 上限 %4 位元組).</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>付款要求 %1 過大 (%2 位元組, 上限 %3 位元組).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3084,6 +3084,10 @@ Address: %4
         <translation>是否允許在節點位址數目不足時，使用域名查詢來搜尋節點 (預設值: 當沒用 -connect 時為 1)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>沒有手續費或手續費比較低的交易是否必須要是高優先權才會轉發(預設值: %u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>設定高優先度或低手續費的交易資料大小上限成多少位元組(預設值: %d)</translation>
     </message>
@@ -3156,6 +3160,10 @@ rpcpassword=%s
         <translation>載入 wallet.dat 檔案時發生錯誤: 這個錢包需要新版的位元幣核心</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>讀取資料庫時發生錯誤，要關閉了。</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>錯誤: 找到不再支援的 -tor 參數，請改用 -onion 參數。</translation>
     </message>
@@ -3169,7 +3177,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
-        <translation>初始化時的基本檢查失敗了。位元幣核心將會關閉。</translation>
+        <translation>初始化時的基本檢查失敗了。位元幣核心就要關閉了。</translation>
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
@@ -3210,6 +3218,10 @@ rpcpassword=%s
     <message>
         <source>RPC server options:</source>
         <translation>RPC 伺服器選項:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC 是否支援 HTTP 持久連線(預設值: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

@@ -1,4 +1,4 @@
-<TS language="da" version="2.0">
+<TS language="da" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1285,8 +1285,8 @@ Adresse: %4
         <translation>Tilbagebetaling fra %1</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>Betalingsanmodning %2 er for stor (%3 byte, %4 byte tilladt).</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Betalingsanmodning %1 er for stor (%2 byte, %3 byte tilladt).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3083,6 +3083,10 @@ Adresse: %4
         <translation>Forespørgsel</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Kræv høj prioritet for at videresende transaktioner med intet eller lavt gebyr (standard: %u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Sæt maksimumstørrelse for højprioritet/lavgebyr-transaktioner i byte (standard: %d)</translation>
     </message>
@@ -3155,6 +3159,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fejl ved indlæsning af wallet.dat: Tegnebog kræver en nyere version af Bitcoin Core</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Fejl under læsning fra database; lukker ned.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fejl: Ikke understøttet argument -tor fundet, brug -onion.</translation>
     </message>
@@ -3209,6 +3217,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>RPC server options:</source>
         <translation>Tilvalg for RPC-server:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC-understøttelse for HTTP-persistente forbindelser (standard: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

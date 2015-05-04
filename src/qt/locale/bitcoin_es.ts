@@ -1,4 +1,4 @@
-<TS language="es" version="2.0">
+<TS language="es" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1285,8 +1285,8 @@ Dirección: %4
         <translation>Devolución desde %1</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation> Petición pago %2 es demasiado grande ( %3 bytes , permitió %4 bytes ) .</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>La petición de pago %1 es demasiado grande (%2 bytes, permitidos %3 bytes).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3075,6 +3075,10 @@ Dirección: %4
         <translation>Consulta de direcciones pares mediante búsqueda de DNS, si bajo en direcciones (por defecto: 1 a menos que - conectar)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Se requiere alta prioridad para retransmitir transacciones gratis o de baja comisión (por defecto:%u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Establecer tamaño máximo de las transacciones de alta prioridad/baja comisión en bytes (predeterminado: %d)</translation>
     </message>
@@ -3147,6 +3151,10 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
         <translation>Error al cargar wallet.dat: El monedero requiere una versión más reciente de Bitcoin Core</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Error al leer la base de datos, cerrando.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Error: Argumento encontrado -tor no soportado, utilice -onion</translation>
     </message>
@@ -3201,6 +3209,10 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>RPC server options:</source>
         <translation>Opciones de servidor RPC:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>Soporte RPC para conexiones HTTP persistentes (por defecto: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
