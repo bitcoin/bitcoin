@@ -29,6 +29,7 @@ testScripts=(
     'zapwallettxes.py'
     'proxy_test.py'
     'merkle_blocks.py'
+    'rawtransactions.py'
 #    'forknotify.py'
     'maxblocksinflight.py'
     'invalidblockrequest.py'
