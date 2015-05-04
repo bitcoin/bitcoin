@@ -17,77 +17,13 @@
 
 namespace CoreWallet {
 
-const static std::string DEFAULT_WALLET_FILE = "wallet.wal";
 const static std::string DEFAULT_WALLETS_METADATA_FILE = "multiwallet.dat";
-static std::map<std::string, WalletModel> mapWallets;
-static FileDB *walletsListDB;
-    
+static Manager *managerSharedInstance;
+
 //implemented in corewallet_rpc.cpp
 extern void ExecuteRPC(const std::string& strMethod, const json_spirit::Array& params, json_spirit::Value& result, bool& accept);
 
 
-std::vector<std::string> GetWalletIDs()
-{
-    std::vector<std::string> vIDs;
-    std::pair<std::string, WalletModel> walletAndMetadata; // what a map<int, int> is made of
-    BOOST_FOREACH(walletAndMetadata, mapWallets) {
-        vIDs.push_back(walletAndMetadata.first);
-    }
-    return vIDs;
-}
-    
-CoreWallet::Wallet* GetWalletWithID(const std::string& walletIDIn)
-{
-    std::string walletID = walletIDIn;
-    
-    if (walletID == "" && mapWallets.size() == 1)
-        walletID = mapWallets.begin()->first;
-    
-    if (mapWallets.find(walletID) != mapWallets.end())
-    {
-        if (!mapWallets[walletID].pWallet) //is it closed?
-            mapWallets[walletID].pWallet = new Wallet(walletID);
-        
-        return mapWallets[walletID].pWallet;
-    }
-    
-    return NULL;
-}
-    
-void AppendHelpMessageString(std::string& strUsage, bool debugHelp)
-{
-    if (debugHelp)
-        return;
-    
-    strUsage += HelpMessageGroup(_("CoreWallet options:"));
-    strUsage += HelpMessageOpt("-disablecorewallet", _("Do not load the wallet and disable wallet RPC calls"));
-}
-    
-void readWalletLists()
-{
-    CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
-    if (!multiwalletFile.IsNull())
-    {
-        try {
-            multiwalletFile >> mapWallets;
-        } catch (const std::exception&) {
-            LogPrintf("CoreWallet: could not read multiwallet metadata file (non-fatal)");
-        }
-    }
-}
-
-void writeWalletList()
-{
-    CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
-    if (!multiwalletFile.IsNull())
-        multiwalletFile << mapWallets;
-}
-
-void LoadAsModule(std::string& warningString, std::string& errorString, bool& stopInit)
-{
-    readWalletLists();
-}
-    
 bool CheckFilenameString(const std::string& str)
 {
     static std::string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890._-");
@@ -100,7 +36,46 @@ bool CheckFilenameString(const std::string& str)
     return true;
 }
     
-void AddNewWallet(const std::string& walletID)
+void AppendHelpMessageString(std::string& strUsage, bool debugHelp)
+{
+    if (debugHelp)
+        return;
+    
+    strUsage += HelpMessageGroup(_("CoreWallet options:"));
+    strUsage += HelpMessageOpt("-disablecorewallet", _("Do not load the wallet and disable wallet RPC calls"));
+}
+
+Manager::Manager()
+{
+    ReadWalletLists();
+}
+
+void Manager::ReadWalletLists()
+{
+    CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
+    if (!multiwalletFile.IsNull())
+    {
+        try {
+            multiwalletFile >> mapWallets;
+        } catch (const std::exception&) {
+            LogPrintf("CoreWallet: could not read multiwallet metadata file (non-fatal)");
+        }
+    }
+}
+
+void Manager::WriteWalletList()
+{
+    CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+    if (!multiwalletFile.IsNull())
+        multiwalletFile << mapWallets;
+}
+
+void LoadAsModule(std::string& warningString, std::string& errorString, bool& stopInit)
+{
+    GetManager();
+}
+
+void Manager::AddNewWallet(const std::string& walletID)
 {
     if (mapWallets.find(walletID) != mapWallets.end())
         throw std::runtime_error(_("walletid already exists"));
@@ -111,13 +86,45 @@ void AddNewWallet(const std::string& walletID)
     Wallet *newWallet = new Wallet(walletID);
     mapWallets[walletID] = WalletModel(walletID, newWallet);
     
-    writeWalletList();
+    WriteWalletList();
+}
+
+Wallet* Manager::GetWalletWithID(const std::string& walletIDIn)
+{
+    std::string walletID = walletIDIn;
+
+    if (walletID == "" && mapWallets.size() == 1)
+        walletID = mapWallets.begin()->first;
+
+    if (mapWallets.find(walletID) != mapWallets.end())
+    {
+        if (!mapWallets[walletID].pWallet) //is it closed?
+            mapWallets[walletID].pWallet = new Wallet(walletID);
+
+        return mapWallets[walletID].pWallet;
+    }
+    
+    return NULL;
+}
+
+std::vector<std::string> Manager::GetWalletIDs()
+{
+    std::vector<std::string> vIDs;
+    std::pair<std::string, WalletModel> walletAndMetadata; // what a map<int, int> is made of
+    BOOST_FOREACH(walletAndMetadata, mapWallets) {
+        vIDs.push_back(walletAndMetadata.first);
+    }
+    return vIDs;
 }
 
 void Dealloc()
 {
-    delete walletsListDB;
-    walletsListDB = NULL;
+    if (managerSharedInstance)
+    {
+        UnregisterValidationInterface(managerSharedInstance);
+        delete managerSharedInstance;
+        managerSharedInstance = NULL;
+    }
 }
     
 void RegisterSignals()
@@ -136,4 +143,20 @@ void UnregisterSignals()
     GetMainSignals().CreateHelpString.disconnect(boost::bind(&AppendHelpMessageString, _1, _2));
     GetMainSignals().LoadModules.disconnect(boost::bind(&LoadAsModule, _1, _2, _3));
 }
+
+Manager* GetManager()
+{
+    if (!managerSharedInstance)
+    {
+        managerSharedInstance = new Manager();
+        RegisterValidationInterface(managerSharedInstance);
+    }
+    return managerSharedInstance;
+}
+
+void Manager::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
+{
+
+}
+
 };

@@ -7,14 +7,28 @@
 #define BITCOIN_COREWALLT_COREWALLET_H
 
 #include "corewallet/corewallet_wallet.h"
+#include "validationinterface.h"
+
 
 namespace CoreWallet {
+    class Manager : public CValidationInterface
+    {
+    public:
+        Manager();
+        ~Manager() { }
+        Wallet* GetWalletWithID(const std::string& walletIDIn);
+        std::vector<std::string> GetWalletIDs();
+        void AddNewWallet(const std::string& walletID);
+        void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+    protected:
+        std::map<std::string, WalletModel> mapWallets;
+        void WriteWalletList();
+        void ReadWalletLists();
+    };
+
     void RegisterSignals();
     void UnregisterSignals();
-    
-    std::vector<std::string> GetWalletIDs();
-    Wallet* GetWalletWithID(const std::string& walletID = "");
-    void AddNewWallet(const std::string& walletID);
+    Manager* GetManager();
 };
 
 #endif // BITCOIN_COREWALLT_COREWALLET_H

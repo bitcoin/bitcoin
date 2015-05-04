@@ -76,7 +76,7 @@ Wallet* WalletFromParams(const json_spirit::Array& params)
         if (!possibleValue.is_null())
             walletID = possibleValue.get_str();
     }
-    Wallet* wallet = CoreWallet::GetWalletWithID(walletID);
+    Wallet* wallet = CoreWallet::GetManager()->GetWalletWithID(walletID);
     if (!wallet)
         throw std::runtime_error("Wallet ("+SanitizeString(walletID)+") not found");
     
@@ -146,7 +146,7 @@ json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
                 useSeed = true;
             }
             
-            CPubKey newKey = wallet->GenerateBip32Structure("m/44'/0'/0'/", vch, useSeed);
+            wallet->GenerateBip32Structure("m/44'/0'/0'/", vch, useSeed);
             if (!useSeed)
                 obj.push_back(json_spirit::Pair("seed", HexStr(vch, vch+sizeof(vch))));
         }
@@ -216,7 +216,7 @@ json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
                              );
     
     std::string walletID = params[0].get_str();
-    CoreWallet::AddNewWallet(walletID);
+    CoreWallet::GetManager()->AddNewWallet(walletID);
     
     return json_spirit::Value::null;
 }
@@ -237,7 +237,7 @@ json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp)
                                  );
     
     json_spirit::Array ret;
-    std::vector<std::string> vWalletIDs = CoreWallet::GetWalletIDs();
+    std::vector<std::string> vWalletIDs = CoreWallet::GetManager()->GetWalletIDs();
     BOOST_FOREACH(const std::string& walletID, vWalletIDs)
     {
         ret.push_back(walletID);
