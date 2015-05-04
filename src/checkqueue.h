@@ -54,7 +54,7 @@ private:
 
     /**
      * Number of verifications that haven't completed yet.
-     * This includes elements that are not anymore in queue, but still in
+     * This includes elements that are no longer queued, but still in the
      * worker's own batches.
      */
     unsigned int nTodo;
@@ -81,7 +81,7 @@ private:
                     fAllOk &= fOk;
                     nTodo -= nNow;
                     if (nTodo == 0 && !fMaster)
-                        // We processed the last element; inform the master he or she can exit and return the result
+                        // We processed the last element; inform the master it can exit and return the result
                         condMaster.notify_one();
                 } else {
                     // first iteration
@@ -136,7 +136,7 @@ public:
         Loop();
     }
 
-    //! Wait until execution finishes, and return whether all evaluations where successful.
+    //! Wait until execution finishes, and return whether all evaluations were successful.
     bool Wait()
     {
         return Loop(true);
