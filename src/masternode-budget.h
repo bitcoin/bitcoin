@@ -25,6 +25,9 @@ class CBudgetVote;
 #define VOTE_YES      1
 #define VOTE_NO       2
 
+//Amount of blocks in a months period of time (using 2.6 minutes per)
+#define PAYMENT_CYCLE_BLOCKS 16615
+
 extern CBudgetManager budget;
 
 void DumpBudgets();
@@ -174,6 +177,7 @@ public:
 
     CBudgetVote();
     CBudgetVote(CTxIn vinIn, std::string strProposalNameIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, int nVoteIn);
+    CBudgetVote(CTxIn vinIn, std::string strProposalNameIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nVoteIn);
 
     bool Sign(CKey& keyCollateralAddress, CPubKey& pubKeyMasternode);
     bool SignatureValid();

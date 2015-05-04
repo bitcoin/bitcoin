@@ -39,24 +39,26 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote-many")
     {
-/*        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 5)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many PROPOSAL-NAME BLOCKSTART BLOCKEND XADDRESS AMOUNT YEA|NAY'");
+            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many PROPOSAL-NAME PAYMENT_COUNT DASH_ADDRESS USD_AMOUNT YES|NO|ABSTAIN'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
             return "Invalid proposal name, limit of 20 characters.";
 
-        int nBlockStart = params[2].get_int();
-        int nBlockEnd   = params[3].get_int();
-        CBitcoinAddress address(params[4].get_str());
+        int nPaymentCount = params[2].get_int();
+        CBitcoinAddress address(params[3].get_str());
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
 
-        CAmount nAmount = AmountFromValue(params[5]);
-        std::string strVote = params[6].get_str().c_str();
+        // Parse Dash address
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
+
+        CAmount nAmount = AmountFromValue(params[4]);
+        std::string strVote = params[5].get_str().c_str();
 
         if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
         int nVote = VOTE_ABSTAIN;
@@ -95,7 +97,7 @@ Value mnbudget(const Array& params, bool fHelp)
             if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
                 return(" Error upon calling SetKey");
 
-            CBudgetVote vote(pmn->vin, strProposalName, nBlockStart, nBlockEnd, address, nAmount, nVote);
+            CBudgetVote vote(pmn->vin, strProposalName, nPaymentCount, scriptPubKey, nAmount, nVote);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 return "Failure to sign.";
             }
@@ -104,30 +106,32 @@ Value mnbudget(const Array& params, bool fHelp)
             vote.Relay();
         }
 
-        return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");*/
+        return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
     }
 
     if(strCommand == "vote")
     {
-       /* std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 5)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget vote PROPOSAL-NAME BLOCKSTART BLOCKEND XADDRESS AMOUNT YEA|NAY'");
+            throw runtime_error("Correct usage of vote-many is 'mnbudget vote PROPOSAL-NAME PAYMENT_COUNT DASH_ADDRESS USD_AMOUNT YES|NO|ABSTAIN'");
 
         std::string strProposalName = params[1].get_str();
 
         if(strProposalName.size() > 20)
             return "Invalid proposal name, limit of 20 characters.";
 
-        int nBlockStart = params[2].get_int();
-        int nBlockEnd   = params[3].get_int();
-        CBitcoinAddress address(params[4].get_str());
+        int nPaymentCount = params[2].get_int();
+        CBitcoinAddress address(params[3].get_str());
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
 
-        CAmount nAmount = AmountFromValue(params[5]);
-        std::string strVote = params[6].get_str().c_str();
+        // Parse Dash address
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
+
+        CAmount nAmount = AmountFromValue(params[4]);
+        std::string strVote = params[5].get_str().c_str();
 
         if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
         int nVote = VOTE_ABSTAIN;
@@ -141,12 +145,12 @@ Value mnbudget(const Array& params, bool fHelp)
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return(" Error upon calling SetKey");
 
-        CBudgetVote vote(activeMasternode.vin, strProposalName, nBlockStart, nBlockEnd, address, nAmount, nVote);
+        CBudgetVote vote(activeMasternode.vin, strProposalName, nPaymentCount, scriptPubKey, nAmount, nVote);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
 
-        vote.Relay();*/
+        vote.Relay();
 
     }
 
