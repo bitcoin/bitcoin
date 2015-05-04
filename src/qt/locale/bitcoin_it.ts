@@ -1,4 +1,4 @@
-<TS language="it" version="2.0">
+<TS language="it" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1283,8 +1283,8 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Rimborso da %1</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>La richiesta di pagamento %2 (%3 byte) supera la dimensione massima di %4 byte.</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>La richiesta di pagamento %1 (%2 byte) supera la dimensione massima di %3 byte.</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3077,6 +3077,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Ottiene gli indirizzi dei peer attraverso interrogazioni DNS, in caso di scarsa disponibilità (predefinito: 1 a meno che -connect non sia specificato)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Richiedi alta priorità per la trasmissione di transazioni a zero o basse commissioni (predefinito:%u )</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Imposta la dimensione massima in byte delle transazioni ad alta-priorità/basse-commissioni (predefinito: %d)</translation>
     </message>
@@ -3148,6 +3152,10 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>Errore durante il caricamento del file wallet.dat: il portamonete richiede una versione di Bitcoin Core più recente</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Errore durante lalettura del database. Arresto in corso.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Errore: Rilevato argomento -tor non supportato, utilizzare -onion.</translation>
     </message>
@@ -3202,6 +3210,10 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
     <message>
         <source>RPC server options:</source>
         <translation>Opzioni server RPC:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>Supporto RPC per le connessioni HTTP persistenti (predefinito: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

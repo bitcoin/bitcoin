@@ -1,4 +1,4 @@
-<TS language="uk" version="2.0">
+<TS language="uk" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1287,10 +1287,6 @@ Address: %4
     <message>
         <source>Refund from %1</source>
         <translation>Відшкодування з %1</translation>
-    </message>
-    <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>Запит до оплати %2 занадто великий (%3 байт, дозволено %4 байт)</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>

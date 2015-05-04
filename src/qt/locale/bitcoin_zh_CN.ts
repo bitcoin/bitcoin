@@ -1,4 +1,4 @@
-<TS language="zh_CN" version="2.0">
+<TS language="zh_CN" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1290,8 +1290,8 @@ Address: %4
         <translation>退款来自 %1</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>支付请求 %2 太大 (%3 字节。只允许 %4 字节)。</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>支付请求 %1 太大 (%2 字节。只允许 %3 字节)。</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3094,6 +3094,10 @@ Address: %4
         <translation>通过DNS查询每个地址，如果短地址 (默认值: 1 除非 -连接)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>对交易免费或低交易费请求高优先级 (默认:%u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>设置 高优先级/低交易费 交易的最大字节  (缺省: %d)</translation>
     </message>
@@ -3166,6 +3170,10 @@ rpcpassword=%s
         <translation>加载wallet.dat错误：需要新版的比特币核心钱包</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>读取数据库出错，关闭中。</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>错误：发现了不支持的参数 -tor，请使用 -onion。</translation>
     </message>
@@ -3216,6 +3224,10 @@ rpcpassword=%s
     <message>
         <source>RPC server options:</source>
         <translation>RPC 服务器选项：</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC 支持 HTTP 持久连接 (默认: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

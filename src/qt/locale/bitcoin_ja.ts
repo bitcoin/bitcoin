@@ -1,4 +1,4 @@
-<TS language="ja" version="2.0">
+<TS language="ja" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1288,8 +1288,8 @@ Address: %4
         <translation>%1 からの返金</translation>
     </message>
     <message>
-        <source>Payment request %2 is too large (%3 bytes, allowed %4 bytes).</source>
-        <translation>支払リクエスト %2 は大きすぎます（%3バイトですが、%4バイトまでが許されています）。</translation>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>支払リクエスト %1 は大きすぎます（%2バイトですが、%3バイトまでが許されています）。</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -3087,6 +3087,10 @@ Address: %4
         <translation>保有するピアアドレスが少ない場合、DNS ルックアップによりピアアドレスを問い合わせる (-connect を使っていない場合の初期値: 1)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>手数料なし、または低手数料のトランザクションのリレー時に高い優先度を要求する (初期値: %u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>最優先/最低手数料の最大サイズをバイトで指定 (初期値: %d)</translation>
     </message>
@@ -3159,6 +3163,10 @@ rpcpassword=%s
         <translation>wallet.dat の読み込みに失敗しました: ウォレットの読み込みにはより新しいバージョンの Bitcoin Core が必要です</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>データベースの読み込みエラー。シャットダウンします。</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>エラー: サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
     </message>
@@ -3213,6 +3221,10 @@ rpcpassword=%s
     <message>
         <source>RPC server options:</source>
         <translation>RPCサーバのオプション:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPCにおけるHTTPの持続的接続のサポート (初期値: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
