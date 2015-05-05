@@ -244,17 +244,21 @@ RES_ICONS = \
   res/icons/export.png \
   res/icons/filesave.png \
   res/icons/history.png \
+  res/icons/bitcoin_history.png \
   res/icons/key.png \
   res/icons/lock_closed.png \
   res/icons/lock_open.png \
   res/icons/mining.png \
   res/icons/mining_deposits.png \
   res/icons/overview.png \
+  res/icons/bitcoin_overview.png \
   res/icons/qrcode.png \
   res/icons/quit.png \
   res/icons/receive.png \
+  res/icons/bitcoin_receive.png \
   res/icons/remove.png \
   res/icons/send.png \
+  res/icons/bitcoin_send.png \
   res/icons/synced.png \
   res/icons/toolbar.png \
   res/icons/toolbar_testnet.png \
@@ -262,6 +266,7 @@ RES_ICONS = \
   res/icons/transaction2.png \
   res/icons/transaction_conflicted.png \
   res/icons/tx_inout.png \
+  res/icons/bitcoin_tx_inout.png \
   res/icons/tx_input.png \
   res/icons/tx_output.png \
   res/icons/tx_deposit.png \
