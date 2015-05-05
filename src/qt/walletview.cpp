@@ -24,7 +24,7 @@
 #include "transactionview.h"
 #include "balancesdialog.h"
 #include "walletmodel.h"
-#include "orderhistorydialog.h"
+#include "tradehistorydialog.h"
 #include "txhistorydialog.h"
 #include "ui_interface.h"
 
@@ -94,10 +94,10 @@ WalletView::WalletView(QWidget *parent):
     metaDExTab = new MetaDExDialog();
     cancelTab = new MetaDExCancelDialog();
     QTabWidget *exTabHolder = new QTabWidget();
-    orderHistoryTab = new OrderHistoryDialog;
+    tradeHistoryTab = new TradeHistoryDialog;
     //exTabHolder->addTab(new QWidget(),tr("Trade Bitcoin/Mastercoin")); not yet implemented
     exTabHolder->addTab(metaDExTab,tr("Trade Mastercoin/Smart Properties"));
-    exTabHolder->addTab(orderHistoryTab,tr("Order History"));
+    exTabHolder->addTab(tradeHistoryTab,tr("Trade History"));
     exTabHolder->addTab(cancelTab,tr("Cancel Orders"));
     exvbox->addWidget(exTabHolder);
     exchangePage->setLayout(exvbox);
@@ -185,7 +185,7 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     balancesPage->setWalletModel(walletModel);
     metaDExTab->setModel(walletModel);
     mpTXTab->setWalletModel(walletModel);
-    orderHistoryTab->setModel(walletModel);
+    tradeHistoryTab->setModel(walletModel);
     cancelTab->setWalletModel(walletModel);
 
     if (walletModel)

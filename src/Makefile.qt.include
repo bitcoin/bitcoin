@@ -99,7 +99,7 @@ QT_FORMS_UI = \
   qt/forms/txhistorydialog.ui \
   qt/forms/metadexcanceldialog.ui \
   qt/forms/metadexdialog.ui \
-  qt/forms/orderhistorydialog.ui \
+  qt/forms/tradehistorydialog.ui \
   qt/forms/balancesdialog.ui
 
 QT_MOC_CPP = \
@@ -155,7 +155,7 @@ QT_MOC_CPP = \
   qt/moc_omnicore_init.cpp \
   qt/moc_metadexdialog.cpp \
   qt/moc_metadexcanceldialog.cpp \
-  qt/moc_orderhistorydialog.cpp \
+  qt/moc_tradehistorydialog.cpp \
   qt/moc_omnicore_qtutils.cpp
 
 BITCOIN_MM = \
@@ -236,7 +236,7 @@ BITCOIN_QT_H = \
   qt/omnicore_init.h \
   qt/metadexdialog.h \
   qt/metadexcanceldialog.h \
-  qt/orderhistorydialog.h \
+  qt/tradehistorydialog.h \
   qt/sendmpdialog.h \
   qt/omnicore_qtutils.h
 
@@ -365,7 +365,7 @@ BITCOIN_QT_CPP += \
   qt/omnicore_init.cpp \
   qt/metadexdialog.cpp \
   qt/metadexcanceldialog.cpp \
-  qt/orderhistorydialog.cpp \
+  qt/tradehistorydialog.cpp \
   qt/omnicore_qtutils.cpp
 endif
 

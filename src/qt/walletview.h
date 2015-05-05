@@ -15,7 +15,7 @@ class OverviewPage;
 class ReceiveCoinsDialog;
 class SendCoinsDialog;
 class SendMPDialog;
-class OrderHistoryDialog;
+class TradeHistoryDialog;
 class LookupSPDialog;
 class LookupTXDialog;
 class LookupAddressDialog;
@@ -81,7 +81,7 @@ private:
     LookupSPDialog *spLookupTab;
     LookupTXDialog *txLookupTab;
     LookupAddressDialog *addressLookupTab;
-    OrderHistoryDialog *orderHistoryTab;
+    TradeHistoryDialog *tradeHistoryTab;
     MetaDExDialog *metaDExTab;
     MetaDExCancelDialog *cancelTab;
     TransactionView *transactionView;
