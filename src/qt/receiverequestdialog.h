@@ -24,12 +24,12 @@ QT_END_NAMESPACE
 /* Label widget for QR code. This image can be dragged, dropped, copied and saved
  * to disk.
  */
-class QRImageWidget : public QLabel
+class Credits_QRImageWidget : public QLabel
 {
     Q_OBJECT
 
 public:
-    explicit QRImageWidget(QWidget *parent = 0);
+    explicit Credits_QRImageWidget(QWidget *parent = 0);
     QImage exportImage();
 
 public slots:

@@ -12,7 +12,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <widget class="QRImageWidget" name="lblQRCode">
+    <widget class="Credits_QRImageWidget" name="lblQRCode">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -116,7 +116,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QRImageWidget</class>
+   <class>Credits_QRImageWidget</class>
    <extends>QLabel</extends>
    <header>receiverequestdialog.h</header>
   </customwidget>

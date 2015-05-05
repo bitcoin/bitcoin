@@ -29,7 +29,7 @@
 #include <qrencode.h>
 #endif
 
-QRImageWidget::QRImageWidget(QWidget *parent):
+Credits_QRImageWidget::Credits_QRImageWidget(QWidget *parent):
     QLabel(parent), contextMenu(0)
 {
     contextMenu = new QMenu();
@@ -41,14 +41,14 @@ QRImageWidget::QRImageWidget(QWidget *parent):
     contextMenu->addAction(copyImageAction);
 }
 
-QImage QRImageWidget::exportImage()
+QImage Credits_QRImageWidget::exportImage()
 {
     if(!pixmap())
         return QImage();
     return pixmap()->toImage().scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE);
 }
 
-void QRImageWidget::mousePressEvent(QMouseEvent *event)
+void Credits_QRImageWidget::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton && pixmap())
     {
@@ -64,7 +64,7 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void QRImageWidget::saveImage()
+void Credits_QRImageWidget::saveImage()
 {
     if(!pixmap())
         return;
@@ -75,14 +75,14 @@ void QRImageWidget::saveImage()
     }
 }
 
-void QRImageWidget::copyImage()
+void Credits_QRImageWidget::copyImage()
 {
     if(!pixmap())
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
-void QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
+void Credits_QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
 {
     if(!pixmap())
         return;
