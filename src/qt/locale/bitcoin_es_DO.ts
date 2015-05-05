@@ -2829,8 +2829,36 @@ Por ejemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Conectarse solo a nodos de la red &lt;net&gt; (IPv4, IPv6 o Tor)</translation>
     </message>
     <message>
+        <source>Print block on startup, if found in block index</source>
+        <translation>Imprimir bloque en inicio, si se encuentra en el índice de bloques</translation>
+    </message>
+    <message>
+        <source>Print block tree on startup (default: 0)</source>
+        <translation>Imprimir árbol de bloques en inicio (por defecto: 0)</translation>
+    </message>
+    <message>
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>Opciones RPC SSL: (Vea la Wiki de Bitcoin para las instrucciones de la configuración de SSL)</translation>
+    </message>
+    <message>
+        <source>RPC server options:</source>
+        <translation>Opciones del sservidor RPC:</translation>
+    </message>
+    <message>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <translation>Descartar aleatoriamente 1 de cada &lt;n&gt; mensajes de red</translation>
+    </message>
+    <message>
+        <source>Run a thread to flush wallet periodically (default: 1)</source>
+        <translation>Ejecutar un hilo para vaciar la billetera periodicamente (por defecto:1)</translation>
+    </message>
+    <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Opciones SSL: (ver la Bitcoin Wiki para instrucciones de configuración SSL)</translation>
+    </message>
+    <message>
+        <source>Send command to Bitcoin Core</source>
+        <translation>Enviar comando a Bitcoin Core</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2839,6 +2867,18 @@ Por ejemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>Establecer tamaño mínimo de bloque en bytes (predeterminado: 0)</translation>
+    </message>
+    <message>
+        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
+        <translation>Establece la bandera DB_PRIVATE en el entorno db de la billetera (por defecto:1)</translation>
+    </message>
+    <message>
+        <source>Show all debugging options (usage: --help -help-debug)</source>
+        <translation>Mostrar todas las opciones de depuración (uso: --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Show benchmark information (default: 0)</source>
+        <translation>Mostrar información de punto de referencia (por defecto: 0)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2851,6 +2891,10 @@ Por ejemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
         <translation>Especificar el tiempo máximo de conexión en milisegundos (predeterminado: 5000)</translation>
+    </message>
+    <message>
+        <source>Start Bitcoin Core Daemon</source>
+        <translation>Iniciar demonio de Bitcoin Core</translation>
     </message>
     <message>
         <source>System error: </source>
@@ -2888,6 +2932,10 @@ Por ejemplo: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Aviso: Esta versión es obsoleta, actualización necesaria!</translation>
+    </message>
+    <message>
+        <source>on startup</source>
+        <translation>al iniciar</translation>
     </message>
     <message>
         <source>version</source>

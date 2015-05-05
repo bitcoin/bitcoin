@@ -122,6 +122,10 @@ Tiu ĉi produkto enhavas erojn kreitajn de la "OpenSSL Project" por uzo en la "O
         <source>Comma separated file (*.csv)</source>
         <translation>Perkome disigita dosiero (*.csv)</translation>
     </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -2256,6 +2260,10 @@ Adreso: %4
     <message>
         <source>Show transaction details</source>
         <translation>Montri detalojn de transakcio</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
