@@ -419,7 +419,6 @@ typedef std::map<uint256, CMPPending> PendingMap;
 extern PendingMap my_pending;
 string strMPProperty(unsigned int i);
 
-bool AbortOmniNode(const std::string &strMessage);
 int GetHeight(void);
 uint32_t GetLatestBlockTime(void);
 CBlockIndex* GetBlockIndex(const uint256& hash);
