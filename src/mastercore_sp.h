@@ -7,6 +7,7 @@
 
 class CBlockIndex;
 
+#include "base58.h"
 #include "tinyformat.h"
 #include "uint256.h"
 #include "utiltime.h"
