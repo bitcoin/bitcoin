@@ -42,7 +42,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(шошго алга)</translation>
+        <translation>(шошгогүй)</translation>
     </message>
 </context>
 <context>
@@ -84,20 +84,12 @@
         <translation>Нууц үгийг солих</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Түрүйвчийн хуучин болоод шинэ нууц үгсийг оруулна уу</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Түрүйвчийн цоожийг баталгаажуулах</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Түрүйвч цоожлогдлоо</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Цоожлолтын процесыг дуусгахын тулд Биткойн одоо хаагдана. Ѳѳрийн түрүйвчийг цоожлох нь таны биткойнуудыг компьютерийн вирус хулгайлахаас бүрэн сэргийлж чадахгүй гэдгийг санаарай.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -214,18 +206,6 @@
         <source>&amp;Help</source>
         <translation>&amp;Тусламж</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболт байна </numerusform><numerusform>Биткойны сүлжээрүү %n идэвхитэй холболтууд байна </numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n цаг</numerusform><numerusform>%n цаг</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n ѳдѳр</numerusform><numerusform>%n ѳдрүүд</numerusform></translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Алдаа</translation>
@@ -241,21 +221,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Дотогшоо гүйлгээ</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Огноо: %1
-
-Хэмжээ: %2 
-
-Тѳрѳл: %3 
-
-Хаяг: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -400,10 +365,6 @@ Address: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Клиент унтрах гэж байна, яг унтраах уу?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -570,7 +531,7 @@ Address: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(шошго алга)</translation>
+        <translation>(шошгогүй)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -800,10 +761,6 @@ Address: %4
         <translation>Тѳрѳл</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Хаяг</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>%1 хүртэл нээлттэй</translation>
     </message>
@@ -818,6 +775,10 @@ Address: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Үүсгэгдсэн гэхдээ хүлээн авагдаагүй</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Шошго</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -862,10 +823,6 @@ Address: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Гүйлгээний тѳрѳл</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Гүйлгээг хүлээн авах хаяг</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>

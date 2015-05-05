@@ -156,10 +156,6 @@
         <translation>Vaihda tunnuslause</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Anna vanha ja uusi tunnuslause.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Vahvista lompakon salaus</translation>
     </message>
@@ -186,10 +182,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Anna salauslause lompakkoon. &lt;br/&gt;Ole hyvä ja käytä lausetta jossa on &lt;b&gt;kymmenen tai enemmän satunnaista merkkiä&lt;/b&gt; tai &lt;b&gt;kahdeksan tai useampi sanaa&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin sulkeutuu lopettaakseen salausprosessin. Muista, että salattukaan lompakko ei täysin suojaa sitä haittaohjelmien aiheuttamilta varkauksilta.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -309,10 +301,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Lähetä kolikoita Bitcoin-osoitteeseen</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Muuta Bitcoinin konfiguraatioasetuksia</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -478,10 +466,6 @@
         <source>Up to date</source>
         <translation>Rahansiirtohistoria on ajan tasalla</translation>
     </message>
-    <message numerus="yes">
-        <source>Processed %n blocks of transaction history.</source>
-        <translation><numerusform>Käsitelty %n lohko rahansiirtohistoriasta.</numerusform><numerusform>Käsitelty %n lohkoa rahansiirtohistoriasta.</numerusform></translation>
-    </message>
     <message>
         <source>Catching up...</source>
         <translation>Saavutetaan verkkoa...</translation>
@@ -493,17 +477,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Saapuva rahansiirto</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Päivä: %1
-Määrä: %2
-Tyyppi: %3
-Osoite: %4</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -708,10 +681,6 @@ Osoite: %4</translation>
         <translation>ei</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Tämä nimi muuttuu punaiseksi jos rahansiirron koko on suurempi kuin 1000 tavua</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Tämä tarkoittaa että vähintään %1 per kB palkkio on pakollinen.</translation>
     </message>
@@ -722,14 +691,6 @@ Osoite: %4</translation>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Rahansiirrot korkeammalla prioriteetilla sisällytetään varmemmin lohkoon.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Tämä nimi muuttuu punaiseksi jos prioriteetti on pienempi kuin "keskisuuri".</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Tämä nimi muuttuu punaiseksi jos vastaanottaja saa pienemmän määrän kuin %1</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -852,30 +813,6 @@ Osoite: %4</translation>
         <source>command-line options</source>
         <translation>komentorivi parametrit</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>Käyttöliittymäasetukset</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Set language, for example "de_DE" (default: system locale)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Käynnistä pienennettynä</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Aseta SSL root varmenne maksupyynnöille (oletus: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Näytä aloitusruutu käynnistettäessä (oletus: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Valitse data-hakemisto käynnistyksessä (oletus: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -956,14 +893,6 @@ Osoite: %4</translation>
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Yleiset</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Käynnistä Bitcoin kirjautumisen yhteydessä.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Käynnistä Bitcoin kirjautumisen yhteydessä</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1078,10 +1007,6 @@ Osoite: %4</translation>
         <translation>&amp;Pienennä ilmaisinalueelle työkalurivin sijasta</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Ikkunaa suljettaessa vain pienentää Bitcoin-ohjelman ikkunan lopettamatta itse ohjelmaa. Kun tämä asetus on valittuna, ohjelman voi sulkea vain valitsemalla Lopeta ohjelman valikosta.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>P&amp;ienennä suljettaessa</translation>
     </message>
@@ -1092,10 +1017,6 @@ Osoite: %4</translation>
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Käyttöliittymän kieli</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Tässä voit määritellä käyttöliittymän kielen. Muutokset astuvat voimaan seuraavan kerran, kun Bitcoin käynnistetään.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1132,10 +1053,6 @@ Osoite: %4</translation>
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ohjelman uudelleenkäynnistys aktivoi muutokset.</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Ohjelma lopetetaan. Haluatko jatkaa?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1244,10 +1161,6 @@ Osoite: %4</translation>
         <translation>Maksypyyntö verkossa ei täsmää asiakasohjelman verkkoon.</translation>
     </message>
     <message>
-        <source>Payment request has expired.</source>
-        <translation>Maksupyyntö on vanhentunut.</translation>
-    </message>
-    <message>
         <source>Payment request is not initialized.</source>
         <translation>Maksupyyntöä ei ole alustettu.</translation>
     </message>
@@ -1311,10 +1224,6 @@ Osoite: %4</translation>
         <translation>Käyttöliittymä</translation>
     </message>
     <message>
-        <source>Address/Hostname</source>
-        <translation>Osoite/Isäntänimi</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Vasteaika</translation>
     </message>
@@ -1344,14 +1253,6 @@ Osoite: %4</translation>
     <message>
         <source>%1 s</source>
         <translation>%1 s</translation>
-    </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>VERKKO</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>TUNNISTAMATON</translation>
     </message>
     <message>
         <source>None</source>
@@ -1552,16 +1453,8 @@ Osoite: %4</translation>
         <translation>Debug lokitiedosto</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Avaa lokitiedosto nykyisestä data-kansiosta. Tämä voi viedä useamman sekunnin, jos lokitiedosto on iso.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Tyhjennä konsoli</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Tervetuloa Bitcoin RPC konsoliin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1852,10 +1745,6 @@ Osoite: %4</translation>
         <translation>pudota kulujen asetukset</translation>
     </message>
     <message>
-        <source>Minimize</source>
-        <translation>Pienennä</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>per kilotavu</translation>
     </message>
@@ -1972,10 +1861,6 @@ Osoite: %4</translation>
         <translation>tai</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Vastaanottajan osoite on virheellinen. Tarkista osoite.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Maksettavan summan tulee olla suurempi kuin 0 Bitcoinia.</translation>
     </message>
@@ -1986,10 +1871,6 @@ Osoite: %4</translation>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Kokonaismäärä ylittää saldosi kun %1 maksukulu lisätään summaan.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Sama osoite toistuu useamman kerran. Samaan osoitteeseen voi lähettää vain kerran per maksu.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2079,20 +1960,12 @@ Osoite: %4</translation>
         <translation>Viesti:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>Tämä on varmistettu maksupyyntö.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Aseta nimi tälle osoitteelle lisätäksesi sen käytettyjen osoitteiden listalle.</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>Viesti joka liitettiin bitcoin: URI:iin tallennetaan rahansiirtoon viitteeksi. Tätä viestiä ei lähetetä Bitcoin-verkkoon.</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Tämä on varmistamaton maksupyyntö</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2123,10 +1996,6 @@ Osoite: %4</translation>
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Allekirjoita viesti</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Voit allekirjoittaa viestit omalla osoitteellasi todistaaksesi että omistat ne. Ole huolellinen, että et allekirjoita mitään epämääräistä, phishing-hyökkääjät voivat huijata sinua allekirjoittamaan luovuttamalla henkilöllisyytesi. Allekirjoita selvitys täysin yksityiskohtaisesti mihin olet sitoutunut.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2179,10 +2048,6 @@ Osoite: %4</translation>
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Varmista viesti</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Syötä allekirjoittava osoite, viesti ja allekirjoitus alla oleviin kenttiin varmistaaksesi allekirjoituksen aitouden. Varmista että kopioit kaikki kentät täsmälleen oikein, myös rivinvaihdot, välilyönnit, tabulaattorit, jne.</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2448,10 +2313,6 @@ Osoite: %4</translation>
         <translation>Laatu</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Osoite</translation>
-    </message>
-    <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Epäkypsä (%1 varmistusta, saatavilla %2 jälkeen)</translation>
     </message>
@@ -2478,6 +2339,10 @@ Osoite: %4</translation>
     <message>
         <source>Offline</source>
         <translation>Offline</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Nimi</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2530,10 +2395,6 @@ Osoite: %4</translation>
     <message>
         <source>Type of transaction.</source>
         <translation>Rahansiirron laatu.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Rahansiirron kohteen Bitcoin-osoite</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2854,10 +2715,6 @@ Osoite: %4</translation>
         <translation>Debuggaus/Testauksen valinnat:</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Hae oma IP osoite (vakioasetus: 1 kun kuuntelemassa ja ei -externalip)</translation>
-    </message>
-    <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
         <translation>Älä lataa lompakkoa ja poista lompakon RPC kutsut</translation>
     </message>
@@ -2908,10 +2765,6 @@ Osoite: %4</translation>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Ei tarpeeksi tiedostomerkintöjä vapaana.</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Uudelleenrakenna lohkoketjuindeksi nykyisistä blk000??.dat tiedostoista</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -2974,6 +2827,10 @@ Osoite: %4</translation>
         <translation>Aseta kolikoiden luomiseen tarkoitettujen säikeiden lukumäärä (-1 = kaikki ytimet, oletus: %d)</translation>
     </message>
     <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Valitse data-hakemisto käynnistyksessä (oletus: 0)</translation>
+    </message>
+    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Yhdistä SOCKS5 proxin kautta</translation>
     </message>
@@ -3022,8 +2879,20 @@ Osoite: %4</translation>
         <translation>Lähetä jäljitys/debug-tieto konsoliin, debug.log-tiedoston sijaan</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Aseta SSL root varmenne maksupyynnöille (oletus: -system-)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Set language, for example "de_DE" (default: system locale)</translation>
+    </message>
+    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Näytä kaikki debuggaus valinnat: (käyttö: --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Näytä aloitusruutu käynnistettäessä (oletus: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3032,6 +2901,10 @@ Osoite: %4</translation>
     <message>
         <source>Signing transaction failed</source>
         <translation>Siirron vahvistus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Käynnistä pienennettynä</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3064,10 +2937,6 @@ Osoite: %4</translation>
     <message>
         <source>Warning</source>
         <translation>Varoitus</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Varoitus: Tämä versio on vanhentunut, päivitys tarpeen!</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>

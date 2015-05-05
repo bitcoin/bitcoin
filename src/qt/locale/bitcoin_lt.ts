@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Kableliais išskirtas failas (*.csv)</translation>
+        <translation>Kableliais atskirtų duomenų failas (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -128,10 +128,6 @@
         <translation>Pakeisti slaptafrazę</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Įveskite seną ir naują piniginės slaptafrazes.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Patvirtinkite piniginės užšifravimą</translation>
     </message>
@@ -150,10 +146,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Piniginė užšifruota</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin dabar užsidarys šifravimo proceso pabaigai. Atminkite, kad piniginės šifravimas negali pilnai apsaugoti bitcoinų vagysčių kai tinkle esančios kenkėjiškos programos patenka į jūsų kompiuterį.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -271,10 +263,6 @@
         <translation>Siųsti monetas Bitcoin adresui</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Keisti bitcoin konfigūracijos galimybes</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Daryti piniginės atsarginę kopiją</translation>
     </message>
@@ -350,26 +338,6 @@
         <source>&amp;About Bitcoin Core</source>
         <translation>&amp;Apie Bitcoin Core</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n Bitcoin tinklo aktyvus ryšys</numerusform><numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform><numerusform>%n Bitcoin tinklo aktyvūs ryšiai</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n valanda</numerusform><numerusform>%n valandos</numerusform><numerusform>%n valandų</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n diena</numerusform><numerusform>%n dienos</numerusform><numerusform>%n dienų</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n savaitė</numerusform><numerusform>%n savaitės</numerusform><numerusform>%n savaičių</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n metas</numerusform><numerusform>%n metai</numerusform><numerusform>%n metų</numerusform></translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Klaida</translation>
@@ -397,17 +365,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Ateinantis sandoris</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Data: %1
-Suma: %2
-Tipas: %3
-Adresas: %4</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -652,19 +609,7 @@ Adresas: %4</translation>
         <source>command-line options</source>
         <translation>komandinės eilutės parametrai</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>Naudotoji sąsajos parametrai</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nustatyti kalbą, pavyzdžiui "lt_LT" (numatyta: sistemos kalba)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Paleisti sumažintą</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -696,14 +641,6 @@ Adresas: %4</translation>
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Pagrindinės</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automatiškai paleisti Bitkoin programą įjungus sistemą.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Paleisti Bitcoin programą su window sistemos paleidimu</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -742,10 +679,6 @@ Adresas: %4</translation>
         <translation>&amp;M sumažinti langą bet ne užduočių juostą</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Uždarant langą neuždaryti programos. Kai ši parinktis įjungta, programa bus uždaryta tik pasirinkus  meniu komandą Baigti.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>&amp;Sumažinti uždarant</translation>
     </message>
@@ -756,10 +689,6 @@ Adresas: %4</translation>
     <message>
         <source>User Interface &amp;language:</source>
         <translation>Naudotojo sąsajos &amp;kalba:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Čia gali būti nustatyta naudotojo sąsajos kalba. Šis nustatymas įsigalios iš naujo paleidus Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -922,10 +851,6 @@ Adresas: %4</translation>
     <message>
         <source>Clear console</source>
         <translation>Išvalyti konsolę</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Sveiki atvykę į Bitcoin RPC konsolę.</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1100,10 +1025,6 @@ Adresas: %4</translation>
         <translation>Kopijuoti pirmumą</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Negaliojantis gavėjo adresas. Patikrinkite.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Apmokėjimo suma turi būti didesnė nei 0.</translation>
     </message>
@@ -1114,10 +1035,6 @@ Adresas: %4</translation>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Jei pridedame sandorio mokestį %1 bendra suma viršija jūsų balansą.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Rastas adreso dublikatas.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1400,10 +1317,6 @@ Adresas: %4</translation>
         <translation>Tipas</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresas</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Atidaryta iki %1</translation>
     </message>
@@ -1420,6 +1333,10 @@ Adresas: %4</translation>
         <translation>Išgauta bet nepriimta</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Žymė</translation>
+    </message>
+    <message>
         <source>Received with</source>
         <translation>Gauta su</translation>
     </message>
@@ -1429,7 +1346,7 @@ Adresas: %4</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Siųsta </translation>
+        <translation>Išsiųsta</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
@@ -1454,10 +1371,6 @@ Adresas: %4</translation>
     <message>
         <source>Type of transaction.</source>
         <translation>Sandorio tipas.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Sandorio paskirties adresas</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -1672,6 +1585,14 @@ Adresas: %4</translation>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Siųsti atsekimo/derinimo info į konsolę vietoj debug.log failo</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Nustatyti kalbą, pavyzdžiui "lt_LT" (numatyta: sistemos kalba)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Paleisti sumažintą</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
