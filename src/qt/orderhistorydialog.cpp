@@ -52,7 +52,7 @@ using namespace boost::assign;
 using namespace leveldb;
 // end potentially overzealous using
 
-#include "mastercore_dex.h"
+#include "mastercore_mdex.h"
 #include "mastercore_tx.h"
 #include "mastercore_sp.h"
 #include "mastercore_parse_string.h"
