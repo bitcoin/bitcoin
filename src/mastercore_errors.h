@@ -10,8 +10,9 @@ enum MPRPCErrorCode
     MP_INSUF_FUNDS_APENDI =         -2,     // balance after pending
     MP_INPUT_NOT_IN_RANGE =         -11,    // input value larger than supported
     
-    //ClassB_send
+    //ClassAgnostic_send
     MP_INPUTS_INVALID =             -212,
+    MP_ENCODING_ERROR =             -250,
     MP_REDEMP_ILLEGAL =             -233,
     MP_REDEMP_BAD_KEYID =           -220,
     MP_REDEMP_FETCH_ERR_PUBKEY =    -221,
