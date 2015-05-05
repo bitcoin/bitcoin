@@ -8,6 +8,7 @@
 #include "mastercore_parse_string.h"
 #include "mastercore_sp.h"
 #include "mastercore_dex.h"
+#include "mastercore_tx.h"
 #include "omnicore_createpayload.h"
 #include "rpcserver.h"
 #include "wallet.h"
@@ -783,30 +784,31 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
     const int64_t senderBalance = getMPbalance(fromAddress, propertyIdForSale, BALANCE);
     const int64_t senderAvailableBalance = getUserAvailableMPbalance(fromAddress, propertyIdForSale);
 
-
-    // perform conversions
+    // setup a few vars
     int64_t amountForSale = 0, amountDesired = 0;
     CMPSPInfo::Entry spForSale;
-    if (false == _my_sps->getSP(propertyIdForSale, spForSale)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale does not exist");
     CMPSPInfo::Entry spDesired;
-    if (false == _my_sps->getSP(propertyIdDesired, spDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property desired does not exist");
-    amountForSale = StrToInt64(strAmountForSale, spForSale.isDivisible());
-    amountDesired = StrToInt64(strAmountDesired, spDesired.isDivisible());
 
-    // perform checks
-    if (action <= 0 || 4 < action) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid action (1,2,3,4 only)");
-    if (action <= 2) { // actions 3 and 4 permit zero values, skip check
+    // perform conversions & checks
+    if (action <= 0 || CMPTransaction::CANCEL_EVERYTHING < action) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid action (1,2,3,4 only)");
+    if (action != CMPTransaction::CANCEL_EVERYTHING) { // these checks are not applicable to cancel everything
+        if (false == _my_sps->getSP(propertyIdForSale, spForSale)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale does not exist");
+        if (false == _my_sps->getSP(propertyIdDesired, spDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property desired does not exist");
+        if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
+        if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    }
+    if (action <= CMPTransaction::CANCEL_AT_PRICE) { // cancel pair and cancel everything permit zero values
+        amountForSale = StrToInt64(strAmountForSale, spForSale.isDivisible());
+        amountDesired = StrToInt64(strAmountDesired, spDesired.isDivisible());
         if (0 >= amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for sale");
         if (!isRangeOK(amountForSale)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount for sale not in range");
         if (0 >= amountDesired) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount desired");
         if (!isRangeOK(amountDesired)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount desired not in range");
     }
-    if (action == 1) { // only check for sufficient balance for new trades
+    if (action == CMPTransaction::ADD) { // only check for sufficient balance for new trades
         if (senderBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance");
         if (senderAvailableBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance (due to pending transactions)");
     }
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property fpr sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
