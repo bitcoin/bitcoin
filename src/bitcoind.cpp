@@ -7,6 +7,7 @@
 #include "rpcserver.h"
 #include "init.h"
 #include "main.h"
+#include "module.h"
 #include "noui.h"
 #include "util.h"
 
@@ -63,7 +64,8 @@ bool AppInit(int argc, char* argv[])
     //
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
     ParseParameters(argc, argv);
-
+    Module::Signals.ParameterParsed();
+    
     // Process help and version before taking care about datadir
     if (mapArgs.count("-?") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
@@ -95,6 +97,7 @@ bool AppInit(int argc, char* argv[])
         try
         {
             ReadConfigFile(mapArgs, mapMultiArgs);
+            Module::Signals.ConfigRead();
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;

@@ -16,6 +16,7 @@
 #include "key.h"
 #include "main.h"
 #include "miner.h"
+#include "module.h"
 #include "net.h"
 #include "rpcserver.h"
 #include "script/standard.h"
@@ -42,6 +43,7 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
+#include <boost/signals2/signal.hpp>
 
 using namespace std;
 
@@ -149,6 +151,7 @@ void Shutdown()
     RenameThread("bitcoin-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
+    Module::Signals.Shutdown(Module::SignalStageStarted);
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         pwalletMain->Flush(false);
@@ -182,6 +185,7 @@ void Shutdown()
         delete pblocktree;
         pblocktree = NULL;
     }
+    Module::Signals.Shutdown(Module::SignalStageStage0);
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         pwalletMain->Flush(true);
@@ -190,6 +194,7 @@ void Shutdown()
     boost::filesystem::remove(GetPidFile());
 #endif
     UnregisterAllValidationInterfaces();
+    Module::Signals.Shutdown(Module::SignalStageFinished);
 #ifdef ENABLE_WALLET
     delete pwalletMain;
     pwalletMain = NULL;
@@ -342,6 +347,8 @@ std::string HelpMessage(HelpMessageMode mode)
         " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
                     
 #endif
+    
+    Module::Signals.AppendHelpMessage(strUsage);
 
     strUsage += HelpMessageGroup(_("Debugging/Testing options:"));
     if (GetBoolArg("-help-debug", false))
@@ -678,6 +685,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
+    Module::Signals.ValidateArguments();
     if (GetBoolArg("-salvagewallet", false)) {
         // Rewrite just private keys: rescan to find transactions
         if (SoftSetBoolArg("-rescan", true))
@@ -795,6 +803,15 @@ bool AppInit2(boost::thread_group& threadGroup)
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
     }
 
+    string errorString;
+    string warningString;
+    Module::Signals.ParseArguments(errorString, warningString);
+    //push message in case of received error/warnings
+    if(!warningString.empty())
+        InitWarning(warningString); //warning; pass
+    if(!errorString.empty())
+        return InitError(errorString); //stop on errors
+    
 #ifdef ENABLE_WALLET
     if (mapArgs.count("-mintxfee"))
     {
@@ -869,6 +886,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
+    Module::Signals.DebugStartupInfo(Module::SignalStageStarted);
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
 #endif
@@ -902,6 +920,15 @@ bool AppInit2(boost::thread_group& threadGroup)
     int64_t nStart;
 
     // ********************************************************* Step 5: verify wallet database integrity
+    
+    errorString = string();
+    warningString = string();
+    Module::Signals.ModuleInit(Module::SignalStageStarted,errorString, warningString);
+    if(!warningString.empty())
+        InitWarning(warningString); //warning; pass
+    if(!errorString.empty())
+        return InitError(errorString); //stop on errors
+    
 #ifdef ENABLE_WALLET
     if (!fDisableWallet) {
         LogPrintf("Using wallet %s\n", strWalletFile);
@@ -1187,6 +1214,15 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     // ********************************************************* Step 8: load wallet
+    
+    errorString = string();
+    warningString = string();
+    Module::Signals.ModuleInit(Module::SignalStageStage0,errorString, warningString);
+    if(!warningString.empty())
+        InitWarning(warningString); //warning; pass
+    if(!errorString.empty())
+        return InitError(errorString); //stop on errors
+    
 #ifdef ENABLE_WALLET
     if (fDisableWallet) {
         pwalletMain = NULL;
@@ -1363,6 +1399,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     //// debug print
     LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
     LogPrintf("nBestHeight = %d\n",                   chainActive.Height());
+    Module::Signals.DebugStartupInfo(Module::SignalStageFinished);
 #ifdef ENABLE_WALLET
     LogPrintf("setKeyPool.size() = %u\n",      pwalletMain ? pwalletMain->setKeyPool.size() : 0);
     LogPrintf("mapWallet.size() = %u\n",       pwalletMain ? pwalletMain->mapWallet.size() : 0);
@@ -1370,6 +1407,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     StartNode(threadGroup);
+    Module::Signals.NodeStarted();
 
 #ifdef ENABLE_WALLET
     // Generate coins in the background
@@ -1381,7 +1419,15 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
-
+    
+    errorString = string();
+    warningString = string();
+    Module::Signals.ModuleInit(Module::SignalStageFinished,errorString, warningString);
+    if(!warningString.empty())
+        InitWarning(warningString); //warning; pass
+    if(!errorString.empty())
+        return InitError(errorString); //stop on errors
+    
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         // Add wallet transactions that aren't already in a block to mapTransactions
