@@ -292,10 +292,6 @@
         <source>Date</source>
         <translation>Дата</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Дарек</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>

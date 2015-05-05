@@ -373,8 +373,8 @@
         <translation>Күні</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Адрес</translation>
+        <source>Label</source>
+        <translation>таңба</translation>
     </message>
     </context>
 <context>

@@ -161,8 +161,8 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <source>Label</source>
+        <translation>Nhãn dữ liệu</translation>
     </message>
     </context>
 <context>

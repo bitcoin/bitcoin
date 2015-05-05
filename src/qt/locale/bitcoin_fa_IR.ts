@@ -92,20 +92,12 @@
         <translation>تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>رمز/پَس فرِیزِ قدیم و جدید را در wallet  وارد کنید</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>رمزگذاری wallet را تایید کنید</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>تایید رمزگذاری</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin برای اتمام فرایند رمزگذاری بسته خواهد شد. به خاطر داشته باشید که رمزگذاری WALLET شما،  کامپیوتر شما را از آلودگی به بدافزارها مصون نمی دارد.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -191,10 +183,6 @@
         <translation>تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>اصلاح انتخابها برای پیکربندی Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>گرفتن نسخه پیشتیبان در آدرسی دیگر</translation>
     </message>
@@ -253,15 +241,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>تراکنش دریافتی</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>تاریخ: %1⏎ میزان وجه : %2⏎ نوع: %3⏎ آدرس: %4⏎ 
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -457,10 +436,6 @@ Address: %4
     <message>
         <source>Current number of blocks</source>
         <translation>تعداد زنجیره های حاضر</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>به کنسول آر.پی.سی. BITCOIN خوش آمدید</translation>
     </message>
     </context>
 <context>
@@ -707,10 +682,6 @@ Address: %4
         <translation>گونه</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>حساب</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>باز کن تا %1</translation>
     </message>
@@ -725,6 +696,10 @@ Address: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>تولید شده اما قبول نشده است</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>برچسب</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -761,10 +736,6 @@ Address: %4
     <message>
         <source>Type of transaction.</source>
         <translation>نوع تراکنش</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>آدرس مقصد در تراکنش</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>

@@ -108,10 +108,6 @@
         <translation>Ndrysho frazkalimin</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Futni frazkalimin e vjetër dhe të ri në portofol. </translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Konfirmoni enkriptimin e portofolit</translation>
     </message>
@@ -226,25 +222,9 @@
         <source>&amp;About Bitcoin Core</source>
         <translation>Rreth Berthames Bitkoin</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n ore</numerusform><numerusform>%n ore</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dite</numerusform><numerusform>%n dite</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n jave</numerusform><numerusform>%n jave</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 dhe %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n vit</numerusform><numerusform>%n vite</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -649,10 +629,6 @@
         <translation>Lloji</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresë</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Hapur deri më %1</translation>
     </message>
@@ -667,6 +643,10 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>I krijuar por i papranuar</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiketë</translation>
     </message>
     <message>
         <source>Received with</source>

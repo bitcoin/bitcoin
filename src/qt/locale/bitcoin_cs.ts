@@ -156,10 +156,6 @@
         <translation>Změň heslo</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Zadej staré a nové heslo k peněžence.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Potvrď zašifrování peněženky</translation>
     </message>
@@ -186,10 +182,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Zadej nové heslo k peněžence.&lt;br/&gt;Použij &lt;b&gt;alespoň deset náhodných znaků&lt;/b&gt; nebo &lt;b&gt;alespoň osm slov&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se teď ukončí, aby dokončil zašifrování. Pamatuj však, že pouhé zašifrování peněženky úplně nezabraňuje krádeži tvých bitcoinů malwarem, kterým se může počítač nakazit.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -309,10 +301,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Pošli mince na Bitcoinovou adresu</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Uprav nastavení Bitcoinu</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -478,10 +466,6 @@
         <source>Up to date</source>
         <translation>Aktuální</translation>
     </message>
-    <message numerus="yes">
-        <source>Processed %n blocks of transaction history.</source>
-        <translation><numerusform>Zpracován %n blok transakční historie.</numerusform><numerusform>Zpracovány %n bloky transakční historie.</numerusform><numerusform>Zpracováno %n bloků transakční historie.</numerusform></translation>
-    </message>
     <message>
         <source>Catching up...</source>
         <translation>Stahuji...</translation>
@@ -493,18 +477,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Příchozí transakce</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Datum: %1
-Částka: %2
-Typ: %3
-Adresa: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -709,10 +681,6 @@ Adresa: %4
         <translation>ne</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Popisek zčervená, pokud je velikost transakce větší než 1000 bajtů.</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>To znamená, že je vyžadován poplatek alespoň %1 za kB.</translation>
     </message>
@@ -723,14 +691,6 @@ Adresa: %4
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Transakce s vyšší prioritou mají větší šanci na zařazení do bloku.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Popisek zčervená, pokud je priorita menší než „střední“.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Popisek zčervená, pokud má některý příjemce obdržet částku menší než %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -853,30 +813,6 @@ Adresa: %4
         <source>command-line options</source>
         <translation>možnosti příkazové řádky</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>Možnosti UI</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavit jazyk, například "de_DE" (výchozí: systémové nastavení)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Nastartovat minimalizovaně</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavit kořenové SSL certifikáty pro platební požadavky (výchozí: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Zobrazit startovací obrazovku (výchozí: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Zvolit adresář pro data při startu (výchozí: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -957,14 +893,6 @@ Adresa: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Hlavní</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automaticky spustí Bitcoin po přihlášení do systému.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>S&amp;pustit Bitcoin po přihlášení do systému</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1079,10 +1007,6 @@ Adresa: %4
         <translation>&amp;Minimalizovávat do ikony v panelu</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Zavřením se aplikace minimalizuje. Pokud je tato volba zaškrtnuta, tak se aplikace ukončí pouze zvolením Konec v menu.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>Za&amp;vřením minimalizovat</translation>
     </message>
@@ -1093,10 +1017,6 @@ Adresa: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Jazyk uživatelského rozhraní:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Tady lze nastavit jazyk uživatelského rozhraní. Nastavení se projeví až po restartování Bitcoinu.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1133,10 +1053,6 @@ Adresa: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>K aktivaci změn je potřeba restartovat klienta.</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Klient se vypne, chceš pokračovat?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1245,10 +1161,6 @@ Adresa: %4
         <translation>Síť platebního požadavku neodpovídá síti klienta.</translation>
     </message>
     <message>
-        <source>Payment request has expired.</source>
-        <translation>Platební požadavek vypršel.</translation>
-    </message>
-    <message>
         <source>Payment request is not initialized.</source>
         <translation>Platební požadavek není zahájený.</translation>
     </message>
@@ -1324,10 +1236,6 @@ Adresa: %4
         <translation>Typ klienta</translation>
     </message>
     <message>
-        <source>Address/Hostname</source>
-        <translation>Adresa/Název hostitele</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Odezva</translation>
     </message>
@@ -1357,14 +1265,6 @@ Adresa: %4
     <message>
         <source>%1 s</source>
         <translation>%1 s</translation>
-    </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>SÍŤ</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>NEZNÁMÁ</translation>
     </message>
     <message>
         <source>None</source>
@@ -1565,16 +1465,8 @@ Adresa: %4
         <translation>Soubor s ladicími záznamy</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Otevři soubor s ladicími záznamy Bitcoinu z aktuálního datového adresáře. U velkých logů to může pár vteřin zabrat.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Vyčistit konzoli</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Vítej v Bitcoinové RPC konzoli.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1865,14 +1757,6 @@ Adresa: %4
         <translation>sbal nastavení poplatků</translation>
     </message>
     <message>
-        <source>Minimize</source>
-        <translation>Skryj</translation>
-    </message>
-    <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Pokud je vlastní poplatek nastavený na 1000 satoshi a transakce má pouze 250 bajtů, tak „za kilobajt“ zaplatí poplatek jen 250 satoshi, zatímco „přinejmenším“ zaplatí 1000 satoshi. Pro transakce větší než kilobajt obě možnosti platí za kilobajt.</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>za kilobajt</translation>
     </message>
@@ -2001,10 +1885,6 @@ Adresa: %4
         <translation>nebo</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Adresa příjemce je neplatná, překontroluj ji prosím.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Odesílaná částka musí být větší než 0.</translation>
     </message>
@@ -2017,10 +1897,6 @@ Adresa: %4
         <translation>Celková částka při připočítání poplatku %1 překročí stav účtu.</translation>
     </message>
     <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Zaznamenána duplikovaná adresa; každá adresa může být v odesílané platbě pouze jednou.</translation>
-    </message>
-    <message>
         <source>Transaction creation failed!</source>
         <translation>Vytvoření transakce selhalo!</translation>
     </message>
@@ -2029,16 +1905,8 @@ Adresa: %4
         <translation>Transakce byla odmítnuta! Tohle může nastat, pokud nějaké mince z tvé peněženky už jednou byly utraceny, například pokud používáš kopii souboru wallet.dat a mince byly utraceny v druhé kopii, ale nebyly označeny jako utracené v této.</translation>
     </message>
     <message>
-        <source>A fee higher than %1 is considered an insanely high fee.</source>
-        <translation>Poplatek vyšší než %1 je považován za absurdně vysoký.</translation>
-    </message>
-    <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Zaplatit pouze minimální poplatek %1</translation>
-    </message>
-    <message>
-        <source>Estimated to begin confirmation within %1 block(s).</source>
-        <translation>Potvrzování by podle odhadu mělo začít během %1 bloků.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2116,20 +1984,12 @@ Adresa: %4
         <translation>Zpráva:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>Tohle je ověřený platební požadavek.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Zadej označení této adresy; obojí se ti pak uloží do adresáře</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>Zpráva, která byla připojena k bitcoin: URI a která se ti pro přehled uloží k transakci. Poznámka: Tahle zpráva se neposílá s platbou po Bitcoinové síti.</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Tohle je neověřený platební požadavek.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2160,10 +2020,6 @@ Adresa: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Podepiš zprávu</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Podepsáním zprávy svými adresami můžeš prokázat, že je skutečně vlastníš. Buď opatrný a nepodepisuj nic vágního; například při phishingových útocích můžeš být lákán, abys něco takového podepsal. Podepisuj pouze zcela úplná a detailní prohlášení, se kterými souhlasíš.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2216,10 +2072,6 @@ Adresa: %4
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Ověř zprávu</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>K ověření podpisu zprávy zadej podepisující adresu, zprávu (ověř si, že správně kopíruješ zalomení řádků, mezery, tabulátory apod.) a podpis. Dávej pozor na to, abys nezkopíroval do podpisu víc, než co je v samotné podepsané zprávě, abys nebyl napálen man-in-the-middle útokem.</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2485,10 +2337,6 @@ Adresa: %4
         <translation>Typ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Nedozráno (%1 potvrzení, bude k dispozici za %2)</translation>
     </message>
@@ -2515,6 +2363,10 @@ Adresa: %4
     <message>
         <source>Offline</source>
         <translation>Offline</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Označení</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2571,10 +2423,6 @@ Adresa: %4
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
         <translation>Zda tato transakce zahrnuje i některou sledovanou adresu.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Cílová adresa transakce.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2907,10 +2755,6 @@ Adresa: %4
         <translation>Možnosti ladění/testování:</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Zjistit vlastní IP adresu (výchozí: 1, pokud naslouchá a není zadáno -externalip)</translation>
-    </message>
-    <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
         <translation>Nenačítat peněženku a vypnout její RPC volání</translation>
     </message>
@@ -2969,10 +2813,6 @@ Adresa: %4
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Připojovat se pouze k uzlům v &lt;net&gt; síti (ipv4, ipv6 nebo onion)</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Znovu vytvořit index řetězce bloků z aktuálních blk000??.dat souborů</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3039,10 +2879,6 @@ Adresa: %4
         <translation>Nedaří se mi získat zámek na datový adresář %s. Bitcoin Core pravděpodobně už jednou běží.</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:%u)</source>
-        <translation>Kontinuálně omezovat bezpoplatkové transakce na &lt;n&gt;*1000 bajtů za minutu (výchozí: %u)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Vytvářet nové soubory s výchozími systémovými právy namísto umask 077 (uplatní se, pouze pokud je vypnutá funkce peněženky)</translation>
     </message>
@@ -3101,6 +2937,10 @@ Adresa: %4
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Nemohu přeložit -whitebind adresu: '%s'</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Zvolit adresář pro data při startu (výchozí: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3191,8 +3031,20 @@ Adresa: %4
         <translation>Posílat transakce pokud možno bez poplatků (výchozí: %u)</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Nastavit kořenové SSL certifikáty pro platební požadavky (výchozí: -system-)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Nastavit jazyk, například "de_DE" (výchozí: systémové nastavení)</translation>
+    </message>
+    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobrazit všechny možnosti ladění (užití: --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Zobrazit startovací obrazovku (výchozí: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3201,6 +3053,10 @@ Adresa: %4
     <message>
         <source>Signing transaction failed</source>
         <translation>Nepodařilo se podepsat transakci</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Nastartovat minimalizovaně</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3241,10 +3097,6 @@ Adresa: %4
     <message>
         <source>Warning</source>
         <translation>Upozornění</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Upozornění: tahle verze je zastaralá, měl bys ji aktualizovat!</translation>
     </message>
     <message>
         <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
