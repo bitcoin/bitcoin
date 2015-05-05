@@ -2826,9 +2826,9 @@ bool Bitcoin_ReceivedBlockTransactions(const Bitcoin_CBlock &block, CValidationS
         Bitcoin_CheckForkWarningConditions();
 
         // Notify UI to display prev block's coinbase if it was ours
-//        static uint256 hashPrevBestCoinBase;
-//        bitcoin_g_signals.UpdatedTransaction(hashPrevBestCoinBase);
-//        hashPrevBestCoinBase = block.GetTxHash(0);
+        static uint256 hashPrevBestCoinBase;
+        bitcoin_g_signals.UpdatedTransaction(hashPrevBestCoinBase);
+        hashPrevBestCoinBase = block.GetTxHash(0);
     } else
         Bitcoin_CheckForkWarningConditionsOnNewFork(pindexNew);
 

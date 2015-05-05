@@ -441,7 +441,7 @@ void ClaimCoinsDialog::coinControlUpdateLabels()
     if (Bitcoin_CoinControlDialog::coinControl->HasSelected())
     {
         // actual coin control calculation
-    	Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+    	Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
 
         // show coin control stats
         ui->widgetCoinControl->show();

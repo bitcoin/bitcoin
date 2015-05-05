@@ -126,13 +126,10 @@ void Bitcoin_WalletModel::pollBalanceChanged()
 
 void Bitcoin_WalletModel::checkBalanceChanged()
 {
-    //Find all claimed  transactions
-    map<uint256, set<int> > mapClaimTxInPoints;
-    bitcredit_wallet->ClaimTxInPoints(mapClaimTxInPoints);
-
-    qint64 newBalance = getBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints);
-    qint64 newUnconfirmedBalance = getUnconfirmedBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints);
-    qint64 newImmatureBalance = getImmatureBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints);
+    map<uint256, set<int> > mapEmptyTxInPoints;
+    qint64 newBalance = getBalance(NULL, mapEmptyTxInPoints);
+    qint64 newUnconfirmedBalance = getUnconfirmedBalance(NULL, mapEmptyTxInPoints);
+    qint64 newImmatureBalance = getImmatureBalance(NULL, mapEmptyTxInPoints);
 
     if(cachedBalance != newBalance || cachedUnconfirmedBalance != newUnconfirmedBalance || cachedImmatureBalance != newImmatureBalance)
     {
@@ -577,16 +574,12 @@ bool Bitcoin_WalletModel::isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoins
 }
 
 // AvailableCoins + LockedCoins grouped by wallet address (put change in one group with wallet address)
-void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache *claim_view) const
+void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     wallet->MarkDirty();
 
-    //Find all claimed  transactions
-    map<uint256, set<int> > mapClaimTxInPoints;
-    bitcredit_wallet->ClaimTxInPoints(mapClaimTxInPoints);
-
     std::vector<Bitcoin_COutput> vCoins;
-    wallet->AvailableCoins(vCoins, claim_view, mapClaimTxInPoints);
+    wallet->AvailableCoins(vCoins, claim_view, mapFilterTxInPoints);
 
     LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;

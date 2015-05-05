@@ -508,7 +508,6 @@ void Bitcoin_SendCoinsDialog::coinControlFeatureChanged(bool checked)
 void Bitcoin_SendCoinsDialog::coinControlButtonClicked()
 {
     Bitcoin_CoinControlDialog dlg;
-    //TODO - Can we set NULL here?
     dlg.setModel(model, NULL);
     dlg.exec();
     coinControlUpdateLabels();
@@ -592,7 +591,7 @@ void Bitcoin_SendCoinsDialog::coinControlUpdateLabels()
     if (Bitcoin_CoinControlDialog::coinControl->HasSelected())
     {
         // actual coin control calculation
-        Bitcoin_CoinControlDialog::updateLabels(model, this);
+        Bitcoin_CoinControlDialog::updateLabels(model, NULL, this);
 
         // show coin control stats
         ui->labelCoinControlAutomaticallySelected->hide();

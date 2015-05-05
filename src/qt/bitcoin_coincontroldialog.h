@@ -32,7 +32,7 @@ public:
     void setModel(Bitcoin_WalletModel *bitcoin_model, Bitcredit_WalletModel *bitcredit_model);
 
     // static because also called from sendcoinsdialog
-    static void updateLabels(Bitcoin_WalletModel*, QDialog*);
+    static void updateLabels(Bitcoin_WalletModel*, Bitcredit_WalletModel *bitcredit_model, QDialog*);
     static QString getPriorityLabel(double);
 
     static qint64 amountAfterFee;

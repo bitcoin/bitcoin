@@ -144,7 +144,7 @@ void Bitcoin_CoinControlDialog::setModel(Bitcoin_WalletModel *bitcoin_model, Bit
     {
         updateView();
         updateLabelLocked();
-        Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+        Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
     }
 }
 
@@ -183,7 +183,7 @@ void Bitcoin_CoinControlDialog::buttonSelectAllClicked()
     ui->treeWidget->setEnabled(true);
     if (state == Qt::Unchecked)
         coinControl->UnSelectAll(); // just to be sure
-    Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+    Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
 }
 
 // context menu
@@ -378,7 +378,7 @@ void Bitcoin_CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int colum
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
-            Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+            Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
     }
 
     // todo: this is a temporary qt5 fix: when clicking a parent node in tree mode, the parent node
@@ -427,7 +427,7 @@ void Bitcoin_CoinControlDialog::updateLabelLocked()
     else ui->labelLocked->setVisible(false);
 }
 
-void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog* dialog)
+void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, Bitcredit_WalletModel *bitcredit_model, QDialog* dialog)
 {
     if (!model)
         return;
@@ -465,10 +465,15 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog
     unsigned int nQuantity      = 0;
     int nQuantityUncompressed   = 0;
 
+    Bitcoin_CClaimCoinsViewCache *claim_view = NULL;
+    if(bitcredit_model != NULL) {
+    	claim_view = bitcoin_pclaimCoinsTip;
+    }
+
     vector<COutPoint> vCoinControl;
     vector<Bitcoin_COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
-    model->getOutputs(vCoinControl, vOutputs, bitcoin_pclaimCoinsTip);
+    model->getOutputs(vCoinControl, vOutputs, claim_view);
 
     BOOST_FOREACH(const Bitcoin_COutput& out, vOutputs)
     {
@@ -476,7 +481,7 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog
         // when selected are spent elsewhere, like rpc or another computer
         uint256 txhash = out.tx->GetHash();
         COutPoint outpt(txhash, out.i);
-        if (model->isSpent(outpt, bitcoin_pclaimCoinsTip))
+        if (model->isSpent(outpt, claim_view))
         {
             coinControl->UnSelect(outpt);
             continue;
@@ -635,9 +640,16 @@ void Bitcoin_CoinControlDialog::updateView()
 
     int nDisplayUnit = bitcoin_model->getOptionsModel()->getDisplayUnit();
 
+    Bitcoin_CClaimCoinsViewCache *claim_view = NULL;
+    map<uint256, set<int> > mapClaimTxInPoints;
+    if(bitcredit_model != NULL) {
+    	claim_view = bitcoin_pclaimCoinsTip;
+    	bitcredit_model->wallet->ClaimTxInPoints(mapClaimTxInPoints);
+    }
+
     //Use transactions from previous invocation as filter
     map<QString, vector<Bitcoin_COutput> > mapCoins;
-    bitcoin_model->listCoins(mapCoins, bitcoin_pclaimCoinsTip);
+    bitcoin_model->listCoins(mapCoins, claim_view, mapClaimTxInPoints);
 
     BOOST_FOREACH(PAIRTYPE(QString, vector<Bitcoin_COutput>) coins, mapCoins)
     {
