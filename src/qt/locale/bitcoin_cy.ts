@@ -68,10 +68,6 @@
         <translation>Newid cyfrinymadrodd</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Teipiwch yr hen cyfrinymadrodd a chyfrinymadrodd newydd i mewn i'r waled.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Cadarnau amgryptiad y waled</translation>
     </message>
@@ -441,12 +437,12 @@
         <translation>Math</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Cyfeiriad</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Agor tan %1</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     </context>
 <context>

@@ -148,10 +148,6 @@
         <translation>Ubah kata kunci</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Masukkan kata kunci lama dan baru ke dompet ini.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Konfirmasi enkripsi dompet</translation>
     </message>
@@ -170,10 +166,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Dompet terenkripsi</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin akan menutup untuk menyelesaikan proses enkripsi. Ingat bahwa dengan mengenkripsi dompet Anda tidak sepenuhnya melindungi bitcoin Anda dari perangkat lunak berbahaya yang menginfeksi komputer Anda.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -289,10 +281,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Kirim koin ke alamat Bitcoin</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Ubah pilihan konfigurasi untuk Bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -469,18 +457,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Transaksi diterima</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Tanggal: %1
-Nilai: %2
-Jenis: %3
-Alamat: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -661,10 +637,6 @@ Alamat: %4
         <translation>tidak</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Label ini akan berubah merah, jika ukuran transaksi lebih besar dari 1000 byte.</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Berarti perlu biaya lebih dari %1 untuk setiap kB.</translation>
     </message>
@@ -675,14 +647,6 @@ Alamat: %4
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Makin penting transaksinya, makin kemungkinan akan termasuk dalam blok.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Label ini akan berubah merah, jika prioritas lebih kecil dari "medium".</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Label ini akan berubah merah, jika setiap penerima menerima nilai lebih kecil dari %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -797,23 +761,7 @@ Alamat: %4
         <source>command-line options</source>
         <translation>pilihan perintah-baris</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>pilihan UI</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Atur bahasa, sebagai contoh "id_ID" (standar: system locale)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Memulai terminimalisi</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Tampilkan layar pembuka saat nyala (standar: 1)</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -877,14 +825,6 @@ Alamat: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Utama</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Menyalakan Bitcoin secara otomatis setelah masuk ke dalam sistem.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Menyalakan Bitcoin pada login sistem</translation>
     </message>
     <message>
         <source>MB</source>
@@ -967,10 +907,6 @@ Alamat: %4
         <translation>&amp;Meminilisasi ke tray daripada taskbar</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Meminimalkan tanpa keluar dari aplikasi saat jendela ditutup. Apabila pilihan ini diaktifkan, aplikasi hanya bisa ditutup dengan memilih Keluar di menu Berkas.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;eminilisasi saat tutup</translation>
     </message>
@@ -981,10 +917,6 @@ Alamat: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Bahasa Antarmuka Pengguna:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Tampilan bahasa pengguna dapat diatur disini. Pengaturan ini akan berpengaruh setelah memulai kembali aplikasi Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1021,10 +953,6 @@ Alamat: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Restart klien diperlukan untuk mengaktifkan perubahan.</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Klien akan dimatikan, apakah anda hendak melanjutkan?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1257,16 +1185,8 @@ Alamat: %4
         <translation>Berkas catatan debug</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Buka berkas catatan debug Bitcoin dari direktori data sekarang. Hal ini dapat memakan waktu beberapa detik untuk berkas catatan yang besar.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Bersihkan konsol</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Selamat datang ke konsol RPC Bitcoin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1581,10 +1501,6 @@ Alamat: %4
         <translation>atau</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Alamat penerima tidak sah, silakan periksa sekali lagi.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Nilai yang dibayar harus lebih besar dari 0.</translation>
     </message>
@@ -1595,10 +1511,6 @@ Alamat: %4
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Jumlah melebihi saldo Anda ketika biaya transaksi %1 ditambahkan.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Ditemukan alamat ganda, hanya dapat mengirim ke tiap alamat sekali per operasi pengiriman.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -1672,16 +1584,8 @@ Alamat: %4
         <translation>Pesan:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>Permintaan pembayaran terverifikasi.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Masukkan label untuk alamat ini untuk dimasukan dalam daftar alamat yang pernah digunakan</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Permintaan pembayaran tidak terverifikasi.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1997,10 +1901,6 @@ Alamat: %4
         <translation>Jenis</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
-    <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Terlalu muda (cuma %1 konfirmasi, akan siap sesudah %2) </translation>
     </message>
@@ -2027,6 +1927,10 @@ Alamat: %4
     <message>
         <source>Offline</source>
         <translation>Tidak terhubung</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2075,10 +1979,6 @@ Alamat: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Jenis transaksi.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Alamat tujuan dari transaksi.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2351,10 +2251,6 @@ Alamat: %4
         <translation>Menemukan database blok yang rusak </translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Cari alamat IP Anda sendiri (biasanya: 1 saat mendengarkan dan -externalip tidak terpilih)</translation>
-    </message>
-    <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
         <translation>Jangan memuat dompet dan menonaktifkan panggilan dompet RPC</translation>
     </message>
@@ -2455,12 +2351,24 @@ Alamat: %4
         <translation>Kirim info jejak/debug ke konsol bukan berkas debug.log</translation>
     </message>
     <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Atur bahasa, sebagai contoh "id_ID" (standar: system locale)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Tampilkan layar pembuka saat nyala (standar: 1)</translation>
+    </message>
+    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Mengecilkan berkas debug.log saat klien berjalan  (Standar: 1 jika tidak -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Tandatangani transaksi tergagal</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Memulai terminimalisi</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2481,10 +2389,6 @@ Alamat: %4
     <message>
         <source>Warning</source>
         <translation>Peringatan</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Perhatian: Versi ini sudah lama, perlu ditingkatkan!</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>

@@ -83,11 +83,11 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Archivo separado por comas (*.CSV)</translation>
+        <translation>Arhchivo separado por comas (*.CSV)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Fallo en la exportación</translation>
+        <translation>Exportación fallida</translation>
     </message>
     </context>
 <context>
@@ -121,7 +121,7 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Cartera encriptada.</translation>
+        <translation>Encriptar cartera.</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -137,15 +137,11 @@
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Desencriptar la cartera</translation>
+        <translation>Desencriptar cartera</translation>
     </message>
     <message>
         <source>Change passphrase</source>
         <translation>Cambiar contraseña</translation>
-    </message>
-    <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ingrese la antugüa y nueva contraseña de la cartera</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -168,12 +164,8 @@
         <translation>Cartera encriptada</translation>
     </message>
     <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se cerrará para finalizar el proceso de encriptación. Recuerda que encriptar tu cartera no protege completamente a tus bitcoins de ser robadas por malware infectando tu computadora.</translation>
-    </message>
-    <message>
         <source>Wallet encryption failed</source>
-        <translation>La encriptación de la cartera falló</translation>
+        <translation>Encriptación de la cartera fallida</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
@@ -185,11 +177,11 @@
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>El desbloqueo de la cartera Fallo</translation>
+        <translation>El desbloqueo de la cartera falló</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La contraseña ingresada para la des encriptación de la cartera es incorrecto</translation>
+        <translation>La contraseña ingresada para la desencriptación de la cartera es incorrecto</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
@@ -287,10 +279,6 @@
         <translation>Enviar monedas a una dirección Bitcoin</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Modificar las opciones de configuración de Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Respaldar cartera en otra ubicación</translation>
     </message>
@@ -337,10 +325,6 @@
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostrar mensaje de ayuda del nucleo de Bitcoin para optener una lista con los posibles comandos  de Bitcoin</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n Activar conexión a la red de Bitcoin</numerusform><numerusform>%n Activar conexiones a la red de Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -512,26 +496,6 @@
     <message>
         <source>command-line options</source>
         <translation>Opciones de comando de lineas</translation>
-    </message>
-    <message>
-        <source>UI options</source>
-        <translation>Opciones de interfaz</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Definir idioma, por ejemplo "de_DE" (por defecto: Sistema local)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Iniciar minimizado</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostrar pantalla de arraque al iniciar (por defecto: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escojer el directorio de información al iniciar (por defecto : 0)</translation>
     </message>
 </context>
 <context>
@@ -784,14 +748,6 @@
         <translation>Mensaje:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>Esta es una verificación de solicituda de pago.</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Esta es una solicitud de pago no verificada.</translation>
-    </message>
-    <message>
         <source>Pay To:</source>
         <translation>Pago para:</translation>
     </message>
@@ -830,7 +786,7 @@
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation>El nucleo de Bitcoin de desarrolladores</translation>
+        <translation>Los desarrolladores de Bitcoin Core</translation>
     </message>
     </context>
 <context>
@@ -893,10 +849,6 @@
         <translation>Tipo</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Domicilio</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Abrir hasta %1</translation>
     </message>
@@ -913,6 +865,10 @@
         <translation>Generado pero no aprovado</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
         <source>Received with</source>
         <translation>Recivido con</translation>
     </message>
@@ -926,7 +882,7 @@
     </message>
     <message>
         <source>Mined</source>
-        <translation>Minado</translation>
+        <translation>Minado </translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -939,10 +895,6 @@
     <message>
         <source>Type of transaction.</source>
         <translation>Escriba una transacción</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Direccion del destinatario de la transacción</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -1025,7 +977,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Fallo en la exportación</translation>
+        <translation>Exportación fallida</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -1109,6 +1061,22 @@
     <message>
         <source>Wallet options:</source>
         <translation>Opciones de cartera:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Escojer el directorio de información al iniciar (por defecto : 0)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Definir idioma, por ejemplo "de_DE" (por defecto: Sistema local)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Mostrar pantalla de arraque al iniciar (por defecto: 1)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Iniciar minimizado</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

@@ -140,10 +140,6 @@
         <translation>Mainīt paroli</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ierakstiet maciņa veco un jauno paroli.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
@@ -162,10 +158,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Maciņš nošifrēts</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst bitkoinu zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -287,10 +279,6 @@
         <translation>Nosūtīt bitkoinus uz Bitcoin adresi</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Mainīt Bitcoin konfigurācijas uzstādījumus</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Izveidot maciņa rezerves kopiju citur</translation>
     </message>
@@ -386,33 +374,13 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;Komandrindas iespējas</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktīvu savienojumu ar Bitcoin tīklu</numerusform><numerusform>%n aktīvs savienojums ar Bitcoin tīklu</numerusform><numerusform>%n aktīvu savienojumu as Bitcoin tīklu</numerusform></translation>
-    </message>
     <message>
         <source>No block source available...</source>
         <translation>Nav pieejams neviens bloku avots...</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n stundas</numerusform><numerusform>%n stunda</numerusform><numerusform>%n stundas</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dienas</numerusform><numerusform>%n diena</numerusform><numerusform>%n dienas</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n nedēļas</numerusform><numerusform>%n nedēļa</numerusform><numerusform>%n nedēļas</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 un %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n gadi</numerusform><numerusform>%n gads</numerusform><numerusform>%n gadi</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -449,18 +417,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Ienākoša transakcija</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Datums: %1
-Daudzums: %2
-Tips: %3
-Adrese: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -630,7 +586,7 @@ Adrese: %4
     </message>
     <message>
         <source>none</source>
-        <translation>neviens</translation>
+        <translation>neviena</translation>
     </message>
     <message>
         <source>yes</source>
@@ -745,23 +701,7 @@ Adrese: %4
         <source>command-line options</source>
         <translation>komandrindas izvēles</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>Lietotāja interfeisa izvēlnes</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Uzstādiet valodu, piemēram "de_DE" (pēc noklusēšanas: sistēmas lokāle)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Sākt minimizētu</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -821,14 +761,6 @@ Adrese: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Galvenais</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automātiski sākt Bitcoin pēc pieteikšanās sistēmā.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Sākt Bitcoin reizē ar sistēmu</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -915,10 +847,6 @@ Adrese: %4
         <translation>&amp;Minimizēt uz sistēmas tekni, nevis rīkjoslu</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Logu aizverot, minimizēt, nevis beigt darbu. Kad šī izvēlne iespējota, programma aizvērsies tikai pēc Beigt komandas izvēlnē.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimizēt aizverot</translation>
     </message>
@@ -929,10 +857,6 @@ Adrese: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>Lietotāja interfeiss un &amp;valoda:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Šeit var iestatīt lietotāja valodu. Iestatījums aktivizēsies pēc Bitcoin pārstartēšanas.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -965,10 +889,6 @@ Adrese: %4
     <message>
         <source>Confirm options reset</source>
         <translation>Apstiprināt iestatījumu atiestatīšanu</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Klients tiks izslēgts, vai vēlaties turpināt?</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1189,10 +1109,6 @@ Adrese: %4
         <translation>Notīrīt konsoli</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Laipni lūgti Bitcoin RPC konsolē.</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Izmantojiet bultiņas uz augšu un leju, lai pārvietotos pa vēsturi, un &lt;b&gt;Ctrl-L&lt;/b&gt; ekrāna notīrīšanai.</translation>
     </message>
@@ -1370,7 +1286,7 @@ Adrese: %4
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Sūtīt bitkoinus</translation>
+        <translation>Sūtīt Bitkoinus</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1493,10 +1409,6 @@ Adrese: %4
         <translation>vai</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Saņēmēja adrese ir nepareiza, lūdzu pārbaudi.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Nosūtāmajai summai jābūt lielākai par 0.</translation>
     </message>
@@ -1507,10 +1419,6 @@ Adrese: %4
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Kopsumma pārsniedz pieejamo, ja pieskaitīta %1 transakcijas maksa.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Atrastas divas vienādas adreses, vienā nosūtīšanas reizē uz katru adresi var sūtīt tikai vienreiz.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -1578,14 +1486,6 @@ Adrese: %4
     <message>
         <source>Message:</source>
         <translation>Ziņojums:</translation>
-    </message>
-    <message>
-        <source>This is a verified payment request.</source>
-        <translation>Šis ir pārbaudīts maksājuma pieprasījums.</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Šis ir nepārbaudīts maksājuma pieprasījums.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1866,10 +1766,6 @@ Adrese: %4
         <source>, has not been successfully broadcast yet</source>
         <translation>, vēl nav veiksmīgi izziņots</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Atvērts vel %n blokus</numerusform><numerusform>Atvērts vel %n bloku</numerusform><numerusform>Atvērts vel %n blokus</numerusform></translation>
-    </message>
     <message>
         <source>unknown</source>
         <translation>nav zināms</translation>
@@ -1897,14 +1793,6 @@ Adrese: %4
         <translation>Tips</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adrese</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Atvērts vel %n blokus</numerusform><numerusform>Atvērts vel %n bloku</numerusform><numerusform>Atvērts vel %n blokus</numerusform></translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Atvērts līdz %1</translation>
     </message>
@@ -1923,6 +1811,10 @@ Adrese: %4
     <message>
         <source>Offline</source>
         <translation>Bezsaitē</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Nosaukums</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -1967,10 +1859,6 @@ Adrese: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Transakcijas tips.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Transakcijas mērķa adrese.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2267,8 +2155,20 @@ Adrese: %4
         <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
     </message>
     <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Uzstādiet valodu, piemēram "de_DE" (pēc noklusēšanas: sistēmas lokāle)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Sākt minimizētu</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2289,10 +2189,6 @@ Adrese: %4
     <message>
         <source>Warning</source>
         <translation>Brīdinājums</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Brīdinājums: Šī versija ir novecojusi, nepieciešams atjauninājums!</translation>
     </message>
     <message>
         <source>on startup</source>

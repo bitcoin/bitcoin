@@ -47,7 +47,7 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Address king pamag-Padala</translation>
+        <translation>Address king pamag-Send</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
@@ -132,10 +132,6 @@
         <translation>Alilan ya ing passphrase</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Palub ye ing luma ampo ing bayung passphrase king wallet.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Kumpirman ya ing wallet encryption</translation>
     </message>
@@ -158,10 +154,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Me-encrypt ne ing wallet</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Ing Bitcoin ngeni magsara ya ban ayari ing proseso ning pamag-encrypt. Tandanan yu king pamag-encrypt wallet, ali nala aprotektan king kabuuan reng bitcoins yu kareng malware a kasalunsungan atiu kareng computer yu.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -255,10 +247,6 @@
         <translation>Magpadalang barya king Bitcoin address</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Alilan ing pipamilian konpigurasion para keng Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>I-backup ing wallet king aliwang lugal</translation>
     </message>
@@ -349,18 +337,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Paparatang a transaksion</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Aldo: %1
-Alaga: %2
-Type: %3
-Address: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -481,23 +457,7 @@ Address: %4
         <source>command-line options</source>
         <translation>pipamilian command-line</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>Pipamilian ning UI</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Mamiling Amanu, alimbawa "de_DE"(default: system locale)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Umpisan ing pamaglati</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Ipalto ing splash screen keng umpisa (default: 1)</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -525,14 +485,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Pun</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Umpisan yang antimu ing Bitcoin kaibat mekapag-log in king sistema.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Umpisan ya ing Bitcoin king pamag-log-in na ning sistema.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -571,10 +523,6 @@ Address: %4
         <translation>&amp;Latian ya ing tray kesa king taskbar</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Palatian namu kesa king iluwal ya ing aplikasion istung makasara ya ing awang. Istung ing pipamilian a ini atiu king "magsilbi", ing aplikasion misara yamu kaibat meng pinili ing "Tuknangan" king menu.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>P&amp;alatian istung isara</translation>
     </message>
@@ -585,10 +533,6 @@ Address: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>Amanu na ning user interface:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Ing amanu na ning user interface maliari yang i-ayus o ilage keni. Ing ayus a ini magsilbi yamu istung pesibayuan meng pasibayu ing Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -741,16 +685,8 @@ Address: %4
         <translation>Debug log file</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Ibuklat ing Bitcoin debug log file menibat king kasalungsungan data directory. Magluat ya ining pilan segundu para kareng mamaragul a log files.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>I-Clear ing console</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Malaus kayu king Bitcoin RPC console.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -857,10 +793,6 @@ Address: %4
         <translation>Kopyan ing alaga</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Ing address na ning tumanggap ali ya katanggap-tanggap, maliari pung pakilaue pasibayu.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Ing alaga na ning bayaran dapat mung mas matas ya king 0.</translation>
     </message>
@@ -871,10 +803,6 @@ Address: %4
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Ing kabuuan mipasobra ya king kekang balanse istung inabe ya ing %1 a bayad king transaksion </translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Atin meakit a milupang address, maliari kamung magpadalang misan king metung a address king misan a pamagpadalang transaksion.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -924,10 +852,6 @@ Address: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Pirman ing Mensayi</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Maliari kang mamirmang mensayi king kekang address bilang patune na keka ya ini. Mimingat mu king pamag-pirmang  e malino uling mapalyari kang mabiktimang phishing attack a manloku keka na pirman me ing sarili mu para king karela. Only sign fully-detailed statements you agree to.</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1185,10 +1109,6 @@ Address: %4
         <translation>Klase</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Address</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Makabuklat anggang %1</translation>
     </message>
@@ -1203,6 +1123,10 @@ Address: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Me-generate ya oneng ali ya metanggap</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1239,10 +1163,6 @@ Address: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Klase ning transaksion</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Kepuntalan a address ning transaksion</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -1431,10 +1351,6 @@ Address: %4
         <translation>Mekapansin lang me-corrupt a block database</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>I-discover ing sariling IP address (default: 1 istung makiramdam at -externalip)</translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Buri meng buuan pasibayu ing block database ngene?</translation>
     </message>
@@ -1463,6 +1379,18 @@ Address: %4
         <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
     </message>
     <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Mamiling Amanu, alimbawa "de_DE"(default: system locale)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Ipalto ing splash screen keng umpisa (default: 1)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Umpisan ing pamaglati</translation>
+    </message>
+    <message>
         <source>Transaction too large</source>
         <translation>Maragul yang masiadu ing transaksion</translation>
     </message>
@@ -1473,10 +1401,6 @@ Address: %4
     <message>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Kapabaluan: Ing bersioin a ini laus ne, kailangan nang mag-upgrade!</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>

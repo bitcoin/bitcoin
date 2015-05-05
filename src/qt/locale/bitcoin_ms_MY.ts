@@ -156,10 +156,6 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
-    <message>
-        <source>Address</source>
-        <translation>Alamat</translation>
-    </message>
     </context>
 <context>
     <name>TransactionView</name>

@@ -148,10 +148,6 @@
         <translation>Zamenjaj geslo</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Vnesite staro in novo geslo denarnice.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Potrdi šifriranje denarnice</translation>
     </message>
@@ -170,10 +166,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Denarnica šifrirana</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se bo zaprl, da bi dokončal proces šifriranja. Zapomnite si, da šifriranje vaše denarnice ne more popolnoma zaščititi pred krajami zlonamernih programov, ki bi lahko bili nameščeni na vašem računalniku.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -291,10 +283,6 @@
         <translation>Pošlji kovance na Bitcoin naslov</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Spremeni konfiguracijo nastavitev za Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Napravi varnostno kopijo denarnice na drugo lokacijo</translation>
     </message>
@@ -382,29 +370,9 @@
         <source>Open a bitcoin: URI or payment request</source>
         <translation>Odpri Bitcoin: URI ali zahteva o plačilu</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktivna povezava v bitcoin omrežje</numerusform><numerusform>%n aktivni povezavi v bitcoin omrežje</numerusform><numerusform>%n aktivnih povezav v bitcoin omrežje</numerusform><numerusform>%n aktivnih povezav v bitcoin omrežje</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n ura</numerusform><numerusform>%n uri</numerusform><numerusform>%n ure</numerusform><numerusform>%n ura</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dan</numerusform><numerusform>%n dneva</numerusform><numerusform>%n dnevi</numerusform><numerusform>%n dni</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n teden</numerusform><numerusform>%n tedna</numerusform><numerusform>%n tedni</numerusform><numerusform>%n tednov</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 in %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n leto</numerusform><numerusform>%n leti</numerusform><numerusform>%n leta</numerusform><numerusform>%n let</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -443,18 +411,6 @@
         <translation>Prilivi</translation>
     </message>
     <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Datum: %1
-Količina: %2
-Vrsta: %3
-Naslov: %4
-</translation>
-    </message>
-    <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Denarnica je &lt;b&gt;šifrirana&lt;/b&gt; in trenutno &lt;b&gt;odklenjena&lt;/b&gt;</translation>
     </message>
@@ -482,7 +438,7 @@ Naslov: %4
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Količina:</translation>
+        <translation>Znesek:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -637,20 +593,12 @@ Naslov: %4
         <translation>ne</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>V primeru, da je velikost transakcije večja od 1000 bitov, se ta oznaka se obarva rdeče.</translation>
-    </message>
-    <message>
         <source>Can vary +/- 1 byte per input.</source>
         <translation>Se lahko razlikuje +/- 1 byte na vnos.</translation>
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Transakcije z višjo prioriteto imajo boljše možnosti za vključitev v blok.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Oznaka se obarva rdeče, kadar je prioriteta manjša od "srednje".</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -769,30 +717,6 @@ Naslov: %4
         <source>command-line options</source>
         <translation>možnosti ukazne vrstice</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>možnosti uporabniškega vmesnika</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavi jezik, npr. "sl_SI" (privzeto: jezikovna oznaka sistema)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Zaženi pomanjšano</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavi korenske SSL certifikate za plačilni zahtevek (privzeto: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Ob zagonu prikaži uvodni zaslon (privzeto: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ob zagonu izberi mapo za shranjevanje podatkov (privzeto: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -867,14 +791,6 @@ Naslov: %4
         <translation>&amp;Glavno</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Po prijavi v sistem samodejno zaženite Bitcoin.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Zaženi Bitcoin ob prijavi v sistem</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>Velikost lokalne zbirke &amp;podatkovne baze</translation>
     </message>
@@ -947,10 +863,6 @@ Naslov: %4
         <translation>&amp;Minimiraj na pladenj namesto na opravilno vrstico</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimiziraj namesto izhoda iz programa, ko je okno zaprto. Ko je ta opcija omogočena se bo aplikacija zaprla z izbiro opcije Zapri iz menija. </translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>&amp;Minimiziraj na ukaz zapri</translation>
     </message>
@@ -961,10 +873,6 @@ Naslov: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>Vmesnik uporabnika &amp;jezik:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Tukaj je mogoče nastaviti uporabniški vmesnik za jezike. Ta nastavitev bo prikazana šele, ko boste znova zagnali Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1087,7 +995,7 @@ Naslov: %4
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Shrani sliko...</translation>
+        <translation>&amp;Shrani sliko..</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -1203,10 +1111,6 @@ Naslov: %4
     <message>
         <source>Clear console</source>
         <translation>Počisti konzolo</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Dobrodošli na Bitcoin RPC konzoli.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1434,7 +1338,7 @@ Naslov: %4
     </message>
     <message>
         <source>Clear &amp;All</source>
-        <translation>Počisti &amp;vse</translation>
+        <translation>Počisti &amp;vse </translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1487,10 +1391,6 @@ Naslov: %4
     <message>
         <source>The amount exceeds your balance.</source>
         <translation>Količina presega vaše dobroimetje</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Najdena kopija naslova, možnost pošiljanja na vsakega izmed naslov le enkrat ob pošiljanju.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1801,10 +1701,6 @@ Naslov: %4
         <translation>Vrsta</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Naslov</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Odpri enoto %1</translation>
     </message>
@@ -1819,6 +1715,10 @@ Naslov: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Generirano, toda ne sprejeto</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Oznaka</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -1859,10 +1759,6 @@ Naslov: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Vrsta transakcije.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Naslov prejemnika transakcije.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2111,6 +2007,10 @@ Naslov: %4
         <translation>Uvažam...</translation>
     </message>
     <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Ob zagonu izberi mapo za shranjevanje podatkov (privzeto: 0)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informacije</translation>
     </message>
@@ -2119,8 +2019,24 @@ Naslov: %4
         <translation>Pošlji sledilne/razhroščevalne informacije v konzolo namesto jih shraniti v debug.log datoteko</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Nastavi korenske SSL certifikate za plačilni zahtevek (privzeto: -system-)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Nastavi jezik, npr. "sl_SI" (privzeto: jezikovna oznaka sistema)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Ob zagonu prikaži uvodni zaslon (privzeto: 1)</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Podpisovanje transakcije spodletelo</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Zaženi pomanjšano</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2141,10 +2057,6 @@ Naslov: %4
     <message>
         <source>Warning</source>
         <translation>Opozorilo</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Opozorilo: ta različica je zastarela, potrebna je nadgradnja!</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>

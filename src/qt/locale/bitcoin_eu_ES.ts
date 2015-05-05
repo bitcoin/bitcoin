@@ -72,10 +72,6 @@
         <translation>Aldatu pasahitza</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Sartu zorroaren pasahitz zaharra eta berria.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Berretsi zorroaren enkriptazioa</translation>
     </message>
@@ -509,10 +505,6 @@
         <translation>Mota</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Helbidea</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Zabalik %1 arte</translation>
     </message>
@@ -527,6 +519,10 @@
     <message>
         <source>Generated but not accepted</source>
         <translation>Sortua, baina ez onartua</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiketa</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -559,10 +555,6 @@
     <message>
         <source>Type of transaction.</source>
         <translation>Transakzio mota.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Transakzioaren xede-helbidea.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>

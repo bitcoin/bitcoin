@@ -169,8 +169,8 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Address</source>
-        <translation>Addresse</translation>
+        <source>Label</source>
+        <translation>Record</translation>
     </message>
     </context>
 <context>

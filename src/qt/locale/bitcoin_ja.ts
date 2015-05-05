@@ -156,10 +156,6 @@
         <translation>パスフレーズの変更</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>新旧両方のパスフレーズを入力してください。</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>ウォレットの暗号化を確認する</translation>
     </message>
@@ -186,10 +182,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>ウォレットの新しいパスフレーズを入力してください。&lt;br/&gt;&lt;b&gt;10文字以上のランダムな文字&lt;/b&gt;で構成されたものか、&lt;b&gt;8単語以上の単語&lt;/b&gt;で構成されたパスフレーズを使用してください。</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin は暗号化プロセスを終了するために今すぐ終了します。あなたのコンピュータがマルウェアに感染してコインを盗まれることもあるので、暗号化してもあなたのウォレットを完全に保護できないことを覚えていてください。</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -309,10 +301,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Bitcoin アドレスにコインを送る</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Bitcoin の設定を変更する</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -478,10 +466,6 @@
         <source>Up to date</source>
         <translation>バージョンは最新です</translation>
     </message>
-    <message numerus="yes">
-        <source>Processed %n blocks of transaction history.</source>
-        <translation><numerusform>トランザクション履歴の %n ブロックを処理しました。</numerusform></translation>
-    </message>
     <message>
         <source>Catching up...</source>
         <translation>追跡中...</translation>
@@ -493,17 +477,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>着金取引</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>日付: %1
-総額: %2
-種類: %3
-アドレス: %4</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -708,10 +681,6 @@ Address: %4
         <translation>いいえ</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>トランザクションサイズが1000バイトを超える場合にはこのラベルは赤くなります。</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>これは少なくとも1kBあたり %1 の手数料が必要であることを意味します。</translation>
     </message>
@@ -722,14 +691,6 @@ Address: %4
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>より高い優先度を持つトランザクションの方がブロックに取り込まれやすくなります。</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>優先度が「中」未満の場合には、このラベルは赤くなります。</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>少なくともひとつの受取額が %1 を下回る場合にはこのラベルは赤くなります。</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -852,30 +813,6 @@ Address: %4
         <source>command-line options</source>
         <translation>コマンドライン オプション</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>UI オプション</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>言語設定 例: "de_DE" (初期値: システムの言語)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>最小化された状態で起動する</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>支払いリクエスト用にSSLルート証明書を設定する（デフォルト：-system-）</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>起動時にスプラッシュ画面を表示する (初期値: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>起動時にデータ ディレクトリを選ぶ (初期値: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -956,14 +893,6 @@ Address: %4
     <message>
         <source>&amp;Main</source>
         <translation>メイン (&amp;M)</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>システムにログインした時に自動的に Bitcoin を起動します。</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>システムにログインした時に Bitcoin を起動 (&amp;S)</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1078,10 +1007,6 @@ Address: %4
         <translation>タスクバーの代わりにトレイに最小化 (&amp;M)</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>ウインドウが閉じられる時アプリケーションを終了せずに最小化します。このオプションが有効な時にアプリケーションを終了するにはメニューから終了を選択します。</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>閉じる時に最小化 (&amp;i)</translation>
     </message>
@@ -1092,10 +1017,6 @@ Address: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>ユーザインターフェースの言語 (&amp;l) :</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>ここでユーザインターフェースの言語を設定できます。設定を反映するには Bitcoin を再起動します。</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1132,10 +1053,6 @@ Address: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>変更を有効化するにはクライアントを再起動する必要があります。</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>クライアントは停止されます。続行しますか？</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1244,10 +1161,6 @@ Address: %4
         <translation>支払いリクエストのネットワークは現在のクライアントのネットワークに一致しません。</translation>
     </message>
     <message>
-        <source>Payment request has expired.</source>
-        <translation>支払いのリクエストは期限切れです</translation>
-    </message>
-    <message>
         <source>Payment request is not initialized.</source>
         <translation>支払いリクエストは開始されていません。</translation>
     </message>
@@ -1323,10 +1236,6 @@ Address: %4
         <translation>ユーザエージェント</translation>
     </message>
     <message>
-        <source>Address/Hostname</source>
-        <translation>アドレス／ホスト名</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping時間</translation>
     </message>
@@ -1356,14 +1265,6 @@ Address: %4
     <message>
         <source>%1 s</source>
         <translation>%1秒</translation>
-    </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>ネットワーク</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>未知</translation>
     </message>
     <message>
         <source>None</source>
@@ -1564,16 +1465,8 @@ Address: %4
         <translation>デバッグ用ログファイル</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>現在のデータ ディレクトリから Bitcoin のデバッグ用ログファイルを開きます。ログファイルが大規模な場合には数秒かかることがあります。</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>コンソールをクリア</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Bitcoin RPC コンソールへようこそ。</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1864,14 +1757,6 @@ Address: %4
         <translation>手数料設定を折りたたむ</translation>
     </message>
     <message>
-        <source>Minimize</source>
-        <translation>最小化</translation>
-    </message>
-    <message>
-        <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>カスタム手数料が1000satoshiに設定されている場合、トランザクションサイズが250バイトとすると、「1キロバイトあたり手数料」では250satoshiの手数料のみを支払いますが、「最小手数料」では1000satoshiを支払います。1キロバイトを超えるトランザクションの場合には、どちらの方法を選択したとしても1キロバイトあたりで支払われます。</translation>
-    </message>
-    <message>
         <source>per kilobyte</source>
         <translation>1キロバイトあたり手数料</translation>
     </message>
@@ -2000,10 +1885,6 @@ Address: %4
         <translation>または</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>受取人のアドレスが不正です。再確認してください。</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>支払額は0より大きくないといけません。</translation>
     </message>
@@ -2016,10 +1897,6 @@ Address: %4
         <translation>%1 の取引手数料を含めると額が残高を超えています。</translation>
     </message>
     <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>重複しているアドレスが見つかりました。1回の送信で同じアドレスに送ることは出来ません。</translation>
-    </message>
-    <message>
         <source>Transaction creation failed!</source>
         <translation>トラザクションの作成に失敗しました!</translation>
     </message>
@@ -2028,16 +1905,8 @@ Address: %4
         <translation>トランザクションは拒否されました。wallet.dat のコピーを使い、そしてコピーしたウォレットからコインを使用したことがマークされなかったときなど、ウォレットのいくつかのコインがすでに使用されている場合に、このエラーは起こるかもしれません。</translation>
     </message>
     <message>
-        <source>A fee higher than %1 is considered an insanely high fee.</source>
-        <translation>%1 よりも高い手数料は、異常に高い手数料だと考えられます。</translation>
-    </message>
-    <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>最小手数料 %1 のみを支払う</translation>
-    </message>
-    <message>
-        <source>Estimated to begin confirmation within %1 block(s).</source>
-        <translation>%1 ブロック以内に検証が終わると予想されます。</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2115,20 +1984,12 @@ Address: %4
         <translation>メッセージ:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>これは検証済みの支払リクエストです。</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>このアドレスに対するラベルを入力することで、使用済みアドレスの一覧に追加することができます</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>bitcoin: URIに添付されていたメッセージです。これは参照用としてトランザクションとともに保存されます。注意：このメッセージはBitcoinネットワークを通して送信されるわけではありません。</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>これは未検証の支払リクエストです。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2159,10 +2020,6 @@ Address: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>メッセージの署名 (&amp;S)</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>あなた自身を立証するためにあなたのアドレスでメッセージに署名することができます。フィッシング攻撃によってあなたを騙して署名を譲渡させようとするかもしれないので、不明確なものは絶対に署名しないように注意してください。あなたが同意する完全に詳細な声明にだけ署名してください。</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2215,10 +2072,6 @@ Address: %4
     <message>
         <source>&amp;Verify Message</source>
         <translation>メッセージの検証 (&amp;V)</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>メッセージを検証するために、署名するアドレスとメッセージ(改行、スペース、タブなどを正確にコピーしてください)、そして署名を入力します。中間者攻撃によってだまされることを避けるために、署名されたメッセージそのものよりも、署名を読み取られないように注意してください。</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2484,10 +2337,6 @@ Address: %4
         <translation>タイプ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Helbidea</translation>
-    </message>
-    <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>未成熟（%1検証。%2検証完了後に使用可能となります）</translation>
     </message>
@@ -2514,6 +2363,10 @@ Address: %4
     <message>
         <source>Offline</source>
         <translation>オフライン</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>ラベル</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2570,10 +2423,6 @@ Address: %4
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
         <translation>監視限定アドレスがこのトランザクションに含まれているかどうか</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>取引の宛先アドレス。</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2907,10 +2756,6 @@ Address: %4
         <translation>デバッグ／テスト用オプション:</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>自分の IP アドレスを発見 (初期値:  リスン中と -externalip を使用していない場合は1)</translation>
-    </message>
-    <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
         <translation>ウォレットは読み込まず、ウォレットRPCコールを無効化する</translation>
     </message>
@@ -2969,10 +2814,6 @@ Address: %4
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>&lt;net&gt; (ipv4, ipv6 または onion) ネットワーク内のノードだけに接続する</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>現在の blk000??.dat ファイルからブロック チェーンのインデックスを再構築</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -3039,10 +2880,6 @@ Address: %4
         <translation>データ ディレクトリ %s のロックを取得することができません。おそらく Bitcoin Core は実行中です。</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:%u)</source>
-        <translation>手数料ゼロのトランザクションのリレー速度を一分間あたり &lt;n&gt;*1000 バイトに常に制限する (初期値: %u)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>umask 077 ではなく、システムのデフォルトパーミッションで新規ファイルを作成する (ウォレット機能が無効化されていた場合にのみ有効)</translation>
     </message>
@@ -3079,16 +2916,8 @@ Address: %4
         <translation>中継および採掘を行う際の、データ運送トランザクションの中のデータの最大サイズ (初期値: %u)</translation>
     </message>
     <message>
-        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
-        <translation>ひとつのウォレットトランザクションで使用する合計手数料の最大値。低く設定し過ぎると大きなトランザクションの生成に失敗することがあります (初期値: %s)</translation>
-    </message>
-    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>保有するピアアドレスが少ない場合、DNS ルックアップによりピアアドレスを問い合わせる (-connect を使っていない場合の初期値: 1)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
-        <translation>手数料なし、または低手数料のトランザクションのリレー時に高い優先度を要求する (初期値: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3145,6 +2974,10 @@ rpcpassword=%s
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>-whitebind アドレス '%s' を解決できません</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>起動時にデータ ディレクトリを選ぶ (初期値: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3243,8 +3076,20 @@ rpcpassword=%s
         <translation>可能な場合には手数料ゼロのトランザクションとしてトランザクションを送信する (初期値: %u)</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>支払いリクエスト用にSSLルート証明書を設定する（デフォルト：-system-）</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>言語設定 例: "de_DE" (初期値: システムの言語)</translation>
+    </message>
+    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>すべてのデバッグオプションを表示する (使い方: --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>起動時にスプラッシュ画面を表示する (初期値: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3253,6 +3098,10 @@ rpcpassword=%s
     <message>
         <source>Signing transaction failed</source>
         <translation>取引の署名に失敗しました</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>最小化された状態で起動する</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3293,10 +3142,6 @@ rpcpassword=%s
     <message>
         <source>Warning</source>
         <translation>警告</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>警告: このバージョンは古いのでアップグレードが必要です!</translation>
     </message>
     <message>
         <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
