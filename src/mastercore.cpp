@@ -40,6 +40,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
+#include "ui_interface.h"
 #include "wallet.h"
 
 #include <boost/algorithm/string.hpp>
@@ -579,7 +580,10 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                          // can't be trusted to provide valid data, shutdown
                          file_log("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
                          PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
-                         if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode("Shutting down due to alert: " + getMasterCoreAlertTextOnly());
+                         if (!GetBoolArg("-overrideforcedshutdown", false)) {
+                             std::string msgText = "Shutting down due to alert: " + getMasterCoreAlertTextOnly();
+                             AbortNode(msgText, msgText); // show same message to user as that which is logged
+                         }
                          return false;
                      }
 
@@ -804,16 +808,16 @@ unsigned short version_TopAllowed;
 // 10) need a locking mechanism between Core & Qt -- to retrieve the tally, for instance, this and similar to this: LOCK(wallet->cs_wallet);
 //
 
-uint64_t calculate_and_update_devmsc(unsigned int nTime)
+int64_t calculate_and_update_devmsc(unsigned int nTime)
 {
-//do nothing if before end of fundraiser 
+//do nothing if before end of fundraiser
 if (nTime < 1377993874) return -9919;
 
 // taken mainly from msc_validate.py: def get_available_reward(height, c)
-uint64_t devmsc = 0;
+int64_t devmsc = 0;
 int64_t exodus_delta;
 // spec constants:
-const uint64_t all_reward = 5631623576222;
+const int64_t all_reward = 5631623576222;
 const double seconds_in_one_year = 31556926;
 const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
 const double years = seconds_passed/seconds_in_one_year;
@@ -827,6 +831,9 @@ const double available_reward=all_reward * part_available;
 
   // skip if a block's timestamp is older than that of a previous one!
   if (0>exodus_delta) return 0;
+
+  // sanity check that devmsc isn't an impossible value
+  if (devmsc > all_reward || 0 > devmsc) return -9918;
 
   update_tally_map(exodus_address, OMNI_PROPERTY_MSC, exodus_delta, BALANCE);
   exodus_prev = devmsc;
@@ -2034,8 +2041,11 @@ static int load_most_relevant_state()
   // using the SP's watermark after its fixed-up as the tip
   // walk backwards until we find a valid and full set of persisted state files
   // for each block we discard, roll back the SP database
+  // Note: to avoid rolling back all the way to the genesis block (which appears as if client is hung) abort after MAX_STATE_HISTORY attempts
   CBlockIndex const *curTip = spBlockIndex;
-  while (NULL != curTip && persistedBlocks.size() > 0) {
+  int abortRollBackBlock;
+  if (curTip != NULL) abortRollBackBlock = curTip->nHeight - (MAX_STATE_HISTORY+1);
+  while (NULL != curTip && persistedBlocks.size() > 0 && curTip->nHeight > abortRollBackBlock) {
     if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
@@ -2434,6 +2444,8 @@ int mastercore_init()
   if (readPersistence())
   {
     nWaterlineBlock = load_most_relevant_state();
+    PrintToConsole("Loading persistent state: %s\n", nWaterlineBlock>0 ?
+        "OK" : "FAILED (this is normal if this is the first time OmniCore is being run)");
     if (nWaterlineBlock < 0) {
       // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
       clear_all_state();
@@ -3965,16 +3977,14 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 
     // reset states
     if(!readPersistence()) clear_all_state();
-    p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
-    t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
-    s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
+    p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
+    t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight-1); // deleteAboveBlock functions are non-inclusive (>blocknum not >=blocknum)
+    s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight-1);
     reorgRecoveryMaxHeight = 0;
-
 
     nWaterlineBlock = GENESIS_BLOCK - 1;
     if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
     if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
-
 
     if(readPersistence()) {
       int best_state_block = load_most_relevant_state();
@@ -4017,7 +4027,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 // for every new received block must do:
 // 1) remove expired entries from the accept list (per spec accept entries are valid until their blocklimit expiration; because the customer can keep paying BTC for the offer in several installments)
 // 2) update the amount in the Exodus address
-  uint64_t devmsc = 0;
+  int64_t devmsc = 0;
   unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
 
   if (how_many_erased)
