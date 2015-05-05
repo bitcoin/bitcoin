@@ -19,6 +19,8 @@
 #include "mastercore_dex.h"
 #include "mastercore_errors.h"
 #include "mastercore_log.h"
+#include "mastercore_mdex.h"
+#include "mastercore_persistence.h"
 #include "mastercore_script.h"
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
@@ -44,7 +46,6 @@
 #include <boost/exception/to_string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -353,7 +354,7 @@ CMPPending pending;
 }
 
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
-std::map<string, CMPTally> mastercore::mp_tally_map;
+std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally *mastercore::getTally(const string & address)
 {
@@ -2050,8 +2051,9 @@ static int load_most_relevant_state()
     if (persistedBlocks.find(spBlockIndex->GetBlockHash()) != persistedBlocks.end()) {
       int success = -1;
       for (int i = 0; i < NUM_FILETYPES; ++i) {
-        const string filename = (MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % curTip->GetBlockHash().ToString()).str().c_str()).string();
-        success = msc_file_load(filename, i, true);
+        boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
+        const std::string strFile = path.string();
+        success = msc_file_load(strFile, i, true);
         if (success < 0) {
           break;
         }
@@ -2113,13 +2115,12 @@ static int write_msc_balances(ofstream &file, SHA256_CTX *shaCtx)
 
       emptyWallet = false;
 
-      lineOut.append((boost::format("%d:%d,%d,%d,%d;")
-          % prop
-          % balance
-          % sellReserved
-          % acceptReserved
-          % metadexReserve).str());
-
+      lineOut.append(strprintf("%d:%d,%d,%d,%d;",
+          prop,
+          balance,
+          sellReserved,
+          acceptReserved,
+          metadexReserve));
     }
 
     if (false == emptyWallet) {
@@ -2186,11 +2187,10 @@ static int write_globals_state(ofstream &file, SHA256_CTX *shaCtx)
 {
   unsigned int nextSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_MSC);
   unsigned int nextTestSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_TMSC);
-  string lineOut = (boost::format("%d,%d,%d")
-    % exodus_prev
-    % nextSPID
-    % nextTestSPID
-    ).str();
+  std::string lineOut = strprintf("%d,%d,%d",
+    exodus_prev,
+    nextSPID,
+    nextTestSPID);
 
   // add the line to the hash
   SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
@@ -2215,10 +2215,11 @@ static int write_mp_crowdsales(ofstream &file, SHA256_CTX *shaCtx)
 
 static int write_state_file( CBlockIndex const *pBlockIndex, int what )
 {
-  const char *blockHash = pBlockIndex->GetBlockHash().ToString().c_str();
-  boost::filesystem::path balancePath = MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[what] % blockHash).str();
-  ofstream file;
-  file.open(balancePath.string().c_str());
+  boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
+  const std::string strFile = path.string();
+
+  std::ofstream file;
+  file.open(strFile.c_str());
 
   SHA256_CTX shaCtx;
   SHA256_Init(&shaCtx);
@@ -2317,9 +2318,10 @@ static void prune_state_files( CBlockIndex const *topIndex )
      }
 
       // destroy the associated files!
-      const char *blockHashStr = (*iter).ToString().c_str();
+      std::string strBlockHash = iter->ToString();
       for (int i = 0; i < NUM_FILETYPES; ++i) {
-        boost::filesystem::remove(MPPersistencePath / (boost::format("%s-%s.dat") % statePrefix[i] % blockHashStr).str());
+        boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
+        boost::filesystem::remove(path);
       }
     }
   }
@@ -2342,13 +2344,25 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
   return 0;
 }
 
-static void clear_all_state() {
-  mp_tally_map.clear();
-  my_offers.clear();
-  my_accepts.clear();
-  my_crowds.clear();
-  _my_sps->clear();
-  exodus_prev = 0;
+/**
+ * Clears the state of the system.
+ */
+static void clear_all_state()
+{
+    // Memory based storage
+    mp_tally_map.clear();
+    my_offers.clear();
+    my_accepts.clear();
+    my_crowds.clear();
+    metadex.clear();
+
+    // LevelDB based storage
+    _my_sps->Clear();
+    p_txlistdb->Clear();
+    s_stolistdb->Clear();
+    t_tradelistdb->Clear();
+
+    exodus_prev = 0;
 }
 
 /**
@@ -2403,13 +2417,21 @@ int mastercore_init()
           PrintToConsole("Exception deleting folders for --startclean option.\n");
       }
   }
+  
+  // TODO: the databases should be wiped, when reindexing, but currently,
+  // due to the block disconnect handlers, this results in different state,
+  // which is not correct. Util this is resolved, the original behavior is
+  // mirrored.
+  //
+  // See discussion: https://github.com/OmniLayer/omnicore/pull/25
 
-  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", 1<<20, false, fReindex);
-  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", 1<<20, false, fReindex);
-  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", 1<<20, false, fReindex);
-  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo");
+  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", false);
+  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", false);
+  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", false);
+  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
+
   MPPersistencePath = GetDataDir() / "MP_persist";
-  boost::filesystem::create_directories(MPPersistencePath);
+  TryCreateDirectory(MPPersistencePath);
 
   // legacy code, setting to pre-genesis-block
   static int snapshotHeight = (GENESIS_BLOCK - 1);
@@ -3023,8 +3045,7 @@ int CMPTxList::setLastAlert(int blockHeight)
     if (blockHeight > chainActive.Height()) blockHeight = chainActive.Height();
     if (!pdb) return 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     string lastAlertTxid;
     string lastAlertData;
     string itData;
@@ -3104,9 +3125,8 @@ uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
   Slice skey, svalue;
-  readoptions.fill_cache = false;
   uint256 cancelTxid;
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3168,8 +3188,7 @@ int CMPTxList::getMPTransactionCountTotal()
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         skey = it->key();
@@ -3183,8 +3202,7 @@ int CMPTxList::getMPTransactionCountBlock(int block)
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = pdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         skey = it->key();
@@ -3409,10 +3427,7 @@ void CMPTxList::printAll()
 {
 int count = 0;
 Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = pdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3436,7 +3451,7 @@ std::vector<std::string> vstr;
 int block;
 unsigned int n_found = 0;
 
-  leveldb::Iterator* it = pdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3474,12 +3489,11 @@ unsigned int n_found = 0;
 // MPSTOList here
 std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 {
-  if (!sdb) return "";
+  if (!pdb) return "";
   string mySTOReceipts = "";
 
   Slice skey, svalue;
-  readoptions.fill_cache = false;
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3510,7 +3524,7 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 
 void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee)
 {
-  if (!sdb) return;
+  if (!pdb) return;
 
   bool filter = true; //default
   bool filterByWallet = true; //default
@@ -3527,8 +3541,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
   *stoFee = 0;
 
   Slice skey, svalue;
-  readoptions.fill_cache = false;
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3594,10 +3607,10 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
 
 bool CMPSTOList::exists(string address)
 {
-  if (!sdb) return false;
+  if (!pdb) return false;
 
   string strValue;
-  Status status = sdb->Get(readoptions, address, &strValue);
+  Status status = pdb->Get(readoptions, address, &strValue);
 
   if (!status.ok())
   {
@@ -3609,7 +3622,7 @@ bool CMPSTOList::exists(string address)
 
 void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBlock, unsigned int propertyId, uint64_t amount)
 {
-  if (!sdb) return;
+  if (!pdb) return;
 
   bool addressExists = s_stolistdb->exists(address);
   if (addressExists)
@@ -3617,7 +3630,7 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       //retrieve existing record
       std::vector<std::string> vstr;
       string strValue;
-      Status status = sdb->Get(readoptions, address, &strValue);
+      Status status = pdb->Get(readoptions, address, &strValue);
       if (status.ok())
       {
           // add details to record
@@ -3630,9 +3643,9 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
           strValue += newValue;
           // write updated record
           Status status;
-          if (sdb)
+          if (pdb)
           {
-              status = sdb->Put(writeoptions, key, strValue);
+              status = pdb->Put(writeoptions, key, strValue);
               file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
           }
       }
@@ -3642,9 +3655,9 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       const string key = address;
       const string value = strprintf("%s:%d:%u:%lu,", txid.ToString(), nBlock, propertyId, amount);
       Status status;
-      if (sdb)
+      if (pdb)
       {
-          status = sdb->Put(writeoptions, key, value);
+          status = pdb->Put(writeoptions, key, value);
           file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
       }
   }
@@ -3654,10 +3667,7 @@ void CMPSTOList::printAll()
 {
   int count = 0;
   Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = sdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -3672,7 +3682,7 @@ void CMPSTOList::printAll()
 
 void CMPSTOList::printStats()
 {
-  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", sWritten, sRead);
+  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 // delete any STO receipts after blockNum
@@ -3682,7 +3692,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
   unsigned int count = 0;
   std::vector<std::string> vstr;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = sdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3709,9 +3719,9 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
         const string key = address;
         // write updated record
         Status status;
-        if (sdb)
+        if (pdb)
         {
-            status = sdb->Put(writeoptions, key, newValue);
+            status = pdb->Put(writeoptions, key, newValue);
             file_log("DEBUG STO - rewriting STO data after reorg\n");
             file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
         }
@@ -3728,12 +3738,12 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
 // MPTradeList here
 bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, uint64_t *totalSold, uint64_t *totalBought)
 {
-  if (!tdb) return false;
+  if (!pdb) return false;
   leveldb::Slice skey, svalue;
   unsigned int count = 0;
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
-  leveldb::Iterator* it = tdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
       skey = it->key();
@@ -3818,14 +3828,14 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
 
 void CMPTradeList::recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum)
 {
-  if (!tdb) return;
+  if (!pdb) return;
   const string key = txid1.ToString() + "+" + txid2.ToString();
   const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum);
   Status status;
-  if (tdb)
+  if (pdb)
   {
-    status = tdb->Put(writeoptions, key, value);
-    ++tWritten;
+    status = pdb->Put(writeoptions, key, value);
+    ++nWritten;
     if (msc_debug_tradedb) file_log("%s(): %s\n", __FUNCTION__, status.ToString().c_str());
   }
 }
@@ -3838,7 +3848,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
   std::vector<std::string> vstr;
   int block;
   unsigned int n_found = 0;
-  leveldb::Iterator* it = tdb->NewIterator(iteroptions);
+  leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
     skey = it->key();
@@ -3855,7 +3865,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
       {
         ++n_found;
         file_log("%s() DELETING FROM TRADEDB: %s=%s\n", __FUNCTION__, skey.ToString().c_str(), svalue.ToString().c_str());
-        tdb->Delete(writeoptions, skey);
+        pdb->Delete(writeoptions, skey);
       }
     }
   }
@@ -3869,15 +3879,14 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
 
 void CMPTradeList::printStats()
 {
-  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", tWritten, tRead);
+  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 int CMPTradeList::getMPTradeCountTotal()
 {
     int count = 0;
     Slice skey, svalue;
-    readoptions.fill_cache = false;
-    Iterator* it = tdb->NewIterator(readoptions);
+    Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
         ++count;
@@ -3890,10 +3899,7 @@ void CMPTradeList::printAll()
 {
   int count = 0;
   Slice skey, svalue;
-
-  readoptions.fill_cache = false;
-
-  Iterator* it = tdb->NewIterator(readoptions);
+  Iterator* it = NewIterator();
 
   for(it->SeekToFirst(); it->Valid(); it->Next())
   {
@@ -4517,13 +4523,13 @@ int rc = PKT_ERROR_STO -1000;
 
       totalTokens = 0;
 
-      typedef std::set<pair<int64_t, string>, SendToOwners_compare> OwnerAddrType;
+      typedef std::set<std::pair<int64_t, std::string>, SendToOwners_compare> OwnerAddrType;
       OwnerAddrType OwnerAddrSet;
 
       {
-        for(map<string, CMPTally>::reverse_iterator my_it = mp_tally_map.rbegin(); my_it != mp_tally_map.rend(); ++my_it)
+        for (std::map<std::string, CMPTally>::reverse_iterator my_it = mp_tally_map.rbegin(); my_it != mp_tally_map.rend(); ++my_it)
         {
-          const string address = (my_it->first).c_str();
+          const std::string address = my_it->first;
 
           // do not count the sender
           if (address == sender) continue;
@@ -4537,7 +4543,7 @@ int rc = PKT_ERROR_STO -1000;
 
           if (tokens)
           {
-            OwnerAddrSet.insert(make_pair(tokens, address));
+            OwnerAddrSet.insert(std::make_pair(tokens, address));
             totalTokens += tokens;
           }
         }
@@ -4555,11 +4561,11 @@ int rc = PKT_ERROR_STO -1000;
     { // two-iteration loop START
       // split up what was taken and distribute between all holders
       uint64_t sent_so_far = 0;
-      for(OwnerAddrType::reverse_iterator my_it = OwnerAddrSet.rbegin(); my_it != OwnerAddrSet.rend(); ++my_it)
+      for (OwnerAddrType::reverse_iterator my_it = OwnerAddrSet.rbegin(); my_it != OwnerAddrSet.rend(); ++my_it)
       { // owners loop
-      const string address = my_it->second;
+        const std::string address = my_it->second;
 
-        int128_t owns = my_it->first;
+        int128_t owns = int128_t(my_it->first);
         int128_t temp = owns * int128_t(nValue);
         int128_t piece = 1 + ((temp - 1) / int128_t(totalTokens));
 

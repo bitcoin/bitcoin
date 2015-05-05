@@ -10,6 +10,7 @@ class CBlockIndex;
 class CTransaction;
 
 #include "mastercore_log.h"
+#include "mastercore_persistence.h"
 
 #include "sync.h"
 #include "uint256.h"
@@ -17,7 +18,7 @@ class CTransaction;
 
 #include <boost/filesystem/path.hpp>
 
-#include "leveldb/db.h"
+#include "leveldb/status.h"
 
 #include "json/json_spirit_value.h"
 
@@ -275,38 +276,20 @@ public:
   }
 };
 
-/* leveldb-based storage for sto recipients */
-class CMPSTOList
+/** LevelDB based storage for STO recipients.
+ */
+class CMPSTOList : public CDBBase
 {
-    protected:
-    // datebase options reused from MPTxList
-    leveldb::Options options;
-    leveldb::ReadOptions readoptions;
-    leveldb::ReadOptions iteroptions;
-    leveldb::WriteOptions writeoptions;
-    leveldb::WriteOptions syncoptions;
-    leveldb::DB *sdb;
-    // statistics
-    unsigned int sWritten;
-    unsigned int sRead;
-
 public:
-    CMPSTOList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):sWritten(0),sRead(0)
+    CMPSTOList(const boost::filesystem::path& path, bool fWipe)
     {
-      options.paranoid_checks = true;
-      options.create_if_missing = true;
-      readoptions.verify_checksums = true;
-      iteroptions.verify_checksums = true;
-      iteroptions.fill_cache = false;
-      syncoptions.sync = true;
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &sdb);
-      PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading send-to-owners database: %s\n", status.ToString());
     }
 
-    ~CMPSTOList()
+    virtual ~CMPSTOList()
     {
-      delete sdb;
-      sdb = NULL;
+        if (msc_debug_persistence) file_log("CMPSTOList closed\n");
     }
 
     void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee);
@@ -318,38 +301,20 @@ public:
     void recordSTOReceive(std::string, const uint256&, int, unsigned int, uint64_t);
 };
 
-/* leveldb-based storage for trade history - trades will be listed here atomically with key txid1:txid2 */
-class CMPTradeList
+/** LevelDB based storage for the trade history. Trades are listed with key "txid1+txid2".
+ */
+class CMPTradeList : public CDBBase
 {
-protected:
-    // datebase options reused from MPTxList
-    leveldb::Options options;
-    leveldb::ReadOptions readoptions;
-    leveldb::ReadOptions iteroptions;
-    leveldb::WriteOptions writeoptions;
-    leveldb::WriteOptions syncoptions;
-    leveldb::DB *tdb;
-    // statistics
-    unsigned int tWritten;
-    unsigned int tRead;
-
 public:
-    CMPTradeList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):tWritten(0),tRead(0)
+    CMPTradeList(const boost::filesystem::path& path, bool fWipe)
     {
-      options.paranoid_checks = true;
-      options.create_if_missing = true;
-      readoptions.verify_checksums = true;
-      iteroptions.verify_checksums = true;
-      iteroptions.fill_cache = false;
-      syncoptions.sync = true;
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &tdb);
-      PrintToConsole("Loading trades database: %s\n", status.ToString());
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading trades database: %s\n", status.ToString());
     }
 
-    ~CMPTradeList()
+    virtual ~CMPTradeList()
     {
-      delete tdb;
-      tdb = NULL;
+        if (msc_debug_persistence) file_log("CMPTradeList closed\n");
     }
 
     void recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
@@ -361,51 +326,20 @@ public:
     int getMPTradeCountTotal();
 };
 
-/* leveldb-based storage for the list of ALL Master Protocol TXIDs (key) with validity bit & other misc data as value */
-class CMPTxList
+/** LevelDB based storage for transactions, with txid as key and validity bit, and other data as value.
+ */
+class CMPTxList : public CDBBase
 {
-protected:
-    // database options used
-    leveldb::Options options;
-
-    // options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    // options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-    // options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    // options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
-    // the database itself
-    leveldb::DB *pdb;
-
-    // statistics
-    unsigned int nWritten;
-    unsigned int nRead;
-
 public:
-    CMPTxList(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory, bool fWipe):nWritten(0),nRead(0)
+    CMPTxList(const boost::filesystem::path& path, bool fWipe)
     {
-      options.paranoid_checks = true;
-      options.create_if_missing = true;
-
-      readoptions.verify_checksums = true;
-      iteroptions.verify_checksums = true;
-      iteroptions.fill_cache = false;
-      syncoptions.sync = true;
-
-      leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-      PrintToConsole("Loading transactions database: %s\n", status.ToString());
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading transactions database: %s\n", status.ToString());
     }
 
-    ~CMPTxList()
+    virtual ~CMPTxList()
     {
-      delete pdb;
-      pdb = NULL;
+        if (msc_debug_persistence) file_log("CMPTxList closed\n");
     }
 
     void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
