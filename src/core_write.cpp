@@ -132,3 +132,49 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry)
 
     entry.pushKV("hex", EncodeHexTx(tx)); // the hex-encoded transaction. used the name "hex" to be consistent with the verbose output of "getrawtransaction".
 }
+
+void BlockToUniv(const CBlock& block, UniValue &entry)
+{
+    bool txDetails = false;
+
+    entry.pushKV("hash", block.GetHash().GetHex());
+
+    /*
+    int confirmations = -1;
+    // Only report confirmations if the block is on the main chain
+    if (chainActive.Contains(blockindex))
+        confirmations = chainActive.Height() - blockindex->nHeight + 1;
+    result.push_back(Pair("confirmations", confirmations));
+    */
+
+    entry.pushKV("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION));
+    // entry.pushKV(Pair("height", blockindex->nHeight));
+    entry.pushKV("version", block.nVersion);
+    entry.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
+    UniValue txs(UniValue::VARR);
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+    {
+        if(txDetails)
+        {
+            UniValue objTx(UniValue::VOBJ);
+            TxToUniv(tx, uint256(), objTx);
+            txs.push_back(objTx);
+        }
+        else
+            txs.push_back(tx.GetHash().GetHex());
+    }
+    entry.pushKV("tx", txs);
+    entry.pushKV("time", block.GetBlockTime());
+    entry.pushKV("nonce", (uint64_t)block.nNonce);
+    entry.pushKV("bits", strprintf("%08x", block.nBits));
+    // entry.pushKV("difficulty", GetDifficulty(blockindex));
+    // entry.pushKV("chainwork", blockindex->nChainWork.GetHex());
+
+    /*
+    if (blockindex->pprev)
+        entry.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
+    CBlockIndex *pnext = chainActive.Next(blockindex);
+    if (pnext)
+        entry.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
+    */
+}
