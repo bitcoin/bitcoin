@@ -31,7 +31,11 @@ MIT/X11 ソフトウェア ライセンスの下で配布されています。�
         <source>The Bitcoin Core developers</source>
         <translation>ビットコインコアの開発者</translation>
     </message>
-    </context>
+    <message>
+        <source>(%1-bit)</source>
+        <translation>(%1ビット)</translation>
+    </message>
+</context>
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -440,8 +444,16 @@ MIT/X11 ソフトウェア ライセンスの下で配布されています。�
         <translation>支払いを受け取るアドレスとラベルのリストを表示する</translation>
     </message>
     <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>bitcoin: URIまたは支払いリクエストを開く</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>コマンドラインオプション (&amp;C)</translation>
+    </message>
+    <message>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation>有効な Bitcoin のコマンドライン オプションを見るために Bitcoin Core のヘルプメッセージを表示します。</translation>
     </message>
     <message>
         <source>Bitcoin client</source>
@@ -582,6 +594,10 @@ Address: %4
         <translation>手数料差引後:</translation>
     </message>
     <message>
+        <source>Change:</source>
+        <translation>釣り銭:</translation>
+    </message>
+    <message>
         <source>(un)select all</source>
         <translation>すべて選択/選択解除</translation>
     </message>
@@ -662,6 +678,50 @@ Address: %4
         <translation>優先度をコピーする</translation>
     </message>
     <message>
+        <source>Copy change</source>
+        <translation>釣り銭をコピー</translation>
+    </message>
+    <message>
+        <source>highest</source>
+        <translation>最高</translation>
+    </message>
+    <message>
+        <source>higher</source>
+        <translation>非常に高</translation>
+    </message>
+    <message>
+        <source>high</source>
+        <translation>高</translation>
+    </message>
+    <message>
+        <source>medium-high</source>
+        <translation>中〜高</translation>
+    </message>
+    <message>
+        <source>medium</source>
+        <translation>中</translation>
+    </message>
+    <message>
+        <source>low-medium</source>
+        <translation>低〜中</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>低</translation>
+    </message>
+    <message>
+        <source>lower</source>
+        <translation>非常に低</translation>
+    </message>
+    <message>
+        <source>lowest</source>
+        <translation>最低</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 がロック済み)</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>なし</translation>
     </message>
@@ -674,14 +734,42 @@ Address: %4
         <translation>いいえ</translation>
     </message>
     <message>
+        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
+        <translation>トランザクションサイズが1000バイトを超える場合にはこのラベルは赤くなります。</translation>
+    </message>
+    <message>
+        <source>This means a fee of at least %1 per kB is required.</source>
+        <translation>これは少なくとも1kBあたり %1 の手数料が必要であることを意味します。</translation>
+    </message>
+    <message>
+        <source>Can vary +/- 1 byte per input.</source>
+        <translation>ひとつの入力につき1バイト程度ずれることがあります。</translation>
+    </message>
+    <message>
+        <source>Transactions with higher priority are more likely to get included into a block.</source>
+        <translation>より高い優先度を持つトランザクションの方がブロックに取り込まれやすくなります。</translation>
+    </message>
+    <message>
         <source>This label turns red, if the priority is smaller than "medium".</source>
         <translation>優先度が「中」未満の場合には、このラベルは赤くなります。</translation>
+    </message>
+    <message>
+        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
+        <translation>少なくともひとつの受取額が %1 を下回る場合にはこのラベルは赤くなります。</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>（ラベル無し）</translation>
     </message>
-    </context>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>%1 (%2) からのおつり</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(おつり)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -691,6 +779,14 @@ Address: %4
     <message>
         <source>&amp;Label</source>
         <translation>ラベル(&amp;L)</translation>
+    </message>
+    <message>
+        <source>The label associated with this address list entry</source>
+        <translation>このアドレス帳項目に結びつけられているラベル</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>このアドレス帳項目に結びつけられているアドレス。この項目は送金用アドレスの場合のみ編集することができます。</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -787,6 +883,10 @@ Address: %4
         <translation>最小化された状態で起動する</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>支払いリクエスト用にSSLルート証明書を設定する（デフォルト：-system-）</translation>
+    </message>
+    <message>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>起動時にスプラッシュ画面を表示する (初期値: 1)</translation>
     </message>
@@ -804,6 +904,14 @@ Address: %4
     <message>
         <source>Welcome to Bitcoin Core.</source>
         <translation>ようこそ！</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
+        <translation>これはプログラム最初の起動です。Bitcoin Coreがデータを保存する場所を選択して下さい。</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Coreは、ビットコインのブロックチェーンのコピーを、ダウンロードして保存します。少なくとも%1ギガバイトのデータが、このディレクトリに保存されます。そしてそれは時間と共に増加します。またウォレットもこのディレクトリに保存されます。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -900,6 +1008,18 @@ Address: %4
         <translation>プロキシのIPアドレス (例えば IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>トランザクションタブのコンテキストメニュー項目に表示する、サードパーティURL (例えばブロックエクスプローラ)。URL中の%sはトランザクションのハッシュ値に置き換えられます。垂直バー | で区切ることで、複数のURLを指定できます。</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>サードパーティのトランザクションURL</translation>
+    </message>
+    <message>
+        <source>Active command-line options that override above options:</source>
+        <translation>上のオプションを置き換えることのできる、有効なコマンドラインオプションの一覧:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>すべてのオプションを初期値に戻します。</translation>
     </message>
@@ -912,6 +1032,10 @@ Address: %4
         <translation>ネットワーク (&amp;N)</translation>
     </message>
     <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0 = 自動、0以上 = 指定した数のコアをフリーにする)</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>ウォレット (&amp;A)</translation>
     </message>
@@ -922,6 +1046,14 @@ Address: %4
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>コインコントロール機能を有効化する (&amp;C)</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation>未検証のおつりの使用を無効化すると、トランザクションが少なくとも1検証を獲得するまではそのトランザクションのおつりは利用できなくなります。これは残高の計算方法にも影響します。</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>未検証のおつりを使用する (&amp;S)</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1000,6 +1132,10 @@ Address: %4
         <translation>取引履歴にアドレスを表示 (&amp;D)</translation>
     </message>
     <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation>コインコントロール機能を表示するかどうか。</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
@@ -1018,6 +1154,18 @@ Address: %4
     <message>
         <source>Confirm options reset</source>
         <translation>オプションのリセットの確認</translation>
+    </message>
+    <message>
+        <source>Client restart required to activate changes.</source>
+        <translation>変更を有効化するにはクライアントを再起動する必要があります。</translation>
+    </message>
+    <message>
+        <source>Client will be shutdown, do you want to proceed?</source>
+        <translation>クライアントは停止されます。続行しますか？</translation>
+    </message>
+    <message>
+        <source>This change would require a client restart.</source>
+        <translation>この変更はクライアントの再起動が必要です。</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1039,8 +1187,16 @@ Address: %4
         <translation>ウォレット</translation>
     </message>
     <message>
+        <source>Available:</source>
+        <translation>利用可能:</translation>
+    </message>
+    <message>
         <source>Your current spendable balance</source>
         <translation>あなたの利用可能残高</translation>
+    </message>
+    <message>
+        <source>Pending:</source>
+        <translation>検証待ち:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1083,12 +1239,32 @@ Address: %4
 </translation>
     </message>
     <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>要求された支払額 %1 は少なすぎます (ダストとみなされてしまいます)。</translation>
+    </message>
+    <message>
         <source>Payment request error</source>
         <translation>支払いのリクエストのエラーです</translation>
     </message>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
         <translation>Bitcoin を起動できません: click-to-pay handler</translation>
+    </message>
+    <message>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation>支払い要求の取得先URLが無効です: %1</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>支払いリクエストファイルを処理しています</translation>
+    </message>
+    <message>
+        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
+        <translation>カスタム支払いスクリプトに対する、検証されていない支払いリクエストはサポートされていません。</translation>
+    </message>
+    <message>
+        <source>Refund from %1</source>
+        <translation>%1 からの返金</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -1166,6 +1342,10 @@ Address: %4
     <message>
         <source>Debug window</source>
         <translation>デバッグ ウインドウ</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation>一般</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
@@ -1303,6 +1483,30 @@ Address: %4
         <translation>メッセージ (&amp;M):</translation>
     </message>
     <message>
+        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
+        <translation>以前利用した受取用アドレスのどれかを再利用します。アドレスの再利用はセキュリティおよびプライバシーにおいて問題があります。以前作成した支払リクエストを再生成するとき以外は利用しないでください。</translation>
+    </message>
+    <message>
+        <source>R&amp;euse an existing receiving address (not recommended)</source>
+        <translation>既存の受取用アドレスを再利用する (非推奨) (&amp;E)</translation>
+    </message>
+    <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation>支払リクエストが開始された時に表示される、支払リクエストに添える任意のメッセージです。注意：メッセージはBitcoinネットワークを通じて、支払と共に送られるわけではありません。</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation>受取用アドレスに紐づく任意のラベル。</translation>
+    </message>
+    <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>このフォームを使用して支払のリクエストを行いましょう。すべての項目は&lt;b&gt;任意入力&lt;/b&gt;です。</translation>
+    </message>
+    <message>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation>リクエストする任意の金額。特定の金額をリクエストするのでない場合には、この欄は空白のままかゼロにしてください。</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>全ての入力項目をクリア</translation>
     </message>
@@ -1311,12 +1515,28 @@ Address: %4
         <translation>クリア</translation>
     </message>
     <message>
+        <source>Requested payments history</source>
+        <translation>支払リクエスト履歴</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>支払をリクエストする (&amp;R)</translation>
+    </message>
+    <message>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>選択されたリクエストを表示する（項目をダブルクリックすることでも表示できます）</translation>
+    </message>
+    <message>
         <source>Show</source>
         <translation>表示</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
         <translation>リストから選択項目を削除</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>削除</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1408,7 +1628,15 @@ Address: %4
         <source>(no label)</source>
         <translation>（ラベル無し）</translation>
     </message>
-    </context>
+    <message>
+        <source>(no message)</source>
+        <translation>（メッセージなし）</translation>
+    </message>
+    <message>
+        <source>(no amount)</source>
+        <translation>（金額なし）</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1456,6 +1684,18 @@ Address: %4
         <translation>手数料差引後:</translation>
     </message>
     <message>
+        <source>Change:</source>
+        <translation>釣り銭:</translation>
+    </message>
+    <message>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation>これが有効にもかかわらずおつりアドレスが空欄であったり無効であった場合には、おつりは新しく生成されたアドレスへ送金されます。</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation>カスタムおつりアドレス</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>一度に複数の人に送る</translation>
     </message>
@@ -1488,6 +1728,10 @@ Address: %4
         <translation>コインを送る確認</translation>
     </message>
     <message>
+        <source>%1 to %2</source>
+        <translation>%1 から %2</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation>数量をコピーする</translation>
     </message>
@@ -1512,6 +1756,18 @@ Address: %4
         <translation>優先度をコピーする</translation>
     </message>
     <message>
+        <source>Copy change</source>
+        <translation>釣り銭をコピー</translation>
+    </message>
+    <message>
+        <source>Total Amount %1 (= %2)</source>
+        <translation>総送金額 %1 (= %2)</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>または</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>受取人のアドレスが不正です。再確認してください。</translation>
     </message>
@@ -1532,8 +1788,24 @@ Address: %4
         <translation>重複しているアドレスが見つかりました。1回の送信で同じアドレスに送ることは出来ません。</translation>
     </message>
     <message>
+        <source>Transaction creation failed!</source>
+        <translation>トラザクションの作成に失敗しました!</translation>
+    </message>
+    <message>
+        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
+        <translation>トランザクションは拒否されました。wallet.dat のコピーを使い、そしてコピーしたウォレットからコインを使用したことがマークされなかったときなど、ウォレットのいくつかのコインがすでに使用されている場合に、このエラーは起こるかもしれません。</translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>警告：無効なBitcoinアドレスです</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>（ラベル無し）</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown change address</source>
+        <translation>警告：未知のおつりアドレスです</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -1579,6 +1851,10 @@ Address: %4
         <translation>前に使用したアドレスを選ぶ</translation>
     </message>
     <message>
+        <source>This is a normal payment.</source>
+        <translation>これは通常の支払です。</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1591,8 +1867,28 @@ Address: %4
         <translation>Alt+P</translation>
     </message>
     <message>
+        <source>Remove this entry</source>
+        <translation>この項目を削除する</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>メッセージ:</translation>
+    </message>
+    <message>
+        <source>This is a verified payment request.</source>
+        <translation>これは検証済みの支払リクエストです。</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation>このアドレスに対するラベルを入力することで、使用済みアドレスの一覧に追加することができます</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
+        <translation>bitcoin: URIに添付されていたメッセージです。これは参照用としてトランザクションとともに保存されます。注意：このメッセージはBitcoinネットワークを通して送信されるわけではありません。</translation>
+    </message>
+    <message>
+        <source>This is an unverified payment request.</source>
+        <translation>これは未検証の支払リクエストです。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1786,6 +2082,10 @@ Address: %4
         <translation>ユニット %1 を開く</translation>
     </message>
     <message>
+        <source>conflicted</source>
+        <translation>衝突</translation>
+    </message>
+    <message>
         <source>%1/offline</source>
         <translation>%1/オフライン</translation>
     </message>
@@ -1874,6 +2174,10 @@ Address: %4
         <translation>商人</translation>
     </message>
     <message>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <translation>生成されたコインは使う前に%1のブロックを完成させる必要があります。あなたが生成した時、このブロックはブロック チェーンに追加されるネットワークにブロードキャストされました。チェーンに追加されるのが失敗した場合、状態が"不承認"に変更されて使えなくなるでしょう。これは、別のノードがあなたの数秒前にブロックを生成する場合に時々起こるかもしれません。</translation>
+    </message>
+    <message>
         <source>Debug information</source>
         <translation>デバッグ情報</translation>
     </message>
@@ -1939,6 +2243,10 @@ Address: %4
         <source>Amount</source>
         <translation>総額</translation>
     </message>
+    <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>未成熟（%1検証。%2検証完了後に使用可能となります）</translation>
+    </message>
     <message numerus="yes">
         <source>Open for %n more block(s)</source>
         <translation><numerusform>%n 以上のブロックを開く</numerusform></translation>
@@ -1966,6 +2274,14 @@ Address: %4
     <message>
         <source>Unconfirmed</source>
         <translation>未検証</translation>
+    </message>
+    <message>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>検証中（%2の推奨検証数のうち、%1検証が完了）</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>衝突</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2111,6 +2427,10 @@ Address: %4
         <translation>エクスポートに成功しました</translation>
     </message>
     <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>トランザクション履歴は正常に%1に保存されました。</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>テキスト CSV (*.csv)</translation>
     </message>
@@ -2186,6 +2506,14 @@ Address: %4
     <message>
         <source>Backup Failed</source>
         <translation>バックアップに失敗しました</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>ウォレットデータを%1へ保存する際にエラーが発生しました。</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>ウォレット データは正常に%1に保存されました。</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -2310,6 +2638,10 @@ rpcpassword=%s
         <translation>ブロックを瞬時に解決することができる特別なチェーンを使用して、リグレッションテストモードに入る。これはリグレッションテストツールやアプリケーション開発を対象としています。</translation>
     </message>
     <message>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>ブロックを瞬時に解決することができる特別なチェーンを使用して、リグレッションテストモードに入る。</translation>
+    </message>
+    <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>エラー: 取引は拒否されました。wallet.dat のコピーを使い、そしてコピーしたウォレットからコインを使用したことがマークされなかったときなど、ウォレットのいくつかのコインがすでに使用されている場合に、このエラーは起こるかもしれません。</translation>
     </message>
@@ -2322,8 +2654,20 @@ rpcpassword=%s
         <translation>ウォレットの取引を変更する際にコマンドを実行 (cmd の %s は TxID に置換される)</translation>
     </message>
     <message>
+        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
+        <translation>このモードでは -genproclimit は何個のブロックをただちに生成するのか制御します。</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation>スクリプト検証スレッドを設定 (%uから%dの間, 0 = 自動, &lt;0 = たくさんのコアを自由にしておく, 初期値: %d)</translation>
+    </message>
+    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>これはリリース前のテストビルドです - 各自の責任で利用すること - 採掘や商取引に使用しないでください</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
+        <translation>このコンピュータの %s にバインドすることができません。おそらく Bitcoin Core は既に実行されています。</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2358,6 +2702,10 @@ rpcpassword=%s
         <translation>(デフォルト: wallet.dat)</translation>
     </message>
     <message>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;category&gt;は以下の値を指定できます：</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat</source>
         <translation>壊れた wallet.dat から秘密鍵を復旧することを試す</translation>
     </message>
@@ -2374,6 +2722,10 @@ rpcpassword=%s
         <translation>SOCKS プロキシ経由で接続する</translation>
     </message>
     <message>
+        <source>Connection options:</source>
+        <translation>接続オプション：</translation>
+    </message>
+    <message>
         <source>Corrupted block database detected</source>
         <translation>破損したブロック データベースが見つかりました
 </translation>
@@ -2385,6 +2737,10 @@ rpcpassword=%s
     <message>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
         <translation>自分の IP アドレスを発見 (初期値:  リスン中と -externalip を使用していない場合は1)</translation>
+    </message>
+    <message>
+        <source>Do not load the wallet and disable wallet RPC calls</source>
+        <translation>ウォレットは読み込まず、ウォレットRPCコールを無効化する</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -2491,8 +2847,16 @@ rpcpassword=%s
         <translation>&lt;category&gt; が与えられなかった場合には、すべてのデバッグ情報が出力されます。</translation>
     </message>
     <message>
+        <source>Importing...</source>
+        <translation>インポートしています……</translation>
+    </message>
+    <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
         <translation>不正なブロックあるいは、生成されていないブロックが見つかりました。ネットワークの datadir が間違っていませんか?</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address: '%s'</source>
+        <translation>無効な -onion アドレス：'%s'</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2507,12 +2871,24 @@ rpcpassword=%s
         <translation>現在の blk000??.dat ファイルからブロック チェーンのインデックスを再構築</translation>
     </message>
     <message>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <translation>データベースのキャッシュサイズをメガバイトで設定 (%dから%d。初期値: %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block size in bytes (default: %d)</source>
+        <translation>最大ブロックサイズをバイトで設定 (初期値: %d)</translation>
+    </message>
+    <message>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
         <translation>RPC サービスのスレッド数を設定 (初期値: 4)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>ウォレットのファイルを指定　(データ・ディレクトリの中に)</translation>
+    </message>
+    <message>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation>これはリグレッションテストツールやアプリ開発のためのものです。</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2531,6 +2907,10 @@ rpcpassword=%s
         <translation>財布 %s はデータ・ディレクトリ%sの外にあります</translation>
     </message>
     <message>
+        <source>Wallet options:</source>
+        <translation>ウォレットオプション：</translation>
+    </message>
+    <message>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
         <translation>警告: 非推奨の引数 -debugnet は無視されました。-debug=net を使用してください</translation>
     </message>
@@ -2543,8 +2923,16 @@ rpcpassword=%s
         <translation>外部の blk000??.dat ファイルからブロックをインポート</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
+        <translation>データ ディレクトリ %s のロックを取得することができません。おそらく Bitcoin Core は実行中です。</translation>
+    </message>
+    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>関連のアラートをもらってもすごく長いのフォークを見てもコマンドを実行 (コマンドの中にあるの%sはメッセージから置き換えさせる)</translation>
+    </message>
+    <message>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation>最優先/最低手数料の最大サイズをバイトで指定 (初期値: %d)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2595,6 +2983,14 @@ rpcpassword=%s
         <translation>RPCサーバのオプション:</translation>
     </message>
     <message>
+        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
+        <translation>&lt;n&gt; 個のネットワークメッセージごとにひとつをランダムに捨てる</translation>
+    </message>
+    <message>
+        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
+        <translation>&lt;n&gt;個のネットワークメッセージごとにひとつをランダムに改変する</translation>
+    </message>
+    <message>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>SSL オプション: (SSLのセットアップ手順は Bitcoin Wiki をご覧下さい)</translation>
     </message>
@@ -2605,6 +3001,10 @@ rpcpassword=%s
     <message>
         <source>Set minimum block size in bytes (default: 0)</source>
         <translation>最小ブロックサイズをバイトで設定 (初期値: 0)</translation>
+    </message>
+    <message>
+        <source>Show all debugging options (usage: --help -help-debug)</source>
+        <translation>すべてのデバッグオプションを表示する (使い方: --help -help-debug)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2657,6 +3057,14 @@ rpcpassword=%s
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>警告: このバージョンは古いのでアップグレードが必要です!</translation>
+    </message>
+    <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>ウォレットからすべてのトランザクションを消去しています...</translation>
+    </message>
+    <message>
+        <source>on startup</source>
+        <translation>起動時</translation>
     </message>
     <message>
         <source>version</source>

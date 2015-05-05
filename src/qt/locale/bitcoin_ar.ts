@@ -325,6 +325,14 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>افتح &amp;URI...</translation>
     </message>
     <message>
+        <source>Importing blocks from disk...</source>
+        <translation>استيراد كتل من القرص ...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>إعادة الفهرسة الكتل على القرص ...</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>ارسل عملات الى عنوان بيتكوين</translation>
     </message>
@@ -1737,6 +1745,10 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <source>Signing transaction failed</source>
         <translation>فشل توقيع المعاملة</translation>
+    </message>
+    <message>
+        <source>Start Bitcoin Core Daemon</source>
+        <translation>ابدأ Bitcoin Core Daemon</translation>
     </message>
     <message>
         <source>System error: </source>

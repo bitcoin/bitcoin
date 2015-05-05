@@ -1496,7 +1496,7 @@ Adresse : %4
     </message>
     <message>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Taper &lt;b&gt;help&lt;/b&gt; pour afficher une vue générale des commandes disponibles.</translation>
+        <translation>Taper &lt;b&gt;help&lt;/b&gt; pour afficher une vue générale des commandes proposées.</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -2089,7 +2089,7 @@ Adresse : %4
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>La clef privée pour l'adresse indiquée n'est pas disponible.</translation>
+        <translation>La clef privée n'est pas disponible pour l'adresse indiquée.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
@@ -2975,7 +2975,7 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Pas assez de descripteurs de fichiers de disponibles.</translation>
+        <translation>Pas assez de descripteurs de fichiers proposés.</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: 1)</source>

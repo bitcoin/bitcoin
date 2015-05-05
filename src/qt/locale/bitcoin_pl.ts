@@ -448,6 +448,10 @@ Ten produkt zawiera oprogramowanie opracowane przez Projekt OpenSSL do użycia w
         <translation>Pokaż listę użytych adresów odbiorczych i etykiety</translation>
     </message>
     <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Otwórz URI bitcoin: lub żądanie zapłaty</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Opcje konsoli</translation>
     </message>
@@ -592,6 +596,10 @@ Adres: %4
     <message>
         <source>Fee:</source>
         <translation>Opłata:</translation>
+    </message>
+    <message>
+        <source>Low Output:</source>
+        <translation>Niska Wartość:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -903,6 +911,10 @@ Adres: %4
         <translation>Uruchom zminimalizowany</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ustaw certyfikaty główne SSL dla żądań płatności (domyślnie: -system-)</translation>
+    </message>
+    <message>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Pokazuj okno powitalne przy starcie (domyślnie: 1)</translation>
     </message>
@@ -1008,6 +1020,10 @@ Adres: %4
         <translation>Uruchamiaj Bitcoin wraz z zalogowaniem do &amp;systemu</translation>
     </message>
     <message>
+        <source>Size of &amp;database cache</source>
+        <translation>Wielkość bufora bazy &amp;danych</translation>
+    </message>
+    <message>
         <source>MB</source>
         <translation>MB</translation>
     </message>
@@ -1018,6 +1034,10 @@ Adres: %4
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation>Połącz się z siecią Bitcoin poprzez SOCKS proxy.</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS proxy (default proxy):</source>
+        <translation>Połącz przez proxy SO&amp;CKS (domyślne proxy):</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1040,12 +1060,24 @@ Adres: %4
         <translation>&amp;Sieć</translation>
     </message>
     <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0 = automatycznie, &lt;0 = zostaw tyle wolnych rdzeni)</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>Portfel</translation>
     </message>
     <message>
         <source>Expert</source>
         <translation>Ekspert</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Włącz funk&amp;cje kontoli monet</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>Wydaj niepotwierdzoną re&amp;sztę</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1122,6 +1154,10 @@ Adres: %4
     <message>
         <source>&amp;Display addresses in transaction list</source>
         <translation>&amp;Wyświetlaj adresy w liście transakcji</translation>
+    </message>
+    <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation>Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1244,6 +1280,10 @@ Adres: %4
     <message>
         <source>Your active proxy doesn't support SOCKS5, which is required for payment requests via proxy.</source>
         <translation>Twoje aktywne proxy nie obsługuje SOCKS5, co jest wymagane dla żądania płatności przez proxy.</translation>
+    </message>
+    <message>
+        <source>Payment request fetch URL is invalid: %1</source>
+        <translation>URL pobrania żądania zapłaty jest nieprawidłowe: %1</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1486,6 +1526,10 @@ Adres: %4
         <translation>Użyj tego formularza do zażądania płatności. Wszystkie pola są &lt;b&gt;opcjonalne&lt;/b&gt;.</translation>
     </message>
     <message>
+        <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
+        <translation>Opcjonalna kwota by zażądać. Zostaw puste lub zero by nie zażądać konkretnej kwoty.</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Wyczyść pola formularza</translation>
     </message>
@@ -1500,6 +1544,10 @@ Adres: %4
     <message>
         <source>&amp;Request payment</source>
         <translation>&amp;Żądaj płatności</translation>
+    </message>
+    <message>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>Pokaż wybrane żądanie (robi to samo co dwukrotne kliknięcie pozycji)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1653,6 +1701,10 @@ Adres: %4
     <message>
         <source>Fee:</source>
         <translation>Opłata:</translation>
+    </message>
+    <message>
+        <source>Low Output:</source>
+        <translation>Niska Wartość:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2219,6 +2271,10 @@ Adres: %4
         <translation>Kwota</translation>
     </message>
     <message>
+        <source>Immature (%1 confirmations, will be available after %2)</source>
+        <translation>Niedojrzała (%1 potwierdzeń, będzie dostępna po %2)</translation>
+    </message>
+    <message>
         <source>Open until %1</source>
         <translation>Otwórz do %1</translation>
     </message>
@@ -2609,6 +2665,10 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Wejście w tryb testów regresji, który wykorzystuje specjalny łańcuch, w którym bloki można rozwiązać natychmiast. To jest przeznaczone dla narzędzi testowania regresji i rozwoju aplikacji.</translation>
     </message>
     <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %d)</source>
+        <translation>Błąd: Nasłuchiwanie połączeń przychodzących nie powiodło się (nasłuch zwrócił błąd %d)</translation>
+    </message>
+    <message>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Błąd: transakcja została odrzucona. Może się to zdarzyć, gdy monety z Twojego portfela zostały już wydane, na przykład gdy używałeś kopii wallet.dat i bitcoiny które tam wydałeś nie zostały jeszcze odjęte z portfela z którego teraz korzystasz.</translation>
     </message>
@@ -2621,8 +2681,28 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Wykonaj polecenie, kiedy transakcja portfela ulegnie zmianie (%s w poleceniu zostanie zastąpione przez TxID)</translation>
     </message>
     <message>
+        <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
+        <translation>Prowizje mniejsze niż ta są uznawane za nieistniejące (przy tworzeniu transakcji) (domyślnie:</translation>
+    </message>
+    <message>
+        <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
+        <translation>Jak dokładna jest weryfikacja bloków przy -checkblocks (0-4, domyślnie: 3)</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation>Ustaw liczbę wątków skryptu weryfikacyjnego (%u do %d, 0 = auto, &lt;0 = zostaw tyle rdzeni wolnych, domyślnie: %d)</translation>
+    </message>
+    <message>
+        <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
+        <translation>Ustaw limit wątków dla generowania monet (-1 = wszystkie rdzenie, domyślnie: -1)</translation>
+    </message>
+    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>To jest testowa wersja - używaj na własne ryzyko - nie używaj do wykopywania oraz przy aplikacjach kupieckich</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
+        <translation>Nie można przywiązać z portem %s na tym komputerze. Bitcoin Core prawdopodobnie już działa.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2857,6 +2937,10 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
         <translation>Wydawaj niepotwierdzoną resztę podczas wysyłania transakcji (domyślnie: 1)</translation>
     </message>
     <message>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation>Jest to przeznaczone dla narzędzi testowania regresji i rozwoju aplikacji.</translation>
+    </message>
+    <message>
         <source>Usage (deprecated, use bitcoin-cli):</source>
         <translation>Użycie (przestarzałe, użyj bitcoin-cli):</translation>
     </message>
@@ -3035,6 +3119,10 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com⏎</t
     <message>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Uwaga: Ta wersja jest przestarzała, aktualizacja wymagana!</translation>
+    </message>
+    <message>
+        <source>Zapping all transactions from wallet...</source>
+        <translation>Usuwam wszystkie transakcje z portfela...</translation>
     </message>
     <message>
         <source>on startup</source>

@@ -898,6 +898,14 @@ Cím: %4
         <translation>Üdvözlünk a Bitcoin Core-ban.</translation>
     </message>
     <message>
+        <source>Use the default data directory</source>
+        <translation>Az alapértelmezett adat könyvtár használata</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation>Saját adatkönyvtár használata:</translation>
+    </message>
+    <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -932,7 +940,11 @@ Cím: %4
         <source>Select payment request file</source>
         <translation>Fizetési kérelmi fájl kiválasztása</translation>
     </message>
-    </context>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Fizetés kérelmi fájl kiválasztása</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -966,6 +978,10 @@ Cím: %4
     <message>
         <source>Connect to the Bitcoin network through a SOCKS proxy.</source>
         <translation>SOCKS proxyn keresztüli csatlakozás a Bitcoin hálózatához.</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>A proxy IP címe (pl.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1074,6 +1090,10 @@ Cím: %4
     <message>
         <source>Confirm options reset</source>
         <translation>Beállítások törlésének jóváhagyása.</translation>
+    </message>
+    <message>
+        <source>Client restart required to activate changes.</source>
+        <translation>A változtatások aktiválásahoz újra kell indítani a klienst.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
@@ -1199,6 +1219,10 @@ Cím: %4
         <translation>Debug ablak</translation>
     </message>
     <message>
+        <source>General</source>
+        <translation>Általános</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>Használt OpenSSL verzió</translation>
     </message>
@@ -1297,6 +1321,14 @@ Cím: %4
     <message>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 p</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 ó</translation>
     </message>
     </context>
 <context>
