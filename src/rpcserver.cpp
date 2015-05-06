@@ -994,7 +994,7 @@ void ServiceConnection(AcceptedConnection *conn)
 
         // Process via HTTP REST API
         } else if (strURI.substr(0, 6) == "/rest/" && GetBoolArg("-rest", false)) {
-            if (!HTTPReq_REST(conn, strURI, mapHeaders, fRun))
+            if (!HTTPReq_REST(conn, strURI, strRequest, mapHeaders, fRun))
                 break;
 
         } else {

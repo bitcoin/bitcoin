@@ -9,13 +9,17 @@
 #include "rpcserver.h"
 #include "streams.h"
 #include "sync.h"
+#include "txmempool.h"
 #include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 using namespace std;
 using namespace json_spirit;
+
+static const int MAX_GETUTXOS_OUTPOINTS = 100; //allow a max of 100 outpoints to be queried at once
 
 enum RetFormat {
     RF_UNDEF,
@@ -34,6 +38,22 @@ static const struct {
       {RF_JSON, "json"},
 };
 
+struct CCoin {
+    uint32_t nTxVer; // Don't call this nVersion, that name has a special meaning inside IMPLEMENT_SERIALIZE
+    uint32_t nHeight;
+    CTxOut out;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        READWRITE(nTxVer);
+        READWRITE(nHeight);
+        READWRITE(out);
+    }
+};
+
 class RestErr
 {
 public:
@@ -43,6 +63,7 @@ public:
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry);
 extern Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
+extern void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
 
 static RestErr RESTERR(enum HTTPStatusCode status, string message)
 {
@@ -90,12 +111,13 @@ static bool ParseHashStr(const string& strReq, uint256& v)
 }
 
 static bool rest_headers(AcceptedConnection* conn,
-                         const std::string& strReq,
+                         const std::string& strURIPart,
+                         const std::string& strRequest,
                          const std::map<std::string, std::string>& mapHeaders,
                          bool fRun)
 {
     vector<string> params;
-    const RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strURIPart);
     vector<string> path;
     boost::split(path, params[0], boost::is_any_of("/"));
 
@@ -153,13 +175,14 @@ static bool rest_headers(AcceptedConnection* conn,
 }
 
 static bool rest_block(AcceptedConnection* conn,
-                       const std::string& strReq,
+                       const std::string& strURIPart,
+                       const std::string& strRequest,
                        const std::map<std::string, std::string>& mapHeaders,
                        bool fRun,
                        bool showTxDetails)
 {
     vector<string> params;
-    const RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strURIPart);
 
     string hashStr = params[0];
     uint256 hash;
@@ -211,28 +234,31 @@ static bool rest_block(AcceptedConnection* conn,
 }
 
 static bool rest_block_extended(AcceptedConnection* conn,
-                       const std::string& strReq,
+                       const std::string& strURIPart,
+                       const std::string& strRequest,
                        const std::map<std::string, std::string>& mapHeaders,
                        bool fRun)
 {
-    return rest_block(conn, strReq, mapHeaders, fRun, true);
+    return rest_block(conn, strURIPart, strRequest, mapHeaders, fRun, true);
 }
 
 static bool rest_block_notxdetails(AcceptedConnection* conn,
-                       const std::string& strReq,
+                       const std::string& strURIPart,
+                       const std::string& strRequest,
                        const std::map<std::string, std::string>& mapHeaders,
                        bool fRun)
 {
-    return rest_block(conn, strReq, mapHeaders, fRun, false);
+    return rest_block(conn, strURIPart, strRequest, mapHeaders, fRun, false);
 }
 
 static bool rest_chaininfo(AcceptedConnection* conn,
-                                   const std::string& strReq,
-                                   const std::map<std::string, std::string>& mapHeaders,
-                                   bool fRun)
+                           const std::string& strURIPart,
+                           const std::string& strRequest,
+                           const std::map<std::string, std::string>& mapHeaders,
+                           bool fRun)
 {
     vector<string> params;
-    const RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strURIPart);
     
     switch (rf) {
     case RF_JSON: {
@@ -253,12 +279,13 @@ static bool rest_chaininfo(AcceptedConnection* conn,
 }
 
 static bool rest_tx(AcceptedConnection* conn,
-                    const std::string& strReq,
+                    const std::string& strURIPart,
+                    const std::string& strRequest,
                     const std::map<std::string, std::string>& mapHeaders,
                     bool fRun)
 {
     vector<string> params;
-    const RetFormat rf = ParseDataFormat(params, strReq);
+    const RetFormat rf = ParseDataFormat(params, strURIPart);
 
     string hashStr = params[0];
     uint256 hash;
@@ -303,10 +330,191 @@ static bool rest_tx(AcceptedConnection* conn,
     return true; // continue to process further HTTP reqs on this cxn
 }
 
+static bool rest_getutxos(AcceptedConnection* conn,
+                          const std::string& strURIPart,
+                          const std::string& strRequest,
+                          const std::map<std::string, std::string>& mapHeaders,
+                          bool fRun)
+{
+    vector<string> params;
+    enum RetFormat rf = ParseDataFormat(params, strURIPart);
+
+    // throw exception in case of a empty request
+    if (strRequest.length() == 0)
+        throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+
+    bool fCheckMemPool = false;
+    vector<COutPoint> vOutPoints;
+
+    // parse/deserialize input
+    // input-format = output-format, rest/getutxos/bin requires binary input, gives binary output, ...
+    
+    string strRequestMutable = strRequest; //convert const string to string for allowing hex to bin converting
+    
+    switch (rf) {
+    case RF_HEX: {
+        // convert hex to bin, continue then with bin part
+        std::vector<unsigned char> strRequestV = ParseHex(strRequest);
+        strRequestMutable.assign(strRequestV.begin(), strRequestV.end());
+    }
+
+    case RF_BINARY: {
+        try {
+            //deserialize
+            CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
+            oss << strRequestMutable;
+            oss >> fCheckMemPool;
+            oss >> vOutPoints;
+        } catch (const std::ios_base::failure& e) {
+            // abort in case of unreadable binary data
+            throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+        }
+        break;
+    }
+
+    case RF_JSON: {
+        try {
+            // parse json request
+            Value valRequest;
+            if (!read_string(strRequest, valRequest))
+                throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+
+            Object jsonObject = valRequest.get_obj();
+            const Value& checkMempoolValue = find_value(jsonObject, "checkmempool");
+
+            if (!checkMempoolValue.is_null()) {
+                fCheckMemPool = checkMempoolValue.get_bool();
+            }
+            const Value& outpointsValue = find_value(jsonObject, "outpoints");
+            if (!outpointsValue.is_null()) {
+                Array outPoints = outpointsValue.get_array();
+                BOOST_FOREACH (const Value& outPoint, outPoints) {
+                    Object outpointObject = outPoint.get_obj();
+                    uint256 txid = ParseHashO(outpointObject, "txid");
+                    Value nValue = find_value(outpointObject, "n");
+                    int nOutput = nValue.get_int();
+                    vOutPoints.push_back(COutPoint(txid, nOutput));
+                }
+            }
+        } catch (...) {
+            // return HTTP 500 if there was a json parsing error
+            throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+        }
+        break;
+    }
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
+
+    // limit max outpoints
+    if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
+        throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
+
+    // check spentness and form a bitmap (as well as a JSON capable human-readble string representation)
+    vector<unsigned char> bitmap;
+    vector<CCoin> outs;
+    std::string bitmapStringRepresentation;
+    boost::dynamic_bitset<unsigned char> hits(vOutPoints.size());
+    {
+        LOCK2(cs_main, mempool.cs);
+
+        CCoinsView viewDummy;
+        CCoinsViewCache view(&viewDummy);
+
+        CCoinsViewCache& viewChain = *pcoinsTip;
+        CCoinsViewMemPool viewMempool(&viewChain, mempool);
+
+        if (fCheckMemPool)
+            view.SetBackend(viewMempool); // switch cache backend to db+mempool in case user likes to query mempool
+
+        for (size_t i = 0; i < vOutPoints.size(); i++) {
+            CCoins coins;
+            uint256 hash = vOutPoints[i].hash;
+            if (view.GetCoins(hash, coins)) {
+                mempool.pruneSpent(hash, coins);
+                if (coins.IsAvailable(vOutPoints[i].n)) {
+                    hits[i] = true;
+                    // Safe to index into vout here because IsAvailable checked if it's off the end of the array, or if
+                    // n is valid but points to an already spent output (IsNull).
+                    CCoin coin;
+                    coin.nTxVer = coins.nVersion;
+                    coin.nHeight = coins.nHeight;
+                    coin.out = coins.vout.at(vOutPoints[i].n);
+                    assert(!coin.out.IsNull());
+                    outs.push_back(coin);
+                }
+            }
+
+            bitmapStringRepresentation.append(hits[i] ? "1" : "0"); // form a binary string representation (human-readable for json output)
+        }
+    }
+    boost::to_block_range(hits, std::back_inserter(bitmap));
+
+    switch (rf) {
+    case RF_BINARY: {
+        // serialize data
+        // use exact same output as mentioned in Bip64
+        CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
+        ssGetUTXOResponse << chainActive.Height() << chainActive.Tip()->GetBlockHash() << bitmap << outs;
+        string ssGetUTXOResponseString = ssGetUTXOResponse.str();
+
+        conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, ssGetUTXOResponseString.size(), "application/octet-stream") << ssGetUTXOResponseString << std::flush;
+        return true;
+    }
+
+    case RF_HEX: {
+        CDataStream ssGetUTXOResponse(SER_NETWORK, PROTOCOL_VERSION);
+        ssGetUTXOResponse << chainActive.Height() << chainActive.Tip()->GetBlockHash() << bitmap << outs;
+        string strHex = HexStr(ssGetUTXOResponse.begin(), ssGetUTXOResponse.end()) + "\n";
+
+        conn->stream() << HTTPReply(HTTP_OK, strHex, fRun, false, "text/plain") << std::flush;
+        return true;
+    }
+
+    case RF_JSON: {
+        Object objGetUTXOResponse;
+
+        // pack in some essentials
+        // use more or less the same output as mentioned in Bip64
+        objGetUTXOResponse.push_back(Pair("chainHeight", chainActive.Height()));
+        objGetUTXOResponse.push_back(Pair("chaintipHash", chainActive.Tip()->GetBlockHash().GetHex()));
+        objGetUTXOResponse.push_back(Pair("bitmap", bitmapStringRepresentation));
+
+        Array utxos;
+        BOOST_FOREACH (const CCoin& coin, outs) {
+            Object utxo;
+            utxo.push_back(Pair("txvers", (int32_t)coin.nTxVer));
+            utxo.push_back(Pair("height", (int32_t)coin.nHeight));
+            utxo.push_back(Pair("value", ValueFromAmount(coin.out.nValue)));
+
+            // include the script in a json output
+            Object o;
+            ScriptPubKeyToJSON(coin.out.scriptPubKey, o, true);
+            utxo.push_back(Pair("scriptPubKey", o));
+            utxos.push_back(utxo);
+        }
+        objGetUTXOResponse.push_back(Pair("utxos", utxos));
+
+        // return json string
+        string strJSON = write_string(Value(objGetUTXOResponse), false) + "\n";
+        conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
+        return true;
+    }
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
+
+    // not reached
+    return true; // continue to process further HTTP reqs on this cxn
+}
+
 static const struct {
     const char* prefix;
     bool (*handler)(AcceptedConnection* conn,
-                    const std::string& strURI,
+                    const std::string& strURIPart,
+                    const std::string& strRequest,
                     const std::map<std::string, std::string>& mapHeaders,
                     bool fRun);
 } uri_prefixes[] = {
@@ -315,10 +523,12 @@ static const struct {
       {"/rest/block/", rest_block_extended},
       {"/rest/chaininfo", rest_chaininfo},
       {"/rest/headers/", rest_headers},
+      {"/rest/getutxos", rest_getutxos},
 };
 
 bool HTTPReq_REST(AcceptedConnection* conn,
                   const std::string& strURI,
+                  const string& strRequest,
                   const std::map<std::string, std::string>& mapHeaders,
                   bool fRun)
 {
@@ -330,8 +540,8 @@ bool HTTPReq_REST(AcceptedConnection* conn,
         for (unsigned int i = 0; i < ARRAYLEN(uri_prefixes); i++) {
             unsigned int plen = strlen(uri_prefixes[i].prefix);
             if (strURI.substr(0, plen) == uri_prefixes[i].prefix) {
-                string strReq = strURI.substr(plen);
-                return uri_prefixes[i].handler(conn, strReq, mapHeaders, fRun);
+                string strURIPart = strURI.substr(plen);
+                return uri_prefixes[i].handler(conn, strURIPart, strRequest, mapHeaders, fRun);
             }
         }
     } catch (const RestErr& re) {
