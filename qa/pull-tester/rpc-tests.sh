@@ -59,6 +59,10 @@ testScriptsExt=(
     'p2p-acceptblock.py'
 );
 
+if [ "x$ENABLE_ZMQ" = "x1" ]; then
+  testScripts=( ${testScripts[@]} 'zmq_test.py' )
+fi
+
 extArg="-extended"
 passOn=${@#$extArg}
 
