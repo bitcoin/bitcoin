@@ -62,26 +62,24 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
 {
-    CMPSPInfo::Entry spProperty;
-    CMPSPInfo::Entry spDesProperty;
+    // temp commentary - Z rewrite to be more similar to existing calls
 
-    _my_sps->getSP(obj.getProperty(), spProperty);
-    _my_sps->getSP(obj.getDesProperty(), spDesProperty);
-
-    std::string strAmountOriginal = FormatMP(obj.getProperty(), obj.getAmountForSale());
-    std::string strAmountDesired = FormatMP(obj.getDesProperty(), obj.getAmountDesired());
-    std::string strEcosystem = isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main";
-
+    bool propertyIdForSaleIsDivisible = isPropertyDivisible(obj.getProperty());
+    bool propertyIdDesiredIsDivisible = isPropertyDivisible(obj.getDesProperty());
+    std::string strAmountForSale = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountForSale());
+    std::string strAmountRemaining = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountRemaining());
+    std::string strAmountDesired = FormatMP(propertyIdDesiredIsDivisible, obj.getAmountDesired());
     // add data to JSON object
     metadex_obj.push_back(Pair("address", obj.getAddr()));
     metadex_obj.push_back(Pair("txid", obj.getHash().GetHex()));
-    metadex_obj.push_back(Pair("ecosystem", strEcosystem));
-    metadex_obj.push_back(Pair("property_owned", (uint64_t) obj.getProperty()));
-    metadex_obj.push_back(Pair("property_desired", (uint64_t) obj.getDesProperty()));
-    metadex_obj.push_back(Pair("property_owned_divisible", spProperty.isDivisible()));
-    metadex_obj.push_back(Pair("property_desired_divisible", spDesProperty.isDivisible()));
-    metadex_obj.push_back(Pair("amount_original", strAmountOriginal));
-    metadex_obj.push_back(Pair("amount_desired", strAmountDesired));
+    if (obj.getAction() == 4) metadex_obj.push_back(Pair("ecosystem", isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main"));
+    metadex_obj.push_back(Pair("propertyidforsale", (uint64_t) obj.getProperty()));
+    metadex_obj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
+    metadex_obj.push_back(Pair("amountforsale", strAmountForSale));
+    metadex_obj.push_back(Pair("amountremaining", strAmountRemaining));
+    metadex_obj.push_back(Pair("propertyiddesired", (uint64_t) obj.getDesProperty()));
+    metadex_obj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
+    metadex_obj.push_back(Pair("amountdesired", strAmountDesired));
     metadex_obj.push_back(Pair("action", (int) obj.getAction()));
     metadex_obj.push_back(Pair("block", obj.getBlock()));
     metadex_obj.push_back(Pair("blocktime", obj.getBlockTime()));
@@ -1223,8 +1221,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     bool mdex_propertyId_Div = false;
     uint64_t mdex_propertyWanted = 0;
     uint64_t mdex_amountWanted = 0;
+    uint64_t mdex_amountRemaining = 0;
     bool mdex_propertyWanted_Div = false;
     unsigned int mdex_action = 0;
+    string mdex_unitPriceStr;
     string mdex_actionStr;
 
     if (0 == blockHash) { return MP_TX_UNCONFIRMED; }
@@ -1330,7 +1330,18 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                      mdex_propertyWanted = temp_metadexoffer.getDesProperty();
                                      mdex_propertyWanted_Div = isPropertyDivisible(mdex_propertyWanted);
                                      mdex_amountWanted = temp_metadexoffer.getAmountDesired();
+                                     mdex_amountRemaining = temp_metadexoffer.getAmountRemaining();
                                      mdex_action = temp_metadexoffer.getAction();
+                                     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
+                                     XDOUBLE tempUnitPrice = 0;
+                                     if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
+                                         tempUnitPrice = temp_metadexoffer.inversePrice();
+                                         if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                     } else {
+                                         tempUnitPrice = temp_metadexoffer.unitPrice();
+                                         if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                     }
+                                     mdex_unitPriceStr = tempUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
                                      if(1 == mdex_action) mdex_actionStr = "new sell";
                                      if(2 == mdex_action) mdex_actionStr = "cancel price";
                                      if(3 == mdex_action) mdex_actionStr = "cancel pair";
@@ -1515,18 +1526,17 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
         }
         if (MSC_TYPE_METADEX == MPTxTypeInt)
         {
-            txobj->push_back(Pair("amountoffered", FormatMP(propertyId, amount)));
-            txobj->push_back(Pair("propertyoffered", propertyId));
-            txobj->push_back(Pair("propertyofferedisdivisible", mdex_propertyId_Div));
+            txobj->push_back(Pair("propertyidforsale", propertyId));
+            txobj->push_back(Pair("propertyidforsaleisdivisible", mdex_propertyId_Div));
+            txobj->push_back(Pair("amountforsale", FormatMP(propertyId, amount)));
+            txobj->push_back(Pair("amountremaining", FormatMP(propertyId, mdex_amountRemaining)));
+            txobj->push_back(Pair("propertyiddesired", mdex_propertyWanted));
+            txobj->push_back(Pair("propertyiddesiredisdivisible", mdex_propertyWanted_Div));
             txobj->push_back(Pair("amountdesired", FormatMP(mdex_propertyWanted, mdex_amountWanted)));
-            txobj->push_back(Pair("propertydesired", mdex_propertyWanted));
-            txobj->push_back(Pair("propertydesiredisdivisible", mdex_propertyWanted_Div));
+            txobj->push_back(Pair("unitprice", mdex_unitPriceStr));
             txobj->push_back(Pair("action", mdex_actionStr));
-            //txobj->push_back(Pair("unit_price", mdex_unitPrice ) );
-            //txobj->push_back(Pair("inverse_unit_price", mdex_invUnitPrice ) );
-            //active?
-            //txobj->push_back(Pair("amount_original", FormatDivisibleMP(mdex_amt_orig_sale)));
-            //txobj->push_back(Pair("amount_desired", FormatDivisibleMP(mdex_amt_des)));
+            if (mdex_actionStr == "cancel all") txobj->push_back(Pair("ecosystem",
+                isTestEcosystemProperty(propertyId) ? "Test" : "Main"));
         }
         txobj->push_back(Pair("valid", valid));
     }
@@ -1888,45 +1898,39 @@ Value gettrade_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    // Prepare a few vars
     uint256 hash;
-    hash.SetHex(params[0].get_str());
     Object tradeobj;
     Object txobj;
     CMPMetaDEx temp_metadexoffer;
-
-    //get sender & propId
-    string senderAddress;
-    unsigned int propertyId = 0;
     CTransaction wtx;
     uint256 blockHash = 0;
-    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+    string senderAddress;
+    unsigned int propertyId = 0;
     CMPTransaction mp_obj;
+
+    // Obtain the transaction
+    hash.SetHex(params[0].get_str());
+    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+
+    // Ensure it can be parsed OK
     int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
-    if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sa$
-    {
-        if (0<=mp_obj.step1())
-        {
+    if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
+        if (0<=mp_obj.step1()) {
             senderAddress = mp_obj.getSender();
-            if (0 == mp_obj.step2_Value())
-            {
-                propertyId = mp_obj.getProperty();
-            }
+            if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
         }
     }
-    if (propertyId == 0) // something went wrong, couldn't decode property ID - bad packet?
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
-    if (senderAddress.empty()) // something went wrong, couldn't decode transaction
+    if ((0 > parseRC) || (propertyId == 0) || (senderAddress.empty())) // something went wrong, couldn't decode - bad packet?
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
 
-    // make a request to new RPC populator function to populate a transaction object
+    // make a request to RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, &txobj);
 
     // check the response, throw any error codes if false
-    if (0>populateResult)
-    {
+    if (0>populateResult) {
         // TODO: consider throwing other error codes, check back with Bitcoin Core
-        switch (populateResult)
-        {
+        switch (populateResult) {
             case MP_TX_NOT_FOUND:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
             case MP_TX_UNCONFIRMED:
@@ -1956,7 +1960,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
     int actionByte = 0;
     if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
 
-    // everything seems ok, now add status and get an array of matches to add to the object
+    // everything seems ok, now add status and add array of matches to the object
     // work out status
     bool orderOpen = isMetaDExOfferActive(hash, propertyId);
     bool partialFilled = false;
@@ -1973,36 +1977,29 @@ Value gettrade_MP(const Array& params, bool fHelp)
     if(actionByte==1) txobj.push_back(Pair("status", statusText)); // no status for cancel txs
 
     // add cancels array to object and set status as cancelled only if cancel type
-    if(actionByte != 1)
-    {
+    if(actionByte != 1) {
         Array cancelArray;
         int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(hash);
-        if (0<numberOfCancels)
-        {
-            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++)
-            {
+        if (0<numberOfCancels) {
+            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
                 Object cancelTx;
                 string strValue = p_txlistdb->getKeyValue(hash.ToString() + "-C" + to_string(refNumber));
-                if (!strValue.empty())
-                {
+                if (!strValue.empty()) {
                     std::vector<std::string> vstr;
                     boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-                    if (3 <= vstr.size())
-                    {
+                    if (3 <= vstr.size()) {
                         uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
                         uint64_t amountUnreserved = boost::lexical_cast<uint64_t>(vstr[2]);
                         cancelTx.push_back(Pair("txid", vstr[0]));
                         cancelTx.push_back(Pair("propertyid", propId));
                         cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, amountUnreserved)));
-                    cancelArray.push_back(cancelTx);
+                        cancelArray.push_back(cancelTx);
                     }
                 }
             }
         }
         txobj.push_back(Pair("cancelledtransactions", cancelArray));
-    }
-    else
-    {
+    } else {
         // if cancelled, show cancellation txid
         if((statusText == "cancelled") || (statusText == "cancelled part filled")) { txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(hash).GetHex())); }
         // add matches array to object
