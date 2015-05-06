@@ -70,7 +70,7 @@
                <string notr="true">QLabel { color: red; }</string>
               </property>
               <property name="text">
-               <string notr="true">(out of sync)</string>
+               <string notr="true">(out of sync, please allow a few days to become synchronized)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -442,7 +442,7 @@
                <string notr="true">QLabel { color: red; }</string>
               </property>
               <property name="text">
-               <string notr="true">(out of sync)</string>
+               <string notr="true">(out of sync, please allow a few days to become synchronized)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
