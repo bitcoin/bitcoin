@@ -1131,7 +1131,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (fRet) {
             // add txindex=1 to config file in GetConfigFile()
             boost::filesystem::path configPathInfo = GetConfigFile();
-            FILE *fp = fopen(configPathInfo.string().c_str(), "a");
+            FILE *fp = fopen(configPathInfo.string().c_str(), "at");
             if (!fp) {
                 std::string failMsg = _("Unable to update configuration file at");
                 failMsg += ":\n" + GetConfigFile().string() + "\n\n";
@@ -1139,7 +1139,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 failMsg += _("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown.");
                 return InitError(failMsg);
             }
-            fprintf(fp, "\ntxindex=1\n");
+            fprintf(fp, "\ntxindex=1");
             fflush(fp);
             fclose(fp);
             return InitError(_("Your configuration file has been updated.\n\n"
