@@ -5,7 +5,7 @@ suites:
 architectures:
 - "i386"
 - "amd64"
-packages: 
+packages:
 - "g++"
 - "git-core"
 - "unzip"
@@ -22,7 +22,7 @@ packages:
 - "libqt4-test"
 reference_datetime: "2014-01-10 00:00:00"
 remotes:
-- "url": "https://github.com/darkcoin/darkcoin.git"
+- "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
 files:
 - "bitcoin-deps-linux32-gitian-r9.zip"
@@ -73,7 +73,7 @@ script: |
   mkdir -p distsrc
   cd distsrc
   tar --strip-components=1 -xf ../$DISTNAME
-  do_configure --bindir=$BINDIR 
+  do_configure --bindir=$BINDIR
   make $MAKEOPTS
   make $MAKEOPTS install-strip
   make $MAKEOPTS clean

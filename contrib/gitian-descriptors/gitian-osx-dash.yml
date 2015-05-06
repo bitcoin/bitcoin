@@ -14,7 +14,7 @@ packages:
 
 reference_datetime: "2014-01-10 00:00:00"
 remotes:
-- "url": "https://github.com/darkcoin/darkcoin.git"
+- "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
 files:
 - "osx-native-depends-r3.tar.gz"
