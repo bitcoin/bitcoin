@@ -1,14 +1,14 @@
 language: c
+sudo: false
+addons:
+  apt:
+    packages: libgmp-dev
 compiler:
   - clang
   - gcc
-install:
-  - sudo apt-get install -qq libssl-dev
-  - if [ "$BIGNUM" = "gmp" -o "$BIGNUM" = "auto" ]; then sudo apt-get install --no-install-recommends --no-upgrade -qq libgmp-dev; fi
-  - if [ -n "$EXTRAPACKAGES" ]; then sudo apt-get update && sudo apt-get install --no-install-recommends --no-upgrade $EXTRAPACKAGES; fi
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  ASM=no  BUILD=check  EXTRAFLAGS= HOST= EXTRAPACKAGES=
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  ASM=no  BUILD=check  EXTRAFLAGS= HOST=
   matrix:
     - SCALAR=32bit
     - SCALAR=64bit
@@ -22,8 +22,35 @@ env:
     - BIGNUM=no       ENDOMORPHISM=yes
     - BUILD=distcheck
     - EXTRAFLAGS=CFLAGS=-DDETERMINISTIC
-    - HOST=i686-linux-gnu EXTRAPACKAGES="gcc-multilib"
-    - HOST=i686-linux-gnu EXTRAPACKAGES="gcc-multilib" ENDOMORPHISM=yes
+matrix:
+  fast_finish: true
+  include:
+    - compiler: clang
+      env: HOST=i686-linux-gnu ENDOMORPHISM=yes
+      addons:
+        apt:
+          packages:
+            - gcc-multilib
+            - libgmp-dev:i386
+    - compiler: clang
+      env: HOST=i686-linux-gnu
+      addons:
+        apt:
+          packages:
+            - gcc-multilib
+    - compiler: gcc
+      env: HOST=i686-linux-gnu ENDOMORPHISM=yes
+      addons:
+        apt:
+          packages:
+            - gcc-multilib
+    - compiler: gcc
+      env: HOST=i686-linux-gnu
+      addons:
+        apt:
+          packages:
+            - gcc-multilib
+            - libgmp-dev:i386
 before_script: ./autogen.sh
 script:
  - if [ -n "$HOST" ]; then export USE_HOST="--host=$HOST"; fi
