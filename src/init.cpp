@@ -1118,13 +1118,14 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     if (!fTxIndex) {
-        return InitError(_(
-                "Disabled transaction index detected.\n\n"
-                "Omni Core requires an enabled transaction index. To enable "
-                "transaction indexing, please use the \"-txindex\" option as "
-                "command line argument or add \"txindex=1\" to your client "
-                "configuration file."
-            ));
+        std::string msg = _("Disabled transaction index detected.\n\n"
+                            "Omni Core requires an enabled transaction index. To enable "
+                            "transaction indexing, please use the \"-txindex\" option as "
+                            "command line argument or add \"txindex=1\" to your client "
+                            "configuration file within your data directory.\n\n"
+                            "Configuration file: "); // allow translation of main text body while still allowing differing config file string
+        msg += GetConfigFile().string();
+        return InitError(msg);
     }
 
     uiInterface.InitMessage(_("Parsing Omni Layer transactions..."));
