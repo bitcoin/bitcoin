@@ -34,7 +34,7 @@ Bitcoin_SendCoinsDialog::Bitcoin_SendCoinsDialog(QWidget *parent) :
     ui->sendButton->setIcon(QIcon());
 #endif
 
-    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
+    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this, false);
 
     addEntry();
 

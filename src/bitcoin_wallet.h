@@ -217,7 +217,7 @@ public:
 
     int GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache* claim_view) const;
 
-    void AvailableCoins(std::vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxPoints, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL) const;
+    void AvailableCoins(std::vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const;
     bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<Bitcoin_COutput> vCoins, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n, unsigned int claimBestBlockDepth) const;
@@ -226,7 +226,7 @@ public:
     void LockCoin(COutPoint& output);
     void UnlockCoin(COutPoint& output);
     void UnlockAllCoins();
-    void ListLockedCoins(std::vector<COutPoint>& vOutpts);
+    void ListLockedCoins(std::vector<COutPoint>& vOutputs);
 
     // keystore implementation
     // Generate a new key

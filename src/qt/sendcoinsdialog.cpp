@@ -35,7 +35,7 @@ Credits_SendCoinsDialog::Credits_SendCoinsDialog(QWidget *parent) :
     ui->sendButton->setIcon(QIcon());
 #endif
 
-    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
+    GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this, true);
 
     addEntry();
 

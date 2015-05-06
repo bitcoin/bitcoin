@@ -30,8 +30,8 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
     ui->addressIn_VM->setPlaceholderText(tr("Enter a Credits address (e.g. 1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L)"));
 #endif
 
-    GUIUtil::setupAddressWidget(ui->addressIn_SM, this);
-    GUIUtil::setupAddressWidget(ui->addressIn_VM, this);
+    GUIUtil::setupAddressWidget(ui->addressIn_SM, this, true);
+    GUIUtil::setupAddressWidget(ui->addressIn_VM, this, true);
 
     ui->addressIn_SM->installEventFilter(this);
     ui->messageIn_SM->installEventFilter(this);

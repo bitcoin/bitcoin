@@ -569,7 +569,10 @@ void Bitcoin_WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, s
 bool Bitcoin_WalletModel::isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache *claim_view) const
 {
     LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet);
-	const int nClaimBestBlockDepth = wallet->GetBestBlockClaimDepth(claim_view);
+	int nClaimBestBlockDepth = 0;
+	if(claim_view != NULL) {
+		nClaimBestBlockDepth = wallet->GetBestBlockClaimDepth(claim_view);
+	}
     return wallet->IsSpent(outpoint.hash, outpoint.n, nClaimBestBlockDepth);
 }
 
@@ -579,7 +582,7 @@ void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutpu
     wallet->MarkDirty();
 
     std::vector<Bitcoin_COutput> vCoins;
-    wallet->AvailableCoins(vCoins, claim_view, mapFilterTxInPoints);
+    wallet->AvailableCoins(vCoins, claim_view, mapFilterTxInPoints, true, NULL);
 
     LOCK2(bitcoin_mainState.cs_main, wallet->cs_wallet); // ListLockedCoins, mapWallet
     std::vector<COutPoint> vLockedCoins;

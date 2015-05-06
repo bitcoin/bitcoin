@@ -20,7 +20,7 @@ Credits_EditAddressDialog::Credits_EditAddressDialog(Mode mode, QWidget *parent)
 {
     ui->setupUi(this);
 
-    GUIUtil::setupAddressWidget(ui->addressEdit, this);
+    GUIUtil::setupAddressWidget(ui->addressEdit, this, true);
 
     switch(mode)
     {

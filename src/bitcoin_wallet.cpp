@@ -1179,7 +1179,7 @@ void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CC
     {
         LOCK(cs_wallet);
 
-		const int nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
+		int nClaimBestBlockDepth = 0;
 
         for (map<uint256, Bitcoin_CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
@@ -1209,6 +1209,8 @@ void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CC
 					}
 				}
             } else {
+        		nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
+
 				if(claim_view->HaveCoins(wtxid)) {
 					Bitcoin_CClaimCoins & claimCoin = claim_view->GetCoins(wtxid);
 

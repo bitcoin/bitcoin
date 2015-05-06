@@ -27,11 +27,11 @@ Bitcoin_SendCoinsEntry::Bitcoin_SendCoinsEntry(QWidget *parent) :
     ui->payToLayout->setSpacing(4);
 #endif
 #if QT_VERSION >= 0x040700
-    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
+    ui->addAsLabel->setPlaceholderText(tr("Enter a label for this Bitcoin address to add it to your address book"));
 #endif
 
     // normal bitcoin address field
-    GUIUtil::setupAddressWidget(ui->payTo, this);
+    GUIUtil::setupAddressWidget(ui->payTo, this, false);
     // just a label for displaying bitcoin address(es)
     ui->payTo_is->setFont(GUIUtil::bitcoinAddressFont());
 }

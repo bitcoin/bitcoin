@@ -387,7 +387,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
         aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Credits Core"), this);
     else
         aboutAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&About Credits Core"), this);
-    aboutAction->setStatusTip(tr("Show information about Bitcredit"));
+    aboutAction->setStatusTip(tr("Show information about Credits"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -498,6 +498,7 @@ void BitcreditGUI::createMenuBar()
         file->addSeparator();
         file->addAction(credits_usedSendingAddressesAction);
         file->addAction(credits_usedReceivingAddressesAction);
+        file->addSeparator();
         file->addAction(bitcoin_usedSendingAddressesAction);
         file->addAction(bitcoin_usedReceivingAddressesAction);
         file->addSeparator();

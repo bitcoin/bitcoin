@@ -87,7 +87,7 @@
              <string notr="true">font-weight:bold;</string>
             </property>
             <property name="text">
-             <string>Coin Control Features</string>
+             <string>Bitcoin Coin Selection</string>
             </property>
            </widget>
           </item>
@@ -107,7 +107,7 @@
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>Inputs...</string>
+             <string>Select coins...</string>
             </property>
            </widget>
           </item>

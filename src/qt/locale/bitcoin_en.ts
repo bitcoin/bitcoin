@@ -2192,7 +2192,7 @@ Address: %4
     </message>
     <message>
         <location line="+20"/>
-        <source>Inputs...</source>
+        <source>Select coins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
