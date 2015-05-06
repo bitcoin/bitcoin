@@ -74,7 +74,7 @@ public:
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
-    virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
+    const Checkpoints::CCheckpointData& Checkpoints() const { return checkpointData; }
 protected:
     CChainParams() {}
 
@@ -96,6 +96,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fTestnetToBeDeprecatedFieldRPC;
+    Checkpoints::CCheckpointData checkpointData;
 };
 
 /**
