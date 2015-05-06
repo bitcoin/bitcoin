@@ -37,15 +37,15 @@ static int column_alignments[] = {
 // Comparison operator for sort/binary search of model tx list
 struct Bitcredit_TxLessThan
 {
-    bool operator()(const Bitcredit_TransactionRecord &a, const Bitcredit_TransactionRecord &b) const
+    bool operator()(const Credits_TransactionRecord &a, const Credits_TransactionRecord &b) const
     {
         return a.hash < b.hash;
     }
-    bool operator()(const Bitcredit_TransactionRecord &a, const uint256 &b) const
+    bool operator()(const Credits_TransactionRecord &a, const uint256 &b) const
     {
         return a.hash < b;
     }
-    bool operator()(const uint256 &a, const Bitcredit_TransactionRecord &b) const
+    bool operator()(const uint256 &a, const Credits_TransactionRecord &b) const
     {
         return a < b.hash;
     }
@@ -70,7 +70,7 @@ public:
      * As it is in the same order as the CWallet, by definition
      * this is sorted by sha256.
      */
-    QList<Bitcredit_TransactionRecord> cachedWallet;
+    QList<Credits_TransactionRecord> cachedWallet;
 
     /* Query entire wallet anew from core.
      */
@@ -82,8 +82,8 @@ public:
             LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
             for(std::map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_wallet->mapWallet.begin(); it != bitcredit_wallet->mapWallet.end(); ++it)
             {
-                if(Bitcredit_TransactionRecord::showTransaction(it->second))
-                    cachedWallet.append(Bitcredit_TransactionRecord::decomposeTransaction(keyholder_wallet, it->second));
+                if(Credits_TransactionRecord::showTransaction(it->second))
+                    cachedWallet.append(Credits_TransactionRecord::decomposeTransaction(keyholder_wallet, it->second));
             }
         }
     }
@@ -104,16 +104,16 @@ public:
             bool inWallet = mi != bitcredit_wallet->mapWallet.end();
 
             // Find bounds of this transaction in model
-            QList<Bitcredit_TransactionRecord>::iterator lower = qLowerBound(
+            QList<Credits_TransactionRecord>::iterator lower = qLowerBound(
                 cachedWallet.begin(), cachedWallet.end(), hash, Bitcredit_TxLessThan());
-            QList<Bitcredit_TransactionRecord>::iterator upper = qUpperBound(
+            QList<Credits_TransactionRecord>::iterator upper = qUpperBound(
                 cachedWallet.begin(), cachedWallet.end(), hash, Bitcredit_TxLessThan());
             int lowerIndex = (lower - cachedWallet.begin());
             int upperIndex = (upper - cachedWallet.begin());
             bool inModel = (lower != upper);
 
             // Determine whether to show transaction or not
-            bool showTransaction = (inWallet && Bitcredit_TransactionRecord::showTransaction(mi->second));
+            bool showTransaction = (inWallet && Credits_TransactionRecord::showTransaction(mi->second));
 
             if(status == CT_UPDATED)
             {
@@ -143,13 +143,13 @@ public:
                 if(showTransaction)
                 {
                     // Added -- insert at the right position
-                    QList<Bitcredit_TransactionRecord> toInsert =
-                            Bitcredit_TransactionRecord::decomposeTransaction(keyholder_wallet, mi->second);
+                    QList<Credits_TransactionRecord> toInsert =
+                            Credits_TransactionRecord::decomposeTransaction(keyholder_wallet, mi->second);
                     if(!toInsert.isEmpty()) /* only if something to insert */
                     {
                         parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex+toInsert.size()-1);
                         int insert_idx = lowerIndex;
-                        foreach(const Bitcredit_TransactionRecord &rec, toInsert)
+                        foreach(const Credits_TransactionRecord &rec, toInsert)
                         {
                             cachedWallet.insert(insert_idx, rec);
                             insert_idx += 1;
@@ -182,11 +182,11 @@ public:
         return cachedWallet.size();
     }
 
-    Bitcredit_TransactionRecord *index(int idx)
+    Credits_TransactionRecord *index(int idx)
     {
         if(idx >= 0 && idx < cachedWallet.size())
         {
-            Bitcredit_TransactionRecord *rec = &cachedWallet[idx];
+            Credits_TransactionRecord *rec = &cachedWallet[idx];
 
             // Get required locks upfront. This avoids the GUI from getting
             // stuck if the core is holding the locks for a longer time - for
@@ -217,14 +217,14 @@ public:
         }
     }
 
-    QString describe(Bitcredit_TransactionRecord *rec, int unit)
+    QString describe(Credits_TransactionRecord *rec, int unit)
     {
         {
             LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
             std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(rec->hash);
             if(mi != bitcredit_wallet->mapWallet.end())
             {
-                return Bitcredit_TransactionDesc::toHTML(keyholder_wallet, mi->second, rec, unit);
+                return Credits_TransactionDesc::toHTML(keyholder_wallet, mi->second, rec, unit);
             }
         }
         return QString("");
@@ -285,7 +285,7 @@ int Bitcredit_TransactionTableModel::columnCount(const QModelIndex &parent) cons
     return columns.length();
 }
 
-QString Bitcredit_TransactionTableModel::formatTxStatus(const Bitcredit_TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxStatus(const Credits_TransactionRecord *wtx) const
 {
     QString status;
 
@@ -304,7 +304,7 @@ QString Bitcredit_TransactionTableModel::formatTxStatus(const Bitcredit_Transact
         status = tr("Unconfirmed");
         break;
     case Bitcredit_TransactionStatus::Confirming:
-        status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(Bitcredit_TransactionRecord::RecommendedNumConfirmations);
+        status = tr("Confirming (%1 of %2 recommended confirmations)").arg(wtx->status.depth).arg(Credits_TransactionRecord::RecommendedNumConfirmations);
         break;
     case Bitcredit_TransactionStatus::Confirmed:
         status = tr("Confirmed (%1 confirmations)").arg(wtx->status.depth);
@@ -332,7 +332,7 @@ QString Bitcredit_TransactionTableModel::formatTxStatus(const Bitcredit_Transact
     return status;
 }
 
-QString Bitcredit_TransactionTableModel::formatTxDate(const Bitcredit_TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxDate(const Credits_TransactionRecord *wtx) const
 {
     if(wtx->time)
     {
@@ -362,45 +362,45 @@ QString Bitcredit_TransactionTableModel::lookupAddress(const std::string &addres
     return description;
 }
 
-QString Bitcredit_TransactionTableModel::formatTxType(const Bitcredit_TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxType(const Credits_TransactionRecord *wtx) const
 {
     switch(wtx->type)
     {
-    case Bitcredit_TransactionRecord::RecvWithAddress:
+    case Credits_TransactionRecord::RecvWithAddress:
         return tr("Received with");
-    case Bitcredit_TransactionRecord::RecvFromOther:
+    case Credits_TransactionRecord::RecvFromOther:
         return tr("Received from");
-    case Bitcredit_TransactionRecord::SendToAddress:
-    case Bitcredit_TransactionRecord::SendToOther:
+    case Credits_TransactionRecord::SendToAddress:
+    case Credits_TransactionRecord::SendToOther:
         return tr("Sent to");
-    case Bitcredit_TransactionRecord::SendToSelf:
+    case Credits_TransactionRecord::SendToSelf:
         return tr("Payment to yourself");
-    case Bitcredit_TransactionRecord::Generated:
+    case Credits_TransactionRecord::Generated:
         return tr("Mined");
-    case Bitcredit_TransactionRecord::Deposit:
+    case Credits_TransactionRecord::Deposit:
         return tr("Deposit");
-    case Bitcredit_TransactionRecord::DepositChange:
+    case Credits_TransactionRecord::DepositChange:
         return tr("Deposit change");
     default:
         return QString();
     }
 }
 
-QVariant Bitcredit_TransactionTableModel::txAddressDecoration(const Bitcredit_TransactionRecord *wtx) const
+QVariant Bitcredit_TransactionTableModel::txAddressDecoration(const Credits_TransactionRecord *wtx) const
 {
     switch(wtx->type)
     {
-    case Bitcredit_TransactionRecord::Generated:
+    case Credits_TransactionRecord::Generated:
         return QIcon(":/icons/tx_mined");
-    case Bitcredit_TransactionRecord::Deposit:
+    case Credits_TransactionRecord::Deposit:
         return QIcon(":/icons/tx_deposit");
-    case Bitcredit_TransactionRecord::DepositChange:
+    case Credits_TransactionRecord::DepositChange:
         return QIcon(":/icons/tx_deposit");
-    case Bitcredit_TransactionRecord::RecvWithAddress:
-    case Bitcredit_TransactionRecord::RecvFromOther:
+    case Credits_TransactionRecord::RecvWithAddress:
+    case Credits_TransactionRecord::RecvFromOther:
         return QIcon(":/icons/tx_input");
-    case Bitcredit_TransactionRecord::SendToAddress:
-    case Bitcredit_TransactionRecord::SendToOther:
+    case Credits_TransactionRecord::SendToAddress:
+    case Credits_TransactionRecord::SendToOther:
         return QIcon(":/icons/tx_output");
     default:
         return QIcon(":/icons/tx_inout");
@@ -408,54 +408,54 @@ QVariant Bitcredit_TransactionTableModel::txAddressDecoration(const Bitcredit_Tr
     return QVariant();
 }
 
-QString Bitcredit_TransactionTableModel::formatTxToAddress(const Bitcredit_TransactionRecord *wtx, bool tooltip) const
+QString Bitcredit_TransactionTableModel::formatTxToAddress(const Credits_TransactionRecord *wtx, bool tooltip) const
 {
     switch(wtx->type)
     {
-    case Bitcredit_TransactionRecord::RecvFromOther:
+    case Credits_TransactionRecord::RecvFromOther:
         return QString::fromStdString(wtx->address);
-    case Bitcredit_TransactionRecord::RecvWithAddress:
-    case Bitcredit_TransactionRecord::SendToAddress:
-    case Bitcredit_TransactionRecord::Generated:
+    case Credits_TransactionRecord::RecvWithAddress:
+    case Credits_TransactionRecord::SendToAddress:
+    case Credits_TransactionRecord::Generated:
         return lookupAddress(wtx->address, tooltip);
-    case Bitcredit_TransactionRecord::Deposit:
+    case Credits_TransactionRecord::Deposit:
         return lookupAddress(wtx->address, tooltip);
-    case Bitcredit_TransactionRecord::DepositChange:
+    case Credits_TransactionRecord::DepositChange:
         return lookupAddress(wtx->address, tooltip);
-    case Bitcredit_TransactionRecord::SendToOther:
+    case Credits_TransactionRecord::SendToOther:
         return QString::fromStdString(wtx->address);
-    case Bitcredit_TransactionRecord::SendToSelf:
+    case Credits_TransactionRecord::SendToSelf:
     default:
         return tr("(n/a)");
     }
 }
 
-QVariant Bitcredit_TransactionTableModel::addressColor(const Bitcredit_TransactionRecord *wtx) const
+QVariant Bitcredit_TransactionTableModel::addressColor(const Credits_TransactionRecord *wtx) const
 {
     // Show addresses without label in a less visible color
     switch(wtx->type)
     {
-    case Bitcredit_TransactionRecord::RecvWithAddress:
-    case Bitcredit_TransactionRecord::SendToAddress:
-    case Bitcredit_TransactionRecord::Generated:
+    case Credits_TransactionRecord::RecvWithAddress:
+    case Credits_TransactionRecord::SendToAddress:
+    case Credits_TransactionRecord::Generated:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
-    case Bitcredit_TransactionRecord::Deposit:
+    case Credits_TransactionRecord::Deposit:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
-    case Bitcredit_TransactionRecord::DepositChange:
+    case Credits_TransactionRecord::DepositChange:
         {
         QString label = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(wtx->address));
         if(label.isEmpty())
             return COLOR_BAREADDRESS;
         } break;
-    case Bitcredit_TransactionRecord::SendToSelf:
+    case Credits_TransactionRecord::SendToSelf:
         return COLOR_BAREADDRESS;
     default:
         break;
@@ -463,7 +463,7 @@ QVariant Bitcredit_TransactionTableModel::addressColor(const Bitcredit_Transacti
     return QVariant();
 }
 
-QString Bitcredit_TransactionTableModel::formatTxAmount(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed) const
+QString Bitcredit_TransactionTableModel::formatTxAmount(const Credits_TransactionRecord *wtx, bool showUnconfirmed) const
 {
     QString str = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
     if(showUnconfirmed)
@@ -475,7 +475,7 @@ QString Bitcredit_TransactionTableModel::formatTxAmount(const Bitcredit_Transact
     }
     return QString(str);
 }
-QString Bitcredit_TransactionTableModel::formatTxAmountWithDeposit(const Bitcredit_TransactionRecord *wtx, bool showUnconfirmed) const
+QString Bitcredit_TransactionTableModel::formatTxAmountWithDeposit(const Credits_TransactionRecord *wtx, bool showUnconfirmed) const
 {
     QString str = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit);
     QString strCredit = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit);
@@ -488,14 +488,14 @@ QString Bitcredit_TransactionTableModel::formatTxAmountWithDeposit(const Bitcred
     }
     return QString(QString("(") + strCredit + QString(") ") + str);
 }
-QString Bitcredit_TransactionTableModel::formatTxDepositAmount(const Bitcredit_TransactionRecord *wtx) const
+QString Bitcredit_TransactionTableModel::formatTxDepositAmount(const Credits_TransactionRecord *wtx) const
 {
     QString str = BitcreditUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit);
 	str = QString("[") + str + QString("]");
     return QString(str);
 }
 
-QVariant Bitcredit_TransactionTableModel::txStatusDecoration(const Bitcredit_TransactionRecord *wtx) const
+QVariant Bitcredit_TransactionTableModel::txStatusDecoration(const Credits_TransactionRecord *wtx) const
 {
     switch(wtx->status.status)
     {
@@ -541,11 +541,11 @@ QVariant Bitcredit_TransactionTableModel::txStatusDecoration(const Bitcredit_Tra
     return QColor(0,0,0);
 }
 
-QString Bitcredit_TransactionTableModel::formatTooltip(const Bitcredit_TransactionRecord *rec) const
+QString Bitcredit_TransactionTableModel::formatTooltip(const Credits_TransactionRecord *rec) const
 {
     QString tooltip = formatTxStatus(rec) + QString("\n") + formatTxType(rec);
-    if(rec->type==Bitcredit_TransactionRecord::RecvFromOther || rec->type==Bitcredit_TransactionRecord::SendToOther ||
-       rec->type==Bitcredit_TransactionRecord::SendToAddress || rec->type==Bitcredit_TransactionRecord::RecvWithAddress)
+    if(rec->type==Credits_TransactionRecord::RecvFromOther || rec->type==Credits_TransactionRecord::SendToOther ||
+       rec->type==Credits_TransactionRecord::SendToAddress || rec->type==Credits_TransactionRecord::RecvWithAddress)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }
@@ -556,7 +556,7 @@ QVariant Bitcredit_TransactionTableModel::data(const QModelIndex &index, int rol
 {
     if(!index.isValid())
         return QVariant();
-    Bitcredit_TransactionRecord *rec = static_cast<Bitcredit_TransactionRecord*>(index.internalPointer());
+    Credits_TransactionRecord *rec = static_cast<Credits_TransactionRecord*>(index.internalPointer());
 
     switch(role)
     {
@@ -582,7 +582,7 @@ QVariant Bitcredit_TransactionTableModel::data(const QModelIndex &index, int rol
         	if(isForDepositWallet) {
         		return formatTxDepositAmount(rec);
         	} else {
-        		if(rec->type == Bitcredit_TransactionRecord::Deposit || rec->type == Bitcredit_TransactionRecord::DepositChange) {
+        		if(rec->type == Credits_TransactionRecord::Deposit || rec->type == Credits_TransactionRecord::DepositChange) {
 					return formatTxAmountWithDeposit(rec);
         		} else {
 					return formatTxAmount(rec);
@@ -695,7 +695,7 @@ QVariant Bitcredit_TransactionTableModel::headerData(int section, Qt::Orientatio
 QModelIndex Bitcredit_TransactionTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    Bitcredit_TransactionRecord *data = priv->index(row);
+    Credits_TransactionRecord *data = priv->index(row);
     if(data)
     {
         return createIndex(row, column, priv->index(row));

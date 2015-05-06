@@ -11,16 +11,16 @@
 #include <QDataWidgetMapper>
 #include <QMessageBox>
 
-Bitcredit_EditAddressDialog::Bitcredit_EditAddressDialog(Mode mode, QWidget *parent) :
+Credits_EditAddressDialog::Credits_EditAddressDialog(Mode mode, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::Bitcredit_EditAddressDialog),
+    ui(new Ui::Credits_EditAddressDialog),
     mapper(0),
     mode(mode),
     model(0)
 {
     ui->setupUi(this);
 
-    GUIUtil::setupAddressWidget(ui->addressEdit, this);
+    GUIUtil::setupAddressWidget(ui->addressEdit, this, true);
 
     switch(mode)
     {
@@ -44,12 +44,12 @@ Bitcredit_EditAddressDialog::Bitcredit_EditAddressDialog(Mode mode, QWidget *par
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 
-Bitcredit_EditAddressDialog::~Bitcredit_EditAddressDialog()
+Credits_EditAddressDialog::~Credits_EditAddressDialog()
 {
     delete ui;
 }
 
-void Bitcredit_EditAddressDialog::setModel(Bitcredit_AddressTableModel *model)
+void Credits_EditAddressDialog::setModel(Bitcredit_AddressTableModel *model)
 {
     this->model = model;
     if(!model)
@@ -60,12 +60,12 @@ void Bitcredit_EditAddressDialog::setModel(Bitcredit_AddressTableModel *model)
     mapper->addMapping(ui->addressEdit, Bitcredit_AddressTableModel::Address);
 }
 
-void Bitcredit_EditAddressDialog::loadRow(int row)
+void Credits_EditAddressDialog::loadRow(int row)
 {
     mapper->setCurrentIndex(row);
 }
 
-bool Bitcredit_EditAddressDialog::saveCurrentRow()
+bool Credits_EditAddressDialog::saveCurrentRow()
 {
     if(!model)
         return false;
@@ -90,7 +90,7 @@ bool Bitcredit_EditAddressDialog::saveCurrentRow()
     return !address.isEmpty();
 }
 
-void Bitcredit_EditAddressDialog::accept()
+void Credits_EditAddressDialog::accept()
 {
     if(!model)
         return;
@@ -132,12 +132,12 @@ void Bitcredit_EditAddressDialog::accept()
     QDialog::accept();
 }
 
-QString Bitcredit_EditAddressDialog::getAddress() const
+QString Credits_EditAddressDialog::getAddress() const
 {
     return address;
 }
 
-void Bitcredit_EditAddressDialog::setAddress(const QString &address)
+void Credits_EditAddressDialog::setAddress(const QString &address)
 {
     this->address = address;
     ui->addressEdit->setText(address);

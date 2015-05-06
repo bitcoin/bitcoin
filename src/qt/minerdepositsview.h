@@ -9,7 +9,7 @@
 
 #include <QWidget>
 
-class Bitcredit_TransactionFilterProxy;
+class Credits_TransactionFilterProxy;
 class Bitcredit_WalletModel;
 
 QT_BEGIN_NAMESPACE
@@ -58,7 +58,7 @@ public:
 private:
     Bitcredit_WalletModel *bitcredit_model;
     Bitcredit_WalletModel *deposit_model;
-    Bitcredit_TransactionFilterProxy *transactionProxyModel;
+    Credits_TransactionFilterProxy *transactionProxyModel;
     QTableView *minerDepositView;
 
     QComboBox *dateWidget;

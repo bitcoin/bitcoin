@@ -74,9 +74,9 @@ MinerDepositsView::MinerDepositsView(QWidget *parent) :
     typeWidget->setFixedWidth(120);
 #endif
 
-    typeWidget->addItem(tr("All"), Bitcredit_TransactionFilterProxy::ALL_TYPES);
-    typeWidget->addItem(tr("Deposit"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::Deposit));
-    typeWidget->addItem(tr("Deposit change"), Bitcredit_TransactionFilterProxy::TYPE(Bitcredit_TransactionRecord::DepositChange));
+    typeWidget->addItem(tr("All"), Credits_TransactionFilterProxy::ALL_TYPES);
+    typeWidget->addItem(tr("Deposit"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::Deposit));
+    typeWidget->addItem(tr("Deposit change"), Credits_TransactionFilterProxy::TYPE(Credits_TransactionRecord::DepositChange));
 
     hlayout->addWidget(typeWidget);
 
@@ -167,7 +167,7 @@ void MinerDepositsView::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcred
     this->deposit_model = deposit_model;
     if(deposit_model)
     {
-        transactionProxyModel = new Bitcredit_TransactionFilterProxy(this);
+        transactionProxyModel = new Credits_TransactionFilterProxy(this);
         transactionProxyModel->setSourceModel(deposit_model->getTransactionTableModel());
         transactionProxyModel->setDynamicSortFilter(true);
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
@@ -222,26 +222,26 @@ void MinerDepositsView::chooseDate(int idx)
     {
     case All:
         transactionProxyModel->setDateRange(
-                Bitcredit_TransactionFilterProxy::MIN_DATE,
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MIN_DATE,
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case Today:
         transactionProxyModel->setDateRange(
                 QDateTime(current),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case ThisWeek: {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
         transactionProxyModel->setDateRange(
                 QDateTime(startOfWeek),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
 
         } break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), current.month(), 1)),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case LastMonth:
         transactionProxyModel->setDateRange(
@@ -251,7 +251,7 @@ void MinerDepositsView::chooseDate(int idx)
     case ThisYear:
         transactionProxyModel->setDateRange(
                 QDateTime(QDate(current.year(), 1, 1)),
-                Bitcredit_TransactionFilterProxy::MAX_DATE);
+                Credits_TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
         dateRangeWidget->setVisible(true);
@@ -345,10 +345,10 @@ void MinerDepositsView::editLabel()
             // Determine type of address, launch appropriate editor dialog type
             QString type = modelIdx.data(Bitcredit_AddressTableModel::TypeRole).toString();
 
-            Bitcredit_EditAddressDialog dlg(
+            Credits_EditAddressDialog dlg(
                 type == Bitcredit_AddressTableModel::Receive
-                ? Bitcredit_EditAddressDialog::EditReceivingAddress
-                : Bitcredit_EditAddressDialog::EditSendingAddress, this);
+                ? Credits_EditAddressDialog::EditReceivingAddress
+                : Credits_EditAddressDialog::EditSendingAddress, this);
             dlg.setModel(addressBook);
             dlg.loadRow(idx);
             dlg.exec();
@@ -356,7 +356,7 @@ void MinerDepositsView::editLabel()
         else
         {
             // Add sending address
-            Bitcredit_EditAddressDialog dlg(Bitcredit_EditAddressDialog::NewSendingAddress,
+            Credits_EditAddressDialog dlg(Credits_EditAddressDialog::NewSendingAddress,
                 this);
             dlg.setModel(addressBook);
             dlg.setAddress(address);
@@ -372,7 +372,7 @@ void MinerDepositsView::showDetails()
     QModelIndexList selection = minerDepositView->selectionModel()->selectedRows();
     if(!selection.isEmpty())
     {
-        TransactionDescDialog dlg(selection.at(0));
+        Credits_TransactionDescDialog dlg(selection.at(0));
         dlg.exec();
     }
 }

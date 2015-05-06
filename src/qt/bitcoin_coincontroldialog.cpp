@@ -75,6 +75,7 @@ Bitcoin_CoinControlDialog::Bitcoin_CoinControlDialog(QWidget *parent) :
     QAction *clipboardBytesAction = new QAction(tr("Copy bytes"), this);
     QAction *clipboardPriorityAction = new QAction(tr("Copy priority"), this);
     QAction *clipboardLowOutputAction = new QAction(tr("Copy low output"), this);
+    QAction *clipboardChangeAction = new QAction(tr("Copy change"), this);
 
     connect(clipboardQuantityAction, SIGNAL(triggered()), this, SLOT(clipboardQuantity()));
     connect(clipboardAmountAction, SIGNAL(triggered()), this, SLOT(clipboardAmount()));
@@ -83,6 +84,7 @@ Bitcoin_CoinControlDialog::Bitcoin_CoinControlDialog(QWidget *parent) :
     connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(clipboardBytes()));
     connect(clipboardPriorityAction, SIGNAL(triggered()), this, SLOT(clipboardPriority()));
     connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(clipboardLowOutput()));
+    connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(clipboardChange()));
 
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
@@ -91,6 +93,7 @@ Bitcoin_CoinControlDialog::Bitcoin_CoinControlDialog(QWidget *parent) :
     ui->labelCoinControlBytes->addAction(clipboardBytesAction);
     ui->labelCoinControlPriority->addAction(clipboardPriorityAction);
     ui->labelCoinControlLowOutput->addAction(clipboardLowOutputAction);
+    ui->labelCoinControlChange->addAction(clipboardChangeAction);
 
     // toggle tree/list mode
     connect(ui->radioTreeMode, SIGNAL(toggled(bool)), this, SLOT(radioTreeMode(bool)));
@@ -144,7 +147,7 @@ void Bitcoin_CoinControlDialog::setModel(Bitcoin_WalletModel *bitcoin_model, Bit
     {
         updateView();
         updateLabelLocked();
-        Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+        Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
     }
 }
 
@@ -183,7 +186,7 @@ void Bitcoin_CoinControlDialog::buttonSelectAllClicked()
     ui->treeWidget->setEnabled(true);
     if (state == Qt::Unchecked)
         coinControl->UnSelectAll(); // just to be sure
-    Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+    Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
 }
 
 // context menu
@@ -316,6 +319,12 @@ void Bitcoin_CoinControlDialog::clipboardLowOutput()
     GUIUtil::setClipboard(ui->labelCoinControlLowOutput->text());
 }
 
+// copy label "Change" to clipboard
+void Bitcoin_CoinControlDialog::clipboardChange()
+{
+    GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")));
+}
+
 // treeview: sort
 void Bitcoin_CoinControlDialog::sortView(int column, Qt::SortOrder order)
 {
@@ -378,7 +387,7 @@ void Bitcoin_CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int colum
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
-            Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+            Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
     }
 
     // todo: this is a temporary qt5 fix: when clicking a parent node in tree mode, the parent node
@@ -427,7 +436,7 @@ void Bitcoin_CoinControlDialog::updateLabelLocked()
     else ui->labelLocked->setVisible(false);
 }
 
-void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog* dialog)
+void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, Bitcredit_WalletModel *bitcredit_model, QDialog* dialog)
 {
     if (!model)
         return;
@@ -465,7 +474,10 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog
     unsigned int nQuantity      = 0;
     int nQuantityUncompressed   = 0;
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
+    Bitcoin_CClaimCoinsViewCache *claim_view = NULL;
+    if(bitcredit_model != NULL) {
+    	claim_view = bitcoin_pclaimCoinsTip;
+    }
 
     vector<COutPoint> vCoinControl;
     vector<Bitcoin_COutput>   vOutputs;
@@ -581,10 +593,13 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog
     QLabel *l5 = dialog->findChild<QLabel *>("labelCoinControlBytes");
     QLabel *l6 = dialog->findChild<QLabel *>("labelCoinControlPriority");
     QLabel *l7 = dialog->findChild<QLabel *>("labelCoinControlLowOutput");
+    QLabel *l8 = dialog->findChild<QLabel *>("labelCoinControlChange");
 
     // enable/disable "low output" and "change"
     dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlLowOutput")    ->setEnabled(nPayAmount > 0);
+    dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setEnabled(nPayAmount > 0);
+    dialog->findChild<QLabel *>("labelCoinControlChange")       ->setEnabled(nPayAmount > 0);
 
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
@@ -595,11 +610,13 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog
     l5->setText(((nBytes > 0) ? "~" : "") + QString::number(nBytes));        // Bytes
     l6->setText(sPriorityLabel);                                             // Priority
     l7->setText((fLowOutput ? (fDust ? tr("Dust") : tr("yes")) : tr("no"))); // Low Output / Dust
+    l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
 
     // turn labels "red"
     l5->setStyleSheet((nBytes >= 1000) ? "color:red;" : "");                            // Bytes >= 1000
     l6->setStyleSheet((dPriority > 0 && !Bitcoin_AllowFree(dPriority)) ? "color:red;" : "");    // Priority < "medium"
     l7->setStyleSheet((fLowOutput) ? "color:red;" : "");                                // Low Output = "yes"
+    l8->setStyleSheet((nChange > 0 && nChange < CENT) ? "color:red;" : "");             // Change < 0.01CRE
 
     // tool tips
     QString toolTip1 = tr("This label turns red, if the transaction size is greater than 1000 bytes.") + "<br /><br />";
@@ -614,18 +631,34 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, QDialog
     toolTip3 += tr("This means a fee of at least %1 is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, Bitcoin_CTransaction::nMinTxFee)) + "<br /><br />";
     toolTip3 += tr("Amounts below 0.546 times the minimum relay fee are shown as dust.");
 
+    QString toolTip4 = tr("This label turns red, if the change is smaller than %1.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, CENT)) + "<br /><br />";
+    toolTip4 += tr("This means a fee of at least %1 is required.").arg(BitcoinUnits::formatWithUnit(nDisplayUnit, Bitcoin_CTransaction::nMinTxFee));
+
     l5->setToolTip(toolTip1);
     l6->setToolTip(toolTip2);
     l7->setToolTip(toolTip3);
+    l8->setToolTip(toolTip4);
     dialog->findChild<QLabel *>("labelCoinControlBytesText")    ->setToolTip(l5->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlPriorityText") ->setToolTip(l6->toolTip());
     dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setToolTip(l7->toolTip());
+    dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setToolTip(l8->toolTip());
+
+    // Insufficient funds
+    QLabel *label = dialog->findChild<QLabel *>("labelCoinControlInsuffFunds");
+    if (label)
+        label->setVisible(nChange < 0);
 }
 
 void Bitcoin_CoinControlDialog::updateView()
 {
     if (!bitcoin_model || !bitcoin_model->getOptionsModel() || !bitcoin_model->getAddressTableModel())
         return;
+
+    if(bitcredit_model == NULL) {
+        setWindowTitle(tr("Bitcoin coin selection"));
+    } else {
+    	setWindowTitle(tr("Claim coin selection"));
+    }
 
     bool treeMode = ui->radioTreeMode->isChecked();
 
@@ -637,11 +670,16 @@ void Bitcoin_CoinControlDialog::updateView()
 
     int nDisplayUnit = bitcoin_model->getOptionsModel()->getDisplayUnit();
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
+    Bitcoin_CClaimCoinsViewCache *claim_view = NULL;
+    map<uint256, set<int> > mapClaimTxInPoints;
+    if(bitcredit_model != NULL) {
+    	claim_view = bitcoin_pclaimCoinsTip;
+    	bitcredit_model->wallet->ClaimTxInPoints(mapClaimTxInPoints);
+    }
 
     //Use transactions from previous invocation as filter
     map<QString, vector<Bitcoin_COutput> > mapCoins;
-    bitcoin_model->listCoins(mapCoins, claim_view);
+    bitcoin_model->listCoins(mapCoins, claim_view, mapClaimTxInPoints);
 
     BOOST_FOREACH(PAIRTYPE(QString, vector<Bitcoin_COutput>) coins, mapCoins)
     {

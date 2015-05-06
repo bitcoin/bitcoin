@@ -8,7 +8,7 @@
 #include <QDialog>
 
 namespace Ui {
-    class TransactionDescDialog;
+    class Credits_TransactionDescDialog;
 }
 
 QT_BEGIN_NAMESPACE
@@ -16,16 +16,16 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Dialog showing transaction details. */
-class TransactionDescDialog : public QDialog
+class Credits_TransactionDescDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit TransactionDescDialog(const QModelIndex &idx, QWidget *parent = 0);
-    ~TransactionDescDialog();
+    explicit Credits_TransactionDescDialog(const QModelIndex &idx, QWidget *parent = 0);
+    ~Credits_TransactionDescDialog();
 
 private:
-    Ui::TransactionDescDialog *ui;
+    Ui::Credits_TransactionDescDialog *ui;
 };
 
 #endif // TRANSACTIONDESCDIALOG_H

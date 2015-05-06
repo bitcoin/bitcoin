@@ -489,7 +489,7 @@ Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareDepositTran
     return SendCoinsReturn(OK);
 }
 
-Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache &claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl)
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
     qint64 total = 0;
     QList<Bitcredit_SendCoinsRecipient> recipients = transaction.getRecipients();

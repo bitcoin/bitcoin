@@ -66,7 +66,7 @@ public:
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
     multiple outputs.
  */
-class Bitcredit_TransactionRecord
+class Credits_TransactionRecord
 {
 public:
     enum Type
@@ -85,18 +85,18 @@ public:
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
-    Bitcredit_TransactionRecord():
+    Credits_TransactionRecord():
             hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
     {
     }
 
-    Bitcredit_TransactionRecord(uint256 hash, qint64 time):
+    Credits_TransactionRecord(uint256 hash, qint64 time):
             hash(hash), time(time), type(Other), address(""), debit(0),
             credit(0), idx(0)
     {
     }
 
-    Bitcredit_TransactionRecord(uint256 hash, qint64 time,
+    Credits_TransactionRecord(uint256 hash, qint64 time,
                 Type type, const std::string &address,
                 qint64 debit, qint64 credit):
             hash(hash), time(time), type(type), address(address), debit(debit), credit(credit),
@@ -107,7 +107,7 @@ public:
     /** Decompose CWallet transaction to model transaction records.
      */
     static bool showTransaction(const Bitcredit_CWalletTx &wtx);
-    static QList<Bitcredit_TransactionRecord> decomposeTransaction(const Bitcredit_CWallet *keyholder_wallet, const Bitcredit_CWalletTx &wtx);
+    static QList<Credits_TransactionRecord> decomposeTransaction(const Bitcredit_CWallet *keyholder_wallet, const Bitcredit_CWalletTx &wtx);
 
     /** @name Immutable transaction attributes
       @{*/

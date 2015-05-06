@@ -17,7 +17,10 @@
 
 class Bitcoin_AddressTableModel;
 class OptionsModel;
+class Bitcoin_RecentRequestsTableModel;
+class Bitcoin_TransactionTableModel;
 class Bitcoin_WalletModelTransaction;
+class Bitcoin_CReserveKey;
 
 class CCoinControl;
 class CKeyID;
@@ -122,10 +125,12 @@ public:
 
     OptionsModel *getOptionsModel();
     Bitcoin_AddressTableModel *getAddressTableModel();
+    Bitcoin_TransactionTableModel *getTransactionTableModel();
+    Bitcoin_RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    qint64 getBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
-    qint64 getUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    qint64 getImmatureBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
+    qint64 getUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
@@ -140,11 +145,11 @@ public:
         StatusCode status;
     };
 
-//    // prepare transaction for getting txfee before sending coins
-//    SendCoinsReturn prepareTransaction(Bitcoin_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
-//
-//    // Send coins to a list of recipients
-//    SendCoinsReturn sendCoins(Bitcoin_WalletModelTransaction &transaction);
+    // prepare transaction for getting txfee before sending coins
+    SendCoinsReturn prepareTransaction(Bitcoin_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+
+    // Send coins to a list of recipients
+    SendCoinsReturn sendCoins(Bitcoin_WalletModelTransaction &transaction);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -177,9 +182,9 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CClaimCoinsViewCache &claim_view);
-    bool isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache &claim_view) const;
-    void listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache &claim_view) const;
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CClaimCoinsViewCache *claim_view);
+    bool isSpent(const COutPoint& outpoint, Bitcoin_CClaimCoinsViewCache *claim_view) const;
+    void listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
@@ -198,6 +203,8 @@ private:
     OptionsModel *optionsModel;
 
     Bitcoin_AddressTableModel *addressTableModel;
+    Bitcoin_TransactionTableModel *transactionTableModel;
+    Bitcoin_RecentRequestsTableModel *recentRequestsTableModel;
 
     // Cache some values to be able to detect changes
     qint64 cachedBalance;

@@ -205,7 +205,7 @@
           <item>
            <widget class="QCheckBox" name="coinControlFeatures">
             <property name="toolTip">
-             <string>Whether to show coin control features or not.</string>
+             <string>Whether to show coin selection features or not.</string>
             </property>
             <property name="text">
              <string>Enable coin &amp;control features</string>
@@ -431,7 +431,7 @@
          <item>
           <widget class="QValueComboBox" name="lang">
            <property name="toolTip">
-            <string>The user interface language can be set here. This setting will take effect after restarting Bitcredit.</string>
+            <string>The user interface language can be set here. This setting will take effect after restarting Credits.</string>
            </property>
           </widget>
          </item>

@@ -786,7 +786,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
         // push to local node and sync with wallets
     	CValidationState state;
         if (Bitcredit_AcceptToMemoryPool(bitcredit_mempool, state, tx, false, NULL, !fOverrideFees)) {
-            Bitcredit_SyncWithWallets(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, hashTx, tx, NULL);
+            Bitcredit_SyncWithWallets(bitcoin_pwalletMain, hashTx, tx, NULL);
         } else {
             if(state.IsInvalid())
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));

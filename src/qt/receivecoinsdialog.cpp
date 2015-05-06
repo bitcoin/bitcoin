@@ -21,9 +21,9 @@
 #include <QScrollBar>
 #include <QTextDocument>
 
-ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
+Credits_ReceiveCoinsDialog::Credits_ReceiveCoinsDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ReceiveCoinsDialog),
+    ui(new Ui::Credits_ReceiveCoinsDialog),
     model(0)
 {
     ui->setupUi(this);
@@ -55,7 +55,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
 }
 
-void ReceiveCoinsDialog::setModel(Bitcredit_WalletModel *model)
+void Credits_ReceiveCoinsDialog::setModel(Bitcredit_WalletModel *model)
 {
     this->model = model;
 
@@ -84,12 +84,12 @@ void ReceiveCoinsDialog::setModel(Bitcredit_WalletModel *model)
     }
 }
 
-ReceiveCoinsDialog::~ReceiveCoinsDialog()
+Credits_ReceiveCoinsDialog::~Credits_ReceiveCoinsDialog()
 {
     delete ui;
 }
 
-void ReceiveCoinsDialog::clear()
+void Credits_ReceiveCoinsDialog::clear()
 {
     ui->reqAmount->clear();
     ui->reqLabel->setText("");
@@ -98,17 +98,17 @@ void ReceiveCoinsDialog::clear()
     updateDisplayUnit();
 }
 
-void ReceiveCoinsDialog::reject()
+void Credits_ReceiveCoinsDialog::reject()
 {
     clear();
 }
 
-void ReceiveCoinsDialog::accept()
+void Credits_ReceiveCoinsDialog::accept()
 {
     clear();
 }
 
-void ReceiveCoinsDialog::updateDisplayUnit()
+void Credits_ReceiveCoinsDialog::updateDisplayUnit()
 {
     if(model && model->getOptionsModel())
     {
@@ -116,7 +116,7 @@ void ReceiveCoinsDialog::updateDisplayUnit()
     }
 }
 
-void ReceiveCoinsDialog::on_receiveButton_clicked()
+void Credits_ReceiveCoinsDialog::on_receiveButton_clicked()
 {
     if(!model || !model->getOptionsModel() || !model->getAddressTableModel() || !model->getRecentRequestsTableModel())
         return;
@@ -126,7 +126,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     if(ui->reuseAddress->isChecked())
     {
         /* Choose existing receiving address */
-        AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
+        Credits_AddressBookPage dlg(Credits_AddressBookPage::ForSelection, Credits_AddressBookPage::ReceivingTab, this);
         dlg.setModel(model->getAddressTableModel());
         if(dlg.exec())
         {
@@ -144,7 +144,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     }
     Bitcredit_SendCoinsRecipient info(address, label,
         ui->reqAmount->value(), ui->reqMessage->text());
-    ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
+    Credits_ReceiveRequestDialog *dialog = new Credits_ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model->getOptionsModel());
     dialog->setInfo(info);
@@ -155,17 +155,17 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     model->getRecentRequestsTableModel()->addNewRequest(info);
 }
 
-void ReceiveCoinsDialog::on_recentRequestsView_doubleClicked(const QModelIndex &index)
+void Credits_ReceiveCoinsDialog::on_recentRequestsView_doubleClicked(const QModelIndex &index)
 {
     const Bitcredit_RecentRequestsTableModel *submodel = model->getRecentRequestsTableModel();
-    ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
+    Credits_ReceiveRequestDialog *dialog = new Credits_ReceiveRequestDialog(this);
     dialog->setModel(model->getOptionsModel());
     dialog->setInfo(submodel->entry(index.row()).recipient);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
 }
 
-void ReceiveCoinsDialog::recentRequestsView_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+void Credits_ReceiveCoinsDialog::recentRequestsView_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
     // Enable Show/Remove buttons only if anything is selected.
     bool enable = !ui->recentRequestsView->selectionModel()->selectedRows().isEmpty();
@@ -173,7 +173,7 @@ void ReceiveCoinsDialog::recentRequestsView_selectionChanged(const QItemSelectio
     ui->removeRequestButton->setEnabled(enable);
 }
 
-void ReceiveCoinsDialog::on_showRequestButton_clicked()
+void Credits_ReceiveCoinsDialog::on_showRequestButton_clicked()
 {
     if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
         return;
@@ -185,7 +185,7 @@ void ReceiveCoinsDialog::on_showRequestButton_clicked()
     }
 }
 
-void ReceiveCoinsDialog::on_removeRequestButton_clicked()
+void Credits_ReceiveCoinsDialog::on_removeRequestButton_clicked()
 {
     if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
         return;
@@ -199,13 +199,13 @@ void ReceiveCoinsDialog::on_removeRequestButton_clicked()
 
 // We override the virtual resizeEvent of the QWidget to adjust tables column
 // sizes as the tables width is proportional to the dialogs width.
-void ReceiveCoinsDialog::resizeEvent(QResizeEvent *event)
+void Credits_ReceiveCoinsDialog::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
     columnResizingFixer->stretchColumnWidth(Bitcredit_RecentRequestsTableModel::Message);
 }
 
-void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
+void Credits_ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Return)
     {
@@ -222,7 +222,7 @@ void ReceiveCoinsDialog::keyPressEvent(QKeyEvent *event)
 }
 
 // copy column of selected row to clipboard
-void ReceiveCoinsDialog::copyColumnToClipboard(int column)
+void Credits_ReceiveCoinsDialog::copyColumnToClipboard(int column)
 {
     if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
         return;
@@ -235,7 +235,7 @@ void ReceiveCoinsDialog::copyColumnToClipboard(int column)
 }
 
 // context menu
-void ReceiveCoinsDialog::showMenu(const QPoint &point)
+void Credits_ReceiveCoinsDialog::showMenu(const QPoint &point)
 {
     if(!model || !model->getRecentRequestsTableModel() || !ui->recentRequestsView->selectionModel())
         return;
@@ -246,19 +246,19 @@ void ReceiveCoinsDialog::showMenu(const QPoint &point)
 }
 
 // context menu action: copy label
-void ReceiveCoinsDialog::copyLabel()
+void Credits_ReceiveCoinsDialog::copyLabel()
 {
     copyColumnToClipboard(Bitcredit_RecentRequestsTableModel::Label);
 }
 
 // context menu action: copy message
-void ReceiveCoinsDialog::copyMessage()
+void Credits_ReceiveCoinsDialog::copyMessage()
 {
     copyColumnToClipboard(Bitcredit_RecentRequestsTableModel::Message);
 }
 
 // context menu action: copy amount
-void ReceiveCoinsDialog::copyAmount()
+void Credits_ReceiveCoinsDialog::copyAmount()
 {
     copyColumnToClipboard(Bitcredit_RecentRequestsTableModel::Amount);
 }

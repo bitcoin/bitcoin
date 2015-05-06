@@ -9,7 +9,7 @@
 
 #include <QWidget>
 
-class Bitcredit_TransactionFilterProxy;
+class Credits_TransactionFilterProxy;
 class Bitcredit_WalletModel;
 
 QT_BEGIN_NAMESPACE
@@ -26,12 +26,12 @@ QT_END_NAMESPACE
 /** Widget showing the transaction list for a wallet, including a filter row.
     Using the filter row, the user can view or export a subset of the transactions.
   */
-class TransactionView : public QWidget
+class Credits_TransactionView : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit TransactionView(QWidget *parent = 0);
+    explicit Credits_TransactionView(QWidget *parent = 0);
 
     void setModel(Bitcredit_WalletModel *model);
 
@@ -57,7 +57,7 @@ public:
 
 private:
     Bitcredit_WalletModel *model;
-    Bitcredit_TransactionFilterProxy *transactionProxyModel;
+    Credits_TransactionFilterProxy *transactionProxyModel;
     QTableView *transactionView;
 
     QComboBox *dateWidget;

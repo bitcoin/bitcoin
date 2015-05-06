@@ -18,6 +18,7 @@ class Notificator;
 class RPCConsole;
 class Bitcoin_RPCConsole;
 class Bitcredit_SendCoinsRecipient;
+class Bitcoin_SendCoinsRecipient;
 class WalletFrame;
 class Bitcredit_WalletModel;
 class Bitcoin_WalletModel;
@@ -89,21 +90,28 @@ private:
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
-    QAction *overviewAction;
+    QAction *credits_overviewAction;
     QAction *claimCoinsAction;
-    QAction *historyAction;
+    QAction *credits_historyAction;
     QAction *minerDepositsAction;
     QAction *minerAction;
     QAction *quitAction;
-    QAction *sendCoinsAction;
-    QAction *usedSendingAddressesAction;
-    QAction *usedReceivingAddressesAction;
+    QAction *credits_sendCoinsAction;
+    QAction *credits_usedSendingAddressesAction;
+    QAction *credits_usedReceivingAddressesAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
-    QAction *receiveCoinsAction;
+    QAction *credits_receiveCoinsAction;
     QAction *optionsAction;
     QAction *toggleHideAction;
+
+    QAction *bitcoin_overviewAction;
+    QAction *bitcoin_historyAction;
+    QAction *bitcoin_sendCoinsAction;
+    QAction *bitcoin_receiveCoinsAction;
+    QAction *bitcoin_usedSendingAddressesAction;
+    QAction *bitcoin_usedReceivingAddressesAction;
 
     QAction *bitcredit_encryptWalletAction;
     QAction *bitcredit_backupWalletAction;
@@ -178,7 +186,8 @@ public slots:
     void bitcredit_setEncryptionStatus(int status);
     void bitcoin_setEncryptionStatus(int status);
 
-    bool handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
+    bool credits_handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
+    bool bitcoin_handlePaymentRequest(const Bitcoin_SendCoinsRecipient& recipient);
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, qint64 amount, const QString& type, const QString& address);
@@ -187,17 +196,21 @@ public slots:
 private slots:
 #ifdef ENABLE_WALLET
     /** Switch to overview (home) page */
-    void gotoOverviewPage();
+    void credits_gotoOverviewPage();
+    void bitcoin_gotoOverviewPage();
     /** Switch to miner management page */
     void gotoClaimCoinsPage();
     /** Switch to history (transactions) page */
-    void gotoHistoryPage();
+    void credits_gotoHistoryPage();
+    void bitcoin_gotoHistoryPage();
     /** Switch to miner deposits page */
     void gotoMinerDepositsPage();
     /** Switch to receive coins page */
-    void gotoReceiveCoinsPage();
+    void credits_gotoReceiveCoinsPage();
+    void bitcoin_gotoReceiveCoinsPage();
     /** Switch to send coins page */
-    void gotoSendCoinsPage(QString addr = "");
+    void credits_gotoSendCoinsPage(QString addr = "");
+    void bitcoin_gotoSendCoinsPage(QString addr = "");
     /** Switch to send coins page */
     void gotoMinerCoinsPage(QString addr = "");
 

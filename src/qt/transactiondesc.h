@@ -8,22 +8,22 @@
 #include <QObject>
 #include <QString>
 
-class Bitcredit_TransactionRecord;
+class Credits_TransactionRecord;
 
 class Bitcredit_CWallet;
 class Bitcredit_CWalletTx;
 
 /** Provide a human-readable extended HTML description of a transaction.
  */
-class Bitcredit_TransactionDesc: public QObject
+class Credits_TransactionDesc: public QObject
 {
     Q_OBJECT
 
 public:
-    static QString toHTML(Bitcredit_CWallet *keyholder_wallet, Bitcredit_CWalletTx &wtx, Bitcredit_TransactionRecord *rec, int unit);
+    static QString toHTML(Bitcredit_CWallet *keyholder_wallet, Bitcredit_CWalletTx &wtx, Credits_TransactionRecord *rec, int unit);
 
 private:
-    Bitcredit_TransactionDesc() {}
+    Credits_TransactionDesc() {}
 
     static QString FormatTxStatus(const Bitcredit_CWalletTx& wtx);
 };

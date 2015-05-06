@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ReceiveRequestDialog</class>
- <widget class="QDialog" name="ReceiveRequestDialog">
+ <class>Credits_ReceiveRequestDialog</class>
+ <widget class="QDialog" name="Credits_ReceiveRequestDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -12,7 +12,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <widget class="QRImageWidget" name="lblQRCode">
+    <widget class="Credits_QRImageWidget" name="lblQRCode">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -116,7 +116,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QRImageWidget</class>
+   <class>Credits_QRImageWidget</class>
    <extends>QLabel</extends>
    <header>receiverequestdialog.h</header>
   </customwidget>
@@ -126,7 +126,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ReceiveRequestDialog</receiver>
+   <receiver>Credits_ReceiveRequestDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -142,7 +142,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ReceiveRequestDialog</receiver>
+   <receiver>Credits_ReceiveRequestDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">

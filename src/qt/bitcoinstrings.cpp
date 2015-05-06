@@ -102,6 +102,9 @@ QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Warning: -paytxfee is set very high! This is the transaction fee you will "
 "pay if you send a transaction."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
+"Warning: -bitcoin_paytxfee is set very high! This is the transaction fee you will "
+"pay if you send a transaction."),
+QT_TRANSLATE_NOOP("bitcredit-core", ""
 "Warning: Please check that your computer's date and time are correct! If "
 "your clock is wrong Credits will not work properly."),
 QT_TRANSLATE_NOOP("bitcredit-core", ""
@@ -191,6 +194,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Invalid -proxy address: '%s'"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Invalid amount for -minrelaytxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Invalid amount for -mintxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Invalid amount for -paytxfee=<amount>: '%s'"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Invalid amount for -bitcoin_paytxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Invalid amount"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Limit size of signature cache to <n> entries (default: 50000)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "List commands"),

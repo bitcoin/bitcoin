@@ -11,7 +11,7 @@ class Bitcredit_AddressTableModel;
 class OptionsModel;
 
 namespace Ui {
-    class AddressBookPage;
+    class Credits_AddressBookPage;
 }
 
 QT_BEGIN_NAMESPACE
@@ -24,7 +24,7 @@ QT_END_NAMESPACE
 
 /** Widget that shows a list of sending or receiving addresses.
   */
-class AddressBookPage : public QDialog
+class Credits_AddressBookPage : public QDialog
 {
     Q_OBJECT
 
@@ -39,8 +39,8 @@ public:
         ForEditing  /**< Open address book for editing */
     };
 
-    explicit AddressBookPage(Mode mode, Tabs tab, QWidget *parent);
-    ~AddressBookPage();
+    explicit Credits_AddressBookPage(Mode mode, Tabs tab, QWidget *parent);
+    ~Credits_AddressBookPage();
 
     void setModel(Bitcredit_AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
@@ -49,7 +49,7 @@ public slots:
     void done(int retval);
 
 private:
-    Ui::AddressBookPage *ui;
+    Ui::Credits_AddressBookPage *ui;
     Bitcredit_AddressTableModel *model;
     Mode mode;
     Tabs tab;

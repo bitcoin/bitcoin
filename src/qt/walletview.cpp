@@ -5,6 +5,7 @@
 #include "walletview.h"
 
 #include "addressbookpage.h"
+#include "bitcoin_addressbookpage.h"
 #include "askpassphrasedialog.h"
 #include "bitcoin_askpassphrasedialog.h"
 #include "bitcoingui.h"
@@ -15,11 +16,16 @@
 #include "minercoinsdialog.h"
 #include "minerdepositsview.h"
 #include "overviewpage.h"
+#include "bitcoin_overviewpage.h"
 #include "receivecoinsdialog.h"
+#include "bitcoin_receivecoinsdialog.h"
 #include "sendcoinsdialog.h"
+#include "bitcoin_sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
+#include "bitcoin_transactiontablemodel.h"
 #include "transactionview.h"
+#include "bitcoin_transactionview.h"
 #include "walletmodel.h"
 #include "bitcoin_walletmodel.h"
 #include "main.h"
@@ -42,48 +48,68 @@ WalletView::WalletView(QWidget *parent):
     deposit_model(0)
 {
     // Create tabs
-    overviewPage = new OverviewPage();
+	credits_overviewPage = new Credits_OverviewPage();
+    bitcoin_overviewPage = new  Bitcoin_OverviewPage();
 
-    transactionsPage = new QWidget(this);
-    transactionView = new TransactionView(this);
-    QPushButton * transactionsButton = CreateButton(transactionView, transactionsPage);
+    credits_transactionsPage = new QWidget(this);
+    bitcoin_transactionsPage = new QWidget(this);
+    credits_transactionView = new Credits_TransactionView(this);
+    bitcoin_transactionView = new Bitcoin_TransactionView(this);
+    QPushButton * credits_transactionsButton = CreateButton(credits_transactionView, credits_transactionsPage);
+    QPushButton * bitcoin_transactionsButton = CreateButton(bitcoin_transactionView, bitcoin_transactionsPage);
 
     minerDepositsPage = new QWidget(this);
     minerDepositsView = new MinerDepositsView(this);
     CreateLowerLayout(minerDepositsView, minerDepositsPage);
 
-    receiveCoinsPage = new ReceiveCoinsDialog();
-    sendCoinsPage = new SendCoinsDialog();
+    credits_receiveCoinsPage = new Credits_ReceiveCoinsDialog();
+    bitcoin_receiveCoinsPage = new Bitcoin_ReceiveCoinsDialog();
+    credits_sendCoinsPage = new Credits_SendCoinsDialog();
+    bitcoin_sendCoinsPage = new Bitcoin_SendCoinsDialog();
     claimCoinsPage = new ClaimCoinsDialog();
     minerCoinsPage = new MinerCoinsDialog();
 
-    addWidget(overviewPage);
-    addWidget(transactionsPage);
+    addWidget(credits_overviewPage);
+    addWidget(credits_transactionsPage);
     addWidget(minerDepositsPage);
-    addWidget(receiveCoinsPage);
-    addWidget(sendCoinsPage);
+    addWidget(credits_receiveCoinsPage);
+    addWidget(credits_sendCoinsPage);
     addWidget(claimCoinsPage);
     addWidget(minerCoinsPage);
 
+    addWidget(bitcoin_overviewPage);
+    addWidget(bitcoin_transactionsPage);
+    addWidget(bitcoin_receiveCoinsPage);
+    addWidget(bitcoin_sendCoinsPage);
+
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
-    connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
+    connect(credits_overviewPage, SIGNAL(transactionClicked(QModelIndex)), credits_transactionView, SLOT(focusTransaction(QModelIndex)));
+    connect(bitcoin_overviewPage, SIGNAL(transactionClicked(QModelIndex)), bitcoin_transactionView, SLOT(focusTransaction(QModelIndex)));
 
     // Double-clicking on a transaction on the transaction history page shows details
-    connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
+    connect(credits_transactionView, SIGNAL(doubleClicked(QModelIndex)), credits_transactionView, SLOT(showDetails()));
+    // Double-clicking on a transaction on the bitcoin transaction history page shows details
+    connect(bitcoin_transactionView, SIGNAL(doubleClicked(QModelIndex)), bitcoin_transactionView, SLOT(showDetails()));
     // Clicking on "Export" allows to export the transaction list
-    connect(transactionsButton, SIGNAL(clicked()), transactionView, SLOT(exportClicked()));
+    connect(credits_transactionsButton, SIGNAL(clicked()), credits_transactionView, SLOT(exportClicked()));
+    // Clicking on "Export" allows to export the transaction list
+    connect(bitcoin_transactionsButton, SIGNAL(clicked()), bitcoin_transactionView, SLOT(exportClicked()));
 
     // Double-clicking on a transaction on the transaction history page shows details
     connect(minerDepositsView, SIGNAL(doubleClicked(QModelIndex)), minerDepositsView, SLOT(showDetails()));
 
-    // Pass through messages from sendCoinsPage
-    connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    // Pass through messages from credits_sendCoinsPage
+    connect(credits_sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    // Pass through messages from bitcoin_sendCoinsPage
+    connect(bitcoin_sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     // Pass through messages from claimCoinsPage
     connect(claimCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     // Pass through messages from minerCoinsPage
     connect(minerCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
-    // Pass through messages from transactionView
-    connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    // Pass through messages from credits_transactionView
+    connect(credits_transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
+    // Pass through messages from bitcoin transactionView
+    connect(bitcoin_transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
     // Pass through messages from minerDepositsView
     connect(minerDepositsView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
 }
@@ -121,7 +147,8 @@ void WalletView::setBitcreditGUI(BitcreditGUI *gui)
     if (gui)
     {
         // Clicking on a transaction on the overview page simply sends you to transaction history page
-        connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(gotoHistoryPage()));
+        connect(credits_overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(credits_gotoHistoryPage()));
+        connect(bitcoin_overviewPage, SIGNAL(transactionClicked(QModelIndex)), gui, SLOT(bitcoin_gotoHistoryPage()));
 
         // Receive and report messages
         connect(this, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
@@ -140,7 +167,8 @@ void WalletView::setClientModel(ClientModel *clientModel)
 {
     this->clientModel = clientModel;
 
-    overviewPage->setClientModel(clientModel);
+    credits_overviewPage->setClientModel(clientModel);
+    bitcoin_overviewPage->setClientModel(clientModel);
 }
 
 void WalletView::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_WalletModel *bitcoin_model, Bitcredit_WalletModel *deposit_model)
@@ -150,10 +178,14 @@ void WalletView::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_
     this->deposit_model = deposit_model;
 
     // Put transaction list in tabs
-    transactionView->setModel(bitcredit_model);
-    overviewPage->setWalletModel(bitcredit_model, deposit_model);
-    receiveCoinsPage->setModel(bitcredit_model);
-    sendCoinsPage->setModel(bitcredit_model ,deposit_model);
+    credits_transactionView->setModel(bitcredit_model);
+    bitcoin_transactionView->setModel(bitcoin_model);
+    credits_overviewPage->setWalletModel(bitcredit_model, deposit_model);
+    bitcoin_overviewPage->setWalletModel(bitcoin_model);
+    credits_receiveCoinsPage->setModel(bitcredit_model);
+    bitcoin_receiveCoinsPage->setModel(bitcoin_model);
+    credits_sendCoinsPage->setModel(bitcredit_model ,deposit_model);
+    bitcoin_sendCoinsPage->setModel(bitcoin_model);
     claimCoinsPage->setModel(bitcredit_model, bitcoin_model);
     minerCoinsPage->setModel(bitcredit_model, deposit_model);
     minerDepositsView->setModel(bitcredit_model, deposit_model);
@@ -169,7 +201,7 @@ void WalletView::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_
 
         // Balloon pop-up for new transaction
         connect(bitcredit_model->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
-                this, SLOT(processNewTransaction(QModelIndex,int,int)));
+                this, SLOT(bitcredit_processNewTransaction(QModelIndex,int,int)));
 
         // Ask for passphrase if needed
         connect(bitcredit_model, SIGNAL(requireUnlock()), this, SLOT(bitcredit_unlockWallet()));
@@ -188,8 +220,8 @@ void WalletView::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_
         updateEncryptionStatus();
 
         // Balloon pop-up for new transaction
-        //connect(bitcoin_model->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
-        //        this, SLOT(processNewTransaction(QModelIndex,int,int)));
+        connect(bitcoin_model->getTransactionTableModel(), SIGNAL(rowsInserted(QModelIndex,int,int)),
+                this, SLOT(bitcoin_processNewTransaction(QModelIndex,int,int)));
 
         // Ask for passphrase if needed
         connect(bitcoin_model, SIGNAL(requireUnlock()), this, SLOT(bitcoin_unlockWallet()));
@@ -219,7 +251,7 @@ void WalletView::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_
     }
 }
 
-void WalletView::processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
+void WalletView::credits_processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
     // Prevent balloon-spam when initial block download is in progress
     if (!bitcredit_model || !clientModel || Bitcredit_IsInitialBlockDownload() ||  Bitcoin_IsInitialBlockDownload())
@@ -234,10 +266,29 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
 
     emit incomingTransaction(date, bitcredit_model->getOptionsModel()->getDisplayUnit(), amount, type, address);
 }
-
-void WalletView::gotoOverviewPage()
+void WalletView::bitcoin_processNewTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
-    setCurrentWidget(overviewPage);
+    // Prevent balloon-spam when initial block download is in progress
+    if (!bitcoin_model || !clientModel || Bitcredit_IsInitialBlockDownload() ||  Bitcoin_IsInitialBlockDownload())
+        return;
+
+    Bitcoin_TransactionTableModel *ttm = bitcoin_model->getTransactionTableModel();
+
+    QString date = ttm->index(start, Bitcoin_TransactionTableModel::Date, parent).data().toString();
+    qint64 amount = ttm->index(start, Bitcoin_TransactionTableModel::Amount, parent).data(Qt::EditRole).toULongLong();
+    QString type = ttm->index(start, Bitcoin_TransactionTableModel::Type, parent).data().toString();
+    QString address = ttm->index(start, Bitcoin_TransactionTableModel::ToAddress, parent).data().toString();
+
+    emit incomingTransaction(date, bitcoin_model->getOptionsModel()->getDisplayUnit(), amount, type, address);
+}
+
+void WalletView::credits_gotoOverviewPage()
+{
+    setCurrentWidget(credits_overviewPage);
+}
+void WalletView::bitcoin_gotoOverviewPage()
+{
+    setCurrentWidget(bitcoin_overviewPage);
 }
 
 void WalletView::gotoClaimCoinsPage()
@@ -245,26 +296,42 @@ void WalletView::gotoClaimCoinsPage()
     setCurrentWidget(claimCoinsPage);
 }
 
-void WalletView::gotoHistoryPage()
+void WalletView::credits_gotoHistoryPage()
 {
-    setCurrentWidget(transactionsPage);
+    setCurrentWidget(credits_transactionsPage);
 }
+void WalletView::bitcoin_gotoHistoryPage()
+{
+    setCurrentWidget(bitcoin_transactionsPage);
+}
+
 void WalletView::gotoMinerDepositsPage()
 {
     setCurrentWidget(minerDepositsPage);
 }
 
-void WalletView::gotoReceiveCoinsPage()
+void WalletView::credits_gotoReceiveCoinsPage()
 {
-    setCurrentWidget(receiveCoinsPage);
+    setCurrentWidget(credits_receiveCoinsPage);
+}
+void WalletView::bitcoin_gotoReceiveCoinsPage()
+{
+    setCurrentWidget(bitcoin_receiveCoinsPage);
 }
 
-void WalletView::gotoSendCoinsPage(QString addr)
+void WalletView::credits_gotoSendCoinsPage(QString addr)
 {
-    setCurrentWidget(sendCoinsPage);
+    setCurrentWidget(credits_sendCoinsPage);
 
     if (!addr.isEmpty())
-        sendCoinsPage->setAddress(addr);
+    	credits_sendCoinsPage->setAddress(addr);
+}
+void WalletView::bitcoin_gotoSendCoinsPage(QString addr)
+{
+    setCurrentWidget(bitcoin_sendCoinsPage);
+
+    if (!addr.isEmpty())
+    	bitcoin_sendCoinsPage->setAddress(addr);
 }
 
 void WalletView::gotoMinerCoinsPage(QString addr)
@@ -296,14 +363,22 @@ void WalletView::gotoVerifyMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_VM(addr);
 }
 
-bool WalletView::handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient)
+bool WalletView::credits_handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient)
 {
-    return sendCoinsPage->handlePaymentRequest(recipient);
+    return credits_sendCoinsPage->handlePaymentRequest(recipient);
+}
+bool WalletView::bitcoin_handlePaymentRequest(const Bitcoin_SendCoinsRecipient& recipient)
+{
+    return bitcoin_sendCoinsPage->handlePaymentRequest(recipient);
 }
 
-void WalletView::showOutOfSyncWarning(bool fShow)
+void WalletView::credits_showOutOfSyncWarning(bool fShow)
 {
-    overviewPage->showOutOfSyncWarning(fShow);
+	credits_overviewPage->showOutOfSyncWarning(fShow);
+}
+void WalletView::bitcoin_showOutOfSyncWarning(bool fShow)
+{
+	bitcoin_overviewPage->showOutOfSyncWarning(fShow);
 }
 
 void WalletView::updateEncryptionStatus()
@@ -456,23 +531,43 @@ void WalletView::deposit_unlockWallet()
     }
 }
 
-void WalletView::usedSendingAddresses()
+void WalletView::credits_usedSendingAddresses()
 {
     if(!bitcredit_model)
         return;
-    AddressBookPage *dlg = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
+    Credits_AddressBookPage *dlg = new Credits_AddressBookPage(Credits_AddressBookPage::ForEditing, Credits_AddressBookPage::SendingTab, this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->setModel(bitcredit_model->getAddressTableModel());
     dlg->show();
 }
 
-void WalletView::usedReceivingAddresses()
+void WalletView::bitcoin_usedSendingAddresses()
+{
+    if(!bitcoin_model)
+        return;
+    Bitcoin_AddressBookPage *dlg = new Bitcoin_AddressBookPage(Bitcoin_AddressBookPage::ForEditing, Bitcoin_AddressBookPage::SendingTab, this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setModel(bitcoin_model->getAddressTableModel());
+    dlg->show();
+}
+
+void WalletView::credits_usedReceivingAddresses()
 {
     if(!bitcredit_model)
         return;
-    AddressBookPage *dlg = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
+    Credits_AddressBookPage *dlg = new Credits_AddressBookPage(Credits_AddressBookPage::ForEditing, Credits_AddressBookPage::ReceivingTab, this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->setModel(bitcredit_model->getAddressTableModel());
+    dlg->show();
+}
+
+void WalletView::bitcoin_usedReceivingAddresses()
+{
+    if(!bitcoin_model)
+        return;
+    Bitcoin_AddressBookPage *dlg = new Bitcoin_AddressBookPage(Bitcoin_AddressBookPage::ForEditing, Bitcoin_AddressBookPage::ReceivingTab, this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setModel(bitcoin_model->getAddressTableModel());
     dlg->show();
 }
 

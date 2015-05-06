@@ -29,7 +29,7 @@
 #include <qrencode.h>
 #endif
 
-QRImageWidget::QRImageWidget(QWidget *parent):
+Credits_QRImageWidget::Credits_QRImageWidget(QWidget *parent):
     QLabel(parent), contextMenu(0)
 {
     contextMenu = new QMenu();
@@ -41,14 +41,14 @@ QRImageWidget::QRImageWidget(QWidget *parent):
     contextMenu->addAction(copyImageAction);
 }
 
-QImage QRImageWidget::exportImage()
+QImage Credits_QRImageWidget::exportImage()
 {
     if(!pixmap())
         return QImage();
     return pixmap()->toImage().scaled(EXPORT_IMAGE_SIZE, EXPORT_IMAGE_SIZE);
 }
 
-void QRImageWidget::mousePressEvent(QMouseEvent *event)
+void Credits_QRImageWidget::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::LeftButton && pixmap())
     {
@@ -64,7 +64,7 @@ void QRImageWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void QRImageWidget::saveImage()
+void Credits_QRImageWidget::saveImage()
 {
     if(!pixmap())
         return;
@@ -75,23 +75,23 @@ void QRImageWidget::saveImage()
     }
 }
 
-void QRImageWidget::copyImage()
+void Credits_QRImageWidget::copyImage()
 {
     if(!pixmap())
         return;
     QApplication::clipboard()->setImage(exportImage());
 }
 
-void QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
+void Credits_QRImageWidget::contextMenuEvent(QContextMenuEvent *event)
 {
     if(!pixmap())
         return;
     contextMenu->exec(event->globalPos());
 }
 
-ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
+Credits_ReceiveRequestDialog::Credits_ReceiveRequestDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ReceiveRequestDialog),
+    ui(new Ui::Credits_ReceiveRequestDialog),
     model(0)
 {
     ui->setupUi(this);
@@ -104,12 +104,12 @@ ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
     connect(ui->btnSaveAs, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
 }
 
-ReceiveRequestDialog::~ReceiveRequestDialog()
+Credits_ReceiveRequestDialog::~Credits_ReceiveRequestDialog()
 {
     delete ui;
 }
 
-void ReceiveRequestDialog::setModel(OptionsModel *model)
+void Credits_ReceiveRequestDialog::setModel(OptionsModel *model)
 {
     this->model = model;
 
@@ -120,13 +120,13 @@ void ReceiveRequestDialog::setModel(OptionsModel *model)
     update();
 }
 
-void ReceiveRequestDialog::setInfo(const Bitcredit_SendCoinsRecipient &info)
+void Credits_ReceiveRequestDialog::setInfo(const Bitcredit_SendCoinsRecipient &info)
 {
     this->info = info;
     update();
 }
 
-void ReceiveRequestDialog::update()
+void Credits_ReceiveRequestDialog::update()
 {
     if(!model)
         return;
@@ -186,12 +186,12 @@ void ReceiveRequestDialog::update()
 #endif
 }
 
-void ReceiveRequestDialog::on_btnCopyURI_clicked()
+void Credits_ReceiveRequestDialog::on_btnCopyURI_clicked()
 {
     GUIUtil::setClipboard(GUIUtil::formatBitcreditURI(info));
 }
 
-void ReceiveRequestDialog::on_btnCopyAddress_clicked()
+void Credits_ReceiveRequestDialog::on_btnCopyAddress_clicked()
 {
     GUIUtil::setClipboard(info.address);
 }

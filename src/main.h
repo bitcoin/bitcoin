@@ -133,7 +133,7 @@ void Bitcredit_UnregisterWallet(Bitcredit_CWalletInterface* pwalletIn);
 /** Unregister all wallets from core */
 void Bitcredit_UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
-void Bitcredit_SyncWithWallets(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock = NULL);
+void Bitcredit_SyncWithWallets(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock = NULL);
 
 /** Register with a network node to receive its signals */
 void Bitcredit_RegisterNodeSignals(CNodeSignals& nodeSignals);
@@ -848,7 +848,7 @@ public:
 
 class Bitcredit_CWalletInterface {
 protected:
-    virtual void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction &tx, const Bitcredit_CBlock *pblock) =0;
+    virtual void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction &tx, const Bitcredit_CBlock *pblock) =0;
     virtual void EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;

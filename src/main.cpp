@@ -118,7 +118,7 @@ namespace {
 namespace {
 struct Bitcredit_CMainSignals {
     // Notifies listeners of updated transaction data (passing hash, transaction, and optionally the block it is found in.
-    boost::signals2::signal<void (const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &, const Bitcredit_CTransaction &, const Bitcredit_CBlock *)> SyncTransaction;
+    boost::signals2::signal<void (const Bitcoin_CWallet *bitcoin_wallet, const uint256 &, const Bitcredit_CTransaction &, const Bitcredit_CBlock *)> SyncTransaction;
     // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
     boost::signals2::signal<void (Bitcredit_CWallet *bitcredit_wallet, const uint256 &)> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
@@ -133,7 +133,7 @@ struct Bitcredit_CMainSignals {
 }
 
 void Bitcredit_RegisterWallet(Bitcredit_CWalletInterface* pwalletIn) {
-    bitcredit_g_signals.SyncTransaction.connect(boost::bind(&Bitcredit_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3, _4, _5));
+    bitcredit_g_signals.SyncTransaction.connect(boost::bind(&Bitcredit_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3, _4));
     bitcredit_g_signals.EraseTransaction.connect(boost::bind(&Bitcredit_CWalletInterface::EraseFromWallet, pwalletIn, _1, _2));
     bitcredit_g_signals.UpdatedTransaction.connect(boost::bind(&Bitcredit_CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     bitcredit_g_signals.SetBestChain.connect(boost::bind(&Bitcredit_CWalletInterface::SetBestChain, pwalletIn, _1));
@@ -147,7 +147,7 @@ void Bitcredit_UnregisterWallet(Bitcredit_CWalletInterface* pwalletIn) {
     bitcredit_g_signals.SetBestChain.disconnect(boost::bind(&Bitcredit_CWalletInterface::SetBestChain, pwalletIn, _1));
     bitcredit_g_signals.UpdatedTransaction.disconnect(boost::bind(&Bitcredit_CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     bitcredit_g_signals.EraseTransaction.disconnect(boost::bind(&Bitcredit_CWalletInterface::EraseFromWallet, pwalletIn, _1, _2));
-    bitcredit_g_signals.SyncTransaction.disconnect(boost::bind(&Bitcredit_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3, _4, _5));
+    bitcredit_g_signals.SyncTransaction.disconnect(boost::bind(&Bitcredit_CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3, _4));
 }
 
 void Bitcredit_UnregisterAllWallets() {
@@ -159,8 +159,8 @@ void Bitcredit_UnregisterAllWallets() {
     bitcredit_g_signals.SyncTransaction.disconnect_all_slots();
 }
 
-void Bitcredit_SyncWithWallets(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache &claim_view, const uint256 &hash, const Bitcredit_CTransaction &tx, const Bitcredit_CBlock *pblock) {
-    bitcredit_g_signals.SyncTransaction(bitcoin_wallet, claim_view, hash, tx, pblock);
+void Bitcredit_SyncWithWallets(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction &tx, const Bitcredit_CBlock *pblock) {
+    bitcredit_g_signals.SyncTransaction(bitcoin_wallet, hash, tx, pblock);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -976,7 +976,7 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
         pool.addUnchecked(hash, entry);
     }
 
-    bitcredit_g_signals.SyncTransaction(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, hash, tx, NULL);
+    bitcredit_g_signals.SyncTransaction(bitcoin_pwalletMain, hash, tx, NULL);
 
     return true;
 }
@@ -2250,7 +2250,7 @@ bool Bitcredit_ConnectBlock(Bitcredit_CBlock& block, CValidationState& state, Bi
 
     // Watch for transactions paying to me
     for (unsigned int i = 0; i < block.vtx.size(); i++)
-        bitcredit_g_signals.SyncTransaction(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip, block.GetTxHash(i), block.vtx[i], &block);
+        bitcredit_g_signals.SyncTransaction(bitcoin_pwalletMain, block.GetTxHash(i), block.vtx[i], &block);
 
     return true;
 }
@@ -2420,7 +2420,7 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const Bitcredit_CTransaction &tx, block.vtx) {
-        Bitcredit_SyncWithWallets(bitcoin_pwalletMain,*bitcoin_pclaimCoinsTip, tx.GetHash(), tx, NULL);
+        Bitcredit_SyncWithWallets(bitcoin_pwalletMain, tx.GetHash(), tx, NULL);
     }
     return true;
 }
@@ -2508,11 +2508,11 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Bitcredit_CBlockIndex 
     // Tell wallet about transactions that went from mempool
     // to conflicted:
     BOOST_FOREACH(const Bitcredit_CTransaction &tx, txConflicted) {
-        Bitcredit_SyncWithWallets(bitcoin_pwalletMain,*bitcoin_pclaimCoinsTip, tx.GetHash(), tx, NULL);
+        Bitcredit_SyncWithWallets(bitcoin_pwalletMain, tx.GetHash(), tx, NULL);
     }
     // ... and about transactions that got confirmed:
     BOOST_FOREACH(const Bitcredit_CTransaction &tx, block.vtx) {
-        Bitcredit_SyncWithWallets(bitcoin_pwalletMain, *bitcoin_pclaimCoinsTip,tx.GetHash(), tx, &block);
+        Bitcredit_SyncWithWallets(bitcoin_pwalletMain, tx.GetHash(), tx, &block);
     }
     return true;
 }

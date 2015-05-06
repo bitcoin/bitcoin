@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <string>
 
-QString Bitcredit_TransactionDesc::FormatTxStatus(const Bitcredit_CWalletTx& wtx)
+QString Credits_TransactionDesc::FormatTxStatus(const Bitcredit_CWalletTx& wtx)
 {
     AssertLockHeld(bitcredit_mainState.cs_main);
     if (!Bitcredit_IsFinalTx(wtx, bitcredit_chainActive.Height() + 1))
@@ -42,7 +42,7 @@ QString Bitcredit_TransactionDesc::FormatTxStatus(const Bitcredit_CWalletTx& wtx
     }
 }
 
-QString Bitcredit_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bitcredit_CWalletTx &wtx, Bitcredit_TransactionRecord *rec, int unit)
+QString Credits_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bitcredit_CWalletTx &wtx, Credits_TransactionRecord *rec, int unit)
 {
     QString strHTML;
 
@@ -220,7 +220,7 @@ QString Bitcredit_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, B
     if (wtx.mapValue.count("comment") && !wtx.mapValue["comment"].empty())
         strHTML += "<br><b>" + tr("Comment") + ":</b><br>" + GUIUtil::HtmlEscape(wtx.mapValue["comment"], true) + "<br>";
 
-    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + Bitcredit_TransactionRecord::formatSubTxId(wtx.GetHash(), rec->idx) + "<br>";
+    strHTML += "<b>" + tr("Transaction ID") + ":</b> " + Credits_TransactionRecord::formatSubTxId(wtx.GetHash(), rec->idx) + "<br>";
 
     // Message from normal bitcredit:URI (bitcredit:123...?message=example)
     foreach (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
@@ -247,7 +247,7 @@ QString Bitcredit_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, B
         quint32 numBlocksToMaturity = BITCREDIT_COINBASE_MATURITY +  1;
         strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     } else if (wtx.IsDeposit()) {
-    	if(rec->type == Bitcredit_TransactionRecord::Deposit) {
+    	if(rec->type == Credits_TransactionRecord::Deposit) {
 			quint32 numBlocksToMaturity = Bitcredit_Params().DepositLockDepth();
 			strHTML += "<br>" + tr("Coins in deposit will be locked for %1 blocks before they can be spent. When you added these coins as a deposit, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and your deposit will be returned to you. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     	} else {

@@ -588,13 +588,13 @@ bool Bitcoin_CWallet::AddToWallet(const Bitcoin_CWalletTx& wtxIn, bool fFromLoad
 // Add a transaction to the wallet, or update it.
 // pblock is optional, but should be provided if the transaction is known to be in a block.
 // If fUpdate is true, existing transactions will be updated.
-bool Bitcoin_CWallet::AddToWalletIfInvolvingMe(Bitcoin_CClaimCoinsViewCache& claim_view, const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock, bool fUpdate)
+bool Bitcoin_CWallet::AddToWalletIfInvolvingMe(const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock, bool fUpdate)
 {
     {
         AssertLockHeld(cs_wallet);
         bool fExisted = mapWallet.count(hash);
         if (fExisted && !fUpdate) return false;
-        if (fExisted || IsMine(tx) || IsFromMe(tx, claim_view))
+        if (fExisted || IsMine(tx) || IsFromMe(tx))
         {
             Bitcoin_CWalletTx wtx(this,tx);
             // Get merkle branch if transaction was found in a block
@@ -606,10 +606,10 @@ bool Bitcoin_CWallet::AddToWalletIfInvolvingMe(Bitcoin_CClaimCoinsViewCache& cla
     return false;
 }
 
-void Bitcoin_CWallet::SyncTransaction(Bitcoin_CClaimCoinsViewCache& claim_view, const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock)
+void Bitcoin_CWallet::SyncTransaction(const uint256 &hash, const Bitcoin_CTransaction& tx, const Bitcoin_CBlock* pblock)
 {
     LOCK2(bitcoin_mainState.cs_main, cs_wallet);
-    if (!AddToWalletIfInvolvingMe(claim_view, hash, tx, pblock, true))
+    if (!AddToWalletIfInvolvingMe(hash, tx, pblock, true))
         return; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -651,7 +651,7 @@ bool Bitcoin_CWallet::IsMine(const Bitcoin_CTxIn &txin) const
     return false;
 }
 
-int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CClaimCoinsViewCache &claim_view) const
+int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CClaimCoinsViewCache *claim_view) const
 {
     {
         LOCK(cs_wallet);
@@ -661,19 +661,23 @@ int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CClaimCoins
             const Bitcoin_CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.vout.size())
                 if (IsMine(prev.vout[txin.prevout.n])) {
-                    if(claim_view.HaveCoins(txin.prevout.hash)) {
-						const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(txin.prevout.hash);
+                	if(claim_view == NULL) {
+                		return prev.vout[txin.prevout.n].nValue;
+                	} else {
+						if(claim_view->HaveCoins(txin.prevout.hash)) {
+							const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(txin.prevout.hash);
 
-						if(claimCoins.HasClaimable(txin.prevout.n)) {
-							return claimCoins.vout[txin.prevout.n].nValueClaimable;
+							if(claimCoins.HasClaimable(txin.prevout.n)) {
+								return claimCoins.vout[txin.prevout.n].nValueClaimable;
+							}
 						}
-					}
+                	}
                 }
         }
     }
     return 0;
 }
-int64_t Bitcoin_CWallet::GetDebitWithoutClaimed(const Bitcoin_CTxIn &txin) const
+int64_t Bitcoin_CWallet::GetDebit(const Bitcredit_CTxIn &txin, Bitcoin_CClaimCoinsViewCache *claim_view) const
 {
     {
         LOCK(cs_wallet);
@@ -683,34 +687,23 @@ int64_t Bitcoin_CWallet::GetDebitWithoutClaimed(const Bitcoin_CTxIn &txin) const
             const Bitcoin_CWalletTx& prev = (*mi).second;
             if (txin.prevout.n < prev.vout.size())
                 if (IsMine(prev.vout[txin.prevout.n])) {
-					return prev.vout[txin.prevout.n].nValue;
-                }
-        }
-    }
-    return 0;
-}
-int64_t Bitcoin_CWallet::GetDebit(const Bitcredit_CTxIn &txin, Bitcoin_CClaimCoinsViewCache &claim_view) const
-{
-    {
-        LOCK(cs_wallet);
-        map<uint256, Bitcoin_CWalletTx>::const_iterator mi = mapWallet.find(txin.prevout.hash);
-        if (mi != mapWallet.end())
-        {
-            const Bitcoin_CWalletTx& prev = (*mi).second;
-            if (txin.prevout.n < prev.vout.size())
-                if (IsMine(prev.vout[txin.prevout.n])) {
-                    if(claim_view.HaveCoins(txin.prevout.hash)) {
-						const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(txin.prevout.hash);
+                	if(claim_view == NULL) {
+                		return prev.vout[txin.prevout.n].nValue;
+                	} else {
+						if(claim_view->HaveCoins(txin.prevout.hash)) {
+							const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(txin.prevout.hash);
 
-						if(claimCoins.HasClaimable(txin.prevout.n)) {
-							return claimCoins.vout[txin.prevout.n].nValueClaimable;
+							if(claimCoins.HasClaimable(txin.prevout.n)) {
+								return claimCoins.vout[txin.prevout.n].nValueClaimable;
+							}
 						}
-                    }
+                	}
                 }
         }
     }
     return 0;
 }
+
 
 bool Bitcoin_CWallet::IsChange(const CTxOut& txout) const
 {
@@ -777,7 +770,7 @@ int Bitcoin_CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
-void Bitcoin_CWalletTx::GetAmounts(Bitcoin_CClaimCoinsViewCache& claim_view, list<pair<CTxDestination, int64_t> >& listReceived,
+void Bitcoin_CWalletTx::Claim_GetAmounts(Bitcoin_CClaimCoinsViewCache* claim_view, list<pair<CTxDestination, int64_t> >& listReceived,
                            list<pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, string& strSentAccount) const
 {
     nFee = 0;
@@ -786,14 +779,15 @@ void Bitcoin_CWalletTx::GetAmounts(Bitcoin_CClaimCoinsViewCache& claim_view, lis
     strSentAccount = strFromAccount;
 
     // Compute fee:
-    int64_t nDebit = GetDebit(claim_view);
+    int64_t nDebit = Claim_GetDebit(claim_view);
     if (nDebit > 0) // debit>0 means we signed/sent this transaction
     {
-        nFee = GetDebitWithoutClaimed() - GetValueOut();
+    	//TODO - Shouldn't be GetValueOut(), should really be GetCredit(claim_view)?
+        nFee = Claim_GetDebit(claim_view) - GetValueOut();
     }
 
-    if(claim_view.HaveCoins(GetHash())) {
-		const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(GetHash());
+    if(claim_view->HaveCoins(GetHash())) {
+		const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(GetHash());
 
 		// Sent/received.
 		for(unsigned int i = 0; i < vout.size(); i++) {
@@ -836,11 +830,62 @@ void Bitcoin_CWalletTx::GetAmounts(Bitcoin_CClaimCoinsViewCache& claim_view, lis
 				listReceived.push_back(make_pair(address, nValueClaimable));
 		}
     }
-
-
 }
 
-void Bitcoin_CWalletTx::GetAccountAmounts(Bitcoin_CClaimCoinsViewCache& claim_view, const string& strAccount, int64_t& nReceived,
+void Bitcoin_CWalletTx::Bitcoin_GetAmounts(list<pair<CTxDestination, int64_t> >& listReceived,
+                           list<pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, string& strSentAccount) const
+{
+    nFee = 0;
+    listReceived.clear();
+    listSent.clear();
+    strSentAccount = strFromAccount;
+
+    // Compute fee:
+    int64_t nDebit = Bitcoin_GetDebit();
+    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    {
+    	//TODO - Shouldn't be GetValueOut(), should really be GetCredit()?
+        nFee = Bitcoin_GetDebit() - GetValueOut();
+    }
+
+	// Sent/received.
+	for(unsigned int i = 0; i < vout.size(); i++) {
+		const CTxOut& txout = vout[i];
+
+		bool fIsMine;
+		// Only need to handle txouts if AT LEAST one of these is true:
+		//   1) they debit from us (sent)
+		//   2) the output is to us (received)
+		if (nDebit > 0)
+		{
+			// Don't report 'change' txouts
+			if (pwallet->IsChange(txout))
+				continue;
+			fIsMine = pwallet->IsMine(txout);
+		}
+		else if (!(fIsMine = pwallet->IsMine(txout)))
+			continue;
+
+		// In either case, we need to get the destination address
+		CTxDestination address;
+		if (!ExtractDestination(txout.scriptPubKey, address))
+		{
+			LogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
+					 this->GetHash().ToString());
+			address = CNoDestination();
+		}
+
+		// If we are debited by the transaction, add the output as a "sent" entry
+		if (nDebit > 0)
+			listSent.push_back(make_pair(address, txout.nValue));
+
+		// If we are receiving the output, add it as a "received" entry
+		if (fIsMine)
+			listReceived.push_back(make_pair(address, txout.nValue));
+	}
+}
+
+void Bitcoin_CWalletTx::Claim_GetAccountAmounts(Bitcoin_CClaimCoinsViewCache* claim_view, const string& strAccount, int64_t& nReceived,
                                   int64_t& nSent, int64_t& nFee) const
 {
     nReceived = nSent = nFee = 0;
@@ -849,7 +894,42 @@ void Bitcoin_CWalletTx::GetAccountAmounts(Bitcoin_CClaimCoinsViewCache& claim_vi
     string strSentAccount;
     list<pair<CTxDestination, int64_t> > listReceived;
     list<pair<CTxDestination, int64_t> > listSent;
-    GetAmounts(claim_view, listReceived, listSent, allFee, strSentAccount);
+    Claim_GetAmounts(claim_view, listReceived, listSent, allFee, strSentAccount);
+
+    if (strAccount == strSentAccount)
+    {
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& s, listSent)
+            nSent += s.second;
+        nFee = allFee;
+    }
+    {
+        LOCK(pwallet->cs_wallet);
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& r, listReceived)
+        {
+            if (pwallet->mapAddressBook.count(r.first))
+            {
+                map<CTxDestination, CAddressBookData>::const_iterator mi = pwallet->mapAddressBook.find(r.first);
+                if (mi != pwallet->mapAddressBook.end() && (*mi).second.name == strAccount)
+                    nReceived += r.second;
+            }
+            else if (strAccount.empty())
+            {
+                nReceived += r.second;
+            }
+        }
+    }
+}
+
+void Bitcoin_CWalletTx::Bitcoin_GetAccountAmounts(const string& strAccount, int64_t& nReceived,
+                                  int64_t& nSent, int64_t& nFee) const
+{
+    nReceived = nSent = nFee = 0;
+
+    int64_t allFee;
+    string strSentAccount;
+    list<pair<CTxDestination, int64_t> > listReceived;
+    list<pair<CTxDestination, int64_t> > listSent;
+    Bitcoin_GetAmounts(listReceived, listSent, allFee, strSentAccount);
 
     if (strAccount == strSentAccount)
     {
@@ -884,7 +964,7 @@ bool Bitcoin_CWalletTx::WriteToDisk()
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
-int Bitcoin_CWallet::ScanForWalletTransactions(Bitcoin_CClaimCoinsViewCache& claim_view, Bitcoin_CBlockIndex* pindexStart, Bitcoin_CBlockIndex* pindexStop, bool fUpdate)
+int Bitcoin_CWallet::ScanForWalletTransactions(Bitcoin_CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
     int64_t nNow = GetTime();
@@ -900,7 +980,7 @@ int Bitcoin_CWallet::ScanForWalletTransactions(Bitcoin_CClaimCoinsViewCache& cla
 
         ShowProgress(_("Rescanning bitcoin wallet..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -bitcoin_rescan on startup
         double dProgressStart = Checkpoints::Bitcoin_GuessVerificationProgress(pindex, false);
-        double dProgressTip = Checkpoints::Bitcoin_GuessVerificationProgress((Bitcoin_CBlockIndex*)pindexStop, false);
+        double dProgressTip = Checkpoints::Bitcoin_GuessVerificationProgress((Bitcoin_CBlockIndex*)bitcoin_chainActive.Tip(), false);
         while (pindex)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
@@ -910,16 +990,9 @@ int Bitcoin_CWallet::ScanForWalletTransactions(Bitcoin_CClaimCoinsViewCache& cla
             Bitcoin_ReadBlockFromDisk(block, pindex);
             BOOST_FOREACH(Bitcoin_CTransaction& tx, block.vtx)
             {
-                if (AddToWalletIfInvolvingMe(claim_view,tx.GetHash(), tx, &block, fUpdate))
+                if (AddToWalletIfInvolvingMe(tx.GetHash(), tx, &block, fUpdate))
                     ret++;
             }
-
-            //Stop index reached and scanned
-            if(pindex->nHeight == pindexStop->nHeight) {
-                LogPrintf("Rescan bitcoin wallet, block at height %d reached. Stopping. \n", pindex->nHeight);
-            	break;
-            }
-
             pindex = bitcoin_chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
@@ -951,17 +1024,17 @@ void Bitcoin_CWallet::ReacceptWalletTransactions()
     }
 }
 
-//void Bitcoin_CWalletTx::RelayWalletTransaction()
-//{
-//    if (!IsCoinBase())
-//    {
-//        if (GetDepthInMainChain() == 0) {
-//            uint256 hash = GetHash();
-//            LogPrintf("Relaying wtx %s\n", hash.ToString());
-//            Bitcoin_RelayTransaction((Bitcoin_CTransaction)*this, hash, Bitcoin_NetParams());
-//        }
-//    }
-//}
+void Bitcoin_CWalletTx::RelayWalletTransaction()
+{
+    if (!IsCoinBase())
+    {
+        if (GetDepthInMainChain() == 0) {
+            uint256 hash = GetHash();
+            LogPrintf("Relaying wtx %s\n", hash.ToString());
+            Bitcoin_RelayTransaction((Bitcoin_CTransaction)*this, hash, Bitcoin_NetParams());
+        }
+    }
+}
 
 set<uint256> Bitcoin_CWalletTx::GetConflicts() const
 {
@@ -975,43 +1048,43 @@ set<uint256> Bitcoin_CWalletTx::GetConflicts() const
     return result;
 }
 
-//void Bitcoin_CWallet::ResendWalletTransactions()
-//{
-//    // Do this infrequently and randomly to avoid giving away
-//    // that these are our transactions.
-//    if (GetTime() < nNextResend)
-//        return;
-//    bool fFirst = (nNextResend == 0);
-//    nNextResend = GetTime() + GetRand(30 * 60);
-//    if (fFirst)
-//        return;
-//
-//    // Only do it if there's been a new block since last time
-//    if (bitcoin_nTimeBestReceived < nLastResend)
-//        return;
-//    nLastResend = GetTime();
-//
-//    // Rebroadcast any of our txes that aren't in a block yet
-//    LogPrintf("ResendWalletTransactions()\n");
-//    {
-//        LOCK(cs_wallet);
-//        // Sort them in chronological order
-//        multimap<unsigned int, Bitcoin_CWalletTx*> mapSorted;
-//        BOOST_FOREACH(PAIRTYPE(const uint256, Bitcoin_CWalletTx)& item, mapWallet)
-//        {
-//            Bitcoin_CWalletTx& wtx = item.second;
-//            // Don't rebroadcast until it's had plenty of time that
-//            // it should have gotten in already by now.
-//            if (bitcoin_nTimeBestReceived - (int64_t)wtx.nTimeReceived > 5 * 60)
-//                mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
-//        }
-//        BOOST_FOREACH(PAIRTYPE(const unsigned int, Bitcoin_CWalletTx*)& item, mapSorted)
-//        {
-//            Bitcoin_CWalletTx& wtx = *item.second;
-//            wtx.RelayWalletTransaction();
-//        }
-//    }
-//}
+void Bitcoin_CWallet::ResendWalletTransactions()
+{
+    // Do this infrequently and randomly to avoid giving away
+    // that these are our transactions.
+    if (GetTime() < nNextResend)
+        return;
+    bool fFirst = (nNextResend == 0);
+    nNextResend = GetTime() + GetRand(30 * 60);
+    if (fFirst)
+        return;
+
+    // Only do it if there's been a new block since last time
+    if (bitcoin_nTimeBestReceived < nLastResend)
+        return;
+    nLastResend = GetTime();
+
+    // Rebroadcast any of our txes that aren't in a block yet
+    LogPrintf("ResendWalletTransactions()\n");
+    {
+        LOCK(cs_wallet);
+        // Sort them in chronological order
+        multimap<unsigned int, Bitcoin_CWalletTx*> mapSorted;
+        BOOST_FOREACH(PAIRTYPE(const uint256, Bitcoin_CWalletTx)& item, mapWallet)
+        {
+            Bitcoin_CWalletTx& wtx = item.second;
+            // Don't rebroadcast until it's had plenty of time that
+            // it should have gotten in already by now.
+            if (bitcoin_nTimeBestReceived - (int64_t)wtx.nTimeReceived > 5 * 60)
+                mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
+        }
+        BOOST_FOREACH(PAIRTYPE(const unsigned int, Bitcoin_CWalletTx*)& item, mapSorted)
+        {
+            Bitcoin_CWalletTx& wtx = *item.second;
+            wtx.RelayWalletTransaction();
+        }
+    }
+}
 
 
 
@@ -1023,7 +1096,7 @@ set<uint256> Bitcoin_CWalletTx::GetConflicts() const
 // Actions
 //
 
-int64_t Bitcoin_CWallet::GetBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+int64_t Bitcoin_CWallet::GetBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     int64_t nTotal = 0;
     {
@@ -1031,15 +1104,20 @@ int64_t Bitcoin_CWallet::GetBalance(Bitcoin_CClaimCoinsViewCache& claim_view, ma
         for (map<uint256, Bitcoin_CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const Bitcoin_CWalletTx* pcoin = &(*it).second;
-            if (pcoin->IsTrusted(claim_view))
-                nTotal += pcoin->GetAvailableCredit(claim_view, mapFilterTxInPoints);
+            if (pcoin->IsTrusted()) {
+            	if(claim_view == NULL) {
+            		nTotal += pcoin->Bitcoin_GetAvailableCredit(mapFilterTxInPoints);
+            	} else {
+            		nTotal += pcoin->Claim_GetAvailableCredit(claim_view, mapFilterTxInPoints);
+            	}
+            }
         }
     }
 
     return nTotal;
 }
 
-int64_t Bitcoin_CWallet::GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+int64_t Bitcoin_CWallet::GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     int64_t nTotal = 0;
     {
@@ -1047,14 +1125,19 @@ int64_t Bitcoin_CWallet::GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache& cla
         for (map<uint256, Bitcoin_CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const Bitcoin_CWalletTx* pcoin = &(*it).second;
-            if (!Bitcoin_IsFinalTx(*pcoin) || (!pcoin->IsTrusted(claim_view) && pcoin->GetDepthInMainChain() == 0))
-                nTotal += pcoin->GetAvailableCredit(claim_view, mapFilterTxInPoints);
+            if (!Bitcoin_IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0)){
+            	if(claim_view == NULL) {
+            		nTotal += pcoin->Bitcoin_GetAvailableCredit(mapFilterTxInPoints);
+            	} else {
+            		nTotal += pcoin->Claim_GetAvailableCredit(claim_view, mapFilterTxInPoints);
+            	}
+            }
         }
     }
     return nTotal;
 }
 
-int64_t Bitcoin_CWallet::GetImmatureBalance(Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+int64_t Bitcoin_CWallet::GetImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     int64_t nTotal = 0;
     {
@@ -1062,17 +1145,21 @@ int64_t Bitcoin_CWallet::GetImmatureBalance(Bitcoin_CClaimCoinsViewCache& claim_
         for (map<uint256, Bitcoin_CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const Bitcoin_CWalletTx* pcoin = &(*it).second;
-            nTotal += pcoin->GetImmatureCredit(claim_view, mapFilterTxInPoints);
+        	if(claim_view == NULL) {
+        		nTotal += pcoin->Bitcoin_GetImmatureCredit(mapFilterTxInPoints);
+        	} else {
+        		nTotal += pcoin->Claim_GetImmatureCredit(claim_view, mapFilterTxInPoints);
+        	}
         }
     }
     return nTotal;
 }
 
 // Find the depth of the claim best block
-int Bitcoin_CWallet::GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache& claim_view) const
+int Bitcoin_CWallet::GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache* claim_view) const
 {
 	int nHeight = 0;
-	uint256 bestBlockHash = claim_view.GetBestBlock();
+	uint256 bestBlockHash = claim_view->GetBestBlock();
 	if(bestBlockHash != uint256(0)) {
 		map<uint256, Bitcoin_CBlockIndex*>::iterator mi = bitcoin_mapBlockIndex.find(bestBlockHash);
 		assert(mi != bitcoin_mapBlockIndex.end());
@@ -1085,14 +1172,14 @@ int Bitcoin_CWallet::GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache& claim_
 }
 
 // populate vCoins with vector of spendable COutputs
-void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const
+void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const
 {
     vCoins.clear();
 
     {
         LOCK(cs_wallet);
 
-		const int nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
+		int nClaimBestBlockDepth = 0;
 
         for (map<uint256, Bitcoin_CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
@@ -1102,7 +1189,7 @@ void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CC
             if (!Bitcoin_IsFinalTx(*pcoin))
                 continue;
 
-            if (fOnlyConfirmed && !pcoin->IsTrusted(claim_view))
+            if (fOnlyConfirmed && !pcoin->IsTrusted())
                 continue;
 
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
@@ -1112,18 +1199,31 @@ void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CC
             if (nDepth < 0 || nDepth < nClaimBestBlockDepth)
                 continue;
 
-            if(claim_view.HaveCoins(wtxid)) {
-            	Bitcoin_CClaimCoins & claimCoin = claim_view.GetCoins(wtxid);
-
-            	for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+            if(claim_view == NULL) {
+				for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 					if (!(IsSpent(wtxid, i, nClaimBestBlockDepth)) && IsMine(pcoin->vout[i]) && !IsLockedCoin((*it).first, i) &&
 						(!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i))) {
-						if(claimCoin.HasClaimable(i)) {
-							if(!IsInFilterPoints(wtxid, i, mapFilterTxInPoints)) {
-								vCoins.push_back(Bitcoin_COutput(pcoin, i, nDepth, claimCoin.vout[i].nValueClaimable));
+						if(!IsInFilterPoints(wtxid, i, mapFilterTxInPoints)) {
+							vCoins.push_back(Bitcoin_COutput(pcoin, i, nDepth, pcoin->vout[i].nValue));
+						}
+					}
+				}
+            } else {
+        		nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
+
+				if(claim_view->HaveCoins(wtxid)) {
+					Bitcoin_CClaimCoins & claimCoin = claim_view->GetCoins(wtxid);
+
+					for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+						if (!(IsSpent(wtxid, i, nClaimBestBlockDepth)) && IsMine(pcoin->vout[i]) && !IsLockedCoin((*it).first, i) &&
+							(!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i))) {
+							if(claimCoin.HasClaimable(i)) {
+								if(!IsInFilterPoints(wtxid, i, mapFilterTxInPoints)) {
+									vCoins.push_back(Bitcoin_COutput(pcoin, i, nDepth, claimCoin.vout[i].nValueClaimable));
+								}
 							}
 						}
-    				}
+					}
 				}
             }
         }
@@ -1177,7 +1277,7 @@ static void Bitcoin_ApproximateBestSubset(vector<pair<int64_t, pair<const Bitcoi
     }
 }
 
-bool Bitcoin_CWallet::SelectCoinsMinConf(Bitcoin_CClaimCoinsViewCache& claim_view, int64_t nTargetValue, int nConfMine, int nConfTheirs, vector<Bitcoin_COutput> vCoins,
+bool Bitcoin_CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, vector<Bitcoin_COutput> vCoins,
                                  set<pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const
 {
     setCoinsRet.clear();
@@ -1196,7 +1296,7 @@ bool Bitcoin_CWallet::SelectCoinsMinConf(Bitcoin_CClaimCoinsViewCache& claim_vie
     {
         const Bitcoin_CWalletTx *pcoin = output.tx;
 
-        if (output.nDepth < (pcoin->IsFromMe(claim_view) ? nConfMine : nConfTheirs))
+        if (output.nDepth < (pcoin->IsFromMe() ? nConfMine : nConfTheirs))
             continue;
 
         int i = output.i;
@@ -1275,7 +1375,7 @@ bool Bitcoin_CWallet::SelectCoinsMinConf(Bitcoin_CClaimCoinsViewCache& claim_vie
     return true;
 }
 
-bool Bitcoin_CWallet::SelectCoins(int64_t nTargetValue, set<pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Bitcoin_CClaimCoinsViewCache& claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl* coinControl) const
+bool Bitcoin_CWallet::SelectCoins(int64_t nTargetValue, set<pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl* coinControl) const
 {
     vector<Bitcoin_COutput> vCoins;
     AvailableCoins(vCoins, claim_view, mapFilterTxInPoints, true, coinControl);
@@ -1291,282 +1391,285 @@ bool Bitcoin_CWallet::SelectCoins(int64_t nTargetValue, set<pair<const Bitcoin_C
         return (nValueRet >= nTargetValue);
     }
 
-    return (SelectCoinsMinConf(claim_view, nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
-            SelectCoinsMinConf(claim_view, nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
-            (bitcoin_bSpendZeroConfChange && SelectCoinsMinConf(claim_view, nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
+    return (SelectCoinsMinConf(nTargetValue, 1, 6, vCoins, setCoinsRet, nValueRet) ||
+            SelectCoinsMinConf(nTargetValue, 1, 1, vCoins, setCoinsRet, nValueRet) ||
+            (bitcoin_bSpendZeroConfChange && SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet)));
 }
 
 
 
 
-//bool Bitcoin_CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
-//                                Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
-//{
-//    int64_t nValue = 0;
-//    BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
-//    {
-//        if (nValue < 0)
-//        {
-//            strFailReason = _("Transaction amounts must be positive");
-//            return false;
-//        }
-//        nValue += s.second;
-//    }
-//    if (vecSend.empty() || nValue < 0)
-//    {
-//        strFailReason = _("Transaction amounts must be positive");
-//        return false;
-//    }
-//
-//    wtxNew.BindWallet(this);
-//
-//    {
-//        LOCK2(bitcoin_mainState.cs_main, cs_wallet);
-//        {
-//            nFeeRet = bitcoin_nTransactionFee;
-//            while (true)
-//            {
-//                wtxNew.vin.clear();
-//                wtxNew.vout.clear();
-//                wtxNew.fFromMe = true;
-//
-//                int64_t nTotalValue = nValue + nFeeRet;
-//                double dPriority = 0;
-//                // vouts to the payees
-//                BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
-//                {
-//                	CTxOut txout(s.second, s.first);
-//                    if (txout.IsDust(Bitcoin_CTransaction::nMinRelayTxFee))
-//                    {
-//                        strFailReason = _("Transaction amount too small");
-//                        return false;
-//                    }
-//                    wtxNew.vout.push_back(txout);
-//                }
-//
-//                // Choose coins to use
-//                set<pair<const Bitcoin_CWalletTx*,unsigned int> > setCoins;
-//                int64_t nValueIn = 0;
-//                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl))
-//                {
-//                    strFailReason = _("Insufficient funds");
-//                    return false;
-//                }
-//                BOOST_FOREACH(PAIRTYPE(const Bitcoin_CWalletTx*, unsigned int) pcoin, setCoins)
-//                {
-//                    int64_t nCredit = pcoin.first->vout[pcoin.second].nValue;
-//                    //The priority after the next block (depth+1) is used instead of the current,
-//                    //reflecting an assumption the user would accept a bit more delay for
-//                    //a chance at a free transaction.
-//                    dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
-//                }
-//
-//                int64_t nChange = nValueIn - nValue - nFeeRet;
-//                // The following if statement should be removed once enough miners
-//                // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
-//                // creating free transactions that have change outputs less than
-//                // CENT bitcoins.
-//                if (nFeeRet < Bitcoin_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
-//                {
-//                    int64_t nMoveToFee = min(nChange, Bitcoin_CTransaction::nMinTxFee - nFeeRet);
-//                    nChange -= nMoveToFee;
-//                    nFeeRet += nMoveToFee;
-//                }
-//
-//                if (nChange > 0)
-//                {
-//                    // Fill a vout to ourself
-//                    // TODO: pass in scriptChange instead of reservekey so
-//                    // change transaction isn't always pay-to-bitcoin-address
-//                    CScript scriptChange;
-//
-//                    // coin control: send change to custom address
-//                    if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-//                        scriptChange.SetDestination(coinControl->destChange);
-//
-//                    // no coin control: send change to newly generated address
-//                    else
-//                    {
-//                        // Note: We use a new key here to keep it from being obvious which side is the change.
-//                        //  The drawback is that by not reusing a previous key, the change may be lost if a
-//                        //  backup is restored, if the backup doesn't have the new private key for the change.
-//                        //  If we reused the old key, it would be possible to add code to look for and
-//                        //  rediscover unknown transactions that were written with keys of ours to recover
-//                        //  post-backup change.
-//
-//                        // Reserve a new key pair from key pool
-//                        CPubKey vchPubKey;
-//                        bool ret;
-//                        ret = reservekey.GetReservedKey(vchPubKey);
-//                        assert(ret); // should never fail, as we just unlocked
-//
-//                        scriptChange.SetDestination(vchPubKey.GetID());
-//                    }
-//
-//                    CTxOut newTxOut(nChange, scriptChange);
-//
-//                    // Never create dust outputs; if we would, just
-//                    // add the dust to the fee.
-//                    if (newTxOut.IsDust(Bitcoin_CTransaction::nMinRelayTxFee))
-//                    {
-//                        nFeeRet += nChange;
-//                        reservekey.ReturnKey();
-//                    }
-//                    else
-//                    {
-//                        // Insert change txn at random position:
-//                        vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size()+1);
-//                        wtxNew.vout.insert(position, newTxOut);
-//                    }
-//                }
-//                else
-//                    reservekey.ReturnKey();
-//
-//                // Fill vin
-//                BOOST_FOREACH(const PAIRTYPE(const Bitcoin_CWalletTx*,unsigned int)& coin, setCoins)
-//                    wtxNew.vin.push_back(Bitcoin_CTxIn(coin.first->GetHash(),coin.second));
-//
-//                // Sign
-//                int nIn = 0;
-//                BOOST_FOREACH(const PAIRTYPE(const Bitcoin_CWalletTx*,unsigned int)& coin, setCoins) {
-//                	CTransactionWrapperConst coinFirstWrap(*coin.first);
-//                	CTransactionWrapper wtxNewWrap(wtxNew);
-//
-//                    if (!SignSignature(*this, coinFirstWrap, wtxNewWrap, nIn++))
-//                    {
-//                        strFailReason = _("Signing transaction failed");
-//                        return false;
-//                    }
-//                }
-//
-//                // Limit size
-//                unsigned int nBytes = ::GetSerializeSize(*(Bitcoin_CTransaction*)&wtxNew, SER_NETWORK, BITCOIN_PROTOCOL_VERSION);
-//                if (nBytes >= BITCOIN_MAX_STANDARD_TX_SIZE)
-//                {
-//                    strFailReason = _("Transaction too large");
-//                    return false;
-//                }
-//                dPriority = wtxNew.ComputePriority(dPriority, nBytes);
-//
-//                // Check that enough fee is included
-//                int64_t nPayFee = bitcoin_nTransactionFee * (1 + (int64_t)nBytes / 1000);
-//                bool fAllowFree = Bitcoin_AllowFree(dPriority);
-//                int64_t nMinFee = Bitcoin_GetMinFee(wtxNew, nBytes, fAllowFree, GMF_SEND);
-//                if (nFeeRet < max(nPayFee, nMinFee))
-//                {
-//                    nFeeRet = max(nPayFee, nMinFee);
-//                    continue;
-//                }
-//
-//                wtxNew.fTimeReceivedIsTxTime = true;
-//
-//                break;
-//            }
-//        }
-//    }
-//    return true;
-//}
-//
-//bool Bitcoin_CWallet::CreateTransaction(CScript scriptPubKey, int64_t nValue,
-//                                Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
-//{
-//    vector< pair<CScript, int64_t> > vecSend;
-//    vecSend.push_back(make_pair(scriptPubKey, nValue));
-//    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl);
-//}
-//
-//// Call after CreateTransaction unless you want to abort
-//bool Bitcoin_CWallet::CommitTransaction(Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey)
-//{
-//    {
-//        LOCK2(bitcoin_mainState.cs_main, cs_wallet);
-//        LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
-//        {
-//            // This is only to keep the database open to defeat the auto-flush for the
-//            // duration of this scope.  This is the only place where this optimization
-//            // maybe makes sense; please don't do it anywhere else.
-//            Bitcoin_CWalletDB* pwalletdb = fFileBacked ? new Bitcoin_CWalletDB(strWalletFile,"r") : NULL;
-//
-//            // Take key pair from key pool so it won't be used again
-//            reservekey.KeepKey();
-//
-//            // Add tx to wallet, because if it has change it's also ours,
-//            // otherwise just for transaction history.
-//            AddToWallet(wtxNew);
-//
-//            // Notify that old coins are spent
-//            set<Bitcoin_CWalletTx*> setCoins;
-//            BOOST_FOREACH(const Bitcoin_CTxIn& txin, wtxNew.vin)
-//            {
-//                Bitcoin_CWalletTx &coin = mapWallet[txin.prevout.hash];
-//                coin.BindWallet(this);
-//                NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
-//            }
-//
-//            if (fFileBacked)
-//                delete pwalletdb;
-//        }
-//
-//        // Track how many getdata requests our transaction gets
-//        mapRequestCount[wtxNew.GetHash()] = 0;
-//
-//        // Broadcast
-//        if (!wtxNew.AcceptToMemoryPool(false))
-//        {
-//            // This must not fail. The transaction has already been signed and recorded.
-//            LogPrintf("CommitTransaction() : Error: Transaction not valid");
-//            return false;
-//        }
-//        wtxNew.RelayWalletTransaction();
-//    }
-//    return true;
-//}
-//
-//
-//
-//
-//string Bitcoin_CWallet::SendMoney(CScript scriptPubKey, int64_t nValue, Bitcoin_CWalletTx& wtxNew)
-//{
-//    Bitcoin_CReserveKey reservekey(this);
-//    int64_t nFeeRequired;
-//
-//    if (IsLocked())
-//    {
-//        string strError = _("Error: Wallet locked, unable to create transaction!");
-//        LogPrintf("SendMoney() : %s", strError);
-//        return strError;
-//    }
-//    string strError;
-//    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError))
-//    {
-//        if (nValue + nFeeRequired > GetBalance())
-//            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired));
-//        LogPrintf("SendMoney() : %s\n", strError);
-//        return strError;
-//    }
-//
-//    if (!CommitTransaction(wtxNew, reservekey))
-//        return _("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-//
-//    return "";
-//}
-//
-//
-//
-//string Bitcoin_CWallet::SendMoneyToDestination(const CTxDestination& address, int64_t nValue, Bitcoin_CWalletTx& wtxNew)
-//{
-//    // Check amount
-//    if (nValue <= 0)
-//        return _("Invalid amount");
-//    if (nValue + bitcoin_nTransactionFee > GetBalance())
-//        return _("Insufficient funds");
-//
-//    // Parse Bitcoin address
-//    CScript scriptPubKey;
-//    scriptPubKey.SetDestination(address);
-//
-//    return SendMoney(scriptPubKey, nValue, wtxNew);
-//}
+bool Bitcoin_CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
+                                Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
+{
+    int64_t nValue = 0;
+    BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
+    {
+        if (nValue < 0)
+        {
+            strFailReason = _("Transaction amounts must be positive");
+            return false;
+        }
+        nValue += s.second;
+    }
+    if (vecSend.empty() || nValue < 0)
+    {
+        strFailReason = _("Transaction amounts must be positive");
+        return false;
+    }
+
+    wtxNew.BindWallet(this);
+
+    {
+        LOCK2(bitcoin_mainState.cs_main, cs_wallet);
+        {
+            nFeeRet = bitcoin_nTransactionFee;
+            while (true)
+            {
+                wtxNew.vin.clear();
+                wtxNew.vout.clear();
+                wtxNew.fFromMe = true;
+
+                int64_t nTotalValue = nValue + nFeeRet;
+                double dPriority = 0;
+                // vouts to the payees
+                BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
+                {
+                	CTxOut txout(s.second, s.first);
+                    if (txout.IsDust(Bitcoin_CTransaction::nMinRelayTxFee))
+                    {
+                        strFailReason = _("Transaction amount too small");
+                        return false;
+                    }
+                    wtxNew.vout.push_back(txout);
+                }
+
+                map<uint256, set<int> > mapEmptyTxInPoints;
+
+                // Choose coins to use
+                set<pair<const Bitcoin_CWalletTx*,unsigned int> > setCoins;
+                int64_t nValueIn = 0;
+                //TODO - Should there be NULL here?
+                if (!SelectCoins(nTotalValue, setCoins, nValueIn, NULL, mapEmptyTxInPoints, coinControl))
+                {
+                    strFailReason = _("Insufficient funds");
+                    return false;
+                }
+                BOOST_FOREACH(PAIRTYPE(const Bitcoin_CWalletTx*, unsigned int) pcoin, setCoins)
+                {
+                    int64_t nCredit = pcoin.first->vout[pcoin.second].nValue;
+                    //The priority after the next block (depth+1) is used instead of the current,
+                    //reflecting an assumption the user would accept a bit more delay for
+                    //a chance at a free transaction.
+                    dPriority += (double)nCredit * (pcoin.first->GetDepthInMainChain()+1);
+                }
+
+                int64_t nChange = nValueIn - nValue - nFeeRet;
+                // The following if statement should be removed once enough miners
+                // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
+                // creating free transactions that have change outputs less than
+                // CENT bitcoins.
+                if (nFeeRet < Bitcoin_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+                {
+                    int64_t nMoveToFee = min(nChange, Bitcoin_CTransaction::nMinTxFee - nFeeRet);
+                    nChange -= nMoveToFee;
+                    nFeeRet += nMoveToFee;
+                }
+
+                if (nChange > 0)
+                {
+                    // Fill a vout to ourself
+                    // TODO: pass in scriptChange instead of reservekey so
+                    // change transaction isn't always pay-to-bitcoin-address
+                    CScript scriptChange;
+
+                    // coin control: send change to custom address
+                    if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
+                        scriptChange.SetDestination(coinControl->destChange);
+
+                    // no coin control: send change to newly generated address
+                    else
+                    {
+                        // Note: We use a new key here to keep it from being obvious which side is the change.
+                        //  The drawback is that by not reusing a previous key, the change may be lost if a
+                        //  backup is restored, if the backup doesn't have the new private key for the change.
+                        //  If we reused the old key, it would be possible to add code to look for and
+                        //  rediscover unknown transactions that were written with keys of ours to recover
+                        //  post-backup change.
+
+                        // Reserve a new key pair from key pool
+                        CPubKey vchPubKey;
+                        bool ret;
+                        ret = reservekey.GetReservedKey(vchPubKey);
+                        assert(ret); // should never fail, as we just unlocked
+
+                        scriptChange.SetDestination(vchPubKey.GetID());
+                    }
+
+                    CTxOut newTxOut(nChange, scriptChange);
+
+                    // Never create dust outputs; if we would, just
+                    // add the dust to the fee.
+                    if (newTxOut.IsDust(Bitcoin_CTransaction::nMinRelayTxFee))
+                    {
+                        nFeeRet += nChange;
+                        reservekey.ReturnKey();
+                    }
+                    else
+                    {
+                        // Insert change txn at random position:
+                        vector<CTxOut>::iterator position = wtxNew.vout.begin()+GetRandInt(wtxNew.vout.size()+1);
+                        wtxNew.vout.insert(position, newTxOut);
+                    }
+                }
+                else
+                    reservekey.ReturnKey();
+
+                // Fill vin
+                BOOST_FOREACH(const PAIRTYPE(const Bitcoin_CWalletTx*,unsigned int)& coin, setCoins)
+                    wtxNew.vin.push_back(Bitcoin_CTxIn(coin.first->GetHash(),coin.second));
+
+                // Sign
+                int nIn = 0;
+                BOOST_FOREACH(const PAIRTYPE(const Bitcoin_CWalletTx*,unsigned int)& coin, setCoins) {
+                    if (!Bitcoin_SignSignature(*this, *coin.first, wtxNew, nIn++))
+                    {
+                        strFailReason = _("Signing transaction failed");
+                        return false;
+                    }
+                }
+
+                // Limit size
+                unsigned int nBytes = ::GetSerializeSize(*(Bitcoin_CTransaction*)&wtxNew, SER_NETWORK, BITCOIN_PROTOCOL_VERSION);
+                if (nBytes >= BITCOIN_MAX_STANDARD_TX_SIZE)
+                {
+                    strFailReason = _("Transaction too large");
+                    return false;
+                }
+                dPriority = wtxNew.ComputePriority(dPriority, nBytes);
+
+                // Check that enough fee is included
+                int64_t nPayFee = bitcoin_nTransactionFee * (1 + (int64_t)nBytes / 1000);
+                bool fAllowFree = Bitcoin_AllowFree(dPriority);
+                int64_t nMinFee = Bitcoin_GetMinFee(wtxNew, nBytes, fAllowFree, GMF_SEND);
+                if (nFeeRet < max(nPayFee, nMinFee))
+                {
+                    nFeeRet = max(nPayFee, nMinFee);
+                    continue;
+                }
+
+                wtxNew.fTimeReceivedIsTxTime = true;
+
+                break;
+            }
+        }
+    }
+    return true;
+}
+
+bool Bitcoin_CWallet::CreateTransaction(CScript scriptPubKey, int64_t nValue,
+                                Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
+{
+    vector< pair<CScript, int64_t> > vecSend;
+    vecSend.push_back(make_pair(scriptPubKey, nValue));
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl);
+}
+
+// Call after CreateTransaction unless you want to abort
+bool Bitcoin_CWallet::CommitTransaction(Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey)
+{
+    {
+        LOCK2(bitcoin_mainState.cs_main, cs_wallet);
+        LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
+        {
+            // This is only to keep the database open to defeat the auto-flush for the
+            // duration of this scope.  This is the only place where this optimization
+            // maybe makes sense; please don't do it anywhere else.
+            Bitcoin_CWalletDB* pwalletdb = fFileBacked ? new Bitcoin_CWalletDB(strWalletFile,"r") : NULL;
+
+            // Take key pair from key pool so it won't be used again
+            reservekey.KeepKey();
+
+            // Add tx to wallet, because if it has change it's also ours,
+            // otherwise just for transaction history.
+            AddToWallet(wtxNew);
+
+            // Notify that old coins are spent
+            set<Bitcoin_CWalletTx*> setCoins;
+            BOOST_FOREACH(const Bitcoin_CTxIn& txin, wtxNew.vin)
+            {
+                Bitcoin_CWalletTx &coin = mapWallet[txin.prevout.hash];
+                coin.BindWallet(this);
+                NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
+            }
+
+            if (fFileBacked)
+                delete pwalletdb;
+        }
+
+        // Track how many getdata requests our transaction gets
+        mapRequestCount[wtxNew.GetHash()] = 0;
+
+        // Broadcast
+        if (!wtxNew.AcceptToMemoryPool(false))
+        {
+            // This must not fail. The transaction has already been signed and recorded.
+            LogPrintf("CommitTransaction() : Error: Transaction not valid");
+            return false;
+        }
+        wtxNew.RelayWalletTransaction();
+    }
+    return true;
+}
+
+
+
+
+string Bitcoin_CWallet::SendMoney(CScript scriptPubKey, int64_t nValue, Bitcoin_CWalletTx& wtxNew)
+{
+    Bitcoin_CReserveKey reservekey(this);
+    int64_t nFeeRequired;
+
+    if (IsLocked())
+    {
+        string strError = _("Error: Wallet locked, unable to create transaction!");
+        LogPrintf("SendMoney() : %s", strError);
+        return strError;
+    }
+    string strError;
+    if (!CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError))
+    {
+        map<uint256, set<int> > mapEmptyTxInPoints;
+        if (nValue + nFeeRequired > GetBalance(NULL, mapEmptyTxInPoints))
+            strError = strprintf(_("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!"), FormatMoney(nFeeRequired));
+        LogPrintf("SendMoney() : %s\n", strError);
+        return strError;
+    }
+
+    if (!CommitTransaction(wtxNew, reservekey))
+        return _("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+
+    return "";
+}
+
+
+
+string Bitcoin_CWallet::SendMoneyToDestination(const CTxDestination& address, int64_t nValue, Bitcoin_CWalletTx& wtxNew)
+{
+    // Check amount
+    if (nValue <= 0)
+        return _("Invalid amount");
+
+    map<uint256, set<int> > mapEmptyTxInPoints;
+    if (nValue + bitcoin_nTransactionFee > GetBalance(NULL, mapEmptyTxInPoints))
+        return _("Insufficient funds");
+
+    // Parse Bitcoin address
+    CScript scriptPubKey;
+    scriptPubKey.SetDestination(address);
+
+    return SendMoney(scriptPubKey, nValue, wtxNew);
+}
 
 
 
@@ -1816,27 +1919,30 @@ int64_t Bitcoin_CWallet::GetOldestKeyPoolTime()
     return keypool.nTime;
 }
 
-std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Bitcoin_CClaimCoinsViewCache& claim_view)
+std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Bitcoin_CClaimCoinsViewCache* claim_view)
 {
     map<CTxDestination, int64_t> balances;
 
     {
         LOCK(cs_wallet);
 
-		const int nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
+		int nClaimBestBlockDepth = 0;
+        if(claim_view != NULL) {
+        	nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
+        }
 
         BOOST_FOREACH(PAIRTYPE(uint256, Bitcoin_CWalletTx) walletEntry, mapWallet)
         {
             Bitcoin_CWalletTx *pcoin = &walletEntry.second;
 
-            if (!Bitcoin_IsFinalTx(*pcoin) || !pcoin->IsTrusted(claim_view))
+            if (!Bitcoin_IsFinalTx(*pcoin) || !pcoin->IsTrusted())
                 continue;
 
             if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
                 continue;
 
             int nDepth = pcoin->GetDepthInMainChain();
-            if ((nDepth < (pcoin->IsFromMe(claim_view) ? 0 : 1)) || nDepth < nClaimBestBlockDepth)
+            if ((nDepth < (pcoin->IsFromMe() ? 0 : 1)) || nDepth < nClaimBestBlockDepth)
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
@@ -1847,20 +1953,23 @@ std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Bitcoin_CC
                 if(!ExtractDestination(pcoin->vout[i].scriptPubKey, addr))
                     continue;
 
-                if(claim_view.HaveCoins(pcoin->GetHash())) {
-        			const Bitcoin_CClaimCoins & claimCoins = claim_view.GetCoins(pcoin->GetHash());
+				int64_t n = 0;
+                if(claim_view == NULL) {
+                    n = IsSpent(walletEntry.first, i, 0) ? 0 : pcoin->vout[i].nValue;
+                } else {
+					if(claim_view->HaveCoins(pcoin->GetHash())) {
+						const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(pcoin->GetHash());
 
-        			int64_t n = 0;
-        			if(!IsSpent(walletEntry.first, i, nClaimBestBlockDepth)) {
-						if(claimCoins.HasClaimable(i)) {
-							n =  claimCoins.vout[i].nValueClaimable;
+						if(!IsSpent(walletEntry.first, i, nClaimBestBlockDepth)) {
+							if(claimCoins.HasClaimable(i)) {
+								n =  claimCoins.vout[i].nValueClaimable;
+							}
 						}
-        			}
-
-					if (!balances.count(addr))
-						balances[addr] = 0;
-					balances[addr] += n;
+					}
                 }
+				if (!balances.count(addr))
+					balances[addr] = 0;
+				balances[addr] += n;
             }
         }
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SendCoinsEntry</class>
- <widget class="QStackedWidget" name="SendCoinsEntry">
+ <class>Credits_SendCoinsEntry</class>
+ <widget class="QStackedWidget" name="Credits_SendCoinsEntry">
   <property name="geometry">
    <rect>
     <x>0</x>

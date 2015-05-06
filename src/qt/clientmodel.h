@@ -14,8 +14,10 @@ class Bitcredit_AddressTableModel;
 class OptionsModel;
 class PeerTableModel;
 class Bitcredit_TransactionTableModel;
+class Bitcoin_TransactionTableModel;
 
 class Bitcredit_CWallet;
+class Bitcoin_CWallet;
 
 QT_BEGIN_NAMESPACE
 class QDateTime;

@@ -47,6 +47,7 @@ ClaimCoinsDialog::ClaimCoinsDialog(QWidget *parent) :
     QAction *clipboardBytesAction = new QAction(tr("Copy bytes"), this);
     QAction *clipboardPriorityAction = new QAction(tr("Copy priority"), this);
     QAction *clipboardLowOutputAction = new QAction(tr("Copy low output"), this);
+    QAction *clipboardChangeAction = new QAction(tr("Copy change"), this);
     connect(clipboardQuantityAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardQuantity()));
     connect(clipboardAmountAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardAmount()));
     connect(clipboardFeeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardFee()));
@@ -54,6 +55,7 @@ ClaimCoinsDialog::ClaimCoinsDialog(QWidget *parent) :
     connect(clipboardBytesAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardBytes()));
     connect(clipboardPriorityAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardPriority()));
     connect(clipboardLowOutputAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardLowOutput()));
+    connect(clipboardChangeAction, SIGNAL(triggered()), this, SLOT(coinControlClipboardChange()));
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
     ui->labelCoinControlFee->addAction(clipboardFeeAction);
@@ -61,6 +63,7 @@ ClaimCoinsDialog::ClaimCoinsDialog(QWidget *parent) :
     ui->labelCoinControlBytes->addAction(clipboardBytesAction);
     ui->labelCoinControlPriority->addAction(clipboardPriorityAction);
     ui->labelCoinControlLowOutput->addAction(clipboardLowOutputAction);
+    ui->labelCoinControlChange->addAction(clipboardChangeAction);
 }
 
 void ClaimCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_WalletModel * bitcoin_model)
@@ -80,7 +83,7 @@ void ClaimCoinsDialog::setModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_
         }
 
         refreshBalance();
-        connect(bitcoin_model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        connect(bitcoin_model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(refreshBalance()));
         connect(bitcoin_model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         connect(bitcredit_model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64, qint64)), this, SLOT(refreshBalance()));
@@ -160,11 +163,9 @@ void ClaimCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
-
     // prepare transaction for getting txFee earlier
     Bitcredit_WalletModelTransaction currentTransaction(recipients);
-    Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareClaimTransaction(bitcoin_model, claim_view, currentTransaction, Bitcoin_CoinControlDialog::coinControl);
+    Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareClaimTransaction(bitcoin_model, bitcoin_pclaimCoinsTip, currentTransaction, Bitcoin_CoinControlDialog::coinControl);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -313,9 +314,7 @@ void ClaimCoinsDialog::refreshBalance()
     map<uint256, set<int> > mapClaimTxInPoints;
     bitcredit_model->wallet->ClaimTxInPoints(mapClaimTxInPoints);
 
-    Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
-
-    setBalance(bitcoin_model->getBalance(claim_view, mapClaimTxInPoints), 0, 0);
+    setBalance(bitcoin_model->getBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints), 0, 0);
 }
 
 void ClaimCoinsDialog::updateDisplayUnit()
@@ -408,6 +407,12 @@ void ClaimCoinsDialog::coinControlClipboardLowOutput()
     GUIUtil::setClipboard(ui->labelCoinControlLowOutput->text());
 }
 
+// Coin Control: copy label "Change" to clipboard
+void ClaimCoinsDialog::coinControlClipboardChange()
+{
+    GUIUtil::setClipboard(ui->labelCoinControlChange->text().left(ui->labelCoinControlChange->text().indexOf(" ")));
+}
+
 // Coin Control: button inputs -> show actual coin control dialog
 void ClaimCoinsDialog::coinControlButtonClicked()
 {
@@ -445,7 +450,7 @@ void ClaimCoinsDialog::coinControlUpdateLabels()
     if (Bitcoin_CoinControlDialog::coinControl->HasSelected())
     {
         // actual coin control calculation
-    	Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, this);
+    	Bitcoin_CoinControlDialog::updateLabels(bitcoin_model, bitcredit_model, this);
 
         // show coin control stats
         ui->widgetCoinControl->show();
@@ -454,5 +459,6 @@ void ClaimCoinsDialog::coinControlUpdateLabels()
     {
         // hide coin control stats
         ui->widgetCoinControl->hide();
+        ui->labelCoinControlInsuffFunds->hide();
     }
 }

@@ -2139,9 +2139,9 @@ Address: %4
     </message>
 </context>
 <context>
-    <name>RecentRequestsTableModel</name>
+    <name>Bitcoin_RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="+24"/>
+        <location filename="../bitcoin_recentrequeststablemodel.cpp" line="+24"/>
         <source>Date</source>
         <translation type="unfinished">Date</translation>
     </message>
@@ -2192,7 +2192,7 @@ Address: %4
     </message>
     <message>
         <location line="+20"/>
-        <source>Inputs...</source>
+        <source>Select coins...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

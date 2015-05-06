@@ -49,6 +49,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QStyleFactory>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -274,33 +275,33 @@ void BitcreditGUI::createActions(bool fIsTestnet)
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
-    overviewAction->setStatusTip(tr("Show general overview of wallet"));
-    overviewAction->setToolTip(overviewAction->statusTip());
-    overviewAction->setCheckable(true);
-    overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
-    tabGroup->addAction(overviewAction);
+    credits_overviewAction = new QAction(QIcon(":/icons/overview"), tr("&Overview"), this);
+    credits_overviewAction->setStatusTip(tr("Show general overview of wallet"));
+    credits_overviewAction->setToolTip(credits_overviewAction->statusTip());
+    credits_overviewAction->setCheckable(true);
+    credits_overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
+    tabGroup->addAction(credits_overviewAction);
 
-    sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Credits address"));
-    sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
-    sendCoinsAction->setCheckable(true);
-    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
-    tabGroup->addAction(sendCoinsAction);
+    credits_sendCoinsAction = new QAction(QIcon(":/icons/send"), tr("&Send"), this);
+    credits_sendCoinsAction->setStatusTip(tr("Send coins to a Credits address"));
+    credits_sendCoinsAction->setToolTip(credits_sendCoinsAction->statusTip());
+    credits_sendCoinsAction->setCheckable(true);
+    credits_sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
+    tabGroup->addAction(credits_sendCoinsAction);
 
-    receiveCoinsAction = new QAction(QIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
-    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitcredit: URIs)"));
-    receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
-    receiveCoinsAction->setCheckable(true);
-    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
-    tabGroup->addAction(receiveCoinsAction);
+    credits_receiveCoinsAction = new QAction(QIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
+    credits_receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and bitcredit: URIs)"));
+    credits_receiveCoinsAction->setToolTip(credits_receiveCoinsAction->statusTip());
+    credits_receiveCoinsAction->setCheckable(true);
+    credits_receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
+    tabGroup->addAction(credits_receiveCoinsAction);
 
-    historyAction = new QAction(QIcon(":/icons/history"), tr("&Transactions"), this);
-    historyAction->setStatusTip(tr("Browse transaction history"));
-    historyAction->setToolTip(historyAction->statusTip());
-    historyAction->setCheckable(true);
-    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
-    tabGroup->addAction(historyAction);
+    credits_historyAction = new QAction(QIcon(":/icons/history"), tr("&Transactions"), this);
+    credits_historyAction->setStatusTip(tr("Browse transaction history"));
+    credits_historyAction->setToolTip(credits_historyAction->statusTip());
+    credits_historyAction->setCheckable(true);
+    credits_historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
+    tabGroup->addAction(credits_historyAction);
 
     claimCoinsAction = new QAction(QIcon(":/icons/claim"), tr("&Claim bitcoins"), this);
     claimCoinsAction->setStatusTip(tr("Claim bitcoins"));
@@ -310,7 +311,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     tabGroup->addAction(claimCoinsAction);
 
 
-    minerAction = new QAction(QIcon(":/icons/mining"), tr("&Prepare miner deposits"), this);
+    minerAction = new QAction(QIcon(":/icons/mining"), tr("&Prepare deposits"), this);
     minerAction->setStatusTip(tr("Manage mining"));
     minerAction->setToolTip(minerAction->statusTip());
     minerAction->setCheckable(true);
@@ -324,22 +325,59 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     minerDepositsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
     tabGroup->addAction(minerDepositsAction);
 
+    bitcoin_overviewAction = new QAction(QIcon(":/icons/bitcoin_overview"), tr("&Overview"), this);
+    bitcoin_overviewAction->setStatusTip(tr("Show general overview of bitcoin wallet"));
+    bitcoin_overviewAction->setToolTip(bitcoin_overviewAction->statusTip());
+    bitcoin_overviewAction->setCheckable(true);
+    bitcoin_overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
+    tabGroup->addAction(bitcoin_overviewAction);
+
+    bitcoin_sendCoinsAction = new QAction(QIcon(":/icons/bitcoin_send"), tr("&Send"), this);
+    bitcoin_sendCoinsAction->setStatusTip(tr("Send bitcoins to a Bitcoin address"));
+    bitcoin_sendCoinsAction->setToolTip(bitcoin_sendCoinsAction->statusTip());
+    bitcoin_sendCoinsAction->setCheckable(true);
+    bitcoin_sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_A));
+    tabGroup->addAction(bitcoin_sendCoinsAction);
+
+    bitcoin_receiveCoinsAction = new QAction(QIcon(":/icons/bitcoin_receiving_addresses"), tr("&Receive"), this);
+    bitcoin_receiveCoinsAction->setStatusTip(tr("Request bitcoin payments (generates QR codes and bitcoin: URIs)"));
+    bitcoin_receiveCoinsAction->setToolTip(bitcoin_receiveCoinsAction->statusTip());
+    bitcoin_receiveCoinsAction->setCheckable(true);
+    bitcoin_receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_B));
+    tabGroup->addAction(bitcoin_receiveCoinsAction);
+
+    bitcoin_historyAction = new QAction(QIcon(":/icons/bitcoin_history"), tr("&Transactions"), this);
+    bitcoin_historyAction->setStatusTip(tr("Browse bitcoin transaction history"));
+    bitcoin_historyAction->setToolTip(bitcoin_historyAction->statusTip());
+    bitcoin_historyAction->setCheckable(true);
+    bitcoin_historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_C));
+    tabGroup->addAction(bitcoin_historyAction);
+
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(credits_overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(credits_overviewAction, SIGNAL(triggered()), this, SLOT(credits_gotoOverviewPage()));
+    connect(credits_sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(credits_sendCoinsAction, SIGNAL(triggered()), this, SLOT(credits_gotoSendCoinsPage()));
+    connect(credits_receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(credits_receiveCoinsAction, SIGNAL(triggered()), this, SLOT(credits_gotoReceiveCoinsPage()));
+    connect(credits_historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(credits_historyAction, SIGNAL(triggered()), this, SLOT(credits_gotoHistoryPage()));
     connect(minerDepositsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(minerDepositsAction, SIGNAL(triggered()), this, SLOT(gotoMinerDepositsPage()));
     connect(claimCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(claimCoinsAction, SIGNAL(triggered()), this, SLOT(gotoClaimCoinsPage()));
     connect(minerAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(minerAction, SIGNAL(triggered()), this, SLOT(gotoMinerCoinsPage()));
+
+    connect(bitcoin_overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(bitcoin_overviewAction, SIGNAL(triggered()), this, SLOT(bitcoin_gotoOverviewPage()));
+    connect(bitcoin_sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(bitcoin_sendCoinsAction, SIGNAL(triggered()), this, SLOT(bitcoin_gotoSendCoinsPage()));
+    connect(bitcoin_receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(bitcoin_receiveCoinsAction, SIGNAL(triggered()), this, SLOT(bitcoin_gotoReceiveCoinsPage()));
+    connect(bitcoin_historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(bitcoin_historyAction, SIGNAL(triggered()), this, SLOT(bitcoin_gotoHistoryPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
@@ -349,7 +387,7 @@ void BitcreditGUI::createActions(bool fIsTestnet)
         aboutAction = new QAction(QIcon(":/icons/bitcoin"), tr("&About Credits Core"), this);
     else
         aboutAction = new QAction(QIcon(":/icons/bitcredit_testnet"), tr("&About Credits Core"), this);
-    aboutAction->setStatusTip(tr("Show information about Bitcredit"));
+    aboutAction->setStatusTip(tr("Show information about Credits"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -394,10 +432,15 @@ void BitcreditGUI::createActions(bool fIsTestnet)
     bitcoin_openRPCConsoleAction = new QAction(QIcon(":/icons/debugwindow"), tr("&Bitcoin info window"), this);
     bitcoin_openRPCConsoleAction->setStatusTip(tr("Open bitcoin debugging and diagnostic console"));
 
-    usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
-    usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
-    usedReceivingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Receiving addresses..."), this);
-    usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
+    credits_usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending Credits addresses..."), this);
+    credits_usedSendingAddressesAction->setStatusTip(tr("Show the list of used Credits sending addresses and labels"));
+    credits_usedReceivingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Receiving Credits addresses..."), this);
+    credits_usedReceivingAddressesAction->setStatusTip(tr("Show the list of used Credits receiving addresses and labels"));
+
+    bitcoin_usedSendingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Sending Bitcoin addresses..."), this);
+    bitcoin_usedSendingAddressesAction->setStatusTip(tr("Show the list of used Bitcoin sending addresses and labels"));
+    bitcoin_usedReceivingAddressesAction = new QAction(QIcon(":/icons/address-book"), tr("&Receiving Bitcoin addresses..."), this);
+    bitcoin_usedReceivingAddressesAction->setStatusTip(tr("Show the list of used Bitcoin receiving addresses and labels"));
 
     openAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_FileIcon), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a bitcredit: URI or payment request"));
@@ -424,8 +467,10 @@ void BitcreditGUI::createActions(bool fIsTestnet)
 
         connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
         connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
-        connect(usedSendingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedSendingAddresses()));
-        connect(usedReceivingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedReceivingAddresses()));
+        connect(credits_usedSendingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(credits_usedSendingAddresses()));
+        connect(credits_usedReceivingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(credits_usedReceivingAddresses()));
+        connect(bitcoin_usedSendingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(bitcoin_usedSendingAddresses()));
+        connect(bitcoin_usedReceivingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(bitcoin_usedReceivingAddresses()));
         connect(openAction, SIGNAL(triggered()), this, SLOT(openClicked()));
     }
 #endif
@@ -451,8 +496,11 @@ void BitcreditGUI::createMenuBar()
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
         file->addSeparator();
-        file->addAction(usedSendingAddressesAction);
-        file->addAction(usedReceivingAddressesAction);
+        file->addAction(credits_usedSendingAddressesAction);
+        file->addAction(credits_usedReceivingAddressesAction);
+        file->addSeparator();
+        file->addAction(bitcoin_usedSendingAddressesAction);
+        file->addAction(bitcoin_usedReceivingAddressesAction);
         file->addSeparator();
     }
     file->addAction(quitAction);
@@ -489,15 +537,47 @@ void BitcreditGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        toolbar->layout()->setContentsMargins(5, 5, 5, 5);
+        addToolBar(Qt::LeftToolBarArea, toolbar);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        toolbar->addAction(overviewAction);
-        toolbar->addAction(sendCoinsAction);
-        toolbar->addAction(receiveCoinsAction);
-        toolbar->addAction(historyAction);
+        toolbar->setFloatable(false);
+		toolbar->setMovable(false);
+        toolbar->setStyle(QStyleFactory::create("windows"));
+
+        toolbar->addAction("Credits toolbar");
+        toolbar->addAction(credits_overviewAction);
+        toolbar->widgetForAction(credits_overviewAction)->setFixedWidth(140);
+        toolbar->addAction(credits_sendCoinsAction);
+        toolbar->widgetForAction(credits_sendCoinsAction)->setFixedWidth(140);
+        toolbar->addAction(credits_receiveCoinsAction);
+        toolbar->widgetForAction(credits_receiveCoinsAction)->setFixedWidth(140);
+        toolbar->addAction(credits_historyAction);
+        toolbar->widgetForAction(credits_historyAction)->setFixedWidth(140);
         toolbar->addAction(claimCoinsAction);
+        toolbar->widgetForAction(claimCoinsAction)->setFixedWidth(140);
         toolbar->addAction(minerAction);
+        toolbar->widgetForAction(minerAction)->setFixedWidth(140);
         toolbar->addAction(minerDepositsAction);
-        overviewAction->setChecked(true);
+        toolbar->widgetForAction(minerDepositsAction)->setFixedWidth(140);
+
+        QAction* separator = toolbar->addSeparator();
+        toolbar->widgetForAction(separator)->setFixedWidth(140);
+
+        toolbar->addAction("Bitcoin toolbar");
+        toolbar->addAction(bitcoin_overviewAction);
+        toolbar->widgetForAction(bitcoin_overviewAction)->setFixedWidth(140);
+        toolbar->addAction(bitcoin_sendCoinsAction);
+        toolbar->widgetForAction(bitcoin_sendCoinsAction)->setFixedWidth(140);
+        toolbar->addAction(bitcoin_receiveCoinsAction);
+        toolbar->widgetForAction(bitcoin_receiveCoinsAction)->setFixedWidth(140);
+        toolbar->addAction(bitcoin_historyAction);
+        toolbar->widgetForAction(bitcoin_historyAction)->setFixedWidth(140);
+        QLayout *layt2 = toolbar->layout();
+        for (int i = 0; i < layt2->count(); ++i) {
+        	layt2->itemAt(i)->setAlignment(Qt::AlignLeft);
+        }
+
+        credits_overviewAction->setChecked(true);
     }
 }
 
@@ -582,13 +662,18 @@ void BitcreditGUI::removeAllWallets()
 
 void BitcreditGUI::setWalletActionsEnabled(bool enabled)
 {
-    overviewAction->setEnabled(enabled);
-    sendCoinsAction->setEnabled(enabled);
-    receiveCoinsAction->setEnabled(enabled);
+	credits_overviewAction->setEnabled(enabled);
+	credits_sendCoinsAction->setEnabled(enabled);
+	credits_receiveCoinsAction->setEnabled(enabled);
     claimCoinsAction->setEnabled(enabled);
-    historyAction->setEnabled(enabled);
+    credits_historyAction->setEnabled(enabled);
     minerDepositsAction->setEnabled(enabled);
     minerAction->setEnabled(enabled);
+
+    bitcoin_overviewAction->setEnabled(enabled);
+    bitcoin_sendCoinsAction->setEnabled(enabled);
+    bitcoin_receiveCoinsAction->setEnabled(enabled);
+    bitcoin_historyAction->setEnabled(enabled);
 
     bitcredit_encryptWalletAction->setEnabled(enabled);
     bitcredit_backupWalletAction->setEnabled(enabled);
@@ -600,9 +685,12 @@ void BitcreditGUI::setWalletActionsEnabled(bool enabled)
 
     signMessageAction->setEnabled(enabled);
     verifyMessageAction->setEnabled(enabled);
-    usedSendingAddressesAction->setEnabled(enabled);
-    usedReceivingAddressesAction->setEnabled(enabled);
+    credits_usedSendingAddressesAction->setEnabled(enabled);
+    credits_usedReceivingAddressesAction->setEnabled(enabled);
     openAction->setEnabled(enabled);
+
+    bitcoin_usedSendingAddressesAction->setEnabled(enabled);
+    bitcoin_usedReceivingAddressesAction->setEnabled(enabled);
 }
 
 void BitcreditGUI::createTrayIcon(bool fIsTestnet)
@@ -650,8 +738,8 @@ void BitcreditGUI::createTrayIconMenu()
     // Configuration of the tray icon (or dock icon) icon menu
     trayIconMenu->addAction(toggleHideAction);
     trayIconMenu->addSeparator();
-    trayIconMenu->addAction(sendCoinsAction);
-    trayIconMenu->addAction(receiveCoinsAction);
+    trayIconMenu->addAction(credits_sendCoinsAction);
+    trayIconMenu->addAction(credits_receiveCoinsAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(signMessageAction);
     trayIconMenu->addAction(verifyMessageAction);
@@ -659,6 +747,9 @@ void BitcreditGUI::createTrayIconMenu()
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(bitcredit_openRPCConsoleAction);
     trayIconMenu->addAction(bitcoin_openRPCConsoleAction);
+
+    trayIconMenu->addAction(bitcoin_sendCoinsAction);
+    trayIconMenu->addAction(bitcoin_receiveCoinsAction);
 #ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
@@ -713,10 +804,15 @@ void BitcreditGUI::openClicked()
     }
 }
 
-void BitcreditGUI::gotoOverviewPage()
+void BitcreditGUI::credits_gotoOverviewPage()
 {
-    overviewAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoOverviewPage();
+	credits_overviewAction->setChecked(true);
+    if (walletFrame) walletFrame->credits_gotoOverviewPage();
+}
+void BitcreditGUI::bitcoin_gotoOverviewPage()
+{
+	bitcoin_overviewAction->setChecked(true);
+    if (walletFrame) walletFrame->bitcoin_gotoOverviewPage();
 }
 
 void BitcreditGUI::gotoClaimCoinsPage()
@@ -725,27 +821,43 @@ void BitcreditGUI::gotoClaimCoinsPage()
     if (walletFrame) walletFrame->gotoClaimCoinsPage();
 }
 
-void BitcreditGUI::gotoHistoryPage()
+void BitcreditGUI::credits_gotoHistoryPage()
 {
-    historyAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoHistoryPage();
+	credits_historyAction->setChecked(true);
+    if (walletFrame) walletFrame->credits_gotoHistoryPage();
 }
+void BitcreditGUI::bitcoin_gotoHistoryPage()
+{
+	bitcoin_historyAction->setChecked(true);
+    if (walletFrame) walletFrame->bitcoin_gotoHistoryPage();
+}
+
 void BitcreditGUI::gotoMinerDepositsPage()
 {
 	minerDepositsAction->setChecked(true);
     if (walletFrame) walletFrame->gotoMinerDepositsPage();
 }
 
-void BitcreditGUI::gotoReceiveCoinsPage()
+void BitcreditGUI::credits_gotoReceiveCoinsPage()
 {
-    receiveCoinsAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoReceiveCoinsPage();
+	credits_receiveCoinsAction->setChecked(true);
+    if (walletFrame) walletFrame->credits_gotoReceiveCoinsPage();
+}
+void BitcreditGUI::bitcoin_gotoReceiveCoinsPage()
+{
+	bitcoin_receiveCoinsAction->setChecked(true);
+    if (walletFrame) walletFrame->bitcoin_gotoReceiveCoinsPage();
 }
 
-void BitcreditGUI::gotoSendCoinsPage(QString addr)
+void BitcreditGUI::credits_gotoSendCoinsPage(QString addr)
 {
-    sendCoinsAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+	credits_sendCoinsAction->setChecked(true);
+    if (walletFrame) walletFrame->credits_gotoSendCoinsPage(addr);
+}
+void BitcreditGUI::bitcoin_gotoSendCoinsPage(QString addr)
+{
+	bitcoin_sendCoinsAction->setChecked(true);
+    if (walletFrame) walletFrame->bitcoin_gotoSendCoinsPage(addr);
 }
 
 void BitcreditGUI::gotoMinerCoinsPage(QString addr)
@@ -832,8 +944,10 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
         bitcredit_labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
 #ifdef ENABLE_WALLET
-        if(walletFrame)
-            walletFrame->showOutOfSyncWarning(false);
+        if(walletFrame) {
+            walletFrame->credits_showOutOfSyncWarning(false);
+            walletFrame->bitcoin_showOutOfSyncWarning(false);
+        }
 #endif
 
         bitcredit_progressBarLabel->setVisible(false);
@@ -883,8 +997,10 @@ void BitcreditGUI::bitcredit_setNumBlocks(int count)
         bitcredit_prevBlocks = count;
 
 #ifdef ENABLE_WALLET
-        if(walletFrame)
-            walletFrame->showOutOfSyncWarning(true);
+        if(walletFrame) {
+            walletFrame->credits_showOutOfSyncWarning(true);
+            walletFrame->bitcoin_showOutOfSyncWarning(true);
+        }
 #endif
 
         tooltip += QString("<br>");
@@ -1145,13 +1261,25 @@ bool BitcreditGUI::eventFilter(QObject *object, QEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-bool BitcreditGUI::handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient)
+bool BitcreditGUI::credits_handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient)
 {
     // URI has to be valid
-    if (walletFrame && walletFrame->handlePaymentRequest(recipient))
+    if (walletFrame && walletFrame->credits_handlePaymentRequest(recipient))
     {
         showNormalIfMinimized();
-        gotoSendCoinsPage();
+        credits_gotoSendCoinsPage();
+        return true;
+    }
+    else
+        return false;
+}
+bool BitcreditGUI::bitcoin_handlePaymentRequest(const Bitcoin_SendCoinsRecipient& recipient)
+{
+    // URI has to be valid
+    if (walletFrame && walletFrame->bitcoin_handlePaymentRequest(recipient))
+    {
+        showNormalIfMinimized();
+        bitcoin_gotoSendCoinsPage();
         return true;
     }
     else

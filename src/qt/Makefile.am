@@ -17,6 +17,7 @@ QT_TS = \
 QT_FORMS_UI = \
   forms/aboutdialog.ui \
   forms/addressbookpage.ui \
+  forms/bitcoin_addressbookpage.ui \
   forms/askpassphrasedialog.ui \
   forms/bitcoin_askpassphrasedialog.ui \
   forms/claimcoinsdialog.ui \
@@ -24,6 +25,7 @@ QT_FORMS_UI = \
   forms/bitcoin_coincontroldialog.ui \
   forms/miner_coincontroldialog.ui \
   forms/editaddressdialog.ui \
+  forms/bitcoin_editaddressdialog.ui \
   forms/helpmessagedialog.ui \
   forms/intro.ui \
   forms/minercoinsdialog.ui \
@@ -31,17 +33,24 @@ QT_FORMS_UI = \
   forms/openuridialog.ui \
   forms/optionsdialog.ui \
   forms/overviewpage.ui \
+  forms/bitcoin_overviewpage.ui \
   forms/receivecoinsdialog.ui \
+  forms/bitcoin_receivecoinsdialog.ui \
   forms/receiverequestdialog.ui \
+  forms/bitcoin_receiverequestdialog.ui \
   forms/rpcconsole.ui \
   forms/bitcoin_rpcconsole.ui \
   forms/sendcoinsdialog.ui \
+  forms/bitcoin_sendcoinsdialog.ui \
   forms/sendcoinsentry.ui \
+  forms/bitcoin_sendcoinsentry.ui \
   forms/signverifymessagedialog.ui \
-  forms/transactiondescdialog.ui
+  forms/transactiondescdialog.ui \
+  forms/bitcoin_transactiondescdialog.ui
 
 QT_MOC_CPP = \
   moc_addressbookpage.cpp \
+  moc_bitcoin_addressbookpage.cpp \
   moc_addresstablemodel.cpp \
   moc_bitcoin_addresstablemodel.cpp \
   moc_askpassphrasedialog.cpp \
@@ -62,6 +71,7 @@ QT_MOC_CPP = \
   moc_uneditablecoinsentry.cpp \
   moc_csvmodelwriter.cpp \
   moc_editaddressdialog.cpp \
+  moc_bitcoin_editaddressdialog.cpp \
   moc_guiutil.cpp \
   moc_intro.cpp \
   moc_macdockiconhandler.cpp \
@@ -74,25 +84,36 @@ QT_MOC_CPP = \
   moc_optionsdialog.cpp \
   moc_optionsmodel.cpp \
   moc_overviewpage.cpp \
+  moc_bitcoin_overviewpage.cpp \
   moc_peertablemodel.cpp \
   moc_paymentserver.cpp \
   moc_qvalidatedlineedit.cpp \
   moc_qvaluecombobox.cpp \
   moc_receivecoinsdialog.cpp \
+  moc_bitcoin_receivecoinsdialog.cpp \
   moc_receiverequestdialog.cpp \
+  moc_bitcoin_receiverequestdialog.cpp \
   moc_recentrequeststablemodel.cpp \
+  moc_bitcoin_recentrequeststablemodel.cpp \
   moc_rpcconsole.cpp \
   moc_bitcoin_rpcconsole.cpp \
   moc_sendcoinsdialog.cpp \
+  moc_bitcoin_sendcoinsdialog.cpp \
   moc_sendcoinsentry.cpp \
+  moc_bitcoin_sendcoinsentry.cpp \
   moc_signverifymessagedialog.cpp \
   moc_splashscreen.cpp \
   moc_trafficgraphwidget.cpp \
   moc_transactiondesc.cpp \
+  moc_bitcoin_transactiondesc.cpp \
   moc_transactiondescdialog.cpp \
+  moc_bitcoin_transactiondescdialog.cpp \
   moc_transactionfilterproxy.cpp \
+  moc_bitcoin_transactionfilterproxy.cpp \
   moc_transactiontablemodel.cpp \
+  moc_bitcoin_transactiontablemodel.cpp \
   moc_transactionview.cpp \
+  moc_bitcoin_transactionview.cpp \
   moc_utilitydialog.cpp \
   moc_walletframe.cpp \
   moc_walletmodel.cpp \
@@ -107,6 +128,7 @@ QT_MOC = \
   bitcoin.moc \
   intro.moc \
   overviewpage.moc \
+  bitcoin_overviewpage.moc \
   rpcconsole.moc  \
   bitcoin_rpcconsole.moc
 
@@ -119,6 +141,7 @@ PROTOBUF_PROTO = paymentrequest.proto
 
 BITCOIN_QT_H = \
   addressbookpage.h \
+  bitcoin_addressbookpage.h \
   addresstablemodel.h \
   bitcoin_addresstablemodel.h \
   askpassphrasedialog.h \
@@ -139,6 +162,7 @@ BITCOIN_QT_H = \
   uneditablecoinsentry.h \
   csvmodelwriter.h \
   editaddressdialog.h \
+  bitcoin_editaddressdialog.h \
   guiconstants.h \
   guiutil.h \
   intro.h \
@@ -152,27 +176,39 @@ BITCOIN_QT_H = \
   optionsdialog.h \
   optionsmodel.h \
   overviewpage.h \
+  bitcoin_overviewpage.h \
   paymentrequestplus.h \
   paymentserver.h \
   peertablemodel.h \
   qvalidatedlineedit.h \
   qvaluecombobox.h \
   receivecoinsdialog.h \
+  bitcoin_receivecoinsdialog.h \
   receiverequestdialog.h \
+  bitcoin_receiverequestdialog.h \
   recentrequeststablemodel.h \
+  bitcoin_recentrequeststablemodel.h \
   rpcconsole.h \
   bitcoin_rpcconsole.h \
   sendcoinsdialog.h \
+  bitcoin_sendcoinsdialog.h \
   sendcoinsentry.h \
+  bitcoin_sendcoinsentry.h \
   signverifymessagedialog.h \
   splashscreen.h \
   trafficgraphwidget.h \
   transactiondesc.h \
+  bitcoin_transactiondesc.h \
   transactiondescdialog.h \
+  bitcoin_transactiondescdialog.h \
   transactionfilterproxy.h \
+  bitcoin_transactionfilterproxy.h \
   transactionrecord.h \
+  bitcoin_transactionrecord.h \
   transactiontablemodel.h \
+  bitcoin_transactiontablemodel.h \
   transactionview.h \
+  bitcoin_transactionview.h \
   utilitydialog.h \
   walletframe.h \
   walletmodel.h \
@@ -208,17 +244,21 @@ RES_ICONS = \
   res/icons/export.png \
   res/icons/filesave.png \
   res/icons/history.png \
+  res/icons/bitcoin_history.png \
   res/icons/key.png \
   res/icons/lock_closed.png \
   res/icons/lock_open.png \
   res/icons/mining.png \
   res/icons/mining_deposits.png \
   res/icons/overview.png \
+  res/icons/bitcoin_overview.png \
   res/icons/qrcode.png \
   res/icons/quit.png \
   res/icons/receive.png \
+  res/icons/bitcoin_receive.png \
   res/icons/remove.png \
   res/icons/send.png \
+  res/icons/bitcoin_send.png \
   res/icons/synced.png \
   res/icons/toolbar.png \
   res/icons/toolbar_testnet.png \
@@ -226,6 +266,7 @@ RES_ICONS = \
   res/icons/transaction2.png \
   res/icons/transaction_conflicted.png \
   res/icons/tx_inout.png \
+  res/icons/bitcoin_tx_inout.png \
   res/icons/tx_input.png \
   res/icons/tx_output.png \
   res/icons/tx_deposit.png \
@@ -258,6 +299,7 @@ BITCOIN_QT_CPP = \
 if ENABLE_WALLET
 BITCOIN_QT_CPP += \
   addressbookpage.cpp \
+  bitcoin_addressbookpage.cpp \
   addresstablemodel.cpp \
   bitcoin_addresstablemodel.cpp \
   askpassphrasedialog.cpp \
@@ -270,26 +312,39 @@ BITCOIN_QT_CPP += \
   bitcoin_coincontroltreewidget.cpp \
   miner_coincontroltreewidget.cpp \
   editaddressdialog.cpp \
+  bitcoin_editaddressdialog.cpp \
   minercoinsdialog.cpp \
   uneditablecoinsentry.cpp \
   minerdepositsview.cpp \
   openuridialog.cpp \
   overviewpage.cpp \
+  bitcoin_overviewpage.cpp \
   paymentrequestplus.cpp \
   paymentserver.cpp \
   peertablemodel.cpp \
   receivecoinsdialog.cpp \
+  bitcoin_receivecoinsdialog.cpp \
   receiverequestdialog.cpp \
+  bitcoin_receiverequestdialog.cpp \
   recentrequeststablemodel.cpp \
+  bitcoin_recentrequeststablemodel.cpp \
   sendcoinsdialog.cpp \
+  bitcoin_sendcoinsdialog.cpp \
   sendcoinsentry.cpp \
+  bitcoin_sendcoinsentry.cpp \
   signverifymessagedialog.cpp \
   transactiondesc.cpp \
+  bitcoin_transactiondesc.cpp \
   transactiondescdialog.cpp \
+  bitcoin_transactiondescdialog.cpp \
   transactionfilterproxy.cpp \
+  bitcoin_transactionfilterproxy.cpp \
   transactionrecord.cpp \
+  bitcoin_transactionrecord.cpp \
   transactiontablemodel.cpp \
+  bitcoin_transactiontablemodel.cpp \
   transactionview.cpp \
+  bitcoin_transactionview.cpp \
   walletframe.cpp \
   walletmodel.cpp \
   bitcoin_walletmodel.cpp \

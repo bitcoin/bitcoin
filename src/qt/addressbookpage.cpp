@@ -20,9 +20,9 @@
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 
-AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
+Credits_AddressBookPage::Credits_AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AddressBookPage),
+    ui(new Ui::Credits_AddressBookPage),
     model(0),
     mode(mode),
     tab(tab)
@@ -96,12 +96,12 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(accept()));
 }
 
-AddressBookPage::~AddressBookPage()
+Credits_AddressBookPage::~Credits_AddressBookPage()
 {
     delete ui;
 }
 
-void AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
+void Credits_AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
 {
     this->model = model;
     if(!model)
@@ -146,17 +146,17 @@ void AddressBookPage::setModel(Bitcredit_AddressTableModel *model)
     selectionChanged();
 }
 
-void AddressBookPage::on_copyAddress_clicked()
+void Credits_AddressBookPage::on_copyAddress_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, Bitcredit_AddressTableModel::Address);
 }
 
-void AddressBookPage::onCopyLabelAction()
+void Credits_AddressBookPage::onCopyLabelAction()
 {
     GUIUtil::copyEntryData(ui->tableView, Bitcredit_AddressTableModel::Label);
 }
 
-void AddressBookPage::onEditAction()
+void Credits_AddressBookPage::onEditAction()
 {
     if(!model)
         return;
@@ -167,25 +167,25 @@ void AddressBookPage::onEditAction()
     if(indexes.isEmpty())
         return;
 
-    Bitcredit_EditAddressDialog dlg(
+    Credits_EditAddressDialog dlg(
         tab == SendingTab ?
-        Bitcredit_EditAddressDialog::EditSendingAddress :
-        Bitcredit_EditAddressDialog::EditReceivingAddress, this);
+        Credits_EditAddressDialog::EditSendingAddress :
+        Credits_EditAddressDialog::EditReceivingAddress, this);
     dlg.setModel(model);
     QModelIndex origIndex = proxyModel->mapToSource(indexes.at(0));
     dlg.loadRow(origIndex.row());
     dlg.exec();
 }
 
-void AddressBookPage::on_newAddress_clicked()
+void Credits_AddressBookPage::on_newAddress_clicked()
 {
     if(!model)
         return;
 
-    Bitcredit_EditAddressDialog dlg(
+    Credits_EditAddressDialog dlg(
         tab == SendingTab ?
-        Bitcredit_EditAddressDialog::NewSendingAddress :
-        Bitcredit_EditAddressDialog::NewReceivingAddress, this);
+        Credits_EditAddressDialog::NewSendingAddress :
+        Credits_EditAddressDialog::NewReceivingAddress, this);
     dlg.setModel(model);
     if(dlg.exec())
     {
@@ -193,7 +193,7 @@ void AddressBookPage::on_newAddress_clicked()
     }
 }
 
-void AddressBookPage::on_deleteAddress_clicked()
+void Credits_AddressBookPage::on_deleteAddress_clicked()
 {
     QTableView *table = ui->tableView;
     if(!table->selectionModel())
@@ -206,7 +206,7 @@ void AddressBookPage::on_deleteAddress_clicked()
     }
 }
 
-void AddressBookPage::selectionChanged()
+void Credits_AddressBookPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
     QTableView *table = ui->tableView;
@@ -239,7 +239,7 @@ void AddressBookPage::selectionChanged()
     }
 }
 
-void AddressBookPage::done(int retval)
+void Credits_AddressBookPage::done(int retval)
 {
     QTableView *table = ui->tableView;
     if(!table->selectionModel() || !table->model())
@@ -263,7 +263,7 @@ void AddressBookPage::done(int retval)
     QDialog::done(retval);
 }
 
-void AddressBookPage::on_exportButton_clicked()
+void Credits_AddressBookPage::on_exportButton_clicked()
 {
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
@@ -286,7 +286,7 @@ void AddressBookPage::on_exportButton_clicked()
     }
 }
 
-void AddressBookPage::contextualMenu(const QPoint &point)
+void Credits_AddressBookPage::contextualMenu(const QPoint &point)
 {
     QModelIndex index = ui->tableView->indexAt(point);
     if(index.isValid())
@@ -295,7 +295,7 @@ void AddressBookPage::contextualMenu(const QPoint &point)
     }
 }
 
-void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int /*end*/)
+void Credits_AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int /*end*/)
 {
     QModelIndex idx = proxyModel->mapFromSource(model->index(begin, Bitcredit_AddressTableModel::Address, parent));
     if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newAddressToSelect))

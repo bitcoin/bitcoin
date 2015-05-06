@@ -20,11 +20,11 @@
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 3
 
-class TxViewDelegate : public QAbstractItemDelegate
+class Bitcredit_TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(): QAbstractItemDelegate(), unit(BitcreditUnits::CRE)
+    Bitcredit_TxViewDelegate(): QAbstractItemDelegate(), unit(BitcreditUnits::CRE)
     {
 
     }
@@ -95,9 +95,9 @@ public:
 };
 #include "overviewpage.moc"
 
-OverviewPage::OverviewPage(QWidget *parent) :
+Credits_OverviewPage::Credits_OverviewPage(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::OverviewPage),
+    ui(new Ui::Credits_OverviewPage),
     clientModel(0),
     bitcredit_model(0),
     deposit_model(0),
@@ -106,7 +106,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
     currentImmatureBalance(-1),
     currentPreparedDepositBalance(-1),
     currentInDepositBalance(-1),
-    txdelegate(new TxViewDelegate()),
+    txdelegate(new Bitcredit_TxViewDelegate()),
     filter(0)
 {
     ui->setupUi(this);
@@ -127,18 +127,18 @@ OverviewPage::OverviewPage(QWidget *parent) :
     showOutOfSyncWarning(true);
 }
 
-void OverviewPage::handleTransactionClicked(const QModelIndex &index)
+void Credits_OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
     if(filter)
         emit transactionClicked(filter->mapToSource(index));
 }
 
-OverviewPage::~OverviewPage()
+Credits_OverviewPage::~Credits_OverviewPage()
 {
     delete ui;
 }
 
-void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance)
+void Credits_OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 preparedDepositBalance, qint64 inDepositBalance)
 {
     int unit = bitcredit_model->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
@@ -172,7 +172,7 @@ void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 
 //    ui->labelInDepositText->setVisible(showInDeposit);
 }
 
-void OverviewPage::refreshBalance()
+void Credits_OverviewPage::refreshBalance()
 {
     //Find all prepared deposit transactions
     map<uint256, set<int> > mapPreparedDepositTxInPoints;
@@ -181,7 +181,7 @@ void OverviewPage::refreshBalance()
     setBalance(bitcredit_model->getBalance(mapPreparedDepositTxInPoints), bitcredit_model->getUnconfirmedBalance(mapPreparedDepositTxInPoints), bitcredit_model->getImmatureBalance(mapPreparedDepositTxInPoints), bitcredit_model->getPreparedDepositBalance(), bitcredit_model->getInDepositBalance());
 }
 
-void OverviewPage::setClientModel(ClientModel *model)
+void Credits_OverviewPage::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if(model)
@@ -192,7 +192,7 @@ void OverviewPage::setClientModel(ClientModel *model)
     }
 }
 
-void OverviewPage::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
+void Credits_OverviewPage::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModel *deposit_model)
 {
     this->bitcredit_model = bitcredit_model;
     this->deposit_model = deposit_model;
@@ -200,7 +200,7 @@ void OverviewPage::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcre
     if(bitcredit_model && bitcredit_model->getOptionsModel())
     {
         // Set up transaction list
-        filter = new Bitcredit_TransactionFilterProxy();
+        filter = new Credits_TransactionFilterProxy();
         filter->setSourceModel(bitcredit_model->getTransactionTableModel());
         filter->setLimit(NUM_ITEMS);
         filter->setDynamicSortFilter(true);
@@ -224,7 +224,7 @@ void OverviewPage::setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcre
     updateDisplayUnit();
 }
 
-void OverviewPage::updateDisplayUnit()
+void Credits_OverviewPage::updateDisplayUnit()
 {
     if(bitcredit_model && bitcredit_model->getOptionsModel())
     {
@@ -238,13 +238,13 @@ void OverviewPage::updateDisplayUnit()
     }
 }
 
-void OverviewPage::updateAlerts(const QString &warnings)
+void Credits_OverviewPage::updateAlerts(const QString &warnings)
 {
     this->ui->labelAlerts->setVisible(!warnings.isEmpty());
     this->ui->labelAlerts->setText(warnings);
 }
 
-void OverviewPage::showOutOfSyncWarning(bool fShow)
+void Credits_OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);

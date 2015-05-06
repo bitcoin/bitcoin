@@ -10,13 +10,18 @@
 
 class BitcreditGUI;
 class ClientModel;
-class OverviewPage;
-class ReceiveCoinsDialog;
-class SendCoinsDialog;
+class Credits_OverviewPage;
+class Bitcoin_OverviewPage;
+class Credits_ReceiveCoinsDialog;
+class Bitcoin_ReceiveCoinsDialog;
+class Credits_SendCoinsDialog;
+class Bitcoin_SendCoinsDialog;
 class ClaimCoinsDialog;
 class MinerCoinsDialog;
 class Bitcredit_SendCoinsRecipient;
-class TransactionView;
+class Bitcoin_SendCoinsRecipient;
+class Credits_TransactionView;
+class Bitcoin_TransactionView;
 class MinerDepositsView;
 class Bitcredit_WalletModel;
 class Bitcoin_WalletModel;
@@ -51,9 +56,11 @@ public:
     */
     void setWalletModel(Bitcredit_WalletModel *bitcredit_model, Bitcoin_WalletModel *bitcoin_model, Bitcredit_WalletModel *deposit_model);
 
-    bool handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
+    bool credits_handlePaymentRequest(const Bitcredit_SendCoinsRecipient& recipient);
+    bool bitcoin_handlePaymentRequest(const Bitcoin_SendCoinsRecipient& recipient);
 
-    void showOutOfSyncWarning(bool fShow);
+    void credits_showOutOfSyncWarning(bool fShow);
+    void bitcoin_showOutOfSyncWarning(bool fShow);
 
 private:
     ClientModel *clientModel;
@@ -61,15 +68,20 @@ private:
     Bitcoin_WalletModel *bitcoin_model;
     Bitcredit_WalletModel *deposit_model;
 
-    OverviewPage *overviewPage;
-    QWidget *transactionsPage;
+    Credits_OverviewPage *credits_overviewPage;
+    Bitcoin_OverviewPage *bitcoin_overviewPage;
+    QWidget *credits_transactionsPage;
+    QWidget *bitcoin_transactionsPage;
     QWidget *minerDepositsPage;
-    ReceiveCoinsDialog *receiveCoinsPage;
-    SendCoinsDialog *sendCoinsPage;
+    Credits_ReceiveCoinsDialog *credits_receiveCoinsPage;
+    Bitcoin_ReceiveCoinsDialog *bitcoin_receiveCoinsPage;
+    Credits_SendCoinsDialog *credits_sendCoinsPage;
+    Bitcoin_SendCoinsDialog *bitcoin_sendCoinsPage;
     ClaimCoinsDialog *claimCoinsPage;
     MinerCoinsDialog *minerCoinsPage;
 
-    TransactionView *transactionView;
+    Credits_TransactionView *credits_transactionView;
+    Bitcoin_TransactionView *bitcoin_transactionView;
     MinerDepositsView *minerDepositsView;
 
     QProgressDialog *progressDialog;
@@ -79,17 +91,21 @@ private:
 
 public slots:
     /** Switch to overview (home) page */
-    void gotoOverviewPage();
+    void credits_gotoOverviewPage();
+    void bitcoin_gotoOverviewPage();
     /** Switch to new claim  coins page */
     void gotoClaimCoinsPage();
     /** Switch to history (transactions) page */
-    void gotoHistoryPage();
+    void credits_gotoHistoryPage();
+    void bitcoin_gotoHistoryPage();
     /** Switch to miner deposits page */
     void gotoMinerDepositsPage();
     /** Switch to receive coins page */
-    void gotoReceiveCoinsPage();
+    void credits_gotoReceiveCoinsPage();
+    void bitcoin_gotoReceiveCoinsPage();
     /** Switch to send coins page */
-    void gotoSendCoinsPage(QString addr = "");
+    void credits_gotoSendCoinsPage(QString addr = "");
+    void bitcoin_gotoSendCoinsPage(QString addr = "");
     /** Switch to miner coins page */
     void gotoMinerCoinsPage(QString addr = "");
 
@@ -102,7 +118,8 @@ public slots:
 
         The new items are those between start and end inclusive, under the given parent item.
     */
-    void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
+    void credits_processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
+    void bitcoin_processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
     /** Encrypt the wallet */
     void bitcredit_encryptWallet(bool status);
     void bitcoin_encryptWallet(bool status);
@@ -121,9 +138,11 @@ public slots:
     void deposit_unlockWallet();
 
     /** Show used sending addresses */
-    void usedSendingAddresses();
+    void credits_usedSendingAddresses();
+    void bitcoin_usedSendingAddresses();
     /** Show used receiving addresses */
-    void usedReceivingAddresses();
+    void credits_usedReceivingAddresses();
+    void bitcoin_usedReceivingAddresses();
 
     void bitcredit_setNumBlocks(int count);
 

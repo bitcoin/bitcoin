@@ -12,7 +12,7 @@
 class Bitcredit_WalletModel;
 
 namespace Ui {
-    class SendCoinsEntry;
+    class Credits_SendCoinsEntry;
 }
 
 /**
@@ -20,13 +20,13 @@ namespace Ui {
  * Stacked widget, with different UIs for payment requests
  * with a strong payee identity.
  */
-class SendCoinsEntry : public QStackedWidget
+class Credits_SendCoinsEntry : public QStackedWidget
 {
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(QWidget *parent = 0);
-    ~SendCoinsEntry();
+    explicit Credits_SendCoinsEntry(QWidget *parent = 0);
+    ~Credits_SendCoinsEntry();
 
     void setModel(Bitcredit_WalletModel *model);
     bool validate();
@@ -49,7 +49,7 @@ public slots:
     void clear();
 
 signals:
-    void removeEntry(SendCoinsEntry *entry);
+    void removeEntry(Credits_SendCoinsEntry *entry);
     void payAmountChanged();
 
 private slots:
@@ -61,7 +61,7 @@ private slots:
 
 private:
     Bitcredit_SendCoinsRecipient recipient;
-    Ui::SendCoinsEntry *ui;
+    Ui::Credits_SendCoinsEntry *ui;
     Bitcredit_WalletModel *model;
 
     bool updateLabel(const QString &address);

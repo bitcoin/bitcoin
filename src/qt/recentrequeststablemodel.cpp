@@ -48,7 +48,7 @@ QVariant Bitcredit_RecentRequestsTableModel::data(const QModelIndex &index, int 
     if(!index.isValid() || index.row() >= list.length())
         return QVariant();
 
-    const Bitcredit_RecentRequestEntry *rec = &list[index.row()];
+    const Credits_RecentRequestEntry *rec = &list[index.row()];
 
     if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
@@ -114,7 +114,7 @@ bool Bitcredit_RecentRequestsTableModel::removeRows(int row, int count, const QM
 
     if(count > 0 && row >= 0 && (row+count) <= list.size())
     {
-        const Bitcredit_RecentRequestEntry *rec;
+        const Credits_RecentRequestEntry *rec;
         for (int i = 0; i < count; ++i)
         {
             rec = &list[row+i];
@@ -139,12 +139,12 @@ Qt::ItemFlags Bitcredit_RecentRequestsTableModel::flags(const QModelIndex &index
 // called when adding a request from the GUI
 void Bitcredit_RecentRequestsTableModel::addNewRequest(const Bitcredit_SendCoinsRecipient &recipient)
 {
-    Bitcredit_RecentRequestEntry newEntry;
+    Credits_RecentRequestEntry newEntry;
     newEntry.id = ++nReceiveRequestsMaxId;
     newEntry.date = QDateTime::currentDateTime();
     newEntry.recipient = recipient;
 
-    CDataStream ss(SER_DISK, BITCREDIT_CLIENT_VERSION);
+    CDataStream ss(SER_DISK, Bitcredit_Params().ClientVersion());
     ss << newEntry;
 
     if (!walletModel->saveReceiveRequest(recipient.address.toStdString(), newEntry.id, ss.str()))
@@ -157,9 +157,9 @@ void Bitcredit_RecentRequestsTableModel::addNewRequest(const Bitcredit_SendCoins
 void Bitcredit_RecentRequestsTableModel::addNewRequest(const std::string &recipient)
 {
     std::vector<char> data(recipient.begin(), recipient.end());
-    CDataStream ss(data, SER_DISK, BITCREDIT_CLIENT_VERSION);
+    CDataStream ss(data, SER_DISK, Bitcredit_Params().ClientVersion());
 
-    Bitcredit_RecentRequestEntry entry;
+    Credits_RecentRequestEntry entry;
     ss >> entry;
 
     if (entry.id == 0) // should not happen
@@ -172,7 +172,7 @@ void Bitcredit_RecentRequestsTableModel::addNewRequest(const std::string &recipi
 }
 
 // actually add to table in GUI
-void Bitcredit_RecentRequestsTableModel::addNewRequest(Bitcredit_RecentRequestEntry &recipient)
+void Bitcredit_RecentRequestsTableModel::addNewRequest(Credits_RecentRequestEntry &recipient)
 {
     beginInsertRows(QModelIndex(), 0, 0);
     list.prepend(recipient);
@@ -181,14 +181,14 @@ void Bitcredit_RecentRequestsTableModel::addNewRequest(Bitcredit_RecentRequestEn
 
 void Bitcredit_RecentRequestsTableModel::sort(int column, Qt::SortOrder order)
 {
-    qSort(list.begin(), list.end(), Bitcredit_RecentRequestEntryLessThan(column, order));
+    qSort(list.begin(), list.end(), Credits_RecentRequestEntryLessThan(column, order));
     emit dataChanged(index(0, 0, QModelIndex()), index(list.size() - 1, NUMBER_OF_COLUMNS - 1, QModelIndex()));
 }
 
-bool Bitcredit_RecentRequestEntryLessThan::operator()(Bitcredit_RecentRequestEntry &left, Bitcredit_RecentRequestEntry &right) const
+bool Credits_RecentRequestEntryLessThan::operator()(Credits_RecentRequestEntry &left, Credits_RecentRequestEntry &right) const
 {
-    Bitcredit_RecentRequestEntry *pLeft = &left;
-    Bitcredit_RecentRequestEntry *pRight = &right;
+    Credits_RecentRequestEntry *pLeft = &left;
+    Credits_RecentRequestEntry *pRight = &right;
     if (order == Qt::DescendingOrder)
         std::swap(pLeft, pRight);
 

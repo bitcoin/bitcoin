@@ -2352,7 +2352,7 @@ Value bitcoin_getwalletinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("walletversion", bitcoin_pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(*bitcoin_pclaimCoinsTip, mapClaimTxInPoints))));
+    obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(bitcoin_pclaimCoinsTip, mapClaimTxInPoints))));
     obj.push_back(Pair("txcount",       (int)bitcoin_pwalletMain->mapWallet.size()));
     obj.push_back(Pair("keypoololdest", bitcoin_pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)bitcoin_pwalletMain->GetKeyPoolSize()));

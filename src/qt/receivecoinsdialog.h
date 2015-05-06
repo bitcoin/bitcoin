@@ -16,7 +16,7 @@
 #include "guiutil.h"
 
 namespace Ui {
-    class ReceiveCoinsDialog;
+    class Credits_ReceiveCoinsDialog;
 }
 class OptionsModel;
 class Bitcredit_WalletModel;
@@ -26,7 +26,7 @@ class QModelIndex;
 QT_END_NAMESPACE
 
 /** Dialog for requesting payment of bitcredits */
-class ReceiveCoinsDialog : public QDialog
+class Credits_ReceiveCoinsDialog : public QDialog
 {
     Q_OBJECT
 
@@ -38,8 +38,8 @@ public:
         MINIMUM_COLUMN_WIDTH = 130
     };
 
-    explicit ReceiveCoinsDialog(QWidget *parent = 0);
-    ~ReceiveCoinsDialog();
+    explicit Credits_ReceiveCoinsDialog(QWidget *parent = 0);
+    ~Credits_ReceiveCoinsDialog();
 
     void setModel(Bitcredit_WalletModel *model);
 
@@ -52,7 +52,7 @@ protected:
     virtual void keyPressEvent(QKeyEvent *event);
 
 private:
-    Ui::ReceiveCoinsDialog *ui;
+    Ui::Credits_ReceiveCoinsDialog *ui;
     GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     Bitcredit_WalletModel *model;
     QMenu *contextMenu;
