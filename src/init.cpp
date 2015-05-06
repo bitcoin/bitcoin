@@ -1133,8 +1133,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             boost::filesystem::path configPathInfo = GetConfigFile();
             FILE *fp = fopen(configPathInfo.string().c_str(), "a");
             if (!fp) {
-                std::string failMsg = _("Unable to update configuration file at\n");
-                failMsg += ": " + GetConfigFile().string() + "\n\n";
+                std::string failMsg = _("Unable to update configuration file at");
+                failMsg += ":\n" + GetConfigFile().string() + "\n\n";
                 failMsg += _("The file may be write protected or you may not have the required permissions to edit it.\n");
                 failMsg += _("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown.");
                 return InitError(failMsg);
