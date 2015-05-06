@@ -6,6 +6,7 @@
 
 #include "test_bitcoin.h"
 
+#include "key.h"
 #include "main.h"
 #include "random.h"
 #include "txdb.h"
@@ -28,6 +29,7 @@ extern void noui_connect();
 
 BasicTestingSetup::BasicTestingSetup()
 {
+        ECC_Start();
         SetupEnvironment();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
@@ -35,6 +37,7 @@ BasicTestingSetup::BasicTestingSetup()
 }
 BasicTestingSetup::~BasicTestingSetup()
 {
+        ECC_Stop();
 }
 
 TestingSetup::TestingSetup()
