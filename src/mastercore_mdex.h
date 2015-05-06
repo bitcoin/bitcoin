@@ -77,7 +77,7 @@ public:
 
     std::string ToString() const;
 
-    XDOUBLE effectivePrice() const;
+    XDOUBLE unitPrice() const;
     XDOUBLE inversePrice() const;
 
     void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const;

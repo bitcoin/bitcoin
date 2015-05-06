@@ -1513,7 +1513,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                          tempUnitPrice = temp_metadexoffer.inversePrice();
                                          if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
                                      } else {
-                                         tempUnitPrice = temp_metadexoffer.effectivePrice();
+                                         tempUnitPrice = temp_metadexoffer.unitPrice();
                                          if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
                                      }
                                      mdex_unitPriceStr = tempUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);

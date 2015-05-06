@@ -130,7 +130,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
         md_Set::iterator iitt;
         for (iitt = indexes->begin(); iitt != indexes->end();) { // specific price, check all properties
             p_older = &(*iitt);
-            assert(p_older->effectivePrice() == sellers_price);
+            assert(p_older->unitPrice() == sellers_price);
 
             if (msc_debug_metadex1) file_log("Looking at existing: %s (its prop= %u, its des prop= %u) = %s\n",
                 xToString(sellers_price), p_older->getProperty(), p_older->getDesProperty(), p_older->ToString());
@@ -192,7 +192,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             if (0 < buyer_amountStillForSale) {
                 NewReturn = TRADED_MOREINBUYER;
 
-                PriceCheck(getTradeReturnType(NewReturn), newo->effectivePrice(), newo->effectivePrice());
+                PriceCheck(getTradeReturnType(NewReturn), newo->unitPrice(), newo->unitPrice());
             } else {
                 bBuyerSatisfied = true;
             }
@@ -202,7 +202,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
                 NewReturn = TRADED_MOREINSELLER;
                 bBuyerSatisfied = true;
 
-                PriceCheck(getTradeReturnType(NewReturn), p_older->effectivePrice(), seller_replacement.effectivePrice());
+                PriceCheck(getTradeReturnType(NewReturn), p_older->unitPrice(), seller_replacement.unitPrice());
             }
 
             if (msc_debug_metadex1) file_log("==== TRADED !!! %u=%s\n", NewReturn, getTradeReturnType(NewReturn));
@@ -233,7 +233,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
     return NewReturn;
 }
 
-XDOUBLE CMPMetaDEx::effectivePrice() const
+XDOUBLE CMPMetaDEx::unitPrice() const
 {
     XDOUBLE effective_price = 0;
 
@@ -252,7 +252,7 @@ XDOUBLE CMPMetaDEx::inversePrice() const
 
 int64_t CMPMetaDEx::getAmountDesired() const
 {
-    XDOUBLE xStillDesired = (XDOUBLE) getAmountRemaining() * effectivePrice();
+    XDOUBLE xStillDesired = (XDOUBLE) getAmountRemaining() * unitPrice();
 
     return xToInt64(xStillDesired);
 }
@@ -288,7 +288,7 @@ void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, u
 std::string CMPMetaDEx::ToString() const
 {
     return strprintf("%s:%34s in %d/%03u, txid: %s , trade #%u %s for #%u %s",
-        xToString(effectivePrice()), addr, block, idx, txid.ToString().substr(0, 10),
+        xToString(unitPrice()), addr, block, idx, txid.ToString().substr(0, 10),
         property, FormatMP(property, amount_forsale), desired_property, FormatMP(desired_property, amount_desired));
 }
 
@@ -335,7 +335,7 @@ bool mastercore::MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx)
     std::pair <md_Set::iterator, bool> ret;
 
     // Attempt to obtain a set of metadex objects for this price from the price map
-    if (p_prices) p_indexes = get_Indexes(p_prices, objMetaDEx.effectivePrice());
+    if (p_prices) p_indexes = get_Indexes(p_prices, objMetaDEx.unitPrice());
     // See if the set was populated, if not no set exists at this price level, use the empty set that we created earlier
     if (!p_indexes) p_indexes = &temp_indexes;
 
@@ -347,7 +347,7 @@ bool mastercore::MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx)
     if (!p_prices) p_prices = &temp_prices;
 
     // Update the prices map with the new set at this price
-    (*p_prices)[objMetaDEx.effectivePrice()] = *p_indexes;
+    (*p_prices)[objMetaDEx.unitPrice()] = *p_indexes;
 
     // Set the metadex map for the property to the updated (or new if it didn't exist) price map
     metadex[objMetaDEx.getProperty()] = *p_prices;
@@ -369,7 +369,7 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
     if (msc_debug_metadex1) file_log("%s(); buyer obj: %s\n", __FUNCTION__, new_mdex.ToString());
 
     // Ensure this is not a badly priced trade (for example due to zero amounts)
-    if (0 >= new_mdex.effectivePrice()) return METADEX_ERROR -66;
+    if (0 >= new_mdex.unitPrice()) return METADEX_ERROR -66;
 
     // Match against existing trades, remainder of the order will be put into the order book
     if (msc_debug_metadex3) MetaDEx_debug_print();
@@ -386,7 +386,7 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
             assert(update_tally_map(sender_addr, prop, -new_mdex.getAmountRemaining(), BALANCE));
             assert(update_tally_map(sender_addr, prop, new_mdex.getAmountRemaining(), METADEX_RESERVE));
 
-            if (msc_debug_metadex1) file_log("==== INSERTED: %s= %s\n", xToString(new_mdex.effectivePrice()), new_mdex.ToString());
+            if (msc_debug_metadex1) file_log("==== INSERTED: %s= %s\n", xToString(new_mdex.unitPrice()), new_mdex.ToString());
             if (msc_debug_metadex3) MetaDEx_debug_print();
         }
     }
@@ -415,7 +415,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
     for (md_PricesMap::iterator my_it = prices->begin(); my_it != prices->end(); ++my_it) {
         XDOUBLE sellers_price = my_it->first;
 
-        if (mdex.effectivePrice() != sellers_price) continue;
+        if (mdex.unitPrice() != sellers_price) continue;
 
         md_Set* indexes = &(my_it->second);
 
