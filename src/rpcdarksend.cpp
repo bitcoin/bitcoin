@@ -606,7 +606,7 @@ Value masternode(const Array& params, bool fHelp)
                 failed++;
                 continue;
             }
-            
+
             CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
             if(pmn == NULL)
             {
@@ -802,8 +802,8 @@ Value masternodelist(const Array& params, bool fHelp)
             } else if(strMode == "votes"){
                 std::string strStatus = "ABSTAIN";
 
-                //voting lasts 7 days, ignore the last vote if it was older than that
-                if((GetAdjustedTime() - mn.lastVote) < (60*60*8))
+                //voting lasts 30 days, ignore the last vote if it was older than that
+                if((GetAdjustedTime() - mn.lastVote) < (60*60*30*24))
                 {
                     if(mn.nVote == -1) strStatus = "NAY";
                     if(mn.nVote == 1) strStatus = "YEA";
