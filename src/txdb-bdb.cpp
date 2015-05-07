@@ -424,7 +424,7 @@ bool CTxDB::LoadBlockIndexGuts()
             break; // if shutdown requested or finished loading block index
         }
         }    // try
-        catch (std::exception &e) {
+        catch (const std::exception&) {
             return error("%s() : deserialize error", BOOST_CURRENT_FUNCTION);
         }
     }
