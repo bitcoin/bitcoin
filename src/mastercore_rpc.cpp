@@ -12,6 +12,8 @@
 #include "mastercore_sp.h"
 #include "mastercore_tx.h"
 #include "mastercore_version.h"
+#include "omnicore_createpayload.h"
+#include "omnicore_rpctx.h"
 
 #include "amount.h"
 #include "init.h"
@@ -60,26 +62,24 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
 {
-    CMPSPInfo::Entry spProperty;
-    CMPSPInfo::Entry spDesProperty;
+    // temp commentary - Z rewrite to be more similar to existing calls
 
-    _my_sps->getSP(obj.getProperty(), spProperty);
-    _my_sps->getSP(obj.getDesProperty(), spDesProperty);
-
-    std::string strAmountOriginal = FormatMP(obj.getProperty(), obj.getAmountForSale());
-    std::string strAmountDesired = FormatMP(obj.getDesProperty(), obj.getAmountDesired());
-    std::string strEcosystem = isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main";
-
+    bool propertyIdForSaleIsDivisible = isPropertyDivisible(obj.getProperty());
+    bool propertyIdDesiredIsDivisible = isPropertyDivisible(obj.getDesProperty());
+    std::string strAmountForSale = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountForSale());
+    std::string strAmountRemaining = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountRemaining());
+    std::string strAmountDesired = FormatMP(propertyIdDesiredIsDivisible, obj.getAmountDesired());
     // add data to JSON object
     metadex_obj.push_back(Pair("address", obj.getAddr()));
     metadex_obj.push_back(Pair("txid", obj.getHash().GetHex()));
-    metadex_obj.push_back(Pair("ecosystem", strEcosystem));
-    metadex_obj.push_back(Pair("property_owned", (uint64_t) obj.getProperty()));
-    metadex_obj.push_back(Pair("property_desired", (uint64_t) obj.getDesProperty()));
-    metadex_obj.push_back(Pair("property_owned_divisible", spProperty.isDivisible()));
-    metadex_obj.push_back(Pair("property_desired_divisible", spDesProperty.isDivisible()));
-    metadex_obj.push_back(Pair("amount_original", strAmountOriginal));
-    metadex_obj.push_back(Pair("amount_desired", strAmountDesired));
+    if (obj.getAction() == 4) metadex_obj.push_back(Pair("ecosystem", isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main"));
+    metadex_obj.push_back(Pair("propertyidforsale", (uint64_t) obj.getProperty()));
+    metadex_obj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
+    metadex_obj.push_back(Pair("amountforsale", strAmountForSale));
+    metadex_obj.push_back(Pair("amountremaining", strAmountRemaining));
+    metadex_obj.push_back(Pair("propertyiddesired", (uint64_t) obj.getDesProperty()));
+    metadex_obj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
+    metadex_obj.push_back(Pair("amountdesired", strAmountDesired));
     metadex_obj.push_back(Pair("action", (int) obj.getAction()));
     metadex_obj.push_back(Pair("block", obj.getBlock()));
     metadex_obj.push_back(Pair("blocktime", obj.getBlockTime()));
@@ -117,6 +117,20 @@ void BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
         balance_obj.push_back(Pair("balance", FormatIndivisibleMP(nAvailable)));
         balance_obj.push_back(Pair("reserved", FormatIndivisibleMP(nReserved)));
     }
+}
+
+// determine whether to automatically commit transactions
+Value setautocommit_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "setautocommit\n"
+            "\nSets the global flag that determines whether transactions are automatically committed and broadcast.\n"
+            "\nResult:\n"
+            "(boolean) The new flag status\n"
+        );
+    autoCommit = params[0].get_bool();
+    return autoCommit;
 }
 
 // display the tally map & the offer/accept list(s)
@@ -255,121 +269,6 @@ Value getbalance_MP(const Array& params, bool fHelp)
     return balance_obj;
 }
 
-// send a MP transaction via RPC - simple send
-Value send_MP(const Array& params, bool fHelp)
-{
-if (fHelp || params.size() < 4 || params.size() > 6)
-        throw runtime_error(
-            "send_MP \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"redeemaddress\" \"referenceamount\" )\n"
-            "\nCreates and broadcasts a simple send for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "ToAddress     : the address to send to\n"
-            "PropertyID    : the id of the smart property to send\n"
-            "Amount        : the amount to send\n"
-            "RedeemAddress : (optional) the address that can redeem the bitcoin outputs. Defaults to FromAddress\n"
-            "ReferenceAmount:(optional)\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
-            "\nExamples:\n"
-            ">mastercored send_MP 1FromAddress 1ToAddress PropertyID Amount 1RedeemAddress\n"
-        );
-
-  std::string FromAddress = (params[0].get_str());
-  std::string ToAddress = (params[1].get_str());
-  std::string RedeemAddress = (params.size() > 4) ? (params[4].get_str()): "";
-
-  int64_t tmpPropertyId = params[2].get_int64();
-  if ((1 > tmpPropertyId) || (4294967295 < tmpPropertyId)) // not safe to do conversion
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
-  unsigned int propertyId = int(tmpPropertyId);
-
-  CMPSPInfo::Entry sp;
-  if (false == _my_sps->getSP(propertyId, sp)) {
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
-  }
-
-  bool divisible = sp.isDivisible();
-
-  string strAmount = params[3].get_str();
-  int64_t Amount = 0, additional = 0;
-  Amount = StrToInt64(strAmount, divisible);
-
-  if (0 >= Amount)
-   throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-
-  std::string strAdditional = (params.size() > 5) ? (params[5].get_str()): "0";
-  additional = StrToInt64(strAdditional, true);
-
-  if ((0.01 * COIN) < additional)
-   throw JSONRPCError(RPC_TYPE_ERROR, "Invalid reference amount");
-
-  //some sanity checking of the data supplied?
-  int code = 0;
-  uint256 newTX = send_INTERNAL_1packet(FromAddress, ToAddress, RedeemAddress, propertyId, Amount, 0, 0, MSC_TYPE_SIMPLE_SEND, additional, &code);
-
-  if (0 != code) throw JSONRPCError(code, error_str(code));
-
-  //we need to do better than just returning a string of 0000000 here if we can't send the TX
-  return newTX.GetHex();
-}
-
-// send a MP transaction via RPC - simple send
-Value sendtoowners_MP(const Array& params, bool fHelp)
-{
-if (fHelp || params.size() < 3 || params.size() > 4)
-        throw runtime_error(
-            "sendtoowners_MP \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" )\n"
-            "\nCreates and broadcasts a send-to-owners transaction for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "PropertyID    : the id of the smart property to send\n"
-            "Amount (string): the amount to send\n"
-            "RedeemAddress : (optional) the address that can redeem the bitcoin outputs. Defaults to FromAddress\n"
-            "\nResult:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
-            "\nExamples:\n"
-            ">mastercored send_MP 1FromAddress PropertyID Amount 1RedeemAddress\n"
-        );
-
-  std::string FromAddress = (params[0].get_str());
-  std::string RedeemAddress = (params.size() > 3) ? (params[3].get_str()): "";
-
-  int64_t tmpPropertyId = params[1].get_int64();
-  if ((1 > tmpPropertyId) || (4294967295 < tmpPropertyId)) // not safe to do conversion
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
-
-  unsigned int propertyId = int(tmpPropertyId);
-
-  CMPSPInfo::Entry sp;
-  if (false == _my_sps->getSP(propertyId, sp)) {
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
-  }
-
-  bool divisible = sp.isDivisible();
-
-//  printf("%s(), params3='%s' line %d, file: %s\n", __FUNCTION__, params[3].get_str().c_str(), __LINE__, __FILE__);
-
-  string strAmount = params[2].get_str();
-  int64_t Amount = 0;
-  Amount = StrToInt64(strAmount, divisible);
-
-  if (0 >= Amount)
-    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-
-  // printf("%s() %40.25lf, %lu, line %d, file: %s\n", __FUNCTION__, tmpAmount, Amount, __LINE__, __FILE__);
-
-  //some sanity checking of the data supplied?
-  int code = 0;
-  uint256 newTX = send_INTERNAL_1packet(FromAddress, "", RedeemAddress, propertyId, Amount, 0, 0, MSC_TYPE_SEND_TO_OWNERS, 0, &code);
-
-  if (0 != code)
-    throw JSONRPCError(code, error_str(code));
-
-  //we need to do better than just returning a string of 0000000 here if we can't send the TX
-  return newTX.GetHex();
-}
-
 Value sendrawtx_MP(const Array& params, bool fHelp)
 {
 if (fHelp || params.size() < 2 || params.size() > 5)
@@ -393,7 +292,7 @@ if (fHelp || params.size() < 2 || params.size() > 5)
   std::string hexTransaction = (params[1].get_str());
   std::string toAddress = (params.size() > 2) ? (params[2].get_str()): "";
   std::string redeemAddress = (params.size() > 3) ? (params[3].get_str()): "";
-  
+
   int64_t referenceAmount = 0;
 
   if (params.size() > 4)
@@ -401,14 +300,20 @@ if (fHelp || params.size() < 2 || params.size() > 5)
 
   //some sanity checking of the data supplied?
   uint256 newTX;
+  string rawHex;
   std::vector<unsigned char> data = ParseHex(hexTransaction);
-  int rc = ClassB_send(fromAddress, toAddress, redeemAddress, data, newTX, referenceAmount);
+  int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, data, newTX, rawHex, autoCommit);
 
-  if (0 != rc)
-      throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("error code= %i", rc));
-
-  //we need to do better than just returning a string of 0000000 here if we can't send the TX
-  return newTX.GetHex();
+  // check error and return the txid (or raw hex depending on autocommit)
+  if (result != 0) {
+      throw JSONRPCError(result, error_str(result));
+  } else {
+      if (!autoCommit) {
+          return rawHex;
+      } else {
+          return newTX.GetHex();
+      }
+  }
 }
 
 Value getallbalancesforid_MP(const Array& params, bool fHelp)
@@ -940,88 +845,6 @@ int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
   return tmpPropId;
 }
 
-Value trade_MP(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 6)
-        throw runtime_error(
-            "trade_MP \"address\" \"amountforsale\" propertyid1 \"amountdesired\" propertid2 action ( \"redeemaddress\" )\n"
-            "\nPlace or cancel an offer on the distributed token exchange.\n"
-
-            "\nArguments:\n"
-            "1. address           (string, required) address that is making the sale\n"
-            "2. amount_for_sale   (string, required) amount owned to put up on sale\n"
-            "3. property_id1      (int, required) property owned to put up on sale\n"
-            "4. amount_desired    (string, required) amount wanted/willing to purchase\n"
-            "5. property_id2      (int, required) property wanted/willing to purchase\n"
-            "6. action            (int, required) decision to either start a new (1), cancel_price (2), cancel_pair (3), or cancel_all (4) for an offer\n"
-            "7. redeem_address    (optional) the address that can redeem the bitcoin outputs, defaults to sender\n"
-        );
-
-    std::string fromAddress = params[0].get_str();
-    std::string redeemAddress = (params.size() > 6) ? (params[6].get_str()) : "";
-
-    uint32_t propertyIdSale = static_cast<uint32_t>(params[2].get_int64());
-    uint32_t propertyIdWant = static_cast<uint32_t>(params[4].get_int64());
-
-    int64_t amountSale = 0;
-    int64_t amountWant = 0;
-    int64_t action = params[5].get_int64();
-    
-    if (action <= 0 || CMPTransaction::CANCEL_EVERYTHING < action)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid action (1, 2, 3, 4 only)");
-
-    // CANCEL-EVERYTHING doesn't require additional checks or setup
-    // CANCEL-AT-PRICE and CANCEL-ALL-FOR-PAIR have property values
-    if (action <= CMPTransaction::CANCEL_ALL_FOR_PAIR)
-    {
-        check_prop_valid(propertyIdSale,
-                "Invalid property identifier (Sale)",
-                "Property identifier does not exist (Sale)");
-
-        check_prop_valid(propertyIdWant,
-                "Invalid property identifier (Want)",
-                "Property identifier does not exist (Want)");
-
-        if (isTestEcosystemProperty(propertyIdSale) != isTestEcosystemProperty(propertyIdWant))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Properties must be in the same ecosystem (Main/Test)");
-
-        if (propertyIdSale == propertyIdWant)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Properties must be different");
-    }
-
-    // CANCEL-AT-PRICE has also price information
-    if (action <= CMPTransaction::CANCEL_AT_PRICE)
-    {
-        CMPSPInfo::Entry sp;
-        bool divisible_sale = false, divisible_want = false;
-
-        _my_sps->getSP(propertyIdSale, sp);
-        divisible_sale = sp.isDivisible();
-
-        _my_sps->getSP(propertyIdWant, sp);
-        divisible_want = sp.isDivisible();
-
-        std::string strAmountSale = params[1].get_str();        
-        amountSale = StrToInt64(strAmountSale, divisible_sale);
-
-        std::string strAmountWant = params[3].get_str();        
-        amountWant = StrToInt64(strAmountWant, divisible_want);
-
-        if (0 >= amountSale)
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount (Sale)");
-
-        if (0 >= amountWant)
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount (Want)");
-    }
-
-    int code = 0;    
-    uint256 newTX = send_INTERNAL_1packet(fromAddress, "", redeemAddress, propertyIdSale, amountSale, propertyIdWant, amountWant, MSC_TYPE_METADEX, action, &code);
-    if (0 != code) throw JSONRPCError(code, error_str(code));
-
-    // we need to do better than just returning a string of 0000000 here if we can't send the TX
-    return newTX.GetHex();
-}
-
 Value getorderbook_MP(const Array& params, bool fHelp)
 {
    if (fHelp || params.size() < 1)
@@ -1398,8 +1221,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     bool mdex_propertyId_Div = false;
     uint64_t mdex_propertyWanted = 0;
     uint64_t mdex_amountWanted = 0;
+    uint64_t mdex_amountRemaining = 0;
     bool mdex_propertyWanted_Div = false;
     unsigned int mdex_action = 0;
+    string mdex_unitPriceStr;
     string mdex_actionStr;
 
     if (0 == blockHash) { return MP_TX_UNCONFIRMED; }
@@ -1505,7 +1330,18 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                      mdex_propertyWanted = temp_metadexoffer.getDesProperty();
                                      mdex_propertyWanted_Div = isPropertyDivisible(mdex_propertyWanted);
                                      mdex_amountWanted = temp_metadexoffer.getAmountDesired();
+                                     mdex_amountRemaining = temp_metadexoffer.getAmountRemaining();
                                      mdex_action = temp_metadexoffer.getAction();
+                                     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
+                                     XDOUBLE tempUnitPrice = 0;
+                                     if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
+                                         tempUnitPrice = temp_metadexoffer.inversePrice();
+                                         if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                     } else {
+                                         tempUnitPrice = temp_metadexoffer.unitPrice();
+                                         if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                     }
+                                     mdex_unitPriceStr = tempUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
                                      if(1 == mdex_action) mdex_actionStr = "new sell";
                                      if(2 == mdex_action) mdex_actionStr = "cancel price";
                                      if(3 == mdex_action) mdex_actionStr = "cancel pair";
@@ -1690,18 +1526,17 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
         }
         if (MSC_TYPE_METADEX == MPTxTypeInt)
         {
-            txobj->push_back(Pair("amountoffered", FormatMP(propertyId, amount)));
-            txobj->push_back(Pair("propertyoffered", propertyId));
-            txobj->push_back(Pair("propertyofferedisdivisible", mdex_propertyId_Div));
+            txobj->push_back(Pair("propertyidforsale", propertyId));
+            txobj->push_back(Pair("propertyidforsaleisdivisible", mdex_propertyId_Div));
+            txobj->push_back(Pair("amountforsale", FormatMP(propertyId, amount)));
+            txobj->push_back(Pair("amountremaining", FormatMP(propertyId, mdex_amountRemaining)));
+            txobj->push_back(Pair("propertyiddesired", mdex_propertyWanted));
+            txobj->push_back(Pair("propertyiddesiredisdivisible", mdex_propertyWanted_Div));
             txobj->push_back(Pair("amountdesired", FormatMP(mdex_propertyWanted, mdex_amountWanted)));
-            txobj->push_back(Pair("propertydesired", mdex_propertyWanted));
-            txobj->push_back(Pair("propertydesiredisdivisible", mdex_propertyWanted_Div));
+            txobj->push_back(Pair("unitprice", mdex_unitPriceStr));
             txobj->push_back(Pair("action", mdex_actionStr));
-            //txobj->push_back(Pair("unit_price", mdex_unitPrice ) );
-            //txobj->push_back(Pair("inverse_unit_price", mdex_invUnitPrice ) );
-            //active?
-            //txobj->push_back(Pair("amount_original", FormatDivisibleMP(mdex_amt_orig_sale)));
-            //txobj->push_back(Pair("amount_desired", FormatDivisibleMP(mdex_amt_des)));
+            if (mdex_actionStr == "cancel all") txobj->push_back(Pair("ecosystem",
+                isTestEcosystemProperty(propertyId) ? "Test" : "Main"));
         }
         txobj->push_back(Pair("valid", valid));
     }
@@ -2063,45 +1898,39 @@ Value gettrade_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    // Prepare a few vars
     uint256 hash;
-    hash.SetHex(params[0].get_str());
     Object tradeobj;
     Object txobj;
     CMPMetaDEx temp_metadexoffer;
-
-    //get sender & propId
-    string senderAddress;
-    unsigned int propertyId = 0;
     CTransaction wtx;
     uint256 blockHash = 0;
-    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+    string senderAddress;
+    unsigned int propertyId = 0;
     CMPTransaction mp_obj;
+
+    // Obtain the transaction
+    hash.SetHex(params[0].get_str());
+    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+
+    // Ensure it can be parsed OK
     int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
-    if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sa$
-    {
-        if (0<=mp_obj.step1())
-        {
+    if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
+        if (0<=mp_obj.step1()) {
             senderAddress = mp_obj.getSender();
-            if (0 == mp_obj.step2_Value())
-            {
-                propertyId = mp_obj.getProperty();
-            }
+            if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
         }
     }
-    if (propertyId == 0) // something went wrong, couldn't decode property ID - bad packet?
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
-    if (senderAddress.empty()) // something went wrong, couldn't decode transaction
+    if ((0 > parseRC) || (propertyId == 0) || (senderAddress.empty())) // something went wrong, couldn't decode - bad packet?
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
 
-    // make a request to new RPC populator function to populate a transaction object
+    // make a request to RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, &txobj);
 
     // check the response, throw any error codes if false
-    if (0>populateResult)
-    {
+    if (0>populateResult) {
         // TODO: consider throwing other error codes, check back with Bitcoin Core
-        switch (populateResult)
-        {
+        switch (populateResult) {
             case MP_TX_NOT_FOUND:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
             case MP_TX_UNCONFIRMED:
@@ -2131,7 +1960,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
     int actionByte = 0;
     if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
 
-    // everything seems ok, now add status and get an array of matches to add to the object
+    // everything seems ok, now add status and add array of matches to the object
     // work out status
     bool orderOpen = isMetaDExOfferActive(hash, propertyId);
     bool partialFilled = false;
@@ -2148,36 +1977,29 @@ Value gettrade_MP(const Array& params, bool fHelp)
     if(actionByte==1) txobj.push_back(Pair("status", statusText)); // no status for cancel txs
 
     // add cancels array to object and set status as cancelled only if cancel type
-    if(actionByte != 1)
-    {
+    if(actionByte != 1) {
         Array cancelArray;
         int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(hash);
-        if (0<numberOfCancels)
-        {
-            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++)
-            {
+        if (0<numberOfCancels) {
+            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
                 Object cancelTx;
                 string strValue = p_txlistdb->getKeyValue(hash.ToString() + "-C" + to_string(refNumber));
-                if (!strValue.empty())
-                {
+                if (!strValue.empty()) {
                     std::vector<std::string> vstr;
                     boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-                    if (3 <= vstr.size())
-                    {
+                    if (3 <= vstr.size()) {
                         uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
                         uint64_t amountUnreserved = boost::lexical_cast<uint64_t>(vstr[2]);
                         cancelTx.push_back(Pair("txid", vstr[0]));
                         cancelTx.push_back(Pair("propertyid", propId));
                         cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, amountUnreserved)));
-                    cancelArray.push_back(cancelTx);
+                        cancelArray.push_back(cancelTx);
                     }
                 }
             }
         }
         txobj.push_back(Pair("cancelledtransactions", cancelArray));
-    }
-    else
-    {
+    } else {
         // if cancelled, show cancellation txid
         if((statusText == "cancelled") || (statusText == "cancelled part filled")) { txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(hash).GetHex())); }
         // add matches array to object
@@ -2187,3 +2009,4 @@ Value gettrade_MP(const Array& params, bool fHelp)
     // return object
     return txobj;
 }
+

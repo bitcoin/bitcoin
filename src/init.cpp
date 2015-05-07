@@ -1118,13 +1118,35 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
     if (!fTxIndex) {
-        return InitError(_(
-                "Disabled transaction index detected.\n\n"
-                "Omni Core requires an enabled transaction index. To enable "
-                "transaction indexing, please use the \"-txindex\" option as "
-                "command line argument or add \"txindex=1\" to your client "
-                "configuration file."
-            ));
+        // ask the user if they would like us to modify their config file for them
+        std::string msg = _("Disabled transaction index detected.\n\n"
+                            "Omni Core requires an enabled transaction index. To enable "
+                            "transaction indexing, please use the \"-txindex\" option as "
+                            "command line argument or add \"txindex=1\" to your client "
+                            "configuration file within your data directory.\n\n"
+                            "Configuration file"); // allow translation of main text body while still allowing differing config file string
+        msg += ": " + GetConfigFile().string() + "\n\n";
+        msg += _("Would you like Omni Core to attempt to update your configuration file accordingly?");
+        bool fRet = uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+        if (fRet) {
+            // add txindex=1 to config file in GetConfigFile()
+            boost::filesystem::path configPathInfo = GetConfigFile();
+            FILE *fp = fopen(configPathInfo.string().c_str(), "at");
+            if (!fp) {
+                std::string failMsg = _("Unable to update configuration file at");
+                failMsg += ":\n" + GetConfigFile().string() + "\n\n";
+                failMsg += _("The file may be write protected or you may not have the required permissions to edit it.\n");
+                failMsg += _("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown.");
+                return InitError(failMsg);
+            }
+            fprintf(fp, "\ntxindex=1");
+            fflush(fp);
+            fclose(fp);
+            return InitError(_("Your configuration file has been updated.\n\n"
+                               "Omni Core will now shutdown - please restart the client for your new configuration to take effect."));
+        } else {
+            return InitError(_("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown."));
+        }
     }
 
     uiInterface.InitMessage(_("Parsing Omni Layer transactions..."));

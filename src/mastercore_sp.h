@@ -7,6 +7,7 @@
 
 class CBlockIndex;
 
+#include "base58.h"
 #include "tinyformat.h"
 #include "uint256.h"
 #include "utiltime.h"
@@ -273,7 +274,7 @@ public:
     PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
     // special cases for constant SPs MSC and TMSC
-    implied_msc.issuer = ExodusAddress();
+    implied_msc.issuer = ExodusAddress().ToString();
     implied_msc.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_msc.num_tokens = 700000;
     implied_msc.category = "N/A";
@@ -281,7 +282,7 @@ public:
     implied_msc.name = "MasterCoin";
     implied_msc.url = "www.mastercoin.org";
     implied_msc.data = "***data***";
-    implied_tmsc.issuer = ExodusAddress();
+    implied_tmsc.issuer = ExodusAddress().ToString();
     implied_tmsc.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_tmsc.num_tokens = 700000;
     implied_tmsc.category = "N/A";

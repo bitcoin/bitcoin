@@ -250,6 +250,21 @@ extern json_spirit::Value listtransactions_MP(const json_spirit::Array& params, 
 extern json_spirit::Value listblocktransactions_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getinfo_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getsto_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setautocommit_OMNI(const json_spirit::Array& params, bool fHelp);
+
+//! Omni Core transaction calls
+extern json_spirit::Value send_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value senddexsell_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value senddexaccept_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendissuancecrowdsale_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendissuancefixed_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendissuancemanaged_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendsto_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendgrant_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendrevoke_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendclosecrowdsale_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendtrade_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendchangeissuer_OMNI(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,

@@ -1,10 +1,6 @@
 #ifndef MASTERCORE_MDEX_H
 #define MASTERCORE_MDEX_H
 
-#include "mastercore_log.h"
-
-#include "chain.h"
-#include "main.h"
 #include "uint256.h"
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
@@ -30,14 +26,13 @@ class CMPMetaDEx
 private:
     int block;
     uint256 txid;
-    //! Index within the block
-    unsigned int idx;
-    unsigned int property;
-    uint64_t amount_forsale;
-    unsigned int desired_property;
+    unsigned int idx; // index within block
+    uint32_t property;
+    int64_t amount_forsale;
+    uint32_t desired_property;
     int64_t amount_desired;
-    uint64_t still_left_forsale;
-    unsigned char subaction;
+    int64_t amount_remaining;
+    uint8_t subaction;
     std::string addr;
 
 public:
@@ -47,50 +42,43 @@ public:
     unsigned int getProperty() const { return property; }
     unsigned int getDesProperty() const { return desired_property; }
 
-    uint64_t getAmountForSale() const { return amount_forsale; }
-    int64_t getAmountDesired() const { return amount_desired; }
+    int64_t getAmountForSale() const { return amount_forsale; }
+    int64_t getAmountDesired() const;
+    int64_t getAmountRemaining() const { return amount_remaining; }
 
-    void setAmountForSale(int64_t ao, const std::string& label = "")
-    {
-        amount_forsale = ao;
-        file_log("%s(%ld %s):%s\n", __FUNCTION__, ao, label, ToString());
-    }
+    void setAmountRemaining(int64_t ar, const std::string& label = "");
 
-    void setAmountDesired(int64_t ad, const std::string& label = "")
-    {
-        amount_desired = ad;
-        file_log("%s(%ld %s):%s\n", __FUNCTION__, ad, label, ToString());
-    }
-
-    unsigned char getAction() const { return subaction; }
+    uint8_t getAction() const { return subaction; }
 
     const std::string& getAddr() const { return addr; }
 
     int getBlock() const { return block; }
     unsigned int getIdx() const { return idx; }
 
-    uint64_t getBlockTime() const
-    {
-        CBlockIndex* pblockindex = chainActive[block];
-        return pblockindex->GetBlockTime();
-    }
+    uint64_t getBlockTime() const;
 
     // needed only by the RPC functions
     // needed only by the RPC functions
     CMPMetaDEx()
       : block(0), txid(0), idx(0), property(0), amount_forsale(0), desired_property(0), amount_desired(0),
-        still_left_forsale(0), subaction(0) {}
+        amount_remaining(0), subaction(0) {}
 
-    CMPMetaDEx(const std::string& addr, int b, unsigned int c, uint64_t nValue, unsigned int cd, uint64_t ad,
-               const uint256& tx, unsigned int i, unsigned char suba, uint64_t lfors = 0)
+    CMPMetaDEx(const std::string& addr, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad,
+               const uint256& tx, uint32_t i, uint8_t suba)
       : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
-        still_left_forsale(lfors), subaction(suba), addr(addr) {}
+        amount_remaining(nValue), subaction(suba), addr(addr) {}
 
-    void Set(const std::string&, int, unsigned int, uint64_t, unsigned int, uint64_t, const uint256&, unsigned int, unsigned char);
+    CMPMetaDEx(const std::string& addr, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad,
+               const uint256& tx, uint32_t i, uint8_t suba, int64_t ar)
+      : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
+        amount_remaining(ar), subaction(suba), addr(addr) {}
+
+    void Set(const std::string&, int, uint32_t, int64_t, uint32_t, int64_t, const uint256&, uint32_t, uint8_t);
 
     std::string ToString() const;
 
-    XDOUBLE effectivePrice() const;
+    XDOUBLE unitPrice() const;
+    XDOUBLE inversePrice() const;
 
     void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const;
 };
@@ -108,20 +96,20 @@ typedef std::set<CMPMetaDEx, MetaDEx_compare> md_Set;
 //! Map of prices; there is a set of sorted objects for each price
 typedef std::map<XDOUBLE, md_Set> md_PricesMap;
 //! Map of properties; there is a map of prices for each property
-typedef std::map<unsigned int, md_PricesMap> md_PropertiesMap;
+typedef std::map<uint32_t, md_PricesMap> md_PropertiesMap;
 
 extern md_PropertiesMap metadex;
 
 // TODO: explore a property-pair, instead of a single property as map's key........
-md_PricesMap* get_Prices(unsigned int prop);
+md_PricesMap* get_Prices(uint32_t prop);
 md_Set* get_Indexes(md_PricesMap* p, XDOUBLE price);
 // ---------------
 
-int MetaDEx_ADD(const std::string& sender_addr, unsigned int, uint64_t, int block, unsigned int property_desired, uint64_t amount_desired, const uint256& txid, unsigned int idx);
-int MetaDEx_CANCEL_AT_PRICE(const uint256&, unsigned int, const std::string&, unsigned int, uint64_t, unsigned int, uint64_t);
-int MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256&, unsigned int, const std::string&, unsigned int, unsigned int);
-int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int block, const std::string& sender_addr, unsigned char ecosystem);
-
+int MetaDEx_ADD(const std::string& sender_addr, uint32_t, int64_t, int block, uint32_t property_desired, int64_t amount_desired, const uint256& txid, unsigned int idx);
+int MetaDEx_CANCEL_AT_PRICE(const uint256&, uint32_t, const std::string&, uint32_t, int64_t, uint32_t, int64_t);
+int MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256&, uint32_t, const std::string&, uint32_t, uint32_t);
+int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, uint32_t block, const std::string& sender_addr, unsigned char ecosystem);
+bool MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx);
 void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
 }
 

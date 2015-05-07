@@ -31,7 +31,7 @@ using namespace mastercore;
 // initial packet interpret step
 int CMPTransaction::step1()
 {
-  if (PACKET_SIZE_CLASS_A > pkt_size)  // class A could be 19 bytes
+  if (MIN_PAYLOAD_SIZE > pkt_size)  // class C packets could now be as small as 8 bytes
   {
     file_log("%s() ERROR PACKET TOO SMALL; size = %d, line %d, file: %s\n", __FUNCTION__, pkt_size, __LINE__, __FILE__);
     return -(PKT_ERROR -1);
@@ -48,7 +48,19 @@ int CMPTransaction::step1()
 
   swapByteOrder32(type);
 
-  file_log("version: %d, Class %s\n", version, !multi ? "A":"B");
+  string classType;
+  switch(multi) {
+      case 0:
+          classType = "A";
+      break;
+      case 1:
+          classType = "B";
+      break;
+      case 2:
+          classType = "C";
+      break;
+  }
+  file_log("\t         version: %d, Class %s\n", version, classType.c_str());
   file_log("\t            type: %u (%s)\n", type, c_strMasterProtocolTXType(type));
 
   return (type);

@@ -1998,15 +1998,6 @@ static int64_t nTimePostConnect = 0;
 bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *pblock) {
     assert(pindexNew->pprev == chainActive.Tip());
 
-    //! Omni Core: transaction position within the block
-    unsigned int nTxIdx = 0;
-    //! Omni Core: number of meta transactions found
-    unsigned int nNumMetaTxs = 0;
-
-    //! Omni Core: begin block connect notification
-    LogPrint("handler", "Omni Core handler: block connect begin [height: %d]\n", GetHeight());
-    mastercore_handler_block_begin(GetHeight(), pindexNew);
-
     mempool.check(pcoinsTip);
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
@@ -2042,6 +2033,16 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+
+    //! Omni Core: transaction position within the block
+    unsigned int nTxIdx = 0;
+    //! Omni Core: number of meta transactions found
+    unsigned int nNumMetaTxs = 0;
+
+    //! Omni Core: begin block connect notification
+    LogPrint("handler", "Omni Core handler: block connect begin [height: %d]\n", GetHeight());
+    mastercore_handler_block_begin(GetHeight(), pindexNew);
+
     // Remove conflicting transactions from the mempool.
     list<CTransaction> txConflicted;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted);
