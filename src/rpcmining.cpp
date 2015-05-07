@@ -404,7 +404,7 @@ Value getwork(const Array& params, bool fHelp)
 
         // Pre-build hash buffers
         char pmidstate[32];
-        char pdata[336];
+        char pdata[168];
         char phash1[64];
         FormatHashBuffers(pblock, pmidstate, pdata, phash1);
 

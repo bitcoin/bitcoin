@@ -30,6 +30,42 @@
      </property>
     </widget>
    </item>
+     
+	<item>
+		<layout class="QFormLayout" name="formLayoutCoinControl0">
+			<property name="horizontalSpacing">
+				<number>10</number>
+			</property>
+			<property name="verticalSpacing">
+				<number>0</number>
+			</property>
+			<property name="leftMargin">
+				<number>6</number>
+			</property>
+			<property name="rightMargin">
+				<number>6</number>
+			</property>
+			<item>
+				<widget class="QLabel" name="logoImage">
+					<property name="pixmap">
+						<string>:/images/bitcoin_logo_40</string>
+					</property>
+					<property name="alignment">
+						<set>Qt::AlignLeft|Qt::AlignVCenter</set>
+					</property>
+				</widget>
+			</item>
+		</layout>
+	</item>   
+	
+	<item>
+		<widget class="Line" name="line">
+			<property name="orientation">
+				<enum>Qt::Horizontal</enum>
+			</property>
+		</widget>
+	</item>
+   
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
      <item>

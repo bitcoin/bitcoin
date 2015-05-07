@@ -30,7 +30,19 @@
     <property name="spacing">
      <number>12</number>
     </property>
-    <item row="0" column="0">
+    
+    <item row="0" column="0" rowspan="4">
+     <widget class="QLabel" name="logoImage">
+      <property name="pixmap">
+       <string>:/images/credits_logo_40</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    
+    <item row="0" column="1">
      <widget class="QLabel" name="payToLabel">
       <property name="text">
        <string>Pay &amp;To:</string>
@@ -43,7 +55,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
+    <item row="0" column="2">
      <layout class="QHBoxLayout" name="payToLayout">
       <property name="spacing">
        <number>0</number>
@@ -105,7 +117,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0">
+    <item row="1" column="1">
      <widget class="QLabel" name="labellLabel">
       <property name="text">
        <string>&amp;Label:</string>
@@ -118,14 +130,14 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
+    <item row="1" column="2">
      <widget class="QLineEdit" name="addAsLabel">
       <property name="toolTip">
        <string>Enter a label for this address to add it to the list of used addresses</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item row="2" column="1">
      <widget class="QLabel" name="amountLabel">
       <property name="text">
        <string>A&amp;mount:</string>
@@ -138,10 +150,10 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount"/>
+    <item row="2" column="2">
+     <widget class="BitcreditAmountField" name="payAmount"/>
     </item>
-    <item row="3" column="0">
+    <item row="3" column="1">
      <widget class="QLabel" name="messageLabel">
       <property name="text">
        <string>Message:</string>
@@ -151,7 +163,7 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
+    <item row="3" column="2">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
        <string>A message that was attached to the bitcredit: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Credits network.</string>
@@ -595,7 +607,7 @@
     <property name="spacing">
      <number>12</number>
     </property>
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QLabel" name="payToLabel_is">
       <property name="text">
        <string>Pay To:</string>
@@ -605,7 +617,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
+    <item row="0" column="2">
      <layout class="QHBoxLayout" name="payToLayout_is">
       <property name="spacing">
        <number>0</number>
@@ -629,7 +641,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0">
+    <item row="1" column="1">
      <widget class="QLabel" name="memoLabel_is">
       <property name="text">
        <string>Memo:</string>
@@ -639,14 +651,14 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
+    <item row="1" column="2">
      <widget class="QLabel" name="memoTextLabel_is">
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item row="2" column="1">
      <widget class="QLabel" name="amountLabel_is">
       <property name="text">
        <string>A&amp;mount:</string>
@@ -659,8 +671,8 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_is">
+    <item row="2" column="2">
+     <widget class="BitcreditAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1127,7 +1139,7 @@
     <property name="spacing">
      <number>12</number>
     </property>
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QLabel" name="payToLabel_s">
       <property name="text">
        <string>Pay To:</string>
@@ -1137,7 +1149,7 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
+    <item row="0" column="2">
      <layout class="QHBoxLayout" name="payToLayout_s">
       <property name="spacing">
        <number>0</number>
@@ -1165,7 +1177,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0">
+    <item row="1" column="1">
      <widget class="QLabel" name="memoLabel_s">
       <property name="text">
        <string>Memo:</string>
@@ -1175,14 +1187,14 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
+    <item row="1" column="2">
      <widget class="QLabel" name="memoTextLabel_s">
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item row="2" column="1">
      <widget class="QLabel" name="amountLabel_s">
       <property name="text">
        <string>A&amp;mount:</string>
@@ -1195,8 +1207,8 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_s">
+    <item row="2" column="2">
+     <widget class="BitcreditAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1212,9 +1224,9 @@
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>BitcreditAmountField</class>
    <extends>QLineEdit</extends>
-   <header>bitcoinamountfield.h</header>
+   <header>bitcreditamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
