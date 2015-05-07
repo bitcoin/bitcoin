@@ -247,8 +247,8 @@ void MetaDExDialog::UpdateOffers()
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
                 XDOUBLE price = (it->first);
-                XDOUBLE effectivePrice;
-                string effectivePriceStr;
+                XDOUBLE unitPrice;
+                string unitPriceStr;
                 int64_t available = 0, total = 0;
                 bool includesMe = false;
                 md_Set & indexes = (it->second);
@@ -267,19 +267,19 @@ void MetaDExDialog::UpdateOffers()
                             if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     }
-                    effectivePrice = obj.effectivePrice(); // could be set multiple times but always a same price level
+                    unitPrice = obj.unitPrice(); // could be set multiple times but always a same price level
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                     string strAvail;
                     if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
 
                     if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { price = price/COIN; }
-                    if ((!isPropertyDivisible(global_metadex_market)) && (!useBuyList)) { effectivePrice = effectivePrice/COIN; }
+                    if ((!isPropertyDivisible(global_metadex_market)) && (!useBuyList)) { unitPrice = unitPrice/COIN; }
 
                     if (useBuyList) {
                         AddRow(useBuyList, includesMe, StripTrailingZeros(price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
                     } else {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(effectivePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(unitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
                     }
                 }
             }

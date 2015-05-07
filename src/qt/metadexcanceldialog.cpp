@@ -185,7 +185,7 @@ void MetaDExCancelDialog::UpdateCancelCombo()
                         if (isBuy) {
                             if (!divisible) price = price/COIN;
                         } else {
-                            if (!divisible) { price = obj.effectivePrice()/COIN; } else { price = obj.effectivePrice(); }
+                            if (!divisible) { price = obj.unitPrice()/COIN; } else { price = obj.unitPrice(); }
                         }
                         comboStr += " priced at " + StripTrailingZeros(price.str(16, std::ios_base::fixed)); // limited to 16 digits of precision for display purposes
                         if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getDesProperty() == OMNI_PROPERTY_MSC)) { comboStr += " MSC/SPT"; } else { comboStr += " TMSC/SPT"; }
@@ -277,15 +277,15 @@ void MetaDExCancelDialog::SendCancelTransaction()
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
                 XDOUBLE price = it->first;
-                XDOUBLE effectivePrice;
+                XDOUBLE unitPrice;
                 md_Set & indexes = it->second;
                 for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                     CMPMetaDEx obj = *it;
-                    effectivePrice = obj.effectivePrice();
+                    unitPrice = obj.unitPrice();
                     if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdForSale == OMNI_PROPERTY_TMSC)) { // "buy" order
                         if (price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) == priceStr) matched=true;
                     } else {
-                        if (effectivePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) == priceStr) matched=true;
+                        if (unitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed) == priceStr) matched=true;
                     }
                     if (matched) {
                         amountForSale = obj.getAmountForSale();
