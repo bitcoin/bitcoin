@@ -299,7 +299,7 @@ Value getblock(const Array& params, bool fHelp)
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
 
-    if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
+    if (fHavePruned && !HaveBlockData(pblockindex) && pblockindex->nTx > 0)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
 
     if(!ReadBlockFromDisk(block, pblockindex))
@@ -499,7 +499,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     if (fPruneMode)
     {
         CBlockIndex *block = chainActive.Tip();
-        while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA))
+        while (block && block->pprev && HaveBlockData(block->pprev))
             block = block->pprev;
 
         obj.push_back(Pair("pruneheight",        block->nHeight));

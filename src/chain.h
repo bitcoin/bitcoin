@@ -85,9 +85,9 @@ enum BlockStatus {
     BLOCK_VALID_MASK         =   BLOCK_VALID_HEADER | BLOCK_VALID_TREE | BLOCK_VALID_TRANSACTIONS |
                                  BLOCK_VALID_CHAIN | BLOCK_VALID_SCRIPTS,
 
-    BLOCK_HAVE_DATA          =    8, //! full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, //! undo data available in rev*.dat
-    BLOCK_HAVE_MASK          =   BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO,
+    BLOCK_STORED_DATA        =    8, //! full block was stored in blk*.dat; pruning may have deleted
+    BLOCK_STORED_UNDO        =   16, //! undo data was stored in rev*.dat; pruning may have deleted
+    BLOCK_STORED_MASK        =   BLOCK_STORED_DATA | BLOCK_STORED_UNDO,
 
     BLOCK_FAILED_VALID       =   32, //! stage after last reached validness failed
     BLOCK_FAILED_CHILD       =   64, //! descends from failed block
@@ -188,7 +188,7 @@ public:
 
     CDiskBlockPos GetBlockPos() const {
         CDiskBlockPos ret;
-        if (nStatus & BLOCK_HAVE_DATA) {
+        if (nStatus & BLOCK_STORED_DATA) {
             ret.nFile = nFile;
             ret.nPos  = nDataPos;
         }
@@ -197,7 +197,7 @@ public:
 
     CDiskBlockPos GetUndoPos() const {
         CDiskBlockPos ret;
-        if (nStatus & BLOCK_HAVE_UNDO) {
+        if (nStatus & BLOCK_STORED_UNDO) {
             ret.nFile = nFile;
             ret.nPos  = nUndoPos;
         }
@@ -306,11 +306,11 @@ public:
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
-        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
+        if (nStatus & (BLOCK_STORED_DATA | BLOCK_STORED_UNDO))
             READWRITE(VARINT(nFile));
-        if (nStatus & BLOCK_HAVE_DATA)
+        if (nStatus & BLOCK_STORED_DATA)
             READWRITE(VARINT(nDataPos));
-        if (nStatus & BLOCK_HAVE_UNDO)
+        if (nStatus & BLOCK_STORED_UNDO)
             READWRITE(VARINT(nUndoPos));
 
         // block header
