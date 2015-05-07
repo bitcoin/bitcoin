@@ -16,7 +16,6 @@
 #include "base58.h"
 #include "coincontrol.h"
 #include "ui_interface.h"
-#include "walletmodel.h"
 
 #include <boost/filesystem.hpp>
 
@@ -162,34 +161,22 @@ void SendMPDialog::updateFrom()
     } else {
         currentSetFromAddress = "";
     }
+
+    // warning label will be lit if insufficient fees for a typical simple send of 2KB or less
     int64_t inputTotal = feeCheck(currentSetFromAddress);
-    //int64_t minWarn = 3 * CTransaction::nMinRelayTxFee + 2 * nTransactionFee;
-    int64_t minWarn = 20000; //temp
-    // warn when fees are not sufficient to cover a 2 KB simple send
-    if (inputTotal >= minWarn)
-    {
+    int64_t minWarn = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(2000); // based on 3x <200 byte outputs (change/reference/data) & total tx size of <2KB
+    if (inputTotal >= minWarn) {
         ui->feeWarningLabel->setVisible(false);
-    }
-    else
-    {
-        std::string feeWarning = "WARNING: The sending address is low on BTC for transaction fees. "
-                     "Please topup the BTC balance for the sending address to send Omni Layer transactions.";
-        ui->feeWarningLabel->setText(QString::fromStdString(feeWarning));
+    } else {
+        ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");
         ui->feeWarningLabel->setVisible(true);
     }
+
+    // update the balance for the selected address
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
-    unsigned int propertyId = spId.toUInt();
+    uint32_t propertyId = spId.toUInt();
     if (propertyId > 0) {
-        std::string tokenLabel;
-        if (propertyId==1) tokenLabel = " MSC";
-        if (propertyId==2) tokenLabel = " TMSC";
-        if (propertyId>2) tokenLabel = " SPT";
-        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetFromAddress, propertyId);
-        if (isPropertyDivisible(propertyId)) {
-            ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatDivisibleMP(balanceAvailable) + tokenLabel));
-        } else {
-            ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatIndivisibleMP(balanceAvailable) + tokenLabel));
-        }
+        ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
     }
 }
 
