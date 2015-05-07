@@ -56,6 +56,7 @@ QT_MOC_CPP = \
   moc_askpassphrasedialog.cpp \
   moc_bitcoin_askpassphrasedialog.cpp \
   moc_bitcoinaddressvalidator.cpp \
+  moc_bitcreditamountfield.cpp \
   moc_bitcoinamountfield.cpp \
   moc_bitcoingui.cpp \
   moc_bitcreditunits.cpp \
@@ -147,6 +148,7 @@ BITCOIN_QT_H = \
   askpassphrasedialog.h \
   bitcoin_askpassphrasedialog.h \
   bitcoinaddressvalidator.h \
+  bitcreditamountfield.h \
   bitcoinamountfield.h \
   bitcoingui.h \
   bitcreditunits.h \
@@ -231,6 +233,8 @@ RES_ICONS = \
   res/icons/clock3.png \
   res/icons/clock4.png \
   res/icons/clock5.png \
+  res/images/credits_logo_40.png \
+  res/images/bitcoin_logo_40.png \
   res/icons/configure.png \
   res/icons/connect0_16.png \
   res/icons/connect1_16.png \
@@ -275,6 +279,7 @@ RES_ICONS = \
 BITCOIN_QT_CPP = \
   bitcoin.cpp \
   bitcoinaddressvalidator.cpp \
+  bitcreditamountfield.cpp \
   bitcoinamountfield.cpp \
   bitcoingui.cpp \
   bitcreditunits.cpp \

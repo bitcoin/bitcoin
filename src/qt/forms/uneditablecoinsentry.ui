@@ -32,6 +32,17 @@
     </property>
 
     <item row="0" column="0">
+     <widget class="QLabel" name="logoImage">
+      <property name="pixmap">
+       <string>:/images/credits_logo_40</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+
+    <item row="0" column="1">
      <widget class="QLabel" name="amountLabel">
       <property name="font">
         <font>
@@ -50,8 +61,8 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="BitcoinAmountField" name="payAmount"/>
+    <item row="0" column="2">
+     <widget class="BitcreditAmountField" name="payAmount"/>
     </item> 
  
    </layout>
@@ -492,7 +503,7 @@
     
 
 
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QLabel" name="amountLabel_is">
       <property name="text">
        <string>A&amp;mount:</string>
@@ -506,8 +517,8 @@
      </widget>
     </item>
     
-    <item row="0" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_is">
+    <item row="0" column="2">
+     <widget class="BitcreditAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -976,7 +987,7 @@
      <number>12</number>
     </property>
 
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QLabel" name="amountLabel_s">
       <property name="text">
        <string>A&amp;mount:</string>
@@ -989,8 +1000,8 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_s">
+    <item row="0" column="2">
+     <widget class="BitcreditAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1007,9 +1018,9 @@
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>BitcreditAmountField</class>
    <extends>QLineEdit</extends>
-   <header>bitcoinamountfield.h</header>
+   <header>bitcreditamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
