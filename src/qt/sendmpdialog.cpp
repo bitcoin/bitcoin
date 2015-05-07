@@ -182,71 +182,40 @@ void SendMPDialog::updateFrom()
 
 void SendMPDialog::updateProperty()
 {
-    // get currently selected from address
+    // cache currently selected from address & clear address selector
     std::string currentSetFromAddress = ui->sendFromComboBox->currentText().toStdString();
-
-    // clear address selector
     ui->sendFromComboBox->clear();
 
     // populate from address selector
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
-    unsigned int propertyId = spId.toUInt();
-    bool divisible = isPropertyDivisible(propertyId);
-    std::string tokenLabel;
-    if (propertyId==1) tokenLabel = " MSC";
-    if (propertyId==2) tokenLabel = " TMSC";
-    if (propertyId>2) tokenLabel = " SPT";
+    uint32_t propertyId = spId.toUInt();
     LOCK(cs_tally);
-    for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-    {
+    for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         string address = (my_it->first).c_str();
-        string balance = "";
-        unsigned int id;
+        uint32_t id = 0;
         bool includeAddress=false;
         (my_it->second).init();
-        while (0 != (id = (my_it->second).next()))
-        {
-            if(id==propertyId) { includeAddress=true; break; }
+        while (0 != (id = (my_it->second).next())) {
+            if(id == propertyId) { includeAddress=true; break; }
         }
         if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
         if (!IsMyAddress(address)) continue; //ignore this address, it's not ours
         if ((address.substr(0,1)=="2") || (address.substr(0,3)=="3")) continue; //quick hack to not show P2SH addresses in from selector (can't be sent from UI)
-        int64_t balanceAvailable = getUserAvailableMPbalance(address, propertyId);
-        if (divisible)
-        {
-          balance = " \t" + FormatDivisibleMP(balanceAvailable) + tokenLabel;
-        }
-        else {
-          balance = " \t" + FormatIndivisibleMP(balanceAvailable) + tokenLabel;
-        }
-        ui->sendFromComboBox->addItem(((my_it->first)+balance).c_str());
+        ui->sendFromComboBox->addItem(QString::fromStdString(address + " \t" + FormatMP(propertyId, getUserAvailableMPbalance(address, propertyId)) + getTokenLabel(propertyId)));
     }
 
-    // attempt to set from address back to what was originally in there before update
+    // attempt to set from address back to cached value
     int fromIdx = ui->sendFromComboBox->findText(QString::fromStdString(currentSetFromAddress), Qt::MatchContains);
-    if (fromIdx != -1) { ui->sendFromComboBox->setCurrentIndex(fromIdx); } // -1 means the currently set from address doesn't have a balance in the newly selected property
+    if (fromIdx != -1) { ui->sendFromComboBox->setCurrentIndex(fromIdx); } // -1 means the cached from address doesn't have a balance in the newly selected property
 
     // populate balance for global wallet
     int64_t globalAvailable = 0;
     if (propertyId<2147483648) { globalAvailable = global_balance_money_maineco[propertyId]; } else { globalAvailable = global_balance_money_testeco[propertyId-2147483647]; }
-    QString globalLabel;
-    if (divisible)
-    {
-        globalLabel = QString::fromStdString("Wallet Balance (Available): " + FormatDivisibleMP(globalAvailable) + tokenLabel);
-    }
-    else
-    {
-        globalLabel = QString::fromStdString("Wallet Balance (Available): " + FormatIndivisibleMP(globalAvailable) + tokenLabel);
-    }
-    ui->globalBalanceLabel->setText(globalLabel);
+    ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, globalAvailable) + getTokenLabel(propertyId)));
 
 #if QT_VERSION >= 0x040700
     // update placeholder text
-    if (isPropertyDivisible(propertyId)) {
-        ui->amountLineEdit->setPlaceholderText("Enter Divisible Amount");
-    } else {
-        ui->amountLineEdit->setPlaceholderText("Enter Indivisible Amount");
-    }
+    if (isPropertyDivisible(propertyId)) { ui->amountLineEdit->setPlaceholderText("Enter Divisible Amount"); } else { ui->amountLineEdit->setPlaceholderText("Enter Indivisible Amount"); }
 #endif
 }
 
