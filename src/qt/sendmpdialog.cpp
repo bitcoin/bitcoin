@@ -62,6 +62,7 @@ using namespace leveldb;
 #include "mastercore_sp.h"
 #include "mastercore_errors.h"
 #include "omnicore_qtutils.h"
+#include "omnicore_createpayload.h"
 
 #include <QDateTime>
 #include <QMessageBox>
@@ -223,13 +224,12 @@ void SendMPDialog::sendMPTransaction()
 {
     // get the property being sent and get divisibility
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
-    if (spId.toStdString().empty())
-    {
+    if (spId.toStdString().empty()) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The property selected is not valid.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
         return;
     }
-    unsigned int propertyId = spId.toUInt();
+    uint32_t propertyId = spId.toUInt();
     bool divisible = isPropertyDivisible(propertyId);
 
     // obtain the selected sender address
@@ -238,8 +238,7 @@ void SendMPDialog::sendMPTransaction()
     // push recipient address into a CBitcoinAddress type and check validity
     CBitcoinAddress fromAddress;
     if (false == strFromAddress.empty()) { fromAddress.SetString(strFromAddress); }
-    if (!fromAddress.IsValid())
-    {
+    if (!fromAddress.IsValid()) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The sender address selected is not valid.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
         return;
@@ -250,8 +249,7 @@ void SendMPDialog::sendMPTransaction()
     // push recipient address into a CBitcoinAddress type and check validity
     CBitcoinAddress refAddress;
     if (false == strRefAddress.empty()) { refAddress.SetString(strRefAddress); }
-    if (!refAddress.IsValid())
-    {
+    if (!refAddress.IsValid()) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The recipient address entered is not valid.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
         return;
@@ -259,11 +257,9 @@ void SendMPDialog::sendMPTransaction()
 
     // warn if we have to truncate the amount due to a decimal amount for an indivisible property, but allow send to continue
     string strAmount = ui->amountLineEdit->text().toStdString();
-    if (!divisible)
-    {
+    if (!divisible) {
         size_t pos = strAmount.find(".");
-        if (pos!=std::string::npos)
-        {
+        if (pos!=std::string::npos) {
             string tmpStrAmount = strAmount.substr(0,pos);
             string strMsgText = "The amount entered contains a decimal however the property being sent is indivisible.\n\nThe amount entered will be truncated as follows:\n";
             strMsgText += "Original amount entered: " + strAmount + "\nAmount that will be sent: " + tmpStrAmount + "\n\n";
@@ -271,8 +267,7 @@ void SendMPDialog::sendMPTransaction()
             QString msgText = QString::fromStdString(strMsgText);
             QMessageBox::StandardButton responseClick;
             responseClick = QMessageBox::question(this, "Amount truncation warning", msgText, QMessageBox::Yes|QMessageBox::No);
-            if (responseClick == QMessageBox::No)
-            {
+            if (responseClick == QMessageBox::No) {
                 QMessageBox::critical( this, "Send transaction cancelled",
                 "The send transaction has been cancelled.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
                 return;
@@ -284,8 +279,7 @@ void SendMPDialog::sendMPTransaction()
 
     // use strToInt64 function to get the amount, using divisibility of the property
     int64_t sendAmount = StrToInt64(strAmount, divisible);
-    if (0>=sendAmount)
-    {
+    if (0>=sendAmount) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The amount entered is not valid.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
         return;
@@ -293,8 +287,7 @@ void SendMPDialog::sendMPTransaction()
 
     // check if sending address has enough funds
     int64_t balanceAvailable = getUserAvailableMPbalance(fromAddress.ToString(), propertyId); //getMPbalance(fromAddress.ToString(), propertyId, MONEY);
-    if (sendAmount>balanceAvailable)
-    {
+    if (sendAmount>balanceAvailable) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The selected sending address does not have a sufficient balance to cover the amount entered.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
         return;
@@ -305,8 +298,7 @@ void SendMPDialog::sendMPTransaction()
     uint32_t intBlockDate = GetLatestBlockTime();  // uint32, not using time_t for portability
     QDateTime currentDate = QDateTime::currentDateTime();
     int secs = QDateTime::fromTime_t(intBlockDate).secsTo(currentDate);
-    if(secs > 90*60)
-    {
+    if(secs > 90*60) {
         QMessageBox::critical( this, "Unable to send transaction",
         "The client is still synchronizing.  Sending transactions can currently be performed only when the client has completed synchronizing." );
         return;
@@ -323,8 +315,7 @@ void SendMPDialog::sendMPTransaction()
     QString msgText = QString::fromStdString(strMsgText);
     QMessageBox::StandardButton responseClick;
     responseClick = QMessageBox::question(this, "Confirm send transaction", msgText, QMessageBox::Yes|QMessageBox::No);
-    if (responseClick == QMessageBox::No)
-    {
+    if (responseClick == QMessageBox::No) {
         QMessageBox::critical( this, "Send transaction cancelled",
         "The send transaction has been cancelled.\n\nPlease double-check the transction details thoroughly before retrying your send transaction." );
         return;
@@ -332,19 +323,17 @@ void SendMPDialog::sendMPTransaction()
 
     // unlock the wallet
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-    if(!ctx.isValid())
-    {
-        // Unlock wallet was cancelled/failed
-        return;
+    if(!ctx.isValid()) {
+        return; // unlock wallet was cancelled/failed
     }
 
     // create a payload for the transaction
-    // #CLASSC# std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, sendAmount);
+    std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, sendAmount);
 
     // request the wallet build the transaction (and if needed commit it) - note UI does not support added reference amounts currently
     uint256 txid = 0;
     std::string rawHex;
-    int result = 0; // #CLASSC# int result = ClassAgnosticWalletTXBuilder(fromAddress.ToString(), refAddress.ToString(), "", 0, payload, txid, rawHex, autoCommit);
+    int result = ClassAgnosticWalletTXBuilder(fromAddress.ToString(), refAddress.ToString(), "", 0, payload, txid, rawHex, autoCommit);
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
@@ -353,11 +342,11 @@ void SendMPDialog::sendMPTransaction()
         "The send transaction has been cancelled.\n\nThe wallet unlock process must be completed to send a transaction." );
         return;
     } else {
-        if (0) { // #CLASSC# if (!autoCommit) {
+        if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
             PopulateTXSentDialog(txid.GetHex());
-            // TODO PENDING OBJECT
+            //CreatePendingObject(txid, fromAddress.ToString, refAddress.ToString, MSC_TYPE_SIMPLE_SEND, propertyId, sendAmount);
         }
     }
     clearFields();
