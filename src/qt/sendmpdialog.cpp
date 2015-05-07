@@ -76,14 +76,12 @@ SendMPDialog::SendMPDialog(QWidget *parent) :
     walletModel(0)
 {
     ui->setupUi(this);
-//    this->model = model;
 
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->clearButton->setIcon(QIcon());
     ui->sendButton->setIcon(QIcon());
 #endif
-#if QT_VERSION >= 0x040700
-    // populate placeholder text
+#if QT_VERSION >= 0x040700 // populate placeholder text
     ui->sendToLineEdit->setPlaceholderText("Enter a Omni Layer address (e.g. 1oMn1LaYeRADDreSShef77z6A5S4P)");
     ui->amountLineEdit->setPlaceholderText("Enter Amount");
 #endif
@@ -116,31 +114,27 @@ void SendMPDialog::setWalletModel(WalletModel *model)
 
 void SendMPDialog::updatePropSelector()
 {
+    uint32_t nextPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
+    uint32_t nextPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     ui->propertyComboBox->clear();
-    for (unsigned int propertyId = 1; propertyId<100000; propertyId++)
-    {
-        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0))
-        {
-            string spName;
-            spName = getPropertyName(propertyId).c_str();
-            if(spName.size()>20) spName=spName.substr(0,23)+"...";
-            string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+    for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
+        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
+            std::string spName = getPropertyName(propertyId);
+            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            if(spName.size()>23) spName=spName.substr(0,23) + "...";
             spName += " (#" + spId + ")";
             if (isPropertyDivisible(propertyId)) { spName += " [D]"; } else { spName += " [I]"; }
             ui->propertyComboBox->addItem(spName.c_str(),spId.c_str());
         }
     }
-    for (unsigned int propertyId = 1; propertyId<100000; propertyId++)
-    {
-        if ((global_balance_money_testeco[propertyId] > 0) || (global_balance_reserved_testeco[propertyId] > 0))
-        {
-            string spName;
-            spName = getPropertyName(propertyId+2147483647).c_str();
-            if(spName.size()>20) spName=spName.substr(0,23)+"...";
-            string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId+2147483647) )->str();
+    for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
+        if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
+            std::string spName = getPropertyName(propertyId);
+            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            if(spName.size()>23) spName=spName.substr(0,23)+"...";
             spName += " (#" + spId + ")";
-            if (isPropertyDivisible(propertyId+2147483647)) { spName += " [D]"; } else { spName += " [I]"; }
+            if (isPropertyDivisible(propertyId)) { spName += " [D]"; } else { spName += " [I]"; }
             ui->propertyComboBox->addItem(spName.c_str(),spId.c_str());
         }
     }
