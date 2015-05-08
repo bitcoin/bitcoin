@@ -24,6 +24,7 @@ BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
+LIBBITCOIN_COREWALLET=libbitcoin_corewallet.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
@@ -47,6 +48,9 @@ EXTRA_LIBRARIES = \
 if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
 EXTRA_LIBRARIES += libbitcoin_wallet.a
+endif
+if ENABLE_COREWALLET
+EXTRA_LIBRARIES += libbitcoin_corewallet.a
 endif
 
 if BUILD_BITCOIN_LIBS
@@ -94,6 +98,12 @@ BITCOIN_CORE_H = \
   consensus/params.h \
   consensus/validation.h \
   core_io.h \
+  corewallet/corewallet.h \
+  corewallet/corewallet_basics.h \
+  corewallet/corewallet_db.h \
+  corewallet/corewallet_wallet.h \
+  corewallet/crypter.h \
+  corewallet/logdb.h \
   eccryptoverify.h \
   ecwrapper.h \
   hash.h \
@@ -150,6 +160,7 @@ BITCOIN_CORE_H = \
   validationinterface.h \
   version.h \
   wallet/crypter.h \
+  wallet/db.h \
   wallet/legacywallet.h \
   wallet/walletdb.h \
   wallet/wallet.h \
@@ -206,6 +217,18 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/wallet_ismine.cpp \
   wallet/walletdb.cpp \
+  $(BITCOIN_CORE_H)
+
+# corewallet: shared between bitcoind and bitcoin-qt, but only linked
+# when corewallet enabled
+libbitcoin_corewallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libbitcoin_corewallet_a_SOURCES = \
+  corewallet/corewallet.cpp \
+  corewallet/corewallet_db.cpp \
+  corewallet/corewallet_rpc.cpp \
+  corewallet/corewallet_wallet.cpp \
+  corewallet/crypter.cpp \
+  corewallet/logdb.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -318,6 +341,10 @@ bitcoind_LDADD = \
 
 if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a
+endif
+
+if ENABLE_COREWALLET
+bitcoind_LDADD += libbitcoin_corewallet.a
 endif
 
 bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)

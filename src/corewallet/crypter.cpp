@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/crypter.h"
+#include "corewallet/crypter.h"
 
 #include "script/script.h"
 #include "script/standard.h"
@@ -14,6 +14,7 @@
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 
+namespace CoreWallet {
 bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod)
 {
     if (nRounds < 1 || chSalt.size() != WALLET_CRYPTO_SALT_SIZE)
@@ -290,3 +291,4 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
     }
     return true;
 }
+}; //end namespace
