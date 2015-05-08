@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     	uint64_t nSubsidy = Bitcredit_GetAllowedBlockSubsidy(nSum, nSum, 2000 * COIN);
         nSum += nSubsidy;
 
-        BOOST_CHECK(Bitcredit_MoneyRange(nSum));
+        BOOST_CHECK(Credits_MoneyRange(nSum));
     }
     BOOST_CHECK_EQUAL(nSum, 3000000000000000ULL);
 
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
         BOOST_CHECK(nSubsidy <= subsidyLevels[nHeight/10000/2].nSubsidyUpdateTo);
         nSum += nSubsidy * 10000;
 
-        BOOST_CHECK(Bitcredit_MoneyRange(nSum));
+        BOOST_CHECK(Credits_MoneyRange(nSum));
     }
     BOOST_CHECK_EQUAL(nSum, 3000000000000000ULL);
 
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     	}
         nSum += nSubsidy;
 
-        BOOST_CHECK(Bitcredit_MoneyRange(nSum));
+        BOOST_CHECK(Credits_MoneyRange(nSum));
     }
     BOOST_CHECK_EQUAL(nSum, 2999963660306077ULL);
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     	}
         nSum += nSubsidy;
 
-        BOOST_CHECK(Bitcredit_MoneyRange(nSum));
+        BOOST_CHECK(Credits_MoneyRange(nSum));
     }
     BOOST_CHECK_EQUAL(nSum, 2992237032212233ULL);
 }

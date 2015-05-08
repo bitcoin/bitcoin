@@ -170,7 +170,7 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &tx, uint2
 /** Find the best known block, and make it the tip of the block chain */
 bool Bitcoin_ActivateBestChain(CValidationState &state);
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
-bool Bitcoin_AlignClaimTip(const Bitcredit_CBlockIndex *expectedCurrentBlockIndex, const Bitcredit_CBlockIndex *palignToBlockIndex, Bitcoin_CClaimCoinsViewCache& view, CValidationState &state, bool updateUndo);
+bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CClaimCoinsViewCache& view, CValidationState &state, bool updateUndo);
 int64_t Bitcoin_GetBlockValue(int nHeight, int64_t nFees);
 unsigned int Bitcoin_GetNextWorkRequired(const Bitcoin_CBlockIndex* pindexLast, const Bitcoin_CBlockHeader *pblock);
 

@@ -17,12 +17,12 @@ using namespace boost::assign;
 
 typedef vector<unsigned char> valtype;
 
-extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType);
+extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Credits_CTransaction& txTo, unsigned int nIn, int nHashType);
 
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
 CScript
-sign_multisig(CScript scriptPubKey, vector<CKey> keys, Bitcredit_CTransaction transaction, int whichIn)
+sign_multisig(CScript scriptPubKey, vector<CKey> keys, Credits_CTransaction transaction, int whichIn)
 {
     uint256 hash = Bitcredit_SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL);
 
@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     CScript escrow;
     escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    Bitcredit_CTransaction txFrom;  // Funding transaction
+    Credits_CTransaction txFrom;  // Funding transaction
     txFrom.vout.resize(3);
     txFrom.vout[0].scriptPubKey = a_and_b;
     txFrom.vout[1].scriptPubKey = a_or_b;
     txFrom.vout[2].scriptPubKey = escrow;
 
-    Bitcredit_CTransaction txTo[3]; // Spending transaction
+    Credits_CTransaction txTo[3]; // Spending transaction
     for (int i = 0; i < 3; i++)
     {
         txTo[i].vin.resize(1);
@@ -270,13 +270,13 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     CScript escrow;
     escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    Bitcredit_CTransaction txFrom;  // Funding transaction
+    Credits_CTransaction txFrom;  // Funding transaction
     txFrom.vout.resize(3);
     txFrom.vout[0].scriptPubKey = a_and_b;
     txFrom.vout[1].scriptPubKey = a_or_b;
     txFrom.vout[2].scriptPubKey = escrow;
 
-    Bitcredit_CTransaction txTo[3]; // Spending transaction
+    Credits_CTransaction txTo[3]; // Spending transaction
     for (int i = 0; i < 3; i++)
     {
         txTo[i].vin.resize(1);

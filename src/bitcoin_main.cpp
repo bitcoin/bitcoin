@@ -2639,7 +2639,7 @@ void PrintClaimMovement(std::string prefix, Bitcoin_CBlockIndex* pCurrentIndex, 
 }
 
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
-bool Bitcoin_AlignClaimTip(const Bitcredit_CBlockIndex * expectedCurrentBitcreditBlockIndex, const Bitcredit_CBlockIndex *palignToBitcreditBlockIndex, Bitcoin_CClaimCoinsViewCache& view, CValidationState &state, bool updateUndo) {
+bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditBlockIndex, const Credits_CBlockIndex *palignToBitcreditBlockIndex, Bitcoin_CClaimCoinsViewCache& view, CValidationState &state, bool updateUndo) {
 	LOCK(bitcoin_mainState.cs_main);
 
 	const uint256 moveToBitcoinHash = palignToBitcreditBlockIndex->hashLinkedBitcoinBlock;

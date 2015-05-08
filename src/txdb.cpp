@@ -120,67 +120,67 @@ Bitcredit_CCoinsViewDB::Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory, 
 
 //-----------------------------------------------
 
-const unsigned char Bitcredit_CBlockTreeDB::BLOCKINDEX_KEY = 'b';
-const unsigned char Bitcredit_CBlockTreeDB::REINDEX_KEY = 'R';
-const unsigned char Bitcredit_CBlockTreeDB::FILE_KEY = 'f';
-const unsigned char Bitcredit_CBlockTreeDB::FLAG_KEY = 'F';
-const unsigned char Bitcredit_CBlockTreeDB::LAST_BLOCK_KEY = 'l';
-const unsigned char Bitcredit_CBlockTreeDB::TX_KEY = 't';
-const unsigned char Bitcredit_CBlockTreeDB::ONE = '1';
-const unsigned char Bitcredit_CBlockTreeDB::ZERO = '0';
+const unsigned char Credits_CBlockTreeDB::BLOCKINDEX_KEY = 'b';
+const unsigned char Credits_CBlockTreeDB::REINDEX_KEY = 'R';
+const unsigned char Credits_CBlockTreeDB::FILE_KEY = 'f';
+const unsigned char Credits_CBlockTreeDB::FLAG_KEY = 'F';
+const unsigned char Credits_CBlockTreeDB::LAST_BLOCK_KEY = 'l';
+const unsigned char Credits_CBlockTreeDB::TX_KEY = 't';
+const unsigned char Credits_CBlockTreeDB::ONE = '1';
+const unsigned char Credits_CBlockTreeDB::ZERO = '0';
 
-Bitcredit_CBlockTreeDB::Bitcredit_CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "bitcredit_blocks" / "index", nCacheSize, fMemory, fWipe) {
+Credits_CBlockTreeDB::Credits_CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "bitcredit_blocks" / "index", nCacheSize, fMemory, fWipe) {
 }
 
-bool Bitcredit_CBlockTreeDB::WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex)
+bool Credits_CBlockTreeDB::WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex)
 {
     return Write(make_pair(BLOCKINDEX_KEY, blockindex.GetBlockHash()), blockindex);
 }
 
-bool Bitcredit_CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
+bool Credits_CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
     return Write(make_pair(FILE_KEY, nFile), info);
 }
 
-bool Bitcredit_CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
+bool Credits_CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
     return Read(make_pair(FILE_KEY, nFile), info);
 }
 
-bool Bitcredit_CBlockTreeDB::WriteLastBlockFile(int nFile) {
+bool Credits_CBlockTreeDB::WriteLastBlockFile(int nFile) {
     return Write(LAST_BLOCK_KEY, nFile);
 }
 
-bool Bitcredit_CBlockTreeDB::ReadLastBlockFile(int &nFile) {
+bool Credits_CBlockTreeDB::ReadLastBlockFile(int &nFile) {
     return Read(LAST_BLOCK_KEY, nFile);
 }
 
-bool Bitcredit_CBlockTreeDB::WriteReindexing(bool fReindexing) {
+bool Credits_CBlockTreeDB::WriteReindexing(bool fReindexing) {
     if (fReindexing)
         return Write(REINDEX_KEY, ONE);
     else
         return Erase(REINDEX_KEY);
 }
 
-bool Bitcredit_CBlockTreeDB::ReadReindexing(bool &fReindexing) {
+bool Credits_CBlockTreeDB::ReadReindexing(bool &fReindexing) {
     fReindexing = Exists(REINDEX_KEY);
     return true;
 }
 
-bool Bitcredit_CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
+bool Credits_CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
     return Read(make_pair(TX_KEY, txid), pos);
 }
 
-bool Bitcredit_CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
+bool Credits_CBlockTreeDB::WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> >&vect) {
     CLevelDBBatch batch;
     for (std::vector<std::pair<uint256,CDiskTxPos> >::const_iterator it=vect.begin(); it!=vect.end(); it++)
         batch.Write(make_pair(TX_KEY, it->first), it->second);
     return WriteBatch(batch);
 }
 
-bool Bitcredit_CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
+bool Credits_CBlockTreeDB::WriteFlag(const std::string &name, bool fValue) {
     return Write(std::make_pair(FLAG_KEY, name), fValue ? ONE : ZERO);
 }
 
-bool Bitcredit_CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
+bool Credits_CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     char ch;
     if (!Read(std::make_pair(FLAG_KEY, name), ch))
         return false;
@@ -188,7 +188,7 @@ bool Bitcredit_CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
-bool Bitcredit_CBlockTreeDB::LoadBlockIndexGuts()
+bool Credits_CBlockTreeDB::LoadBlockIndexGuts()
 {
     leveldb::Iterator *pcursor = NewIterator();
 
@@ -211,7 +211,7 @@ bool Bitcredit_CBlockTreeDB::LoadBlockIndexGuts()
                 ssValue >> diskindex;
 
                 // Construct block index object
-                Bitcredit_CBlockIndex* pindexNew = Bitcredit_InsertBlockIndex(diskindex.GetBlockHash());
+                Credits_CBlockIndex* pindexNew = Bitcredit_InsertBlockIndex(diskindex.GetBlockHash());
                 pindexNew->pprev          = Bitcredit_InsertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;

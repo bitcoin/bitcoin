@@ -34,9 +34,9 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         unsigned int nTx = nTxCounts[n];
 
         // build a block with some dummy transactions
-        Bitcredit_CBlock block;
+        Credits_CBlock block;
         for (unsigned int j=0; j<nTx; j++) {
-            Bitcredit_CTransaction tx;
+            Credits_CTransaction tx;
             tx.nLockTime = rand(); // actual transaction data doesn't matter; just make the nLockTime's unique
             block.vtx.push_back(tx);
         }

@@ -95,7 +95,7 @@ namespace Checkpoints
     }
 
     // Guess how far we are in the verification process at the given block index
-    double Bitcredit_GuessVerificationProgress(Bitcredit_CBlockIndex *pindex, bool fSigchecks) {
+    double Bitcredit_GuessVerificationProgress(Credits_CBlockIndex *pindex, bool fSigchecks) {
         if (pindex==NULL)
             return 0.0;
 
@@ -136,7 +136,7 @@ namespace Checkpoints
         return checkpoints.rbegin()->first;
     }
 
-    Bitcredit_CBlockIndex* Bitcredit_GetLastCheckpoint(const std::map<uint256, Bitcredit_CBlockIndex*>& mapBlockIndex)
+    Credits_CBlockIndex* Bitcredit_GetLastCheckpoint(const std::map<uint256, Credits_CBlockIndex*>& mapBlockIndex)
     {
         if (!bitcredit_fEnabled)
             return NULL;
@@ -146,7 +146,7 @@ namespace Checkpoints
         BOOST_REVERSE_FOREACH(const Bitcredit_MapCheckpoints::value_type& i, checkpoints)
         {
             const uint256& hash = i.second;
-            std::map<uint256, Bitcredit_CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
+            std::map<uint256, Credits_CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
                 return t->second;
         }

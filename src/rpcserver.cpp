@@ -87,7 +87,7 @@ int64_t AmountFromValue(const Value& value)
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     int64_t nAmount = roundint64(dAmount * COIN);
-    if (!Bitcredit_MoneyRange(nAmount))
+    if (!Credits_MoneyRange(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
 }

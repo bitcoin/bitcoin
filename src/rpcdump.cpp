@@ -285,9 +285,9 @@ Value bitcredit_importwallet(const Array& params, bool fHelp)
     file.close();
     bitcredit_pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
 
-    Bitcredit_CBlockIndex *pindex = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    Credits_CBlockIndex *pindex = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
     while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
-        pindex = (Bitcredit_CBlockIndex*)pindex->pprev;
+        pindex = (Credits_CBlockIndex*)pindex->pprev;
 
     if (!bitcredit_pwalletMain->nTimeFirstKey || nTimeBegin < bitcredit_pwalletMain->nTimeFirstKey)
         bitcredit_pwalletMain->nTimeFirstKey = nTimeBegin;

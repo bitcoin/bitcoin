@@ -149,7 +149,7 @@ QString Credits_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bit
     else
     {
         bool fAllFromMe = true;
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin)
             fAllFromMe = fAllFromMe && keyholder_wallet->IsMine(txin);
 
         bool fAllToMe = true;
@@ -201,7 +201,7 @@ QString Credits_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bit
             //
             // Mixed debit transaction
             //
-            BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+            BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin)
                 if (keyholder_wallet->IsMine(txin))
                     strHTML += "<b>" + tr("Debit") + ":</b> " + BitcreditUnits::formatWithUnit(unit, -keyholder_wallet->GetDebit(txin)) + "<br>";
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -262,7 +262,7 @@ QString Credits_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bit
     if (fDebug)
     {
         strHTML += "<hr><br>" + tr("Debug information") + "<br><br>";
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin)
             if(keyholder_wallet->IsMine(txin))
                 strHTML += "<b>" + tr("Debit") + ":</b> " + BitcreditUnits::formatWithUnit(unit, -keyholder_wallet->GetDebit(txin)) + "<br>";
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -275,7 +275,7 @@ QString Credits_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bit
         strHTML += "<br><b>" + tr("Inputs") + ":</b>";
         strHTML += "<ul>";
 
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin)
         {
         	COutPoint prevout = txin.prevout;
 

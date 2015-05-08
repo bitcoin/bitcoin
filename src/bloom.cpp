@@ -100,7 +100,7 @@ bool CBloomFilter::IsWithinSizeConstraints() const
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-bool CBloomFilter::bitcredit_IsRelevantAndUpdate(const Bitcredit_CTransaction& tx, const uint256& hash)
+bool CBloomFilter::bitcredit_IsRelevantAndUpdate(const Credits_CTransaction& tx, const uint256& hash)
 {
     bool fFound = false;
     // Match if the filter contains the hash of tx
@@ -147,7 +147,7 @@ bool CBloomFilter::bitcredit_IsRelevantAndUpdate(const Bitcredit_CTransaction& t
     if (fFound)
         return true;
 
-    BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+    BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
     {
         // Match if the filter contains an outpoint tx spends
         if (contains(txin.prevout, BITCREDIT_PROTOCOL_VERSION))

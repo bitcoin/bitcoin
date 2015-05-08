@@ -283,7 +283,7 @@ public:
 
     // mark an outpoint spent, and construct undo information
     bool Spend(const COutPoint &out, Bitcoin_CTxInUndoClaim &undo);
-    bool SpendByClaiming(const COutPoint &out, Bitcredit_CTxInUndo &undo);
+    bool SpendByClaiming(const COutPoint &out, Credits_CTxInUndo &undo);
 
     // check whether a particular output is still available
     bool IsAvailable(unsigned int nPos) const {
@@ -446,15 +446,15 @@ public:
         @return	Sum of value of all inputs (scriptSigs)
      */
     void GetValueIn(const Bitcoin_CTransaction& tx, ClaimSum& claimSum);
-    int64_t GetValueIn(const Bitcredit_CTransaction& tx);
+    int64_t GetValueIn(const Credits_CTransaction& tx);
 
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const Bitcredit_CTransaction& tx);
+    bool HaveInputs(const Credits_CTransaction& tx);
 
     // Return pvoutty of tx at height nHeight
-    double GetPriority(const Bitcredit_CTransaction &tx, int nHeight);
+    double GetPriority(const Credits_CTransaction &tx, int nHeight);
 
-    const CScript &GetOutputScriptFor(const Bitcredit_CTxIn& input);
+    const CScript &GetOutputScriptFor(const Credits_CTxIn& input);
 
 private:
 	//If we are over cache coins limit, write everything in cache down to lower levels

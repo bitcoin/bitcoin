@@ -10,9 +10,9 @@
 
 #include "keystore.h"
 
-class Bitcredit_CBlock;
-class Bitcredit_CBlockIndex;
-struct Bitcredit_CBlockTemplate;
+class Credits_CBlock;
+class Credits_CBlockIndex;
+struct Credits_CBlockTemplate;
 class Bitcredit_CReserveKey;
 class CScript;
 class Bitcredit_CWallet;
@@ -21,14 +21,14 @@ class CPubKey;
 /** Run the miner threads */
 void GenerateBitcredits(bool fGenerate, Bitcredit_CWallet* pwallet, Bitcredit_CWallet* pdepositWallet, int nThreads, bool coinbaseDepositDisabled);
 /** Generate a new block, without valid proof-of-work */
-Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, const CScript& scriptPubKeyDeposit, const CScript& scriptPubKeyDepositChange, CPubKey& pubKeySigningDeposit, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled);
-Bitcredit_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseReservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey, CKeyStore * bitcreditKeystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled);
+Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, const CScript& scriptPubKeyDeposit, const CScript& scriptPubKeyDepositChange, CPubKey& pubKeySigningDeposit, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled);
+Credits_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseReservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey, CKeyStore * bitcreditKeystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled);
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(Bitcredit_CBlock* pblock, Bitcredit_CBlockIndex* pindexPrev, unsigned int& nExtraNonce, CKeyStore * bitcreditKeystore, CKeyStore * depositKeystore, const bool& coinbaseDepositDisabled);
+void IncrementExtraNonce(Credits_CBlock* pblock, Credits_CBlockIndex* pindexPrev, unsigned int& nExtraNonce, CKeyStore * bitcreditKeystore, CKeyStore * depositKeystore, const bool& coinbaseDepositDisabled);
 /** Do mining precalculation */
-void FormatHashBuffers(Bitcredit_CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
+void FormatHashBuffers(Credits_CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 /** Check mined block */
-bool CheckWork(Bitcredit_CBlock* pblock, Bitcredit_CWallet& wallet, Bitcredit_CWallet& depositWallet, Bitcredit_CReserveKey& reservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey);
+bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& wallet, Bitcredit_CWallet& depositWallet, Bitcredit_CReserveKey& reservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey);
 /** Base sha256 mining transform */
 void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 

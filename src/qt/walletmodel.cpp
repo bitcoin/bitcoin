@@ -98,7 +98,7 @@ qint64 Bitcredit_WalletModel::getTotalMonetaryBase() const
 {
     uint64_t nTotalMonetaryBase = 0;
     if(bitcredit_chainActive.Tip()) {
-    	const Bitcredit_CBlockIndex* ptip = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    	const Credits_CBlockIndex* ptip = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
     	nTotalMonetaryBase = ptip->nTotalMonetaryBase;
     }
     return nTotalMonetaryBase;
@@ -107,7 +107,7 @@ qint64 Bitcredit_WalletModel::getTotalDepositBase() const
 {
     uint64_t nTotalDepositBase = 0;
     if(bitcredit_chainActive.Tip()) {
-    	const Bitcredit_CBlockIndex* ptip = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    	const Credits_CBlockIndex* ptip = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
     	nTotalDepositBase = ptip->nTotalDepositBase;
     }
     return nTotalDepositBase;
@@ -611,7 +611,7 @@ Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::sendCoins(Bitcredi
         if(!wallet->CommitTransaction(bitcoin_wallet, *newTx, *keyChange, transaction.getKeyRecipients()))
             return TransactionCommitFailed;
 
-        Bitcredit_CTransaction* t = (Bitcredit_CTransaction*)newTx;
+        Credits_CTransaction* t = (Credits_CTransaction*)newTx;
         CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
         ssTx << *t;
         transaction_array.append(&(ssTx[0]), ssTx.size());

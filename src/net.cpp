@@ -1931,14 +1931,14 @@ instance_of_cnetcleanup;
 
 
 
-void Bitcredit_RelayTransaction(const Bitcredit_CTransaction& tx, const uint256& hash, CNetParams * netParams)
+void Bitcredit_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, CNetParams * netParams)
 {
     CDataStream ss(SER_NETWORK, netParams->ProtocolVersion());
     ss.reserve(10000);
     ss << tx;
     Bitcredit_RelayTransaction(tx, hash, ss, netParams);
 }
-void Bitcredit_RelayTransaction(const Bitcredit_CTransaction& tx, const uint256& hash, const CDataStream& ss, CNetParams * netParams)
+void Bitcredit_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, const CDataStream& ss, CNetParams * netParams)
 {
     CInv inv(MSG_TX, hash);
     {

@@ -312,7 +312,7 @@ bool isDust(const QString& address, qint64 amount)
     CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script; script.SetDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee);
+    return txOut.IsDust(Credits_CTransaction::nMinRelayTxFee);
 }
 
 bool isDust(qint64 amount)
@@ -320,7 +320,7 @@ bool isDust(qint64 amount)
     CTxDestination dest = CBitcoinAddress().Get();
     CScript script; script.SetDestination(dest);
     CTxOut txOut(amount, script);
-    return txOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee);
+    return txOut.IsDust(Credits_CTransaction::nMinRelayTxFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)

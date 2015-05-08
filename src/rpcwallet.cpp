@@ -1419,7 +1419,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
         );
 
-    Bitcredit_CBlockIndex *pindex = NULL;
+    Credits_CBlockIndex *pindex = NULL;
     int target_confirms = 1;
 
     if (params.size() > 0)
@@ -1427,7 +1427,7 @@ Value listsinceblock(const Array& params, bool fHelp)
         uint256 blockId = 0;
 
         blockId.SetHex(params[0].get_str());
-        std::map<uint256, Bitcredit_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(blockId);
+        std::map<uint256, Credits_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(blockId);
         if (it != bitcredit_mapBlockIndex.end())
             pindex = it->second;
     }
@@ -1452,7 +1452,7 @@ Value listsinceblock(const Array& params, bool fHelp)
             ListTransactions(tx, "*", 0, true, transactions);
     }
 
-    Bitcredit_CBlockIndex *pblockLast = bitcredit_chainActive[bitcredit_chainActive.Height() + 1 - target_confirms];
+    Credits_CBlockIndex *pblockLast = bitcredit_chainActive[bitcredit_chainActive.Height() + 1 - target_confirms];
     uint256 lastblock = pblockLast ? pblockLast->GetBlockHash() : 0;
 
     Object ret;
@@ -1524,7 +1524,7 @@ Value gettransaction(const Array& params, bool fHelp)
     entry.push_back(Pair("details", details));
 
     CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-    ssTx << static_cast<Bitcredit_CTransaction>(wtx);
+    ssTx << static_cast<Credits_CTransaction>(wtx);
     string strHex = HexStr(ssTx.begin(), ssTx.end());
     entry.push_back(Pair("hex", strHex));
 

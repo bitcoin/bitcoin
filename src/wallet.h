@@ -214,10 +214,10 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFromLoadWallet=false);
-    void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock);
-    bool AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate);
+    void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Credits_CTransaction& tx, const Credits_CBlock* pblock);
+    bool AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Credits_CTransaction& tx, const Credits_CBlock* pblock, bool fUpdate);
     void EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, const uint256 &hash);
-    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate = false);
+    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Credits_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
     int64_t GetBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
@@ -252,45 +252,45 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
-    bool IsMine(const Bitcredit_CTxIn& txin) const;
-    int64_t GetDebit(const Bitcredit_CTxIn& txin) const;
+    bool IsMine(const Credits_CTxIn& txin) const;
+    int64_t GetDebit(const Credits_CTxIn& txin) const;
     bool IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
     }
     int64_t GetCredit(const CTxOut& txout) const
     {
-    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Credits: CWallet::GetCredit() : value out of range");
+    	assert_with_stacktrace(Credits_MoneyRange(txout.nValue), "Credits: CWallet::GetCredit() : value out of range");
         return (IsMine(txout) ? txout.nValue : 0);
     }
     bool IsChange(const CTxOut& txout) const;
     int64_t GetChange(const CTxOut& txout) const
     {
-    	assert_with_stacktrace(Bitcredit_MoneyRange(txout.nValue), "Credits: CWallet::GetChange() : value out of range");
+    	assert_with_stacktrace(Credits_MoneyRange(txout.nValue), "Credits: CWallet::GetChange() : value out of range");
         return (IsChange(txout) ? txout.nValue : 0);
     }
-    bool IsMine(const Bitcredit_CTransaction& tx) const
+    bool IsMine(const Credits_CTransaction& tx) const
     {
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
             if (IsMine(txout))
                 return true;
         return false;
     }
-    bool IsFromMe(const Bitcredit_CTransaction& tx) const
+    bool IsFromMe(const Credits_CTransaction& tx) const
     {
         return (GetDebit(tx) > 0);
     }
-    int64_t GetDebit(const Bitcredit_CTransaction& tx) const
+    int64_t GetDebit(const Credits_CTransaction& tx) const
     {
         int64_t nDebit = 0;
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
         {
             nDebit += GetDebit(txin);
-            assert_with_stacktrace(Bitcredit_MoneyRange(nDebit), "Credits: CWallet::GetDebit() : value out of range");
+            assert_with_stacktrace(Credits_MoneyRange(nDebit), "Credits: CWallet::GetDebit() : value out of range");
         }
         return nDebit;
     }
-    int64_t GetCredit(const Bitcredit_CTransaction& tx, map<uint256, set<int> >& mapFilterTxInPoints) const
+    int64_t GetCredit(const Credits_CTransaction& tx, map<uint256, set<int> >& mapFilterTxInPoints) const
     {
     	const uint256 &hashTx = tx.GetHash();
         int64_t nCredit = 0;
@@ -298,18 +298,18 @@ public:
 			if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
 				const CTxOut& txout = tx.vout[i];
 				nCredit += GetCredit(txout);
-				assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Credits: CWallet::GetCredit() : value out of range");
+				assert_with_stacktrace(Credits_MoneyRange(nCredit), "Credits: CWallet::GetCredit() : value out of range");
 			}
         }
         return nCredit;
     }
-    int64_t GetChange(const Bitcredit_CTransaction& tx) const
+    int64_t GetChange(const Credits_CTransaction& tx) const
     {
         int64_t nChange = 0;
         BOOST_FOREACH(const CTxOut& txout, tx.vout)
         {
             nChange += GetChange(txout);
-            assert_with_stacktrace(Bitcredit_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
+            assert_with_stacktrace(Credits_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
         }
         return nChange;
     }
@@ -446,7 +446,7 @@ public:
         Init(pwalletIn);
     }
 
-    Bitcredit_CWalletTx(const Bitcredit_CWallet* pwalletIn, const Bitcredit_CTransaction& txIn) : Bitcredit_CMerkleTx(txIn)
+    Bitcredit_CWalletTx(const Bitcredit_CWallet* pwalletIn, const Credits_CTransaction& txIn) : Bitcredit_CMerkleTx(txIn)
     {
         Init(pwalletIn);
     }
@@ -582,7 +582,7 @@ public:
 		const CTxOut &txout = vout[n];
 		if (!pwallet->IsSpent(hashTx, n)) {
 			nCredit += pwallet->GetCredit(txout);
-			assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Credits: CWalletTx::AddTxOutValue() : value out of range");
+			assert_with_stacktrace(Credits_MoneyRange(nCredit), "Credits: CWalletTx::AddTxOutValue() : value out of range");
 		}
 	}
 
@@ -669,7 +669,7 @@ public:
 				const CTxOut &txout = vout[i];
 				if (!pwallet->IsSpent(hashTx, i)) {
 					nCredit += txout.nValue;
-					assert_with_stacktrace(Bitcredit_MoneyRange(nCredit), "Credits: CWalletTx::GetImmatureCredit() : value out of range");
+					assert_with_stacktrace(Credits_MoneyRange(nCredit), "Credits: CWalletTx::GetImmatureCredit() : value out of range");
 				}
 			}
 
@@ -744,7 +744,7 @@ public:
             return false;
 
         // Trusted if all inputs are from us and are in the mempool:
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, vin)
         {
             // Transactions not sent by us: not trusted
             const Bitcredit_CWalletTx* parent = pwallet->GetWalletTx(txin.prevout.hash);

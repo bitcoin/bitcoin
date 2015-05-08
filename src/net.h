@@ -31,7 +31,7 @@
 
 class CAddrMan;
 class CNetParams;
-class Bitcredit_CBlockIndex;
+class Credits_CBlockIndex;
 class CNode;
 
 namespace boost {
@@ -799,9 +799,9 @@ public:
 };
 
 
-class Bitcredit_CTransaction;
-void Bitcredit_RelayTransaction(const Bitcredit_CTransaction& tx, const uint256& hash, CNetParams * netParams);
-void Bitcredit_RelayTransaction(const Bitcredit_CTransaction& txWrap, const uint256& hash, const CDataStream& ss, CNetParams * netParams);
+class Credits_CTransaction;
+void Bitcredit_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, CNetParams * netParams);
+void Bitcredit_RelayTransaction(const Credits_CTransaction& txWrap, const uint256& hash, const CDataStream& ss, CNetParams * netParams);
 
 class Bitcoin_CTransaction;
 void Bitcoin_RelayTransaction(const Bitcoin_CTransaction& tx, const uint256& hash, CNetParams * netParams);

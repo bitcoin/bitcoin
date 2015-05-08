@@ -32,7 +32,7 @@ static vector<Bitcredit_COutput> vCoins;
 static void add_coin(int64_t nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
 {
     static int nextLockTime = 0;
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.vout.resize(nInput+1);
     tx.vout[nInput].nValue = nValue;

@@ -251,7 +251,7 @@ public:
     }
 };
 
-/** Undo information for a Bitcredit_CTransaction */
+/** Undo information for a Credits_CTransaction */
 class Bitcoin_CTxUndo
 {
 public:

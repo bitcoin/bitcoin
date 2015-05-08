@@ -27,11 +27,11 @@ static bool
 Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict)
 {
     // Create dummy to/from transactions:
-    Bitcredit_CTransaction txFrom;
+    Credits_CTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey = scriptPubKey;
 
-    Bitcredit_CTransaction txTo;
+    Credits_CTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(sign)
         evalScripts[i].SetDestination(standardScripts[i].GetID());
     }
 
-    Bitcredit_CTransaction txFrom;  // Funding transaction:
+    Credits_CTransaction txFrom;  // Funding transaction:
     string reason;
     txFrom.vout.resize(8);
     for (int i = 0; i < 4; i++)
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(sign)
     }
     BOOST_CHECK(Bitcredit_IsStandardTx(txFrom, reason));
 
-    Bitcredit_CTransaction txTo[8]; // Spending transactions
+    Credits_CTransaction txTo[8]; // Spending transactions
     for (int i = 0; i < 8; i++)
     {
         txTo[i].vin.resize(1);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(set)
         keystore.AddCScript(inner[i]);
     }
 
-    Bitcredit_CTransaction txFrom;  // Funding transaction:
+    Credits_CTransaction txFrom;  // Funding transaction:
     string reason;
     txFrom.vout.resize(4);
     for (int i = 0; i < 4; i++)
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(set)
     }
     BOOST_CHECK(Bitcredit_IsStandardTx(txFrom, reason));
 
-    Bitcredit_CTransaction txTo[4]; // Spending transactions
+    Credits_CTransaction txTo[4]; // Spending transactions
     for (int i = 0; i < 4; i++)
     {
         txTo[i].vin.resize(1);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         keys.push_back(key[i].GetPubKey());
     }
 
-    Bitcredit_CTransaction txFrom;
+    Credits_CTransaction txFrom;
     txFrom.vout.resize(6);
 
     // First three are standard:
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     bitcredit_coins.SetCoins(txFrom.GetHash(), Bitcredit_CCoins(txFrom, 0));
 
-    Bitcredit_CTransaction txTo;
+    Credits_CTransaction txTo;
     txTo.vout.resize(1);
     txTo.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
 
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
         txTo.vin[i].scriptSig = t;
     }
 
-    Bitcredit_CTransaction txToNonStd;
+    Credits_CTransaction txToNonStd;
     txToNonStd.vout.resize(1);
     txToNonStd.vout[0].scriptPubKey.SetDestination(key[1].GetPubKey().GetID());
     txToNonStd.vout[0].nValue = 1000;
