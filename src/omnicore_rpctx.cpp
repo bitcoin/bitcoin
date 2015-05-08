@@ -10,6 +10,8 @@
 #include "mastercore_dex.h"
 #include "mastercore_tx.h"
 #include "omnicore_createpayload.h"
+#include "omnicore_pending.h"
+
 #include "rpcserver.h"
 #include "wallet.h"
 
@@ -35,58 +37,6 @@ using std::vector;
 
 using namespace json_spirit;
 using namespace mastercore;
-
-void CreatePendingObject(uint256 txid, const string& sendingAddress, const string& referenceAddress, uint16_t type, uint32_t propertyId, int64_t amount, uint32_t propertyIdDesired = 0, int64_t amountDesired = 0, int64_t action = 0)
-{
-    Object txobj;
-    string amountStr, amountDStr;
-    bool divisible;
-    bool divisibleDesired;
-    txobj.push_back(Pair("txid", txid.GetHex()));
-    txobj.push_back(Pair("sendingaddress", sendingAddress));
-    if (!referenceAddress.empty()) txobj.push_back(Pair("referenceaddress", referenceAddress));
-    txobj.push_back(Pair("confirmations", 0));
-    txobj.push_back(Pair("type", c_strMasterProtocolTXType(type)));
-    switch (type) {
-        case MSC_TYPE_SIMPLE_SEND:
-            txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
-            divisible = isPropertyDivisible(propertyId);
-            txobj.push_back(Pair("divisible", divisible));
-            if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
-            txobj.push_back(Pair("amount", amountStr));
-        break;
-        case MSC_TYPE_SEND_TO_OWNERS:
-            txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
-            divisible = isPropertyDivisible(propertyId);
-            txobj.push_back(Pair("divisible", divisible));
-            if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
-            txobj.push_back(Pair("amount", amountStr));
-        break;
-        case MSC_TYPE_TRADE_OFFER:
-            amountStr = FormatDivisibleMP(amount); // both amount for sale (either TMSC or MSC) and BTC desired are always divisible
-            amountDStr = FormatDivisibleMP(amountDesired);
-            txobj.push_back(Pair("amountoffered", amountStr));
-            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
-            txobj.push_back(Pair("btcamountdesired", amountDStr));
-            txobj.push_back(Pair("action", action));
-        break;
-        case MSC_TYPE_METADEX:
-            divisible = isPropertyDivisible(propertyId);
-            divisibleDesired = isPropertyDivisible(propertyIdDesired);
-            if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
-            if (divisibleDesired) { amountDStr = FormatDivisibleMP(amountDesired); } else { amountDStr = FormatIndivisibleMP(amountDesired); }
-            txobj.push_back(Pair("amountoffered", amountStr));
-            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
-            txobj.push_back(Pair("propertyidofferedisdivisible", divisible));
-            txobj.push_back(Pair("amountdesired", amountDStr));
-            txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
-            txobj.push_back(Pair("propertyiddesiredisdivisible", divisibleDesired));
-            txobj.push_back(Pair("action", action));
-        break;
-    }
-    string txDesc = write_string(Value(txobj), false);
-    (void) pendingAdd(txid, sendingAddress, propertyId, amount, type, txDesc);
-}
 
 uint32_t int64Touint32Safe(int64_t sourceValue)
 {
@@ -154,7 +104,7 @@ Value send_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            CreatePendingObject(txid, fromAddress, toAddress, MSC_TYPE_SIMPLE_SEND, propertyId, amount);
+            PendingAdd(txid, fromAddress, toAddress, MSC_TYPE_SIMPLE_SEND, propertyId, amount);
             return txid.GetHex();
         }
     }
@@ -229,7 +179,7 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            CreatePendingObject(txid, fromAddress, "", MSC_TYPE_TRADE_OFFER, propertyIdForSale, amountForSale, 0, amountDesired, action);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_TRADE_OFFER, propertyIdForSale, amountForSale, 0, amountDesired, action);
             return txid.GetHex();
         }
     }
@@ -582,7 +532,7 @@ Value sendsto_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            CreatePendingObject(txid, fromAddress, "", MSC_TYPE_SEND_TO_OWNERS, propertyId, amount);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_SEND_TO_OWNERS, propertyId, amount);
             return txid.GetHex();
         }
     }
@@ -825,7 +775,7 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            CreatePendingObject(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
             return txid.GetHex();
         }
     }

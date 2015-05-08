@@ -27,6 +27,7 @@
 #include "mastercore_version.h"
 #include "omnicore_encoding.h"
 #include "omnicore_utils.h"
+#include "omnicore_pending.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -307,59 +308,6 @@ CMPSPInfo *mastercore::_my_sps;
 CrowdMap mastercore::my_crowds;
 
 PendingMap mastercore::my_pending;
-
-static CMPPending *pendingDelete(const uint256 txid, bool bErase = false)
-{
-  if (msc_debug_verbose3) file_log("%s(%s)\n", __FUNCTION__, txid.GetHex().c_str());
-
-  PendingMap::iterator it = my_pending.find(txid);
-
-  if (it != my_pending.end())
-  {
-    // display
-    CMPPending *p_pending = &(it->second);
-
-    int64_t src_amount = getMPbalance(p_pending->src, p_pending->prop, PENDING);
-
-    if (msc_debug_verbose3) file_log("%s()src= %ld, line %d, file: %s\n", __FUNCTION__, src_amount, __LINE__, __FILE__);
-
-    if (src_amount)
-    {
-      update_tally_map(p_pending->src, p_pending->prop, p_pending->amount, PENDING);
-    }
-
-    if (bErase)
-    {
-      my_pending.erase(it);
-    }
-    else
-    {
-      return &(it->second);
-    }
-  }
-
-  return (CMPPending *) NULL;
-}
-
-int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc)
-{
-CMPPending pending;
-
-  if (msc_debug_verbose3) file_log("%s(%s,%s,%u,%ld,%d, %s), line %d, file: %s\n", __FUNCTION__, txid.GetHex().c_str(), FromAddress.c_str(), propId, Amount, type, txDesc,__LINE__, __FILE__);
-
-  // support for pending, 0-confirm
-  if (update_tally_map(FromAddress, propId, -Amount, PENDING))
-  {
-    pending.src = FromAddress;
-    pending.amount = Amount;
-    pending.prop = propId;
-    pending.desc = txDesc;
-    pending.type = type;
-    my_pending.insert(std::make_pair(txid, pending));
-  }
-
-  return 0;
-}
 
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
 std::map<std::string, CMPTally> mastercore::mp_tally_map;
@@ -663,7 +611,7 @@ int64_t prev = 0, owners = 0;
 bool mastercore::update_tally_map(string who, unsigned int which_property, int64_t amount, TallyType ttype)
 {
 bool bRet = false;
-uint64_t before, after;
+int64_t before, after;
 
   if (0 == amount)
   {
@@ -693,7 +641,7 @@ uint64_t before, after;
   {
     if ((exodus_address != who) || (exodus_address == who && msc_debug_exo))
     {
-      file_log("%s(%s, %u=0x%X, %+ld, ttype=%d); before=%lu, after=%lu\n",
+      file_log("%s(%s, %u=0x%X, %+ld, ttype=%d); before=%ld, after=%ld\n",
        __FUNCTION__, who.c_str(), which_property, which_property, amount, ttype, before, after);
     }
   }
@@ -2365,7 +2313,7 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
   // NOTE1: Every incoming TX is checked, not just MP-ones because:
   //  if for some reason the incoming TX doesn't pass our parser validation steps successfuly, I'd still want to clear pending amounts for that TX.
   // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
-  (void) pendingDelete(tx.GetHash(), true);
+  (void) PendingDelete(tx.GetHash());
 
 CMPTransaction mp_obj;
 // save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)

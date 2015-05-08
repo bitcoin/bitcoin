@@ -42,6 +42,7 @@ bool msc_debug_txdb               = 0;
 bool msc_debug_tradedb            = 1;
 bool msc_debug_persistence        = 0;
 bool msc_debug_ui                 = 0;
+bool msc_debug_pending            = 1;
 bool msc_debug_metadex1           = 0;
 bool msc_debug_metadex2           = 0;
 //! Print orderbook before and after each trade

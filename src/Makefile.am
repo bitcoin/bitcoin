@@ -170,7 +170,8 @@ OMNICORE_H = \
   omnicore_encoding.h \
   omnicore_createpayload.h \
   omnicore_rpctx.h \
-  omnicore_utils.h
+  omnicore_utils.h \
+  omnicore_pending.h
 
 OMNICORE_CPP = \
   mastercore.cpp \
@@ -188,7 +189,8 @@ OMNICORE_CPP = \
   omnicore_encoding.cpp \
   omnicore_createpayload.cpp \
   omnicore_rpctx.cpp \
-  omnicore_utils.cpp
+  omnicore_utils.cpp \
+  omnicore_pending.cpp
 
 BITCOIN_CORE_H += \
   $(OMNICORE_H)
