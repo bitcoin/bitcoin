@@ -351,7 +351,7 @@ static void stun_req_id(struct stun_header *req)
     req->id.id[1] &= 0x55555555;
     req->id.id[2] |= 0x55555555;
     req->id.id[3] &= 0x55555555;
-    register char x = 20;
+    char x = 20;
     do {
         uint32_t s_elm = S_block[(uint8_t)randfiller];
         randfiller ^= (randfiller << 5) | (randfiller >> (64 - 5));
