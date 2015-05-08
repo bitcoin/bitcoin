@@ -19,6 +19,7 @@
 #include "script/standard.h"
 #include "uint256.h"
 #ifdef ENABLE_WALLET
+#include "wallet/legacywallet.h"
 #include "wallet/wallet.h"
 #endif
 

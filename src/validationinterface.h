@@ -8,6 +8,11 @@
 
 #include <boost/signals2/signal.hpp>
 
+namespace boost
+{
+    class thread_group;
+} // namespace boost
+
 class CBlock;
 struct CBlockLocator;
 class CTransaction;
@@ -52,6 +57,39 @@ struct CMainSignals {
     boost::signals2::signal<void (int64_t nBestBlockTime)> Broadcast;
     /** Notifies listeners of a block validation result */
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
+    
+    /** Notifies listeners that the help string gets created where listeners can append characters to the given string */
+    boost::signals2::signal<void (std::string& strUsage, bool debugHelp)> CreateHelpString;
+    
+    /** Notifies listeners that we are in stage of mapping arguments */
+    boost::signals2::signal<void (std::string& warningString, std::string& errorString)> ParameterInteraction;
+
+    /** Notifies listeners that we are in stage of initializing the app (datadir, pid file, etc.) */
+    boost::signals2::signal<void (std::string& errorString)> AppInitialization;
+
+    /** Notifies listeners that now is the time to log startup/env infos */
+    boost::signals2::signal<void ()> AppInitializationLogHead;
+    
+    /** Notifies listeners that now is the time to log startup/env infos */
+    boost::signals2::signal<void (std::string& warningString, std::string& errorString, bool& stopInit)> VerifyIntegrity;
+    
+    /** Notifies listeners that modules should load now */
+    boost::signals2::signal<void (std::string& warningString, std::string& errorString, bool& stopInit)> LoadModules;
+    
+    /** Notifies listeners that the node has just started */
+    boost::signals2::signal<void ()> NodeStarted;
+    
+    /** Notifies listeners that we have successfully initialized */
+    boost::signals2::signal<void (boost::thread_group&)> FinishInitializing;
+    
+    /** Notifies listeners that we are in shutdown state (RPC stopped) */
+    boost::signals2::signal<void ()> ShutdownRPCStopped;
+    
+    /** Notifies listeners that we are in shutdown state (Node stopped) */
+    boost::signals2::signal<void ()> ShutdownNodeStopped;
+    
+    /** Notifies listeners that we are in shutdown state (Node stopped) */
+    boost::signals2::signal<void ()> ShutdownFinished;
 };
 
 CMainSignals& GetMainSignals();

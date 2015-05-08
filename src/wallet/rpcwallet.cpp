@@ -14,6 +14,7 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "legacywallet.h"
 #include "wallet.h"
 #include "walletdb.h"
 
