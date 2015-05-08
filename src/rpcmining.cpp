@@ -415,6 +415,12 @@ Value getwork(const Array& params, bool fHelp)
 
         uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
+        //// debug print
+        LogPrintf("getwork:\n\n\n");
+        LogPrintf("block sent as data: %s\n", pblock->GetHash().GetHex());
+        pblock->print();
+        LogPrintf("\n\n\n");
+
         Object result;
         result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate2), END(pmidstate2)))); // deprecated
         result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
@@ -448,7 +454,12 @@ Value getwork(const Array& params, bool fHelp)
         pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
         pblock->hashSigMerkleRoot = pblock->BuildSigMerkleTree();
-        pblock->UpdateSignatures(*deposit_pwalletMain);
+
+        //// debug print
+        LogPrintf("\n\ngetwork:\n");
+        LogPrintf("block recreated from data: %s\n", pblock->GetHash().GetHex());
+        pblock->print();
+        LogPrintf("\n\n\n");
 
         assert(bitcredit_pwalletMain != NULL);
         return CheckWork(pblock, *bitcredit_pwalletMain, *deposit_pwalletMain, *pMiningKey, *pDepositMiningKey, *pDepositChangeMiningKey, *pDepositSigningMiningKey);
