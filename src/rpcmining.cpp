@@ -317,7 +317,6 @@ Value getmininginfo(const Array& params, bool fHelp)
 
 
 #ifdef ENABLE_WALLET
-//TODO - This is NOT working whatsoever
 Value getwork(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -404,14 +403,18 @@ Value getwork(const Array& params, bool fHelp)
 
         // Pre-build hash buffers
         char pmidstate[32];
+        char pmidstate2[32];
         char pdata[168];
         char phash1[64];
         FormatHashBuffers(pblock, pmidstate, pdata, phash1);
 
+        //Precalc the second hashing of three 64 byte chunks that are required to hash the header
+    	SHA256Transform(pmidstate2, pdata + sha256DigestChunkByteSize, pmidstate);
+
         uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
         Object result;
-        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate)))); // deprecated
+        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate2), END(pmidstate2)))); // deprecated
         result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
         result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1)))); // deprecated
         result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
