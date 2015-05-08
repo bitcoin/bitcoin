@@ -63,6 +63,7 @@ using namespace leveldb;
 #include "mastercore_errors.h"
 #include "omnicore_qtutils.h"
 #include "omnicore_createpayload.h"
+#include "omnicore_pending.h"
 
 #include <QDateTime>
 #include <QMessageBox>
@@ -346,7 +347,7 @@ void SendMPDialog::sendMPTransaction()
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
             PopulateTXSentDialog(txid.GetHex());
-            //CreatePendingObject(txid, fromAddress.ToString, refAddress.ToString, MSC_TYPE_SIMPLE_SEND, propertyId, sendAmount);
+            PendingAdd(txid, fromAddress.ToString(), refAddress.ToString(), MSC_TYPE_SIMPLE_SEND, propertyId, sendAmount);
         }
     }
     clearFields();
