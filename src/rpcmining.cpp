@@ -286,6 +286,7 @@ Value getmininginfo(const Array& params, bool fHelp)
             "  \"currentblocksize\": nnn,   (numeric) The last block size\n"
             "  \"currentblocktx\": nnn,     (numeric) The last block transaction\n"
             "  \"difficulty\": xxx.xxxxx    (numeric) The current difficulty\n"
+            "  \"requireddeposit\": xxxxxx    (numeric) The current required deposit, in smallest possible unit\n"
             "  \"errors\": \"...\"          (string) Current errors\n"
             "  \"generate\": true|false     (boolean) If the generation is on or off (see getgenerate or setgenerate calls)\n"
             "  \"genproclimit\": n          (numeric) The processor limit for generation. -1 if no generation. (see getgenerate or setgenerate calls)\n"
@@ -299,11 +300,15 @@ Value getmininginfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getmininginfo", "")
         );
 
+    const Bitcredit_CBlockIndex* ptip = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    const uint64_t nTotalDepositBase = ptip->nTotalDepositBase;
+
     Object obj;
     obj.push_back(Pair("blocks",           (int)bitcredit_chainActive.Height()));
     obj.push_back(Pair("currentblocksize", (uint64_t)bitcredit_nLastBlockSize));
     obj.push_back(Pair("currentblocktx",   (uint64_t)bitcredit_nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)Bitcredit_GetDifficulty()));
+    obj.push_back(Pair("requireddeposit",       (double)Bitcredit_GetRequiredDeposit(nTotalDepositBase)));
     obj.push_back(Pair("errors",           Bitcredit_GetWarnings("statusbar")));
     obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
     obj.push_back(Pair("coinbasedepositdisabled",     (bool)GetBoolArg("-coinbasedepositdisabled", false)));
