@@ -21,6 +21,8 @@
 using namespace json_spirit;
 using namespace std;
 
+static const unsigned int sha256DigestChunkByteSize = 64;
+
 #ifdef ENABLE_WALLET
 // Key used by getwork miners.
 // Allocated in InitRPCMining, free'd in ShutdownRPCMining
