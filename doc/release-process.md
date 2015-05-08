@@ -114,19 +114,19 @@ Release Process
 
  Build creditsd and credits-qt on Linux32, Linux64, and Win32:
   
-	./bin/gbuild --commit bitcredit=${VERSION} ../credits/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gbuild --commit credits=${VERSION} ../credits/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-linux.yml
 	pushd build/out
 	zip -r credits-${VERSION}-linux-gitian.zip *
 	mv credits-${VERSION}-linux-gitian.zip ../../../
 	popd
-	./bin/gbuild --commit bitcredit=${VERSION} ../credits/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gbuild --commit credits=${VERSION} ../credits/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-win.yml
 	pushd build/out
 	zip -r credits-${VERSION}-win-gitian.zip *
 	mv credits-${VERSION}-win-gitian.zip ../../../
 	popd
-    ./bin/gbuild --commit bitcredit=${VERSION} ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
+    ./bin/gbuild --commit credits=${VERSION} ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
     ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
 	pushd build/out
 	mv Credits-Qt.dmg ../../../
