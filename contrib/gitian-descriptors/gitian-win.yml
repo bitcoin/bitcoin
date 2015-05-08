@@ -1,5 +1,5 @@
 ---
-name: "bitcredit"
+name: "credits"
 suites:
 - "precise"
 architectures:
@@ -19,8 +19,8 @@ packages:
 
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "/opt/bit/bitcredit"
-  "dir": "bitcredit"
+- "url": "/opt/bit/credits"
+  "dir": "credits"
 files:
 - "qt-win32-5.2.0-gitian-r3.zip"
 - "qt-win64-5.2.0-gitian-r3.zip"
@@ -65,9 +65,9 @@ script: |
     unzip $INDIR/protobuf-win${BITS}-2.5.0-gitian-r4.zip
     if [ "$NEEDDIST" == "1" ]; then
       # Make source code archive which is architecture independent so it only needs to be done once
-      cd $HOME/build/bitcredit
+      cd $HOME/build/credits
       ./autogen.sh
-      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcredit ${OPTFLAGS}"
+      ./configure --bindir=$OUTDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=credits ${OPTFLAGS}"
       make dist
       DISTNAME=`echo credits-*.tar.gz`
       NEEDDIST=0
@@ -76,8 +76,8 @@ script: |
     cd $BUILDDIR
     mkdir -p distsrc
     cd distsrc
-    tar --strip-components=1 -xf $HOME/build/bitcredit/$DISTNAME
-    ./configure --enable-upnp-default --bindir=$BINDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcredit ${OPTFLAGS}"
+    tar --strip-components=1 -xf $HOME/build/credits/$DISTNAME
+    ./configure --enable-upnp-default --bindir=$BINDIR --prefix=$STAGING --host=$HOST --with-qt-plugindir=$STAGING/plugins  --with-qt-incdir=$STAGING/include --with-qt-bindir=$STAGING/host/bin --with-boost=$STAGING --disable-maintainer-mode --with-protoc-bindir=$STAGING/host/bin --disable-dependency-tracking CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib ${OPTFLAGS}" CXXFLAGS="-frandom-seed=credits ${OPTFLAGS}"
     export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1
     export FAKETIME=$REFERENCE_DATETIME
     make $MAKEOPTS
@@ -93,5 +93,5 @@ script: |
   rm -rf $TEMPDIR
   mkdir -p $TEMPDIR
   cd $TEMPDIR
-  tar -xvf $HOME/build/bitcredit/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+  tar -xvf $HOME/build/credits/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
 

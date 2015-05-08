@@ -1,5 +1,5 @@
 ---
-name: "bitcredit"
+name: "credits"
 suites:
 - "precise"
 architectures:
@@ -14,8 +14,8 @@ packages:
 
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "/opt/bit/bitcredit"
-  "dir": "bitcredit"
+- "url": "/opt/bit/credits"
+  "dir": "credits"
 files:
 - "osx-native-depends-r3.tar.gz"
 - "osx-depends-r3.tar.gz"
@@ -41,7 +41,7 @@ script: |
   tar -C osx-cross-depends -xf osx-depends-qt-5.2.1-r3.tar.gz
   export PATH=`pwd`/osx-cross-depends/native-prefix/bin:$PATH
 
-  cd bitcredit
+  cd credits
 
   export ZERO_AR_DATE=1
   export QT_RCC_TEST=1

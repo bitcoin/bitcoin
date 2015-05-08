@@ -1,5 +1,5 @@
 ---
-name: "bitcredit"
+name: "credits"
 suites:
 - "precise"
 architectures:
@@ -22,8 +22,8 @@ packages:
 - "libqt4-test"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "/opt/bit/bitcredit"
-  "dir": "bitcredit"
+- "url": "/opt/bit/credits"
+  "dir": "credits"
 files:
 - "credits-deps-linux32-gitian-r5.zip"
 - "credits-deps-linux64-gitian-r5.zip"
@@ -59,10 +59,10 @@ script: |
     local: *;
   };' > $LINKER_SCRIPT
   function do_configure {
-      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=bitcredit ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
+      ./configure "$@" --enable-upnp-default --prefix=$STAGING --with-protoc-bindir=$STAGING/host/bin --with-qt-bindir=$STAGING/bin --with-boost=$STAGING --disable-maintainer-mode --disable-dependency-tracking PKG_CONFIG_PATH="$STAGING/lib/pkgconfig" CPPFLAGS="-I$STAGING/include ${OPTFLAGS}" LDFLAGS="-L$STAGING/lib -Wl,--version-script=$LINKER_SCRIPT ${OPTFLAGS}" CXXFLAGS="-frandom-seed=credits ${OPTFLAGS}" BOOST_CHRONO_EXTRALIBS="-lrt" --enable-glibc-back-compat
   }
   #
-  cd bitcredit
+  cd credits
   ./autogen.sh
   do_configure
   make dist
@@ -83,4 +83,4 @@ script: |
   rm -rf $TEMPDIR
   mkdir -p $TEMPDIR
   cd $TEMPDIR
-  tar -xvf $HOME/build/bitcredit/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+  tar -xvf $HOME/build/credits/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
