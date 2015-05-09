@@ -98,7 +98,7 @@ signals:
     /** Mark transactions and compute the sum */
     void clicked(QModelIndex);
     /** Send computed sum back to wallet-view */
-    void trxAmount(QString amount); // TKS
+    void trxAmount(QString amount);
 
 public slots:
     void chooseDate(int idx);
