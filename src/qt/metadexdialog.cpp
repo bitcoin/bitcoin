@@ -57,6 +57,8 @@ using namespace leveldb;
 #include "mastercore_parse_string.h"
 #include "mastercore_errors.h"
 #include "omnicore_qtutils.h"
+#include "omnicore_pending.h"
+#include "omnicore_createpayload.h"
 
 #include <boost/math/constants/constants.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
@@ -235,7 +237,7 @@ void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price
     }
 }
 
-// This function loops through the MetaDEx and updates the list of sell offers
+// This function loops through the MetaDEx and updates the list of buy/sell offers
 void MetaDExDialog::UpdateOffers()
 {
     for (int useBuyList = 0; useBuyList < 2; ++useBuyList) {
@@ -246,8 +248,8 @@ void MetaDExDialog::UpdateOffers()
             if ((useBuyList) && (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC)))) continue;
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
-                XDOUBLE price = (it->first);
                 XDOUBLE unitPrice;
+                XDOUBLE inversePrice;
                 string unitPriceStr;
                 int64_t available = 0, total = 0;
                 bool includesMe = false;
@@ -268,16 +270,17 @@ void MetaDExDialog::UpdateOffers()
                         }
                     }
                     unitPrice = obj.unitPrice(); // could be set multiple times but always a same price level
+                    inversePrice = obj.inversePrice();
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                     string strAvail;
                     if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
 
-                    if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { price = price/COIN; }
+                    if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { inversePrice = inversePrice/COIN; }
                     if ((!isPropertyDivisible(global_metadex_market)) && (!useBuyList)) { unitPrice = unitPrice/COIN; }
 
                     if (useBuyList) {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(price.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(inversePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
                     } else {
                         AddRow(useBuyList, includesMe, StripTrailingZeros(unitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
                     }
@@ -482,9 +485,9 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // use strToInt64 function to get the amounts, using divisibility of the property
-    uint64_t amountDes;
-    uint64_t amountSell;
-    uint64_t price;
+    int64_t amountDes;
+    int64_t amountSell;
+    int64_t price;
     unsigned int propertyIdDes;
     unsigned int propertyIdSell;
     if(sell) {
@@ -573,12 +576,12 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // create a payload for the transaction
-    // #CLASSC# std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdSell, amountSell, propertyIdDes, amountDes, 1);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdSell, amountSell, propertyIdDes, amountDes, 1);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
     std::string rawHex;
-    int result = 0; // #CLASSC# int result = ClassAgnosticWalletTXBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+    int result = ClassAgnosticWalletTXBuilder(strFromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
@@ -587,11 +590,11 @@ void MetaDExDialog::sendTrade(bool sell)
         "The MetaDEx transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(strError));
         return;
     } else {
-        if (1) { // #CLASSC# if (!autoCommit) {
+        if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
             PopulateTXSentDialog(txid.GetHex());
-            // TODO : ADD AN OBJECT TO PENDING MAP
+            PendingAdd(txid, strFromAddress, "", MSC_TYPE_METADEX, propertyIdSell, amountSell, propertyIdDes, amountDes, 1);
         }
     }
 }
