@@ -355,7 +355,7 @@ Value getwork(const Array& params, bool fHelp)
     if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Credits is downloading blocks...");
 
-    typedef map<uint256, pair<Credits_CBlock*, CScript> > mapNewBlock_t;
+    typedef map<pair<uint256, unsigned int>, pair<Credits_CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
     static vector<Credits_CBlockTemplate*> vNewBlockTemplate;
 
@@ -406,7 +406,7 @@ Value getwork(const Array& params, bool fHelp)
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
 
         // Save
-        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
+        mapNewBlock[make_pair(pblock->hashMerkleRoot, pblock->nTime)] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
 
         // Pre-build hash buffers
         char pmidstate[32];
@@ -446,9 +446,9 @@ Value getwork(const Array& params, bool fHelp)
             ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
 
         // Get saved block
-        if (!mapNewBlock.count(pdata->hashMerkleRoot))
+        if (!mapNewBlock.count(make_pair(pdata->hashMerkleRoot, pdata->nTime)))
             return false;
-        Credits_CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
+        Credits_CBlock* pblock = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->nTime)].first;
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
@@ -456,7 +456,7 @@ Value getwork(const Array& params, bool fHelp)
         pblock->nTotalDepositBase = pdata->nTotalDepositBase;
         pblock->nDepositAmount = pdata->nDepositAmount;
         pblock->hashLinkedBitcoinBlock = pdata->hashLinkedBitcoinBlock;
-        pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
+        pblock->vtx[0].vin[0].scriptSig = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->nTime)].second;
         pblock->hashMerkleRoot = pblock->BuildMerkleTree();
         pblock->hashSigMerkleRoot = pblock->BuildSigMerkleTree();
 
