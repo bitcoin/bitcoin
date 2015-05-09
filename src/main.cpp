@@ -2083,7 +2083,13 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
     int64_t nFees = 0;
     int nInputs = 0;
     unsigned int nSigOps = 0;
-    CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
+    //We must move the nTxOffset past the signature vector here, not required in Bitcoin.
+    //It's sigvectorsize + sigarraysize + txvectorsize
+    unsigned int sigSerSize = 0;
+    for (unsigned int i = 0; i < block.vsig.size(); i++) {
+    	sigSerSize += block.vsig[i].GetSerializeSize(SER_DISK, Bitcredit_Params().ClientVersion());
+    }
+    CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vsig.size()) + sigSerSize + GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
     for (unsigned int i = 0; i < block.vtx.size(); i++)
@@ -3385,6 +3391,24 @@ bool static Bitcredit_LoadBlockIndexDB()
     LogPrintf("Credits: LoadBlockIndexDB(): last block file = %i\n", bitcredit_mainState.nLastBlockFile);
     if (bitcredit_pblocktree->ReadBlockFileInfo(bitcredit_mainState.nLastBlockFile, bitcredit_mainState.infoLastBlockFile))
         LogPrintf("Credits: LoadBlockIndexDB(): last block file info: %s\n", bitcredit_mainState.infoLastBlockFile.ToString());
+
+    // Check presence of blk files
+    LogPrintf("Credits: Checking all blk files are present...\n");
+    set<int> setBlkDataFiles;
+    BOOST_FOREACH(const PAIRTYPE(uint256, Credits_CBlockIndex*)& item, bitcredit_mapBlockIndex)
+    {
+    	Credits_CBlockIndex* pindex = item.second;
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
+            setBlkDataFiles.insert(pindex->nFile);
+        }
+    }
+    for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
+    {
+        CDiskBlockPos pos(*it, 0);
+        if (!CAutoFile(Bitcredit_OpenBlockFile(pos, true), SER_DISK, Bitcredit_Params().ClientVersion())) {
+            return false;
+        }
+    }
 
     // Check whether we need to continue reindexing
     bool fReindexing = false;
