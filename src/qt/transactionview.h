@@ -97,7 +97,7 @@ signals:
     
     /** Mark transactions and compute the sum */
     void clicked(QModelIndex);
-    /** Send computes sum back to wallet-view */
+    /** Send computed sum back to wallet-view */
     void trxAmount(QString amount); // TKS
 
 public slots:
