@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
             string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-            Bitcredit_CTransaction tx;
+            Credits_CTransaction tx;
             stream >> tx;
 
             CValidationState state;
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 //
 //            string transaction = test[1].get_str();
 //            CDataStream stream(ParseHex(transaction), SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-//            Bitcredit_CTransaction tx;
+//            Credits_CTransaction tx;
 //            stream >> tx;
 //
 //            CValidationState state;
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     // Random real transaction
     string transaction = "010000000100000001b14bdcbc3e01bdaad36cc08e81e69c82e1060bc14e518db2b49aa43ad90ba26000000000490047304402203f16c6f40162ab686621ef3000b04e75418a0c0cb2d8aebeac894ae360ac1e780220ddc15ecdfc3507ac48e1681a33eb60996631bf6bf5bc0a0682c4db743ce7ca2b010140420f00000000001976a914660d4ef3a743e3e696ad990364e555c271ad504b88ac00000000";
     CDataStream stream(ParseHex(transaction), SER_DISK, BITCREDIT_CLIENT_VERSION);
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
     stream >> tx;
     CValidationState state;
     BOOST_CHECK_MESSAGE(Bitcredit_CheckTransaction(tx, state) && state.IsValid(), "Simple deserialized transaction should be valid.");
@@ -225,10 +225,10 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 // paid to a TX_PUBKEY, the second 21 and 22 CENT outputs
 // paid to a TX_PUBKEYHASH.
 //
-static std::vector<Bitcredit_CTransaction>
+static std::vector<Credits_CTransaction>
 SetupDummyInputs(CBasicKeyStore& keystoreRet, Bitcredit_CCoinsView & coinsRet)
 {
-    std::vector<Bitcredit_CTransaction> dummyTransactions;
+    std::vector<Credits_CTransaction> dummyTransactions;
     dummyTransactions.resize(2);
 
     // Add some keys to the keystore:
@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE(test_Get)
     Bitcredit_CCoinsViewCache bitcredit_coins(coinsDummy);
     Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
     Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
-    std::vector<Bitcredit_CTransaction> dummyTransactions = SetupDummyInputs(keystore, bitcredit_coins);
+    std::vector<Credits_CTransaction> dummyTransactions = SetupDummyInputs(keystore, bitcredit_coins);
 
-    Bitcredit_CTransaction t1;
+    Credits_CTransaction t1;
     t1.vin.resize(3);
     t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
     t1.vin[0].prevout.n = 1;
@@ -299,9 +299,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CBasicKeyStore keystore;
     Bitcredit_CCoinsView coinsDummy;
     Bitcredit_CCoinsViewCache coins(coinsDummy);
-    std::vector<Bitcredit_CTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
+    std::vector<Credits_CTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
-    Bitcredit_CTransaction t;
+    Credits_CTransaction t;
     t.vin.resize(1);
     t.vin[0].prevout.hash = dummyTransactions[0].GetHash();
     t.vin[0].prevout.n = 1;

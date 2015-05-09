@@ -14,12 +14,12 @@
 
 #include <stdint.h>
 
-class Bitcredit_CTransaction;
+class Credits_CTransaction;
 
 /** No amount larger than this (in satoshi) is valid */
 static const int64_t BITCOIN_MAX_MONEY = 21000000 * COIN;
 static const int64_t BITCREDIT_MAX_MONEY = 30000000 * COIN;
-inline bool Bitcredit_MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= BITCREDIT_MAX_MONEY); }
+inline bool Credits_MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= BITCREDIT_MAX_MONEY); }
 inline bool Bitcoin_MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= BITCOIN_MAX_MONEY); }
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
@@ -55,14 +55,14 @@ public:
 };
 
 /** An inpoint - a combination of a transaction and an index n into its vin */
-class Bitcredit_CInPoint
+class Credits_CInPoint
 {
 public:
-    const Bitcredit_CTransaction* ptx;
+    const Credits_CTransaction* ptx;
     unsigned int n;
 
-    Bitcredit_CInPoint() { SetNull(); }
-    Bitcredit_CInPoint(const Bitcredit_CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
+    Credits_CInPoint() { SetNull(); }
+    Credits_CInPoint(const Credits_CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
     void SetNull() { ptx = NULL; n = (unsigned int) -1; }
     bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
 };
@@ -71,16 +71,16 @@ public:
  * transaction's output that it claims and a signature that matches the
  * output's public key.
  */
-class Bitcredit_CTxIn
+class Credits_CTxIn
 {
 public:
     COutPoint prevout;
     CScript scriptSig;
 
-    Bitcredit_CTxIn() {}
+    Credits_CTxIn() {}
 
-    explicit Bitcredit_CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript());
-    Bitcredit_CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn=CScript());
+    explicit Credits_CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript());
+    Credits_CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn=CScript());
 
     IMPLEMENT_SERIALIZE
     (
@@ -88,14 +88,14 @@ public:
         READWRITE(scriptSig);
     )
 
-    friend bool operator==(const Bitcredit_CTxIn& a, const Bitcredit_CTxIn& b)
+    friend bool operator==(const Credits_CTxIn& a, const Credits_CTxIn& b)
     {
         return (
         		a.prevout   == b.prevout &&
                 a.scriptSig == b.scriptSig);
     }
 
-    friend bool operator!=(const Bitcredit_CTxIn& a, const Bitcredit_CTxIn& b)
+    friend bool operator!=(const Credits_CTxIn& a, const Credits_CTxIn& b)
     {
         return !(a == b);
     }
@@ -144,7 +144,7 @@ public:
 
     bool IsDust(int64_t nMinRelayTxFee) const
     {
-        // "Dust" is defined in terms of Bitcredit_CTransaction::nMinRelayTxFee,
+        // "Dust" is defined in terms of Credits_CTransaction::nMinRelayTxFee,
         // which has units satoshis-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
@@ -267,7 +267,7 @@ enum
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
-class Bitcredit_CTransaction
+class Credits_CTransaction
 {
 public:
     static int64_t nMinTxFee;
@@ -275,17 +275,17 @@ public:
     static const int CURRENT_VERSION=1;
     int nVersion;
 	unsigned int nTxType;
-    std::vector<Bitcredit_CTxIn> vin;
+    std::vector<Credits_CTxIn> vin;
     std::vector<CTxOut> vout;
     CKeyID signingKeyId;
     unsigned int nLockTime;
 
-    Bitcredit_CTransaction(unsigned char nTypeIn)
+    Credits_CTransaction(unsigned char nTypeIn)
     {
         SetNull();
         nTxType = nTypeIn;
     }
-    Bitcredit_CTransaction()
+    Credits_CTransaction()
     {
         SetNull();
     }
@@ -306,7 +306,7 @@ public:
 
     void SetNull()
     {
-        nVersion = Bitcredit_CTransaction::CURRENT_VERSION;
+        nVersion = Credits_CTransaction::CURRENT_VERSION;
     	nTxType = TX_TYPE_STANDARD;
         vin.clear();
         vout.clear();
@@ -356,7 +356,7 @@ public:
         return nTxType == TX_TYPE_STANDARD;
     }
 
-    friend bool operator==(const Bitcredit_CTransaction& a, const Bitcredit_CTransaction& b)
+    friend bool operator==(const Credits_CTransaction& a, const Credits_CTransaction& b)
     {
         return (a.nVersion  == b.nVersion &&
         		a.nTxType   == b.nTxType &&
@@ -366,7 +366,7 @@ public:
                 a.nLockTime == b.nLockTime);
     }
 
-    friend bool operator!=(const Bitcredit_CTransaction& a, const Bitcredit_CTransaction& b)
+    friend bool operator!=(const Credits_CTransaction& a, const Credits_CTransaction& b)
     {
         return !(a == b);
     }
@@ -439,7 +439,7 @@ public:
  *  last output of the affected transaction, its metadata as well
  *  (coinbase or not, height, transaction version)
  */
-class Bitcredit_CTxInUndo
+class Credits_CTxInUndo
 {
 public:
     CTxOut txout;         // the txout data before being spent
@@ -448,8 +448,8 @@ public:
     int nMetaData; // if the outpoint was the last unspent: its metadata
     int nVersion;         // if the outpoint was the last unspent: its version
 
-    Bitcredit_CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nMetaData(0), nVersion(0) {}
-    Bitcredit_CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nMetaDataIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nMetaData(nMetaDataIn), nVersion(nVersionIn) { }
+    Credits_CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nMetaData(0), nVersion(0) {}
+    Credits_CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nMetaDataIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nMetaData(nMetaDataIn), nVersion(nVersionIn) { }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const {
         return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
@@ -482,12 +482,12 @@ public:
     }
 };
 
-/** Undo information for a Bitcredit_CTransaction */
-class Bitcredit_CTxUndo
+/** Undo information for a Credits_CTransaction */
+class Credits_CTxUndo
 {
 public:
     // undo information for all txins
-    std::vector<Bitcredit_CTxInUndo> vprevout;
+    std::vector<Credits_CTxInUndo> vprevout;
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vprevout);
@@ -502,7 +502,7 @@ public:
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class Bitcredit_CBlockHeader
+class Credits_CBlockHeader
 {
 public:
     // header
@@ -519,7 +519,7 @@ public:
     uint64_t nTotalDepositBase;
     uint64_t nDepositAmount;
 
-    Bitcredit_CBlockHeader()
+    Credits_CBlockHeader()
     {
         SetNull();
     }
@@ -542,7 +542,7 @@ public:
 
     void SetNull()
     {
-        nVersion = Bitcredit_CBlockHeader::CURRENT_VERSION;
+        nVersion = Credits_CBlockHeader::CURRENT_VERSION;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         hashLinkedBitcoinBlock = 0;
@@ -569,47 +569,47 @@ public:
 };
 
 
-class Bitcredit_CBlock : public Bitcredit_CBlockHeader
+class Credits_CBlock : public Credits_CBlockHeader
 {
 public:
     // network and disk
     std::vector<CCompactSignature> vsig;
-    std::vector<Bitcredit_CTransaction> vtx;
+    std::vector<Credits_CTransaction> vtx;
 
     // memory only
     mutable std::vector<uint256> vSigMerkleTree;
     mutable std::vector<uint256> vMerkleTree;
 
-    Bitcredit_CBlock()
+    Credits_CBlock()
     {
         SetNull();
     }
 
-    Bitcredit_CBlock(const Bitcredit_CBlockHeader &header)
+    Credits_CBlock(const Credits_CBlockHeader &header)
     {
         SetNull();
-        *((Bitcredit_CBlockHeader*)this) = header;
+        *((Credits_CBlockHeader*)this) = header;
     }
 
     IMPLEMENT_SERIALIZE
     (
-        READWRITE(*(Bitcredit_CBlockHeader*)this);
+        READWRITE(*(Credits_CBlockHeader*)this);
         READWRITE(vsig);
         READWRITE(vtx);
     )
 
     void SetNull()
     {
-        Bitcredit_CBlockHeader::SetNull();
+        Credits_CBlockHeader::SetNull();
         vsig.clear();
         vtx.clear();
         vSigMerkleTree.clear();
         vMerkleTree.clear();
     }
 
-    Bitcredit_CBlockHeader GetBlockHeader() const
+    Credits_CBlockHeader GetBlockHeader() const
     {
-        Bitcredit_CBlockHeader block;
+        Credits_CBlockHeader block;
         block.nVersion       = nVersion;
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;

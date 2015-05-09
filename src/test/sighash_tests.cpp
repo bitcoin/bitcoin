@@ -18,17 +18,17 @@
 using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
 
-extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType);
+extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Credits_CTransaction& txTo, unsigned int nIn, int nHashType);
 
 // Old script.cpp SignatureHash function
-uint256 static SignatureHashOld(CScript scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType)
+uint256 static SignatureHashOld(CScript scriptCode, const Credits_CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     if (nIn >= txTo.vin.size())
     {
         printf("ERROR: SignatureHash() : nIn=%d out of range\n", nIn);
         return 1;
     }
-    Bitcredit_CTransaction txTmp(txTo);
+    Credits_CTransaction txTmp(txTo);
 
     // In case concatenating two scripts ends up with two codeseparators,
     // or an extra one at the end, this prevents all those possible incompatibilities.
@@ -80,7 +80,7 @@ void static RandomScript(CScript &script) {
         script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
 }
 
-void static RandomTransaction(Bitcredit_CTransaction &tx, bool fSingle) {
+void static RandomTransaction(Credits_CTransaction &tx, bool fSingle) {
     tx.nVersion = insecure_rand();
     tx.nTxType = TX_TYPE_STANDARD;
     tx.vin.clear();
@@ -89,8 +89,8 @@ void static RandomTransaction(Bitcredit_CTransaction &tx, bool fSingle) {
     int ins = (insecure_rand() % 4) + 1;
     int outs = fSingle ? ins : (insecure_rand() % 4) + 1;
     for (int in = 0; in < ins; in++) {
-        tx.vin.push_back(Bitcredit_CTxIn());
-        Bitcredit_CTxIn &txin = tx.vin.back();
+        tx.vin.push_back(Credits_CTxIn());
+        Credits_CTxIn &txin = tx.vin.back();
         txin.prevout.hash = GetRandHash();
         txin.prevout.n = insecure_rand() % 4;
         RandomScript(txin.scriptSig);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 //    #endif
 //    for (int i=0; i<nRandomTests; i++) {
 //        int nHashType = insecure_rand();
-//        Bitcredit_CTransaction txTo;
+//        Credits_CTransaction txTo;
 //        RandomTransaction(txTo, (nHashType & 0x1f) == SIGHASH_SINGLE);
 //        CScript scriptCode;
 //        RandomScript(scriptCode);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
 //        std::string raw_tx, raw_script, sigHashHex;
 //        int nIn, nHashType;
 //        uint256 sh;
-//        Bitcredit_CTransaction tx;
+//        Credits_CTransaction tx;
 //        CScript scriptCode = CScript();
 //
 //        try {

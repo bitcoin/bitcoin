@@ -59,7 +59,7 @@ struct TestingSetup {
         boost::filesystem::create_directories(pathTemp);
         mapArgs["-datadir"] = pathTemp.string();
 
-        bitcredit_pblocktree = new Bitcredit_CBlockTreeDB(1 << 20, true);
+        bitcredit_pblocktree = new Credits_CBlockTreeDB(1 << 20, true);
         bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(1 << 23, true);
         bitcredit_pcoinsTip = new Bitcredit_CCoinsViewCache(*bitcredit_pcoinsdbview);
 

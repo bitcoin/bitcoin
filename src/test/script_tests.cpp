@@ -32,7 +32,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace boost::algorithm;
 
-extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Bitcredit_CTransaction& txTo, unsigned int nIn, int nHashType);
+extern uint256 Bitcredit_SignatureHash(const CScript &scriptCode, const Credits_CTransaction& txTo, unsigned int nIn, int nHashType);
 
 static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
-        Bitcredit_CTransaction tx;
+        Credits_CTransaction tx;
         BOOST_CHECK_MESSAGE(Bitcredit_VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
     }
 }
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
 
-        Bitcredit_CTransaction tx;
+        Credits_CTransaction tx;
         BOOST_CHECK_MESSAGE(!Bitcredit_VerifyScript(scriptSig, scriptPubKey, tx, 0, flags, SIGHASH_NONE), strTest);
     }
 }
@@ -183,23 +183,23 @@ BOOST_AUTO_TEST_CASE(script_PushData)
     static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
 
     vector<vector<unsigned char> > directStack;
-    BOOST_CHECK(Bitcredit_EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), Bitcredit_CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(directStack, CScript(&direct[0], &direct[sizeof(direct)]), Credits_CTransaction(), 0, true, 0));
 
     vector<vector<unsigned char> > pushdata1Stack;
-    BOOST_CHECK(Bitcredit_EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), Bitcredit_CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(pushdata1Stack, CScript(&pushdata1[0], &pushdata1[sizeof(pushdata1)]), Credits_CTransaction(), 0, true, 0));
     BOOST_CHECK(pushdata1Stack == directStack);
 
     vector<vector<unsigned char> > pushdata2Stack;
-    BOOST_CHECK(Bitcredit_EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), Bitcredit_CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(pushdata2Stack, CScript(&pushdata2[0], &pushdata2[sizeof(pushdata2)]), Credits_CTransaction(), 0, true, 0));
     BOOST_CHECK(pushdata2Stack == directStack);
 
     vector<vector<unsigned char> > pushdata4Stack;
-    BOOST_CHECK(Bitcredit_EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), Bitcredit_CTransaction(), 0, true, 0));
+    BOOST_CHECK(Bitcredit_EvalScript(pushdata4Stack, CScript(&pushdata4[0], &pushdata4[sizeof(pushdata4)]), Credits_CTransaction(), 0, true, 0));
     BOOST_CHECK(pushdata4Stack == directStack);
 }
 
 CScript
-sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, Bitcredit_CTransaction transaction)
+sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, Credits_CTransaction transaction)
 {
     uint256 hash = Bitcredit_SignatureHash(scriptPubKey, transaction, 0, SIGHASH_ALL);
 
@@ -223,7 +223,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, Bitcredit_CTransacti
     return result;
 }
 CScript
-sign_multisig(CScript scriptPubKey, const CKey &key, Bitcredit_CTransaction transaction)
+sign_multisig(CScript scriptPubKey, const CKey &key, Credits_CTransaction transaction)
 {
     std::vector<CKey> keys;
     keys.push_back(key);
@@ -240,11 +240,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG12)
     CScript scriptPubKey12;
     scriptPubKey12 << OP_1 << key1.GetPubKey() << key2.GetPubKey() << OP_2 << OP_CHECKMULTISIG;
 
-    Bitcredit_CTransaction txFrom12;
+    Credits_CTransaction txFrom12;
     txFrom12.vout.resize(1);
     txFrom12.vout[0].scriptPubKey = scriptPubKey12;
 
-    Bitcredit_CTransaction txTo12;
+    Credits_CTransaction txTo12;
     txTo12.vin.resize(1);
     txTo12.vout.resize(1);
     txTo12.vin[0].prevout.n = 0;
@@ -274,11 +274,11 @@ BOOST_AUTO_TEST_CASE(script_CHECKMULTISIG23)
     CScript scriptPubKey23;
     scriptPubKey23 << OP_2 << key1.GetPubKey() << key2.GetPubKey() << key3.GetPubKey() << OP_3 << OP_CHECKMULTISIG;
 
-    Bitcredit_CTransaction txFrom23;
+    Credits_CTransaction txFrom23;
     txFrom23.vout.resize(1);
     txFrom23.vout[0].scriptPubKey = scriptPubKey23;
 
-    Bitcredit_CTransaction txTo23;
+    Credits_CTransaction txTo23;
     txTo23.vin.resize(1);
     txTo23.vout.resize(1);
     txTo23.vin[0].prevout.n = 0;
@@ -345,11 +345,11 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         keystore.AddKey(key);
     }
 
-    Bitcredit_CTransaction txFrom;
+    Credits_CTransaction txFrom;
     txFrom.vout.resize(1);
     txFrom.vout[0].scriptPubKey.SetDestination(keys[0].GetPubKey().GetID());
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
-    Bitcredit_CTransaction txTo;
+    Credits_CTransaction txTo;
     txTo.vin.resize(1);
     txTo.vout.resize(1);
     txTo.vin[0].prevout.n = 0;

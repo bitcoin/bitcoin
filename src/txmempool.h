@@ -22,7 +22,7 @@ static const unsigned int BITCREDIT_MEMPOOL_HEIGHT = 0x7FFFFFFF;
 class Bitcredit_CTxMemPoolEntry
 {
 private:
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
     int64_t nFee; // Cached to avoid expensive parent-transaction lookups
     size_t nTxSize; // ... and avoid recomputing tx size
     int64_t nTime; // Local time when entering the mempool
@@ -30,12 +30,12 @@ private:
     unsigned int nHeight; // Chain height when entering the mempool
 
 public:
-    Bitcredit_CTxMemPoolEntry(const Bitcredit_CTransaction& _tx, int64_t _nFee,
+    Bitcredit_CTxMemPoolEntry(const Credits_CTransaction& _tx, int64_t _nFee,
                     int64_t _nTime, double _dPriority, unsigned int _nHeight);
     Bitcredit_CTxMemPoolEntry();
     Bitcredit_CTxMemPoolEntry(const Bitcredit_CTxMemPoolEntry& other);
 
-    const Bitcredit_CTransaction& GetTx() const { return this->tx; }
+    const Credits_CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
     int64_t GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
@@ -62,7 +62,7 @@ private:
 public:
     mutable CCriticalSection cs;
     std::map<uint256, Bitcredit_CTxMemPoolEntry> mapTx;
-    std::map<COutPoint, Bitcredit_CInPoint> mapNextTx;
+    std::map<COutPoint, Credits_CInPoint> mapNextTx;
 
     Bitcredit_CTxMemPool();
 
@@ -76,8 +76,8 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const Bitcredit_CTxMemPoolEntry &entry);
-    void remove(const Bitcredit_CTransaction &tx, std::list<Bitcredit_CTransaction>& removed, bool fRecursive = false);
-    void removeConflicts(const Bitcredit_CTransaction &tx, std::list<Bitcredit_CTransaction>& removed);
+    void remove(const Credits_CTransaction &tx, std::list<Credits_CTransaction>& removed, bool fRecursive = false);
+    void removeConflicts(const Credits_CTransaction &tx, std::list<Credits_CTransaction>& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, Bitcredit_CCoins &coins);
@@ -96,7 +96,7 @@ public:
         return (mapTx.count(hash) != 0);
     }
 
-    bool lookup(uint256 hash, Bitcredit_CTransaction& result) const;
+    bool lookup(uint256 hash, Credits_CTransaction& result) const;
 };
 
 /** CCoinsView that brings transactions from a memorypool into view.

@@ -17,19 +17,19 @@ void COutPoint::print() const
     LogPrintf("%s\n", ToString());
 }
 
-Bitcredit_CTxIn::Bitcredit_CTxIn(COutPoint prevoutIn, CScript scriptSigIn)
+Credits_CTxIn::Credits_CTxIn(COutPoint prevoutIn, CScript scriptSigIn)
 {
     prevout = prevoutIn;
     scriptSig = scriptSigIn;
 }
 
-Bitcredit_CTxIn::Bitcredit_CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn)
+Credits_CTxIn::Credits_CTxIn(uint256 hashPrevTx, unsigned int nOut, CScript scriptSigIn)
 {
     prevout = COutPoint(hashPrevTx, nOut);
     scriptSig = scriptSigIn;
 }
 
-std::string Bitcredit_CTxIn::ToString() const
+std::string Credits_CTxIn::ToString() const
 {
     std::string str;
     str += "CTxIn(";
@@ -42,7 +42,7 @@ std::string Bitcredit_CTxIn::ToString() const
     return str;
 }
 
-void Bitcredit_CTxIn::print() const
+void Credits_CTxIn::print() const
 {
     LogPrintf("%s\n", ToString());
 }
@@ -84,31 +84,31 @@ void CTxOutClaim::print() const
     LogPrintf("%s\n", ToString());
 }
 
-uint256 Bitcredit_CTransaction::GetHash() const
+uint256 Credits_CTransaction::GetHash() const
 {
     return SerializeHash(*this, SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
 }
 
-int64_t Bitcredit_CTransaction::GetValueOut() const
+int64_t Credits_CTransaction::GetValueOut() const
 {
     int64_t nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
         nValueOut += txout.nValue;
-        if (!Bitcredit_MoneyRange(txout.nValue) || !Bitcredit_MoneyRange(nValueOut))
-            throw std::runtime_error("Bitcredit_CTransaction::GetValueOut() : value out of range");
+        if (!Credits_MoneyRange(txout.nValue) || !Credits_MoneyRange(nValueOut))
+            throw std::runtime_error("Credits_CTransaction::GetValueOut() : value out of range");
     }
     return nValueOut;
 }
-int64_t Bitcredit_CTransaction::GetDepositValueOut() const
+int64_t Credits_CTransaction::GetDepositValueOut() const
 {
     int64_t nValueOut = vout[0].nValue;
-	if (!Bitcredit_MoneyRange(nValueOut))
-		throw std::runtime_error("Bitcredit_CTransaction::GetDepositValueOut() : value out of range");
+	if (!Credits_MoneyRange(nValueOut))
+		throw std::runtime_error("Credits_CTransaction::GetDepositValueOut() : value out of range");
     return nValueOut;
 }
 
-double Bitcredit_CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSize) const
+double Credits_CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSize) const
 {
     // In order to avoid disincentivizing cleaning up the UTXO set we don't count
     // the constant overhead for each txin and up to 110 bytes of scriptSig (which
@@ -117,7 +117,7 @@ double Bitcredit_CTransaction::ComputePriority(double dPriorityInputs, unsigned 
     // risk encouraging people to create junk outputs to redeem later.
     if (nTxSize == 0)
         nTxSize = ::GetSerializeSize(*this, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-    BOOST_FOREACH(const Bitcredit_CTxIn& txin, vin)
+    BOOST_FOREACH(const Credits_CTxIn& txin, vin)
     {
         unsigned int offset = 41U + std::min(110U, (unsigned int)txin.scriptSig.size());
         if (nTxSize > offset)
@@ -127,10 +127,10 @@ double Bitcredit_CTransaction::ComputePriority(double dPriorityInputs, unsigned 
     return dPriorityInputs / nTxSize;
 }
 
-std::string Bitcredit_CTransaction::ToString() const
+std::string Credits_CTransaction::ToString() const
 {
     std::string str;
-    str += strprintf("Bitcredit_CTransaction(hash=%s, ver=%d, type=%d, vin.size=%u, vout.size=%u, signingKeyId=%s, nLockTime=%u)\n",
+    str += strprintf("Credits_CTransaction(hash=%s, ver=%d, type=%d, vin.size=%u, vout.size=%u, signingKeyId=%s, nLockTime=%u)\n",
         GetHash().ToString().substr(0,10),
         nVersion,
         nTxType,
@@ -145,7 +145,7 @@ std::string Bitcredit_CTransaction::ToString() const
     return str;
 }
 
-void Bitcredit_CTransaction::print() const
+void Credits_CTransaction::print() const
 {
     LogPrintf("%s", ToString());
 }
@@ -253,7 +253,7 @@ uint64_t CTxOutClaimCompressor::DecompressAmount(uint64_t x)
  * This is only a helper object used to make a temporary copy of the relevant data from
  * CBlockHeader into a separate memory space which is used to create a BlockHeader hash.
  */
-class Bitcredit_CLockHashInput{
+class Credits_CLockHashInput{
 public:
     int nVersion;
     uint256 hashPrevBlock;
@@ -263,12 +263,12 @@ public:
     uint64_t nTotalDepositBase;
     uint64_t nDepositAmount;
 
-    Bitcredit_CLockHashInput(){
+    Credits_CLockHashInput(){
         SetNull();
     }
 
     void SetNull(){
-        nVersion = Bitcredit_CBlockHeader::CURRENT_VERSION;
+        nVersion = Credits_CBlockHeader::CURRENT_VERSION;
         hashPrevBlock = 0;
         hashLinkedBitcoinBlock = 0;
         nBits = 0;
@@ -278,9 +278,9 @@ public:
     }
 };
 
-uint256 Bitcredit_CBlockHeader::GetLockHash() const
+uint256 Credits_CBlockHeader::GetLockHash() const
 {
-	Bitcredit_CLockHashInput input;
+	Credits_CLockHashInput input;
 	input.nVersion = nVersion;
 	input.hashPrevBlock = hashPrevBlock;
 	input.hashLinkedBitcoinBlock = hashLinkedBitcoinBlock;
@@ -292,12 +292,12 @@ uint256 Bitcredit_CBlockHeader::GetLockHash() const
     return Hash(BEGIN(input.nVersion), END(input.nDepositAmount));
 }
 
-uint256 Bitcredit_CBlockHeader::GetHash() const
+uint256 Credits_CBlockHeader::GetHash() const
 {
     return Hash(BEGIN(nVersion), END(nDepositAmount));
 }
 
-uint256 Bitcredit_CBlock::BuildSigMerkleTree() const
+uint256 Credits_CBlock::BuildSigMerkleTree() const
 {
     vSigMerkleTree.clear();
     BOOST_FOREACH(const CCompactSignature& sig, vsig)
@@ -316,10 +316,10 @@ uint256 Bitcredit_CBlock::BuildSigMerkleTree() const
     return (vSigMerkleTree.empty() ? 0 : vSigMerkleTree.back());
 }
 
-uint256 Bitcredit_CBlock::BuildMerkleTree() const
+uint256 Credits_CBlock::BuildMerkleTree() const
 {
     vMerkleTree.clear();
-    BOOST_FOREACH(const Bitcredit_CTransaction& tx, vtx)
+    BOOST_FOREACH(const Credits_CTransaction& tx, vtx)
         vMerkleTree.push_back(tx.GetHash());
     int j = 0;
     for (int nSize = vtx.size(); nSize > 1; nSize = (nSize + 1) / 2)
@@ -335,15 +335,15 @@ uint256 Bitcredit_CBlock::BuildMerkleTree() const
     return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
 
-void Bitcredit_CBlock::RecalcLockHashAndMerkleRoot()
+void Credits_CBlock::RecalcLockHashAndMerkleRoot()
 {
 	vtx[0].vin[0].prevout.hash = GetLockHash();
 	hashMerkleRoot = BuildMerkleTree();
 }
-bool Bitcredit_CBlock::UpdateSignatures(const CKeyStore &deposit_keyStore)
+bool Credits_CBlock::UpdateSignatures(const CKeyStore &deposit_keyStore)
 {
 	vsig.clear();
-    BOOST_FOREACH(const Bitcredit_CTransaction& tx, vtx) {
+    BOOST_FOREACH(const Credits_CTransaction& tx, vtx) {
     	if(tx.IsDeposit()) {
 			const CKeyID keyID = tx.signingKeyId;
 			CKey signingKey;
@@ -364,7 +364,7 @@ bool Bitcredit_CBlock::UpdateSignatures(const CKeyStore &deposit_keyStore)
     return true;
 }
 
-std::vector<uint256> Bitcredit_CBlock::GetMerkleBranch(int nIndex) const
+std::vector<uint256> Credits_CBlock::GetMerkleBranch(int nIndex) const
 {
     if (vMerkleTree.empty())
         BuildMerkleTree();
@@ -380,7 +380,7 @@ std::vector<uint256> Bitcredit_CBlock::GetMerkleBranch(int nIndex) const
     return vMerkleBranch;
 }
 
-uint256 Bitcredit_CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex)
+uint256 Credits_CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex)
 {
     if (nIndex == -1)
         return 0;
@@ -395,7 +395,7 @@ uint256 Bitcredit_CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint
     return hash;
 }
 
-void Bitcredit_CBlock::print() const
+void Credits_CBlock::print() const
 {
     LogPrintf("\nCBlock(\nhash=%s, \nver=%d, \nhashPrevBlock=%s, \nhashMerkleRoot=%s, \nnTime=%u, \nnBits=%08x, \nnNonce=%u, \nnTotalMonetaryBase=%u, \nnTotalDepositBase=%u, \nnDepositAmount=%u, \nhashLinkedBitcoinBlock=%u, \nhashSigMerkleRoot=%u, \nvtx=%u)\n\n",
     	GetHash().ToString(),

@@ -155,7 +155,7 @@ QList<Credits_TransactionRecord> Credits_TransactionRecord::decomposeTransaction
     else
     {
         bool fAllFromMe = true;
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin)
             fAllFromMe = fAllFromMe && keyholder_wallet->IsMine(txin);
 
         bool fAllToMe = true;
@@ -264,8 +264,8 @@ void Credits_TransactionRecord::updateStatus(const Bitcredit_CWalletTx &wtx)
     // Determine transaction status
 
     // Find the block the tx is in
-    Bitcredit_CBlockIndex* pindex = NULL;
-    std::map<uint256, Bitcredit_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(wtx.hashBlock);
+    Credits_CBlockIndex* pindex = NULL;
+    std::map<uint256, Credits_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(wtx.hashBlock);
     if (mi != bitcredit_mapBlockIndex.end())
         pindex = (*mi).second;
 

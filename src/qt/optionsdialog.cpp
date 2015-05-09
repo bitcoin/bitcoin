@@ -14,7 +14,7 @@
 #include "monitoreddatamapper.h"
 #include "optionsmodel.h"
 
-#include "main.h" // for Bitcredit_CTransaction::nMinTxFee and MAX_SCRIPTCHECK_THREADS
+#include "main.h" // for Credits_CTransaction::nMinTxFee and MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
@@ -101,7 +101,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
 #endif
 
     ui->unit->setModel(new BitcreditUnits(this));
-    ui->transactionFee->setSingleStep(Bitcredit_CTransaction::nMinTxFee);
+    ui->transactionFee->setSingleStep(Credits_CTransaction::nMinTxFee);
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);

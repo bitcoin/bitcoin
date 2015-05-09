@@ -22,9 +22,9 @@
 #include <boost/test/unit_test.hpp>
 
 // Tests this internal-to-main.cpp method:
-extern bool Bitcredit_AddOrphanTx(const Bitcredit_CTransaction& tx);
+extern bool Bitcredit_AddOrphanTx(const Credits_CTransaction& tx);
 extern unsigned int Bitcredit_LimitOrphanTxSize(unsigned int nMaxOrphans);
-extern std::map<uint256, Bitcredit_CTransaction> bitcredit_mapOrphanTransactions;
+extern std::map<uint256, Credits_CTransaction> bitcredit_mapOrphanTransactions;
 extern std::map<uint256, std::set<uint256> > bitcredit_mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i)
@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
     BOOST_CHECK(CheckNBits(firstcheck.second, lastcheck.first+60*60*24*365*4, lastcheck.second, lastcheck.first));
 }
 
-Bitcredit_CTransaction RandomOrphan()
+Credits_CTransaction RandomOrphan()
 {
-    std::map<uint256, Bitcredit_CTransaction>::iterator it;
+    std::map<uint256, Credits_CTransaction>::iterator it;
     it = bitcredit_mapOrphanTransactions.lower_bound(GetRandHash());
     if (it == bitcredit_mapOrphanTransactions.end())
         it = bitcredit_mapOrphanTransactions.begin();
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // 50 orphan transactions:
     for (int i = 0; i < 50; i++)
     {
-        Bitcredit_CTransaction tx;
+        Credits_CTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
         tx.vin[0].prevout.hash = GetRandHash();
@@ -182,9 +182,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // ... and 50 that depend on other orphans:
     for (int i = 0; i < 50; i++)
     {
-        Bitcredit_CTransaction txPrev = RandomOrphan();
+        Credits_CTransaction txPrev = RandomOrphan();
 
-        Bitcredit_CTransaction tx;
+        Credits_CTransaction tx;
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
         tx.vin[0].prevout.hash = txPrev.GetHash();
@@ -200,9 +200,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // This really-big orphan should be ignored:
     for (int i = 0; i < 10; i++)
     {
-        Bitcredit_CTransaction txPrev = RandomOrphan();
+        Credits_CTransaction txPrev = RandomOrphan();
 
-        Bitcredit_CTransaction tx;
+        Credits_CTransaction tx;
         tx.vout.resize(1);
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
@@ -244,10 +244,10 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
 
     // 100 orphan transactions:
     static const int NPREV=100;
-    Bitcredit_CTransaction orphans[NPREV];
+    Credits_CTransaction orphans[NPREV];
     for (int i = 0; i < NPREV; i++)
     {
-        Bitcredit_CTransaction& tx = orphans[i];
+        Credits_CTransaction& tx = orphans[i];
         tx.vin.resize(1);
         tx.vin[0].prevout.n = 0;
         tx.vin[0].prevout.hash = GetRandHash();
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     }
 
     // Create a transaction that depends on orphans:
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
     tx.vout.resize(1);
     tx.vout[0].nValue = 1*CENT;
     tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());

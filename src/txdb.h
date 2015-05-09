@@ -47,10 +47,10 @@ public:
 };
 
 /** Access to the block database (blocks/index/) */
-class Bitcredit_CBlockTreeDB : public CLevelDBWrapper
+class Credits_CBlockTreeDB : public CLevelDBWrapper
 {
 public:
-    Bitcredit_CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    Credits_CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 private:
 	static const unsigned char BLOCKINDEX_KEY;
 	static const unsigned char REINDEX_KEY;
@@ -61,8 +61,8 @@ private:
 	static const unsigned char ONE;
 	static const unsigned char ZERO;
 
-    Bitcredit_CBlockTreeDB(const Bitcredit_CBlockTreeDB&);
-    void operator=(const Bitcredit_CBlockTreeDB&);
+    Credits_CBlockTreeDB(const Credits_CBlockTreeDB&);
+    void operator=(const Credits_CBlockTreeDB&);
 public:
     bool WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);

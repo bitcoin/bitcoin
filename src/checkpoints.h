@@ -7,7 +7,7 @@
 
 #include <map>
 
-class Bitcredit_CBlockIndex;
+class Credits_CBlockIndex;
 class uint256;
 
 /** Block-chain checkpoints are compiled-in sanity checks.
@@ -22,9 +22,9 @@ namespace Checkpoints
     int Bitcredit_GetTotalBlocksEstimate();
 
     // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-    Bitcredit_CBlockIndex* Bitcredit_GetLastCheckpoint(const std::map<uint256, Bitcredit_CBlockIndex*>& mapBlockIndex);
+    Credits_CBlockIndex* Bitcredit_GetLastCheckpoint(const std::map<uint256, Credits_CBlockIndex*>& mapBlockIndex);
 
-    double Bitcredit_GuessVerificationProgress(Bitcredit_CBlockIndex *pindex, bool fSigchecks = true);
+    double Bitcredit_GuessVerificationProgress(Credits_CBlockIndex *pindex, bool fSigchecks = true);
 
     extern bool bitcredit_fEnabled;
 }

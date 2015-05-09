@@ -114,7 +114,7 @@ double ClientModel::getVerificationProgress() const
 {
     LOCK(mainState.cs_main);
     if(isForBitcredit) {
-        return Checkpoints::Bitcredit_GuessVerificationProgress((Bitcredit_CBlockIndex*)chainActive.Tip());
+        return Checkpoints::Bitcredit_GuessVerificationProgress((Credits_CBlockIndex*)chainActive.Tip());
     } else {
         return Checkpoints::Bitcoin_GuessVerificationProgress((Bitcoin_CBlockIndex*)chainActive.Tip());
     }

@@ -10,7 +10,7 @@
 #include <vector>
 
 class COutPoint;
-class Bitcredit_CTransaction;
+class Credits_CTransaction;
 class Bitcoin_CTransaction;
 class uint256;
 
@@ -84,7 +84,7 @@ public:
     bool IsWithinSizeConstraints() const;
 
     // Also adds any outputs which match the filter to the filter (to match their spending txes)
-    bool bitcredit_IsRelevantAndUpdate(const Bitcredit_CTransaction& tx, const uint256& hash);
+    bool bitcredit_IsRelevantAndUpdate(const Credits_CTransaction& tx, const uint256& hash);
     bool bitcoin_IsRelevantAndUpdate(const Bitcoin_CTransaction& tx, const uint256& hash);
 
     // Checks for empty and full filters to avoid wasting cpu

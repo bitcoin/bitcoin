@@ -259,7 +259,7 @@ set<uint256> Bitcredit_CWallet::GetConflicts(const uint256& txid) const
 
     std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
 
-    BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin)
+    BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin)
     {
         if (mapTxSpends.count(txin.prevout) <= 1)
             continue;  // No conflict if zero or one spends
@@ -341,7 +341,7 @@ void Bitcredit_CWallet::AddToSpends(const uint256& wtxid)
     if (thisTx.IsCoinBase()) // Coinbases don't spend anything!
         return;
 
-    BOOST_FOREACH(const Bitcredit_CTxIn& txin, thisTx.vin)
+    BOOST_FOREACH(const Credits_CTxIn& txin, thisTx.vin)
         AddToSpends(txin.prevout, wtxid);
 }
 
@@ -595,7 +595,7 @@ bool Bitcredit_CWallet::AddToWallet(const Bitcredit_CWalletTx& wtxIn, bool fFrom
 // Add a transaction to the wallet, or update it.
 // pblock is optional, but should be provided if the transaction is known to be in a block.
 // If fUpdate is true, existing transactions will be updated.
-bool Bitcredit_CWallet::AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet,  const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock, bool fUpdate)
+bool Bitcredit_CWallet::AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet,  const uint256 &hash, const Credits_CTransaction& tx, const Credits_CBlock* pblock, bool fUpdate)
 {
     {
         AssertLockHeld(cs_wallet);
@@ -613,7 +613,7 @@ bool Bitcredit_CWallet::AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_
     return false;
 }
 
-void Bitcredit_CWallet::SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Bitcredit_CTransaction& tx, const Bitcredit_CBlock* pblock)
+void Bitcredit_CWallet::SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Credits_CTransaction& tx, const Credits_CBlock* pblock)
 {
     LOCK2(bitcredit_mainState.cs_main, cs_wallet);
     if (!AddToWalletIfInvolvingMe(bitcoin_wallet, hash, tx, pblock, true))
@@ -622,7 +622,7 @@ void Bitcredit_CWallet::SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, c
     // If a transaction changes 'conflicted' state, that changes the balance
     // available of the outputs it spends. So force those to be
     // recomputed, also:
-    BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+    BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
     {
         if (mapWallet.count(txin.prevout.hash))
             mapWallet[txin.prevout.hash].MarkDirty();
@@ -632,7 +632,7 @@ void Bitcredit_CWallet::SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, c
 void Bitcredit_CWallet::NotifyTxPrevInsBitcoin(Bitcoin_CWallet *bitcoin_wallet, Bitcredit_CWalletTx &wtx) {
 	//NOTE! This part operates on bitoin_wallet
     if(bitcoin_wallet) {
-		BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin) {
+		BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin) {
 			Bitcoin_CWalletTx &coin = bitcoin_wallet->mapWallet[txin.prevout.hash];
 			coin.BindWallet(bitcoin_wallet);
 			bitcoin_wallet->NotifyTransactionChanged(bitcoin_wallet, coin.GetHash(), CT_UPDATED);
@@ -643,7 +643,7 @@ void Bitcredit_CWallet::NotifyTxPrevInsBitcoin(Bitcoin_CWallet *bitcoin_wallet, 
 void Bitcredit_CWallet::NotifyTxPrevInsBitcredit(Bitcredit_CWallet *bitcredit_wallet, Bitcredit_CWalletTx &wtx) {
 	//NOTE! This part operates on bitcredit_wallet
     if(bitcredit_wallet) {
-		BOOST_FOREACH(const Bitcredit_CTxIn& txin, wtx.vin) {
+		BOOST_FOREACH(const Credits_CTxIn& txin, wtx.vin) {
 			Bitcredit_CWalletTx &coin = bitcredit_wallet->mapWallet[txin.prevout.hash];
 			coin.BindWallet(bitcredit_wallet);
 			bitcredit_wallet->NotifyTransactionChanged(bitcredit_wallet, coin.GetHash(), CT_UPDATED);
@@ -672,7 +672,7 @@ void Bitcredit_CWallet::EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, con
 }
 
 
-bool Bitcredit_CWallet::IsMine(const Bitcredit_CTxIn &txin) const
+bool Bitcredit_CWallet::IsMine(const Credits_CTxIn &txin) const
 {
     {
         LOCK(cs_wallet);
@@ -688,7 +688,7 @@ bool Bitcredit_CWallet::IsMine(const Bitcredit_CTxIn &txin) const
     return false;
 }
 
-int64_t Bitcredit_CWallet::GetDebit(const Bitcredit_CTxIn &txin) const
+int64_t Bitcredit_CWallet::GetDebit(const Credits_CTxIn &txin) const
 {
     {
         LOCK(cs_wallet);
@@ -866,12 +866,12 @@ bool Bitcredit_CWalletTx::WriteToDisk()
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
-int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_CBlockIndex* pindexStart, bool fUpdate)
+int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Credits_CBlockIndex* pindexStart, bool fUpdate)
 {
     int ret = 0;
     int64_t nNow = GetTime();
 
-    Bitcredit_CBlockIndex* pindex = pindexStart;
+    Credits_CBlockIndex* pindex = pindexStart;
     {
         LOCK2(bitcredit_mainState.cs_main, cs_wallet);
 
@@ -882,15 +882,15 @@ int Bitcredit_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_
 
         ShowProgress(_("Rescanning credits wallet..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -bitcredit_rescan on startup
         double dProgressStart = Checkpoints::Bitcredit_GuessVerificationProgress(pindex, false);
-        double dProgressTip = Checkpoints::Bitcredit_GuessVerificationProgress((Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip(), false);
+        double dProgressTip = Checkpoints::Bitcredit_GuessVerificationProgress((Credits_CBlockIndex*)bitcredit_chainActive.Tip(), false);
         while (pindex)
         {
             if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
                 ShowProgress(_("Rescanning credits wallet..."), std::max(1, std::min(99, (int)((Checkpoints::Bitcredit_GuessVerificationProgress(pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
 
-            Bitcredit_CBlock block;
+            Credits_CBlock block;
             Bitcredit_ReadBlockFromDisk(block, pindex);
-            BOOST_FOREACH(Bitcredit_CTransaction& tx, block.vtx)
+            BOOST_FOREACH(Credits_CTransaction& tx, block.vtx)
             {
                 if (AddToWalletIfInvolvingMe(bitcoin_wallet,  tx.GetHash(), tx, &block, fUpdate))
                     ret++;
@@ -933,7 +933,7 @@ void Bitcredit_CWalletTx::RelayWalletTransaction()
         if (GetDepthInMainChain() == 0) {
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
-            Bitcredit_RelayTransaction((Bitcredit_CTransaction)*this, hash, Bitcredit_NetParams());
+            Bitcredit_RelayTransaction((Credits_CTransaction)*this, hash, Bitcredit_NetParams());
         }
     }
 }
@@ -1370,7 +1370,7 @@ bool Bitcredit_CWallet::CreateTransaction(Bitcredit_CWallet *deposit_wallet, con
                 BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
                 {
                 	CTxOut txout(s.second, s.first);
-                    if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+                    if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
                     {
                         strFailReason = _("Transaction amount too small");
                         return false;
@@ -1404,9 +1404,9 @@ bool Bitcredit_CWallet::CreateTransaction(Bitcredit_CWallet *deposit_wallet, con
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
                 // CENT bitcoins.
-                if (nFeeRet < Bitcredit_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+                if (nFeeRet < Credits_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
                 {
-                    int64_t nMoveToFee = min(nChange, Bitcredit_CTransaction::nMinTxFee - nFeeRet);
+                    int64_t nMoveToFee = min(nChange, Credits_CTransaction::nMinTxFee - nFeeRet);
                     nChange -= nMoveToFee;
                     nFeeRet += nMoveToFee;
                 }
@@ -1445,7 +1445,7 @@ bool Bitcredit_CWallet::CreateTransaction(Bitcredit_CWallet *deposit_wallet, con
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    if (newTxOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+                    if (newTxOut.IsDust(Credits_CTransaction::nMinRelayTxFee))
                     {
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
@@ -1462,7 +1462,7 @@ bool Bitcredit_CWallet::CreateTransaction(Bitcredit_CWallet *deposit_wallet, con
 
                 // Fill vin
                 BOOST_FOREACH(const PAIRTYPE(const Bitcredit_CWalletTx*,unsigned int)& coin, setCoins)
-                    wtxNew.vin.push_back(Bitcredit_CTxIn(coin.first->GetHash(),coin.second));
+                    wtxNew.vin.push_back(Credits_CTxIn(coin.first->GetHash(),coin.second));
 
                 // Sign
                 int nIn = 0;
@@ -1475,7 +1475,7 @@ bool Bitcredit_CWallet::CreateTransaction(Bitcredit_CWallet *deposit_wallet, con
                 }
 
                 // Limit size
-                unsigned int nBytes = ::GetSerializeSize(*(Bitcredit_CTransaction*)&wtxNew, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+                unsigned int nBytes = ::GetSerializeSize(*(Credits_CTransaction*)&wtxNew, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
                 if (nBytes >= BITCREDIT_MAX_STANDARD_TX_SIZE)
                 {
                     strFailReason = _("Transaction too large");
@@ -1541,7 +1541,7 @@ bool Bitcredit_CWallet::CreateDepositTransaction(Bitcredit_CWallet *deposit_wall
 
                 // vouts to the payees
 				CTxOut txout(send.second, send.first);
-				if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+				if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
 				{
 					strFailReason = _("Transaction amount too small");
 					return false;
@@ -1549,7 +1549,7 @@ bool Bitcredit_CWallet::CreateDepositTransaction(Bitcredit_CWallet *deposit_wall
 				wtxNew.vout.push_back(txout);
 
                 // Fill vin
-                wtxNew.vin.push_back(Bitcredit_CTxIn(coin.tx->GetHash(),coin.i));
+                wtxNew.vin.push_back(Credits_CTxIn(coin.tx->GetHash(),coin.i));
 
                 // Sign
                 int nIn = 0;
@@ -1560,7 +1560,7 @@ bool Bitcredit_CWallet::CreateDepositTransaction(Bitcredit_CWallet *deposit_wall
 				}
 
                 // Limit size
-                unsigned int nBytes = ::GetSerializeSize(*(Bitcredit_CTransaction*)&wtxNew, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+                unsigned int nBytes = ::GetSerializeSize(*(Credits_CTransaction*)&wtxNew, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
                 if (nBytes >= BITCREDIT_MAX_STANDARD_TX_SIZE)
                 {
                     strFailReason = _("Transaction too large");
@@ -1732,7 +1732,7 @@ bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, 
                 BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
                 {
                 	CTxOut txout(s.second, s.first);
-                    if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+                    if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
                     {
                         strFailReason = _("Transaction amount too small");
                         return false;
@@ -1777,9 +1777,9 @@ bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, 
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
                 // CENT bitcoins.
-                if (nFeeRet < Bitcredit_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+                if (nFeeRet < Credits_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
                 {
-                    int64_t nMoveToFee = min(nChange, Bitcredit_CTransaction::nMinTxFee - nFeeRet);
+                    int64_t nMoveToFee = min(nChange, Credits_CTransaction::nMinTxFee - nFeeRet);
                     nChange -= nMoveToFee;
                     nFeeRet += nMoveToFee;
                 }
@@ -1818,7 +1818,7 @@ bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, 
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    if (newTxOut.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+                    if (newTxOut.IsDust(Credits_CTransaction::nMinRelayTxFee))
                     {
                         nFeeRet += nChange;
                         reservekey.ReturnKey();
@@ -1835,7 +1835,7 @@ bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, 
 
                 // Fill vin
                 BOOST_FOREACH(const PAIRTYPE(const Bitcoin_CWalletTx*,unsigned int)& coin, setCoins)
-                    wtxNew.vin.push_back(Bitcredit_CTxIn(coin.first->GetHash(),coin.second));
+                    wtxNew.vin.push_back(Credits_CTxIn(coin.first->GetHash(),coin.second));
 
                 // Sign
                 int nIn = 0;
@@ -1849,7 +1849,7 @@ bool Bitcredit_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, 
                 }
 
                 // Limit size
-                unsigned int nBytes = ::GetSerializeSize(*(Bitcredit_CTransaction*)&wtxNew, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+                unsigned int nBytes = ::GetSerializeSize(*(Credits_CTransaction*)&wtxNew, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
                 if (nBytes >= BITCREDIT_MAX_STANDARD_TX_SIZE)
                 {
                     strFailReason = _("Transaction too large");
@@ -2328,7 +2328,7 @@ set< set<CTxDestination> > Bitcredit_CWallet::GetAddressGroupings()
         {
             bool any_mine = false;
             // group all input addresses with each other
-            BOOST_FOREACH(Bitcredit_CTxIn txin, pcoin->vin)
+            BOOST_FOREACH(Credits_CTxIn txin, pcoin->vin)
             {
                 CTxDestination address;
                 if(!IsMine(txin)) /* If this input isn't mine, ignore it */
@@ -2535,8 +2535,8 @@ void Bitcredit_CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth)
             mapKeyBirth[it->first] = it->second.nCreateTime;
 
     // map in which we'll infer heights of other keys
-    Bitcredit_CBlockIndex *pindexMax = bitcredit_chainActive[std::max(0, bitcredit_chainActive.Height() - 144)]; // the tip can be reorganised; use a 144-block safety margin
-    std::map<CKeyID, Bitcredit_CBlockIndex*> mapKeyFirstBlock;
+    Credits_CBlockIndex *pindexMax = bitcredit_chainActive[std::max(0, bitcredit_chainActive.Height() - 144)]; // the tip can be reorganised; use a 144-block safety margin
+    std::map<CKeyID, Credits_CBlockIndex*> mapKeyFirstBlock;
     std::set<CKeyID> setKeys;
     GetKeys(setKeys);
     BOOST_FOREACH(const CKeyID &keyid, setKeys) {
@@ -2554,7 +2554,7 @@ void Bitcredit_CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth)
     for (std::map<uint256, Bitcredit_CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); it++) {
         // iterate over all wallet transactions...
         const Bitcredit_CWalletTx &wtx = (*it).second;
-        std::map<uint256, Bitcredit_CBlockIndex*>::const_iterator blit = bitcredit_mapBlockIndex.find(wtx.hashBlock);
+        std::map<uint256, Credits_CBlockIndex*>::const_iterator blit = bitcredit_mapBlockIndex.find(wtx.hashBlock);
         if (blit != bitcredit_mapBlockIndex.end() && bitcredit_chainActive.Contains(blit->second)) {
             // ... which are already in a block
             int nHeight = blit->second->nHeight;
@@ -2563,7 +2563,7 @@ void Bitcredit_CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth)
                 ::ExtractAffectedKeys(*this, txout.scriptPubKey, vAffected);
                 BOOST_FOREACH(const CKeyID &keyid, vAffected) {
                     // ... and all their affected keys
-                    std::map<CKeyID, Bitcredit_CBlockIndex*>::iterator rit = mapKeyFirstBlock.find(keyid);
+                    std::map<CKeyID, Credits_CBlockIndex*>::iterator rit = mapKeyFirstBlock.find(keyid);
                     if (rit != mapKeyFirstBlock.end() && nHeight < rit->second->nHeight)
                         rit->second = blit->second;
                 }
@@ -2573,7 +2573,7 @@ void Bitcredit_CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth)
     }
 
     // Extract block timestamps for those keys
-    for (std::map<CKeyID, Bitcredit_CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
+    for (std::map<CKeyID, Credits_CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
         mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
 }
 

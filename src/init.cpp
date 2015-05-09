@@ -387,9 +387,9 @@ std::string HelpMessage(HelpMessageMode hmm)
         strUsage += "  -limitfreerelay=<n>    " + _("Continuously rate-limit free transactions to <n>*1000 bytes per minute (default:15)") + "\n";
         strUsage += "  -maxsigcachesize=<n>   " + _("Limit size of signature cache to <n> entries (default: 50000)") + "\n";
     }
-    strUsage += "  -mintxfee=<amt>        " + _("Fees smaller than this are considered zero fee (for transaction creation) (default:") + " " + FormatMoney(Bitcredit_CTransaction::nMinTxFee) + ")" + "\n";
+    strUsage += "  -mintxfee=<amt>        " + _("Fees smaller than this are considered zero fee (for transaction creation) (default:") + " " + FormatMoney(Credits_CTransaction::nMinTxFee) + ")" + "\n";
     strUsage += "  -bitcoin_mintxfee=<amt>   " + _("Same as above, for bitcoin") + "\n";
-    strUsage += "  -minrelaytxfee=<amt>   " + _("Fees smaller than this are considered zero fee (for relaying) (default:") + " " + FormatMoney(Bitcredit_CTransaction::nMinRelayTxFee) + ")" + "\n";
+    strUsage += "  -minrelaytxfee=<amt>   " + _("Fees smaller than this are considered zero fee (for relaying) (default:") + " " + FormatMoney(Credits_CTransaction::nMinRelayTxFee) + ")" + "\n";
     strUsage += "  -bitcoin_minrelaytxfee=<amt>   " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
     if (GetBoolArg("-help-debug", false))
@@ -793,7 +793,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 delete bitcredit_pcoinsdbview;
                 delete bitcredit_pblocktree;
 
-                bitcredit_pblocktree = new Bitcredit_CBlockTreeDB(nBlockTreeDBCache, false, bitcredit_mainState.fReindex);
+                bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, bitcredit_mainState.fReindex);
                 bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(nCoinDBCache, false, bitcredit_mainState.fReindex);
                 bitcredit_pcoinsTip = new Bitcredit_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
@@ -1126,7 +1126,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     {
         int64_t n = 0;
         if (ParseMoney(mapArgs["-mintxfee"], n) && n > 0)
-            Bitcredit_CTransaction::nMinTxFee = n;
+            Credits_CTransaction::nMinTxFee = n;
         else
             return InitError(strprintf(_("Invalid amount for -mintxfee=<amount>: '%s'"), mapArgs["-mintxfee"]));
     }
@@ -1143,7 +1143,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     {
         int64_t n = 0;
         if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
-            Bitcredit_CTransaction::nMinRelayTxFee = n;
+            Credits_CTransaction::nMinRelayTxFee = n;
         else
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
     }
@@ -1476,13 +1476,13 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     {
         string strMatch = mapArgs["-printblock"];
         int nFound = 0;
-        for (map<uint256, Bitcredit_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.begin(); mi != bitcredit_mapBlockIndex.end(); ++mi)
+        for (map<uint256, Credits_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.begin(); mi != bitcredit_mapBlockIndex.end(); ++mi)
         {
             uint256 hash = (*mi).first;
             if (boost::algorithm::starts_with(hash.ToString(), strMatch))
             {
-                Bitcredit_CBlockIndex* pindex = (*mi).second;
-                Bitcredit_CBlock block;
+                Credits_CBlockIndex* pindex = (*mi).second;
+                Credits_CBlock block;
                 Bitcredit_ReadBlockFromDisk(block, pindex);
                 block.BuildMerkleTree();
                 block.BuildSigMerkleTree();
@@ -1691,7 +1691,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         //Deposit wallet should not be involved in the chain
 //        Bitcredit_RegisterWallet(deposit_pwalletMain);
 //
-//        Bitcredit_CBlockIndex *pindexRescan = (Bitcredit_CBlockIndex *)bitcredit_chainActive.Tip();
+//        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)bitcredit_chainActive.Tip();
 //        if (GetBoolArg("-bitcredit_rescan", false))
 //            pindexRescan = bitcredit_chainActive.Genesis();
 //        else
@@ -1801,7 +1801,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
-        Bitcredit_CBlockIndex *pindexRescan = (Bitcredit_CBlockIndex *)bitcredit_chainActive.Tip();
+        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)bitcredit_chainActive.Tip();
         if (GetBoolArg("-bitcredit_rescan", false))
             pindexRescan = bitcredit_chainActive.Genesis();
         else

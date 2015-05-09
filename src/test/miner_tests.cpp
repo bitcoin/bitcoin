@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    CBasicKeyStore tempKeystore;
 //    CKeyStore * tmpKeyStorePointer = &tempKeystore;
 //
-//    Bitcredit_CBlockTemplate *pblocktemplate;
-//    Bitcredit_CTransaction tx,tx2;
+//    Credits_CBlockTemplate *pblocktemplate;
+//    Credits_CTransaction tx,tx2;
 //    CScript script;
 //    uint256 hash;
 //
@@ -72,19 +72,19 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //
 //    // We can't make transactions until we have inputs
 //    // Therefore, load 100 blocks :)
-//    std::vector<Bitcredit_CTransaction*>txFirst;
+//    std::vector<Credits_CTransaction*>txFirst;
 //    for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
 //    {
-//    	Bitcredit_CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+//    	Credits_CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 //        pblock->nVersion = 1;
-//        Bitcredit_CBlockIndex * tmp = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+//        Credits_CBlockIndex * tmp = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
 //        pblock->nTime = tmp->GetMedianTimePast()+1;
 //        pblock->vtx[0].vin[0].scriptSig = CScript();
 //        pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
 //        pblock->vtx[0].vin[0].scriptSig.push_back(bitcredit_chainActive.Height());
 //        pblock->vtx[0].vout[0].scriptPubKey = CScript();
 //        if (txFirst.size() < 2)
-//            txFirst.push_back(new Bitcredit_CTransaction(pblock->vtx[0]));
+//            txFirst.push_back(new Credits_CTransaction(pblock->vtx[0]));
 //        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 //        pblock->nNonce = blockinfo[i].nonce;
 //        //TODO . This needs to be set to some good testing values
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    bitcredit_chainActive.Tip()->nHeight = nHeight;
 //
 //    // non-final txs in mempool
-//    Bitcredit_CBlockIndex * tmp = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+//    Credits_CBlockIndex * tmp = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
 //    SetMockTime(tmp->GetMedianTimePast()+1);
 //
 //    // height locked
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    tx2.vout.resize(1);
 //    tx2.vout[0].nValue = 4900000000LL;
 //    tx2.vout[0].scriptPubKey = CScript() << OP_1;
-//    Bitcredit_CBlockIndex * tmp2 = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+//    Credits_CBlockIndex * tmp2 = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
 //    tx2.nLockTime = tmp2->GetMedianTimePast()+1;
 //    hash = tx2.GetHash();
 //    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //
 //    // However if we advance height and time by one, both will.
 //    bitcredit_chainActive.Tip()->nHeight++;
-//    Bitcredit_CBlockIndex * tmp3 = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+//    Credits_CBlockIndex * tmp3 = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
 //    SetMockTime(tmp3->GetMedianTimePast()+2);
 //
 //    BOOST_CHECK(Bitcredit_IsFinalTx(tx, bitcredit_chainActive.Tip()->nHeight + 1));
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    bitcredit_chainActive.Tip()->nHeight--;
 //    SetMockTime(0);
 //
-//    BOOST_FOREACH(Bitcredit_CTransaction *tx, txFirst)
+//    BOOST_FOREACH(Credits_CTransaction *tx, txFirst)
 //        delete tx;
 
 }

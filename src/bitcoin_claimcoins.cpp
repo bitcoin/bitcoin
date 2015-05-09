@@ -42,7 +42,7 @@ bool Bitcoin_CClaimCoins::Spend(const COutPoint &out, Bitcoin_CTxInUndoClaim &un
     }
     return true;
 }
-bool Bitcoin_CClaimCoins::SpendByClaiming(const COutPoint &out, Bitcredit_CTxInUndo &undo) {
+bool Bitcoin_CClaimCoins::SpendByClaiming(const COutPoint &out, Credits_CTxInUndo &undo) {
     if (out.n >= vout.size())
         return false;
     if (vout[out.n].IsNull())
@@ -50,7 +50,7 @@ bool Bitcoin_CClaimCoins::SpendByClaiming(const COutPoint &out, Bitcredit_CTxInU
     if (vout[out.n].nValueClaimable <= 0)
         return false;
 
-    undo = Bitcredit_CTxInUndo(CTxOut(vout[out.n].nValueClaimable, vout[out.n].scriptPubKey));
+    undo = Credits_CTxInUndo(CTxOut(vout[out.n].nValueClaimable, vout[out.n].scriptPubKey));
 
     vout[out.n].nValueClaimable = 0;
 
@@ -290,7 +290,7 @@ const CTxOutClaim& Bitcoin_CClaimCoinsViewCache::GetOut(const COutPoint &outpoin
 	return coins.vout[outpoint.n];
 }
 
-const CScript &Bitcoin_CClaimCoinsViewCache::GetOutputScriptFor(const Bitcredit_CTxIn& input) {
+const CScript &Bitcoin_CClaimCoinsViewCache::GetOutputScriptFor(const Credits_CTxIn& input) {
 	return GetOut(input.prevout).scriptPubKey;
 }
 
@@ -314,7 +314,7 @@ void Bitcoin_CClaimCoinsViewCache::GetValueIn(const Bitcoin_CTransaction& tx, Cl
 
     return;
 }
-int64_t Bitcoin_CClaimCoinsViewCache::GetValueIn(const Bitcredit_CTransaction& tx) {
+int64_t Bitcoin_CClaimCoinsViewCache::GetValueIn(const Credits_CTransaction& tx) {
 	assert(tx.IsClaim());
 
     int64_t nResult = 0;
@@ -330,12 +330,12 @@ int64_t Bitcoin_CClaimCoinsViewCache::GetValueIn(const Bitcredit_CTransaction& t
     return nResult;
 }
 
-bool Bitcoin_CClaimCoinsViewCache::HaveInputs(const Bitcredit_CTransaction& tx) {
+bool Bitcoin_CClaimCoinsViewCache::HaveInputs(const Credits_CTransaction& tx) {
 	assert(tx.IsClaim());
 
 	// first check whether information about the prevout hash is available
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const Bitcredit_CTxIn &txIn = tx.vin[i];
+		const Credits_CTxIn &txIn = tx.vin[i];
 		const COutPoint &prevout = txIn.prevout;
 		if (!HaveCoins(prevout.hash))
 			return false;
@@ -343,7 +343,7 @@ bool Bitcoin_CClaimCoinsViewCache::HaveInputs(const Bitcredit_CTransaction& tx) 
 
 	// then check whether the actual outputs are available
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const Bitcredit_CTxIn &txIn = tx.vin[i];
+		const Credits_CTxIn &txIn = tx.vin[i];
 		const COutPoint &prevout = txIn.prevout;
 		const Bitcoin_CClaimCoins &coins = GetCoins(prevout.hash);
 		if (!coins.HasClaimable(prevout.n))
@@ -353,12 +353,12 @@ bool Bitcoin_CClaimCoinsViewCache::HaveInputs(const Bitcredit_CTransaction& tx) 
     return true;
 }
 
-double Bitcoin_CClaimCoinsViewCache::GetPriority(const Bitcredit_CTransaction &tx, int nHeight) {
+double Bitcoin_CClaimCoinsViewCache::GetPriority(const Credits_CTransaction &tx, int nHeight) {
 	assert(tx.IsClaim());
 
     double dResult = 0.0;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const Bitcredit_CTxIn &txIn = tx.vin[i];
+		const Credits_CTxIn &txIn = tx.vin[i];
 		const Bitcoin_CClaimCoins &coins = GetCoins(txIn.prevout.hash);
 
 		if(coins.HasClaimable(txIn.prevout.n)) {

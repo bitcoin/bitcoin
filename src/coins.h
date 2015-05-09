@@ -86,7 +86,7 @@ public:
     int nVersion;
 
     // construct a Bitcredit_CCoins from a CTransaction, at a given height
-    Bitcredit_CCoins(const Bitcredit_CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), vout(tx.vout), nHeight(nHeightIn), nMetaData(tx.IsDeposit() ? 1 : 0), nVersion(tx.nVersion) {
+    Bitcredit_CCoins(const Credits_CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), vout(tx.vout), nHeight(nHeightIn), nMetaData(tx.IsDeposit() ? 1 : 0), nVersion(tx.nVersion) {
         ClearUnspendable();
     }
 
@@ -234,7 +234,7 @@ public:
     }
 
     // mark an outpoint spent, and construct undo information
-    bool Spend(const COutPoint &out, Bitcredit_CTxInUndo &undo);
+    bool Spend(const COutPoint &out, Credits_CTxInUndo &undo);
 
     // mark a vout spent
     bool Spend(int nPos);
@@ -370,15 +370,15 @@ public:
         @param[in] tx	transaction for which we are checking input total
         @return	Sum of value of all inputs (scriptSigs)
      */
-    int64_t GetValueIn(const Bitcredit_CTransaction& tx);
+    int64_t GetValueIn(const Credits_CTransaction& tx);
 
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const Bitcredit_CTransaction& tx);
+    bool HaveInputs(const Credits_CTransaction& tx);
 
     // Return priority of tx at height nHeight
-    double GetPriority(const Bitcredit_CTransaction &tx, int nHeight);
+    double GetPriority(const Credits_CTransaction &tx, int nHeight);
 
-    const CTxOut &GetOutputFor(const Bitcredit_CTxIn& input);
+    const CTxOut &GetOutputFor(const Credits_CTxIn& input);
 
 private:
     std::map<uint256,Bitcredit_CCoins>::iterator FetchCoins(const uint256 &txid);

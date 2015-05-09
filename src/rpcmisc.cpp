@@ -87,7 +87,7 @@ Value bitcredit_getinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", bitcredit_nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(bitcredit_nTransactionFee)));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(Bitcredit_CTransaction::nMinRelayTxFee)));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(Credits_CTransaction::nMinRelayTxFee)));
     obj.push_back(Pair("errors",        Bitcredit_GetWarnings("statusbar")));
     return obj;
 }

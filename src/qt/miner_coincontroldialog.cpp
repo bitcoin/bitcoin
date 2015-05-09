@@ -389,7 +389,7 @@ void Miner_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDialog
     qint64 nPayAmount = 0;
     bool fLowOutput = false;
     bool fDust = false;
-    Bitcredit_CTransaction txDummy;
+    Credits_CTransaction txDummy;
     foreach(const qint64 &amount, Miner_CoinControlDialog::payAmounts)
     {
         nPayAmount += amount;
@@ -401,7 +401,7 @@ void Miner_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDialog
 
             CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
-            if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+            if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
                fDust = true;
         }
     }
@@ -484,18 +484,18 @@ void Miner_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDialog
         {
             nChange = nAmount - nPayFee - nPayAmount;
 
-            // if sub-cent change is required, the fee must be raised to at least Bitcredit_CTransaction::nMinTxFee
-            if (nPayFee < Bitcredit_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+            // if sub-cent change is required, the fee must be raised to at least Credits_CTransaction::nMinTxFee
+            if (nPayFee < Credits_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
             {
-                if (nChange < Bitcredit_CTransaction::nMinTxFee) // change < 0.0001 => simply move all change to fees
+                if (nChange < Credits_CTransaction::nMinTxFee) // change < 0.0001 => simply move all change to fees
                 {
                     nPayFee += nChange;
                     nChange = 0;
                 }
                 else
                 {
-                    nChange = nChange + nPayFee - Bitcredit_CTransaction::nMinTxFee;
-                    nPayFee = Bitcredit_CTransaction::nMinTxFee;
+                    nChange = nChange + nPayFee - Credits_CTransaction::nMinTxFee;
+                    nPayFee = Credits_CTransaction::nMinTxFee;
                 }
             }
 
@@ -503,7 +503,7 @@ void Miner_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDialog
             if (nChange > 0 && nChange < CENT)
             {
                 CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
-                if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+                if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
                 {
                     nPayFee += nChange;
                     nChange = 0;

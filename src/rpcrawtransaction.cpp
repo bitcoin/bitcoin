@@ -51,7 +51,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
     out.push_back(Pair("addresses", a));
 }
 
-void TxToJSON(const Bitcredit_CTransaction& tx, const uint256 hashBlock, Object& entry)
+void TxToJSON(const Credits_CTransaction& tx, const uint256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
@@ -59,7 +59,7 @@ void TxToJSON(const Bitcredit_CTransaction& tx, const uint256 hashBlock, Object&
     entry.push_back(Pair("signingkeyid", tx.signingKeyId.GetHex()));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
     Array vin;
-    BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+    BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
     {
         Object in;
         if (tx.IsCoinBase())
@@ -93,10 +93,10 @@ void TxToJSON(const Bitcredit_CTransaction& tx, const uint256 hashBlock, Object&
     if (hashBlock != 0)
     {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-        map<uint256, Bitcredit_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(hashBlock);
+        map<uint256, Credits_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(hashBlock);
         if (mi != bitcredit_mapBlockIndex.end() && (*mi).second)
         {
-            Bitcredit_CBlockIndex* pindex = (*mi).second;
+            Credits_CBlockIndex* pindex = (*mi).second;
             if (bitcredit_chainActive.Contains(pindex))
             {
                 entry.push_back(Pair("confirmations", 1 + bitcredit_chainActive.Height() - pindex->nHeight));
@@ -178,7 +178,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     if (params.size() > 1)
         fVerbose = (params[1].get_int() != 0);
 
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
     uint256 hashBlock = 0;
     if (!Bitcredit_GetTransaction(hash, tx, hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
@@ -353,7 +353,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     Array inputs = params[0].get_array();
     Object sendTo = params[1].get_obj();
 
-    Bitcredit_CTransaction rawTx;
+    Credits_CTransaction rawTx;
     rawTx.nTxType = TX_TYPE_STANDARD;
 
     BOOST_FOREACH(const Value& input, inputs)
@@ -369,7 +369,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         if (nOutput < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 
-        Bitcredit_CTxIn in(COutPoint(txid, nOutput));
+        Credits_CTxIn in(COutPoint(txid, nOutput));
         rawTx.vin.push_back(in);
     }
 
@@ -450,7 +450,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument"));
     CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
     try {
         ssData >> tx;
     }
@@ -559,11 +559,11 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
     CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-    vector<Bitcredit_CTransaction> txVariants;
+    vector<Credits_CTransaction> txVariants;
     while (!ssData.empty())
     {
         try {
-            Bitcredit_CTransaction tx;
+            Credits_CTransaction tx;
             ssData >> tx;
             txVariants.push_back(tx);
         }
@@ -577,7 +577,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the rawtx:
-    Bitcredit_CTransaction mergedTx(txVariants[0]);
+    Credits_CTransaction mergedTx(txVariants[0]);
     bool fComplete = true;
 
     // Fetch previous transactions (inputs):
@@ -589,7 +589,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         Bitcredit_CCoinsViewMemPool viewMempool(viewChain, bitcredit_mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
-        BOOST_FOREACH(Bitcredit_CTxIn& txin, mergedTx.vin) {
+        BOOST_FOREACH(Credits_CTxIn& txin, mergedTx.vin) {
             const uint256& prevHash = txin.prevout.hash;
             Bitcredit_CCoins coins;
             view.GetCoins(prevHash, coins); // this is certainly allowed to fail
@@ -704,7 +704,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     // Sign what we can:
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
-        Bitcredit_CTxIn& txin = mergedTx.vin[i];
+        Credits_CTxIn& txin = mergedTx.vin[i];
         Bitcredit_CCoins coins;
         if (!view.GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n))
         {
@@ -719,7 +719,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             Bitcredit_SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
 
         // ... and merge in other signatures:
-        BOOST_FOREACH(const Bitcredit_CTransaction& txv, txVariants)
+        BOOST_FOREACH(const Credits_CTransaction& txv, txVariants)
         {
             txin.scriptSig = Bitcredit_CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
@@ -763,7 +763,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     // parse hex string from parameter
     vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
     CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-    Bitcredit_CTransaction tx;
+    Credits_CTransaction tx;
 
     bool fOverrideFees = false;
     if (params.size() > 1)

@@ -68,11 +68,11 @@ inline bool IsInFilterPoints(const uint256 &txHash, const int &n, map<uint256, s
 
 //Checks if the passed in transactions vin is within the mapFilterTxInPoints map. Used for filtering out transactions that
 //for example overlaps with already prepared deposits
-inline bool IsAnyTxInInFilterPoints(const Bitcredit_CTransaction& tx,  map<uint256, set<int> >& mapFilterTxInPoints) {
+inline bool IsAnyTxInInFilterPoints(const Credits_CTransaction& tx,  map<uint256, set<int> >& mapFilterTxInPoints) {
 	if(mapFilterTxInPoints.empty()) {
 		return false;
 	}
-	BOOST_FOREACH (const Bitcredit_CTxIn & ctxIn, tx.vin) {
+	BOOST_FOREACH (const Credits_CTxIn & ctxIn, tx.vin) {
 		const uint256 &hash = ctxIn.prevout.hash;
 		const unsigned int &n = ctxIn.prevout.n;
 
@@ -311,7 +311,7 @@ public:
 
     bool IsMine(const Bitcoin_CTxIn& txin) const;
     int64_t GetDebit(const Bitcoin_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
-    int64_t GetDebit(const Bitcredit_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
+    int64_t GetDebit(const Credits_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
     bool IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
@@ -338,7 +338,7 @@ public:
     {
         return (GetDebit(tx, NULL) > 0);
     }
-    bool IsFromMe(const Bitcredit_CTransaction& tx) const
+    bool IsFromMe(const Credits_CTransaction& tx) const
     {
         return (GetDebit(tx, NULL) > 0);
     }
@@ -352,10 +352,10 @@ public:
         }
         return nDebit;
     }
-    int64_t GetDebit(const Bitcredit_CTransaction& tx, Bitcoin_CClaimCoinsViewCache *claim_view) const
+    int64_t GetDebit(const Credits_CTransaction& tx, Bitcoin_CClaimCoinsViewCache *claim_view) const
     {
         int64_t nDebit = 0;
-        BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+        BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
         {
             nDebit += GetDebit(txin, claim_view);
             assert_with_stacktrace(Bitcoin_MoneyRange(nDebit), "Bitcoin: CWallet::GetDebit() : value out of range");
@@ -407,7 +407,7 @@ public:
 				const CTxOut& txout = tx.vout[i];
 
                 nChange += GetChange(txout, txout.nValue);
-                assert_with_stacktrace(Bitcredit_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
+                assert_with_stacktrace(Credits_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
             }
     	} else {
     		if(claim_view->HaveCoins(hashTx)) {

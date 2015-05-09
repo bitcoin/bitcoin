@@ -677,7 +677,7 @@ int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CClaimCoins
     }
     return 0;
 }
-int64_t Bitcoin_CWallet::GetDebit(const Bitcredit_CTxIn &txin, Bitcoin_CClaimCoinsViewCache *claim_view) const
+int64_t Bitcoin_CWallet::GetDebit(const Credits_CTxIn &txin, Bitcoin_CClaimCoinsViewCache *claim_view) const
 {
     {
         LOCK(cs_wallet);

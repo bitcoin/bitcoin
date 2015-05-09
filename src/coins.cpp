@@ -27,12 +27,12 @@ void Bitcredit_CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzero
     nBytes += nLastUsedByte;
 }
 
-bool Bitcredit_CCoins::Spend(const COutPoint &out, Bitcredit_CTxInUndo &undo) {
+bool Bitcredit_CCoins::Spend(const COutPoint &out, Credits_CTxInUndo &undo) {
     if (out.n >= vout.size())
         return false;
     if (vout[out.n].IsNull())
         return false;
-    undo = Bitcredit_CTxInUndo(vout[out.n]);
+    undo = Credits_CTxInUndo(vout[out.n]);
     vout[out.n].SetNull();
     Cleanup();
     if (vout.size() == 0) {
@@ -45,7 +45,7 @@ bool Bitcredit_CCoins::Spend(const COutPoint &out, Bitcredit_CTxInUndo &undo) {
 }
 
 bool Bitcredit_CCoins::Spend(int nPos) {
-	Bitcredit_CTxInUndo undo;
+	Credits_CTxInUndo undo;
     COutPoint out(0, nPos);
     return Spend(out, undo);
 }
@@ -140,14 +140,14 @@ unsigned int Bitcredit_CCoinsViewCache::GetCacheSize() {
     return cacheCoins.size();
 }
 
-const CTxOut &Bitcredit_CCoinsViewCache::GetOutputFor(const Bitcredit_CTxIn& input)
+const CTxOut &Bitcredit_CCoinsViewCache::GetOutputFor(const Credits_CTxIn& input)
 {
     const Bitcredit_CCoins &coins = GetCoins(input.prevout.hash);
     assert(coins.IsAvailable(input.prevout.n));
     return coins.vout[input.prevout.n];
 }
 
-int64_t Bitcredit_CCoinsViewCache::GetValueIn(const Bitcredit_CTransaction& tx)
+int64_t Bitcredit_CCoinsViewCache::GetValueIn(const Credits_CTransaction& tx)
 {
 	assert(!tx.IsClaim());
 
@@ -162,14 +162,14 @@ int64_t Bitcredit_CCoinsViewCache::GetValueIn(const Bitcredit_CTransaction& tx)
     return nResult;
 }
 
-bool Bitcredit_CCoinsViewCache::HaveInputs(const Bitcredit_CTransaction& tx)
+bool Bitcredit_CCoinsViewCache::HaveInputs(const Credits_CTransaction& tx)
 {
 	assert(!tx.IsClaim());
 
     if (!tx.IsCoinBase()) {
         // first check whether information about the prevout hash is available
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			const Bitcredit_CTxIn &ctxIn = tx.vin[i];
+			const Credits_CTxIn &ctxIn = tx.vin[i];
 			const COutPoint &prevout = ctxIn.prevout;
 			if (!HaveCoins(prevout.hash))
 				return false;
@@ -177,7 +177,7 @@ bool Bitcredit_CCoinsViewCache::HaveInputs(const Bitcredit_CTransaction& tx)
 
         // then check whether the actual outputs are available
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			const Bitcredit_CTxIn &ctxIn = tx.vin[i];
+			const Credits_CTxIn &ctxIn = tx.vin[i];
 			const COutPoint &prevout = ctxIn.prevout;
 			const Bitcredit_CCoins &coins = GetCoins(prevout.hash);
 			if (!coins.IsAvailable(prevout.n))
@@ -187,7 +187,7 @@ bool Bitcredit_CCoinsViewCache::HaveInputs(const Bitcredit_CTransaction& tx)
     return true;
 }
 
-double Bitcredit_CCoinsViewCache::GetPriority(const Bitcredit_CTransaction &tx, int nHeight)
+double Bitcredit_CCoinsViewCache::GetPriority(const Credits_CTransaction &tx, int nHeight)
 {
 	assert(!tx.IsClaim());
 
@@ -196,7 +196,7 @@ double Bitcredit_CCoinsViewCache::GetPriority(const Bitcredit_CTransaction &tx, 
 
     double dResult = 0.0;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const Bitcredit_CTxIn &ctxIn = tx.vin[i];
+		const Credits_CTxIn &ctxIn = tx.vin[i];
 		const Bitcredit_CCoins &coins = GetCoins(ctxIn.prevout.hash);
 		if (!coins.IsAvailable(ctxIn.prevout.n)) continue;
 		if (coins.nHeight < nHeight) {

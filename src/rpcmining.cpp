@@ -300,7 +300,7 @@ Value getmininginfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getmininginfo", "")
         );
 
-    const Bitcredit_CBlockIndex* ptip = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+    const Credits_CBlockIndex* ptip = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
     const uint64_t nTotalDepositBase = ptip->nTotalDepositBase;
 
     Object obj;
@@ -355,17 +355,17 @@ Value getwork(const Array& params, bool fHelp)
     if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Credits is downloading blocks...");
 
-    typedef map<uint256, pair<Bitcredit_CBlock*, CScript> > mapNewBlock_t;
+    typedef map<uint256, pair<Credits_CBlock*, CScript> > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
-    static vector<Bitcredit_CBlockTemplate*> vNewBlockTemplate;
+    static vector<Credits_CBlockTemplate*> vNewBlockTemplate;
 
     if (params.size() == 0)
     {
         // Update block
         static unsigned int nTransactionsUpdatedLast;
-        static Bitcredit_CBlockIndex* pindexPrev;
+        static Credits_CBlockIndex* pindexPrev;
         static int64_t nStart;
-        static Bitcredit_CBlockTemplate* pblocktemplate;
+        static Credits_CBlockTemplate* pblocktemplate;
         if (pindexPrev != bitcredit_chainActive.Tip() ||
             (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
         {
@@ -373,7 +373,7 @@ Value getwork(const Array& params, bool fHelp)
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
-                BOOST_FOREACH(Bitcredit_CBlockTemplate* pblocktemplate, vNewBlockTemplate)
+                BOOST_FOREACH(Credits_CBlockTemplate* pblocktemplate, vNewBlockTemplate)
                     delete pblocktemplate;
                 vNewBlockTemplate.clear();
             }
@@ -383,7 +383,7 @@ Value getwork(const Array& params, bool fHelp)
 
             // Store the pindexBest used before CreateNewBlock, to avoid races
             nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
-            Bitcredit_CBlockIndex* pindexPrevNew = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+            Credits_CBlockIndex* pindexPrevNew = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
             nStart = GetTime();
 
             // Create new block
@@ -395,7 +395,7 @@ Value getwork(const Array& params, bool fHelp)
             // Need to update only after we know CreateNewBlock succeeded
             pindexPrev = pindexPrevNew;
         }
-        Bitcredit_CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+        Credits_CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
         // Update nTime
         Bitcredit_UpdateTime(*pblock, pindexPrev);
@@ -439,7 +439,7 @@ Value getwork(const Array& params, bool fHelp)
         vector<unsigned char> vchData = ParseHex(params[0].get_str());
         if (vchData.size() != 168)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        Bitcredit_CBlock* pdata = (Bitcredit_CBlock*)&vchData[0];
+        Credits_CBlock* pdata = (Credits_CBlock*)&vchData[0];
 
         // Byte reverse
         for (int i = 0; i < 168/4; i++)
@@ -448,7 +448,7 @@ Value getwork(const Array& params, bool fHelp)
         // Get saved block
         if (!mapNewBlock.count(pdata->hashMerkleRoot))
             return false;
-        Bitcredit_CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
+        Credits_CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
 
         pblock->nTime = pdata->nTime;
         pblock->nNonce = pdata->nNonce;
@@ -567,9 +567,9 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
     // Update block
     static unsigned int nTransactionsUpdatedLast;
-    static Bitcredit_CBlockIndex* pindexPrev;
+    static Credits_CBlockIndex* pindexPrev;
     static int64_t nStart;
-    static Bitcredit_CBlockTemplate* pblocktemplate;
+    static Credits_CBlockTemplate* pblocktemplate;
     if (pindexPrev != bitcredit_chainActive.Tip() ||
         (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
@@ -578,7 +578,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
-        Bitcredit_CBlockIndex* pindexPrevNew = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+        Credits_CBlockIndex* pindexPrevNew = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
         nStart = GetTime();
 
         // Create new block
@@ -599,7 +599,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
     }
-    Bitcredit_CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+    Credits_CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // Update nTime
     Bitcredit_UpdateTime(*pblock, pindexPrev);
@@ -608,7 +608,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     Array transactions;
     map<uint256, int64_t> setTxIndex;
     int i = 0;
-    BOOST_FOREACH (Bitcredit_CTransaction& tx, pblock->vtx)
+    BOOST_FOREACH (Credits_CTransaction& tx, pblock->vtx)
     {
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
@@ -625,7 +625,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         entry.push_back(Pair("hash", txHash.GetHex()));
 
         Array deps;
-        BOOST_FOREACH (const Bitcredit_CTxIn &in, tx.vin)
+        BOOST_FOREACH (const Credits_CTxIn &in, tx.vin)
         {
             if (setTxIndex.count(in.prevout.hash))
                 deps.push_back(setTxIndex[in.prevout.hash]);
@@ -699,7 +699,7 @@ Value submitblock(const Array& params, bool fHelp)
 
     vector<unsigned char> blockData(ParseHex(params[0].get_str()));
     CDataStream ssBlock(blockData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
-    Bitcredit_CBlock pblock;
+    Credits_CBlock pblock;
     try {
         ssBlock >> pblock;
     }

@@ -87,7 +87,7 @@ public:
     uint256 hash;
     unsigned char pchPadding1[sha256DigestChunkByteSize];
 
-    void InitData(Bitcredit_CBlock* pblock, unsigned int &shaChunksForHeader, unsigned int &shaChunksForHash) {
+    void InitData(Credits_CBlock* pblock, unsigned int &shaChunksForHeader, unsigned int &shaChunksForHash) {
        headerData.nVersion       = pblock->nVersion;
        headerData.hashPrevBlock  = pblock->hashPrevBlock;
        headerData.hashMerkleRoot = pblock->hashMerkleRoot;
@@ -131,12 +131,12 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit)
 class COrphan
 {
 public:
-    const Bitcredit_CTransaction* ptx;
+    const Credits_CTransaction* ptx;
     set<uint256> setDependsOn;
     double dPriority;
     double dFeePerKb;
 
-    COrphan(const Bitcredit_CTransaction* ptxIn)
+    COrphan(const Credits_CTransaction* ptxIn)
     {
         ptx = ptxIn;
         dPriority = dFeePerKb = 0;
@@ -156,7 +156,7 @@ uint64_t bitcredit_nLastBlockTx = 0;
 uint64_t bitcredit_nLastBlockSize = 0;
 
 // We want to sort transactions by priority and fee, so:
-typedef boost::tuple<double, double, const Bitcredit_CTransaction*> TxPriority;
+typedef boost::tuple<double, double, const Credits_CTransaction*> TxPriority;
 class TxPriorityCompare
 {
     bool byFee;
@@ -179,7 +179,7 @@ public:
     }
 };
 
-bool VerifyDepositSignatures (std::string prefix, Bitcredit_CBlock *pblock) {
+bool VerifyDepositSignatures (std::string prefix, Credits_CBlock *pblock) {
 	const COutPoint coinbaseOutPoint(pblock->vtx[0].GetHash(), 0);
 
     //Test the newly created signature
@@ -187,8 +187,8 @@ bool VerifyDepositSignatures (std::string prefix, Bitcredit_CBlock *pblock) {
 
 	for (unsigned int i = 1; i < pblock->vtx.size(); i++) {
 		if (pblock->vtx[i].IsDeposit()) {
-			Bitcredit_CTransaction &txDeposit = pblock->vtx[i];
-			Bitcredit_CTxIn & txDepositIn = txDeposit.vin[0];
+			Credits_CTransaction &txDeposit = pblock->vtx[i];
+			Credits_CTxIn & txDepositIn = txDeposit.vin[0];
 			const CScript &scriptSig = txDepositIn.scriptSig;
 
 			//If coinbase is referenced, find that for validation, otherwise look in bitcredit_coins
@@ -214,8 +214,8 @@ bool VerifyDepositSignatures (std::string prefix, Bitcredit_CBlock *pblock) {
     return true;
 }
 
-bool RecalculateCoinbaseDeposit(Bitcredit_CBlock *pblock, const uint256 &oldCoinBaseHash, CKeyStore * bitcreditKeystore, CKeyStore * depositKeystore, const bool& coinbaseDepositDisabled) {
-	const Bitcredit_CTransaction& txCoinbase = pblock->vtx[0];
+bool RecalculateCoinbaseDeposit(Credits_CBlock *pblock, const uint256 &oldCoinBaseHash, CKeyStore * bitcreditKeystore, CKeyStore * depositKeystore, const bool& coinbaseDepositDisabled) {
+	const Credits_CTransaction& txCoinbase = pblock->vtx[0];
 
     CKeyStore * tmpKeyStore = bitcreditKeystore;
     if(bitcredit_pwalletMain->IsLocked() && !coinbaseDepositDisabled) {
@@ -224,8 +224,8 @@ bool RecalculateCoinbaseDeposit(Bitcredit_CBlock *pblock, const uint256 &oldCoin
 
 	for (unsigned int i = 1; i < pblock->vtx.size(); i++) {
 		if (pblock->vtx[i].IsDeposit()) {
-			Bitcredit_CTransaction &txDeposit = pblock->vtx[i];
-			Bitcredit_CTxIn & txDepositIn = txDeposit.vin[0];
+			Credits_CTransaction &txDeposit = pblock->vtx[i];
+			Credits_CTxIn & txDepositIn = txDeposit.vin[0];
 
 			if(txDepositIn.prevout.hash == oldCoinBaseHash) {
 				txDepositIn.prevout = COutPoint(txCoinbase.GetHash(), 0);
@@ -243,14 +243,14 @@ bool RecalculateCoinbaseDeposit(Bitcredit_CBlock *pblock, const uint256 &oldCoin
 
 struct Miner_CompareValueOnly
 {
-    bool operator()(const pair<int64_t, const Bitcredit_CTransaction*>& t1,
-                    const pair<int64_t, const Bitcredit_CTransaction*>& t2) const
+    bool operator()(const pair<int64_t, const Credits_CTransaction*>& t1,
+                    const pair<int64_t, const Credits_CTransaction*>& t2) const
     {
         return t1.first < t2.first;
     }
 };
 
-static void ApproximateBestSubset(vector<pair<int64_t, const Bitcredit_CTransaction*> >vValue,  int64_t nTotalLower, int64_t nTargetValue,
+static void ApproximateBestSubset(vector<pair<int64_t, const Credits_CTransaction*> >vValue,  int64_t nTotalLower, int64_t nTargetValue,
                                   vector<char>& vfBest, int64_t& nBest, int iterations = 1000)
 {
     vector<char> vfIncluded;
@@ -296,17 +296,17 @@ static void ApproximateBestSubset(vector<pair<int64_t, const Bitcredit_CTransact
     }
 }
 
-bool SelectDepositTxs(int64_t nTargetValue, vector<Bitcredit_CTransaction> &vCoins,
-		set<const Bitcredit_CTransaction*>& setCoinsRet)
+bool SelectDepositTxs(int64_t nTargetValue, vector<Credits_CTransaction> &vCoins,
+		set<const Credits_CTransaction*>& setCoinsRet)
 {
     setCoinsRet.clear();
 
     // The value closest to the target value but larger
-    pair<int64_t, const Bitcredit_CTransaction*> coinLowestLarger;
+    pair<int64_t, const Credits_CTransaction*> coinLowestLarger;
     coinLowestLarger.first = std::numeric_limits<int64_t>::max();
     coinLowestLarger.second = NULL;
     // List of values less than target
-    vector<pair<int64_t, const Bitcredit_CTransaction*> > vValue;
+    vector<pair<int64_t, const Credits_CTransaction*> > vValue;
     int64_t nTotalLower = 0;
 
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
@@ -315,7 +315,7 @@ bool SelectDepositTxs(int64_t nTargetValue, vector<Bitcredit_CTransaction> &vCoi
     {
         const int64_t n = vCoins[i].GetDepositValueOut();
 
-        pair<int64_t,const Bitcredit_CTransaction*> coin = make_pair(n,&vCoins[i]);
+        pair<int64_t,const Credits_CTransaction*> coin = make_pair(n,&vCoins[i]);
 
         if (n == nTargetValue)
         {
@@ -384,13 +384,13 @@ bool SelectDepositTxs(int64_t nTargetValue, vector<Bitcredit_CTransaction> &vCoi
     return true;
 }
 
-void SelectLargestDepositTxs(int64_t nTargetValue, vector<Bitcredit_CTransaction> &vCoins, set<const Bitcredit_CTransaction*>& setCoinsRet, unsigned int nMaxTxs) {
+void SelectLargestDepositTxs(int64_t nTargetValue, vector<Credits_CTransaction> &vCoins, set<const Credits_CTransaction*>& setCoinsRet, unsigned int nMaxTxs) {
     setCoinsRet.clear();
 
-    vector<pair<int64_t, const Bitcredit_CTransaction*> > vValue;
+    vector<pair<int64_t, const Credits_CTransaction*> > vValue;
     for(unsigned int i= 0; i < vCoins.size();i++) {
         const int64_t n = vCoins[i].GetDepositValueOut();
-        pair<int64_t,const Bitcredit_CTransaction*> coin = make_pair(n,&vCoins[i]);
+        pair<int64_t,const Credits_CTransaction*> coin = make_pair(n,&vCoins[i]);
 		vValue.push_back(coin);
     }
 
@@ -413,16 +413,16 @@ void SelectLargestDepositTxs(int64_t nTargetValue, vector<Bitcredit_CTransaction
     }
 }
 
-Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, const CScript& scriptPubKeyDeposit, const CScript& scriptPubKeyDepositChange, CPubKey& pubKeySigningDeposit, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
+Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, const CScript& scriptPubKeyDeposit, const CScript& scriptPubKeyDepositChange, CPubKey& pubKeySigningDeposit, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
     // Create new block
-    auto_ptr<Bitcredit_CBlockTemplate> pblocktemplate(new Bitcredit_CBlockTemplate());
+    auto_ptr<Credits_CBlockTemplate> pblocktemplate(new Credits_CBlockTemplate());
     if(!pblocktemplate.get())
         return NULL;
-    Bitcredit_CBlock *pblock = &pblocktemplate->block; // pointer for convenience
+    Credits_CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
     // Create coinbase tx
-    Bitcredit_CTransaction txCoinbaseNew(TX_TYPE_COINBASE);
+    Credits_CTransaction txCoinbaseNew(TX_TYPE_COINBASE);
     txCoinbaseNew.vout.resize(1);
     txCoinbaseNew.vout[0].scriptPubKey = scriptPubKeyCoinbase;
     txCoinbaseNew.vin.resize(1);
@@ -451,7 +451,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
     int64_t nFees = 0;
     {
         LOCK2(bitcredit_mainState.cs_main, bitcredit_mempool.cs);
-        Bitcredit_CBlockIndex* pindexPrev = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+        Credits_CBlockIndex* pindexPrev = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
 
         //Verify linked block
         Bitcoin_CBlockIndex* pprevLinkedBlock;
@@ -501,7 +501,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 
 			//Pre-setup hashLinkedBitcoinBlock to be able to use it with indexDummy
 			pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
-	        Bitcredit_CBlockIndex indexDummy(*pblock);
+	        Credits_CBlockIndex indexDummy(*pblock);
 	        indexDummy.pprev = pindexPrev;
 	        indexDummy.nHeight = pindexPrev->nHeight + 1;
 
@@ -522,7 +522,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 			for (map<uint256, Bitcredit_CTxMemPoolEntry>::iterator mi = bitcredit_mempool.mapTx.begin();
 				 mi != bitcredit_mempool.mapTx.end(); ++mi)
 			{
-				const Bitcredit_CTransaction& tx = mi->second.GetTx();
+				const Credits_CTransaction& tx = mi->second.GetTx();
 				if (tx.IsCoinBase() || tx.IsDeposit() || !Bitcredit_IsFinalTx(tx, pindexPrev->nHeight + 1))
 					continue;
 
@@ -531,7 +531,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 					double dPriority = 0;
 					int64_t nTotalIn = 0;
 					bool fMissingInputs = false;
-					BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
 					{
 						// Read prev transaction
 						if (!bitcredit_view.HaveCoins(txin.prevout.hash))
@@ -592,7 +592,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 					double dPriority = 0;
 					int64_t nTotalIn = 0;
 					bool fMissingInputs = false;
-					BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
 					{
 						// Read prev transaction
 						if (!claim_viewtmp.HaveCoins(txin.prevout.hash))
@@ -662,8 +662,8 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 			}
 
 			//Setup the block used for updating the deposit base due to long enough block chain
-			Bitcredit_CBlockIndex* pBlockToTrim = NULL;
-			Bitcredit_CBlock trimBlock;
+			Credits_CBlockIndex* pBlockToTrim = NULL;
+			Credits_CBlock trimBlock;
 			unsigned int currentHeight = pindexPrev->nHeight + 1 ;
 			if(currentHeight > BITCREDIT_DEPOSIT_CUTOFF_DEPTH) {
 				//Find trim block in active chain
@@ -693,7 +693,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 				// Take highest priority transaction off the priority queue:
 				double dPriority = vecPriority.front().get<0>();
 				double dFeePerKb = vecPriority.front().get<1>();
-				const Bitcredit_CTransaction& tx = *(vecPriority.front().get<2>());
+				const Credits_CTransaction& tx = *(vecPriority.front().get<2>());
 
 				std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
 				vecPriority.pop_back();
@@ -709,7 +709,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 					continue;
 
 				// Skip free transactions if we're past the minimum block size:
-				if (fSortedByFee && (dFeePerKb < Bitcredit_CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
+				if (fSortedByFee && (dFeePerKb < Credits_CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
 					continue;
 
 				// Prioritize by fee once past the priority size or we run out of high-priority
@@ -754,7 +754,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 
 				UpdateResurrectedDepositBase(pBlockToTrim, tx, nResurrectedDepositBase, bitcredit_view);
 
-				Bitcredit_CTxUndo txundoUnused;
+				Credits_CTxUndo txundoUnused;
 				uint256 hash = tx.GetHash();
 				Bitcredit_UpdateCoins(tx, state, bitcredit_view, claim_viewtmp, txundoUnused, pindexPrev->nHeight+1, hash);
 
@@ -807,12 +807,12 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 				uint256 tmpCoinbaseHash(0);
 				// Create deposit tx
 				const int64_t nSubsidy = pblock->vtx[0].vout[0].nValue;
-				Bitcredit_CTransaction txDeposit(TX_TYPE_DEPOSIT);
+				Credits_CTransaction txDeposit(TX_TYPE_DEPOSIT);
 				txDeposit.vout.resize(1);
 				txDeposit.vout[0].scriptPubKey = scriptPubKeyDeposit;
 				txDeposit.vout[0].nValue = nSubsidy;
 				txDeposit.vin.resize(1);
-				txDeposit.vin[0] = Bitcredit_CTxIn(COutPoint(tmpCoinbaseHash, 0));
+				txDeposit.vin[0] = Credits_CTxIn(COutPoint(tmpCoinbaseHash, 0));
 				txDeposit.signingKeyId = pubKeySigningDeposit.GetID();
 				// Add our deposit tx as second transaction
 				pblock->vtx.insert(pblock->vtx.begin() + 1, txDeposit);
@@ -838,7 +838,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 					pdepositWallet->GetAllWalletTxs(vDepositWalletTxs);
 					LogPrintf("Wallet contains %d transactions\n", vDepositWalletTxs.size());
 
-					vector<Bitcredit_CTransaction> vDepositTxs;
+					vector<Credits_CTransaction> vDepositTxs;
 					BOOST_FOREACH(const Bitcredit_CWalletTx* walletTx, vDepositWalletTxs)
 					{
 						const Bitcredit_CWalletTx &tx = *walletTx;
@@ -865,7 +865,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 					LogPrintf("Found %d deposit transactions available for mining\n", vDepositTxs.size());
 
 					// Choose deposit transactions to use
-					set<const Bitcredit_CTransaction*>  setExtraDepositTxs;
+					set<const Credits_CTransaction*>  setExtraDepositTxs;
 					if (!SelectDepositTxs(nRequiredExtraDeposit, vDepositTxs, setExtraDepositTxs))
 					{
 						if(coinbaseDepositDisabled) {
@@ -886,7 +886,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 						return NULL;
 					}
 
-					BOOST_FOREACH(const Bitcredit_CTransaction* tx, setExtraDepositTxs)
+					BOOST_FOREACH(const Credits_CTransaction* tx, setExtraDepositTxs)
 					{
 						//Insert all new deposit transaction at position after coinbase
 						if(pblock->vtx.size() == 1) {
@@ -927,7 +927,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
 					const uint256 coinbaseHash = pblock->vtx[0].GetHash();
 
 					for (unsigned int i = 1; i < pblock->vtx.size(); i++) {
-						Bitcredit_CTransaction& txDeposit = pblock->vtx[i];
+						Credits_CTransaction& txDeposit = pblock->vtx[i];
 
 						if(!txDeposit.IsDeposit()) {
 							break;
@@ -990,7 +990,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
         	}
 		}
 
-        Bitcredit_CBlockIndex indexDummy(*pblock);
+        Credits_CBlockIndex indexDummy(*pblock);
         indexDummy.pprev = pindexPrev;
         indexDummy.nHeight = pindexPrev->nHeight + 1;
 
@@ -1014,7 +1014,7 @@ Bitcredit_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, co
     return pblocktemplate.release();
 }
 
-void IncrementExtraNonce(Bitcredit_CBlock* pblock, Bitcredit_CBlockIndex* pindexPrev, unsigned int& nExtraNonce, CKeyStore * bitcreditKeystore, CKeyStore * depositKeystore, const bool& coinbaseDepositDisabled)
+void IncrementExtraNonce(Credits_CBlock* pblock, Credits_CBlockIndex* pindexPrev, unsigned int& nExtraNonce, CKeyStore * bitcreditKeystore, CKeyStore * depositKeystore, const bool& coinbaseDepositDisabled)
 {
     const uint256 oldCoinbaseHash = pblock->vtx[0].GetHash();
 
@@ -1042,7 +1042,7 @@ void IncrementExtraNonce(Bitcredit_CBlock* pblock, Bitcredit_CBlockIndex* pindex
 }
 
 
-void FormatHashBuffers(Bitcredit_CBlock* pblock, char* pmidstate, char* pdata, char* phash)
+void FormatHashBuffers(Credits_CBlock* pblock, char* pmidstate, char* pdata, char* phash)
 {
     //
     // Pre-build hash buffers
@@ -1111,7 +1111,7 @@ unsigned int static ScanHash_CryptoPP(char* pdata, char* midHash, char* phash, c
     }
 }
 
-Bitcredit_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseReservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
+Credits_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseReservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
     CPubKey pubkeyCoinbase;
     if (!coinbaseReservekey.GetReservedKey(pubkeyCoinbase))
@@ -1135,7 +1135,7 @@ Bitcredit_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseR
     return CreateNewBlock(scriptPubKeyCoinbase, scriptPubKeyDeposit, scriptPubKeyDepositChange, pubkeySigningDeposit, keystore, pdepositWallet, coinbaseDepositDisabled);
 }
 
-bool CheckWork(Bitcredit_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitcredit_CWallet& deposit_wallet, Bitcredit_CReserveKey& reservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey)
+bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitcredit_CWallet& deposit_wallet, Bitcredit_CReserveKey& reservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey)
 {
     if(!VerifyDepositSignatures("CheckWork", pblock)) {
     	return false;
@@ -1163,7 +1163,7 @@ bool CheckWork(Bitcredit_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bi
         depositChangeReserveKey.KeepKey();
         depositReserveSigningKey.KeepKey();
 
-        BOOST_FOREACH(const Bitcredit_CTransaction& tx, pblock->vtx) {
+        BOOST_FOREACH(const Credits_CTransaction& tx, pblock->vtx) {
         	if(tx.IsDeposit() && tx.vin[0].prevout != COutPoint(pblock->vtx[0].GetHash(), 0)) {
 				uint256 txHash = tx.GetHash();
 				if(deposit_wallet.GetWalletTx(txHash) != NULL) {
@@ -1231,12 +1231,12 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
         // Create new block
         //
         unsigned int nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
-        Bitcredit_CBlockIndex* pindexPrev = (Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip();
+        Credits_CBlockIndex* pindexPrev = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
 
-        auto_ptr<Bitcredit_CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, depositReservekey, depositChangeReservekey, depositReserveSigningKey, pwallet, pdepositWallet, coinbaseDepositDisabled));
+        auto_ptr<Credits_CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, depositReservekey, depositChangeReservekey, depositReserveSigningKey, pwallet, pdepositWallet, coinbaseDepositDisabled));
         if (!pblocktemplate.get())
             return;
-        Bitcredit_CBlock *pblock = &pblocktemplate->block;
+        Credits_CBlock *pblock = &pblocktemplate->block;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, pwallet, pdepositWallet, coinbaseDepositDisabled);
 
         if(!VerifyDepositSignatures("Bitcreditminer", pblock)) {

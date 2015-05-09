@@ -81,7 +81,7 @@ double Bitcoin_GetDifficulty(const CBlockIndexBase* blockindex)
 }
 
 
-Object blockToJSON(const Bitcredit_CBlock& block, const CBlockIndexBase* blockindex)
+Object blockToJSON(const Credits_CBlock& block, const CBlockIndexBase* blockindex)
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
@@ -93,7 +93,7 @@ Object blockToJSON(const Bitcredit_CBlock& block, const CBlockIndexBase* blockin
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     Array txs;
-    BOOST_FOREACH(const Bitcredit_CTransaction&tx, block.vtx)
+    BOOST_FOREACH(const Credits_CTransaction&tx, block.vtx)
         txs.push_back(tx.GetHash().GetHex());
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("hashlinkedbitcoinblock", block.hashLinkedBitcoinBlock.GetHex()));
@@ -109,7 +109,7 @@ Object blockToJSON(const Bitcredit_CBlock& block, const CBlockIndexBase* blockin
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
-    Bitcredit_CBlockIndex *pnext = bitcredit_chainActive.Next((Bitcredit_CBlockIndex*)blockindex);
+    Credits_CBlockIndex *pnext = bitcredit_chainActive.Next((Credits_CBlockIndex*)blockindex);
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
     return result;
@@ -264,9 +264,9 @@ Value getrawmempool(const Array& params, bool fHelp)
             info.push_back(Pair("height", (int)e.GetHeight()));
             info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
             info.push_back(Pair("currentpriority", e.GetPriority(bitcredit_chainActive.Height())));
-            const Bitcredit_CTransaction& tx = e.GetTx();
+            const Credits_CTransaction& tx = e.GetTx();
             set<string> setDepends;
-            BOOST_FOREACH(const Bitcredit_CTxIn& txin, tx.vin)
+            BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
             {
                 if (bitcredit_mempool.exists(txin.prevout.hash))
                     setDepends.insert(txin.prevout.hash.ToString());
@@ -309,7 +309,7 @@ Value getblockhash(const Array& params, bool fHelp)
     if (nHeight < 0 || nHeight > bitcredit_chainActive.Height())
         throw runtime_error("Block number out of range.");
 
-    Bitcredit_CBlockIndex* pblockindex = bitcredit_chainActive[nHeight];
+    Credits_CBlockIndex* pblockindex = bitcredit_chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
 }
 
@@ -362,8 +362,8 @@ Value getblock(const Array& params, bool fHelp)
     if (bitcredit_mapBlockIndex.count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
-    Bitcredit_CBlock block;
-    Bitcredit_CBlockIndex* pblockindex = bitcredit_mapBlockIndex[hash];
+    Credits_CBlock block;
+    Credits_CBlockIndex* pblockindex = bitcredit_mapBlockIndex[hash];
     Bitcredit_ReadBlockFromDisk(block, pblockindex);
 
     if (!fVerbose)
@@ -475,8 +475,8 @@ Value gettxout(const Array& params, bool fHelp)
     if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
         return Value::null;
 
-    std::map<uint256, Bitcredit_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(bitcredit_pcoinsTip->GetBestBlock());
-    Bitcredit_CBlockIndex *pindex = it->second;
+    std::map<uint256, Credits_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(bitcredit_pcoinsTip->GetBestBlock());
+    Credits_CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
     if ((unsigned int)coins.nHeight == BITCREDIT_MEMPOOL_HEIGHT)
         ret.push_back(Pair("confirmations", 0));
@@ -550,7 +550,7 @@ Value bitcredit_getblockchaininfo(const Array& params, bool fHelp)
     obj.push_back(Pair("blocks",        (int)bitcredit_chainActive.Height()));
     obj.push_back(Pair("bestblockhash", bitcredit_chainActive.Tip()->GetBlockHash().GetHex()));
     obj.push_back(Pair("difficulty",    (double)Bitcredit_GetDifficulty()));
-    obj.push_back(Pair("verificationprogress", Checkpoints::Bitcredit_GuessVerificationProgress((Bitcredit_CBlockIndex*)bitcredit_chainActive.Tip())));
+    obj.push_back(Pair("verificationprogress", Checkpoints::Bitcredit_GuessVerificationProgress((Credits_CBlockIndex*)bitcredit_chainActive.Tip())));
     obj.push_back(Pair("chainwork",     bitcredit_chainActive.Tip()->nChainWork.GetHex()));
     return obj;
 }

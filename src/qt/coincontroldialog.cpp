@@ -443,7 +443,7 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
     qint64 nPayAmount = 0;
     bool fLowOutput = false;
     bool fDust = false;
-    Bitcredit_CTransaction txDummy;
+    Credits_CTransaction txDummy;
     foreach(const qint64 &amount, Bitcredit_CoinControlDialog::payAmounts)
     {
         nPayAmount += amount;
@@ -455,7 +455,7 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
 
             CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
-            if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+            if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
                fDust = true;
         }
     }
@@ -538,18 +538,18 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
         {
             nChange = nAmount - nPayFee - nPayAmount;
 
-            // if sub-cent change is required, the fee must be raised to at least Bitcredit_CTransaction::nMinTxFee
-            if (nPayFee < Bitcredit_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
+            // if sub-cent change is required, the fee must be raised to at least Credits_CTransaction::nMinTxFee
+            if (nPayFee < Credits_CTransaction::nMinTxFee && nChange > 0 && nChange < CENT)
             {
-                if (nChange < Bitcredit_CTransaction::nMinTxFee) // change < 0.0001 => simply move all change to fees
+                if (nChange < Credits_CTransaction::nMinTxFee) // change < 0.0001 => simply move all change to fees
                 {
                     nPayFee += nChange;
                     nChange = 0;
                 }
                 else
                 {
-                    nChange = nChange + nPayFee - Bitcredit_CTransaction::nMinTxFee;
-                    nPayFee = Bitcredit_CTransaction::nMinTxFee;
+                    nChange = nChange + nPayFee - Credits_CTransaction::nMinTxFee;
+                    nPayFee = Credits_CTransaction::nMinTxFee;
                 }
             }
 
@@ -557,7 +557,7 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
             if (nChange > 0 && nChange < CENT)
             {
                 CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
-                if (txout.IsDust(Bitcredit_CTransaction::nMinRelayTxFee))
+                if (txout.IsDust(Credits_CTransaction::nMinRelayTxFee))
                 {
                     nPayFee += nChange;
                     nChange = 0;
@@ -612,19 +612,19 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
 
     // tool tips
     QString toolTip1 = tr("This label turns red, if the transaction size is greater than 1000 bytes.") + "<br /><br />";
-    toolTip1 += tr("This means a fee of at least %1 per kB is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Bitcredit_CTransaction::nMinTxFee)) + "<br /><br />";
+    toolTip1 += tr("This means a fee of at least %1 per kB is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Credits_CTransaction::nMinTxFee)) + "<br /><br />";
     toolTip1 += tr("Can vary +/- 1 byte per input.");
 
     QString toolTip2 = tr("Transactions with higher priority are more likely to get included into a block.") + "<br /><br />";
     toolTip2 += tr("This label turns red, if the priority is smaller than \"medium\".") + "<br /><br />";
-    toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Bitcredit_CTransaction::nMinTxFee));
+    toolTip2 += tr("This means a fee of at least %1 per kB is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Credits_CTransaction::nMinTxFee));
 
     QString toolTip3 = tr("This label turns red, if any recipient receives an amount smaller than %1.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, CENT)) + "<br /><br />";
-    toolTip3 += tr("This means a fee of at least %1 is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Bitcredit_CTransaction::nMinTxFee)) + "<br /><br />";
+    toolTip3 += tr("This means a fee of at least %1 is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Credits_CTransaction::nMinTxFee)) + "<br /><br />";
     toolTip3 += tr("Amounts below 0.546 times the minimum relay fee are shown as dust.");
 
     QString toolTip4 = tr("This label turns red, if the change is smaller than %1.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, CENT)) + "<br /><br />";
-    toolTip4 += tr("This means a fee of at least %1 is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Bitcredit_CTransaction::nMinTxFee));
+    toolTip4 += tr("This means a fee of at least %1 is required.").arg(BitcreditUnits::formatWithUnit(nDisplayUnit, Credits_CTransaction::nMinTxFee));
 
     l5->setToolTip(toolTip1);
     l6->setToolTip(toolTip2);

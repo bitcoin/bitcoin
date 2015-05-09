@@ -103,10 +103,10 @@ unsigned int bitcoin_pnSeed[] =
     0x13f5094c, 0x7ab32648, 0x542e9fd5, 0x53136bc1, 0x7fdf51c0, 0x802197b2, 0xa2d2cc5b, 0x6b5f4bc0,
 };
 
-Bitcredit_CTransaction createBitcreditTransaction(const char* publicKeyTo, COutPoint outPoint, int64_t nSubsidy) {
-    Bitcredit_CTransaction txNew;
+Credits_CTransaction createBitcreditTransaction(const char* publicKeyTo, COutPoint outPoint, int64_t nSubsidy) {
+    Credits_CTransaction txNew;
     //Add tx in
-	Bitcredit_CTxIn ctxIn;
+	Credits_CTxIn ctxIn;
 	ctxIn.prevout = outPoint;
 	txNew.vin.push_back(ctxIn);
 	//Add tx out
@@ -142,13 +142,13 @@ Bitcredit_CMainParams::Bitcredit_CMainParams() {
     uint64_t nSubsidyLevel = vSubsidyLevels[0].nSubsidyUpdateTo;
 
     const char * pubKeyCoinbaseTo = "047a5285d161909416706759f6351ae2954d5d420cfda656570d093161ae8cd8ab0d3c26499077f1d9a8c226eb3920d04ea8bf57f5e7fc03eb47948a1a6b1a1f80";
-	Bitcredit_CTransaction txCoinbase = createBitcreditTransaction(pubKeyCoinbaseTo, COutPoint(0, -1), nSubsidyLevel);
+	Credits_CTransaction txCoinbase = createBitcreditTransaction(pubKeyCoinbaseTo, COutPoint(0, -1), nSubsidyLevel);
 	txCoinbase.nTxType = TX_TYPE_COINBASE;
 	const char* pszTimestampCoinbase = "The Times 5/Mar/2015 Currency wars threaten new catastrophe";
     txCoinbase.vin[0].scriptSig = CScript() << vector<unsigned char>((const unsigned char*)pszTimestampCoinbase, (const unsigned char*)pszTimestampCoinbase + strlen(pszTimestampCoinbase));
     genesis.vtx.push_back(txCoinbase);
 
-    Bitcredit_CTransaction txDeposit = createBitcreditTransaction(pubKeyCoinbaseTo, COutPoint(txCoinbase.GetHash(), 0), nSubsidyLevel);
+    Credits_CTransaction txDeposit = createBitcreditTransaction(pubKeyCoinbaseTo, COutPoint(txCoinbase.GetHash(), 0), nSubsidyLevel);
     txDeposit.nTxType = TX_TYPE_DEPOSIT;
     const char * scriptSigDeposit = "4730440220789140d0d9f223e86a45faf177a37d5a1cdf8359effe68f5f4001cd637053ffd0220422008273df89ed110583fa62cea281f47af5a4c62f08820026c48716a23766f0141047a5285d161909416706759f6351ae2954d5d420cfda656570d093161ae8cd8ab0d3c26499077f1d9a8c226eb3920d04ea8bf57f5e7fc03eb47948a1a6b1a1f80";
     std::vector<unsigned char> vScriptSigDeposit = ParseHex(scriptSigDeposit);

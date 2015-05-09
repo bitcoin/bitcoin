@@ -20,7 +20,7 @@ using namespace std;
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
 class CAddress;
-class Bitcredit_CBlock;
+class Credits_CBlock;
 
 struct CDNSSeedData {
     string name, host;
@@ -97,7 +97,7 @@ public:
     Bitcredit_CMainParams();
 
     vector<SubsidyLevel> getSubsidyLevels() const { return vSubsidyLevels; }
-    virtual const Bitcredit_CBlock& GenesisBlock() const { return genesis; }
+    virtual const Credits_CBlock& GenesisBlock() const { return genesis; }
     virtual Network NetworkID() const { return CChainParams::MAIN; }
     virtual int FastForwardClaimBitcoinBlockHeight() const { return 340874; }
     virtual uint256 FastForwardClaimBitcoinBlockHash() const { return uint256("0x000000000000000005a50dde9c4522c05b6b9051dd04b450b9c6721483c213b9"); }
@@ -107,7 +107,7 @@ public:
     }
 protected:
     vector<SubsidyLevel> vSubsidyLevels;
-    Bitcredit_CBlock genesis;
+    Credits_CBlock genesis;
     vector<CAddress> vFixedSeeds;
 };
 

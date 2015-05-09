@@ -19,7 +19,7 @@
 
 BOOST_AUTO_TEST_SUITE(CheckBlock_tests)
 
-bool read_block(const std::string& filename, Bitcredit_CBlock& block)
+bool read_block(const std::string& filename, Credits_CBlock& block)
 {
     namespace fs = boost::filesystem;
     fs::path testFile = fs::current_path() / "data" / filename;
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(May15)
     unsigned int tMay15 = 1368576000;
     SetMockTime(tMay15); // Test as if it was right at May 15
 
-    Bitcredit_CBlock forkingBlock;
+    Credits_CBlock forkingBlock;
     if (read_block("Mar12Fork.dat", forkingBlock))
     {
         CValidationState state;
