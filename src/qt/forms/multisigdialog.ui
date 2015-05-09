@@ -156,7 +156,7 @@
          <item>
           <widget class="QLabel" name="maxSignaturesLabel">
            <property name="text">
-            <string>/ 1</string>
+            <string notr="true">/ 1</string>
            </property>
           </widget>
          </item>
@@ -389,7 +389,7 @@
                 <item>
                  <widget class="QLabel" name="inputsAmount">
                   <property name="text">
-                   <string>123.456</string>
+                   <string notr="true">123.456</string>
                   </property>
                   <property name="textInteractionFlags">
                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -399,7 +399,7 @@
                 <item>
                  <widget class="QLabel" name="label">
                   <property name="text">
-                   <string>NVC</string>
+                   <string notr="true">NVC</string>
                   </property>
                  </widget>
                 </item>
@@ -508,7 +508,7 @@
                 <item>
                  <widget class="QLabel" name="outputsAmount">
                   <property name="text">
-                   <string>123.456</string>
+                   <string notr="true">123.456</string>
                   </property>
                   <property name="textInteractionFlags">
                    <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -518,7 +518,7 @@
                 <item>
                  <widget class="QLabel" name="label_2">
                   <property name="text">
-                   <string>NVC</string>
+                   <string notr="true">NVC</string>
                   </property>
                  </widget>
                 </item>
@@ -549,14 +549,14 @@
                 <item>
                  <widget class="QLabel" name="fee">
                   <property name="text">
-                   <string>123.456</string>
+                   <string notr="true">123.456</string>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="label_3">
                   <property name="text">
-                   <string>NVC</string>
+                   <string notr="true">NVC</string>
                   </property>
                  </widget>
                 </item>
