@@ -296,7 +296,7 @@ public:
     Array GetJSON()
     {
         DoPush();
-        Array array;
+        UniValue array(UniValue::VARR);
         array.push_back(FormatScript(spendTx.vin[0].scriptSig));
         array.push_back(FormatScript(creditTx.vout[0].scriptPubKey));
         array.push_back(FormatScriptFlags(flags));

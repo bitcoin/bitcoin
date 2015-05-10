@@ -19,9 +19,9 @@ using namespace json_spirit;
 Array
 createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
 {
-    Array result;
+    UniValue result(UniValue::VARR);
     result.push_back(nRequired);
-    Array addresses;
+    UniValue addresses(UniValue::VARR);
     if (address1) addresses.push_back(address1);
     if (address2) addresses.push_back(address2);
     result.push_back(addresses);
