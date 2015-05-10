@@ -30,6 +30,9 @@ public:
     UniValue(int64_t val_) {
         setInt(val_);
     }
+    UniValue(bool val_) {
+        setBool(val_);
+    }
     UniValue(int val_) {
         setInt(val_);
     }
@@ -189,6 +192,13 @@ static inline std::pair<std::string,UniValue> Pair(const char *cKey, int64_t i64
 {
     std::string key(cKey);
     UniValue uVal(i64Val);
+    return std::make_pair(key, uVal);
+}
+
+static inline std::pair<std::string,UniValue> Pair(const char *cKey, bool iVal)
+{
+    std::string key(cKey);
+    UniValue uVal(iVal);
     return std::make_pair(key, uVal);
 }
 
