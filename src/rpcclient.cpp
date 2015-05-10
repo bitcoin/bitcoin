@@ -11,6 +11,8 @@
 #include <set>
 #include <stdint.h>
 
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+
 using namespace std;
 using namespace json_spirit;
 
@@ -134,9 +136,19 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
 
         // parse string as JSON, insert bool/number/object/etc. value
         else {
+            //according to rfc4627 null, true, false are not valid json strings
             Value jVal;
-            if (!jVal.read(strVal))
-                throw runtime_error(string("Error parsing JSON:")+strVal);
+            if(strVal == "null")
+                jVal.setNull();
+            else if(strVal == "true")
+                jVal.setBool(true);
+            else if(strVal == "false")
+                jVal.setBool(false);
+            else
+            {
+                if (!jVal.read(strVal))
+                    throw runtime_error(string("Error parsing JSON:")+strVal);
+            }
             params.push_back(jVal);
         }
     }
