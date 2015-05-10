@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
 
     double vd = -7.21;
     UniValue v7(vd);
-    BOOST_CHECK(v7.isNum());
+    BOOST_CHECK(v7.isReal());
     BOOST_CHECK_EQUAL(v7.getValStr(), "-7.21");
 
     string vs("yawn");
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(univalue_set)
     BOOST_CHECK_EQUAL(v.getValStr(), "zum");
 
     BOOST_CHECK(v.setFloat(-1.01));
-    BOOST_CHECK(v.isNum());
+    BOOST_CHECK(v.isReal());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
 
     BOOST_CHECK(v.setInt((int)1023));
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     objTypes["distance"] = UniValue::VNUM;
     objTypes["time"] = UniValue::VNUM;
     objTypes["calories"] = UniValue::VNUM;
-    objTypes["temperature"] = UniValue::VNUM;
+    objTypes["temperature"] = UniValue::VREAL;
     objTypes["cat1"] = UniValue::VNUM;
     objTypes["cat2"] = UniValue::VNUM;
     BOOST_CHECK(obj.checkObject(objTypes));
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 }
 
 static const char *json1 =
-"[1.1,{\"key1\":\"str\",\"key2\":800,\"key3\":{\"name\":\"martian\"}}]";
+"[1.10000000,{\"key1\":\"str\",\"key2\":800,\"key3\":{\"name\":\"martian\"}}]";
 
 BOOST_AUTO_TEST_CASE(univalue_readwrite)
 {
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(univalue_readwrite)
     BOOST_CHECK(v.isArray());
     BOOST_CHECK_EQUAL(v.size(), 2);
 
-    BOOST_CHECK_EQUAL(v[0].getValStr(), "1.1");
+    BOOST_CHECK_EQUAL(v[0].getValStr(), "1.10000000");
 
     UniValue obj = v[1];
     BOOST_CHECK(obj.isObject());
