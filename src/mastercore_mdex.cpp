@@ -123,34 +123,86 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             // match found, execute trade now!
             const int64_t seller_amountForSale = pold->getAmountRemaining();
-            const int64_t seller_amountWanted = pold->getAmountDesired();
             const int64_t buyer_amountOffered = pnew->getAmountRemaining();
 
-            if (msc_debug_metadex1) file_log("$$ trading using price: %s; seller: forsale= %d, wanted= %d, buyer amount offered= %d\n",
-                xToString(sellersPrice), seller_amountForSale, seller_amountWanted, buyer_amountOffered);
+            if (msc_debug_metadex1) file_log("$$ trading using price: %s; seller: forsale=%d, desired=%d, remaining=%d, buyer amount offered=%d\n",
+                xToString(sellersPrice), pold->getAmountForSale(), pold->getAmountDesired(), pold->getAmountRemaining(), pnew->getAmountRemaining());
             if (msc_debug_metadex1) file_log("$$ old: %s\n", pold->ToString());
             if (msc_debug_metadex1) file_log("$$ new: %s\n", pnew->ToString());
 
-            int64_t seller_amountGot = seller_amountWanted;
+            ///////////////////////////
 
-            if (buyer_amountOffered < seller_amountWanted) {
-                seller_amountGot = buyer_amountOffered;
-            }
-
-            const int64_t buyer_amountLeft = buyer_amountOffered - seller_amountGot;
+            // preconditions
+            assert(0 < pold->getAmountRemaining());
+            assert(0 < pnew->getAmountRemaining());
+            assert(pnew->getProperty() != pnew->getDesProperty());
+            assert(pnew->getProperty() == pold->getDesProperty());
+            assert(pold->getProperty() == pnew->getDesProperty());
+            assert(pold->unitPrice() <= pnew->inversePrice());
+            assert(pnew->unitPrice() <= pold->inversePrice());
 
             ///////////////////////////
-            rational_t x_buyer_got = (rational_t) seller_amountGot / sellersPrice;
-            const int64_t buyer_amountGot = xToInt64(x_buyer_got, false);
 
+            // First determine how many representable (indivisible) tokens Alice can
+            // purchase from Bob, using Bob's unit price
+            rational_t rCouldBuy = pnew->getAmountRemaining() * pold->inversePrice();
+
+            // This implies rounding down, since rounding up is impossible, and would
+            // require more tokens than Alice has
+            int128_t iCouldBuy = xToInt128(rCouldBuy, false);
+
+            int64_t nCouldBuy = 0;
+            if (iCouldBuy < int128_t(pold->getAmountRemaining())) {
+                nCouldBuy = iCouldBuy.convert_to<int64_t>();
+            } else {
+                nCouldBuy = pold->getAmountRemaining();
+            }
+
+            if (nCouldBuy == 0) {
+                if (msc_debug_metadex1) file_log(
+                        "-- buyer has not enough tokens for sale to purchase one unit!\n");
+                ++offerIt;
+                continue;
+            }
+
+            // If the amount Alice would have to pay to buy Bob's tokens at his price
+            // is fractional, always round UP the amount Alice has to pay
+            rational_t rWouldPay = nCouldBuy * pold->unitPrice();
+
+            // This will always be better for Bob. Rounding in the other direction
+            // will always be impossible, because ot would violate Bob's accepted price
+            int64_t nWouldPay = xToInt64(rWouldPay, true);
+
+            // If the resulting adjusted unit price is higher than Alice' price, the
+            // orders shall not execute, and no representable fill is made
+            const rational_t xEffectivePrice(nWouldPay, nCouldBuy);
+
+            if (xEffectivePrice > pnew->inversePrice()) {
+                if (msc_debug_metadex1) file_log(
+                        "-- effective price is too expensive: %s\n", xToString(xEffectivePrice));
+                ++offerIt;
+                continue;
+            }
+
+            const int64_t buyer_amountGot = nCouldBuy;
+            const int64_t seller_amountGot = nWouldPay;
+            const int64_t buyer_amountLeft = pnew->getAmountRemaining() - seller_amountGot;
             const int64_t seller_amountLeft = pold->getAmountRemaining() - buyer_amountGot;
 
             if (msc_debug_metadex1) file_log("$$ buyer_got= %d, seller_got= %d, seller_left_for_sale= %d, buyer_still_for_sale= %d\n",
                 buyer_amountGot, seller_amountGot, seller_amountLeft, buyer_amountLeft);
 
             ///////////////////////////
-            CMPMetaDEx seller_replacement = *pold;
-            seller_replacement.setAmountRemaining(seller_amountLeft, "seller_replacement");
+
+            // postconditions
+            assert(xEffectivePrice >= pold->unitPrice());
+            assert(xEffectivePrice <= pnew->inversePrice());
+            assert(0 <= seller_amountLeft);
+            assert(0 <= buyer_amountLeft);
+            assert(seller_amountForSale == seller_amountLeft + buyer_amountGot);
+            assert(buyer_amountOffered == buyer_amountLeft + seller_amountGot);
+
+            ///////////////////////////
 
             // transfer the payment property from buyer to seller
             assert(update_tally_map(pnew->getAddr(), pnew->getProperty(), -seller_amountGot, BALANCE));
@@ -162,18 +214,21 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             NewReturn = TRADED;
 
+            CMPMetaDEx seller_replacement = *pold; // < can be moved into last if block
+            seller_replacement.setAmountRemaining(seller_amountLeft, "seller_replacement");
+
             pnew->setAmountRemaining(buyer_amountLeft, "buyer");
 
             if (0 < buyer_amountLeft) {
                 NewReturn = TRADED_MOREINBUYER;
-            } else {
+            }
+
+            if (0 == buyer_amountLeft) {
                 bBuyerSatisfied = true;
             }
 
-            if (0 < seller_amountLeft) // done with all loops, update the seller, buyer is fully satisfied
-            {
+            if (0 < seller_amountLeft) {
                 NewReturn = TRADED_MOREINSELLER;
-                bBuyerSatisfied = true;
             }
 
             if (msc_debug_metadex1) file_log("==== TRADED !!! %u=%s\n", NewReturn, getTradeReturnType(NewReturn));
@@ -186,12 +241,14 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             // erase the old seller element
             pofferSet->erase(offerIt++);
 
+            // insert the updated one in place of the old
+            if (0 < seller_replacement.getAmountRemaining()) {
+                file_log("++ inserting seller_replacement: %s\n", seller_replacement.ToString());
+                pofferSet->insert(seller_replacement);
+            }
+
             if (bBuyerSatisfied) {
-                // insert the updated one in place of the old
-                if (0 < seller_replacement.getAmountRemaining()) {
-                    file_log("++ inserting seller_replacement: %s\n", seller_replacement.ToString());
-                    pofferSet->insert(seller_replacement);
-                }
+                assert(buyer_amountLeft == 0);
                 break;
             }
         } // specific price, check all properties
@@ -218,25 +275,16 @@ rational_t CMPMetaDEx::inversePrice() const
     return inversePrice;
 }
 
-int64_t CMPMetaDEx::getAmountDesired() const
-{
-    rational_t amount = getAmountRemaining() * unitPrice();
-    return xToInt64(amount, true);
-}
-
 uint64_t CMPMetaDEx::getBlockTime() const
 {
     CBlockIndex* pblockindex = chainActive[block];
     return pblockindex->GetBlockTime();
 }
 
-void CMPMetaDEx::setAmountRemaining(int64_t ar, const std::string& label)
+void CMPMetaDEx::setAmountRemaining(int64_t amount, const std::string& label)
 {
-    amount_remaining = ar;
-    file_log("setAmountRemaining(%ld %s):%s\n", ar, label, ToString());
-
-    int64_t ad = getAmountDesired();
-    file_log("setAmountDesired(%ld %s):%s\n", ad, label, ToString());
+    amount_remaining = amount;
+    file_log("update remaining amount still up for sale (%ld %s):%s\n", amount, label, ToString());
 }
 
 void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, uint8_t suba)

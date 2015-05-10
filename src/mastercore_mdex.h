@@ -105,7 +105,7 @@ public:
     unsigned int getDesProperty() const { return desired_property; }
 
     int64_t getAmountForSale() const { return amount_forsale; }
-    int64_t getAmountDesired() const;
+    int64_t getAmountDesired() const { return amount_desired; }
     int64_t getAmountRemaining() const { return amount_remaining; }
 
     void setAmountRemaining(int64_t ar, const std::string& label = "");
