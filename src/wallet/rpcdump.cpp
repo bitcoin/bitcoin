@@ -73,7 +73,7 @@ std::string DecodeDumpString(const std::string &str) {
 Value importprivkey(const Array& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
-        return Value::null;
+        return NullUniValue;
     
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
@@ -147,7 +147,7 @@ Value importprivkey(const Array& params, bool fHelp)
 Value importaddress(const Array& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
-        return Value::null;
+        return NullUniValue;
     
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
@@ -220,7 +220,7 @@ Value importaddress(const Array& params, bool fHelp)
 Value importwallet(const Array& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
-        return Value::null;
+        return NullUniValue;
     
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -324,7 +324,7 @@ Value importwallet(const Array& params, bool fHelp)
 Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
-        return Value::null;
+        return NullUniValue;
     
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -362,7 +362,7 @@ Value dumpprivkey(const Array& params, bool fHelp)
 Value dumpwallet(const Array& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
-        return Value::null;
+        return NullUniValue;
     
     if (fHelp || params.size() != 1)
         throw runtime_error(
