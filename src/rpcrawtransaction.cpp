@@ -220,7 +220,8 @@ Value gettxoutproof(const Array& params, bool fHelp)
     set<uint256> setTxids;
     uint256 oneTxid;
     Array txids = params[0].get_array();
-    BOOST_FOREACH(Value& txid, txids) {
+    for (unsigned int idx = 0; idx < txids.size(); idx++) {
+        const Value& txid = txids[idx];
         if (txid.get_str().length() != 64 || !IsHex(txid.get_str()))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid txid ")+txid.get_str());
         uint256 hash(uint256S(txid.get_str()));
@@ -446,7 +447,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     if (!DecodeHexTx(tx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
-    Object result;
+    UniValue result(UniValue::VOBJ);
     TxToJSON(tx, uint256(), result);
 
     return result;
@@ -478,7 +479,7 @@ Value decodescript(const Array& params, bool fHelp)
         );
 
     LOCK(cs_main);
-    RPCTypeCheck(params, boost::assign::list_of(str_type));
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VSTR));
 
     Object r;
     CScript script;

@@ -142,7 +142,7 @@ Object CallRPC(const string& strMethod, const Array& params)
         throw runtime_error("no response from server");
 
     // Parse reply
-    Value valReply;
+    Value valReply(UniValue::VSTR);
     if (!valReply.read(strReply))
         throw runtime_error("couldn't parse reply from server");
     const Object& reply = valReply.get_obj();

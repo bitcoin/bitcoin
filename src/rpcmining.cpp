@@ -399,7 +399,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
         if (strMode == "proposal")
         {
             const Value& dataval = find_value(oparam, "data");
-            if (dataval.type() != str_type)
+            if (dataval.isStr())
                 throw JSONRPCError(RPC_TYPE_ERROR, "Missing data String key for proposal");
 
             CBlock block;
@@ -519,7 +519,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
     UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
     pblock->nNonce = 0;
 
-    static const Array aCaps = boost::assign::list_of("proposal");
+    Array aCaps; aCaps.push_back("proposal");
 
     Array transactions;
     map<uint256, int64_t> setTxIndex;
