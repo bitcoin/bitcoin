@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
 
 static Value ValueFromString(const std::string &str)
 {
-    Value value;
-    BOOST_CHECK(value.read(str));
+    UniValue value;
+    BOOST_CHECK(value.setNumStr(str));
     return value;
 }
 
