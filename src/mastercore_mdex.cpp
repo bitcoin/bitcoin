@@ -10,8 +10,8 @@
 #include "tinyformat.h"
 #include "uint256.h"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/multiprecision/cpp_dec_float.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/rational.hpp>
 
 #include <openssl/sha.h>
 
@@ -36,7 +36,7 @@ md_PricesMap* mastercore::get_Prices(uint32_t prop)
     return (md_PricesMap*) NULL;
 }
 
-md_Set* mastercore::get_Indexes(md_PricesMap* p, XDOUBLE price)
+md_Set* mastercore::get_Indexes(md_PricesMap* p, rational_t price)
 {
     md_PricesMap::iterator it = p->find(price);
 
@@ -68,28 +68,6 @@ const std::string getTradeReturnType(MatchReturnType ret)
     }
 }
 
-static inline std::string xToString(XDOUBLE value)
-{
-    return value.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
-}
-
-static inline int64_t xToInt64(XDOUBLE value, bool fRoundUp = true)
-{
-    if (fRoundUp) value += (XDOUBLE) 0.5; // ROUND UP
-    std::string str_value = value.str(INTERNAL_PRECISION_LEN, std::ios_base::fixed);
-    std::string str_value_int_part = str_value.substr(0, str_value.find_first_of("."));
-
-    return boost::lexical_cast<int64_t>(str_value_int_part);
-}
-
-static void PriceCheck(const std::string& label, XDOUBLE left, XDOUBLE right)
-{
-    const bool bOK = (left == right);
-
-    file_log("PRICE CHECK %s: buyer = %s , inserted = %s : %s\n", label,
-        xToString(left), xToString(right), bOK ? "good" : "PROBLEM!");
-}
-
 // find the best match on the market
 // NOTE: sometimes I refer to the older order as seller & the newer order as buyer, in this trade
 // INPUT: property, desprop, desprice = of the new order being inserted; the new object being processed
@@ -114,7 +92,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
     // within the desired property map (given one property) iterate over the items looking at prices
     for (md_PricesMap::iterator priceIt = ppriceMap->begin(); priceIt != ppriceMap->end(); ++priceIt) { // check all prices
-        XDOUBLE sellersPrice = priceIt->first;
+        const rational_t sellersPrice = priceIt->first;
 
         if (msc_debug_metadex2) file_log("comparing prices: desprice %s needs to be GREATER THAN OR EQUAL TO %s\n",
             xToString(pnew->inversePrice()), xToString(sellersPrice));
@@ -162,8 +140,8 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             const int64_t buyer_amountLeft = buyer_amountOffered - seller_amountGot;
 
             ///////////////////////////
-            XDOUBLE x_buyer_got = (XDOUBLE) seller_amountGot / sellersPrice;
-            const int64_t buyer_amountGot = xToInt64(x_buyer_got);
+            rational_t x_buyer_got = (rational_t) seller_amountGot / sellersPrice;
+            const int64_t buyer_amountGot = xToInt64(x_buyer_got, false);
 
             const int64_t seller_amountLeft = pold->getAmountRemaining() - buyer_amountGot;
 
@@ -188,8 +166,6 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             if (0 < buyer_amountLeft) {
                 NewReturn = TRADED_MOREINBUYER;
-
-                PriceCheck(getTradeReturnType(NewReturn), pnew->unitPrice(), pnew->unitPrice());
             } else {
                 bBuyerSatisfied = true;
             }
@@ -198,8 +174,6 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             {
                 NewReturn = TRADED_MOREINSELLER;
                 bBuyerSatisfied = true;
-
-                PriceCheck(getTradeReturnType(NewReturn), pold->unitPrice(), seller_replacement.unitPrice());
             }
 
             if (msc_debug_metadex1) file_log("==== TRADED !!! %u=%s\n", NewReturn, getTradeReturnType(NewReturn));
@@ -230,28 +204,24 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
     return NewReturn;
 }
 
-XDOUBLE CMPMetaDEx::unitPrice() const
+rational_t CMPMetaDEx::unitPrice() const
 {
-    XDOUBLE effective_price = 0;
-
-    // I am the seller
-    if (amount_forsale) effective_price = (XDOUBLE) amount_desired / (XDOUBLE) amount_forsale; // division by 0 check
-
-    return (effective_price);
+    rational_t effectivePrice(int128_t(0));
+    if (amount_forsale) effectivePrice = rational_t(amount_desired, amount_forsale);
+    return effectivePrice;
 }
 
-XDOUBLE CMPMetaDEx::inversePrice() const
+rational_t CMPMetaDEx::inversePrice() const
 {
-    XDOUBLE inverse_price = 0;
-    if (amount_desired) inverse_price = (XDOUBLE) amount_forsale / (XDOUBLE) amount_desired;
-    return inverse_price;
+    rational_t inversePrice(int128_t(0));
+    if (amount_desired) inversePrice = rational_t(amount_forsale, amount_desired);
+    return inversePrice;
 }
 
 int64_t CMPMetaDEx::getAmountDesired() const
 {
-    XDOUBLE xStillDesired = (XDOUBLE) getAmountRemaining() * unitPrice();
-
-    return xToInt64(xStillDesired);
+    rational_t amount = getAmountRemaining() * unitPrice();
+    return xToInt64(amount, true);
 }
 
 uint64_t CMPMetaDEx::getBlockTime() const
@@ -410,7 +380,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
 
     // within the desired property map (given one property) iterate over the items
     for (md_PricesMap::iterator my_it = prices->begin(); my_it != prices->end(); ++my_it) {
-        XDOUBLE sellers_price = my_it->first;
+        rational_t sellers_price = my_it->first;
 
         if (mdex.unitPrice() != sellers_price) continue;
 
@@ -519,7 +489,7 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
         md_PricesMap& prices = my_it->second;
 
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
-            XDOUBLE price = it->first;
+            rational_t price = it->first;
             md_Set& indexes = it->second;
 
             file_log("  # Price Level: %s\n", xToString(price));
@@ -564,7 +534,7 @@ void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
         md_PricesMap& prices = my_it->second;
 
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
-            XDOUBLE price = it->first;
+            rational_t price = it->first;
             md_Set& indexes = it->second;
 
             if (bShowPriceLevel) file_log("  # Price Level: %s\n", xToString(price));
