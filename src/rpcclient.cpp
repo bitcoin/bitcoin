@@ -146,8 +146,9 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
                 jVal.setBool(false);
             else
             {
-                if (!jVal.read(strVal))
-                    throw runtime_error(string("Error parsing JSON:")+strVal);
+                if (!jVal.read(strVal) || (jVal.isNull() && strVal.size() > 0))
+                    if(!jVal.setNumStr(strVal) || jVal.isNull())
+                        throw runtime_error(string("Error parsing JSON:")+strVal);
             }
             params.push_back(jVal);
         }

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <ctype.h>
+#include <iomanip>
 #include <sstream>
 #include "univalue.h"
 
@@ -78,9 +79,11 @@ bool UniValue::setFloat(double val)
     string s;
     ostringstream oss;
 
-    oss << val;
+    oss << std::setprecision(16) << val;
 
-    return setNumStr(oss.str());
+    bool ret = setNumStr(oss.str());
+    typ = VREAL;
+    return ret;
 }
 
 bool UniValue::setStr(const string& val_)
@@ -203,6 +206,7 @@ const char *uvTypeName(UniValue::VType t)
     case UniValue::VARR: return "array";
     case UniValue::VSTR: return "string";
     case UniValue::VNUM: return "number";
+    case UniValue::VREAL: return "number";
     }
 
     // not reached
