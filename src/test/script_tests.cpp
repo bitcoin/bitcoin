@@ -583,11 +583,13 @@ BOOST_AUTO_TEST_CASE(script_build)
         Array json_good = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
         Array json_bad = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
-        BOOST_FOREACH(Value& tv, json_good) {
-            tests_good.insert(write_string(Value(tv.get_array()), true));
+        for (unsigned int idx = 0; idx < json_good.size(); idx++) {
+            const Value& tv = json_good[idx];
+            tests_good.insert(tv.get_array().write());
         }
-        BOOST_FOREACH(Value& tv, json_bad) {
-            tests_bad.insert(write_string(Value(tv.get_array()), true));
+        for (unsigned int idx = 0; idx < json_bad.size(); idx++) {
+            const Value& tv = json_bad[idx];
+            tests_bad.insert(tv.get_array().write());
         }
     }
 
@@ -596,7 +598,7 @@ BOOST_AUTO_TEST_CASE(script_build)
 
     BOOST_FOREACH(TestBuilder& test, good) {
         test.Test(true);
-        std::string str = write_string(Value(test.GetJSON()), true);
+        std::string str = test.GetJSON().write();
 #ifndef UPDATE_JSON_TESTS
         if (tests_good.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_valid test: " + test.GetComment());
@@ -606,7 +608,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     }
     BOOST_FOREACH(TestBuilder& test, bad) {
         test.Test(false);
-        std::string str = write_string(Value(test.GetJSON()), true);
+        std::string str = test.GetJSON().write();
 #ifndef UPDATE_JSON_TESTS
         if (tests_bad.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_invalid test: " + test.GetComment());

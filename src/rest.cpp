@@ -222,7 +222,7 @@ static bool rest_block(AcceptedConnection* conn,
 
     case RF_JSON: {
         Object objBlock = blockToJSON(block, pblockindex, showTxDetails);
-        string strJSON = write_string(Value(objBlock), false) + "\n";
+        string strJSON = objBlock.write() + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
     }
@@ -267,8 +267,7 @@ static bool rest_chaininfo(AcceptedConnection* conn,
     case RF_JSON: {
         Array rpcParams;
         Value chainInfoObject = getblockchaininfo(rpcParams, false);
-
-        string strJSON = write_string(chainInfoObject, false) + "\n";
+        string strJSON = chainInfoObject.write() + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
     }
@@ -319,7 +318,7 @@ static bool rest_tx(AcceptedConnection* conn,
     case RF_JSON: {
         Object objTx;
         TxToJSON(tx, hashBlock, objTx);
-        string strJSON = write_string(Value(objTx), false) + "\n";
+        string strJSON = objTx.write() + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
     }
@@ -516,7 +515,7 @@ static bool rest_getutxos(AcceptedConnection* conn,
         objGetUTXOResponse.push_back(Pair("utxos", utxos));
 
         // return json string
-        string strJSON = write_string(Value(objGetUTXOResponse), false) + "\n";
+        string strJSON = objGetUTXOResponse.write() + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
     }
