@@ -15,11 +15,24 @@ import shutil
 
 class BIP66Test(BitcoinTestFramework):
 
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+
+        if n == 1:
+          args.append("-blockversion=2")
+        elif n == 2:
+          args.append("-blockversion=3")
+
+        return args
+
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, []))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-blockversion=2"]))
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-blockversion=3"]))
+        self.nodes.append(start_node(0, self.options.tmpdir,
+                                     self.get_node_args(0)))
+        self.nodes.append(start_node(1, self.options.tmpdir,
+                                     self.get_node_args(1)))
+        self.nodes.append(start_node(2, self.options.tmpdir,
+                                     self.get_node_args(2)))
         connect_nodes(self.nodes[1], 0)
         connect_nodes(self.nodes[2], 0)
         self.is_network_split = False

@@ -19,14 +19,22 @@ class MerkleBlockTest(BitcoinTestFramework):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 4)
 
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+        args.append('-debug')
+
+        if n == 3:
+            args.append('-txindex')
+
+        return args
+
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug"]))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-txindex"]))
+        for i in range(4):
+            self.nodes.append(start_node(i, self.options.tmpdir,
+                                         self.get_node_args(i)))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)

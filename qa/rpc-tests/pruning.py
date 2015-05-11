@@ -46,16 +46,27 @@ class PruneTest(BitcoinTestFramework):
         print("Initializing test directory "+self.options.tmpdir)
         initialize_chain_clean(self.options.tmpdir, 3)
 
+    def get_node_args(self, n):
+        args = BitcoinTestFramework.get_node_args(self, n)
+        args.extend(['-debug', '-maxreceivebuffer=20000'])
+
+        if n == 0 or n == 1:
+            args.extend(['-blockmaxsize=999000', '-checkblocks=5'])
+        elif n == 2:
+            args.append('-prune=550')
+
+        return args
+
     def setup_network(self):
         self.nodes = []
         self.is_network_split = False
 
         # Create nodes 0 and 1 to mine
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=300))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=300))
-
         # Create node 2 to test pruning
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-prune=550"], timewait=300))
+        for i in range(3):
+            self.nodes.append(start_node(i, self.options.tmpdir,
+                                         self.get_node_args(i),
+                                         timewait=300))
         self.prunedir = self.options.tmpdir+"/node2/regtest/blocks/"
 
         self.address[0] = self.nodes[0].getnewaddress()
