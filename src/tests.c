@@ -1511,7 +1511,19 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
     CHECK(secp256k1_ec_pubkey_create(ctx, pubkey, &pubkeylen, privkey, (secp256k1_rand32() & 3) != 0) == 1);
     if (secp256k1_rand32() & 1) {
-        CHECK(secp256k1_ec_pubkey_decompress(ctx, pubkey, &pubkeylen));
+        unsigned char pubkey2[65] = {0};
+        int pubkey2len = pubkeylen;
+        /* Decompress into a new array */
+        CHECK(secp256k1_ec_pubkey_decompress(ctx, pubkey, pubkey2, &pubkey2len));
+        /* Check that the key was changed iff it was originally compressed */
+        if (pubkeylen == 65) {
+            CHECK(memcmp(pubkey, pubkey2, 65) == 0);
+        } else {
+            CHECK(memcmp(pubkey, pubkey2, 65) != 0);
+        }
+        /* Decompress in place */
+        CHECK(secp256k1_ec_pubkey_decompress(ctx, pubkey, pubkey, &pubkeylen));
+        CHECK(memcmp(pubkey, pubkey2, 65) == 0);
     }
     CHECK(secp256k1_ec_pubkey_verify(ctx, pubkey, pubkeylen));
 

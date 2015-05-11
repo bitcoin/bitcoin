@@ -262,18 +262,20 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
 
 /** Decompress a public key.
  * In:     ctx:       pointer to a context object (cannot be NULL)
- * In/Out: pubkey:    pointer to a 65-byte array to put the decompressed public key.
- *                    It must contain a 33-byte or 65-byte public key already (cannot be NULL)
- *         pubkeylen: pointer to the size of the public key pointed to by pubkey (cannot be NULL)
- *                    It will be updated to reflect the new size.
- * Returns: 0: pubkey was invalid
- *          1: pubkey was valid, and was replaced with its decompressed version
+ * In:     pubkeyin:  pointer to a 33-byte or 65-byte public key (cannot be NULL)
+ * In/Out: pubkeyout: pointer to a 65-byte array to put the decompressed public key (cannot be NULL)
+ *                    May alias pubkeyin.
+ *         pubkeylen: pointer to the size of the public key pointed to by pubkeyin (cannot be NULL)
+ *                    It will be updated to reflect the size of the public key in pubkeyout.
+ * Returns: 0: pubkeyin was invalid
+ *          1: pubkeyin was valid, and pubkeyout is its decompressed version
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_decompress(
   const secp256k1_context_t* ctx,
-  unsigned char *pubkey,
+  const unsigned char *pubkeyin,
+  unsigned char *pubkeyout,
   int *pubkeylen
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Export a private key in DER format.
  * In: ctx: pointer to a context object, initialized for signing (cannot be NULL)
