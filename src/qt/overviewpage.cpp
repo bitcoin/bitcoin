@@ -14,7 +14,7 @@
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
 
-#include "mastercore.h"
+#include "omnicore/omnicore.h"
 
 #include "main.h"
 

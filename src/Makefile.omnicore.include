@@ -1,44 +1,44 @@
 OMNICORE_H = \
-  mastercore.h \
-  mastercore_convert.h \
-  mastercore_dex.h \
-  mastercore_errors.h \
-  mastercore_log.h \
-  mastercore_mdex.h \
-  mastercore_parse_string.h \
-  mastercore_persistence.h \
-  mastercore_rpc.h \
-  mastercore_script.h \
-  mastercore_sp.h \
-  mastercore_tx.h \
-  mastercore_version.h \
-  omnicore_encoding.h \
-  omnicore_createpayload.h \
-  omnicore_pending.h \
-  omnicore_rpctx.h \
-  omnicore_utils.h
+  omnicore/convert.h \
+  omnicore/createpayload.h \
+  omnicore/dex.h \
+  omnicore/encoding.h \
+  omnicore/errors.h \
+  omnicore/log.h \
+  omnicore/mdex.h \
+  omnicore/omnicore.h \
+  omnicore/parse_string.h \
+  omnicore/pending.h \
+  omnicore/persistence.h \
+  omnicore/rpc.h \
+  omnicore/rpctx.h \
+  omnicore/script.h \
+  omnicore/sp.h \
+  omnicore/tx.h \
+  omnicore/utils.h \
+  omnicore/version.h
 
 OMNICORE_CPP = \
-  mastercore.cpp \
-  mastercore_convert.cpp \
-  mastercore_dex.cpp \
-  mastercore_log.cpp \
-  mastercore_mdex.cpp \
-  mastercore_parse_string.cpp \
-  mastercore_persistence.cpp \
-  mastercore_rpc.cpp \
-  mastercore_script.cpp \
-  mastercore_sp.cpp \
-  mastercore_tx.cpp \
-  mastercore_version.cpp \
-  omnicore_encoding.cpp \
-  omnicore_createpayload.cpp \
-  omnicore_pending.cpp \
-  omnicore_rpctx.cpp \
-  omnicore_utils.cpp
+  omnicore/convert.cpp \
+  omnicore/createpayload.cpp \
+  omnicore/dex.cpp \
+  omnicore/encoding.cpp \
+  omnicore/log.cpp \
+  omnicore/mdex.cpp \
+  omnicore/omnicore.cpp \
+  omnicore/parse_string.cpp \
+  omnicore/pending.cpp \
+  omnicore/persistence.cpp \
+  omnicore/rpc.cpp \
+  omnicore/rpctx.cpp \
+  omnicore/script.cpp \
+  omnicore/sp.cpp \
+  omnicore/tx.cpp \
+  omnicore/utils.cpp \
+  omnicore/version.cpp
 
 libbitcoin_server_a_SOURCES += \
   $(OMNICORE_CPP) \
   $(OMNICORE_H)
 
-libbitcoin_server_a-mastercore_version.$(OBJEXT): obj/build.h # build info
+libbitcoin_server_a-omnicore/version.$(OBJEXT): obj/build.h # build info

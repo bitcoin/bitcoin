@@ -1,15 +1,15 @@
 OMNICORE_TEST_H =
 
 OMNICORE_TEST_CPP = \
-  test/mastercore_create_payload_tests.cpp \
-  test/mastercore_encoding_c_tests.cpp \
-  test/mastercore_obfuscation_tests.cpp \
-  test/mastercore_rounduint64_tests.cpp \
-  test/mastercore_script_dust_tests.cpp \
-  test/mastercore_script_extraction_tests.cpp \
-  test/mastercore_script_solver_tests.cpp \
-  test/mastercore_strtoint64_tests.cpp \
-  test/mastercore_swapbyteorder_tests.cpp
+  omnicore/test/create_payload_tests.cpp \
+  omnicore/test/encoding_c_tests.cpp \
+  omnicore/test/obfuscation_tests.cpp \
+  omnicore/test/rounduint64_tests.cpp \
+  omnicore/test/script_dust_tests.cpp \
+  omnicore/test/script_extraction_tests.cpp \
+  omnicore/test/script_solver_tests.cpp \
+  omnicore/test/strtoint64_tests.cpp \
+  omnicore/test/swapbyteorder_tests.cpp
 
 BITCOIN_TESTS += \
   $(OMNICORE_TEST_CPP) \

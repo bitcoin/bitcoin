@@ -7,7 +7,7 @@
 #include "walletmodel.h"
 #include "guiutil.h"
 
-#include "mastercore.h"
+#include "omnicore/omnicore.h"
 
 #include "amount.h"
 #include "sync.h"

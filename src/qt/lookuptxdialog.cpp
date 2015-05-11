@@ -5,8 +5,8 @@
 #include "lookuptxdialog.h"
 #include "ui_lookuptxdialog.h"
 
-#include "mastercore_errors.h"
-#include "mastercore_rpc.h"
+#include "omnicore/errors.h"
+#include "omnicore/rpc.h"
 
 #include "uint256.h"
 
