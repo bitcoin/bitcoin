@@ -197,6 +197,9 @@ static bool rest_block(AcceptedConnection* conn,
             throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
 
         pblockindex = mapBlockIndex[hash];
+        if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0)
+            throw RESTERR(HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
+
         if (!ReadBlockFromDisk(block, pblockindex))
             throw RESTERR(HTTP_NOT_FOUND, hashStr + " not found");
     }
