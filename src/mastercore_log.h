@@ -1,5 +1,5 @@
-#ifndef MASTERCORE_LOG_H
-#define MASTERCORE_LOG_H
+#ifndef OMNICORE_LOG_H
+#define OMNICORE_LOG_H
 
 #include "util.h"
 #include "tinyformat.h"
@@ -81,4 +81,5 @@ TINYFORMAT_FOREACH_ARGNUM(MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC)
 
 #undef MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC
 
-#endif // MASTERCORE_LOG_H
+        
+#endif // OMNICORE_LOG_H

@@ -5,7 +5,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(mastercore_obfuscation_tests)
+BOOST_AUTO_TEST_SUITE(omnicore_obfuscation_tests)
 
 BOOST_AUTO_TEST_CASE(prepare_obfuscated_hashes)
 {
@@ -22,5 +22,6 @@ BOOST_AUTO_TEST_CASE(prepare_obfuscated_hashes)
     BOOST_CHECK_EQUAL(vstrObfuscatedHashes[4],
             "AA3F890D32864BEA31EE9BD57D2247D8F8CE07B5ABAED9372F0B8999D28DB963");
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

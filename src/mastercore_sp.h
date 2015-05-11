@@ -1,5 +1,5 @@
-#ifndef _MASTERCOIN_SP
-#define _MASTERCOIN_SP 1
+#ifndef OMNICORE_SP_H
+#define OMNICORE_SP_H
 
 #include "mastercore.h"
 #include "mastercore_log.h"
@@ -502,5 +502,5 @@ unsigned int eraseExpiredCrowdsale(CBlockIndex const * pBlockIndex);
 void dumpCrowdsaleInfo(const string &address, CMPCrowd &crowd, bool bExpired = false);
 }
 
-#endif // _MASTERCOIN_SP
 
+#endif // OMNICORE_SP_H

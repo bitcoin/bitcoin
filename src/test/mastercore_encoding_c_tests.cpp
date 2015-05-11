@@ -94,4 +94,5 @@ BOOST_AUTO_TEST_CASE(class_c_with_empty_payload)
     nMaxDatacarrierBytes = nMaxDatacarrierBytesOriginal;
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()

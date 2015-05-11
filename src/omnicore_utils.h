@@ -8,4 +8,5 @@
 /** Generates hashes used for obfuscation via ToUpper(HexStr(SHA256(x))). */
 void PrepareObfuscatedHashes(const std::string& strSeed, std::string(&vstrHashes)[1+MAX_SHA256_OBFUSCATION_TIMES]);
 
+
 #endif // OMNICORE_UTILS_H

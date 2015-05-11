@@ -34,4 +34,5 @@ const std::string BuildDate();
 //! Returns commit identifier, if available
 const std::string BuildCommit();
 
+
 #endif // OMNICORE_VERSION_H

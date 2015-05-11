@@ -10,7 +10,7 @@
 /** To be set in the tests. */
 extern unsigned nMaxDatacarrierBytes;
 
-BOOST_AUTO_TEST_SUITE(mastercore_script_solver_tests)
+BOOST_AUTO_TEST_SUITE(omnicore_script_solver_tests)
 
 /** Checks whether the custom solver is unaffected by user settings. */
 static void CheckOutputType(const CScript& script, txnouttype outTypeExpected)
@@ -82,5 +82,6 @@ BOOST_AUTO_TEST_CASE(solve_op_return_test)
     // Restore original data carrier size settings
     nMaxDatacarrierBytes = nMaxDatacarrierBytesOriginal;
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

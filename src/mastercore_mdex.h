@@ -1,5 +1,5 @@
-#ifndef MASTERCORE_MDEX_H
-#define MASTERCORE_MDEX_H
+#ifndef OMNICORE_MDEX_H
+#define OMNICORE_MDEX_H
 
 #include "tinyformat.h"
 #include "uint256.h"
@@ -179,4 +179,5 @@ void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
 bool MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale = 0);
 }
 
-#endif // MASTERCORE_MDEX_H
+
+#endif // OMNICORE_MDEX_H

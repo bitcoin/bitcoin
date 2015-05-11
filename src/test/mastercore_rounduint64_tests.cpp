@@ -6,16 +6,16 @@
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(mastercore_rounduint64_tests)
+BOOST_AUTO_TEST_SUITE(omnicore_rounduint64_tests)
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_simple)
+BOOST_AUTO_TEST_CASE(rounduint64_simple)
 {
     const int64_t COIN = 100000000;
     double unit_price = 23.45678923999;
     BOOST_CHECK_EQUAL(2345678924U, rounduint64(COIN * unit_price));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_whole_units)
+BOOST_AUTO_TEST_CASE(rounduint64_whole_units)
 {
     BOOST_CHECK_EQUAL(0U, rounduint64(0.0));
     BOOST_CHECK_EQUAL(1U, rounduint64(1.0));
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_whole_units)
     BOOST_CHECK_EQUAL(3U, rounduint64(3.0));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_round_below_point_5)
+BOOST_AUTO_TEST_CASE(rounduint64_round_below_point_5)
 {    
     BOOST_CHECK_EQUAL(0U, rounduint64(0.49999999));
     BOOST_CHECK_EQUAL(1U, rounduint64(1.49999999));
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_round_below_point_5)
     BOOST_CHECK_EQUAL(3U, rounduint64(3.49999999));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_round_point_5)
+BOOST_AUTO_TEST_CASE(rounduint64_round_point_5)
 {    
     BOOST_CHECK_EQUAL(1U, rounduint64(0.5));
     BOOST_CHECK_EQUAL(2U, rounduint64(1.5));
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_round_point_5)
     BOOST_CHECK_EQUAL(4U, rounduint64(3.5));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_round_over_point_5)
+BOOST_AUTO_TEST_CASE(rounduint64_round_over_point_5)
 {    
     BOOST_CHECK_EQUAL(1U, rounduint64(0.50000001));
     BOOST_CHECK_EQUAL(2U, rounduint64(1.50000001));
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_round_over_point_5)
     BOOST_CHECK_EQUAL(4U, rounduint64(3.50000001));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_limits)
+BOOST_AUTO_TEST_CASE(rounduint64_limits)
 {    
     BOOST_CHECK_EQUAL( // 1 byte signed
             127U,
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_limits)
             rounduint64(18446744073709551615.0L));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_types)
+BOOST_AUTO_TEST_CASE(rounduint64_types)
 {
     BOOST_CHECK_EQUAL(
             rounduint64(static_cast<float>(1.23456789)),
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_types)
             rounduint64(static_cast<long double>(1.23456789)));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_promotion)
+BOOST_AUTO_TEST_CASE(rounduint64_promotion)
 {
     BOOST_CHECK_EQUAL(42U, rounduint64(static_cast<int8_t>(42)));
     BOOST_CHECK_EQUAL(42U, rounduint64(static_cast<uint8_t>(42)));
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_promotion)
     BOOST_CHECK_EQUAL(42U, rounduint64(static_cast<long double>(42)));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_absolute)
+BOOST_AUTO_TEST_CASE(rounduint64_absolute)
 {
     BOOST_CHECK_EQUAL(
             rounduint64(-128.0f),
@@ -134,10 +134,11 @@ BOOST_AUTO_TEST_CASE(mastercore_rounduint64_absolute)
             rounduint64(9223372036854775807.0L));
 }
 
-BOOST_AUTO_TEST_CASE(mastercore_rounduint64_special_cases)
+BOOST_AUTO_TEST_CASE(rounduint64_special_cases)
 {    
     BOOST_CHECK_EQUAL(0U, rounduint64(static_cast<double>(0.49999999999999994)));
     BOOST_CHECK_EQUAL(2147483648U, rounduint64(static_cast<int32_t>(-2147483647-1)));
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

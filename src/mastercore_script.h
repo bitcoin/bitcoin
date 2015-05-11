@@ -1,5 +1,5 @@
-#ifndef MASTERCOIN_SCRIPT_H
-#define MASTERCOIN_SCRIPT_H
+#ifndef OMNICORE_SCRIPT_H
+#define OMNICORE_SCRIPT_H
 
 #include <string>
 #include <vector>
@@ -20,4 +20,5 @@ bool GetScriptPushes(const CScript& script, std::vector<std::string>& vstrRet, b
 /** Returns public keys or hashes from scriptPubKey, for standard transaction types. */
 bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet);
 
-#endif // MASTERCOIN_SCRIPT_H
+
+#endif // OMNICORE_SCRIPT_H

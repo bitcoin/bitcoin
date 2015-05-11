@@ -22,10 +22,5 @@ std::vector<unsigned char> CreatePayload_Revoke(uint32_t propertyId, uint64_t am
 std::vector<unsigned char> CreatePayload_ChangeIssuer(uint32_t propertyId);
 std::vector<unsigned char> CreatePayload_MetaDExTrade(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired, uint8_t action);
 
+
 #endif // OMNICORE_CREATEPAYLOAD_H
-
-
-
-
-
-

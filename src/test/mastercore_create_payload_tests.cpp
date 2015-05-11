@@ -328,4 +328,5 @@ BOOST_AUTO_TEST_CASE(payload_change_property_manager)
     BOOST_CHECK_EQUAL(HexStr(vch), "000000460000000d");
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()

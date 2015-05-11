@@ -1,5 +1,5 @@
-#ifndef _MASTERCOIN_DEX
-#define _MASTERCOIN_DEX 1
+#ifndef OMNICORE_DEX_H
+#define OMNICORE_DEX_H 1
 
 #include "mastercore.h"
 #include "mastercore_log.h"
@@ -207,5 +207,5 @@ int DEx_acceptDestroy(const string &buyer, const string &seller, int, bool bForc
 int DEx_payment(uint256 txid, unsigned int vout, string seller, string buyer, uint64_t BTC_paid, int blockNow, uint64_t *nAmended = NULL);
 }
 
-#endif // #ifndef _MASTERCOIN_DEX
 
+#endif // OMNICORE_DEX_H

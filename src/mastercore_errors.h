@@ -1,5 +1,5 @@
-#ifndef _MASTERCOIN_ERRORS
-#define _MASTERCOIN_ERRORS 1
+#ifndef OMNICORE_ERRORS_H
+#define OMNICORE_ERRORS_H
 
 #include <string>
 
@@ -83,4 +83,5 @@ inline std::string error_str(int ec) {
   return ec_str;
 }
 
-#endif // _MASTERCOIN_ERRORS
+
+#endif // OMNICORE_ERRORS_H

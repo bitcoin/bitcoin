@@ -6,9 +6,9 @@
 
 using namespace mastercore;
 
-BOOST_AUTO_TEST_SUITE(mastercore_swapbyteorder_tests)
+BOOST_AUTO_TEST_SUITE(omnicore_swapbyteorder_tests)
 
-BOOST_AUTO_TEST_CASE(mastercore_swapbyteorder_cycle)
+BOOST_AUTO_TEST_CASE(swapbyteorder_cycle)
 {
     uint16_t a1 = 41959U, a2 = a1;
 
@@ -26,5 +26,6 @@ BOOST_AUTO_TEST_CASE(mastercore_swapbyteorder_cycle)
     swapByteOrder64(c2);
     BOOST_CHECK_EQUAL(c1, c2); // Should be equal, swapping twice brings us back to the original value
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

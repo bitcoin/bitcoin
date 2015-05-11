@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(mastercore_script_extraction_tests)
+BOOST_AUTO_TEST_SUITE(omnicore_script_extraction_tests)
 
 BOOST_AUTO_TEST_CASE(extract_pubkey_test)
 {
@@ -214,5 +214,6 @@ BOOST_AUTO_TEST_CASE(extract_anypush_test)
         BOOST_CHECK_EQUAL(vstrSolutions[n], HexStr(vvchPayloads[n]));
     }
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

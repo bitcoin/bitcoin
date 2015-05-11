@@ -1,5 +1,5 @@
-#ifndef _MASTERCORE_RPC
-#define _MASTERCORE_RPC
+#ifndef OMNICORE_RPC_H
+#define OMNICORE_RPC_H
 
 #include "json/json_spirit_value.h"
 
@@ -9,5 +9,5 @@ class uint256;
 
 int populateRPCTransactionObject(const uint256& txid, json_spirit::Object* txobj, std::string filterAddress);
 
-#endif // #ifndef _MASTERCORE_RPC
 
+#endif // OMNICORE_RPC_H
