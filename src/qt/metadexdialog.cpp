@@ -94,9 +94,9 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
         ui->buyList->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     #endif
     ui->buyList->setShowGrid(false);
-    ui->buyList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->buyList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->buyList->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->buyList->setSelectionMode(QAbstractItemView::NoSelection);
+    ui->buyList->setFocusPolicy(Qt::NoFocus);
     ui->buyList->setAlternatingRowColors(true);
     ui->sellList->verticalHeader()->setVisible(false);
     #if QT_VERSION < 0x050000
@@ -105,9 +105,9 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
         ui->sellList->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     #endif
     ui->sellList->setShowGrid(false);
-    ui->sellList->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->sellList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->sellList->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->sellList->setSelectionMode(QAbstractItemView::NoSelection);
+    ui->sellList->setFocusPolicy(Qt::NoFocus);
     ui->sellList->setAlternatingRowColors(true);
 
     ui->pendingLabel->setVisible(false);
