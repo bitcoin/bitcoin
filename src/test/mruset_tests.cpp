@@ -12,9 +12,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#define NUM_TESTS 16
-#define MAX_SIZE 100
-
 using namespace std;
 
 BOOST_FIXTURE_TEST_SUITE(mruset_tests, BasicTestingSetup)
@@ -76,6 +73,55 @@ BOOST_AUTO_TEST_CASE(mruset_test)
             }
         }
     }
+}
+
+// Test erase functionality
+BOOST_AUTO_TEST_CASE(mruset_erase)
+{
+    static const int MAX_SIZE=100;
+
+    mruset<int> mru(MAX_SIZE);
+    for (int n=0; n<MAX_SIZE; n++)
+    {
+        mru.insert(n);
+    }
+    // Remove elevenses:
+    int nRemoved = 0;
+    for (int n=11; n<MAX_SIZE; n+=11)
+    {
+        mru.erase(n);
+        ++nRemoved;
+    }
+    BOOST_CHECK(mru.size() == MAX_SIZE-nRemoved);
+    BOOST_CHECK(mru.find(0) != mru.end());
+    BOOST_CHECK(mru.find(10) != mru.end());
+    BOOST_CHECK(mru.find(11) == mru.end());
+    BOOST_CHECK(mru.find(12) != mru.end());
+    BOOST_CHECK(mru.find(98) != mru.end());
+    BOOST_CHECK(mru.find(99) == mru.end());
+
+    // Re-insert elevenses:
+    for (int n=11; n<MAX_SIZE; n+=11)
+    {
+        mru.insert(n);
+    }
+    BOOST_CHECK(mru.size() == MAX_SIZE);
+
+    // Overflow by 20.
+    // Should evict 0-10 and 12-20, should not evict 11 (it was just inserted)
+    for (int n = 0; n < 20; n++)
+    {
+        mru.insert(MAX_SIZE+n);
+    }
+    BOOST_CHECK(mru.size() == MAX_SIZE);
+    BOOST_CHECK(mru.find(0) == mru.end());
+    BOOST_CHECK(mru.find(1) == mru.end());
+    BOOST_CHECK(mru.find(10) == mru.end());
+    BOOST_CHECK(mru.find(11) != mru.end());
+    BOOST_CHECK(mru.find(12) == mru.end());
+    BOOST_CHECK(mru.find(20) == mru.end());
+    BOOST_CHECK(mru.find(21) != mru.end());
+    BOOST_CHECK(mru.find(MAX_SIZE) != mru.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

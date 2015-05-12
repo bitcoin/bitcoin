@@ -86,6 +86,8 @@ static const unsigned int BLOCK_DOWNLOAD_WINDOW = 1024;
 static const unsigned int DATABASE_WRITE_INTERVAL = 3600;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
+/** When re-organizing away from a chain, put at most this many block's transactions in memory pool */
+static const unsigned int MAX_REORG_TX_RESURRECT = 6;
 
 /** "reject" message codes */
 static const unsigned char REJECT_MALFORMED = 0x01;

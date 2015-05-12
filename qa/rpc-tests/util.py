@@ -33,7 +33,7 @@ def check_json_precision():
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
-def sync_blocks(rpc_connections):
+def sync_blocks(rpc_connections, max_wait=10):
     """
     Wait until everybody has the same block count
     """
@@ -42,8 +42,11 @@ def sync_blocks(rpc_connections):
         if counts == [ counts[0] ]*len(counts):
             break
         time.sleep(1)
+        max_wait = max_wait-1
+        if max_wait <= 0:
+            raise RuntimeError("sync_blocks: failed to sync")
 
-def sync_mempools(rpc_connections):
+def sync_mempools(rpc_connections, max_wait=10):
     """
     Wait until everybody has the same transactions in their memory
     pools
@@ -57,6 +60,9 @@ def sync_mempools(rpc_connections):
         if num_match == len(rpc_connections):
             break
         time.sleep(1)
+        max_wait = max_wait-1
+        if max_wait <= 0:
+            raise RuntimeError("sync_mempools: failed to sync")
 
 bitcoind_processes = {}
 

@@ -140,6 +140,8 @@ class BitcoinTestFramework(object):
         if not self.options.nocleanup and not self.options.noshutdown:
             print("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
+        else:
+            print("Test directory was "+self.options.tmpdir)
 
         if success:
             print("Tests successful")

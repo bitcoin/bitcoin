@@ -1359,6 +1359,8 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime)
     BOOST_FOREACH(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
     {
         CWalletTx& wtx = *item.second;
+        if (!mempool.exists(wtx.GetHash())) // If it dropped out of mempool, try to put it back in:
+            wtx.AcceptToMemoryPool(false, true);
         if (wtx.RelayWalletTransaction())
             result.push_back(wtx.GetHash());
     }
@@ -2750,9 +2752,21 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
+bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee) const
 {
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
+    bool fMissingInputs;
+    bool fResult = ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, &fMissingInputs, fRejectAbsurdFee);
+    if (!fResult)
+    {
+        string strErr = strprintf("%s: transaction %s not accepted to mempool ",
+                                  __func__, GetHash().ToString());
+        if (fMissingInputs)
+            strErr += "(missing inputs) ";
+        if (state.IsError() || state.IsInvalid())
+            strErr += state.GetRejectReason();
+        LogPrintf("%s\n", strErr);
+    }
+    return fResult;
 }
 
