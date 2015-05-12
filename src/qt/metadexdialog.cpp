@@ -192,14 +192,68 @@ void MetaDExDialog::SwitchMarket()
     FullRefresh();
 }
 
+/**
+ * When a row on the buy side is clicked, populate the sell fields to allow easy selling into the offer accordingly
+ */
 void MetaDExDialog::buyClicked(int row, int col)
 {
-printf("clickedbuyoffer\n");
+    // Populate the sell price field with the price clicked
+    QTableWidgetItem* priceCell = ui->buyList->item(row,2);
+    ui->sellPriceLE->setText(priceCell->text());
+
+    // If the cheapest price is not chosen, make the assumption that user wants to sell down to that price point
+    if (row != 0) {
+        int64_t totalAmount = 0;
+        bool divisible = isPropertyDivisible(global_metadex_market);
+        for (int i = 0; i <= row; i++) {
+            QTableWidgetItem* amountCell = ui->buyList->item(i,1);
+            int64_t amount = StrToInt64(amountCell->text().toStdString(), divisible);
+            totalAmount += amount;
+        }
+        if (divisible) {
+            ui->sellAmountLE->setText(QString::fromStdString(FormatDivisibleShortMP(totalAmount)));
+        } else {
+            ui->sellAmountLE->setText(QString::fromStdString(FormatIndivisibleMP(totalAmount)));
+        }
+    } else {
+        QTableWidgetItem* amountCell = ui->buyList->item(row,1);
+        ui->sellAmountLE->setText(amountCell->text());
+    }
+
+    // Update the total
+    recalcTotal(false);
 }
 
+/**
+ * When a row on the sell side is clicked, populate the buy fields to allow easy buying into the offer accordingly
+ */
 void MetaDExDialog::sellClicked(int row, int col)
 {
-printf("clickedselloffer\n");
+    // Populate the buy price field with the price clicked
+    QTableWidgetItem* priceCell = ui->sellList->item(row,0);
+    ui->buyPriceLE->setText(priceCell->text());
+
+    // If the cheapest price is not chosen, make the assumption that user wants to buy all available up to that price point
+    if (row != 0) {
+        int64_t totalAmount = 0;
+        bool divisible = isPropertyDivisible(global_metadex_market);
+        for (int i = 0; i <= row; i++) {
+            QTableWidgetItem* amountCell = ui->sellList->item(i,1);
+            int64_t amount = StrToInt64(amountCell->text().toStdString(), divisible);
+            totalAmount += amount;
+        }
+        if (divisible) {
+            ui->buyAmountLE->setText(QString::fromStdString(FormatDivisibleShortMP(totalAmount)));
+        } else {
+            ui->buyAmountLE->setText(QString::fromStdString(FormatIndivisibleMP(totalAmount)));
+        }
+    } else {
+        QTableWidgetItem* amountCell = ui->sellList->item(row,1);
+        ui->buyAmountLE->setText(amountCell->text());
+    }
+
+    // Update the total
+    recalcTotal(true);
 }
 
 // This function adds a row to the buy or sell offer list
