@@ -12,6 +12,11 @@ namespace mastercore
     void PopulateSimpleDialog(const std::string& content, const std::string& title, const std::string& tooltip);
 
     /**
+     * Truncates a string at n digits and adds "..." to indicate that display is incomplete
+     */
+    std::string TruncateString(const std::string& inputStr, unsigned int length);
+
+    /**
     * Strips trailing zeros from a string containing a divisible value
     */
     std::string StripTrailingZeros(const std::string& inputStr);

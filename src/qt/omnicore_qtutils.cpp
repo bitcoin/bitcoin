@@ -81,6 +81,19 @@ std::string StripTrailingZeros(const std::string& inputStr)
 }
 
 /**
+ * Truncates a string at n digits and adds "..." to indicate that display is incomplete
+ */
+std::string TruncateString(const std::string& inputStr, unsigned int length)
+{
+    if (inputStr.empty()) return "";
+    std::string outputStr = inputStr;
+    if (length > 0 && inputStr.length() > length) {
+        outputStr = inputStr.substr(0, length) + "...";
+    }
+    return outputStr;
+}
+
+/**
  * Variable length find and replace.  Find all iterations of findText within inputStr and replace them
  * with replaceText.
  */
