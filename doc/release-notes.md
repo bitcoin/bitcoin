@@ -46,9 +46,13 @@ This does not affect wallet forward or backward compatibility.
 Notable changes
 ===============
 
-This is a minor release and hence there are no notable changes.
-For the notable changes in 0.10, refer to the release notes for the
-0.10.0 release at https://github.com/bitcoin/bitcoin/blob/v0.10.0/doc/release-notes.md
+This fixes a serious problem on Windows with usernames that have non-ASCII
+characters (https://github.com/bitcoin/bitcoin/issues/6078).
+
+For other platforms there are no notable changes.
+
+For the notable changes in 0.10, refer to the release notes
+at https://github.com/bitcoin/bitcoin/blob/v0.10.0/doc/release-notes.md
 
 0.10.2 Change log
 =================
@@ -56,57 +60,27 @@ For the notable changes in 0.10, refer to the release notes for the
 Detailed release notes follow. This overview includes changes that affect external
 behavior, not code moves, refactors or string updates.
 
-RPC:
-
-Block (database) and transaction handling:
-
-P2P protocol and network code:
-
-Validation:
-
-Build system:
-
 Wallet:
-
-GUI:
-
-Tests:
+- `824c011` fix boost::get usage with boost 1.58
 
 Miscellaneous:
+- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
+- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Alex Morcos
 - Cory Fields
-- dexX7
-- fsb4000
-- Gavin Andresen
 - Gregory Maxwell
-- Ivan Pustogarov
 - Jonas Schnelli
-- Matt Corallo
-- mrbandrews
-- Pieter Wuille
-- Ruben de Vries
-- Suhas Daftuar
 - Wladimir J. van der Laan
 
 And all those who contributed additional code review and/or security research:
-- 21E14
-- Alison Kendler
-- Aviv Zohar
-- Ethan Heilman
-- Evil-Knievel
-- fanquake
-- Jeff Garzik
-- Jonas Nick
-- Luke Dashjr
-- Patrick Strateman
-- Philip Kaufmann
-- Sergio Demian Lerner
-- Sharon Goldberg
+
+- dexX7
+- Pieter Wuille
+- vayvanne
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
