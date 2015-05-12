@@ -399,6 +399,10 @@
         <translation>Покажи списък с използваните адреси и имена.</translation>
     </message>
     <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Отворете биткойн: URI  или заявка за плащане</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Налични команди</translation>
     </message>
@@ -457,6 +461,10 @@
     <message>
         <source>Up to date</source>
         <translation>Синхронизиран</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Обслужени %n блокове от историята с транзакции.</numerusform><numerusform>Обслужени %n блокове от историята с транзакции.</numerusform></translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -523,6 +531,10 @@ Address: %4
     <message>
         <source>Fee:</source>
         <translation>Такса:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Прах:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -617,6 +629,10 @@ Address: %4
         <translation>Копиране на приоритет</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Копирай прахта:</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation>Копирай рестото</translation>
     </message>
@@ -671,6 +687,10 @@ Address: %4
     <message>
         <source>no</source>
         <translation>не</translation>
+    </message>
+    <message>
+        <source>This means a fee of at least %1 per kB is required.</source>
+        <translation>Това означава че се изисква такса от поне %1 на килобайт.</translation>
     </message>
     <message>
         <source>Can vary +/- 1 byte per input.</source>
@@ -875,8 +895,20 @@ Address: %4
         <translation>Мегабайта</translation>
     </message>
     <message>
+        <source>Accept connections from outside</source>
+        <translation>Приемай връзки отвън</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Позволи входящите връзки</translation>
+    </message>
+    <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>IP адрес на прокси (напр. за IPv4: 127.0.0.1 / за IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Third party transaction URLs</source>
+        <translation>URL адреси на трети страни</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -971,6 +1003,10 @@ Address: %4
         <translation>Изберете единиците, показвани по подразбиране в интерфейса.</translation>
     </message>
     <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation>Дали да покаже възможностите за контрол на монетите или не.</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>ОК</translation>
     </message>
@@ -1018,6 +1054,10 @@ Address: %4
         <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
+        <source>Watch-only:</source>
+        <translation>В наблюдателен режим:</translation>
+    </message>
+    <message>
         <source>Available:</source>
         <translation>Налично:</translation>
     </message>
@@ -1032,6 +1072,10 @@ Address: %4
     <message>
         <source>Immature:</source>
         <translation>Неразвит:</translation>
+    </message>
+    <message>
+        <source>Mined balance that has not yet matured</source>
+        <translation>Миниран баланс,който все още не се е развил</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1061,12 +1105,48 @@ Address: %4
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>URI handling</source>
+        <translation>Справяне с URI</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Невалиден адрес на плащане %1</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Заявката за плащане беше отхвърлена</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Мрежата от която се извършва заявката за плащане не съвпада с мрежата на клиента.</translation>
+    </message>
+    <message>
+        <source>Payment request has expired.</source>
+        <translation>Заявката за плащане е изтекла.</translation>
+    </message>
+    <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation>Заявената сума за плащане: %1 е твърде малка (счита се за отпадък)</translation>
     </message>
     <message>
+        <source>Payment request error</source>
+        <translation>Възникна грешка по време назаявката за плащане</translation>
+    </message>
+    <message>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation>Биткойн не можe да се стартира: click-to-pay handler</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>Файл за справяне със заявки</translation>
+    </message>
+    <message>
         <source>Refund from %1</source>
         <translation>Възстановяване на сума от %1</translation>
+    </message>
+    <message>
+        <source>Payment request DoS protection</source>
+        <translation>Дос защита на заявката за плащане</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -1105,6 +1185,14 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>Сума</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Въведете Биткойн адрес (например: %1)</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 ден</translation>
     </message>
     <message>
         <source>%1 h</source>
@@ -1245,6 +1333,30 @@ Address: %4
         <translation>Услуги</translation>
     </message>
     <message>
+        <source>Starting Height</source>
+        <translation>Стартова височина</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>Продължителност на връзката</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>Изпратени за последно</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>Получени за последно</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Изпратени байтове</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Получени байтове</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Време за отговор</translation>
     </message>
@@ -1324,7 +1436,31 @@ Address: %4
         <source>%1 GB</source>
         <translation>%1 Гигабайт</translation>
     </message>
-    </context>
+    <message>
+        <source>via %1</source>
+        <translation>посредством %1</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>Никога</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>Входящи</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>Изходящи</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Неизвестен</translation>
+    </message>
+    <message>
+        <source>Fetching...</source>
+        <translation>Прихващане...</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1513,6 +1649,18 @@ Address: %4
         <translation>Ако тази опция е активирана,но адресът на промяна е празен или невалиден,промяната ще бъде изпратена на новосъздаден адрес.</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Такса за транзакцията:</translation>
+    </message>
+    <message>
+        <source>Choose...</source>
+        <translation>Избери...</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Минимизирай</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>за килобайт</translation>
     </message>
@@ -1525,8 +1673,20 @@ Address: %4
         <translation>Препоръчителна:</translation>
     </message>
     <message>
+        <source>Custom:</source>
+        <translation>По избор:</translation>
+    </message>
+    <message>
         <source>Confirmation time:</source>
         <translation>Време за потвърждение:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>нормален</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>бърз</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1539,6 +1699,10 @@ Address: %4
     <message>
         <source>Clear all fields of the form.</source>
         <translation>Изчисти всички полета от формуляра.</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Прах:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1637,6 +1801,10 @@ Address: %4
         <translation>Внимание:Неизвестен адрес за промяна</translation>
     </message>
     <message>
+        <source>Copy dust</source>
+        <translation>Копирай прахта:</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>Наистина ли искате да изпратите?</translation>
     </message>
@@ -1696,10 +1864,18 @@ Address: %4
         <translation>Това е потвърдена транзакция.</translation>
     </message>
     <message>
+        <source>This is an unverified payment request.</source>
+        <translation>Това е непотвърдена заявка за плащане.</translation>
+    </message>
+    <message>
         <source>Pay To:</source>
         <translation>Плащане на:</translation>
     </message>
-    </context>
+    <message>
+        <source>Memo:</source>
+        <translation>Бележка:</translation>
+    </message>
+</context>
 <context>
     <name>ShutdownWindow</name>
     <message>
@@ -2291,12 +2467,28 @@ Address: %4
         <translation>Внимание: -paytxfee има голяма стойност! Това е таксата за транзакциите, която ще платите ако направите транзакция.</translation>
     </message>
     <message>
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Сложете в бял списък пиъри,свързващи се от дадената интернет маска или айпи адрес.Може да бъде заложено неколкократно.</translation>
+    </message>
+    <message>
         <source>(default: 1)</source>
         <translation>(по подразбиране 1)</translation>
     </message>
     <message>
+        <source>&lt;category&gt; can be:</source>
+        <translation>&lt;category&gt; може да бъде:</translation>
+    </message>
+    <message>
         <source>Connection options:</source>
         <translation>Настройки на връзката:</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the block database now?</source>
+        <translation>Желаете ли да пресъздадете базата данни с блокове сега?</translation>
+    </message>
+    <message>
+        <source>Error initializing block database</source>
+        <translation>Грешка в пускането на базата данни с блокове</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -2321,6 +2513,14 @@ Address: %4
     <message>
         <source>Wallet options:</source>
         <translation>Настройки на портфейла:</translation>
+    </message>
+    <message>
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Заложете броя на нишки за генерация на монети ако е включено(-1 = всички ядра, по подразбиране: %d)</translation>
+    </message>
+    <message>
+        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Внимание: -maxtxfee има много висока стойност! Толкова високи такси могат да бъдат заплатени на една транзакция.</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -2417,6 +2617,14 @@ Address: %4
     <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Назовете конфигурационен файл(по подразбиране %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Задайте време на изключване при проблеми със свързването в милисекунди(минимум:1, по подразбиране %d)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>Задайте pid  файл(по подразбиране: %s)</translation>
     </message>
     <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>

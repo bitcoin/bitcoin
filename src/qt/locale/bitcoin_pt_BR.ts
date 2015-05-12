@@ -1272,6 +1272,10 @@ Endereço: %4</translation>
         <translation>Reembolso de %1</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Pedido de pagamento %1 é muito grande (%2 bytes, permitido %3 bytes).</translation>
+    </message>
+    <message>
         <source>Payment request DoS protection</source>
         <translation>Pagamento requer proteção DoS</translation>
     </message>
@@ -1837,7 +1841,7 @@ Endereço: %4</translation>
     </message>
     <message>
         <source>Choose...</source>
-        <translation>Escolha:</translation>
+        <translation>Escolher</translation>
     </message>
     <message>
         <source>Minimize</source>
