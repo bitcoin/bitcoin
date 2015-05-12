@@ -189,6 +189,10 @@ void MetaDExDialog::SwitchMarket()
 
     // with checks complete change the market to the entered property ID and perform a full refresh
     global_metadex_market = searchPropertyId;
+    ui->buyAmountLE->clear();
+    ui->buyPriceLE->clear();
+    ui->sellAmountLE->clear();
+    ui->sellPriceLE->clear();
     FullRefresh();
 }
 
