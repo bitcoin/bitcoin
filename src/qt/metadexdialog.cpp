@@ -491,13 +491,14 @@ void MetaDExDialog::recalcTotal(bool useBuyFields)
         amount = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
         price = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
     }
-    if ((0>=amount) || (0>=price)) {
+    totalPrice = amount * price;
+
+    // error and overflow detection
+    if (0 >= amount || 0 >= price || totalPrice < amount || totalPrice < price || (totalPrice / amount != price)) {
         if (useBuyFields) { ui->buyTotalLabel->setText("N/A"); return; } else { ui->sellTotalLabel->setText("N/A"); return; }
     }
-    if (divisible) { totalPrice = (amount * price)/COIN; } else { totalPrice = amount * price; }
-    if ((totalPrice < amount || totalPrice < price) || (totalPrice / amount != price)) { // overflow detection
-        if (useBuyFields) { ui->buyTotalLabel->setText("N/A"); return; } else { ui->sellTotalLabel->setText("N/A"); return; }
-    }
+
+    if (divisible) totalPrice = totalPrice/COIN;
     QString totalLabel = QString::fromStdString(FormatDivisibleMP(totalPrice));
     if (testeco) {
         if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " TMSC"); } else { ui->sellTotalLabel->setText(totalLabel + " TMSC"); }
