@@ -378,7 +378,7 @@
                </font>
               </property>
               <property name="text">
-               <string>SELL OFFERS</string>
+               <string>BUY OFFERS</string>
               </property>
              </widget>
             </item>
@@ -398,7 +398,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QTableWidget" name="sellList">
+           <widget class="QTableWidget" name="buyList">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -619,7 +619,7 @@
                </font>
               </property>
               <property name="text">
-               <string>BUY OFFERS</string>
+               <string>SELL OFFERS</string>
               </property>
              </widget>
             </item>
@@ -639,7 +639,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QTableWidget" name="buyList"/>
+           <widget class="QTableWidget" name="sellList"/>
           </item>
          </layout>
         </widget>

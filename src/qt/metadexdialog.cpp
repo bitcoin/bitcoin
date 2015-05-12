@@ -216,9 +216,6 @@ void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price
     QTableWidgetItem *priceCell = new QTableWidgetItem(QString::fromStdString(price));
     QTableWidgetItem *availableCell = new QTableWidgetItem(QString::fromStdString(available));
     QTableWidgetItem *totalCell = new QTableWidgetItem(QString::fromStdString(total));
-    priceCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-    availableCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
-    totalCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
     if(includesMe) {
         QFont font;
         font.setBold(true);
@@ -227,10 +224,16 @@ void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price
         totalCell->setFont(font);
     }
     if (useBuyList) {
-        ui->buyList->setItem(workingRow, 0, priceCell);
+        priceCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+        availableCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+        totalCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+        ui->buyList->setItem(workingRow, 0, totalCell);
         ui->buyList->setItem(workingRow, 1, availableCell);
-        ui->buyList->setItem(workingRow, 2, totalCell);
+        ui->buyList->setItem(workingRow, 2, priceCell);
     } else {
+        priceCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
+        availableCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
+        totalCell->setTextAlignment(Qt::AlignLeft + Qt::AlignVCenter);
         ui->sellList->setItem(workingRow, 0, priceCell);
         ui->sellList->setItem(workingRow, 1, availableCell);
         ui->sellList->setItem(workingRow, 2, totalCell);
@@ -248,9 +251,8 @@ void MetaDExDialog::UpdateOffers()
             if ((useBuyList) && (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC)))) continue;
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
-                XDOUBLE unitPrice;
-                XDOUBLE inversePrice;
-                string unitPriceStr;
+                std::string unitPriceStr;
+                std::string inversePriceStr;
                 int64_t available = 0, total = 0;
                 bool includesMe = false;
                 md_Set & indexes = (it->second);
@@ -269,20 +271,16 @@ void MetaDExDialog::UpdateOffers()
                             if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     }
-                    unitPrice = obj.unitPrice(); // could be set multiple times but always a same price level
-                    inversePrice = obj.inversePrice();
+                    unitPriceStr = obj.displayUnitPrice();
+                    inversePriceStr = obj.displayInversePrice();
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                     string strAvail;
                     if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
-
-                    if ((!isPropertyDivisible(global_metadex_market)) && (useBuyList)) { inversePrice = inversePrice/COIN; }
-                    if ((!isPropertyDivisible(global_metadex_market)) && (!useBuyList)) { unitPrice = unitPrice/COIN; }
-
                     if (useBuyList) {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(inversePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(inversePriceStr), strAvail, FormatDivisibleShortMP(total));
                     } else {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(unitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed)), strAvail, FormatDivisibleShortMP(total));
+                        AddRow(useBuyList, includesMe, StripTrailingZeros(unitPriceStr), strAvail, FormatDivisibleShortMP(total));
                     }
                 }
             }
@@ -344,9 +342,9 @@ void MetaDExDialog::FullRefresh()
     ui->sellTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
     ui->sellTM->setText(QString::fromStdString(primaryToken));
     ui->buyTM->setText(QString::fromStdString(primaryToken));
-    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
+    ui->buyList->setHorizontalHeaderItem(0, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));
     ui->buyList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
-    ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));
+    ui->buyList->setHorizontalHeaderItem(2, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
     ui->sellList->setHorizontalHeaderItem(0, new QTableWidgetItem("Unit Price (" + QString::fromStdString(primaryToken) + ")"));
     ui->sellList->setHorizontalHeaderItem(1, new QTableWidgetItem("Total SP#" + QString::fromStdString(FormatIndivisibleMP(global_metadex_market))));
     ui->sellList->setHorizontalHeaderItem(2, new QTableWidgetItem("Total " + QString::fromStdString(primaryToken)));

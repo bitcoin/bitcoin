@@ -80,6 +80,9 @@ public:
     XDOUBLE unitPrice() const;
     XDOUBLE inversePrice() const;
 
+    std::string displayUnitPrice() const;
+    std::string displayInversePrice() const;
+
     void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const;
 };
 

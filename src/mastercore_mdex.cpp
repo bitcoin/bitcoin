@@ -130,7 +130,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
         md_Set::iterator iitt;
         for (iitt = indexes->begin(); iitt != indexes->end();) { // specific price, check all properties
             p_older = &(*iitt);
-            assert(p_older->unitPrice() == sellers_price);
+            //assert(p_older->unitPrice() == sellers_price);
 
             if (msc_debug_metadex1) file_log("Looking at existing: %s (its prop= %u, its des prop= %u) = %s\n",
                 xToString(sellers_price), p_older->getProperty(), p_older->getDesProperty(), p_older->ToString());
@@ -178,12 +178,16 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
             seller_replacement.setAmountRemaining(seller_amountLeft, "seller_replacement");
 
             // transfer the payment property from buyer to seller
-            assert(update_tally_map(newo->getAddr(), newo->getProperty(), -seller_amountGot, BALANCE));
-            assert(update_tally_map(p_older->getAddr(), p_older->getDesProperty(), seller_amountGot, BALANCE));
+            //assert(update_tally_map(newo->getAddr(), newo->getProperty(), -seller_amountGot, BALANCE));
+            //assert(update_tally_map(p_older->getAddr(), p_older->getDesProperty(), seller_amountGot, BALANCE));
+            update_tally_map(newo->getAddr(), newo->getProperty(), -seller_amountGot, BALANCE);
+            update_tally_map(p_older->getAddr(), p_older->getDesProperty(), seller_amountGot, BALANCE);
 
             // transfer the market (the one being sold) property from seller to buyer
-            assert(update_tally_map(p_older->getAddr(), p_older->getProperty(), -buyer_amountGot, METADEX_RESERVE));
-            assert(update_tally_map(newo->getAddr(), newo->getDesProperty(), buyer_amountGot, BALANCE));
+            //assert(update_tally_map(p_older->getAddr(), p_older->getProperty(), -buyer_amountGot, METADEX_RESERVE));
+            //assert(update_tally_map(newo->getAddr(), newo->getDesProperty(), buyer_amountGot, BALANCE));
+            update_tally_map(p_older->getAddr(), p_older->getProperty(), -buyer_amountGot, METADEX_RESERVE);
+            update_tally_map(newo->getAddr(), newo->getDesProperty(), buyer_amountGot, BALANCE);
 
             NewReturn = TRADED;
 
@@ -231,6 +235,34 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
     file_log("%s()=%u:%s\n", __FUNCTION__, NewReturn, getTradeReturnType(NewReturn));
 
     return NewReturn;
+}
+
+std::string CMPMetaDEx::displayUnitPrice() const
+{
+     XDOUBLE tmpUnitPrice = unitPrice();
+     bool divByCoin = false;
+     if (desired_property == OMNI_PROPERTY_MSC || desired_property == OMNI_PROPERTY_TMSC) {
+         if (!isPropertyDivisible(property)) divByCoin = true;
+     } else {
+         if (!isPropertyDivisible(desired_property)) divByCoin = true;
+     }
+     if (divByCoin) tmpUnitPrice = tmpUnitPrice / COIN;
+     std::string displayValue = tmpUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+     return displayValue;
+}
+
+std::string CMPMetaDEx::displayInversePrice() const
+{
+     XDOUBLE tmpInversePrice = inversePrice();
+     bool divByCoin = false;
+     if (desired_property == OMNI_PROPERTY_MSC || desired_property == OMNI_PROPERTY_TMSC) {
+         if (!isPropertyDivisible(property)) divByCoin = true;
+     } else {
+         if (!isPropertyDivisible(desired_property)) divByCoin = true;
+     }
+     if (divByCoin) tmpInversePrice = tmpInversePrice / COIN;
+     std::string displayValue = tmpInversePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+     return displayValue;
 }
 
 XDOUBLE CMPMetaDEx::unitPrice() const
@@ -383,8 +415,10 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
             return METADEX_ERROR -70;
         } else {
             // move tokens into reserve
-            assert(update_tally_map(sender_addr, prop, -new_mdex.getAmountRemaining(), BALANCE));
-            assert(update_tally_map(sender_addr, prop, new_mdex.getAmountRemaining(), METADEX_RESERVE));
+            //assert(update_tally_map(sender_addr, prop, -new_mdex.getAmountRemaining(), BALANCE));
+            //assert(update_tally_map(sender_addr, prop, new_mdex.getAmountRemaining(), METADEX_RESERVE));
+            update_tally_map(sender_addr, prop, -new_mdex.getAmountRemaining(), BALANCE);
+            update_tally_map(sender_addr, prop, new_mdex.getAmountRemaining(), METADEX_RESERVE);
 
             if (msc_debug_metadex1) file_log("==== INSERTED: %s= %s\n", xToString(new_mdex.unitPrice()), new_mdex.ToString());
             if (msc_debug_metadex3) MetaDEx_debug_print();
@@ -433,8 +467,10 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
             file_log("%s(): REMOVING %s\n", __FUNCTION__, p_mdex->ToString());
 
             // move from reserve to main
-            assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE));
-            assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE));
+            //assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE));
+            //assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE));
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE);
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE);
 
             // record the cancellation
             bool bValid = true;
@@ -482,8 +518,10 @@ int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int bl
             file_log("%s(): REMOVING %s\n", __FUNCTION__, p_mdex->ToString());
 
             // move from reserve to main
-            assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE));
-            assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE));
+            //assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE));
+            //assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE));
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), -p_mdex->getAmountRemaining(), METADEX_RESERVE);
+            update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE);
 
             // record the cancellation
             bool bValid = true;
@@ -539,8 +577,10 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
                 file_log("%s(): REMOVING %s\n", __FUNCTION__, it->ToString());
 
                 // move from reserve to balance
-                assert(update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE));
-                assert(update_tally_map(it->getAddr(), it->getProperty(), it->getAmountRemaining(), BALANCE));
+                //assert(update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE));
+                //assert(update_tally_map(it->getAddr(), it->getProperty(), it->getAmountRemaining(), BALANCE));
+                update_tally_map(it->getAddr(), it->getProperty(), -it->getAmountRemaining(), METADEX_RESERVE);
+                update_tally_map(it->getAddr(), it->getProperty(), it->getAmountRemaining(), BALANCE);
 
                 // record the cancellation
                 bool bValid = true;
