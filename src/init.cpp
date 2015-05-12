@@ -834,13 +834,13 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", 1);
-    bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
-    fSendFreeTransactions = GetArg("-sendfreetransactions", false);
+    bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
+    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", false);
 
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
 
-    fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
+    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", true);
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
@@ -955,7 +955,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     proxyType addrProxy;
     bool fProxy = false;
     if (mapArgs.count("-proxy")) {
-        addrProxy = proxyType(CService(mapArgs["-proxy"], 9050), GetArg("-proxyrandomize", true));
+        addrProxy = proxyType(CService(mapArgs["-proxy"], 9050), GetBoolArg("-proxyrandomize", true));
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
 
@@ -972,7 +972,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!mapArgs.count("-onion"))
             addrOnion = addrProxy;
         else
-            addrOnion = proxyType(CService(mapArgs["-onion"], 9050), GetArg("-proxyrandomize", true));
+            addrOnion = proxyType(CService(mapArgs["-onion"], 9050), GetBoolArg("-proxyrandomize", true));
         if (!addrOnion.IsValid())
             return InitError(strprintf(_("Invalid -onion address: '%s'"), mapArgs["-onion"]));
         SetProxy(NET_TOR, addrOnion);
