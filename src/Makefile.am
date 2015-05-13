@@ -98,7 +98,6 @@ BITCOIN_CORE_H = \
   ecwrapper.h \
   hash.h \
   init.h \
-  json_spirit_wrapper.h \
   key.h \
   keystore.h \
   leveldbwrapper.h \

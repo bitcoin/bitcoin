@@ -293,7 +293,7 @@ public:
         return *this;
     }
 
-    Array GetJSON()
+    UniValue GetJSON()
     {
         DoPush();
         UniValue array(UniValue::VARR);
@@ -580,8 +580,8 @@ BOOST_AUTO_TEST_CASE(script_build)
     std::set<std::string> tests_bad;
 
     {
-        Array json_good = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
-        Array json_bad = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
+        UniValue json_good = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
+        UniValue json_bad = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
         for (unsigned int idx = 0; idx < json_good.size(); idx++) {
             const Value& tv = json_good[idx];
@@ -634,10 +634,10 @@ BOOST_AUTO_TEST_CASE(script_valid)
     // Inner arrays are [ "scriptSig", "scriptPubKey", "flags" ]
     // ... where scriptSig and scriptPubKey are stringified
     // scripts.
-    Array tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
+    UniValue tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        Array test = tests[idx];
+        UniValue test = tests[idx];
         string strTest = test.write();
         if (test.size() < 3) // Allow size > 3; extra stuff ignored (useful for comments)
         {
@@ -659,10 +659,10 @@ BOOST_AUTO_TEST_CASE(script_valid)
 BOOST_AUTO_TEST_CASE(script_invalid)
 {
     // Scripts that should evaluate as invalid
-    Array tests = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
+    UniValue tests = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
-        Array test = tests[idx];
+        UniValue test = tests[idx];
         string strTest = test.write();
         if (test.size() < 3) // Allow size > 2; extra stuff ignored (useful for comments)
         {
