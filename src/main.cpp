@@ -2388,9 +2388,10 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
     }
 	const Bitcoin_CBlockIndex* pmoveFromBitcoinIndex = (*mi).second;
 
+	const int64_t dbThreshold = GetArg("-claimtmpdbthreshold", -1);
 	const bool fastForwardClaimState = FastForwardClaimStateFor(pmoveFromBitcoinIndex->nHeight, pmoveFromBitcoinIndex->GetBlockHash());
-	if(fastForwardClaimState || bitcoinBlockSteps == 0 || bitcoinBlockSteps == -1) {
-    	//If  claim coin tip is +1/-1 blocks ahead/behind no temporary db is needed
+	if(fastForwardClaimState || dbThreshold ==  -1 || bitcoinBlockSteps < dbThreshold) {
+    	//If  claim coin tip is less than dbThreshold blocks ahead/behind no temporary db is used
     	if(fastForwardClaimState) {
     		LogPrintf("Credits: DisconnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
     	} else {
@@ -2468,9 +2469,10 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     }
 	const Bitcoin_CBlockIndex* palignToBitcoinIndex = (*mi).second;
 
+	const int64_t dbThreshold = GetArg("-claimtmpdbthreshold", -1);
 	const bool fastForwardClaimState = FastForwardClaimStateFor(palignToBitcoinIndex->nHeight, palignToBitcoinIndex->GetBlockHash());
-    if(fastForwardClaimState || bitcoinBlockSteps == 0 || bitcoinBlockSteps == 1) {
-    	//If  claim coin tip is +1/-1 blocks ahead/behind no temporary db is needed
+    if(fastForwardClaimState || dbThreshold ==  -1 || bitcoinBlockSteps < dbThreshold) {
+    	//If  claim coin tip is less than dbThreshold blocks ahead/behind no temporary db is used
     	if(fastForwardClaimState) {
     		LogPrintf("Credits: ConnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
     	} else {
