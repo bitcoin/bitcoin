@@ -1923,13 +1923,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
                 // Can we complete this as a free transaction?
                 if (fSendFreeTransactions && nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE)
                 {
-                    // Not enough fee: enough priority?
                     double dPriorityNeeded = mempool.estimatePriority(nTxConfirmTarget);
-                    // Not enough mempool history to estimate: use hard-coded AllowFree.
-                    if (dPriorityNeeded <= 0 && AllowFree(dPriority))
-                        break;
-
-                    // Small enough, and priority high enough, to send for free
+                    // We have a priority estimate for the desired confirm target and
+                    // the tx has enough priority and is small enough to send for free
                     if (dPriorityNeeded > 0 && dPriority >= dPriorityNeeded)
                         break;
                 }
