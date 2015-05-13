@@ -237,6 +237,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* newo)
     return NewReturn;
 }
 
+// Used for display of unit prices at UI layer
 std::string CMPMetaDEx::displayUnitPrice() const
 {
      XDOUBLE tmpUnitPrice = unitPrice();
@@ -247,10 +248,11 @@ std::string CMPMetaDEx::displayUnitPrice() const
          if (!isPropertyDivisible(desired_property)) divByCoin = true;
      }
      if (divByCoin) tmpUnitPrice = tmpUnitPrice / COIN;
-     std::string displayValue = tmpUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+     std::string displayValue = tmpUnitPrice.str(8, std::ios_base::fixed);
      return displayValue;
 }
 
+// Used for display of unit prices at UI layer
 std::string CMPMetaDEx::displayInversePrice() const
 {
      XDOUBLE tmpInversePrice = inversePrice();
@@ -261,7 +263,7 @@ std::string CMPMetaDEx::displayInversePrice() const
          if (!isPropertyDivisible(desired_property)) divByCoin = true;
      }
      if (divByCoin) tmpInversePrice = tmpInversePrice / COIN;
-     std::string displayValue = tmpInversePrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+     std::string displayValue = tmpInversePrice.str(8, std::ios_base::fixed);
      return displayValue;
 }
 

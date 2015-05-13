@@ -316,6 +316,10 @@ void MetaDExDialog::UpdateOffers()
                 md_Set & indexes = (it->second);
                 for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
                     CMPMetaDEx obj = *it;
+                    if (!useBuyList && obj.displayUnitPrice() == "0.00000000") continue;
+                    if (useBuyList && obj.displayInversePrice() == "0.00000000") continue; // hide trades that have a lower than 0.00000001 MSC unit price
+                    unitPriceStr = obj.displayUnitPrice();
+                    inversePriceStr = obj.displayInversePrice();
                     if (useBuyList) {
                         if (obj.getDesProperty()==global_metadex_market) {
                             available += obj.getAmountDesired();
@@ -329,8 +333,6 @@ void MetaDExDialog::UpdateOffers()
                             if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     }
-                    unitPriceStr = obj.displayUnitPrice();
-                    inversePriceStr = obj.displayInversePrice();
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                     string strAvail;
