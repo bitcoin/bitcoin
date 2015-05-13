@@ -49,6 +49,8 @@ public slots:
     void UpdateAddressSelector();
     void UpdateCancelCombo();
     void RefreshUI();
+    void fromAddressComboBoxChanged(int);
+
 
 private:
     Ui::MetaDExCancelDialog *ui;

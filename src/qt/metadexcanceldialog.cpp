@@ -80,6 +80,8 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
     connect(ui->radioCancelPrice, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
     connect(ui->radioCancelEverything, SIGNAL(clicked()),this, SLOT(UpdateCancelCombo()));
     connect(ui->cancelButton, SIGNAL(clicked()),this, SLOT(SendCancelTransaction()));
+    connect(ui->fromCombo, SIGNAL(activated(int)), this, SLOT(fromAddressComboBoxChanged(int)));
+
 
     // perform initial from address population
     UpdateAddressSelector();
@@ -127,6 +129,14 @@ void MetaDExCancelDialog::UpdateAddressSelector()
             }
         }
     }
+}
+
+/**
+ * Refreshes the cancel combo when the address selector is changed
+ */
+void MetaDExCancelDialog::fromAddressComboBoxChanged(int)
+{
+    UpdateCancelCombo(); // all that's needed at this stage
 }
 
 /**
