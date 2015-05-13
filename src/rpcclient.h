@@ -6,8 +6,8 @@
 #ifndef BITCOIN_RPCCLIENT_H
 #define BITCOIN_RPCCLIENT_H
 
-#include "json_spirit_wrapper.h"
+#include "univalue/univalue.h"
 
-json_spirit::Array RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
+UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
 #endif // BITCOIN_RPCCLIENT_H

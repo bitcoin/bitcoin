@@ -135,7 +135,7 @@ CAmount AmountFromValue(const Value& value)
     return nAmount;
 }
 
-Value ValueFromAmount(const CAmount& amount)
+UniValue ValueFromAmount(const CAmount& amount)
 {
     return (double)amount / (double)COIN;
 }
@@ -196,7 +196,7 @@ string CRPCTable::help(string strCommand) const
             continue;
         try
         {
-            Array params;
+            UniValue params;
             rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
                 (*pfn)(params, true);
@@ -229,7 +229,7 @@ string CRPCTable::help(string strCommand) const
     return strRet;
 }
 
-Value help(const Array& params, bool fHelp)
+UniValue help(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -249,7 +249,7 @@ Value help(const Array& params, bool fHelp)
 }
 
 
-Value stop(const Array& params, bool fHelp)
+UniValue stop(const Array& params, bool fHelp)
 {
     // Accept the deprecated and ignored 'detach' boolean argument
     if (fHelp || params.size() > 1)
@@ -825,9 +825,9 @@ void RPCRunLater(const std::string& name, boost::function<void(void)> func, int6
 class JSONRequest
 {
 public:
-    Value id;
+    UniValue id;
     string strMethod;
-    Array params;
+    UniValue params;
 
     JSONRequest() { id = NullUniValue; }
     void parse(const Value& valRequest);
@@ -844,7 +844,7 @@ void JSONRequest::parse(const Value& valRequest)
     id = find_value(request, "id");
 
     // Parse method
-    Value valMethod = find_value(request, "method");
+    UniValue valMethod = find_value(request, "method");
     if (valMethod.isNull())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
     if (!valMethod.isStr())
@@ -854,7 +854,7 @@ void JSONRequest::parse(const Value& valRequest)
         LogPrint("rpc", "ThreadRPCServer method=%s\n", SanitizeString(strMethod));
 
     // Parse params
-    Value valParams = find_value(request, "params");
+    UniValue valParams = find_value(request, "params");
     if (valParams.isArray())
         params = valParams.get_array();
     else if (valParams.isNull())
@@ -864,7 +864,7 @@ void JSONRequest::parse(const Value& valRequest)
 }
 
 
-static Object JSONRPCExecOne(const Value& req)
+static UniValue JSONRPCExecOne(const Value& req)
 {
     UniValue rpc_result(UniValue::VOBJ);
 
@@ -872,7 +872,7 @@ static Object JSONRPCExecOne(const Value& req)
     try {
         jreq.parse(req);
 
-        Value result = tableRPC.execute(jreq.strMethod, jreq.params);
+        UniValue result = tableRPC.execute(jreq.strMethod, jreq.params);
         rpc_result = JSONRPCReplyObj(result, NullUniValue, jreq.id);
     }
     catch (const Object& objError)
@@ -890,7 +890,7 @@ static Object JSONRPCExecOne(const Value& req)
 
 static string JSONRPCExecBatch(const Array& vReq)
 {
-    Array ret;
+    UniValue ret;
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
         ret.push_back(JSONRPCExecOne(vReq[reqIdx]));
 
@@ -925,7 +925,7 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
     try
     {
         // Parse request
-        Value valRequest;
+        UniValue valRequest;
         if (!valRequest.read(strRequest))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
@@ -942,7 +942,7 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
         if (valRequest.isObject()) {
             jreq.parse(valRequest);
 
-            Value result = tableRPC.execute(jreq.strMethod, jreq.params);
+            UniValue result = tableRPC.execute(jreq.strMethod, jreq.params);
 
             // Send reply
             strReply = JSONRPCReply(result, NullUniValue, jreq.id);
@@ -1005,7 +1005,7 @@ void ServiceConnection(AcceptedConnection *conn)
     }
 }
 
-json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_spirit::Array &params) const
+UniValue CRPCTable::execute(const std::string &strMethod, const UniValue &params) const
 {
     // Find method
     const CRPCCommand *pcmd = tableRPC[strMethod];

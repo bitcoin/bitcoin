@@ -105,7 +105,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     }
 }
 
-Value getrawtransaction(const Array& params, bool fHelp)
+UniValue getrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -195,7 +195,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-Value gettxoutproof(const Array& params, bool fHelp)
+UniValue gettxoutproof(const Array& params, bool fHelp)
 {
     if (fHelp || (params.size() != 1 && params.size() != 2))
         throw runtime_error(
@@ -219,7 +219,7 @@ Value gettxoutproof(const Array& params, bool fHelp)
 
     set<uint256> setTxids;
     uint256 oneTxid;
-    Array txids = params[0].get_array();
+    UniValue txids = params[0].get_array();
     for (unsigned int idx = 0; idx < txids.size(); idx++) {
         const Value& txid = txids[idx];
         if (txid.get_str().length() != 64 || !IsHex(txid.get_str()))
@@ -276,7 +276,7 @@ Value gettxoutproof(const Array& params, bool fHelp)
     return strHex;
 }
 
-Value verifytxoutproof(const Array& params, bool fHelp)
+UniValue verifytxoutproof(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -309,7 +309,7 @@ Value verifytxoutproof(const Array& params, bool fHelp)
     return res;
 }
 
-Value createrawtransaction(const Array& params, bool fHelp)
+UniValue createrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
@@ -345,8 +345,8 @@ Value createrawtransaction(const Array& params, bool fHelp)
     LOCK(cs_main);
     RPCTypeCheck(params, boost::assign::list_of(UniValue::VARR)(UniValue::VOBJ));
 
-    Array inputs = params[0].get_array();
-    Object sendTo = params[1].get_obj();
+    UniValue inputs = params[0].get_array();
+    UniValue sendTo = params[1].get_obj();
 
     CMutableTransaction rawTx;
 
@@ -388,7 +388,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
     return EncodeHexTx(rawTx);
 }
 
-Value decoderawtransaction(const Array& params, bool fHelp)
+UniValue decoderawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -453,7 +453,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-Value decodescript(const Array& params, bool fHelp)
+UniValue decodescript(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -507,7 +507,7 @@ static void TxInErrorToJSON(const CTxIn& txin, Array& vErrorsRet, const std::str
     vErrorsRet.push_back(entry);
 }
 
-Value signrawtransaction(const Array& params, bool fHelp)
+UniValue signrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
@@ -617,9 +617,9 @@ Value signrawtransaction(const Array& params, bool fHelp)
     CBasicKeyStore tempKeystore;
     if (params.size() > 2 && !params[2].isNull()) {
         fGivenKeys = true;
-        Array keys = params[2].get_array();
+        UniValue keys = params[2].get_array();
         for (unsigned int idx = 0; idx < keys.size(); idx++) {
-            Value k = keys[idx];
+            UniValue k = keys[idx];
             CBitcoinSecret vchSecret;
             bool fGood = vchSecret.SetString(k.get_str());
             if (!fGood)
@@ -637,13 +637,13 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     // Add previous txouts given in the RPC call:
     if (params.size() > 1 && !params[1].isNull()) {
-        Array prevTxs = params[1].get_array();
+        UniValue prevTxs = params[1].get_array();
         for (unsigned int idx = 0; idx < prevTxs.size(); idx++) {
             const Value& p = prevTxs[idx];
             if (!p.isObject())
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"txid'\",\"vout\",\"scriptPubKey\"}");
 
-            Object prevOut = p.get_obj();
+            UniValue prevOut = p.get_obj();
 
             RPCTypeCheckObj(prevOut, boost::assign::map_list_of("txid", UniValue::VSTR)("vout", UniValue::VNUM)("scriptPubKey", UniValue::VSTR));
 
@@ -674,7 +674,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             // given), add redeemScript to the tempKeystore so it can be signed:
             if (fGivenKeys && scriptPubKey.IsPayToScriptHash()) {
                 RPCTypeCheckObj(prevOut, boost::assign::map_list_of("txid", UniValue::VSTR)("vout", UniValue::VNUM)("scriptPubKey", UniValue::VSTR)("redeemScript",UniValue::VSTR));
-                Value v = find_value(prevOut, "redeemScript");
+                UniValue v = find_value(prevOut, "redeemScript");
                 if (!v.isNull()) {
                     vector<unsigned char> rsData(ParseHexV(v, "redeemScript"));
                     CScript redeemScript(rsData.begin(), rsData.end());
@@ -749,7 +749,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     return result;
 }
 
-Value sendrawtransaction(const Array& params, bool fHelp)
+UniValue sendrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(

@@ -94,7 +94,7 @@ static bool AppInitRPC(int argc, char* argv[])
     return true;
 }
 
-Object CallRPC(const string& strMethod, const Array& params)
+UniValue CallRPC(const string& strMethod, const Array& params)
 {
     if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
         throw runtime_error(strprintf(
@@ -142,7 +142,7 @@ Object CallRPC(const string& strMethod, const Array& params)
         throw runtime_error("no response from server");
 
     // Parse reply
-    Value valReply(UniValue::VSTR);
+    UniValue valReply(UniValue::VSTR);
     if (!valReply.read(strReply))
         throw runtime_error("couldn't parse reply from server");
     const Object& reply = valReply.get_obj();
@@ -170,14 +170,13 @@ int CommandLineRPC(int argc, char *argv[])
 
         // Parameters default to strings
         std::vector<std::string> strParams(&argv[2], &argv[argc]);
-        Array params = RPCConvertValues(strMethod, strParams);
+        UniValue params = RPCConvertValues(strMethod, strParams);
 
         // Execute and handle connection failures with -rpcwait
         const bool fWait = GetBoolArg("-rpcwait", false);
         do {
             try {
-                // Execute
-                Object reply = CallRPC(strMethod, params);
+                const UniValue reply = CallRPC(strMethod, params);
 
                 // Parse reply
                 const Value& result = find_value(reply, "result");
