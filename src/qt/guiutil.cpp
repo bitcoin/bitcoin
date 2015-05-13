@@ -547,12 +547,16 @@ void TableViewLastColumnResizingFixer::on_geometriesChanged()
         disconnectViewHeadersSignals(); // must disconnect signalling here
         // evaluate whether this is an Omni layout
         QAbstractItemModel* abstractModel = this->tableView->model();
+        bool omniLayout = false;
         bool omniBalanceLayout = false;
+        bool omniTradeHistoryLayout = false;
         if (abstractModel->columnCount() > 3) { // ensure the columns are there before we try to reference them
-            if (abstractModel->headerData(2, Qt::Horizontal).toString()=="Reserved") { omniBalanceLayout = true; }
+            if (abstractModel->headerData(2, Qt::Horizontal).toString()=="Reserved") { omniLayout = true; omniBalanceLayout = true; }
+            if (abstractModel->headerData(2, Qt::Horizontal).toString()=="Date") { omniLayout = true; omniTradeHistoryLayout = true; }
         }
-        if (omniBalanceLayout) { // this is an Omni balance layout, override column resize
-            resizeColumn(omniBalanceOverrideColumnIndex, getAvailableWidthForColumn(omniBalanceOverrideColumnIndex));
+        if (omniLayout) { // this is an Omni balance or trade layout, override column resize
+            if (omniBalanceLayout) resizeColumn(omniBalanceOverrideColumnIndex, getAvailableWidthForColumn(omniBalanceOverrideColumnIndex));
+            if (omniTradeHistoryLayout) resizeColumn(omniTradeHistoryOverrideColumnIndex, getAvailableWidthForColumn(omniTradeHistoryOverrideColumnIndex));
         } else { // else it's an original Bitcoin layout or Omni tx history layout, leave as is
             resizeColumn(secondToLastColumnIndex, getAvailableWidthForColumn(secondToLastColumnIndex));
         }
@@ -573,6 +577,7 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
     lastColumnIndex = columnCount - 1;
     secondToLastColumnIndex = columnCount - 2;
     omniBalanceOverrideColumnIndex = 1; // we can safely hardcode this for now
+    omniTradeHistoryOverrideColumnIndex = 4; // as above
     tableView->horizontalHeader()->setMinimumSectionSize(allColumnsMinimumWidth);
     setViewHeaderResizeMode(secondToLastColumnIndex, QHeaderView::Interactive);
     setViewHeaderResizeMode(lastColumnIndex, QHeaderView::Interactive);
