@@ -62,6 +62,7 @@ using namespace leveldb;
 #include "mastercore_sp.h"
 #include "mastercore_errors.h"
 #include "omnicore_qtutils.h"
+#include "omnicore_createpayload.h"
 
 #include <QDateTime>
 #include <QMessageBox>
