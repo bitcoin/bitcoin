@@ -122,7 +122,7 @@ CRPCConvertTable::CRPCConvertTable()
 static CRPCConvertTable rpcCvtTable;
 
 /** Convert strings to command-specific RPC representation */
-Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 {
     UniValue params(UniValue::VARR);
 

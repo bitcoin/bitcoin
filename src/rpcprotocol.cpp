@@ -256,7 +256,7 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
 
 string JSONRPCRequest(const string& strMethod, const Array& params, const Value& id)
 {
-    Object request(UniValue::VOBJ);
+    UniValue request(UniValue::VOBJ);
     request.push_back(Pair("method", strMethod));
     request.push_back(Pair("params", params));
     request.push_back(Pair("id", id));
@@ -265,7 +265,7 @@ string JSONRPCRequest(const string& strMethod, const Array& params, const Value&
 
 Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
 {
-    Object reply(UniValue::VOBJ);
+    UniValue reply(UniValue::VOBJ);
     if (!error.isNull())
         reply.push_back(Pair("result", NullUniValue));
     else
@@ -277,11 +277,11 @@ Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
 
 string JSONRPCReply(const Value& result, const Value& error, const Value& id)
 {
-    Object reply = JSONRPCReplyObj(result, error, id);
+    UniValue reply = JSONRPCReplyObj(result, error, id);
     return reply.write() + "\n";
 }
 
-Object JSONRPCError(int code, const string& message)
+UniValue JSONRPCError(int code, const string& message)
 {
     UniValue error(UniValue::VOBJ);
     error.push_back(Pair("code", code));
