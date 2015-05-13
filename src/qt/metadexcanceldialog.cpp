@@ -362,12 +362,12 @@ void MetaDExCancelDialog::SendCancelTransaction()
     }
 
     // create a payload for the transaction
-    // #CLASSC# std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
     std::string rawHex;
-    int result = 0; // #CLASSC# int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
@@ -376,7 +376,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
         "The MetaDEx cancel transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(strError));
         return;
     } else {
-        if (0) { // #CLASSC# if (!autoCommit) {
+        if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
             PopulateTXSentDialog(txid.GetHex());
