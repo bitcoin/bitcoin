@@ -19,7 +19,7 @@
 using namespace std;
 using namespace json_spirit;
 
-static const int MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
+static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 
 enum RetFormat {
     RF_UNDEF,
