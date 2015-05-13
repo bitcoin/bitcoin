@@ -1539,6 +1539,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
 class CAffectedKeysVisitor : public boost::static_visitor<void> {
 private:
     const CKeyStore &keystore;
+    CAffectedKeysVisitor& operator=(CAffectedKeysVisitor const&);
     std::vector<CKeyID> &vKeys;
 
 public:
