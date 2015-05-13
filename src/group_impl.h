@@ -301,6 +301,11 @@ static void secp256k1_gej_double_var(secp256k1_gej_t *r, const secp256k1_gej_t *
     secp256k1_fe_add(&r->y, &t2);         /* Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4) */
 }
 
+static SECP256K1_INLINE void secp256k1_gej_double_nonzero(secp256k1_gej_t *r, const secp256k1_gej_t *a, secp256k1_fe_t *rzr) {
+    VERIFY_CHECK(!secp256k1_gej_is_infinity(a));
+    secp256k1_gej_double_var(r, a, rzr);
+}
+
 static void secp256k1_gej_add_var(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_gej_t *b, secp256k1_fe_t *rzr) {
     /* Operations: 12 mul, 4 sqr, 2 normalize, 12 mul_int/add/negate */
     secp256k1_fe_t z22, z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;

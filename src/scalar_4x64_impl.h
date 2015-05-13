@@ -164,6 +164,22 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {
     return yes;
 }
 
+static int secp256k1_scalar_cond_negate(secp256k1_scalar_t *r, int flag) {
+    /* If we are flag = 0, mask = 00...00 and this is a no-op;
+     * if we are flag = 1, mask = 11...11 and this is identical to secp256k1_scalar_negate */
+    uint64_t mask = !flag - 1;
+    uint64_t nonzero = (secp256k1_scalar_is_zero(r) != 0) - 1;
+    uint128_t t = (uint128_t)(r->d[0] ^ mask) + ((SECP256K1_N_0 + 1) & mask);
+    r->d[0] = t & nonzero; t >>= 64;
+    t += (uint128_t)(r->d[1] ^ mask) + (SECP256K1_N_1 & mask);
+    r->d[1] = t & nonzero; t >>= 64;
+    t += (uint128_t)(r->d[2] ^ mask) + (SECP256K1_N_2 & mask);
+    r->d[2] = t & nonzero; t >>= 64;
+    t += (uint128_t)(r->d[3] ^ mask) + (SECP256K1_N_3 & mask);
+    r->d[3] = t & nonzero;
+    return 2 * (mask == 0) - 1;
+}
+
 /* Inspired by the macros in OpenSSL's crypto/bn/asm/x86_64-gcc.c. */
 
 /** Add a*b to the number defined by (c0,c1,c2). c2 must never overflow. */
@@ -875,6 +891,18 @@ static void secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t
     uint64_t l[8];
     secp256k1_scalar_mul_512(l, a, b);
     secp256k1_scalar_reduce_512(r, l);
+}
+
+static int secp256k1_scalar_shr_int(secp256k1_scalar_t *r, int n) {
+    int ret;
+    VERIFY_CHECK(n > 0);
+    VERIFY_CHECK(n < 16);
+    ret = r->d[0] & ((1 << n) - 1);
+    r->d[0] = (r->d[0] >> n) + (r->d[1] << (64 - n));
+    r->d[1] = (r->d[1] >> n) + (r->d[2] << (64 - n));
+    r->d[2] = (r->d[2] >> n) + (r->d[3] << (64 - n));
+    r->d[3] = (r->d[3] >> n);
+    return ret;
 }
 
 static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t *a) {
