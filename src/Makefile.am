@@ -116,6 +116,7 @@ BITCOIN_CORE_H = \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
+  scheduler.h \
   script/interpreter.h \
   script/script_error.h \
   script/script.h \
@@ -259,6 +260,7 @@ libbitcoin_common_a_SOURCES = \
   netbase.cpp \
   protocol.cpp \
   pubkey.cpp \
+  scheduler.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   script/sign.cpp \
