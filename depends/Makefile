@@ -91,12 +91,12 @@ include funcs.mk
 toolchain_path=$($($(host_arch)_$(host_os)_native_toolchain)_prefixbin)
 final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
 final_build_id+=$(shell echo -n $(final_build_id_long) | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
-$(host_prefix)/.stamp_$(final_build_id): | $(native_packages) $(packages)
+$(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	$(AT)rm -rf $(@D)
 	$(AT)mkdir -p $(@D)
-	$(AT)echo copying packages: $|
+	$(AT)echo copying packages: $^
 	$(AT)echo to: $(@D)
-	$(AT)cd $(@D); $(foreach package,$|, tar xf $($(package)_cached); )
+	$(AT)cd $(@D); $(foreach package,$^, tar xf $($(package)_cached); )
 	$(AT)touch $@
 
 $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_build_id)
@@ -121,8 +121,35 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             $< > $@
 	$(AT)touch $@
 
-install: $(host_prefix)/share/config.site
-download-one: $(all_sources)
+
+define check_or_remove_cached
+  mkdir -p $(BASE_CACHE)/$(host)/$(package) && cd $(BASE_CACHE)/$(host)/$(package); \
+  $(build_SHA256SUM) -c $($(package)_cached_checksum) >/dev/null 2>/dev/null || \
+  ( rm -f $($(package)_cached_checksum); \
+    if test -f "$($(package)_cached)"; then echo "Checksum mismatch for $(package). Forcing rebuild.."; rm -f $($(package)_cached_checksum) $($(package)_cached); fi )
+endef
+
+define check_or_remove_sources
+  mkdir -p $($(package)_source_dir); cd $($(package)_source_dir); \
+  $(build_SHA256SUM) -c $($(package)_fetched) >/dev/null 2>/dev/null || \
+    ( if test -f $($(package)_all_sources); then echo "Checksum missing or mismatched for $(package) source. Forcing re-download."; fi; \
+      rm -f $($(package)_all_sources) $($(1)_fetched))
+endef
+
+check-packages:
+	@$(foreach package,$(all_packages),$(call check_or_remove_cached,$(package));)
+check-sources:
+	@$(foreach package,$(all_packages),$(call check_or_remove_sources,$(package));)
+
+$(host_prefix)/share/config.site: check-packages
+
+check-packages: check-sources
+
+install: check-packages $(host_prefix)/share/config.site
+
+
+download-one: check-sources $(all_sources)
+
 download-osx:
 	@$(MAKE) -s HOST=x86_64-apple-darwin11 download-one
 download-linux:
@@ -130,4 +157,5 @@ download-linux:
 download-win:
 	@$(MAKE) -s HOST=x86_64-w64-mingw32 download-one
 download: download-osx download-linux download-win
-.PHONY: install cached download-one download-osx download-linux download-win download
+
+.PHONY: install cached download-one download-osx download-linux download-win download check-packages check-sources
