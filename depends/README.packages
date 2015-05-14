@@ -30,7 +30,9 @@ These variables are optional:
     Names of any other packages that this one depends on.
   $(package)_patches:
     Filenames of any patches needed to build the package
-
+  $(package)_extra_sources:
+    Any extra files that will be fetched via $(package)_fetch_cmds. These are
+    specified so that they can be fetched and verified via 'make download'.
 
 Build Variables:
 After defining the main identifiers, build variables may be added or customized
