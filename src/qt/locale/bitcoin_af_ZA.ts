@@ -68,10 +68,6 @@
         <translation>Verander wagwoord</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Tik asseblief die ou en nuwe wagwoord vir die beursie in.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Bevestig beursie enkripsie.</translation>
     </message>
@@ -485,8 +481,8 @@
         <translation>Tipe</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adres</translation>
+        <source>Label</source>
+        <translation>Etiket</translation>
     </message>
     <message>
         <source>Received with</source>

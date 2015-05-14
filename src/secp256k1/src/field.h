@@ -113,4 +113,7 @@ static void secp256k1_fe_from_storage(secp256k1_fe_t *r, const secp256k1_fe_stor
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
 static void secp256k1_fe_storage_cmov(secp256k1_fe_storage_t *r, const secp256k1_fe_storage_t *a, int flag);
 
+/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
+static void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k1_fe_t *a, int flag);
+
 #endif

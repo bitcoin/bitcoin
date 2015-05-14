@@ -52,7 +52,7 @@ bool fFeeEstimatesInitialized = false;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
-// accessing block files, don't count towards to fd_set size limit
+// accessing block files don't count towards the fd_set size limit
 // anyway.
 #define MIN_CORE_FILEDESCRIPTORS 0
 #else
@@ -194,6 +194,7 @@ void Shutdown()
     delete pwalletMain;
     pwalletMain = NULL;
 #endif
+    ECC_Stop();
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -275,12 +276,10 @@ std::string HelpMessage(HelpMessageMode mode)
 #ifndef WIN32
     strUsage += HelpMessageOpt("-pid=<file>", strprintf(_("Specify pid file (default: %s)"), "bitcoind.pid"));
 #endif
-    strUsage += HelpMessageOpt("-prune=<n>", _("Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex.") + " " +
-            _("Warning: Reverting this setting requires re-downloading the entire blockchain.") + " " +
-            _("(default: 0 = disable pruning blocks,") + " " +
-            strprintf(_(">%u = target size in MiB to use for block files)"), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
-strUsage += HelpMessageOpt("-reindex", _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup"));
-
+    strUsage += HelpMessageOpt("-prune=<n>", strprintf(_("Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. "
+            "Warning: Reverting this setting requires re-downloading the entire blockchain. "
+            "(default: 0 = disable pruning blocks, >%u = target size in MiB to use for block files)"), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
+    strUsage += HelpMessageOpt("-reindex", _("Rebuild block chain index from current blk000??.dat files on startup"));
 #if !defined(WIN32)
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
@@ -334,7 +333,7 @@ strUsage += HelpMessageOpt("-reindex", _("Rebuild block chain index from current
     strUsage += HelpMessageOpt("-sendfreetransactions", strprintf(_("Send transactions as zero-fee transactions if possible (default: %u)"), 0));
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), 1));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), 1));
-    strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)"),
+    strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)"),
         FormatMoney(maxTxFee)));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format") + " " + _("on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), "wallet.dat"));
@@ -741,7 +740,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // Checkmempool and checkblockindex default to true in regtest mode
     mempool.setSanityCheck(GetBoolArg("-checkmempool", chainparams.DefaultConsistencyChecks()));
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
-    Checkpoints::fEnabled = GetBoolArg("-checkpoints", true);
+    fCheckpointsEnabled = GetBoolArg("-checkpoints", true);
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
@@ -835,16 +834,19 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", 1);
-    bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
-    fSendFreeTransactions = GetArg("-sendfreetransactions", false);
+    bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", true);
+    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", false);
 
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
 
-    fIsBareMultisigStd = GetArg("-permitbaremultisig", true) != 0;
+    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", true);
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
+
+    // Initialize elliptic curve code
+    ECC_Start();
 
     // Sanity check
     if (!InitSanityCheck())
@@ -953,7 +955,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     proxyType addrProxy;
     bool fProxy = false;
     if (mapArgs.count("-proxy")) {
-        addrProxy = proxyType(CService(mapArgs["-proxy"], 9050), GetArg("-proxyrandomize", true));
+        addrProxy = proxyType(CService(mapArgs["-proxy"], 9050), GetBoolArg("-proxyrandomize", true));
         if (!addrProxy.IsValid())
             return InitError(strprintf(_("Invalid -proxy address: '%s'"), mapArgs["-proxy"]));
 
@@ -970,7 +972,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         if (!mapArgs.count("-onion"))
             addrOnion = addrProxy;
         else
-            addrOnion = proxyType(CService(mapArgs["-onion"], 9050), GetArg("-proxyrandomize", true));
+            addrOnion = proxyType(CService(mapArgs["-onion"], 9050), GetBoolArg("-proxyrandomize", true));
         if (!addrOnion.IsValid())
             return InitError(strprintf(_("Invalid -onion address: '%s'"), mapArgs["-onion"]));
         SetProxy(NET_TOR, addrOnion);
@@ -1333,6 +1335,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (mapArgs.count("-blocknotify"))
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
+    uiInterface.InitMessage(_("Activating best chain..."));
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
     CValidationState state;
     if (!ActivateBestChain(state))

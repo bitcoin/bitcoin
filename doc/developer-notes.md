@@ -53,7 +53,7 @@ bool function(int arg1, const char *arg2)
 ```
 A complete list of `@xxx` commands can be found at http://www.stack.nl/~dimitri/doxygen/manual/commands.html.
 As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
-*need* to provide any commands for a comment to be valid, just a description text is fine. 
+*need* to provide any commands for a comment to be valid; just a description text is fine.
 
 To describe a class use the same construct above the class definition:
 ```c++
@@ -175,7 +175,7 @@ Threads
 Pull Request Terminology
 ------------------------
 
-Concept ACK - Agree with the idea and overall direction, but haven't reviewed the code changes or tested them.
+Concept ACK - Agree with the idea and overall direction, but have neither reviewed nor tested the code changes.
 
 utACK (untested ACK) - Reviewed and agree with the code changes but haven't actually tested them.
 
@@ -183,4 +183,4 @@ Tested ACK - Reviewed the code changes and have verified the functionality or bu
 
 ACK -  A loose ACK can be confusing. It's best to avoid them unless it's a documentation/comment only change in which case there is nothing to test/verify; therefore the tested/untested distinction is not there.
 
-NACK - Disagree with the code changes/concept. Should be accompanied by an explanation. 
+NACK - Disagree with the code changes/concept. Should be accompanied by an explanation.

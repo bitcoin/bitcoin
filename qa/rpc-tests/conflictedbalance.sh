@@ -49,7 +49,7 @@ B2ARGS="-datadir=$D2 -debug=mempool"
 $BITCOIND $B2ARGS &
 B2PID=$!
 
-# Wait until all four nodes are at the same block number
+# Wait until both nodes are at the same block number
 function WaitBlocks {
     while :
     do

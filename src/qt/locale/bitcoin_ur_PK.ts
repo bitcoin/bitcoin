@@ -237,8 +237,8 @@
         <translation>ٹائپ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation> پتہ</translation>
+        <source>Label</source>
+        <translation>چٹ</translation>
     </message>
     <message>
         <source>Sent to</source>

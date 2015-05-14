@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Plik *.CSV (rozdzielany przecinkami)</translation>
+        <translation>CSV (rozdzielany przecinkami)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -156,10 +156,6 @@
         <translation>Zmień hasło</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Podaj stare i nowe hasło do portfela.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Potwierdź szyfrowanie portfela</translation>
     </message>
@@ -186,10 +182,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Wprowadź nowe hasło do portfela.&lt;br/&gt;Proszę używać hasła złożonego z &lt;b&gt;10 lub więcej losowych znaków&lt;/b&gt; lub &lt;b&gt;ośmiu lub więcej słów.&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Program Bitcoin zamknie się aby dokończyć proces szyfrowania. Pamiętaj, że szyfrowanie portfela nie zabezpiecza w pełni Twoich bitcoinów przed kradzieżą przez wirusy lub trojany mogące zainfekować Twój komputer.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -311,10 +303,6 @@
         <translation>Wyślij monety na adres Bitcoin</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Zmienia opcje konfiguracji bitcoina</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Zapasowy portfel w innej lokalizacji</translation>
     </message>
@@ -422,33 +410,13 @@
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>Pokaż pomoc Rdzenia Bitcoin, aby zobaczyć listę wszystkich opcji linii poleceń</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktywne połączenie do sieci Bitcoin</numerusform><numerusform>%n aktywne połączenia do sieci Bitcoin</numerusform><numerusform>%n aktywnych połączeń do sieci Bitcoin</numerusform></translation>
-    </message>
     <message>
         <source>No block source available...</source>
         <translation>Brak dostępnych źródeł bloków...</translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n godzina</numerusform><numerusform>%n godzin</numerusform><numerusform>%n godzin</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n dzień</numerusform><numerusform>%n dni</numerusform><numerusform>%n dni</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n tydzień</numerusform><numerusform>%n tygodni</numerusform><numerusform>%n tygodni</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 i %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n rok</numerusform><numerusform>%n lata</numerusform><numerusform>%n lat</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -478,10 +446,6 @@
         <source>Up to date</source>
         <translation>Aktualny</translation>
     </message>
-    <message numerus="yes">
-        <source>Processed %n blocks of transaction history.</source>
-        <translation><numerusform>Przetworzono %n blok historii transakcji.</numerusform><numerusform>Przetworzono %n bloki historii transakcji.</numerusform><numerusform>Przetworzono %n bloków historii transakcji.</numerusform></translation>
-    </message>
     <message>
         <source>Catching up...</source>
         <translation>Synchronizuję się...</translation>
@@ -493,18 +457,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Transakcja przychodząca</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Data: %1
-Kwota: %2
-Typ: %3
-Adres: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -646,7 +598,7 @@ Adres: %4
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Kopiuj pył</translation>
+        <translation>Kopiuj kurz</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -709,10 +661,6 @@ Adres: %4
         <translation>nie</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Ta etykieta staje się czerwona, kiedy transakcja jest większa niż 1000 bajtów.</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Oznacza to wymaganą opłatę minimum %1 na kB.</translation>
     </message>
@@ -723,14 +671,6 @@ Adres: %4
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Transakcje o wyższym priorytecie zwykle szybciej zostają dołączone do bloku.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Ta etykieta jest czerwona, jeżeli priorytet jest mniejszy niż "średni"</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Etykieta staje się czerwona kiedy którykolwiek odbiorca otrzymuje kwotę mniejszą niż %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -853,30 +793,6 @@ Adres: %4
         <source>command-line options</source>
         <translation>opcje konsoli</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>Opcje UI</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Ustaw Język, na przykład "pl_PL" (domyślnie: systemowy)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Uruchom zminimalizowany</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ustaw certyfikaty główne SSL dla żądań płatności (domyślnie: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Pokazuj okno powitalne przy starcie (domyślnie: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Wybierz folder danych przy starcie (domyślnie: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -916,15 +832,7 @@ Adres: %4
         <source>Error</source>
         <translation>Błąd</translation>
     </message>
-    <message numerus="yes">
-        <source>%n GB of free space available</source>
-        <translation><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform><numerusform>%n GB dostępnego wolnego miejsca</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation><numerusform>(z %n GB potrzebnego)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform><numerusform>(z %n GB potrzebnych)</numerusform></translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -957,14 +865,6 @@ Adres: %4
     <message>
         <source>&amp;Main</source>
         <translation>Główne</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automatycznie uruchamia Bitcoin po zalogowaniu do systemu.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>Uruchamiaj Bitcoin wraz z zalogowaniem do &amp;systemu</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
@@ -1067,10 +967,6 @@ Adres: %4
         <translation>&amp;Minimalizuj do paska przy zegarku zamiast do paska zadań</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimalizuje zamiast zakończyć działanie programu przy zamykaniu okna. Kiedy ta opcja jest włączona, program zakończy działanie po wybieraniu Zamknij w menu.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimalizuj przy zamknięciu</translation>
     </message>
@@ -1081,10 +977,6 @@ Adres: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>Język &amp;Użytkownika:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Można tu ustawić język interfejsu uzytkownika. Żeby ustawienie przyniosło skutek trzeba uruchomić ponownie Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1121,10 +1013,6 @@ Adres: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Wymagany restart programu, aby uaktywnić zmiany.</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Program zostanie wyłączony. Czy chcesz kontynuować?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1233,10 +1121,6 @@ Adres: %4
         <translation>Sieć żądania płatności nie odpowiada sieci klienta.</translation>
     </message>
     <message>
-        <source>Payment request has expired.</source>
-        <translation>Zażądanie płatności się przedawniło.</translation>
-    </message>
-    <message>
         <source>Payment request is not initialized.</source>
         <translation>Żądanie płatności nie jest zainicjowane.</translation>
     </message>
@@ -1280,10 +1164,6 @@ Adres: %4
 <context>
     <name>PeerTableModel</name>
     <message>
-        <source>Address/Hostname</source>
-        <translation>Adres/Nazwa hosta</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Czas odpowiedzi</translation>
     </message>
@@ -1313,14 +1193,6 @@ Adres: %4
     <message>
         <source>%1 s</source>
         <translation>%1 s</translation>
-    </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>SIEĆ</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>NIEZNANY</translation>
     </message>
     <message>
         <source>None</source>
@@ -1497,16 +1369,8 @@ Adres: %4
         <translation>Plik logowania debugowania</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Otwórz plik logowania debugowania Bitcoin z obecnego katalogu z danymi. Może to potrwać kilka sekund przy większych plikach.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Wyczyść konsolę</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Witam w konsoli Bitcoin RPC.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1589,7 +1453,7 @@ Adres: %4
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Wyczyść pola formularza.</translation>
+        <translation>Wyczyść wszystkie pola formularza.</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1707,7 +1571,7 @@ Adres: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez etykiety)</translation>
+        <translation>(brak etykiety)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1722,7 +1586,7 @@ Adres: %4
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Wyślij Monety</translation>
+        <translation>Wyślij monety</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1787,10 +1651,6 @@ Adres: %4
     <message>
         <source>collapse fee-settings</source>
         <translation>zwiń opcje opłaty</translation>
-    </message>
-    <message>
-        <source>Minimize</source>
-        <translation>Minimalizuj</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -1905,10 +1765,6 @@ Adres: %4
         <translation>lub</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Adres odbiorcy jest nieprawidłowy, proszę poprawić.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Kwota do zapłacenia musi być większa od 0.</translation>
     </message>
@@ -1921,20 +1777,12 @@ Adres: %4
         <translation>Suma przekracza twoje saldo, gdy doliczymy %1 prowizji transakcyjnej.</translation>
     </message>
     <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Znaleziono powtórzony adres, można wysłać tylko raz na każdy adres podczas jednej operacji wysyłania.</translation>
-    </message>
-    <message>
         <source>Transaction creation failed!</source>
         <translation>Utworzenie transakcji nie powiodło się!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Transakcja została odrzucona! Może się to zdarzyć jeśli część monet z portfela została już wydana używając kopii pliku wallet.dat i nie zostało to tutaj uwzględnione.</translation>
-    </message>
-    <message>
-        <source>A fee higher than %1 is considered an insanely high fee.</source>
-        <translation>Opłata wyższa niż %1 jest uważana za szalenie wysoką.</translation>
     </message>
     <message>
         <source>Pay only the minimum fee of %1</source>
@@ -1946,7 +1794,7 @@ Adres: %4
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(bez etykiety)</translation>
+        <translation>(brak etykiety)</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -1985,7 +1833,7 @@ Adres: %4
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Wybierz wcześniej użyty adres </translation>
+        <translation>Wybierz wcześniej użyty adres</translation>
     </message>
     <message>
         <source>This is a normal payment.</source>
@@ -2012,16 +1860,8 @@ Adres: %4
         <translation>Wiadomość:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>To żądanie zapłaty jest zweryfikowane.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Wprowadź etykietę dla tego adresu by dodać go do listy użytych adresów</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>To żądanie zapłaty nie zostało zweryfikowane.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2052,10 +1892,6 @@ Adres: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>Podpi&amp;sz Wiadomość</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Możesz podpisywać wiadomości swoimi adresami aby udowodnić, że jesteś ich właścicielem. Uważaj, aby nie podpisywać niczego co wzbudza Twoje podejrzenia, ponieważ ktoś może stosować phishing próbując nakłonić Cię do ich podpisania. Akceptuj i podpisuj tylko w pełni zrozumiałe komunikaty i wiadomości.</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2104,10 +1940,6 @@ Adres: %4
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Zweryfikuj wiadomość</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Wpisz adres podpisu, wiadomość (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.) oraz podpis poniżej by sprawdzić wiadomość. Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle (człowiek pośrodku)</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -2222,10 +2054,6 @@ Adres: %4
         <source>Status</source>
         <translation>Status</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, przekazywany przez %n węzeł</numerusform><numerusform>, przekazywany przez %n węzły</numerusform><numerusform>, przekazywany przez %n węzłów</numerusform></translation>
-    </message>
     <message>
         <source>Date</source>
         <translation>Data</translation>
@@ -2257,10 +2085,6 @@ Adres: %4
     <message>
         <source>Credit</source>
         <translation>Przypisy</translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>potwierdzona przy %n bloku więcej</numerusform><numerusform>potwierdzona przy %n blokach więcej</numerusform><numerusform>potwierdzona przy %n blokach więcej</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2326,10 +2150,6 @@ Adres: %4
         <source>, has not been successfully broadcast yet</source>
         <translation>, nie został jeszcze pomyślnie rozesłany</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Otwórz dla %n bloku</numerusform><numerusform>Otwórz dla %n następnych bloków</numerusform><numerusform>Otwórz dla %n następnych bloków</numerusform></translation>
-    </message>
     <message>
         <source>unknown</source>
         <translation>nieznany</translation>
@@ -2357,10 +2177,6 @@ Adres: %4
         <translation>Typ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Niedojrzała (%1 potwierdzeń, będzie dostępna po %2)</translation>
     </message>
@@ -2383,6 +2199,10 @@ Adres: %4
     <message>
         <source>Offline</source>
         <translation>Offline</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etykieta</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
@@ -2431,10 +2251,6 @@ Adres: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Rodzaj transakcji.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Adres docelowy transakcji.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2743,10 +2559,6 @@ Adres: %4
         <translation>Opcje debugowania/testowania:</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Wykryj własny adres IP (domyślnie: 1 kiedy w trybie nasłuchu i brak -externalip )</translation>
-    </message>
-    <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
         <translation>Nie ładuj portfela i wyłącz wywołania RPC portfela</translation>
     </message>
@@ -2801,10 +2613,6 @@ Adres: %4
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Łącz z węzłami tylko w sieci &lt;net&gt; (ipv4, piv6 lub onion)</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Odbuduj indeks łańcucha bloków z obecnych plików blk000??.dat</translation>
     </message>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
@@ -2883,10 +2691,6 @@ Adres: %4
         <translation>Wyszukaj adresy węzłów wykorzystując zapytanie DNS, jeżeli masz mało adresów (domyślnie: 1 jeśli nie użyto -connect)</translation>
     </message>
     <message>
-        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
-        <translation>Wymagaj wysokiego priorytetu dla przekazywania transakcji darmowych lub o niskiej opłacie (domyślnie:%u)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Ustaw maksymalny rozmiar transakcji o wysokim priorytecie/niskiej prowizji w bajtach (domyślnie: %d)</translation>
     </message>
@@ -2901,6 +2705,10 @@ Adres: %4
     <message>
         <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>Ostrzeżenie: -matxfee jest ustawione bardzo wysokie! Tak wysokie opłaty mogą być zapłacone w jednej transakcji.</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Wybierz folder danych przy starcie (domyślnie: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -2979,8 +2787,20 @@ Adres: %4
         <translation>Wyślij bez opłaty jeżeli to możliwe (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ustaw certyfikaty główne SSL dla żądań płatności (domyślnie: -system-)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Ustaw Język, na przykład "pl_PL" (domyślnie: systemowy)</translation>
+    </message>
+    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Pokaż wszystkie opcje odpluskwiania (użycie: --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Pokazuj okno powitalne przy starcie (domyślnie: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2989,6 +2809,10 @@ Adres: %4
     <message>
         <source>Signing transaction failed</source>
         <translation>Podpisywanie transakcji nie powiodło się</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Uruchom zminimalizowany</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3029,10 +2853,6 @@ Adres: %4
     <message>
         <source>Warning</source>
         <translation>Ostrzeżenie</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Uwaga: Ta wersja jest przestarzała, wymagana jest aktualizacja!</translation>
     </message>
     <message>
         <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>

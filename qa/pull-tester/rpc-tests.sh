@@ -22,6 +22,7 @@ testScripts=(
     'txn_doublespend.py'
     'txn_doublespend.py --mineblock'
     'getchaintips.py'
+    'rawtransactions.py'
     'rest.py'
     'mempool_spendcoinbase.py'
     'mempool_coinbase_spends.py'
@@ -29,9 +30,11 @@ testScripts=(
     'zapwallettxes.py'
     'proxy_test.py'
     'merkle_blocks.py'
-#    'forknotify.py'
+    'signrawtransactions.py'
     'maxblocksinflight.py'
     'invalidblockrequest.py'
+    'rawtransactions.py'
+#    'forknotify.py'
 );
 if [ "x${ENABLE_BITCOIND}${ENABLE_UTILS}${ENABLE_WALLET}" = "x111" ]; then
     for (( i = 0; i < ${#testScripts[@]}; i++ ))

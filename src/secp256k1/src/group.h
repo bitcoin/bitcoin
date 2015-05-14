@@ -115,4 +115,7 @@ static void secp256k1_ge_from_storage(secp256k1_ge_t *r, const secp256k1_ge_stor
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
 static void secp256k1_ge_storage_cmov(secp256k1_ge_storage_t *r, const secp256k1_ge_storage_t *a, int flag);
 
+/** Rescale a jacobian point by b which must be non-zero. Constant-time. */
+static void secp256k1_gej_rescale(secp256k1_gej_t *r, const secp256k1_fe_t *b);
+
 #endif

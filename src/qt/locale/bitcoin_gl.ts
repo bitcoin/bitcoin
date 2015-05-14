@@ -148,10 +148,6 @@
         <translation>Cambiar contrasinal</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Introduce o vello e novo contrasinais no moedeiro.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirmar encriptación de moedeiro</translation>
     </message>
@@ -174,10 +170,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Moedeiro encriptado</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se pechará agora para rematar o proceso de encriptación. Lembra que encriptar o teu moedeiro non protexe totalmente os teus bitcoins de ser robados por malware que infecte o teu ordenador.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -279,10 +271,6 @@
         <translation>Enviar moedas a unha dirección Bitcoin</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Modificar opcións de configuración para Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Facer copia de seguridade do moedeiro noutra localización</translation>
     </message>
@@ -378,25 +366,9 @@
         <source>Open a bitcoin: URI or payment request</source>
         <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n conexión activa coa rede Bitcoin</numerusform><numerusform>%n conexións activas coa rede Bitcoin</numerusform></translation>
-    </message>
     <message>
         <source>No block source available...</source>
         <translation>Non hai orixe de bloques dispoñible...</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -437,18 +409,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Transacción entrante</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Data: %1
-Cantidade: %2
-Tipo: %3
-Dirección: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -733,26 +693,6 @@ Dirección: %4
         <source>command-line options</source>
         <translation>opcións da liña de comandos</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>opcións de UI</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Fixar idioma, por exemplo "de_DE" (por defecto: locale del sistema)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Comezar minimizado</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Amosar pantalla splash no arranque (por defecto: 1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escolle directorio de datos ao arrancar (por defecto: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -811,14 +751,6 @@ Dirección: %4
         <translation>&amp;Principal</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Comezar Bitcoin automáticamente despois de loguearse no sistema.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Comezar Bitcoin ao facer login no sistema</translation>
-    </message>
-    <message>
         <source>Reset all client options to default.</source>
         <translation>Restaurar todas as opcións de cliente ás por defecto</translation>
     </message>
@@ -863,10 +795,6 @@ Dirección: %4
         <translation>&amp;Minimizar á bandexa en lugar de á barra de tarefas.</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimizar en lugar de saír da aplicación cando se pecha a xanela. Cando se habilita esta opción, a aplicación so se pechará tras seleccionar Saír no menú.</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimizar ao pechar</translation>
     </message>
@@ -877,10 +805,6 @@ Dirección: %4
     <message>
         <source>User Interface &amp;language:</source>
         <translation>&amp;Linguaxe de interface de usuario:</translation>
-    </message>
-    <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>A linguaxe de interface de usuario pode fixarse aquí. Esta configuración terá efecto tras reiniciar Bitcoin.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1109,16 +1033,8 @@ Dirección: %4
         <translation>Arquivo de log de depuración</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Abrir o arquivo de log de depuración de Bitcoin dende o directorio actual de datos. Esto pode levar uns cantos segundos para grandes arquivos de log.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Limpar consola</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Benvido á consola RPC de Bitcoin</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1169,7 +1085,7 @@ Dirección: %4
     </message>
     <message>
         <source>Clear all fields of the form.</source>
-        <translation>Limpar todos os campos do formulario</translation>
+        <translation>Limpar tódolos campos do formulario</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1361,10 +1277,6 @@ Dirección: %4
         <translation>Copiar cambio</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>A dirección de recepción non é válida, por favor compróbea.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>A cantidade a pagar debe ser maior que 0.</translation>
     </message>
@@ -1375,10 +1287,6 @@ Dirección: %4
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>O total sobrepasa o teu balance cando se inclúe a tarifa de transacción %1.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Atopouse dirección duplicada, so se pode enviar a cada dirección unha vez por operación.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1444,16 +1352,8 @@ Dirección: %4
         <translation>Eliminar esta entrada</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>Esta é unha solicitude de pago verificada</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Introduce unha etiqueta para esta dirección para engadila á listaxe de direccións empregadas</translation>
-    </message>
-    <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Esta é unha solicitude de pago non verificada</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1476,10 +1376,6 @@ Dirección: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Asinar Mensaxe</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Podes asinar mensaxes coas túas direccións para probar que ti as posees. Ten conta de non asinar nada vago, xa que hai ataques de phishing que tentarán que asines coa túa identidade por riba deles. Asina únicamente declaracións totalmente detalladas coas que esteas de acordo.</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -1528,10 +1424,6 @@ Dirección: %4
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Verificar Mensaxe</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Introduce a dirección coa que asinar, a mensaxe (asegúrate de copiar exactamente os saltos de liña, espacios, tabulacións, etc.) e a sinatura debaixo para verificar a mensaxe. Ten coidado de non ler máis na sinatura do que hai no mensaxe asinado mesmo, a fin de evitar ser cazado nun ataque de home no medio.</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -1765,14 +1657,6 @@ Dirección: %4
         <translation>Tipo</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Dirección</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Abrir para %n bloque máis</numerusform><numerusform>Abrir para %n bloques máis</numerusform></translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Aberto ata %1</translation>
     </message>
@@ -1787,6 +1671,10 @@ Dirección: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Xerado pero non aceptado</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1823,10 +1711,6 @@ Dirección: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Tipo de transacción.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Dirección de destino da transacción.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2111,10 +1995,6 @@ Dirección: %4
         <translation>Detectada base de datos de bloques corrupta.</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Descobrir dirección IP propia (por defecto: 1 se á escoita e non -externalip)</translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Queres reconstruír a base de datos de bloques agora?</translation>
     </message>
@@ -2155,10 +2035,6 @@ Dirección: %4
         <translation>Non hai suficientes descritores de arquivo dispoñibles.</translation>
     </message>
     <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Reconstruír índice de cadea de bloque dende os ficheiros actuais blk000??.dat</translation>
-    </message>
-    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Especificar arquivo do moedeiro (dentro do directorio de datos)</translation>
     </message>
@@ -2187,6 +2063,10 @@ Dirección: %4
         <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
     </message>
     <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Escolle directorio de datos ao arrancar (por defecto: 0)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Información</translation>
     </message>
@@ -2203,12 +2083,24 @@ Dirección: %4
         <translation>Enviar traza/información de depuración á consola en lugar de ao arquivo debug.log</translation>
     </message>
     <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Fixar idioma, por exemplo "de_DE" (por defecto: locale del sistema)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Amosar pantalla splash no arranque (por defecto: 1)</translation>
+    </message>
+    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Recortar o arquivo debug.log ao arrancar o cliente (por defecto: 1 cando no-debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Fallou a sinatura da transacción</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Comezar minimizado</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2233,10 +2125,6 @@ Dirección: %4
     <message>
         <source>Warning</source>
         <translation>Precaución</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Precaución: Esta versión é obsoleta, precísase unha actualización!</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>

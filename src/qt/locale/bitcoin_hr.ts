@@ -83,7 +83,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Datoteka vrijednosti odvojenih zarezom (*. csv)</translation>
+        <translation>Datoteka podataka odvojenih zarezima (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -152,10 +152,6 @@
         <translation>Promjena lozinke</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Unesite staru i novu lozinku za novčanik.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Potvrdi šifriranje novčanika</translation>
     </message>
@@ -182,10 +178,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Unesite novu lozinku za novčanik. &lt;br/&gt;Molimo Vas da koristite zaporku od &lt;b&gt;deset ili više slučajnih znakova&lt;/b&gt;, ili &lt;b&gt;osam ili više riječi.&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin će se sada zatvoriti kako bi dovršio postupak šifriranja. Zapamtite da šifriranje vašeg novčanika ne može u potpunosti zaštititi vaše bitcoine od krađe preko zloćudnog softvera koji bi bio na vašem računalu.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -307,10 +299,6 @@
         <translation>Slanje novca na bitcoin adresu</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Promijeni postavke konfiguracije za bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Napravite sigurnosnu kopiju novčanika na drugoj lokaciji</translation>
     </message>
@@ -406,10 +394,6 @@
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Prikaži popis korištenih adresa i oznaka za primanje isplate</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n aktivna veza na Bitcoin mrežu</numerusform><numerusform>%n aktivne veze na Bitcoin mrežu</numerusform><numerusform>%n aktivnih veza na Bitcoin mrežu</numerusform></translation>
-    </message>
     <message>
         <source>Error</source>
         <translation>Greška</translation>
@@ -437,18 +421,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Dolazna transakcija</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Datum:%1
-Iznos:%2
-Tip:%3
-Adresa:%4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -563,19 +535,11 @@ Adresa:%4
     </message>
     <message>
         <source>About Bitcoin Core</source>
-        <translation>O Bitcoin Jezrgu</translation>
+        <translation>O Bitcoinovoj jezgri</translation>
     </message>
     <message>
         <source>Usage:</source>
         <translation>Upotreba:</translation>
-    </message>
-    <message>
-        <source>UI options</source>
-        <translation>UI postavke</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Pokreni minimiziran</translation>
     </message>
     </context>
 <context>
@@ -590,7 +554,7 @@ Adresa:%4
     </message>
     <message>
         <source>Error</source>
-        <translation>Pogreška</translation>
+        <translation>Greška</translation>
     </message>
     </context>
 <context>
@@ -605,14 +569,6 @@ Adresa:%4
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Glavno</translation>
-    </message>
-    <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Automatski pokreni Bitcoin kad se uključi računalo</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Pokreni Bitcoin kod pokretanja sustava</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -645,10 +601,6 @@ Adresa:%4
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimiziraj u sistemsku traku umjesto u traku programa</translation>
-    </message>
-    <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimizirati umjesto izaći iz aplikacije kada je prozor zatvoren. Kada je ova opcija omogućena, aplikacija će biti zatvorena tek nakon odabira Izlaz u izborniku.</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -789,10 +741,6 @@ Adresa:%4
         <translation>Očisti konzolu</translation>
     </message>
     <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Dobrodošli u Bitcoin RPC konzolu.</translation>
-    </message>
-    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Kako bi navigirali kroz povijest koristite strelice gore i dolje. &lt;b&gt;Ctrl-L&lt;/b&gt; kako bi očistili ekran.</translation>
     </message>
@@ -913,10 +861,6 @@ Adresa:%4
         <translation>ili</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Adresa primatelja je nevaljala, molimo provjerite je ponovo.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Iznos mora biti veći od 0.</translation>
     </message>
@@ -927,10 +871,6 @@ Adresa:%4
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Iznos je veći od stanja računa kad se doda naknada za transakcije od %1.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Pronašli smo adresu koja se ponavlja. U svakom plaćanju program može svaku adresu koristiti samo jedanput.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -984,10 +924,6 @@ Adresa:%4
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Potpišite poruku</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Možete potpisati poruke sa svojom adresom kako bi dokazali da ih posjedujete. Budite oprezni da ne potpisujete ništa mutno, jer bi vas phishing napadi mogli na prevaru natjerati da prepišete svoj identitet njima. Potpisujte samo detaljno objašnjene izjave sa kojima se slažete.</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1165,10 +1101,6 @@ Adresa:%4
         <translation>Tip</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Otvoren do %1</translation>
     </message>
@@ -1183,6 +1115,10 @@ Adresa:%4
     <message>
         <source>Generated but not accepted</source>
         <translation>Generirano, ali nije prihvaćeno</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Oznaka</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1219,10 +1155,6 @@ Adresa:%4
     <message>
         <source>Type of transaction.</source>
         <translation>Vrsta transakcije.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Odredište transakcije</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -1437,6 +1369,10 @@ Adresa:%4
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Šalji trace/debug informacije na konzolu umjesto u debug.log datoteku</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Pokreni minimiziran</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>

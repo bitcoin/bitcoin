@@ -258,18 +258,6 @@
         <source>Incoming transaction</source>
         <translation>Giao dịch đang tới</translation>
     </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Ngày: %1
-Lượng: %2
-Loại: %3
-Địa chỉ: %4
-</translation>
-    </message>
     </context>
 <context>
     <name>ClientModel</name>
@@ -470,10 +458,6 @@ Loại: %3
         <source>Amount</source>
         <translation>Lượng</translation>
     </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>NETWORK</translation>
-    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -621,8 +605,8 @@ Loại: %3
         <translation>Ngày tháng</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Địa chỉ</translation>
+        <source>Label</source>
+        <translation>Nhãn</translation>
     </message>
     </context>
 <context>
