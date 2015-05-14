@@ -100,7 +100,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     prevBlocks(0),
     spinnerFrame(0)
 {
-    GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
+    GUIUtil::restoreWindowGeometry("nWindow", QSize(760, 550), this);
 
     QString windowTitle = tr("Bitcoin Core") + " - ";
 #ifdef ENABLE_WALLET
