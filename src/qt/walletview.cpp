@@ -77,8 +77,6 @@ WalletView::WalletView(QWidget *parent):
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
 
-    // Compute sum of selected transactions
-    connect(transactionView, SIGNAL(clicked(QModelIndex)), transactionView, SLOT(computeSum()));
     // Update wallet with sum of selected transactions
     connect(transactionView, SIGNAL(trxAmount(QString)), this, SLOT(trxAmount(QString)));
       
