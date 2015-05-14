@@ -16,6 +16,7 @@ QT_BEGIN_NAMESPACE
 class QComboBox;
 class QDateTimeEdit;
 class QFrame;
+class QItemSelectionModel;
 class QLineEdit;
 class QMenu;
 class QModelIndex;
@@ -59,7 +60,6 @@ private:
     WalletModel *model;
     TransactionFilterProxy *transactionProxyModel;
     QTableView *transactionView;
-
     QComboBox *dateWidget;
     QComboBox *typeWidget;
     QLineEdit *addressWidget;
@@ -95,6 +95,9 @@ signals:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 
+    /** Send computed sum back to wallet-view */
+    void trxAmount(QString amount);
+
 public slots:
     void chooseDate(int idx);
     void chooseType(int idx);
@@ -102,7 +105,7 @@ public slots:
     void changedAmount(const QString &amount);
     void exportClicked();
     void focusTransaction(const QModelIndex&);
-
+    void computeSum();
 };
 
 #endif // TRANSACTIONVIEW_H
