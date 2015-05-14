@@ -21,14 +21,20 @@
     <string>This is a normal payment.</string>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Sunken</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <property name="spacing">
+    <property name="topMargin">
+     <number>8</number>
+    </property>
+    <property name="bottomMargin">
+     <number>4</number>
+    </property>
+    <property name="horizontalSpacing">
      <number>12</number>
+    </property>
+    <property name="verticalSpacing">
+     <number>8</number>
     </property>
     <item row="0" column="0">
      <widget class="QLabel" name="payToLabel">
@@ -190,6 +196,13 @@
       </property>
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0" colspan="2">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -618,10 +631,7 @@
     <bool>true</bool>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Sunken</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout_is">
     <property name="spacing">
@@ -1150,10 +1160,7 @@
     <bool>true</bool>
    </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Sunken</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <layout class="QGridLayout" name="gridLayout_s">
     <property name="spacing">
