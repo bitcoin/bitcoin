@@ -615,6 +615,7 @@ public:
 private:
     bool fNeedHandshake;
     bool fUseSSL;
+    SSLIOStreamDevice& operator=(SSLIOStreamDevice const&);
     asio::ssl::stream<typename Protocol::socket>& stream;
 };
 
