@@ -1333,7 +1333,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                      mdex_amountRemaining = temp_metadexoffer.getAmountRemaining();
                                      mdex_action = temp_metadexoffer.getAction();
                                      // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
-                                     XDOUBLE tempUnitPrice = 0;
+                                     rational_t tempUnitPrice(int128_t(0));
                                      if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
                                          tempUnitPrice = temp_metadexoffer.inversePrice();
                                          if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
@@ -1341,7 +1341,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                          tempUnitPrice = temp_metadexoffer.unitPrice();
                                          if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
                                      }
-                                     mdex_unitPriceStr = tempUnitPrice.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+                                     mdex_unitPriceStr = xToString(tempUnitPrice);
                                      if(1 == mdex_action) mdex_actionStr = "new sell";
                                      if(2 == mdex_action) mdex_actionStr = "cancel price";
                                      if(3 == mdex_action) mdex_actionStr = "cancel pair";
