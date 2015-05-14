@@ -27,12 +27,17 @@ static void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 QImage SingleColorImage(const QString& filename, const QColor& colorbase)
 {
     QImage img(filename);
+#if !defined(WIN32) && !defined(MAC_OSX)
     MakeSingleColorImage(img, colorbase);
+#endif
     return img;
 }
 
 QIcon SingleColorIcon(const QIcon& ico, const QColor& colorbase)
 {
+#if defined(WIN32) || defined(MAC_OSX)
+    return ico;
+#else
     QIcon new_ico;
     QSize sz;
     Q_FOREACH(sz, ico.availableSizes())
@@ -42,6 +47,7 @@ QIcon SingleColorIcon(const QIcon& ico, const QColor& colorbase)
         new_ico.addPixmap(QPixmap::fromImage(img));
     }
     return new_ico;
+#endif
 }
 
 QIcon SingleColorIcon(const QString& filename, const QColor& colorbase)
@@ -51,6 +57,9 @@ QIcon SingleColorIcon(const QString& filename, const QColor& colorbase)
 
 QColor SingleColor()
 {
+#if defined(WIN32) || defined(MAC_OSX)
+    return QColor(0,0,0);
+#else
     const QColor colorHighlightBg(QApplication::palette().color(QPalette::Highlight));
     const QColor colorHighlightFg(QApplication::palette().color(QPalette::HighlightedText));
     const QColor colorText(QApplication::palette().color(QPalette::WindowText));
@@ -61,6 +70,7 @@ QColor SingleColor()
     else
         colorbase = colorHighlightFg;
     return colorbase;
+#endif
 }
 
 QIcon SingleColorIcon(const QString& filename)
