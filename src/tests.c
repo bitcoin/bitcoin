@@ -56,6 +56,7 @@ void random_group_element_test(secp256k1_ge_t *ge) {
     do {
         random_field_element_test(&fe);
         if (secp256k1_ge_set_xo_var(ge, &fe, secp256k1_rand32() & 1)) {
+            secp256k1_fe_normalize(&ge->y);
             break;
         }
     } while(1);
@@ -932,7 +933,7 @@ void ge_equals_ge(const secp256k1_ge_t *a, const secp256k1_ge_t *b) {
         return;
     }
     CHECK(secp256k1_fe_equal_var(&a->x, &b->x));
-    CHECK(secp256k1_fe_equal_var(&b->y, &b->y));
+    CHECK(secp256k1_fe_equal_var(&a->y, &b->y));
 }
 
 /* This compares jacobian points including their Z, not just their geometric meaning. */
@@ -1323,6 +1324,8 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     /* X * (point + G) + (order-X) * (pointer + G) = 0 */
     secp256k1_scalar_t x;
     secp256k1_scalar_t nx;
+    secp256k1_scalar_t zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    secp256k1_scalar_t one = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_gej_t res1, res2;
     secp256k1_ge_t res3;
     unsigned char pub[65];
@@ -1340,6 +1343,16 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, 0) == 0);
     psize = 65;
     CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, 1) == 0);
+    /* check zero/one edge cases */
+    secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &zero, &zero);
+    secp256k1_ge_set_gej(&res3, &res1);
+    CHECK(secp256k1_ge_is_infinity(&res3));
+    secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &one, &zero);
+    secp256k1_ge_set_gej(&res3, &res1);
+    ge_equals_gej(&res3, point);
+    secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &zero, &one);
+    secp256k1_ge_set_gej(&res3, &res1);
+    ge_equals_ge(&res3, &secp256k1_ge_const_g);
 }
 
 void run_point_times_order(void) {
@@ -1487,6 +1500,33 @@ void run_ecmult_gen_blind(void) {
     }
 }
 
+#ifdef USE_ENDOMORPHISM
+/***** ENDOMORPHISH TESTS *****/
+void test_scalar_split(void) {
+    secp256k1_scalar_t full;
+    secp256k1_scalar_t s1, slam;
+    const unsigned char zero[32] = {0};
+    unsigned char tmp[32];
+
+    random_scalar_order_test(&full);
+    secp256k1_scalar_split_lambda_var(&s1, &slam, &full);
+
+    /* check that both are <= 128 bits in size */
+    if (secp256k1_scalar_is_high(&s1))
+        secp256k1_scalar_negate(&s1, &s1);
+    if (secp256k1_scalar_is_high(&slam))
+        secp256k1_scalar_negate(&slam, &slam);
+
+    secp256k1_scalar_get_b32(tmp, &s1);
+    CHECK(memcmp(zero, tmp, 16) == 0);
+    secp256k1_scalar_get_b32(tmp, &slam);
+    CHECK(memcmp(zero, tmp, 16) == 0);
+}
+
+void run_endomorphism_tests(void) {
+    test_scalar_split();
+}
+#endif
 
 void random_sign(secp256k1_scalar_t *sigr, secp256k1_scalar_t *sigs, const secp256k1_scalar_t *key, const secp256k1_scalar_t *msg, int *recid) {
     secp256k1_scalar_t nonce;
@@ -2226,6 +2266,11 @@ int main(int argc, char **argv) {
     run_ecmult_chain();
     run_ecmult_constants();
     run_ecmult_gen_blind();
+
+    /* endomorphism tests */
+#ifdef USE_ENDOMORPHISM
+    run_endomorphism_tests();
+#endif
 
     /* ecdsa tests */
     run_random_pubkeys();
