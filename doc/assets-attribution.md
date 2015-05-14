@@ -22,6 +22,7 @@ The following is a list of assets used in the bitcoin source and their proper at
     src/qt/res/icons/receive.png, src/qt/res/icons/remove.png,
     src/qt/res/icons/send.png, src/qt/res/icons/synced.png,
     src/qt/res/icons/transaction*.png, src/qt/res/icons/tx_output.png,
+    src/qt/res/icons/warning.png
 
 Jonas Schnelli
 -----------------------
