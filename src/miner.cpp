@@ -417,8 +417,10 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 {
     // Create new block
     auto_ptr<Credits_CBlockTemplate> pblocktemplate(new Credits_CBlockTemplate());
-    if(!pblocktemplate.get())
-        return NULL;
+    if(!pblocktemplate.get()) {
+        LogPrintf("\n\nERROR! Could not allocate new block template.\n\n");
+    	return NULL;
+    }
     Credits_CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
     // Create coinbase tx
@@ -819,9 +821,11 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.begin()+1, 0); // Deposits can not have tx fees
 				pblocktemplate->vTxSigOps.insert(pblocktemplate->vTxSigOps.begin()+1, -1); // updated at end
 				if(!RecalculateCoinbaseDeposit(pblock, tmpCoinbaseHash, keystore, pdepositWallet, coinbaseDepositDisabled)) {
+		            LogPrintf("\n\nERROR! Coinbase deposit could not be recalcualted\n\n");
 					return NULL;
 				}
 				if(!VerifyDepositSignatures("CreateNewBlock", pblock)) {
+		            LogPrintf("\n\nERROR! Deposit signatures could not be verified.\n\n");
 					return NULL;
 				}
 			}
@@ -875,9 +879,6 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 								LogPrintf("\n\nERROR! No deposits could be found for mining. \n\n");
 								return NULL;
 							}
-						} else {
-							LogPrintf("\n\nERROR! Insufficient funds for mining \n\n");
-							return NULL;
 						}
 					}
 
@@ -1114,23 +1115,31 @@ unsigned int static ScanHash_CryptoPP(char* pdata, char* midHash, char* phash, c
 Credits_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseReservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
     CPubKey pubkeyCoinbase;
-    if (!coinbaseReservekey.GetReservedKey(pubkeyCoinbase))
+    if (!coinbaseReservekey.GetReservedKey(pubkeyCoinbase)) {
+        LogPrintf("\n\nERROR! Could not get coinbase reserve key.\n\n");
         return NULL;
+    }
     CScript scriptPubKeyCoinbase = CScript() << pubkeyCoinbase << OP_CHECKSIG;
 
     CPubKey pubkeyDeposit;
-    if (!depositReserveKey.GetReservedKey(pubkeyDeposit))
-        return NULL;
+    if (!depositReserveKey.GetReservedKey(pubkeyDeposit)){
+        LogPrintf("\n\nERROR! Could not get deposit reserve key.\n\n");
+    	return NULL;
+    }
     CScript scriptPubKeyDeposit = CScript() << pubkeyDeposit << OP_CHECKSIG;
 
     CPubKey pubkeyDepositChange;
-    if (!depositChangeReserveKey.GetReservedKey(pubkeyDepositChange))
-        return NULL;
+    if (!depositChangeReserveKey.GetReservedKey(pubkeyDepositChange)) {
+        LogPrintf("\n\nERROR! Could not get deposit change reserve key.\n\n");
+    	return NULL;
+    }
     CScript scriptPubKeyDepositChange = CScript() << pubkeyDepositChange << OP_CHECKSIG;
 
     CPubKey pubkeySigningDeposit;
-    if (!depositReserveSigningKey.GetReservedKey(pubkeySigningDeposit))
-        return NULL;
+    if (!depositReserveSigningKey.GetReservedKey(pubkeySigningDeposit)) {
+        LogPrintf("\n\nERROR! Could not get deposit signing reserve key.\n\n");
+    	return NULL;
+    }
 
     return CreateNewBlock(scriptPubKeyCoinbase, scriptPubKeyDeposit, scriptPubKeyDepositChange, pubkeySigningDeposit, keystore, pdepositWallet, coinbaseDepositDisabled);
 }

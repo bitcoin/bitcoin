@@ -355,7 +355,7 @@ Value getwork(const Array& params, bool fHelp)
     if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Credits is downloading blocks...");
 
-    typedef map<pair<uint256, uint256>, pair<Credits_CBlock*, pair<Credits_CTransaction, pair<Credits_CTransaction, CCompactSignature> > > > mapNewBlock_t;
+    typedef map<pair<uint256, uint256>, pair<Credits_CBlock*, pair<Credits_CTransaction, pair<unsigned int, pair<Credits_CTransaction, std::vector<CCompactSignature> > > > > > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
     static vector<Credits_CBlockTemplate*> vNewBlockTemplate;
 
@@ -406,16 +406,30 @@ Value getwork(const Array& params, bool fHelp)
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
 
         //Arbitrary size limit to prevent running out of memory
-    	if(mapNewBlock.size() > 10000) {
+    	if(mapNewBlock.size() > 5000) {
     		mapNewBlock.clear();
     	}
 
         // Save
     	const Credits_CTransaction coinbase = pblock->vtx[0];
-    	//TODO - These assumption is only correct if there are only one deposit. This WILL cause external miner integration failures in the future.
-    	const Credits_CTransaction coinbaseSpendingDeposit = pblock->vtx[1];
-    	const CCompactSignature coinbaseSpendingDepositSig = pblock->vsig[0];
-        mapNewBlock[make_pair(pblock->hashMerkleRoot, pblock->hashSigMerkleRoot)] = make_pair(pblock, make_pair(coinbase, make_pair(coinbaseSpendingDeposit, coinbaseSpendingDepositSig)));
+    	//Find the position of the coinbase referencing deposit (if any)
+    	const uint256 coinbaseHash = coinbase.GetHash();
+    	unsigned int coinbaseSpendingDepositPos = 1;
+    	for (unsigned int i = coinbaseSpendingDepositPos; i < pblock->vtx.size(); i++) {
+    		if (pblock->vtx[i].IsDeposit()) {
+    			Credits_CTransaction &txDeposit = pblock->vtx[i];
+    			Credits_CTxIn & txDepositIn = txDeposit.vin[0];
+
+    			if(txDepositIn.prevout.hash == coinbaseHash) {
+    				coinbaseSpendingDepositPos = i;
+    			}
+    		} else {
+    			break;
+    		}
+    	}
+    	const Credits_CTransaction coinbaseSpendingDeposit = pblock->vtx[coinbaseSpendingDepositPos];
+    	const std::vector<CCompactSignature> vSigs = pblock->vsig;
+        mapNewBlock[make_pair(pblock->hashMerkleRoot, pblock->hashSigMerkleRoot)] = make_pair(pblock, make_pair(coinbase, make_pair(coinbaseSpendingDepositPos, make_pair(coinbaseSpendingDeposit, vSigs))));
 
         // Pre-build hash buffers
         char pmidstate[32];
@@ -456,18 +470,21 @@ Value getwork(const Array& params, bool fHelp)
         for (int i = 0; i < 168/4; i++)
             ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
 
+        pair<uint256, uint256> blockKey = make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot);
+
         // Get saved block
-        if (!mapNewBlock.count(make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot))) {
+        if (!mapNewBlock.count(blockKey)) {
         	LogPrintf("could not find block from key, merkle: %s, sigmerkle: %s, time: %d\n", pdata->hashMerkleRoot.GetHex(), pdata->hashSigMerkleRoot.GetHex(), pdata->nTime);
         	return false;
         }
-        Credits_CBlock block = *mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].first;
 
+        Credits_CBlock block = *mapNewBlock[blockKey].first;
         block.nTime = pdata->nTime;
         block.nNonce = pdata->nNonce;
-        block.vtx[0] = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].second.first;
-        block.vtx[1] = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].second.second.first;
-        block.vsig[0] = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].second.second.second;
+        block.vtx[0] = mapNewBlock[blockKey].second.first;
+    	unsigned int coinbaseSpendingDepositPos = mapNewBlock[blockKey].second.second.first;
+        block.vtx[coinbaseSpendingDepositPos] = mapNewBlock[blockKey].second.second.second.first;
+        block.vsig = mapNewBlock[blockKey].second.second.second.second;
         block.hashMerkleRoot = block.BuildMerkleTree();
         block.hashSigMerkleRoot = block.BuildSigMerkleTree();
 
