@@ -38,7 +38,10 @@ map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 CActiveMasternode activeMasternode;
 
 // Count peers we've requested the list from
-int RequestedMasterNodeList = 0;
+int RequestedMasternodeAssets = 0;
+bool IsSyncingMasternodeAssets(){
+    return RequestedMasternodeAssets != MASTERNODE_LIST_SYNCED;
+}
 
 /* *** BEGIN DARKSEND MAGIC - DASH **********
     Copyright (c) 2014-2015, Dash Developers
@@ -2272,7 +2275,7 @@ void ThreadCheckDarkSendPool()
         if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
 
         //try to sync the Masternode list and payment list every 5 seconds from at least 3 nodes
-        if(c % 5 == 0 && RequestedMasterNodeList < 3){
+        if(c % 5 == 0 && RequestedMasternodeAssets <= 2){
             bool fIsInitialDownload = IsInitialBlockDownload();
             if(!fIsInitialDownload) {
                 LOCK(cs_vNodes);
@@ -2290,11 +2293,15 @@ void ThreadCheckDarkSendPool()
                         mnodeman.DsegUpdate(pnode);
 
                         pnode->PushMessage("mnget"); //sync payees
+                        pnode->PushMessage("mnvs"); //sync masternode votes
                         pnode->PushMessage("getsporks"); //get current network sporks
-                        RequestedMasterNodeList++;
+                        RequestedMasternodeAssets++;
+                        break;
                     }
                 }
             }
+        } else if(c % 60 == 0 && RequestedMasternodeAssets == 3){
+            RequestedMasternodeAssets = MASTERNODE_LIST_SYNCED; //done syncing
         }
 
         if(c % 60 == 0){

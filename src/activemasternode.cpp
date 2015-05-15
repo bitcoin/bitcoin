@@ -171,6 +171,7 @@ bool CActiveMasternode::Mnping(CTxIn vin, CService service, CKey keyMasternode, 
         return false;
     }
 
+    mapSeenMasternodePing[mnp.GetHash()] = mnp;
     mnp.Relay();
 
     return true;
@@ -245,6 +246,8 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
     if(pmn != NULL)
     {
         CMasternodeBroadcast mnb(*pmn);
+
+        mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
         //send to all peers
         LogPrintf("CActiveMasternode::Register() - RelayElectionEntry vin = %s\n", vin.ToString().c_str());
         mnb.Relay(false);

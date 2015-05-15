@@ -108,6 +108,7 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
+        payee = CScript();
     }
 
     CBlockHeader GetBlockHeader() const
