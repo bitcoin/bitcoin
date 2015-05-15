@@ -11,6 +11,7 @@
 #include <QPalette>
 #include <QPixmap>
 
+#if !defined(WIN32) && !defined(MAC_OSX)
 static void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 {
     img = img.convertToFormat(QImage::Format_ARGB32);
@@ -23,6 +24,7 @@ static void MakeSingleColorImage(QImage& img, const QColor& colorbase)
         }
     }
 }
+#endif
 
 QImage SingleColorImage(const QString& filename, const QColor& colorbase)
 {
