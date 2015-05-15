@@ -79,6 +79,9 @@ static const int BITCREDIT_MAX_BITCOIN_LINK_HEIGHT = 600000;
 static const int64_t BITCREDIT_MAX_BITCOIN_CLAIM = 15000000 * COIN;
 /** At this depth block values are deducted from the deposit calculation amount.*/
 static const int BITCREDIT_DEPOSIT_CUTOFF_DEPTH = 400000;
+/** The difficulty increase imposed by too low deposits will gradually be enforced up until this level,
+ * when it will have full effect. This is the monetary base level at which the block reward will be at the maximum as well */
+static const uint64_t BITCREDIT_EXPONENTIAL_DEPOSIT_ENFORCE_AT = 8160000 * COIN;
 /** The totalDepositBase level when a lowered reward will be enforced if deposit is not large enough.
  *  Up until this level the only thing a too low deposit will lead to is a higher difficulty. */
 static const int64_t BITCREDIT_ENFORCE_SUBSIDY_REDUCTION_AFTER = 15000000 * COIN;
@@ -181,7 +184,7 @@ bool Bitcredit_ActivateBestChain(CValidationState &state);
 /** The max subsidy a block can give if the deposit is large enough */
 uint64_t Bitcredit_GetMaxBlockSubsidy(const uint64_t nTotalMonetaryBase);
 /** Gets the coinbase value with fees and deposit amount taken into account */
-uint64_t Bitcredit_GetAllowedBlockSubsidy(const uint64_t nTotalMonetaryBase, const uint64_t nTotalDepositBase, uint64_t nDepositAmount);
+uint64_t Bitcredit_GetAllowedBlockSubsidy(const uint64_t nTotalMonetaryBase, uint64_t nDepositAmount, const uint64_t nTotalDepositBase);
 unsigned int Bitcredit_GetNextWorkRequired(const Credits_CBlockIndex* pindexLast, const Credits_CBlockHeader *pblock);
 
 /**
@@ -195,7 +198,7 @@ unsigned int Bitcredit_GetNextWorkRequired(const Credits_CBlockIndex* pindexLast
 uint64_t Bitcredit_GetRequiredDeposit(const uint64_t nTotalDepositBase);
 
 //ONLY exposed here for testability
-uint256 Bitcredit_ReduceByReqDepositLevel(uint256 nValue, const uint64_t nTotalDepositBase, const uint64_t nDepositAmount);
+uint256 Bitcredit_ReduceByReqDepositLevel(const uint256 nValue, const uint64_t nDepositAmount, const uint64_t nTotalDepositBase);
 
 
 void Bitcredit_UpdateTime(Credits_CBlockHeader& block, const Credits_CBlockIndex* pindexPrev);

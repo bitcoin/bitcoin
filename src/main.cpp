@@ -1220,8 +1220,17 @@ uint64_t Bitcredit_GetRequiredDeposit(const uint64_t nTotalDepositBase) {
 	return nTotalDepositBase / (2 * Bitcredit_Params().DepositLockDepth());
 }
 
-uint256 Bitcredit_ReduceByReqDepositLevel(uint256 nValue, const uint64_t nTotalDepositBase, const uint64_t nDepositAmount) {
-	return ReduceByFraction(nValue, nDepositAmount, Bitcredit_GetRequiredDeposit(nTotalDepositBase));
+uint256 Bitcredit_ReduceByReqDepositLevel(const uint256 nValue, const uint64_t nDepositAmount, const uint64_t nTotalDepositBase) {
+	const uint64_t reqDeposit = Bitcredit_GetRequiredDeposit(nTotalDepositBase);
+	const uint256 linear = ReduceByFraction(nValue, nDepositAmount, reqDeposit);
+	uint256 result = linear;
+
+	//Exponential enforcement of deposits is not applied unitl approx block 140000
+	if(nTotalDepositBase >= BITCREDIT_EXPONENTIAL_DEPOSIT_ENFORCE_AT) {
+		const uint256 exponential = ReduceByFraction(linear, nDepositAmount, reqDeposit);
+		result = exponential;
+	}
+	return result;
 }
 
 uint64_t Bitcredit_GetMaxBlockSubsidy(const uint64_t nTotalMonetaryBase) {
@@ -1245,10 +1254,10 @@ uint64_t Bitcredit_GetMaxBlockSubsidy(const uint64_t nTotalMonetaryBase) {
     return nSubsidy;
 }
 
-uint64_t Bitcredit_GetAllowedBlockSubsidy(const uint64_t nTotalMonetaryBase, const uint64_t nTotalDepositBase, uint64_t nDepositAmount) {
+uint64_t Bitcredit_GetAllowedBlockSubsidy(const uint64_t nTotalMonetaryBase, uint64_t nDepositAmount, const uint64_t nTotalDepositBase) {
 	uint64_t nSubsidy = Bitcredit_GetMaxBlockSubsidy(nTotalMonetaryBase);
 	if(nTotalDepositBase > BITCREDIT_ENFORCE_SUBSIDY_REDUCTION_AFTER) {
-		nSubsidy = Bitcredit_ReduceByReqDepositLevel(uint256(nSubsidy), nTotalDepositBase, nDepositAmount).GetLow64();
+		nSubsidy = Bitcredit_ReduceByReqDepositLevel(uint256(nSubsidy), nDepositAmount, nTotalDepositBase).GetLow64();
 	}
 	return nSubsidy;
 }
@@ -1359,7 +1368,7 @@ bool Bitcredit_CheckProofOfWork(uint256 hash, unsigned int nBits, uint64_t nTota
         return error("Credits: CheckProofOfWork() : nBits below minimum work");
 
     //Adjust the target depending on how much miner has added as deposit
-    bnTarget = Bitcredit_ReduceByReqDepositLevel(bnTarget, nTotalDepositBase, nDepositAmount);
+    bnTarget = Bitcredit_ReduceByReqDepositLevel(bnTarget, nDepositAmount, nTotalDepositBase);
 
     // Check proof of work matches claimed amount
     if (hash > bnTarget)
@@ -2167,7 +2176,7 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
 
     //Check that coinbase out is in range
     Credits_CBlockIndex* prevBlockIndex = (Credits_CBlockIndex*)pindex->pprev;
-    const uint64_t allowedSubsidyIncFee = Bitcredit_GetAllowedBlockSubsidy(prevBlockIndex->nTotalMonetaryBase, prevBlockIndex->nTotalDepositBase, nDepositAmount) + nFees;
+    const uint64_t allowedSubsidyIncFee = Bitcredit_GetAllowedBlockSubsidy(prevBlockIndex->nTotalMonetaryBase, nDepositAmount, prevBlockIndex->nTotalDepositBase) + nFees;
     const int64_t coinbaseValueOut = block.vtx[0].GetValueOut();
     if (coinbaseValueOut > allowedSubsidyIncFee)
         return state.DoS(100,

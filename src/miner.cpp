@@ -911,7 +911,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				//This logic determines whether the subsidy needs to be lowered.
 				//When half the monetary base has been mined, a lowered reward is enforced if not enough deposits have been provided.
 				//This is in addition to the higher difficulty that will be enforced on too small deposits as well.
-				const int64_t nAllowedBlockSubsidy = Bitcredit_GetAllowedBlockSubsidy(pindexPrev->nTotalMonetaryBase, pindexPrev->nTotalDepositBase, nDepositAmount);
+				const int64_t nAllowedBlockSubsidy = Bitcredit_GetAllowedBlockSubsidy(pindexPrev->nTotalMonetaryBase, nDepositAmount, pindexPrev->nTotalDepositBase);
 				if(nAllowedBlockSubsidy < Bitcredit_GetMaxBlockSubsidy(pindexPrev->nTotalMonetaryBase)) {
 					if(coinbaseDepositDisabled) {
 						//Lower the subsidy since deposit is not high enough
@@ -1278,7 +1278,7 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
         // Search
         int64_t nStart = GetTime();
         uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-        hashTarget = Bitcredit_ReduceByReqDepositLevel(hashTarget, pblock->nTotalDepositBase, pblock->GetDepositAmount());
+        hashTarget = Bitcredit_ReduceByReqDepositLevel(hashTarget, pblock->GetDepositAmount(), pblock->nTotalDepositBase);
         while (true)
         {
             unsigned int nHashesDone = 0;
@@ -1358,7 +1358,7 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
                 // Changing pblock->nTime can change work required on testnet:
                 nBlockBits = ByteReverse(pblock->nBits);
                 hashTarget.SetCompact(pblock->nBits);
-                hashTarget = Bitcredit_ReduceByReqDepositLevel(hashTarget, pblock->nTotalDepositBase, pblock->GetDepositAmount());
+                hashTarget = Bitcredit_ReduceByReqDepositLevel(hashTarget, pblock->GetDepositAmount(), pblock->nTotalDepositBase);
             }
         }
     } }
