@@ -106,5 +106,5 @@ script:
     - if [ "$RUN_SPOCK_TESTS" = "true" ]; then cd qa/omnicore-rpc-tests; fi
     - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoin-cli -datadir="$DATADIR" -rpcuser=bitcoinrpc -rpcpassword=pass -regtest -rpcwait getinfo; fi
     - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoin-cli -datadir="$DATADIR" -rpcuser=bitcoinrpc -rpcpassword=pass -regtest -rpcwait getinfo_MP; fi
-    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then ./gradlew :omnij-rpc:regTest; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then ./gradlew --console plain :omnij-rpc:regTest; fi
     - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoin-cli -datadir="$DATADIR" -rpcuser=bitcoinrpc -rpcpassword=pass -regtest -rpcwait stop; fi
