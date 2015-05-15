@@ -977,6 +977,10 @@
         <translation>Minimizar em vez de fechar o programa quando a janela for fechada. Quando essa opção estiver ativa, o programa só será fechado somente pela opção Sair no menu Arquivo.</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
+        <translation>A linguagem da interface do usuário pode ser alterada aqui. A mudança ocorrerá após o reinício do Bitcoin Core.</translation>
+    </message>
+    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URLs de terceiros (exemplo: explorador de blocos) que aparecem na aba de transações como itens do menu de contexto. %s na URL é substituido pela hash da transação. Múltiplas URLs são separadas pela barra vertical |.</translation>
     </message>
@@ -2943,6 +2947,10 @@
     <message>
         <source>Wallet options:</source>
         <translation>Opções da carteira:</translation>
+    </message>
+    <message>
+        <source>Warning: This version is obsolete; upgrade required!</source>
+        <translation>Atenção: Essa versão está obsoleta, atualização necessária!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>

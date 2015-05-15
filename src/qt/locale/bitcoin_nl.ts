@@ -168,6 +168,10 @@
         <translation>Weet u zeker dat u uw portemonnee wilt versleutelen?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin Core zal nu afsluiten om het versleutelingsproces te voltooien. Hou er rekening mee dat versleuteling van je portemonnee je niet volledig beschermt tegen diefstal van jouw bitcoins door malware op je computer.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>BELANGRIJK: Elke eerder gemaakte backup van uw portemonneebestand dient u te vervangen door het nieuw gegenereerde, versleutelde portemonneebestand. Om veiligheidsredenen zullen eerdere backups van het niet-versleutelde portemonneebestand onbruikbaar worden zodra u uw nieuwe, versleutelde, portemonnee begint te gebruiken.</translation>
     </message>
@@ -181,7 +185,11 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Voer een nieuw wachtwoord in voor uw portomonee.&lt;br/&gt;Gebruik een wachtwoord van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt;, of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
+        <translation>Voer een nieuw wachtwoord in voor uw portemonnee.&lt;br/&gt;Gebruik een wachtwoord van &lt;b&gt;tien of meer willekeurige karakters&lt;/b&gt;, of &lt;b&gt;acht of meer woorden&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Voer het oude en nieuwe wachtwoord in voor uw portemonnee.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -419,6 +427,10 @@
         <translation>Geen bron voor blokken beschikbaar...</translation>
     </message>
     <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>%n blok aan transactie geschiedenis verwerkt.</numerusform><numerusform>%n blokken aan transactie geschiedenis verwerkt.</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>%n hour(s)</source>
         <translation><numerusform>%n uur</numerusform><numerusform>%n uur</numerusform></translation>
     </message>
@@ -469,6 +481,36 @@
     <message>
         <source>Catching up...</source>
         <translation>Aan het bijwerken...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Datum: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Aantal: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Type: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Label: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adres: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -667,6 +709,18 @@
     <message>
         <source>none</source>
         <translation>geen</translation>
+    </message>
+    <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>Dit label wordt rood als de transactie groter is dan 1000 bytes.</translation>
+    </message>
+    <message>
+        <source>This label turns red if the priority is smaller than "medium".</source>
+        <translation>Dit label wordt rood als de prioriteit lager is dan "gemiddeld".</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
+        <translation>Dit label wordt rood wanneer een ontvanger minder dan %1 krijgt.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -919,6 +973,10 @@
         <translation>IP-adres van de proxy (bijv. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
+        <translation>Stel hier de taal van de applicatie in. Deze instelling zal van kracht worden na het herstarten van de applicatie.</translation>
+    </message>
+    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Derde partijen URL's (bijvoorbeeld block explorer) dat in de transacties tab verschijnen als contextmenu elementen. %s in de URL is vervangen door transactie hash. Verscheidene URL's zijn gescheiden door een verticale streep |.  </translation>
     </message>
@@ -941,6 +999,14 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Netwerk</translation>
+    </message>
+    <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>Bitcoin Kern automatisch starten bij inloggen.</translation>
+    </message>
+    <message>
+        <source>&amp;Start Bitcoin Core on system login</source>
+        <translation>&amp;Start Bitcoin Kern tijdens login.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1053,6 +1119,10 @@
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Herstart van de client is vereist om veranderingen door te voeren.</translation>
+    </message>
+    <message>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <translation>Applicatie zal worden afgesloten. Wilt u doorgaan?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>

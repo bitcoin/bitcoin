@@ -168,6 +168,10 @@
         <translation>本当にウォレットを暗号化しますか?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>暗号化処理を完了させるため Bitcoin Core をいますぐ終了します。ウォレットの暗号化では、コンピュータに感染したマルウェアなどによるビットコインの盗難から完全に守ることはできないことにご注意ください。</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>重要: 過去のウォレット ファイルのバックアップは、暗号化された新しいウォレット ファイルに取り替える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレット ファイルのバックアップはすぐに使えなくなります。</translation>
     </message>
@@ -182,6 +186,10 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>ウォレットの新しいパスフレーズを入力してください。&lt;br/&gt;&lt;b&gt;10文字以上のランダムな文字&lt;/b&gt;で構成されたものか、&lt;b&gt;8単語以上の単語&lt;/b&gt;で構成されたパスフレーズを使用してください。</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>ウォレットの古いパスフレーズおよび新しいパスフレーズを入力してください。</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -391,6 +399,10 @@
         <translation>ビットコインコアについて (&amp;A)</translation>
     </message>
     <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>Bitcoin Core の設定を編集する</translation>
+    </message>
+    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>使用済みの送金用アドレスとラベルの一覧を表示する</translation>
     </message>
@@ -417,6 +429,10 @@
     <message>
         <source>No block source available...</source>
         <translation>利用可能なブロックがありません...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>トランザクション履歴の %n ブロックを処理しました。</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -469,6 +485,36 @@
     <message>
         <source>Catching up...</source>
         <translation>追跡中...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>日付: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>総額: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>タイプ: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>ラベル: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>アドレス: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -667,6 +713,18 @@
     <message>
         <source>none</source>
         <translation>なし</translation>
+    </message>
+    <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>トランザクションのサイズが1000バイトを超える場合にはこのラベルは赤色になります。</translation>
+    </message>
+    <message>
+        <source>This label turns red if the priority is smaller than "medium".</source>
+        <translation>優先度が「中」未満の場合、このラベルは赤色になります。</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
+        <translation>受取人のうち誰かの受取額が %1 未満の場合にこのラベルは赤色になります。</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -919,6 +977,14 @@
         <translation>プロキシのIPアドレス (例えば IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
+        <translation>ウィンドウを閉じる際にアプリケーションを終了するのではなく、最小化します。このオプションが有効化された場合、メニューから終了を選択した場合にのみアプリケーションは閉じられます。</translation>
+    </message>
+    <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
+        <translation>ユーザ・インタフェイス言語はここで設定できます。この設定はBitcoin Coreの再起動後に有効となります。</translation>
+    </message>
+    <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>トランザクションタブのコンテキストメニュー項目に表示する、サードパーティURL (例えばブロックエクスプローラ)。URL中の%sはトランザクションのハッシュ値に置き換えられます。垂直バー | で区切ることで、複数のURLを指定できます。</translation>
     </message>
@@ -941,6 +1007,14 @@
     <message>
         <source>&amp;Network</source>
         <translation>ネットワーク (&amp;N)</translation>
+    </message>
+    <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>システムにログインした際、自動的にBitcoin Coreを起動する。</translation>
+    </message>
+    <message>
+        <source>&amp;Start Bitcoin Core on system login</source>
+        <translation>システムへログインした際にBitcoin Coreを起動する (&amp;S)</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1053,6 +1127,10 @@
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>変更を有効化するにはクライアントを再起動する必要があります。</translation>
+    </message>
+    <message>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <translation>クライアントを終了します。続行してもよろしいですか？</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1193,8 +1271,16 @@
         <translation>支払いリクエストファイルを読み込めませんでした！無効な支払いリクエストファイルにより引き起こされた可能性があります。</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>支払いリクエストの期限が切れました。</translation>
+    </message>
+    <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>カスタム支払いスクリプトに対する、検証されていない支払いリクエストはサポートされていません。</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>無効な支払いリクエスト。</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1234,6 +1320,10 @@
     <message>
         <source>User Agent</source>
         <translation>ユーザエージェント</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>ノード・サービス</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1357,6 +1447,10 @@
         <translation>現在のブロック数</translation>
     </message>
     <message>
+        <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>現在のデータディレクトリからBitcoin Coreのデバッグ用ログファイルを開きます。ログファイルが巨大な場合、数秒かかることがあります。</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>受取</translation>
     </message>
@@ -1425,6 +1519,10 @@
         <translation>Ping時間</translation>
     </message>
     <message>
+        <source>Time Offset</source>
+        <translation>時間オフセット</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>最終ブロックの日時</translation>
     </message>
@@ -1467,6 +1565,10 @@
     <message>
         <source>Clear console</source>
         <translation>コンソールをクリア</translation>
+    </message>
+    <message>
+        <source>Welcome to the Bitcoin Core RPC console.</source>
+        <translation>Bitcoin CoreのRPCコンソールへようこそ。</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1765,6 +1867,10 @@
         <translation>カスタム手数料が1000satoshiに設定されている場合、トランザクションサイズが250バイトとすると、「1キロバイトあたり手数料」では250satoshiの手数料のみを支払いますが、「最小手数料」では1000satoshiを支払います。1キロバイトを超えるトランザクションの場合には、どちらの方法を選択したとしても1キロバイトあたりで支払われます。</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>隠す</translation>
+    </message>
+    <message>
         <source>total at least</source>
         <translation>最小手数料</translation>
     </message>
@@ -1905,8 +2011,28 @@
         <translation>トランザクションは拒否されました。wallet.dat のコピーを使い、そしてコピーしたウォレットからコインを使用したことがマークされなかったときなど、ウォレットのいくつかのコインがすでに使用されている場合に、このエラーは起こるかもしれません。</translation>
     </message>
     <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>%1 よりも高い手数料の場合、手数料が高すぎると判断されます。</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>支払いリクエストの期限が切れました。</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>%n ブロック以内に検証が開始されると予想されます。</numerusform></translation>
+    </message>
+    <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>最小手数料 %1 のみを支払う</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>受取アドレスが不正です。再チェックしてください。</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>重複したアドレスが見つかりました: アドレスはそれぞれ一度のみ使用することができます。</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1980,8 +2106,24 @@
         <translation>この項目を削除する</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>送金する金額から手数料が差し引かれます。受取人は数量フィールドで指定した量よりも少ないビットコインを受け取ります。受取人が複数いる場合には、手数料は均等割されます。</translation>
+    </message>
+    <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>送金額から手数料を差し引く (&amp;U)</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>メッセージ:</translation>
+    </message>
+    <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>これは未認証の支払いリクエストです。</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>これは認証済みの支払いリクエストです。</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2020,6 +2162,10 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>メッセージの署名 (&amp;S)</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>あなたの所有しているアドレスによりメッセージや合意書に署名をすることで、それらアドレスに対して送られたビットコインを受け取ることができることを証明できます。フィッシング攻撃により不正にあなたの識別情報を署名させられてしまうことを防ぐために、不明確なものやランダムなものに対して署名しないよう注意してください。合意することが可能な、よく詳細の記された文言にのみ署名するようにしてください。</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2072,6 +2218,10 @@
     <message>
         <source>&amp;Verify Message</source>
         <translation>メッセージの検証 (&amp;V)</translation>
+    </message>
+    <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>受取人のアドレスとメッセージ（改行やスペース、タブなども完全に一致するよう注意してください）および署名を以下に入力し、メッセージの署名を検証してください。中間者攻撃により騙されるのを防ぐため、署名対象のメッセージに書かれていること以上の意味を署名から読み取ろうとしないよう注意してください。これは署名作成者がこのアドレスで受け取ったことを証明するだけであり、トランザクションの送信権限を証明するものではないことに注意してください！</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2425,6 +2575,10 @@
         <translation>監視限定アドレスがこのトランザクションに含まれているかどうか</translation>
     </message>
     <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>ユーザ定義のトランザクションの意図や目的。</translation>
+    </message>
+    <message>
         <source>Amount removed from or added to balance.</source>
         <translation>残高に追加または削除された総額。</translation>
     </message>
@@ -2667,6 +2821,10 @@
         <translation>指定のアドレスへバインドし、その上で常にリスンします。IPv6 は [ホスト名]:ポート番号 と表記します</translation>
     </message>
     <message>
+        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
+        <translation>継続的に無料トランザクションのレートを一分間に&lt;n&gt;*1000バイトに制限する (規定値: %u)</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>ウォレットの全トランザクションを削除し、これらを-rescanオプションを用いることで起動時にブロックチェインのデータのみからリカバリします。</translation>
     </message>
@@ -2685,6 +2843,14 @@
     <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>このモードでは -genproclimit は何個のブロックをただちに生成するのか制御します。</translation>
+    </message>
+    <message>
+        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>ひとつのウォレットトランザクションで使用する合計手数料の最大値。低すぎる値を指定すると巨大なトランザクションの作成ができなくなります (規定値: %s)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>古いブロックを剪定する（削除する）ことで記憶容量の必要量を削減する。このモードを有効にするとウォレット機能のサポートは無効になり、-txindexとも互換性がなくなります。警告: この設定の再有効化には全ブロックチェインの再ダウンロードが必要となります。(規定値: 0 = ブロックの剪定無効、&gt;%u = ブロックファイルに使用するMiB単位の目標サイズ)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2816,6 +2982,14 @@
         <translation>&lt;net&gt; (ipv4, ipv6 または onion) ネットワーク内のノードだけに接続する</translation>
     </message>
     <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>剪定値は負の値に設定できません。</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>剪定モードは-txindexと互換性がありません。</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>データベースのキャッシュサイズをメガバイトで設定 (%dから%d。初期値: %d)</translation>
     </message>
@@ -2852,6 +3026,10 @@
         <translation>ウォレットオプション：</translation>
     </message>
     <message>
+        <source>Warning: This version is obsolete; upgrade required!</source>
+        <translation>警告: このバージョンはサポートされません。アップグレードが必要です！</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>-txindex を変更するには -reindex を使用してデータベースを再構築する必要があります</translation>
     </message>
@@ -2882,6 +3060,10 @@
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>umask 077 ではなく、システムのデフォルトパーミッションで新規ファイルを作成する (ウォレット機能が無効化されていた場合にのみ有効)</translation>
+    </message>
+    <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>自分のIPアドレスを解決する (規定値: リッスンをしており、-externalipまたは-proxyオプションが指定されていない場合は1)</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -2916,8 +3098,20 @@
         <translation>中継および採掘を行う際の、データ運送トランザクションの中のデータの最大サイズ (初期値: %u)</translation>
     </message>
     <message>
+        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
+        <translation>剪定が最小値の %d MB以下に設定されています。もっと大きな値を使用してください。</translation>
+    </message>
+    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>保有するピアアドレスが少ない場合、DNS ルックアップによりピアアドレスを問い合わせる (-connect を使っていない場合の初期値: 1)</translation>
+    </message>
+    <message>
+        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
+        <translation>認証情報をプロキシー接続ごとにランダム化する。これによりTorストリーム分離をすることができます (規定値: %u)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
+        <translation>無料や低い手数料のトランザクションのリレーに際し、高い優先度を要求する (規定値: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -2926,6 +3120,10 @@
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>コイン生成が有効になっていた場合の利用スレッド数を設定する (-1 = すべてのコア, 初期値: %d)</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>手数料差引後のトランザクションの金額が小さすぎるため、送金できません。</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
@@ -2968,8 +3166,28 @@ rpcpassword=%s
         <translation>ホワイトリストのピアはDoSによるアクセス禁止処理が無効化され、トランザクションは例えmempool内に既に存在していたとしても常にリレーされます。これは例えばゲートウェイに対して有用です</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation>非剪定モードに戻るためには-reindexオプションを使用してデータベースを再構築する必要があります。これによりブロックチェイン全体の再ダウンロードが行われます。</translation>
+    </message>
+    <message>
+        <source>(default: %u)</source>
+        <translation>(規定値: %u)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>公開 REST リクエストを許可する (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Activating best chain...</source>
+        <translation>最優良のチェインを有効化しています...</translation>
+    </message>
+    <message>
+        <source>Allow self signed root certificates (default: 0)</source>
+        <translation>自己署名ルート証明書を許可する (規定値: 0)</translation>
+    </message>
+    <message>
+        <source>Can't run with a wallet in prune mode.</source>
+        <translation>剪定モードではウォレット機能付きで起動できません。</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3104,6 +3322,10 @@ rpcpassword=%s
         <translation>最小化された状態で起動する</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>トランザクションの金額が小さすぎて手数料を支払えません</translation>
+    </message>
+    <message>
         <source>This is experimental software.</source>
         <translation>これは実験的なソフトウェアです。</translation>
     </message>
@@ -3122,6 +3344,10 @@ rpcpassword=%s
     <message>
         <source>Transaction too large</source>
         <translation>取引が大き過ぎます</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>UIオプション:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -3286,6 +3512,10 @@ rpcpassword=%s
     <message>
         <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
         <translation>ピアの接続数を最大でも &lt;n&gt; 個に維持する (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>ウォレットのトランザクションをブロードキャストする</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
