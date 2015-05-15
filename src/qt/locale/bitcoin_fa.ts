@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>برای تغییر آدرس و یا برچسب کلیک راست کنید.</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>ایجاد نشانی جدید</translation>
     </message>
@@ -40,6 +44,22 @@
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;حذف</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>آدرس مورد نظر برای ارسال کوین ها را انتخاب کنید</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>آدرس موردنظر برای دریافت کوین ها را انتخاب کنید.</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>آدرس های ارسال کننده</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>آدرس های دریافت کننده</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -322,6 +342,10 @@
         <source>Bitcoin Core</source>
         <translation> هسته Bitcoin </translation>
     </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>درباره هسته ی بیت کوین</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
@@ -401,8 +425,36 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>انتخاب سکه</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>تعداد:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>بایت ها:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>مبلغ:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>اولویت:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>هزینه:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>هزینه ی پسین:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>پول خورد:</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -905,8 +957,32 @@
         <translation>ارسال سکه</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation>تعداد:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>بایت ها:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>مبلغ:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>اولویت:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>هزینه:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>هزینه ی پسین:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>پول خورد:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
