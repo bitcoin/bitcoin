@@ -665,7 +665,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     bool fFinalized = true;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        fFinalized = fFinalized && txin.IsFinal();
+        fFinalized = fFinalized && (txin.nSequence == CTxIn::SEQUENCE_FINAL);
 
     if (!fFinalized && (int64_t)tx.nLockTime >= ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
         return false;
