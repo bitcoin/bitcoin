@@ -49,6 +49,8 @@ public:
     std::string ToString() const;
     std::string ToStringShort() const;
 
+    uint256 GetHash();
+
 };
 
 /** An input of a transaction.  It contains the location of the previous
