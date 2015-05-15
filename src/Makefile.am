@@ -100,6 +100,7 @@ BITCOIN_CORE_H = \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
+  memusage.h \
   merkleblock.h \
   miner.h \
   mruset.h \
