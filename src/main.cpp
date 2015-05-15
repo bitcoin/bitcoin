@@ -2932,7 +2932,7 @@ void FindFilesToPrune(std::set<int>& setFilesToPrune)
         return;
     }
 
-    unsigned int nLastBlockWeMustKeep = chainActive.Tip()->nHeight - MIN_BLOCKS_TO_KEEP;
+    unsigned int nLastBlockWeCanPrune = chainActive.Tip()->nHeight - MIN_BLOCKS_TO_KEEP;
     uint64_t nCurrentUsage = CalculateCurrentUsage();
     // We don't check to prune until after we've allocated new space for files
     // So we should leave a buffer under our target to account for another allocation
@@ -2952,7 +2952,7 @@ void FindFilesToPrune(std::set<int>& setFilesToPrune)
                 break;
 
             // don't prune files that could have a block within MIN_BLOCKS_TO_KEEP of the main chain's tip
-            if (vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeMustKeep)
+            if (vinfoBlockFile[fileNumber].nHeightLast > nLastBlockWeCanPrune)
                 break;
 
             PruneOneBlockFile(fileNumber);
@@ -2963,10 +2963,10 @@ void FindFilesToPrune(std::set<int>& setFilesToPrune)
         }
     }
 
-    LogPrint("prune", "Prune: target=%dMiB actual=%dMiB diff=%dMiB min_must_keep=%d removed %d blk/rev pairs\n",
+    LogPrint("prune", "Prune: target=%dMiB actual=%dMiB diff=%dMiB max_prune_height=%d removed %d blk/rev pairs\n",
            nPruneTarget/1024/1024, nCurrentUsage/1024/1024,
            ((int64_t)nPruneTarget - (int64_t)nCurrentUsage)/1024/1024,
-           nLastBlockWeMustKeep, count);
+           nLastBlockWeCanPrune, count);
 }
 
 bool CheckDiskSpace(uint64_t nAdditionalBytes)
