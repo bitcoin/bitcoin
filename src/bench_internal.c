@@ -13,6 +13,7 @@
 #include "field_impl.h"
 #include "group_impl.h"
 #include "scalar_impl.h"
+#include "ecmult_const_impl.h"
 #include "ecmult_impl.h"
 #include "bench.h"
 
@@ -235,6 +236,16 @@ void bench_ecmult_wnaf(void* arg) {
     }
 }
 
+void bench_wnaf_const(void* arg) {
+    int i;
+    bench_inv_t *data = (bench_inv_t*)arg;
+
+    for (i = 0; i < 20000; i++) {
+        secp256k1_wnaf_const(data->wnaf, &data->scalar_x, WINDOW_A);
+        secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
+    }
+}
+
 
 void bench_sha256(void* arg) {
     int i;
@@ -310,6 +321,7 @@ int main(int argc, char **argv) {
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine", bench_group_add_affine, bench_setup, NULL, &data, 10, 200000);
     if (have_flag(argc, argv, "group") || have_flag(argc, argv, "add")) run_benchmark("group_add_affine_var", bench_group_add_affine_var, bench_setup, NULL, &data, 10, 200000);
 
+    if (have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("wnaf_const", bench_wnaf_const, bench_setup, NULL, &data, 10, 20000);
     if (have_flag(argc, argv, "ecmult") || have_flag(argc, argv, "wnaf")) run_benchmark("ecmult_wnaf", bench_ecmult_wnaf, bench_setup, NULL, &data, 10, 20000);
 
     if (have_flag(argc, argv, "hash") || have_flag(argc, argv, "sha256")) run_benchmark("hash_sha256", bench_sha256, bench_setup, NULL, &data, 10, 20000);
