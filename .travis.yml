@@ -16,6 +16,8 @@ env:
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
     - SDK_URL=https://s3.amazonaws.com/ci.omnicore.private/depends-sources/sdks
     - WINEDEBUG=fixme-all
+    - RUN_SPOCK_TESTS=false
+    - SPOCK_TEST_URL=https://github.com/OmniLayer/OmniJ.git
 sudo: false
 cache:
   ccache: true
@@ -23,6 +25,7 @@ cache:
   - depends/built
   - depends/sdk-sources
   - $HOME/.ccache
+  - $HOME/.gradle/caches
 matrix:
   fast_finish: true
   include:
@@ -33,7 +36,7 @@ matrix:
           packages:
             - bc
     - compiler: ": 64-bit"
-      env: HOST=x86_64-unknown-linux-gnu RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
+      env: HOST=x86_64-unknown-linux-gnu RUN_SPOCK_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
     - compiler: ": Win64"
       env: HOST=x86_64-w64-mingw32 GOAL="install" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
       addons:
@@ -96,3 +99,12 @@ script:
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
     - if [ "$RUN_TESTS" = "true" ]; then make check; fi
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.sh; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then DATADIR=/tmp/datadir-$HOST; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then mkdir -p $DATADIR; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoind -datadir="$DATADIR" -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -discover=0 -listen=0; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then git clone $SPOCK_TEST_URL qa/omnicore-rpc-tests; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then cd qa/omnicore-rpc-tests; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoin-cli -datadir="$DATADIR" -rpcuser=bitcoinrpc -rpcpassword=pass -regtest -rpcwait getinfo; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoin-cli -datadir="$DATADIR" -rpcuser=bitcoinrpc -rpcpassword=pass -regtest -rpcwait getinfo_MP; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then ./gradlew :omnij-rpc:regTest; fi
+    - if [ "$RUN_SPOCK_TESTS" = "true" ]; then $OUTDIR/bin/bitcoin-cli -datadir="$DATADIR" -rpcuser=bitcoinrpc -rpcpassword=pass -regtest -rpcwait stop; fi
