@@ -660,13 +660,13 @@ void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
     int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision)) / percentage_precision;
 
     // Calculate the bonus percentage for the issuer
-    int128_t issuerPercentage_ = (int128_t) issuerPerc * precision_ / percentage_precision;
+    int128_t issuerPercentage_ = int128_t(issuerPerc) * precision_ / percentage_precision;
 
     // Precision for bitcoin amounts (satoshi)
     int128_t satoshi_precision_ = 100000000;
 
     // Total tokens including remainders
-    cpp_int createdTokens = boost::lexical_cast<cpp_int>((int128_t) amtTransfer * (int128_t) numProps) * boost::lexical_cast<cpp_int>(bonusPercentage_);
+    cpp_int createdTokens = cpp_int(amtTransfer) * cpp_int(numProps) * cpp_int(bonusPercentage_);
     cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_)) * (issuerPercentage_ / 100) * precision_;
 
     cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
@@ -691,7 +691,9 @@ void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
     }
 
     // The tokens to credit
-    tokens = std::make_pair(boost::lexical_cast<uint64_t>(createdTokens_int), boost::lexical_cast<uint64_t>(issuerTokens_int));
+    assert(createdTokens_int <= std::numeric_limits<int64_t>::max());
+    assert(issuerTokens_int <= std::numeric_limits<int64_t>::max());
+    tokens = std::make_pair(createdTokens_int.convert_to<uint64_t>(), issuerTokens_int.convert_to<uint64_t>());
 }
 
 // certain transaction types are not live on the network until some specific block height
