@@ -334,7 +334,7 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     if (!(flags & SCRIPT_VERIFY_STRICTENC))
         return true;
 
-    return IsDERSignature(vchSig, true, flags & SCRIPT_VERIFY_LOW_S);
+    return IsDERSignature(vchSig, true, (flags & SCRIPT_VERIFY_LOW_S) != 0);
 }
 
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
