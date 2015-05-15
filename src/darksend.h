@@ -45,6 +45,8 @@ class CActiveMasternode;
 #define DARKSEND_RELAY_OUT                2
 #define DARKSEND_RELAY_SIG                3
 
+#define MASTERNODE_LIST_SYNCED            999
+
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
 
@@ -54,6 +56,8 @@ extern std::vector<CDarksendQueue> vecDarksendQueue;
 extern std::string strMasterNodePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 extern CActiveMasternode activeMasternode;
+
+bool IsSyncingMasternodeAssets();
 
 // get the Darksend chain depth for a given input
 int GetInputDarksendRounds(CTxIn in, int rounds=0);

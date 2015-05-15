@@ -28,9 +28,9 @@
 #define MASTERNODE_MIN_CONFIRMATIONS           15
 #define MASTERNODE_MIN_MNP_SECONDS             (30*60)
 #define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
-#define MASTERNODE_PING_SECONDS                (1*60)
+#define MASTERNODE_PING_SECONDS                (15*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
-#define MASTERNODE_REMOVAL_SECONDS             (70*60)
+#define MASTERNODE_REMOVAL_SECONDS             (24*60*60)
 
 using namespace std;
 
@@ -77,11 +77,10 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     CScript donationAddress;
     int donationPercentage;
-    int nVote;
-    int64_t lastVote;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
     int64_t nLastPaid;
+    int nVotedTimes;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -113,11 +112,10 @@ public:
         swap(first.nLastDsq, second.nLastDsq);
         swap(first.donationAddress, second.donationAddress);
         swap(first.donationPercentage, second.donationPercentage);
-        swap(first.nVote, second.nVote);
-        swap(first.lastVote, second.lastVote);
         swap(first.nScanningErrorCount, second.nScanningErrorCount);
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
         swap(first.nLastPaid, second.nLastPaid);
+        swap(first.nVotedTimes, second.nVotedTimes);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -160,10 +158,9 @@ public:
             READWRITE(unitTest);
             READWRITE(allowFreeTx);
             READWRITE(nLastDsq);
-            READWRITE(nVote);
-            READWRITE(lastVote);
             READWRITE(nScanningErrorCount);
             READWRITE(nLastScanningErrorBlockHeight);
+            READWRITE(nVotedTimes);
     }
 
     int64_t SecondsSincePayment()
@@ -285,6 +282,12 @@ public:
         READWRITE(nLastPaid);
     }
     
+    uint256 GetHash(){
+         return Hash(
+            BEGIN(sigTime), END(sigTime), 
+            BEGIN(pubkey), END(pubkey)
+        );
+    }
 
 };
 
@@ -316,7 +319,10 @@ public:
 
     bool CheckAndUpdate(int& nDos);
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    void Relay();
+    void Relay();    
 
+    uint256 GetHash(){
+         return Hash(BEGIN(vin), END(vin), BEGIN(sigTime), END(sigTime));
+    }
 };
 #endif
