@@ -355,7 +355,7 @@ Value getwork(const Array& params, bool fHelp)
     if (Bitcredit_IsInitialBlockDownload() || Bitcoin_IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Credits is downloading blocks...");
 
-    typedef map<pair<uint256, unsigned int>, pair<Credits_CBlock*, CScript> > mapNewBlock_t;
+    typedef map<pair<uint256, uint256>, pair<Credits_CBlock*, pair<Credits_CTransaction, pair<Credits_CTransaction, CCompactSignature> > > > mapNewBlock_t;
     static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
     static vector<Credits_CBlockTemplate*> vNewBlockTemplate;
 
@@ -405,8 +405,17 @@ Value getwork(const Array& params, bool fHelp)
         static unsigned int nExtraNonce = 0;
         IncrementExtraNonce(pblock, pindexPrev, nExtraNonce, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
 
+        //Arbitrary size limit to prevent running out of memory
+    	if(mapNewBlock.size() > 10000) {
+    		mapNewBlock.clear();
+    	}
+
         // Save
-        mapNewBlock[make_pair(pblock->hashMerkleRoot, pblock->nTime)] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
+    	const Credits_CTransaction coinbase = pblock->vtx[0];
+    	//TODO - These assumption is only correct if there are only one deposit. This WILL cause external miner integration failures in the future.
+    	const Credits_CTransaction coinbaseSpendingDeposit = pblock->vtx[1];
+    	const CCompactSignature coinbaseSpendingDepositSig = pblock->vsig[0];
+        mapNewBlock[make_pair(pblock->hashMerkleRoot, pblock->hashSigMerkleRoot)] = make_pair(pblock, make_pair(coinbase, make_pair(coinbaseSpendingDeposit, coinbaseSpendingDepositSig)));
 
         // Pre-build hash buffers
         char pmidstate[32];
@@ -420,11 +429,13 @@ Value getwork(const Array& params, bool fHelp)
 
         uint256 hashTarget = uint256().SetCompact(pblock->nBits);
 
-        //// debug print
-        LogPrintf("getwork:\n\n\n");
-        LogPrintf("block sent as data: %s\n", pblock->GetHash().GetHex());
-        pblock->print();
-        LogPrintf("\n\n\n");
+        if (bitcredit_fBenchmark) {
+			//// debug print
+			LogPrintf("getwork:\n\n\n");
+			LogPrintf("block sent as data: %s\n", pblock->GetHash().GetHex());
+			pblock->print();
+			LogPrintf("\n\n\n");
+        }
 
         Object result;
         result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate2), END(pmidstate2)))); // deprecated
@@ -446,27 +457,39 @@ Value getwork(const Array& params, bool fHelp)
             ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
 
         // Get saved block
-        if (!mapNewBlock.count(make_pair(pdata->hashMerkleRoot, pdata->nTime)))
-            return false;
-        Credits_CBlock* pblock = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->nTime)].first;
+        if (!mapNewBlock.count(make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot))) {
+        	LogPrintf("could not find block from key, merkle: %s, sigmerkle: %s, time: %d\n", pdata->hashMerkleRoot.GetHex(), pdata->hashSigMerkleRoot.GetHex(), pdata->nTime);
+        	return false;
+        }
+        Credits_CBlock block = *mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].first;
 
-        pblock->nTime = pdata->nTime;
-        pblock->nNonce = pdata->nNonce;
-        pblock->nTotalMonetaryBase = pdata->nTotalMonetaryBase;
-        pblock->nTotalDepositBase = pdata->nTotalDepositBase;
-        pblock->nDepositAmount = pdata->nDepositAmount;
-        pblock->hashLinkedBitcoinBlock = pdata->hashLinkedBitcoinBlock;
-        pblock->vtx[0].vin[0].scriptSig = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->nTime)].second;
-        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-        pblock->hashSigMerkleRoot = pblock->BuildSigMerkleTree();
+        block.nTime = pdata->nTime;
+        block.nNonce = pdata->nNonce;
+        block.vtx[0] = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].second.first;
+        block.vtx[1] = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].second.second.first;
+        block.vsig[0] = mapNewBlock[make_pair(pdata->hashMerkleRoot, pdata->hashSigMerkleRoot)].second.second.second;
+        block.hashMerkleRoot = block.BuildMerkleTree();
+        block.hashSigMerkleRoot = block.BuildSigMerkleTree();
 
-        //// debug print
-        LogPrintf("\n\ngetwork:\n");
-        LogPrintf("block recreated from data: %s\n", pblock->GetHash().GetHex());
-        pblock->print();
-        LogPrintf("\n\n\n");
+        if (bitcredit_fBenchmark) {
+			//// debug print
+			LogPrintf("\n\ngetwork:\n");
+			LogPrintf("block recreated from data: %s\n", block.GetHash().GetHex());
+			block.print();
+			LogPrintf("\n\n\n");
+        }
+
+        if(block.hashMerkleRoot != pdata->hashMerkleRoot) {
+        	LogPrintf("recreated block merkle hash does not match data merkle hash, recreated: %s, data: %s\n", block.hashMerkleRoot.GetHex(), pdata->hashMerkleRoot.GetHex());
+        	return false;
+        }
+        if(block.hashSigMerkleRoot != pdata->hashSigMerkleRoot) {
+        	LogPrintf("recreated block sig merkle hash does not match data sig merkle hash, recreated: %s, data: %s\n", block.hashSigMerkleRoot.GetHex(), pdata->hashSigMerkleRoot.GetHex());
+        	return false;
+        }
 
         assert(bitcredit_pwalletMain != NULL);
+        Credits_CBlock * pblock = &block;
         return CheckWork(pblock, *bitcredit_pwalletMain, *deposit_pwalletMain, *pMiningKey, *pDepositMiningKey, *pDepositChangeMiningKey, *pDepositSigningMiningKey);
     }
 }
