@@ -634,62 +634,62 @@ int64_t before, after;
 
 //calculateFundraiser does token calculations per transaction
 //calcluateFractional does calculations for missed tokens
-void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsigned char bonusPerc, 
-  uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens, 
-  std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale )
+void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsigned char bonusPerc,
+        uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens,
+        std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale)
 {
-  int128_t weeks_sec_ = 604800L;
-  //define weeks in seconds
-  int128_t precision_ = 1000000000000L;
-  //define precision for all non-bitcoin values (bonus percentages, for example)
-  int128_t percentage_precision = 100L;
-  //define precision for all percentages (10/100 = 10%)
+    int128_t weeks_sec_ = 604800L;
+    //define weeks in seconds
+    int128_t precision_ = 1000000000000L;
+    //define precision for all non-bitcoin values (bonus percentages, for example)
+    int128_t percentage_precision = 100L;
+    //define precision for all percentages (10/100 = 10%)
 
-  //calcluate the bonusseconds
-  int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
+    //calcluate the bonusseconds
+    int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
 
-  int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_ + ( (bonusSeconds_ % weeks_sec_ ) * precision_) / weeks_sec_;
-  //calculate the whole number of weeks to apply bonus
+    int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_ + ((bonusSeconds_ % weeks_sec_) * precision_) / weeks_sec_;
+    //calculate the whole number of weeks to apply bonus
 
-  int128_t ebPercentage_ = weeks_ * bonusPerc;
-  //calculate the earlybird percentage to be applied
+    int128_t ebPercentage_ = weeks_ * bonusPerc;
+    //calculate the earlybird percentage to be applied
 
-  int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision) ) / percentage_precision; 
-  //calcluate the bonus percentage to apply up to 'percentage_precision' number of digits
+    int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision)) / percentage_precision;
+    //calcluate the bonus percentage to apply up to 'percentage_precision' number of digits
 
-  int128_t issuerPercentage_ = (int128_t)issuerPerc * precision_ / percentage_precision;
+    int128_t issuerPercentage_ = (int128_t) issuerPerc * precision_ / percentage_precision;
 
-  int128_t satoshi_precision_ = 100000000;
-  //define the precision for bitcoin amounts (satoshi)
-  //declare used variables for total created tokens
+    int128_t satoshi_precision_ = 100000000;
+    //define the precision for bitcoin amounts (satoshi)
+    //declare used variables for total created tokens
 
-  //declare used variables for total issuer tokens
+    //declare used variables for total issuer tokens
 
-  cpp_int createdTokens = boost::lexical_cast<cpp_int>((int128_t)amtTransfer*(int128_t)numProps)* boost::lexical_cast<cpp_int>(bonusPercentage_);
+    cpp_int createdTokens = boost::lexical_cast<cpp_int>((int128_t) amtTransfer * (int128_t) numProps) * boost::lexical_cast<cpp_int>(bonusPercentage_);
 
-  cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_ )) * (issuerPercentage_ / 100) * precision_;
+    cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_)) * (issuerPercentage_ / 100) * precision_;
 
-  //total tokens including remainders
+    //total tokens including remainders
 
-  cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
-  cpp_int issuerTokens_int = issuerTokens / (precision_ * satoshi_precision_ * 100 );
-  cpp_int newTotalCreated = totalTokens + createdTokens_int  + issuerTokens_int;
+    cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
+    cpp_int issuerTokens_int = issuerTokens / (precision_ * satoshi_precision_ * 100);
+    cpp_int newTotalCreated = totalTokens + createdTokens_int + issuerTokens_int;
 
-  if ( newTotalCreated > MAX_INT_8_BYTES) {
-    cpp_int maxCreatable = MAX_INT_8_BYTES - totalTokens;
+    if (newTotalCreated > MAX_INT_8_BYTES) {
+        cpp_int maxCreatable = MAX_INT_8_BYTES - totalTokens;
 
-    cpp_int created = createdTokens_int + issuerTokens_int;
-    cpp_int ratio = (created * precision_ * satoshi_precision_) / maxCreatable;
-  
-    issuerTokens_int = (issuerTokens_int * precision_ * satoshi_precision_)/ratio;
-    //calcluate the ratio of tokens for what we can create and apply it
-    createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int ;
-    //give the rest to the user
+        cpp_int created = createdTokens_int + issuerTokens_int;
+        cpp_int ratio = (created * precision_ * satoshi_precision_) / maxCreatable;
 
-    close_crowdsale = true; //close up the crowdsale after assigning all tokens
-  }
-  tokens = std::make_pair(boost::lexical_cast<uint64_t>(createdTokens_int) , boost::lexical_cast<uint64_t>(issuerTokens_int));
-  //give tokens
+        issuerTokens_int = (issuerTokens_int * precision_ * satoshi_precision_) / ratio;
+        //calcluate the ratio of tokens for what we can create and apply it
+        createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int;
+        //give the rest to the user
+
+        close_crowdsale = true; //close up the crowdsale after assigning all tokens
+    }
+    tokens = std::make_pair(boost::lexical_cast<uint64_t>(createdTokens_int), boost::lexical_cast<uint64_t>(issuerTokens_int));
+    //give tokens
 }
 
 // certain transaction types are not live on the network until some specific block height
