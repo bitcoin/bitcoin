@@ -581,6 +581,10 @@ QWidget#AddressBookPage QTableView { /* Address Listing */
 font-size:12px;
 }
 
+QWidget#AddressBookPage QHeaderView::section { /* Min width for Windows fix */
+min-width:260px;
+}
+
 /* SETTINGS MENU */
 
 /* Encrypt Wallet and Change Passphrase Dialog */
