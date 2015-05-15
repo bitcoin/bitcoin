@@ -96,3 +96,11 @@ void CScheduler::scheduleEvery(CScheduler::Function f, int64_t deltaSeconds)
 {
     scheduleFromNow(boost::bind(&Repeat, this, f, deltaSeconds), deltaSeconds);
 }
+
+size_t CScheduler::numTasksInQueue()
+{
+    {
+        boost::unique_lock<boost::mutex> lock(newTaskMutex);
+        return taskQueue.size();
+    }
+}

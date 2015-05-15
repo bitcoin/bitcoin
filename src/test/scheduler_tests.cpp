@@ -94,7 +94,8 @@ BOOST_AUTO_TEST_CASE(manythreads)
     }
 
     // All 2,000 tasks should be finished within 2 milliseconds. Sleep a bit longer.
-    MicroSleep(2100);
+    while (microTasks.numTasksInQueue())
+        MicroSleep(2100);
 
     microThreads.interrupt_all();
     microThreads.join_all();
