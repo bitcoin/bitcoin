@@ -634,7 +634,7 @@ int64_t before, after;
 
 // calculateFundraiser does token calculations per transaction
 // calcluateFractional does calculations for missed tokens
-void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsigned char bonusPerc,
+void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
         uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens,
         std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale)
 {
@@ -3939,16 +3939,9 @@ int CMPTransaction::logicMath_SimpleSend()
                 }
 
                 // Calculate the amounts to credit for this fundraiser
-                calculateFundraiser(sp.prop_type,
-                        nValue,
-                        sp.early_bird,
-                        sp.deadline,
-                        (uint64_t) blockTime,
-                        sp.num_tokens,
-                        sp.percentage,
-                        getTotalTokens(pcrowdsale->getPropertyId()),
-                        tokens,
-                        close_crowdsale);
+                calculateFundraiser(nValue, sp.early_bird, sp.deadline, (uint64_t) blockTime,
+                        sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
+                        tokens, close_crowdsale);
 
                 // Update the crowdsale object
                 pcrowdsale->incTokensUserCreated(tokens.first);
