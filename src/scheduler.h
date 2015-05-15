@@ -60,11 +60,24 @@ public:
     // and interrupted using boost::interrupt_thread
     void serviceQueue();
 
+    // Tell any threads running serviceQueue to stop as soon as they're
+    // done servicing whatever task they're currently servicing (drain=false)
+    // or when there is no work left to be done (drain=true)
+    void stop(bool drain=false);
+
+    // Returns number of tasks waiting to be serviced,
+    // and first and last task times
+    size_t getQueueInfo(boost::chrono::system_clock::time_point &first,
+                        boost::chrono::system_clock::time_point &last) const;
+
 private:
     std::multimap<boost::chrono::system_clock::time_point, Function> taskQueue;
     boost::condition_variable newTaskScheduled;
-    boost::mutex newTaskMutex;
+    mutable boost::mutex newTaskMutex;
     int nThreadsServicingQueue;
+    bool stopRequested;
+    bool stopWhenEmpty;
+    bool shouldStop() { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
 };
 
 #endif
