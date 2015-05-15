@@ -261,33 +261,26 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
     return NewReturn;
 }
 
-// Used for display of unit prices at UI layer
+// Used for display of unit prices to 8 decimal places at UI layer - automatically returns unit or inverse price as needed
 std::string CMPMetaDEx::displayUnitPrice() const
 {
-     XDOUBLE tmpUnitPrice = unitPrice();
-     bool divByCoin = false;
+     rational_t tmpDisplayPrice;
      if (desired_property == OMNI_PROPERTY_MSC || desired_property == OMNI_PROPERTY_TMSC) {
-         if (!isPropertyDivisible(property)) divByCoin = true;
+         tmpDisplayPrice = unitPrice();
+         if (isPropertyDivisible(property)) tmpDisplayPrice = tmpDisplayPrice * COIN;
      } else {
-         if (!isPropertyDivisible(desired_property)) divByCoin = true;
+         tmpDisplayPrice = inversePrice();
+         if (isPropertyDivisible(desired_property)) tmpDisplayPrice = tmpDisplayPrice * COIN;
      }
-     if (divByCoin) tmpUnitPrice = tmpUnitPrice / COIN;
-     std::string displayValue = tmpUnitPrice.str(8, std::ios_base::fixed);
-     return displayValue;
-}
 
-// Used for display of unit prices at UI layer
-std::string CMPMetaDEx::displayInversePrice() const
-{
-     XDOUBLE tmpInversePrice = inversePrice();
-     bool divByCoin = false;
-     if (desired_property == OMNI_PROPERTY_MSC || desired_property == OMNI_PROPERTY_TMSC) {
-         if (!isPropertyDivisible(property)) divByCoin = true;
-     } else {
-         if (!isPropertyDivisible(desired_property)) divByCoin = true;
-     }
-     if (divByCoin) tmpInversePrice = tmpInversePrice / COIN;
-     std::string displayValue = tmpInversePrice.str(8, std::ios_base::fixed);
+     // offers with unit prices under 0.00000001 will be excluded from UI layer - TODO: find a better way to identify sub 0.00000001 prices
+     std::string tmpDisplayPriceStr = xToString(tmpDisplayPrice);
+     if (!tmpDisplayPriceStr.empty()) { if (tmpDisplayPriceStr.substr(0,1) == "0") return "0.00000000"; }
+
+     // we must always round up here - for example if the actual price required is 0.3333333344444
+     // round: 0.33333333 - price is insufficient and thus won't result in a trade
+     // round: 0.33333334 - price will be sufficient to result in a trade
+     std::string displayValue = FormatDivisibleMP(xToInt64(tmpDisplayPrice, true));
      return displayValue;
 }
 

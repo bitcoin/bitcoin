@@ -310,38 +310,30 @@ void MetaDExDialog::UpdateOffers()
             md_PricesMap & prices = my_it->second;
             for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) { // loop through the sell prices for the property
                 std::string unitPriceStr;
-                std::string inversePriceStr;
                 int64_t available = 0, total = 0;
                 bool includesMe = false;
                 md_Set & indexes = (it->second);
                 for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
                     CMPMetaDEx obj = *it;
-                    if (!useBuyList && obj.displayUnitPrice() == "0.00000000") continue;
-                    if (useBuyList && obj.displayInversePrice() == "0.00000000") continue; // hide trades that have a lower than 0.00000001 MSC unit price
+                    if (obj.displayUnitPrice() == "0.00000000") continue; // hide trades that have a lower than 0.00000001 MSC unit price
+                    if(IsMyAddress(obj.getAddr())) includesMe = true;
                     unitPriceStr = obj.displayUnitPrice();
-                    inversePriceStr = obj.displayInversePrice();
                     if (useBuyList) {
                         if (obj.getDesProperty()==global_metadex_market) {
                             available += obj.getAmountDesired();
                             total += obj.getAmountForSale();
-                            if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     } else {
                         if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) ) {
                             available += obj.getAmountForSale();
                             total += obj.getAmountDesired();
-                            if(IsMyAddress(obj.getAddr())) includesMe = true;
                         }
                     }
                 }
                 if ((available > 0) && (total > 0)) { // if there are any available at this price, add to the sell list
                     string strAvail;
                     if (isPropertyDivisible(global_metadex_market)) { strAvail = FormatDivisibleShortMP(available); } else { strAvail = FormatIndivisibleMP(available); }
-                    if (useBuyList) {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(inversePriceStr), strAvail, FormatDivisibleShortMP(total));
-                    } else {
-                        AddRow(useBuyList, includesMe, StripTrailingZeros(unitPriceStr), strAvail, FormatDivisibleShortMP(total));
-                    }
+                    AddRow(useBuyList, includesMe, StripTrailingZeros(unitPriceStr), strAvail, FormatDivisibleShortMP(total));
                 }
             }
         }
