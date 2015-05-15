@@ -20,6 +20,12 @@ using namespace std;
 
 class CMasternodeMan;
 
+// Keep track of all broadcasts I've seen
+extern map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+
+// Keep track of all pings I've seen
+extern map<uint256, CMasternodePing> mapSeenMasternodePing;
+
 extern CMasternodeMan mnodeman;
 void DumpMasternodes();
 
@@ -102,11 +108,14 @@ public:
     CMasternode* Find(const CTxIn& vin);
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
-    /// Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge);
+    /// Find an entry in the masternode list that is next to be paid
+    CMasternode* GetNextMasternodeInQueueForPayment();
 
     /// Find a random entry
     CMasternode* FindRandom();
+
+    /// Decrement all masternode nVotedTimes, called 1/6 blocks (allowing for 100 votes each day)
+    void DecrementVotedTimes();
 
     /// Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);

@@ -508,8 +508,8 @@
            </item>
            <item row="4" column="1">
             <widget class="QLabel" name="labelSubmittedDenom">
-             <property name="statusTip">
-              <string>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</string>
+             <property name="toolTip">
+              <string>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</string>
              </property>
              <property name="text">
               <string>n/a</string>
