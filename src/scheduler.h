@@ -60,6 +60,9 @@ public:
     // and interrupted using boost::interrupt_thread
     void serviceQueue();
 
+    // Return the number of tasks left in the queue
+    size_t numTasksInQueue();
+
 private:
     std::multimap<boost::chrono::system_clock::time_point, Function> taskQueue;
     boost::condition_variable newTaskScheduled;
