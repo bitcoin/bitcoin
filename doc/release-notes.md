@@ -46,7 +46,7 @@ This does not affect wallet forward or backward compatibility.
 Notable changes
 ===============
 
-This fixes a serious problem on Windows with usernames that have non-ASCII
+This fixes a serious problem on Windows with data directories that have non-ASCII
 characters (https://github.com/bitcoin/bitcoin/issues/6078).
 
 For other platforms there are no notable changes.
