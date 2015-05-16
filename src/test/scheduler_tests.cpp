@@ -42,6 +42,8 @@ static void MicroSleep(uint64_t n)
 
 BOOST_AUTO_TEST_CASE(manythreads)
 {
+    seed_insecure_rand(false);
+
     // Stress test: hundreds of microsecond-scheduled tasks,
     // serviced by 10 threads.
     //
@@ -54,10 +56,6 @@ BOOST_AUTO_TEST_CASE(manythreads)
     // counters should sum to the number of initial tasks performed.
     CScheduler microTasks;
 
-    boost::thread_group microThreads;
-    for (int i = 0; i < 5; i++)
-        microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
-
     boost::mutex counterMutex[10];
     int counter[10] = { 0 };
     boost::random::mt19937 rng(insecure_rand());
@@ -67,6 +65,9 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
     boost::chrono::system_clock::time_point now = start;
+    boost::chrono::system_clock::time_point first, last;
+    size_t nTasks = microTasks.getQueueInfo(first, last);
+    BOOST_CHECK(nTasks == 0);
 
     for (int i = 0; i < 100; i++) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
@@ -77,9 +78,19 @@ BOOST_AUTO_TEST_CASE(manythreads)
                                              randomDelta(rng), tReschedule);
         microTasks.schedule(f, t);
     }
+    nTasks = microTasks.getQueueInfo(first, last);
+    BOOST_CHECK(nTasks == 100);
+    BOOST_CHECK(first < last);
+    BOOST_CHECK(last > now);
+
+    // As soon as these are created they will start running and servicing the queue
+    boost::thread_group microThreads;
+    for (int i = 0; i < 5; i++)
+        microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
 
     MicroSleep(600);
     now = boost::chrono::system_clock::now();
+
     // More threads and more tasks:
     for (int i = 0; i < 5; i++)
         microThreads.create_thread(boost::bind(&CScheduler::serviceQueue, &microTasks));
@@ -93,11 +104,9 @@ BOOST_AUTO_TEST_CASE(manythreads)
         microTasks.schedule(f, t);
     }
 
-    // All 2,000 tasks should be finished within 2 milliseconds. Sleep a bit longer.
-    MicroSleep(2100);
-
-    microThreads.interrupt_all();
-    microThreads.join_all();
+    // Drain the task queue then exit threads
+    microTasks.stop(true);
+    microThreads.join_all(); // ... wait until all the threads are done
 
     int counterSum = 0;
     for (int i = 0; i < 10; i++) {
