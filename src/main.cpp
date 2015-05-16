@@ -2176,7 +2176,8 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
 
     //Check that coinbase out is in range
     Credits_CBlockIndex* prevBlockIndex = (Credits_CBlockIndex*)pindex->pprev;
-    const uint64_t allowedSubsidyIncFee = Bitcredit_GetAllowedBlockSubsidy(prevBlockIndex->nTotalMonetaryBase, nDepositAmount, prevBlockIndex->nTotalDepositBase) + nFees;
+    const uint64_t allowedSubsidy = Bitcredit_GetAllowedBlockSubsidy(prevBlockIndex->nTotalMonetaryBase, nDepositAmount, prevBlockIndex->nTotalDepositBase);
+    const uint64_t allowedSubsidyIncFee = allowedSubsidy + nFees;
     const int64_t coinbaseValueOut = block.vtx[0].GetValueOut();
     if (coinbaseValueOut > allowedSubsidyIncFee)
         return state.DoS(100,
@@ -2184,23 +2185,25 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
                         		coinbaseValueOut, allowedSubsidyIncFee),
                                BITCREDIT_REJECT_INVALID, "bad-cb-amount");
 
-    //Check that deposit is above allowed if coinbase is used as deposit
-    const uint256 coinbaseHash = block.vtx[0].GetHash();
-    for (unsigned int i = 1; i < block.vtx.size(); i++) {
-    	const Credits_CTransaction& tx = block.vtx[i];
-    	if(tx.IsDeposit()) {
-    		if(tx.vin[0].prevout.hash == coinbaseHash) {
-    			uint64_t nRequiredDeposit = Bitcredit_GetRequiredDeposit(prevBlockIndex->nTotalDepositBase);
-				if (nDepositAmount < nRequiredDeposit)
-					return state.DoS(100,
-									 error("Credits: ConnectBlock() : deposit is too low (actual=%d vs required=%d)",
-											 nDepositAmount, nRequiredDeposit),
-										   BITCREDIT_REJECT_INVALID, "bad-deposit-amount");
-    		}
-    	} else {
-    		break;
-    	}
-    }
+	if(allowedSubsidy < Bitcredit_GetMaxBlockSubsidy(prevBlockIndex->nTotalMonetaryBase)) {
+		//Check that deposit is above allowed if coinbase is used as deposit
+		const uint256 coinbaseHash = block.vtx[0].GetHash();
+		for (unsigned int i = 1; i < block.vtx.size(); i++) {
+			const Credits_CTransaction& tx = block.vtx[i];
+			if(tx.IsDeposit()) {
+				if(tx.vin[0].prevout.hash == coinbaseHash) {
+					uint64_t nRequiredDeposit = Bitcredit_GetRequiredDeposit(prevBlockIndex->nTotalDepositBase);
+					if (nDepositAmount < nRequiredDeposit)
+						return state.DoS(100,
+										 error("Credits: ConnectBlock() : deposit is too low (actual=%d vs required=%d)",
+												 nDepositAmount, nRequiredDeposit),
+											   BITCREDIT_REJECT_INVALID, "bad-deposit-amount");
+				}
+			} else {
+				break;
+			}
+		}
+	}
 
     //Check that total monetary base is exactly previous total monetary base plus coinbase out minus fees
     const int64_t nMonetaryBaseChange = (coinbaseValueOut - nFees) + nClaimedCoinsForBlock;
