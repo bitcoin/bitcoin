@@ -1,10 +1,6 @@
-<TS language="uz@Cyrl" version="2.0">
+<TS language="uz@Cyrl" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Манзил ёки ёрлиқни таҳрирлаш учун икки марта босинг</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Янги манзил яратинг</translation>
@@ -1390,6 +1386,26 @@ Address: %4
     <message>
         <source>Requested payments history</source>
         <translation>Сўралган тўлов тарихи</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>Тўловни &amp;сўраш</translation>
+    </message>
+    <message>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>Танланган сўровни кўрсатиш (икки марта босилганда ҳам бир хил амал бажарилсин)</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Кўрсатиш</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>Танланганларни рўйхатдан ўчириш</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Ўчириш</translation>
     </message>
     <message>
         <source>Copy label</source>

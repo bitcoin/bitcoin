@@ -1,9 +1,9 @@
-<TS language="ar" version="2.0">
+<TS language="ar" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>أنقر بالماوس مرتين لتعديل العنوان او الوصف</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>انقر بالزر الايمن لتعديل العنوان</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -293,6 +293,14 @@
     <message>
         <source>Bitcoin Core client</source>
         <translation>عميل bitcion core</translation>
+    </message>
+    <message>
+        <source>Importing blocks from disk...</source>
+        <translation>استيراد كتل من القرص ...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>إعادة فهرسة الكتل على القرص</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -1675,10 +1683,6 @@
         <translation>تحذير: مساحة القرص منخفضة</translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>تحذير: المحفظة مغلقة , لا تستطيع تنفيذ المعاملة</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>فشل في الاستماع على أي منفذ. استخدام الاستماع = 0 إذا كنت تريد هذا.</translation>
     </message>
@@ -1747,10 +1751,6 @@
         <translation>عنوان البروكسي غير صحيح : '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>قيمة غير صحيحة</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>اموال غير كافية</translation>
     </message>
@@ -1769,10 +1769,6 @@
     <message>
         <source>Done loading</source>
         <translation>انتهاء التحميل</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>لاستخدام %s الخيار</translation>
     </message>
     <message>
         <source>Error</source>

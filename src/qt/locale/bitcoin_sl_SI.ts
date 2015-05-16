@@ -1,10 +1,6 @@
-<TS language="sl_SI" version="2.0">
+<TS language="sl_SI" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dvakrat klikni za urejanje naslovov ali oznak</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Ustvari nov naslov</translation>
@@ -2083,14 +2079,6 @@ Naslov: %4
         <translation>Uporabi testno omrežje</translation>
     </message>
     <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Napaka: Transakcija ni bila sprejeta! To se je morebiti zgodilo, ker so nekateri kovanci v vaši denarnici bili že porabljeni, na primer če ste uporabili kopijo wallet.dat in so tako kovanci bili porabljeni v kopiji, ostali pa označeni kot neporabljeni.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Napaka: Ta transakcija potrebuje povizijo, ki je najmanj %s zaradi svoje količine, kompliciranosti, ali zaradi uporabe prejetih sredstev.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Izvedi ukaz, ko bo transakcija denarnice se spremenila (V cmd je bil TxID zamenjan za %s)</translation>
     </message>
@@ -2117,10 +2105,6 @@ Naslov: %4
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Opozorilo: Premalo prostora na disku!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Opozorilo: Denarnica je zaklenjena, ni mogoče opraviti transkacijo! </translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2227,10 +2211,6 @@ Naslov: %4
         <translation>Neveljavna količina za -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Neveljavna količina</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Premalo sredstev</translation>
     </message>
@@ -2261,10 +2241,6 @@ Naslov: %4
     <message>
         <source>Done loading</source>
         <translation>Nalaganje končano</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Za uporabo %s opcije</translation>
     </message>
     <message>
         <source>Error</source>
