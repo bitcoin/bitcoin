@@ -456,7 +456,7 @@ static int StunRequest2(int sock, struct sockaddr_in *server, struct sockaddr_in
 
     req = (struct stun_header *)reqdata;
     stun_req_id(req);
-    int reqlen = 0;
+    unsigned short reqlen = 0;
     req->msgtype = 0;
     req->msglen = 0;
     req->msglen = htons(reqlen);
