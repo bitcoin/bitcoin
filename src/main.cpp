@@ -2307,13 +2307,21 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             int nBlockEstimate = 0;
             if (fCheckpointsEnabled)
                 nBlockEstimate = Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints());
-            // Don't relay blocks if pruning -- could cause a peer to try to download, resulting
-            // in a stalled download if the block file is pruned before the request.
-            if (nLocalServices & NODE_NETWORK) {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                    if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
-                        pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
+
+            {
+                LOCK2(cs_main, cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes) {
+                    if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate)) {
+                        if (!fPruneMode) // not pruning, always relay
+                            pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
+                        else { // pruning, still relay if peer has at least up to our pruning threshold
+                            int nLastBlockWeMustKeep = chainActive.Height() - MIN_BLOCKS_TO_KEEP + 6; // add 6 to ensure we dont prune while the request is in flight
+                            CNodeState *state = State(pnode->GetId());
+                            if (pnode->nStartingHeight > nLastBlockWeMustKeep || (state && state->pindexBestKnownBlock && state->pindexBestKnownBlock->nHeight > nLastBlockWeMustKeep))
+                                pnode->PushInventory(CInv(MSG_BLOCK, hashNewTip));
+                        }
+                    }
+                }
             }
             // Notify external listeners about the new tip.
             uiInterface.NotifyBlockTip(hashNewTip);
