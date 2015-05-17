@@ -2931,9 +2931,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // ----------- masternode payments -----------
 
     CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev != NULL) 
+    if(pindexPrev != NULL)
     {
-        if(IsBlockPayeeValid(block.vtx[0], pindexPrev->nHeight+1))
+        if(!IsBlockPayeeValid(block.vtx[0], pindexPrev->nHeight+1))
         {
             if(Params().NetworkID() != CBaseChainParams::REGTEST) 
                 return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
