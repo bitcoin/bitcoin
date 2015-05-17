@@ -8,19 +8,20 @@
 #include "guiutil.h"
 #include "uint256.h"
 
+#include <map>
+
 #include <QDialog>
-#include <QString>
-#include <QTableWidget>
-#include <QTextEdit>
-#include <QDialogButtonBox>
-#include <QPushButton>
 
 class ClientModel;
-class OptionsModel;
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QMenu;
+class QModelIndex;
+class QPoint;
+class QResizeEvent;
+class QString;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -49,46 +50,25 @@ class TXHistoryDialog : public QDialog
     Q_OBJECT
 
 public:
-    //void FullRefresh();
     explicit TXHistoryDialog(QWidget *parent = 0);
+    ~TXHistoryDialog();
+
     void setClientModel(ClientModel *model);
     void setWalletModel(WalletModel *model);
 
-    void accept();
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QDialog *txDlg;
-    QWidget *setupTabChain(QWidget *prev);
-    QTableWidgetItem *iconCell;
-    QTableWidgetItem *dateCell;
-    QTableWidgetItem *typeCell;
-    QTableWidgetItem *amountCell;
-    QTableWidgetItem *addressCell;
-    QTableWidgetItem *txidCell;
-    QTableWidgetItem *sortKeyCell;
-    QLayout *dlgLayout;
-    QTextEdit *dlgTextEdit;
-    QDialogButtonBox *buttonBox;
-    QPushButton *closeButton;
-
-    GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
-
     virtual void resizeEvent(QResizeEvent* event);
-
-    HistoryMap txHistoryMap;
     std::string shrinkTxType(int txType, bool *fundsMoved);
-
-public slots:
-    //void switchButtonClicked();
 
 private:
     Ui::txHistoryDialog *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
+    GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
     QMenu *contextMenu;
+    HistoryMap txHistoryMap;
 
 private slots:
-    void contextualMenu(const QPoint &);
+    void contextualMenu(const QPoint &point);
     void showDetails();
     void copyAddress();
     void copyAmount();
@@ -99,7 +79,7 @@ private slots:
     void checkSort(int column);
 
 signals:
-    void doubleClicked(const QModelIndex&);
+    void doubleClicked(const QModelIndex& idx);
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };
