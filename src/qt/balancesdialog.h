@@ -7,25 +7,17 @@
 
 #include "guiutil.h"
 
-#include <QWidget>
 #include <QDialog>
-#include <QObject>
-#include <QString>
-#include <QTableWidget>
-#include <QTextEdit>
-#include <QDialogButtonBox>
 
 class ClientModel;
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
-/*class QComboBox;
-class QFrame;
-class QLineEdit;
 class QMenu;
-class QModelIndex;
-class QSignalMapper;
-class QTableView;*/
+class QPoint;
+class QResizeEvent;
+class QString;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -38,17 +30,13 @@ class BalancesDialog : public QDialog
 
 public:
     explicit BalancesDialog(QWidget *parent = 0);
+    ~BalancesDialog();
+
     void setClientModel(ClientModel *model);
     void setWalletModel(WalletModel *model);
-    void AddRow(std::string label, std::string address, std::string reserved, std::string available);
+    void AddRow(const std::string& label, const std::string& address, const std::string& reserved, const std::string& available);
     void PopulateBalances(unsigned int propertyId);
-    void RefreshBalances();
     void UpdatePropSelector();
-
-    QTableWidgetItem *labelCell;
-    QTableWidgetItem *addressCell;
-    QTableWidgetItem *reservedCell;
-    QTableWidgetItem *availableCell;
 
 private:
     Ui::balancesDialog *ui;
@@ -58,24 +46,22 @@ private:
     QMenu *contextMenuSummary;
 
     GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
-    virtual void resizeEvent(QResizeEvent* event);
+    virtual void resizeEvent(QResizeEvent *event);
+
+public slots:
+    void propSelectorChanged();
+    void balancesUpdated();
 
 private slots:
-    void contextualMenu(const QPoint &);
+    void contextualMenu(const QPoint &point);
     void balancesCopyCol0();
     void balancesCopyCol1();
     void balancesCopyCol2();
     void balancesCopyCol3();
 
 signals:
-    void doubleClicked(const QModelIndex&);
-
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
-
-public slots:
-    void propSelectorChanged();
-    void balancesUpdated();
 };
 
 #endif // BALANCESDIALOG_H
