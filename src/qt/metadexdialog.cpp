@@ -5,74 +5,44 @@
 #include "metadexdialog.h"
 #include "ui_metadexdialog.h"
 
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
-#include "wallet.h"
-#include "base58.h"
-#include "ui_interface.h"
-
-#include <boost/filesystem.hpp>
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-// potentially overzealous includes here
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <utility>
-#include <string>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-// end potentially overzealous includes
-
-using namespace json_spirit;
-#include "mastercore.h"
-using namespace mastercore;
-
-// potentially overzealous using here
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace leveldb;
-// end potentially overzealous using
-
-#include "mastercore_mdex.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
-#include "mastercore_parse_string.h"
-#include "mastercore_errors.h"
 #include "omnicore_qtutils.h"
-#include "omnicore_pending.h"
+
+#include "walletmodel.h"
+
+#include "mastercore.h"
+#include "mastercore_errors.h"
+#include "mastercore_mdex.h"
+#include "mastercore_parse_string.h"
+#include "mastercore_sp.h"
 #include "omnicore_createpayload.h"
+#include "omnicore_pending.h"
 
-#include <boost/math/constants/constants.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
-#include <boost/multiprecision/cpp_dec_float.hpp>
+#include "amount.h"
+#include "sync.h"
+#include "uint256.h"
 
-using boost::multiprecision::int128_t;
-using boost::multiprecision::cpp_int;
-using boost::multiprecision::cpp_dec_float;
-using boost::multiprecision::cpp_dec_float_100;
+#include <boost/lexical_cast.hpp>
 
+#include <stdint.h>
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <QAbstractItemView>
+#include <QDialog>
 #include <QDateTime>
+#include <QFont>
+#include <QHeaderView>
 #include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
+#include <QString>
+#include <QTableWidgetItem>
+#include <QWidget>
+
+using std::ostringstream;
+using std::string;
+
+using namespace mastercore;
 
 MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
@@ -80,7 +50,6 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
-    this->model = model;
     //open
     global_metadex_market = 3;
 
@@ -128,10 +97,17 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
 
 }
 
+MetaDExDialog::~MetaDExDialog()
+{
+    delete ui;
+}
+
 void MetaDExDialog::setModel(WalletModel *model)
 {
     this->model = model;
-    connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
+    if (NULL != model) {
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
+    }
 }
 
 void MetaDExDialog::OrderRefresh()
@@ -314,7 +290,7 @@ void MetaDExDialog::UpdateOffers()
                 bool includesMe = false;
                 md_Set & indexes = (it->second);
                 for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) { // multiple sell offers can exist at the same price, sum them for the UI
-                    CMPMetaDEx obj = *it;
+                    const CMPMetaDEx& obj = *it;
                     if (obj.displayUnitPrice() == "0.00000000") continue; // hide trades that have a lower than 0.00000001 MSC unit price
                     if(IsMyAddress(obj.getAddr())) includesMe = true;
                     unitPriceStr = obj.displayUnitPrice();
@@ -406,7 +382,7 @@ void MetaDExDialog::FullRefresh()
     ui->buyButton->setText("Buy SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
 
     // populate buy and sell addresses
-    for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         string address = (my_it->first).c_str();
         unsigned int id;
         (my_it->second).init();
