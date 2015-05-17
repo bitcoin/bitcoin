@@ -5,7 +5,7 @@ suites:
 - "precise"
 architectures:
 - "amd64"
-packages: 
+packages:
 - "g++-multilib"
 - "git-core"
 - "pkg-config"

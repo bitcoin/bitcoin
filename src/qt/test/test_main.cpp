@@ -7,6 +7,7 @@
 #include "config/dash-config.h"
 #endif
 
+#include "util.h"
 #include "uritests.h"
 
 #ifdef ENABLE_WALLET
@@ -28,6 +29,7 @@ Q_IMPORT_PLUGIN(qkrcodecs)
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
+    SetupEnvironment();
     bool fInvalid = false;
 
     // Don't remove this, it's needed to access
