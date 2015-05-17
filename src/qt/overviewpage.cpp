@@ -61,11 +61,6 @@
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 6 // 3 - number of recent transactions to display
 
-  extern uint64_t global_balance_money_maineco[100000];
-  extern uint64_t global_balance_reserved_maineco[100000];
-  extern uint64_t global_balance_money_testeco[100000];
-  extern uint64_t global_balance_reserved_testeco[100000];
-
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
