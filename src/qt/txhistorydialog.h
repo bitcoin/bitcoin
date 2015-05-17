@@ -29,16 +29,16 @@ namespace Ui {
 
 class HistoryTXObject
 {
-
 public:
-  int blockHeight; // block transaction was mined in
-  int blockByteOffset; // byte offset the tx is stored in the block (used for ordering multiple txs same block)
-  bool valid; // whether the transaction is valid from an Omni perspective
-  bool fundsMoved; // whether tokens actually moved in this transaction
-  std::string txType; // human readable string containing type
-  std::string address; // the address to be displayed (usually sender or recipient)
-  std::string amount; // string containing formatted amount
-
+    HistoryTXObject()
+      : blockHeight(-1), blockByteOffset(0), valid(false), fundsMoved(true) {};
+    int blockHeight; // block transaction was mined in
+    int blockByteOffset; // byte offset the tx is stored in the block (used for ordering multiple txs same block)
+    bool valid; // whether the transaction is valid from an Omni perspective
+    bool fundsMoved; // whether tokens actually moved in this transaction
+    std::string txType; // human readable string containing type
+    std::string address; // the address to be displayed (usually sender or recipient)
+    std::string amount; // string containing formatted amount
 };
 
 typedef std::map<uint256, HistoryTXObject> HistoryMap;
