@@ -5,17 +5,16 @@
 #ifndef LOOKUPADDRESSDIALOG_H
 #define LOOKUPADDRESSDIALOG_H
 
-#include "walletmodel.h"
-
 #include <QDialog>
-#include <QString>
-#include <QImage>
 #include <QLabel>
-class OptionsModel;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QContextMenuEvent;
+class QImage;
 class QMenu;
+class QMouseEvent;
+class QString;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -52,19 +51,15 @@ class LookupAddressDialog : public QDialog
 
 public:
     explicit LookupAddressDialog(QWidget *parent = 0);
+    ~LookupAddressDialog();
+
     void searchAddress();
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QWidget *setupTabChain(QWidget *prev);
 
 public slots:
     void searchButtonClicked();
 
 private:
     Ui::LookupAddressDialog *ui;
-    WalletModel *model;
-
-//private slots:
 
 signals:
     // Fired when a message should be reported to the user
