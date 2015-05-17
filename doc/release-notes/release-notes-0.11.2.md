@@ -10,8 +10,8 @@ Please report bugs using the issue tracker at github:
   https://github.com/darkcoin/darkcoin/issues
 
 
-Masternode blinding and enhancements
-------------------------------------
+Masternode enhancements
+-----------------------
 
 * @TODO *
 
@@ -75,14 +75,13 @@ dashd/dash-qt (on Linux).
 - BIP 66 integration
 - Strict DER signatures
 - Bump block header versoin to 3 (see notes above)
-- Masternode blinding
 - Masternode caching
 - Masternode payment scheduler
 - Better protection from cheating masternodes
 - Extended functionality for `masternode list` RPC command
 - Live Darksend and InstantX fee calculations in CoinControl
 - Darksend input caching
-- Edit config file from within the wallet
+- Open config file from within the wallet
 - Wallet GUI perfomance improvements
 - General stability improvements and bug fixes
 - Code restructure and modularization
