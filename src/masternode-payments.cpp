@@ -160,7 +160,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     //require at least 6 signatures
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
-        if(payee.nVotes >= nMaxSignatures && MNPAYMENTS_SIGNATURES_REQUIRED)
+        if(payee.nVotes >= nMaxSignatures && payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED)
             nMaxSignatures = payee.nVotes;
 
     // if we don't have at least 6 signatures on a payee, approve whichever is the longest chain
