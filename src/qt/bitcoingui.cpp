@@ -175,7 +175,10 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     frameBlocksLayout->setSpacing(3);
     unitDisplayControl = new UnitDisplayStatusBarControl();
     labelEncryptionIcon = new QLabel();
-    labelConnectionsIcon = new QLabel();
+    labelConnectionsIcon = new QPushButton();
+    labelConnectionsIcon->setFlat(true); // Make the button look like a label, but clickable 
+    labelConnectionsIcon->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
+    labelConnectionsIcon->setMaximumSize(16, 16);
     labelBlocksIcon = new QLabel();
     if(enableWallet)
     {
@@ -216,6 +219,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     connect(openPeersAction, SIGNAL(triggered()), rpcConsole, SLOT(showPeers()));
     connect(openConfEditorAction, SIGNAL(triggered()), rpcConsole, SLOT(showConfEditor()));
     connect(showBackupsAction, SIGNAL(triggered()), rpcConsole, SLOT(showBackups()));
+    connect(labelConnectionsIcon, SIGNAL(clicked()), rpcConsole, SLOT(showPeers()));
 
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
@@ -700,7 +704,8 @@ void BitcoinGUI::setNumConnections(int count)
     case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
     default: icon = ":/icons/connect_4"; break;
     }
-    labelConnectionsIcon->setPixmap(QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+    QIcon connectionItem = QIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE);
+    labelConnectionsIcon->setIcon(connectionItem);
     labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Dash network", "", count));
 }
 
