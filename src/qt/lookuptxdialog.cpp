@@ -5,87 +5,44 @@
 #include "lookuptxdialog.h"
 #include "ui_lookuptxdialog.h"
 
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
-#include "wallet.h"
-#include "base58.h"
-#include "ui_interface.h"
-
-#include <boost/filesystem.hpp>
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-// potentially overzealous includes here
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <utility>
-#include <string>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-// end potentially overzealous includes
-
-using namespace json_spirit;
-#include "mastercore.h"
-using namespace mastercore;
-
-// potentially overzealous using here
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace leveldb;
-// end potentially overzealous using
-
-#include "mastercore_dex.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
-#include "mastercore_rpc.h"
 #include "mastercore_errors.h"
+#include "mastercore_rpc.h"
 
+#include "uint256.h"
+
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
+#include <string>
+
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
+#include <QString>
+#include <QTextEdit>
+#include <QVBoxLayout>
+#include <QWidget>
 
-#include <QClipboard>
-#include <QDrag>
-#include <QMimeData>
-#include <QMouseEvent>
-#include <QPixmap>
-#include <QMenu>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
+using std::string;
+using namespace json_spirit;
 
 LookupTXDialog::LookupTXDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::LookupTXDialog),
-    model(0)
+    ui(new Ui::LookupTXDialog)
 {
     ui->setupUi(this);
-    this->model = model;
 
 #if QT_VERSION >= 0x040700
-    // populate placeholder text
     ui->searchLineEdit->setPlaceholderText("Search transaction");
 #endif
 
     // connect actions
     connect(ui->searchButton, SIGNAL(clicked()), this, SLOT(searchButtonClicked()));
+}
+
+LookupTXDialog::~LookupTXDialog()
+{
+    delete ui;
 }
 
 void LookupTXDialog::searchTX()
