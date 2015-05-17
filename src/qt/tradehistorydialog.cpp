@@ -5,66 +5,58 @@
 #include "tradehistorydialog.h"
 #include "ui_tradehistorydialog.h"
 
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
-#include "wallet.h"
-#include "base58.h"
-#include "ui_interface.h"
-#include "txdb.h"
-
-#include <boost/filesystem.hpp>
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-// potentially overzealous includes here
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <utility>
-#include <string>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-// end potentially overzealous includes
-
-using namespace json_spirit;
-#include "mastercore.h"
-using namespace mastercore;
-
-// potentially overzealous using here
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace leveldb;
-// end potentially overzealous using
-
-#include "mastercore_mdex.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
-#include "mastercore_parse_string.h"
-#include "mastercore_rpc.h"
 #include "omnicore_qtutils.h"
 
+#include "mastercore.h"
+#include "mastercore_mdex.h"
+#include "mastercore_rpc.h"
+#include "mastercore_tx.h"
+#include "omnicore_pending.h"
+
+#include "guiutil.h"
+#include "ui_interface.h"
+#include "walletmodel.h"
+
+#include "amount.h"
+#include "init.h"
+#include "main.h"
+#include "primitives/transaction.h"
+#include "sync.h"
+#include "txdb.h"
+#include "uint256.h"
+#include "wallet.h"
+
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
+#include <boost/algorithm/string.hpp>
+
+#include <stdint.h>
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <QAction>
 #include <QDateTime>
-#include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
-#include <QPushButton>
+#include <QDialog>
+#include <QHeaderView>
+#include <QIcon>
+#include <QMenu>
+#include <QModelIndex>
+#include <QPoint>
+#include <QResizeEvent>
 #include <QSortFilterProxyModel>
+#include <QString>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QWidget>
+
+using std::ostringstream;
+using std::string;
+
+using namespace json_spirit;
+using namespace mastercore;
 
 TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     QDialog(parent),
@@ -104,7 +96,7 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     ui->tradeHistoryTable->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tradeHistoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->tradeHistoryTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    Update(); // make sure we're populated before attempting to resize to contents
+    update(); // make sure we're populated before attempting to resize to contents
     ui->tradeHistoryTable->setColumnHidden(0, true);
     ui->tradeHistoryTable->setColumnWidth(1, 23);
     ui->tradeHistoryTable->resizeColumnToContents(2);
@@ -112,8 +104,8 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     ui->tradeHistoryTable->resizeColumnToContents(5);
     ui->tradeHistoryTable->resizeColumnToContents(6);
     borrowedColumnResizingFixer->stretchColumnWidth(4);
-//    ui->orderHistoryTable->setSortingEnabled(true);
-//    ui->orderHistoryTable->horizontalHeader()->setSortIndicator(2, Qt::DescendingOrder);
+//  ui->orderHistoryTable->setSortingEnabled(true);
+//  ui->orderHistoryTable->horizontalHeader()->setSortIndicator(2, Qt::DescendingOrder);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *showDetailsAction = new QAction(tr("Show trade details"), this);
     contextMenu = new QMenu();
@@ -123,6 +115,11 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     connect(ui->tradeHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
+}
+
+TradeHistoryDialog::~TradeHistoryDialog()
+{
+    delete ui;
 }
 
 // Used to cache trades so we don't need to reparse all our transactions on every update
@@ -190,7 +187,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         std::string tempStrValue;
         if (!p_txlistdb->getTX(hash, tempStrValue)) continue;
         std::vector<std::string> vstr;
-        boost::split(vstr, tempStrValue, boost::is_any_of(":"), token_compress_on);
+        boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
         if (vstr.size() > 2) {
             if (atoi(vstr[2]) != MSC_TYPE_METADEX) continue;
         }
@@ -221,8 +218,8 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         uint256 blockHash = 0;
         if (!GetTransaction(hash, wtx, blockHash, true)) continue;
         blockHash = pwtx->hashBlock;
-        if ((0 == blockHash) || (NULL == mapBlockIndex[blockHash])) continue;
-        CBlockIndex* pBlockIndex = mapBlockIndex[blockHash];
+        if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
+        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
         if (NULL == pBlockIndex) continue;
         int blockHeight = pBlockIndex->nHeight;
 
@@ -319,7 +316,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
     return nProcessed;
 }
 
-void TradeHistoryDialog::Update()
+void TradeHistoryDialog::update()
 {
     //pending orders
     int rowcount = 0;
@@ -429,8 +426,8 @@ void TradeHistoryDialog::Update()
             int64_t nTime = pwtx->GetTxTime();
             // get the height of the transaction and check it's within the chosen parameters
             blockHash = pwtx->hashBlock;
-            if ((0 == blockHash) || (NULL == mapBlockIndex[blockHash])) continue;
-            CBlockIndex* pBlockIndex = mapBlockIndex[blockHash];
+            if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
+            CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
             if (NULL == pBlockIndex) continue;
             int blockHeight = pBlockIndex->nHeight;
             if ((blockHeight < nStartBlock) || (blockHeight > nEndBlock)) continue; // ignore it if not within our range
@@ -441,7 +438,7 @@ void TradeHistoryDialog::Update()
                 string strValue;
                 if (!p_txlistdb->getTX(hash, strValue)) continue;
                 std::vector<std::string> vstr;
-                boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
+                boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
                 if (4 <= vstr.size())
                 {
                     // if tx21, get the details for the list
@@ -697,7 +694,7 @@ void TradeHistoryDialog::showDetails()
                         string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + static_cast<ostringstream*>( &(ostringstream() << refNumber) )->str() );
                         if (!strValue.empty()) {
                             std::vector<std::string> vstr;
-                            boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
+                            boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
                             if (3 <= vstr.size()) {
                                 uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
                                 cancelTx.push_back(Pair("txid", vstr[0]));
