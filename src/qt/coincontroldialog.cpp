@@ -124,7 +124,7 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     ui->treeWidget->setColumnWidth(COLUMN_LABEL, 170);
     ui->treeWidget->setColumnWidth(COLUMN_ADDRESS, 190);
     ui->treeWidget->setColumnWidth(COLUMN_DARKSEND_ROUNDS, 120);
-    ui->treeWidget->setColumnWidth(COLUMN_DATE, 60);
+    ui->treeWidget->setColumnWidth(COLUMN_DATE, 80);
     ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 100);
     ui->treeWidget->setColumnWidth(COLUMN_PRIORITY, 100);
     ui->treeWidget->setColumnHidden(COLUMN_TXHASH, true);         // store transacton hash in this column, but dont show it
@@ -693,9 +693,11 @@ void CoinControlDialog::updateView()
 
             // label
             itemWalletAddress->setText(COLUMN_LABEL, sWalletLabel);
+            itemWalletAddress->setToolTip(COLUMN_LABEL, sWalletLabel);
 
             // address
             itemWalletAddress->setText(COLUMN_ADDRESS, sWalletAddress);
+            itemWalletAddress->setToolTip(COLUMN_ADDRESS, sWalletAddress);
         }
 
         int64_t nSum = 0;
@@ -725,6 +727,8 @@ void CoinControlDialog::updateView()
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
 
+                itemOutput->setToolTip(COLUMN_ADDRESS, sAddress);
+                
                 CPubKey pubkey;
                 CKeyID *keyid = boost::get<CKeyID>(&outputAddress);
                 if (keyid && model->getPubKey(*keyid, pubkey) && !pubkey.IsCompressed())
@@ -752,6 +756,7 @@ void CoinControlDialog::updateView()
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
+            itemOutput->setToolTip(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
             itemOutput->setText(COLUMN_DATE_INT64, strPad(QString::number(out.tx->GetTxTime()), 20, " "));
 
 
