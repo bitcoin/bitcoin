@@ -6,59 +6,27 @@
 #include "ui_lookupspdialog.h"
 
 #include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
-#include "wallet.h"
-#include "base58.h"
-#include "ui_interface.h"
 
-#include <boost/filesystem.hpp>
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-// potentially overzealous includes here
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <utility>
-#include <string>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-// end potentially overzealous includes
-
-using namespace json_spirit;
 #include "mastercore.h"
-using namespace mastercore;
-
-// potentially overzealous using here
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace leveldb;
-// end potentially overzealous using
-
-#include "mastercore_dex.h"
-#include "mastercore_tx.h"
 #include "mastercore_sp.h"
 
-#include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
+#include "base58.h"
+
+#include <boost/lexical_cast.hpp>
+
+#include <stdint.h>
+#include <algorithm>
+#include <string>
+
 #include <QDateTime>
+#include <QDialog>
+#include <QString>
+#include <QWidget>
+
+using std::ostringstream;
+using std::string;
+
+using namespace mastercore;
 
 LookupSPDialog::LookupSPDialog(QWidget *parent) :
     QDialog(parent),
@@ -66,9 +34,7 @@ LookupSPDialog::LookupSPDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
-    this->model = model;
 
-    // populate placeholder text
 #if QT_VERSION >= 0x040700
     ui->searchLineEdit->setPlaceholderText("ID, name or issuer");
 #endif
@@ -93,6 +59,11 @@ LookupSPDialog::LookupSPDialog(QWidget *parent) :
     ui->topFrame->setVisible(false);
     ui->leftFrame->setVisible(false);
     ui->rightFrame->setVisible(false);
+}
+
+LookupSPDialog::~LookupSPDialog()
+{
+    delete ui;
 }
 
 void LookupSPDialog::searchSP()
