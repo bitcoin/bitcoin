@@ -1,7 +1,6 @@
 #ifndef OMNICORE_QTUTILS
 #define OMNICORE_QTUTILS
 
-#include <QDialog>
 #include <string>
 
 namespace mastercore

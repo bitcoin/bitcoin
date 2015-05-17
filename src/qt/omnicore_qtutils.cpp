@@ -1,15 +1,16 @@
 #include "omnicore_qtutils.h"
+
 #include "guiutil.h"
 
 #include <string>
+
 #include <QDialog>
-#include <QVBoxLayout>
-#include <QTextEdit>
 #include <QDialogButtonBox>
-#include <QPushButton>
-#include <QObject>
-#include <QWidget>
 #include <QMessageBox>
+#include <QObject>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QVBoxLayout>
 
 namespace mastercore
 {
