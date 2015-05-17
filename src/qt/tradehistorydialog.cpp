@@ -630,7 +630,9 @@ void TradeHistoryDialog::Update()
 void TradeHistoryDialog::setModel(WalletModel *model)
 {
     this->model = model;
-    connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(Update()));
+    if (NULL != model) {
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(update()));
+    }
 }
 
 void TradeHistoryDialog::contextualMenu(const QPoint &point)

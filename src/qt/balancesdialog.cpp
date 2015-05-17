@@ -152,16 +152,16 @@ BalancesDialog::BalancesDialog(QWidget *parent) :
 
 void BalancesDialog::setClientModel(ClientModel *model)
 {
+    this->clientModel = model;
     if (model != NULL) {
-        this->clientModel = model;
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(balancesUpdated()));
     }
 }
 
 void BalancesDialog::setWalletModel(WalletModel *model)
 {
+    this->walletModel = model;
     if (model != NULL) {
-        this->walletModel = model;
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balancesUpdated()));
     }
 }

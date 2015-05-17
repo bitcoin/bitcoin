@@ -147,8 +147,8 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
 
 void TXHistoryDialog::setClientModel(ClientModel *model)
 {
+    this->clientModel = model;
     if (model != NULL) {
-        this->clientModel = model;
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(UpdateHistory()));
         connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(UpdateConfirmations()));
     }
@@ -156,8 +156,8 @@ void TXHistoryDialog::setClientModel(ClientModel *model)
 
 void TXHistoryDialog::setWalletModel(WalletModel *model)
 {
+    this->walletModel = model;
     if (model != NULL) {
-        this->walletModel = model;
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateHistory()));
     }
 }

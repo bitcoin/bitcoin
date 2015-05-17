@@ -93,8 +93,8 @@ MetaDExCancelDialog::MetaDExCancelDialog(QWidget *parent) :
  */
 void MetaDExCancelDialog::setClientModel(ClientModel *model)
 {
+    this->clientModel = model;
     if (model != NULL) {
-        this->clientModel = model;
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(RefreshUI()));
     }
 }
@@ -104,7 +104,7 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
  */
 void MetaDExCancelDialog::setWalletModel(WalletModel *model)
 {
-    if (model != NULL) this->walletModel = model;
+    this->walletModel = model;
 }
 
 /**
