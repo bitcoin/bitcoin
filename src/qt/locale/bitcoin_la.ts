@@ -1,10 +1,6 @@
-<TS language="la" version="2.0">
+<TS language="la" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dupliciter-clicca ut inscriptionem vel titulum mutes</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Crea novam inscriptionem</translation>
@@ -1515,40 +1511,8 @@ Inscriptio: %4
         <translation>Accipe conexiones externas (praedefinitum: 1 nisi -proxy neque -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, necesse est te rpcpassword constituere in plica configurationis:
-%s
-Hortatur te hanc fortuitam tesseram uti:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(non est necesse te hanc tesseram meminisse)
-Nomen usoris et tessera eadem esse NON POSSUNT.
-Si plica non existit, eam crea cum permissionibus ut eius dominus tantum sinitur id legere.
-Quoque hortatur alertnotify constituere ut tu notificetur de problematibus;
-exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Conglutina ad inscriptionem datam et semper in eam ausculta.  Utere [moderatrum]:porta notationem pro IPv6</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Error: Transactio eiecta est! Hoc possit accidere si alii nummorum in cassidili tuo iam soluti sint, ut si usus es exemplar de wallet.dat et nummi soluti sunt in exemplari sed non hic notati ut soluti.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Error: Huic transactioni necesse est merces saltem %s propter eius magnitudinem, complexitatem, vel usum recentum acceptorum nummorum!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -1613,10 +1577,6 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
     <message>
         <source>Error: Disk space is low!</source>
         <translation>Error: Inopia spatii disci!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Error: Cassidile seratum, non posse transactionem creare!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
@@ -1759,10 +1719,6 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
         <translation>Quantitas non valida pro -paytxfee=&lt;quantitas&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Quantitas non valida</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Inopia nummorum</translation>
     </message>
@@ -1793,10 +1749,6 @@ exempli gratia: alertnotify=echo %%s | mail -s "Bitcoin Notificatio" admin@foo.c
     <message>
         <source>Done loading</source>
         <translation>Completo lengendi</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Ut utaris optione %s</translation>
     </message>
     <message>
         <source>Error</source>

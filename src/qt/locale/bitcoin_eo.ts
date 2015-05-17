@@ -1,10 +1,6 @@
-<TS language="eo" version="2.0">
+<TS language="eo" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Duoble-klaku por redakti adreson aŭ etikedon</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Krei novan adreson</translation>
@@ -88,6 +84,10 @@
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Perkome disigita dosiero (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
     </message>
     </context>
 <context>
@@ -283,6 +283,10 @@
         <translation>Malfermi &amp;URI-on...</translation>
     </message>
     <message>
+        <source>Bitcoin Core client</source>
+        <translation>kliento de bitmon-kerno</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>Importado de blokoj el disko...</translation>
     </message>
@@ -421,6 +425,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 kaj %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n jaro</numerusform><numerusform>%n jaroj</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -2080,6 +2088,10 @@ Adreso: %4
         <translation>Montri detalojn de transakcio</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>ekspotado malsukcesinta</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Perkome disigita dosiero (*.csv)</translation>
     </message>
@@ -2191,40 +2203,8 @@ Adreso: %4
         <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, vi devas specifi rpcpassword en la konfigura dosiero:
-%s
-Estas konsilinde uzi tiun ĉi aleatore kreitan pasvorton:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(ne utilas al vi memorigi tiun ĉi pasvorton)
-La salutnomo kaj la pasvorto estu nepre MALSAMAJ.
-Se la dosiero ne ekzistas, kreu ĝin kun permeso "nur posedanto rajtas legi".
-Estas konsilinde ankaŭ agordi alertnotify por ke vi ricevu avertojn pri eventualaj problemoj;
-ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Bindi al donita adreso kaj ĉiam aŭskulti per ĝi. Uzu la formaton [gastigo]:pordo por IPv6</translation>
-    </message>
-    <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Eraro: la transakcio estas rifuzita. Tio povas okazi se iom da Bitmono en via monujo jam elspeziĝis (ekz. se vi uzis kopion de wallet.dat kies Bitmono jam elspeziĝis, sed ne estis markita kiel elspezita ĉi tie).</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Eraro: tiu ĉi transakcio bezonas krompagon de almenaŭ %s pro la sumo, la komplekseco, aŭ la uzo de ĵus ricevita mono!</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2303,10 +2283,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Eraro: restas malmulte da diskospaco!</translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Eraro: monujo ŝlosita, ne eblas krei transakcion!</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ne sukcesis aŭskulti ajnan pordon. Uzu -listen=0 se tion vi volas.</translation>
     </message>
@@ -2381,6 +2357,10 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
     <message>
         <source>Signing transaction failed</source>
         <translation>Subskriba transakcio fiaskis</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation>ĝi estas eksperimenta programo</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2475,10 +2455,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
         <translation>Nevalida sumo por -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Nevalida sumo</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Nesufiĉa mono</translation>
     </message>
@@ -2509,10 +2485,6 @@ ekzemple: alertnotify=echo %%s | mail -s "Averto de Bitmono" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Ŝargado finiĝis</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Por uzi la agordon %s</translation>
     </message>
     <message>
         <source>Error</source>

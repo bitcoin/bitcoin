@@ -1,10 +1,6 @@
-<TS language="th_TH" version="2.0">
+<TS language="th_TH" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>ดับเบิ้ลคลิก เพื่อแก้ไขที่อยู่ หรือชื่อ</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>สร้างที่อยู่ใหม่</translation>

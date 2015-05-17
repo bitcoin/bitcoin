@@ -1,13 +1,13 @@
-<TS language="fa_IR" version="2.0">
+<TS language="fa_IR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>برای ویرایش حساب و یا برچسب دوبار کلیک نمایید</translation>
-    </message>
-    <message>
         <source>Create a new address</source>
         <translation>گشایش حسابی جدید</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>جدید</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -986,10 +986,6 @@ Address: %4
         <translation>میزان اشتباه است for -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>میزان اشتباه است</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>وجوه ناکافی</translation>
     </message>
@@ -1020,10 +1016,6 @@ Address: %4
     <message>
         <source>Done loading</source>
         <translation>اتمام لود شدن</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>برای استفاده از %s  از اختیارات</translation>
     </message>
     <message>
         <source>Error</source>

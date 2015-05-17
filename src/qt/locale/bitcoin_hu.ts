@@ -1,9 +1,9 @@
-<TS language="hu" version="2.0">
+<TS language="hu" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Dupla-kattintás a cím vagy címke szerkesztéséhez</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>A cím vagy címke szerkeszteséhez kattintson a jobb gombbal</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -870,8 +870,20 @@ Cím: %4
         <translation>Üdvözlünk a Bitcoin Core-ban.</translation>
     </message>
     <message>
+        <source>Use the default data directory</source>
+        <translation>Az alapértelmezett adat könyvtár használata</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation>Saját adatkönyvtár használata:</translation>
+    </message>
+    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Hiba: A megadott "%1" adatkönyvtár nem hozható létre. </translation>
     </message>
     <message>
         <source>Error</source>
@@ -896,7 +908,11 @@ Cím: %4
         <source>Select payment request file</source>
         <translation>Fizetési kérelmi fájl kiválasztása</translation>
     </message>
-    </context>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Fizetés kérelmi fájl kiválasztása</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -918,6 +934,18 @@ Cím: %4
     <message>
         <source>MB</source>
         <translation>MB</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside</source>
+        <translation>Külső kapcsolatok elfogadása</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Bejövő kapcsolatok engedélyezése</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>A proxy IP címe (pl.: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1012,6 +1040,10 @@ Cím: %4
         <translation>Beállítások törlésének jóváhagyása.</translation>
     </message>
     <message>
+        <source>Client restart required to activate changes.</source>
+        <translation>A változtatások aktiválásahoz újra kell indítani a klienst.</translation>
+    </message>
+    <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>A megadott proxy cím nem érvényes.</translation>
     </message>
@@ -1059,6 +1091,14 @@ Cím: %4
         <translation>Aktuális egyenleged</translation>
     </message>
     <message>
+        <source>Spendable:</source>
+        <translation>Elkölthető:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>A legutóbbi tranzakciók</translation>
+    </message>
+    <message>
         <source>out of sync</source>
         <translation>Nincs szinkronban.</translation>
     </message>
@@ -1076,12 +1116,32 @@ Cím: %4
     </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>Ping Time</source>
+        <translation>Ping idő</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>Összeg</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 n</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 ó</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 p</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 mp</translation>
     </message>
     <message>
         <source>NETWORK</source>
@@ -1134,6 +1194,10 @@ Cím: %4
         <translation>Debug ablak</translation>
     </message>
     <message>
+        <source>General</source>
+        <translation>Általános</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>Használt OpenSSL verzió</translation>
     </message>
@@ -1172,6 +1236,18 @@ Cím: %4
     <message>
         <source>&amp;Peers</source>
         <translation>&amp;Peerek</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Verzió</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>Szolgáltatások</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>Ping idő</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -2058,10 +2134,6 @@ Cím: %4
         <translation>Kívülről érkező kapcsolatok elfogadása (alapértelmezett: 1, ha nem használt a -proxy vagy a -connect)</translation>
     </message>
     <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Hiba: a tranzakciót elutasították. Ezt az okozhatja, ha már elköltöttél valamennyi érmét a tárcádból például ha a wallet.dat-od egy másolatát használtad, és így az elköltés csak abban lett jelölve, de itt nem.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Parancs, amit akkor hajt végre, amikor egy tárca-tranzakció megváltozik  (%s a parancsban lecserélődik a blokk TxID-re)</translation>
     </message>
@@ -2251,10 +2323,6 @@ Cím: %4
         <translation>Étvénytelen -paytxfee=&lt;összeg&gt; összeg: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Étvénytelen összeg</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Nincs elég bitcoinod.</translation>
     </message>
@@ -2285,10 +2353,6 @@ Cím: %4
     <message>
         <source>Done loading</source>
         <translation>Betöltés befejezve.</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Használd a %s opciót</translation>
     </message>
     <message>
         <source>Error</source>

@@ -1,21 +1,53 @@
-<TS language="sq" version="2.0">
+<TS language="sq" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Klikoni 2 herë për të ndryshuar adressën ose etiketën</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Kliko me të djathtën për të ndryshuar adresën ose etiketen.</translation>
     </message>
     <message>
         <source>Create a new address</source>
         <translation>Krijo një adresë të re</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;E re</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopjo adresën e zgjedhur në memorjen e sistemit </translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Kopjo</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopjo adresen</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Fshi adresen e selektuar nga lista</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Fshi</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Zgjidh adresen ku do te dergoni monedhat</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Duke derguar adresen</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Duke marr adresen</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Ndrysho</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -53,7 +85,7 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Enkripto portofolin</translation>
+        <translation>Kripto portofolin</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -82,6 +114,10 @@
     <message>
         <source>Confirm wallet encryption</source>
         <translation>Konfirmoni enkriptimin e portofolit</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Jeni te sigurt te enkriptoni portofolin tuaj?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -147,6 +183,26 @@
         <translation>Ndrysho frazkalimin e përdorur per enkriptimin e portofolit</translation>
     </message>
     <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Portofol</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;Dergo</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Merr</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Shfaq / Fsheh</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;Skedar</translation>
     </message>
@@ -161,6 +217,46 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Shiriti i mjeteve</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>Rreth Berthames Bitkoin</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n ore</numerusform><numerusform>%n ore</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dite</numerusform><numerusform>%n dite</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n jave</numerusform><numerusform>%n jave</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 dhe %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n vit</numerusform><numerusform>%n vite</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 Pas</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Problem</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Informacion</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -193,12 +289,32 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Zgjedhja e monedhes</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Shuma:</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Sasia</translation>
     </message>
     <message>
         <source>Date</source>
         <translation>Data</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopjo adresën</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>po</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>jo</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -250,12 +366,44 @@
 </context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation>emri</translation>
+    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
+    <message>
+        <source>version</source>
+        <translation>versioni</translation>
+    </message>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>Rreth Berthames Bitkoin</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation>Miresevini</translation>
+    </message>
+    <message>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>Miresevini ne Berthamen Bitcoin</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Problem</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -292,6 +440,22 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Open</source>
+        <translation>&amp;Hap</translation>
+    </message>
+    <message>
+        <source>&amp;Clear</source>
+        <translation>&amp;Pastro</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>asnjehere</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>i/e panjohur</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -339,6 +503,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Dërgo Monedha</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Shuma:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -416,6 +584,10 @@
     </context>
 <context>
     <name>SplashScreen</name>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Berthama Bitcoin</translation>
+    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testo rrjetin]</translation>
@@ -532,6 +704,10 @@
         <translation>Minuar</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>Kopjo adresën</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Skedar i ndarë me pikëpresje(*.csv)</translation>
     </message>
@@ -570,5 +746,21 @@
     </context>
 <context>
     <name>bitcoin-core</name>
-    </context>
+    <message>
+        <source>Information</source>
+        <translation>Informacion</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation>Fonde te pamjaftueshme</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>Rikerkim</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Problem</translation>
+    </message>
+</context>
 </TS>
