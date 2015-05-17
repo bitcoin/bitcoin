@@ -551,7 +551,7 @@ void TXHistoryDialog::showDetails()
         // grab details usual way
         int pop = populateRPCTransactionObject(txid, &txobj, "");
         if (0<=pop) {
-            strTXText = write_string(Value(txobj), false) + "\n";
+            strTXText = write_string(Value(txobj), true);
             // manipulate for STO if needed
             size_t pos = strTXText.find("Send To Owners");
             if (pos!=std::string::npos) {
@@ -561,16 +561,11 @@ void TXHistoryDialog::showDetails()
                 s_stolistdb->getRecipients(txid, "", &receiveArray, &tmpAmount, &tmpSTOFee);
                 txobj.push_back(Pair("recipients", receiveArray));
                 //rewrite string
-                strTXText = write_string(Value(txobj), false) + "\n";
+                strTXText = write_string(Value(txobj), true);
             }
         }
     }
     if (!strTXText.empty()) {
-        strTXText = ReplaceStr(",",",\n    ",strTXText);
-        strTXText = ReplaceStr(":","   :   ",strTXText);
-        strTXText = ReplaceStr("{","{\n    ",strTXText);
-        strTXText = ReplaceStr("}","\n}",strTXText);
-        strTXText = ReplaceStr("[","[\n",strTXText);
         PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
     }
 }

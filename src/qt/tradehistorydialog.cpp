@@ -535,17 +535,11 @@ void TradeHistoryDialog::showDetails()
                 txobj.push_back(Pair("cancelledtransactions", cancelArray));
             }
 
-            strTXText = write_string(Value(txobj), false) + "\n";
+            strTXText = write_string(Value(txobj), true);
         }
     }
 
     if (!strTXText.empty()) {
-        strTXText = ReplaceStr(",",",\n    ",strTXText);
-        strTXText = ReplaceStr(":","   :   ",strTXText);
-        strTXText = ReplaceStr("{","{\n    ",strTXText);
-        strTXText = ReplaceStr("}","\n}",strTXText);
-        strTXText = ReplaceStr("[","[\n",strTXText);
-        strTXText = ReplaceStr("]","\n]",strTXText);
         PopulateSimpleDialog(strTXText, "Trade Information", "Trade Information");
     }
 }
