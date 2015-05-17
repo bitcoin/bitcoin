@@ -397,13 +397,15 @@ public:
  
 };
 
-//temp - only supporting 100,000 properties per eco here, research best way to expand array
-//these 4 arrays use about 3MB total memory with 100K properties limit (100000*8*4 bytes)
 extern uint64_t global_metadex_market;
-extern uint64_t global_balance_money_maineco[100000];
-extern uint64_t global_balance_reserved_maineco[100000];
-extern uint64_t global_balance_money_testeco[100000];
-extern uint64_t global_balance_reserved_testeco[100000];
+//! Available balances of wallet properties in the main ecosystem
+extern std::map<uint32_t, int64_t> global_balance_money_maineco;
+//! Reserved balances of wallet properties in the main ecosystem
+extern std::map<uint32_t, int64_t> global_balance_reserved_maineco;
+//! Available balances of wallet properties in the test ecosystem
+extern std::map<uint32_t, int64_t> global_balance_money_testeco;
+//! Reserved balances of wallet properties in the test ecosystem
+extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
 
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
