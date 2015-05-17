@@ -152,11 +152,9 @@ QT_MOC_CPP = \
   qt/moc_lookuptxdialog.cpp \
   qt/moc_txhistorydialog.cpp \
   qt/moc_balancesdialog.cpp \
-  qt/moc_omnicore_init.cpp \
   qt/moc_metadexdialog.cpp \
   qt/moc_metadexcanceldialog.cpp \
-  qt/moc_tradehistorydialog.cpp \
-  qt/moc_omnicore_qtutils.cpp
+  qt/moc_tradehistorydialog.cpp
 
 BITCOIN_MM = \
   qt/macdockiconhandler.mm \
