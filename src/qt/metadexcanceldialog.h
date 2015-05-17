@@ -5,18 +5,14 @@
 #ifndef METADEXCANCELDIALOG_H
 #define METADEXCANCELDIALOG_H
 
-#include "clientmodel.h"
-#include "walletmodel.h"
-
 #include <QDialog>
-#include <QString>
-#include <QDialogButtonBox>
-#include <QTextEdit>
 
-class OptionsModel;
+class ClientModel;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QWidget;
+class QString;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -30,19 +26,10 @@ class MetaDExCancelDialog : public QDialog
 
 public:
     explicit MetaDExCancelDialog(QWidget *parent = 0);
+    ~MetaDExCancelDialog();
 
     void setClientModel(ClientModel *model);
     void setWalletModel(WalletModel *model);
-
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QWidget *setupTabChain(QWidget *prev);
-
-    QLayout *dlgLayout;
-    QTextEdit *dlgTextEdit;
-    QDialogButtonBox *buttonBox;
-    QPushButton *closeButton;
-
 
 public slots:
     void SendCancelTransaction();
@@ -51,13 +38,13 @@ public slots:
     void RefreshUI();
     void fromAddressComboBoxChanged(int);
 
-
 private:
     Ui::MetaDExCancelDialog *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
 
 private slots:
+    // None!
 
 signals:
     // Fired when a message should be reported to the user
