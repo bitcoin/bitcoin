@@ -21,7 +21,11 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
     addrPrefix(),
+<<<<<<< HEAD
     typeFilter(ALL_TYPES),
+=======
+    typeFilter(COMMON_TYPES),
+>>>>>>> upstream/v0.12.0.x
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
     limitRows(-1),
