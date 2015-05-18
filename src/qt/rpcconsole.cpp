@@ -181,11 +181,7 @@ void RPCExecutor::request(const QString &command)
 
         emit reply(RPCConsole::CMD_REPLY, QString::fromStdString(strPrint));
     }
-<<<<<<< HEAD
-    catch (const json_spirit::Object& objError)
-=======
     catch (UniValue& objError)
->>>>>>> Convert tree to using univalue. Eliminate all json_spirit uses.
     {
         try // Nice formatting for standard-format error
         {

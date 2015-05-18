@@ -12,9 +12,9 @@
 #include <stdint.h>
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include "univalue/univalue.h"
 
 using namespace std;
-using namespace json_spirit;
 
 class CRPCConvertParam
 {
@@ -137,7 +137,7 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
         // parse string as JSON, insert bool/number/object/etc. value
         else {
             //according to rfc4627 null, true, false are not valid json strings
-            Value jVal;
+            UniValue jVal;
             if(strVal == "null")
                 jVal.setNull();
             else if(strVal == "true")

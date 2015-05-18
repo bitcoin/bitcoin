@@ -19,9 +19,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "json_spirit_wrapper.h"
+#include "univalue/univalue.h"
 
-using namespace json_spirit;
 using namespace std;
 
 void EnsureWalletIsUnlocked();
@@ -70,7 +69,7 @@ std::string DecodeDumpString(const std::string &str) {
     return ret.str();
 }
 
-UniValue importprivkey(const Array& params, bool fHelp)
+UniValue importprivkey(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
@@ -144,7 +143,7 @@ UniValue importprivkey(const Array& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue importaddress(const Array& params, bool fHelp)
+UniValue importaddress(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
@@ -217,7 +216,7 @@ UniValue importaddress(const Array& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue importwallet(const Array& params, bool fHelp)
+UniValue importwallet(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
@@ -321,7 +320,7 @@ UniValue importwallet(const Array& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue dumpprivkey(const Array& params, bool fHelp)
+UniValue dumpprivkey(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
@@ -359,7 +358,7 @@ UniValue dumpprivkey(const Array& params, bool fHelp)
 }
 
 
-UniValue dumpwallet(const Array& params, bool fHelp)
+UniValue dumpwallet(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
