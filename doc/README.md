@@ -1,4 +1,4 @@
-Bitcoin 0.9.4 BETA
+Bitcoin 0.9.5 BETA
 =====================
 
 Copyright (c) 2009-2015 Bitcoin Developers
