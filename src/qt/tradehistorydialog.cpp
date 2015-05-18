@@ -11,7 +11,7 @@
 #include "wallet.h"
 #include "base58.h"
 #include "ui_interface.h"
-#include "guiutil.h"
+#include "txdb.h"
 
 #include <boost/filesystem.hpp>
 
@@ -64,6 +64,7 @@ using namespace leveldb;
 #include <QScrollBar>
 #include <QTextDocument>
 #include <QPushButton>
+#include <QSortFilterProxyModel>
 
 TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     QDialog(parent),
@@ -122,6 +123,200 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     connect(ui->tradeHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
+}
+
+// Used to cache trades so we don't need to reparse all our transactions on every update
+int TradeHistoryDialog::PopulateTradeHistoryMap()
+{
+    // Attempt to obtain locks
+    CWallet *wallet = pwalletMain;
+    if (NULL == wallet) return -1;
+    TRY_LOCK(cs_main,lckMain);
+    if (!lckMain) return -1;
+    TRY_LOCK(wallet->cs_wallet, lckWallet);
+    if (!lckWallet) return -1;
+
+    int64_t nProcessed = 0; // number of new entries, forms return code
+
+    // ### START PENDING TRANSACTIONS PROCESSING ###
+    for(PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
+        uint256 txid = it->first;
+
+        // check historyMap, if this tx exists don't waste resources doing anymore work on it
+        TradeHistoryMap::iterator hIter = tradeHistoryMap.find(txid);
+        if (hIter != tradeHistoryMap.end()) continue;
+
+        // grab pending object, extract details and skip if not a metadex trade
+        CMPPending *p_pending = &(it->second);
+        if (p_pending->type != MSC_TYPE_METADEX) continue;
+        uint64_t propertyId = p_pending->prop;
+        int64_t amount = p_pending->amount;
+
+        // create a TradeHistoryObject and populate it
+        TradeHistoryObject objTH;
+        objTH.blockHeight = 0;
+        objTH.blockByteOffset = 0; // attempt to use the position of the transaction in the wallet to provide a sortkey for pending
+        std::map<uint256, CWalletTx>::const_iterator walletIt = wallet->mapWallet.find(txid);
+        if (walletIt != wallet->mapWallet.end()) {
+            const CWalletTx* pendingWTx = &(*walletIt).second;
+            objTH.blockByteOffset = pendingWTx->nOrderPos;
+        }
+        objTH.valid = true; // all pending transactions are assumed to be valid
+        objTH.status = "Pending";
+        objTH.amountIn = "---";
+        objTH.amountOut = "---";
+        objTH.info = "Sell ";
+        if (isPropertyDivisible(propertyId)) {
+            objTH.info += FormatDivisibleShortMP(amount) + getTokenLabel(propertyId) + " (awaiting confirmation)";
+        } else {
+            objTH.info += FormatIndivisibleMP(amount) + getTokenLabel(propertyId) + " (awaiting confirmation)";
+        }
+
+        // add the new TradeHistoryObject to the map
+        tradeHistoryMap.insert(std::make_pair(txid, objTH));
+        nProcessed += 1;
+    }
+    // ### END PENDING TRANSACTIONS PROCESSING ###
+
+    // ### START WALLET TRANSACTIONS PROCESSING ###
+    std::list<CAccountingEntry> acentries;
+    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        CWalletTx *const pwtx = (*it).second.first;
+        if (pwtx == 0) continue;
+        uint256 hash = pwtx->GetHash();
+
+        // use levelDB to perform a fast check on whether it's a bitcoin or Omni tx and whether it's a trade
+        std::string tempStrValue;
+        if (!p_txlistdb->getTX(hash, tempStrValue)) continue;
+        std::vector<std::string> vstr;
+        boost::split(vstr, tempStrValue, boost::is_any_of(":"), token_compress_on);
+        if (vstr.size() > 2) {
+            if (atoi(vstr[2]) != MSC_TYPE_METADEX) continue;
+        }
+
+        // check historyMap, if this tx exists don't waste resources doing anymore work on it
+        TradeHistoryMap::iterator hIter = tradeHistoryMap.find(hash);
+        if (hIter != tradeHistoryMap.end()) {
+            // the tx is in historyMap, check if it has a blockheight of 0 (means a pending has confirmed & we should delete pending tx and add it again via parsing)
+            TradeHistoryObject *objTH = &(hIter->second);
+            if (objTH->blockHeight != 0) {
+                continue;
+            } else {
+                tradeHistoryMap.erase(hIter);
+                ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting temporarily while we update the table (leaving enabled gives unexpected results)
+                QAbstractItemModel* tradeHistoryAbstractModel = ui->tradeHistoryTable->model();
+                QSortFilterProxyModel tradeHistoryProxy;
+                tradeHistoryProxy.setSourceModel(tradeHistoryAbstractModel);
+                tradeHistoryProxy.setFilterKeyColumn(0);
+                tradeHistoryProxy.setFilterFixedString(QString::fromStdString(hash.GetHex()));
+                QModelIndex rowIndex = tradeHistoryProxy.mapToSource(tradeHistoryProxy.index(0,0)); // map to the row in the actual table
+                if(rowIndex.isValid()) ui->tradeHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be readded as a proper confirmed transaction
+                ui->tradeHistoryTable->setSortingEnabled(true); // re-enable sorting
+            }
+        }
+
+        // tx not in historyMap, retrieve the transaction object
+        CTransaction wtx;
+        uint256 blockHash = 0;
+        if (!GetTransaction(hash, wtx, blockHash, true)) continue;
+        blockHash = pwtx->hashBlock;
+        if ((0 == blockHash) || (NULL == mapBlockIndex[blockHash])) continue;
+        CBlockIndex* pBlockIndex = mapBlockIndex[blockHash];
+        if (NULL == pBlockIndex) continue;
+        int blockHeight = pBlockIndex->nHeight;
+
+        // setup some variables
+        CMPTransaction mp_obj;
+        CMPMetaDEx temp_metadexoffer;
+        std::string statusText;
+        unsigned int propertyIdForSale = 0;
+        unsigned int propertyIdDesired = 0;
+        uint64_t amountForSale = 0;
+        uint64_t amountDesired = 0;
+        bool divisibleForSale = false;
+        bool divisibleDesired = false;
+        Array tradeArray;
+        uint64_t totalBought = 0;
+        uint64_t totalSold = 0;
+        bool orderOpen = false;
+        bool valid = false;
+
+        // parse the transaction
+        int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+        if (0 != parseRC) continue;
+        if (0<=mp_obj.step1()) {
+            int tmpblock=0;
+            uint32_t tmptype=0;
+            uint64_t amountNew=0;
+            valid = getValidMPTX(hash, &tmpblock, &tmptype, &amountNew);
+            if (0 == mp_obj.step2_Value()) {
+                propertyIdForSale = mp_obj.getProperty();
+                amountForSale = mp_obj.getAmount();
+                divisibleForSale = isPropertyDivisible(propertyIdForSale);
+                if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
+                    uint8_t mdex_action = temp_metadexoffer.getAction();
+                    if (mdex_action != 1) continue; // cancels aren't trades
+                    propertyIdDesired = temp_metadexoffer.getDesProperty();
+                    divisibleDesired = isPropertyDivisible(propertyIdDesired);
+                    amountDesired = temp_metadexoffer.getAmountDesired();
+                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+                    orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
+                }
+            }
+        }
+
+        // work out status
+        bool partialFilled = false;
+        bool filled = false;
+        statusText = "Unknown";
+        if (totalSold > 0) partialFilled = true;
+        if (totalSold >= amountForSale) filled = true;
+        if (!orderOpen && !partialFilled) statusText = "Cancelled";
+        if (!orderOpen && partialFilled) statusText = "Part Cancel";
+        if (!orderOpen && filled) statusText = "Filled";
+        if (orderOpen && !partialFilled) statusText = "Open";
+        if (orderOpen && partialFilled) statusText = "Part Filled";
+
+        // prepare display values
+        std::string displayText = "Sell ";
+        if (divisibleForSale) { displayText += FormatDivisibleShortMP(amountForSale); } else { displayText += FormatIndivisibleMP(amountForSale); }
+        displayText += getTokenLabel(propertyIdForSale) + " for ";
+        if (divisibleDesired) { displayText += FormatDivisibleShortMP(amountDesired); } else { displayText += FormatIndivisibleMP(amountDesired); }
+        displayText += getTokenLabel(propertyIdDesired);
+        std::string displayIn = "";
+        std::string displayOut = "-";
+        if(divisibleDesired) { displayIn += FormatDivisibleShortMP(totalBought); } else { displayIn += FormatIndivisibleMP(totalBought); }
+        if(divisibleForSale) { displayOut += FormatDivisibleShortMP(totalSold); } else { displayOut += FormatIndivisibleMP(totalSold); }
+        if(totalBought == 0) displayIn = "0";
+        if(totalSold == 0) displayOut = "0";
+        displayIn += getTokenLabel(propertyIdDesired);
+        displayOut += getTokenLabel(propertyIdForSale);
+        QDateTime txTime;
+        txTime.setTime_t(pwtx->GetTxTime());
+        QString txTimeStr = txTime.toString(Qt::SystemLocaleShortDate);
+
+        // create a TradeHistoryObject and populate it
+        TradeHistoryObject objTH;
+        objTH.blockHeight = blockHeight;
+        objTH.blockByteOffset = 0;
+        CDiskTxPos position;
+        if (pblocktree->ReadTxIndex(hash, position)) {
+            objTH.blockByteOffset = position.nTxOffset;
+        }
+        objTH.valid = valid;
+        objTH.status = statusText;
+        objTH.amountIn = displayIn;
+        objTH.amountOut = displayOut;
+        objTH.info = displayText;
+
+        // add the new TradeHistoryObject to the map
+        tradeHistoryMap.insert(std::make_pair(hash, objTH));
+        nProcessed += 1;
+    }
+    // ### END WALLET TRANSACTIONS PROCESSING ###
+
+    return nProcessed;
 }
 
 void TradeHistoryDialog::Update()

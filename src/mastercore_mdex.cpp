@@ -603,6 +603,24 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
     return rc;
 }
 
+// searches the metadex maps to see if a trade is still open
+// allows search to be optimized if propertyIdForSale is specified
+bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)
+{
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if (propertyIdForSale != 0 && propertyIdForSale != my_it->first) continue;
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set & indexes = (it->second);
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                CMPMetaDEx obj = *it;
+                if( obj.getHash().GetHex() == txid.GetHex() ) return true;
+            }
+        }
+    }
+    return false;
+}
+
 void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
 {
     file_log("<<<\n");

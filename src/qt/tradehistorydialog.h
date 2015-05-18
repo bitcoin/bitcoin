@@ -25,6 +25,22 @@ namespace Ui {
     class tradeHistoryDialog;
 }
 
+class TradeHistoryObject
+{
+
+public:
+  int blockHeight; // block transaction was mined in
+  int blockByteOffset; // byte offset the tx is stored in the block (used for ordering multiple txs same block)
+  bool valid; // whether the transaction is valid from an Omni perspective
+  std::string status; // string containing status of trade
+  std::string info; // string containing human readable description of trade
+  std::string amountOut; // string containing formatted amount out
+  std::string amountIn; // string containing formatted amount in
+
+};
+
+typedef std::map<uint256, TradeHistoryObject> TradeHistoryMap;
+
 /** Dialog for looking up Master Protocol tokens */
 class TradeHistoryDialog : public QDialog
 {
@@ -54,6 +70,8 @@ public:
     GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
     virtual void resizeEvent(QResizeEvent* event);
 
+    TradeHistoryMap tradeHistoryMap;
+
 public slots:
     void Update();
     void contextualMenu(const QPoint &);
@@ -66,7 +84,7 @@ private:
     QMenu *contextMenu;
 
 private slots:
-    //void buyRecalc();
+    int PopulateTradeHistoryMap();
 
 signals:
     // Fired when a message should be reported to the user
