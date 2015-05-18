@@ -11,7 +11,9 @@
 #include <QPalette>
 #include <QPixmap>
 
-static void MakeSingleColorImage(QImage& img, const QColor& colorbase)
+namespace {
+
+void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 {
     img = img.convertToFormat(QImage::Format_ARGB32);
     for (int x = img.width(); x--; )
@@ -22,6 +24,8 @@ static void MakeSingleColorImage(QImage& img, const QColor& colorbase)
             img.setPixel(x, y, qRgba(colorbase.red(), colorbase.green(), colorbase.blue(), qAlpha(rgb)));
         }
     }
+}
+
 }
 
 QImage SingleColorImage(const QString& filename, const QColor& colorbase)
