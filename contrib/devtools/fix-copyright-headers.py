@@ -25,7 +25,7 @@ last_year = year - 1
 command = "perl -pi -e 's/%s The Bitcoin/%s The Bitcoin/' %s"
 listFilesCommand = "find . | grep %s"
 
-extensions = [".cpp",".h"]
+extensions = [".cpp", ".h"]
 
 def getLastGitModifiedDate(filePath):
   gitGetLastCommitDateCommand = "git log " + filePath +" | grep Date | head -n 1"
@@ -34,7 +34,7 @@ def getLastGitModifiedDate(filePath):
   for l in p:
     result = l
     break
-  result = result.replace("\n","")
+  result = result.replace("\n", "")
   return result
 
 n=1
@@ -46,8 +46,8 @@ for extension in extensions:
       filePath = os.getcwd() + filePath
       modifiedTime = getLastGitModifiedDate(filePath)
       if len(modifiedTime) > 0 and str(year) in modifiedTime:
-        print n,"Last Git Modified: ", modifiedTime, " - ", filePath
-        os.popen(command % (last_year,year,filePath))
+        print n, "Last Git Modified: ", modifiedTime, " - ", filePath
+        os.popen(command % (last_year, year, filePath))
         n = n + 1
 
 

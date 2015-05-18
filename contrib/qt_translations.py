@@ -10,7 +10,7 @@ import re
 import sys
 
 if len(sys.argv) != 3:
-  sys.exit("Usage: %s $QTDIR/translations $BITCOINDIR/src/qt/locale"%sys.argv[0])
+    sys.exit("Usage: %s $QTDIR/translations $BITCOINDIR/src/qt/locale"%sys.argv[0])
 
 d1 = sys.argv[1]
 d2 = sys.argv[2]

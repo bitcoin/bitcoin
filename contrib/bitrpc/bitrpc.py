@@ -255,9 +255,9 @@ elif cmd == "sendmany":
         mc = raw_input("Minimum confirmations (optional): ")
         comment = raw_input("Comment (optional): ")
         try:
-            print access.sendmany(frm,to,mc,comment)
+            print access.sendmany(frm, to, mc, comment)
         except:
-            print access.sendmany(frm,to)
+            print access.sendmany(frm, to)
     except Exception as inst:
         print inst
 
@@ -268,9 +268,9 @@ elif cmd == "sendtoaddress":
         comment = raw_input("Comment (optional): ")
         commentto = raw_input("Comment-to (optional): ")
         try:
-            print access.sendtoaddress(to,amt,comment,commentto)
+            print access.sendtoaddress(to, amt, comment, commentto)
         except:
-            print access.sendtoaddress(to,amt)
+            print access.sendtoaddress(to, amt)
     except Exception as inst:
         print inst
 
@@ -278,7 +278,7 @@ elif cmd == "setaccount":
     try:
         addr = raw_input("Address: ")
         acct = raw_input("Account:")
-        print access.setaccount(addr,acct)
+        print access.setaccount(addr, acct)
     except Exception as inst:
         print inst
 

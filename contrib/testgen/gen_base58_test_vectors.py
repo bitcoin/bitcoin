@@ -60,7 +60,7 @@ def gen_valid_vectors():
             suffix = str(bytearray(template[2]))
             rv = b58encode_chk(prefix + payload + suffix)
             assert is_valid(rv)
-            metadata = dict([(x,y) for (x,y) in zip(metadata_keys,template[3]) if y is not None])
+            metadata = dict([(x, y) for (x, y) in zip(metadata_keys, template[3]) if y is not None])
             yield (rv, b2a_hex(payload), metadata)
 
 def gen_invalid_vector(template, corrupt_prefix, randomize_payload_size, corrupt_suffix):
@@ -99,7 +99,7 @@ def gen_invalid_vectors():
         #   corrupt checksum
         for template in templates:
             val = gen_invalid_vector(template, randbool(0.2), randbool(0.2), randbool(0.2))
-            if random.randint(0,10)<1: # line corruption
+            if random.randint(0, 10)<1: # line corruption
                 if randbool(): # add random character to end
                     val += random.choice(b58chars)
                 else: # replace random character in the middle
