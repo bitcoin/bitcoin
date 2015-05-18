@@ -213,3 +213,15 @@ const char *uvTypeName(UniValue::VType t)
     return NULL;
 }
 
+const UniValue& find_value( const UniValue& obj, const std::string& name)
+{
+    for (unsigned int i = 0; i < obj.keys.size(); i++)
+    {
+        if( obj.keys[i] == name )
+        {
+            return obj.values[i];
+        }
+    }
+
+    return NullUniValue;
+}

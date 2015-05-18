@@ -16,9 +16,9 @@
 #include <iostream>
 
 #include <boost/test/unit_test.hpp>
-#include "json_spirit_wrapper.h"
 
-using namespace json_spirit;
+#include "univalue/univalue.h"
+
 extern UniValue read_json(const std::string& jsondata);
 
 // Old script.cpp SignatureHash function

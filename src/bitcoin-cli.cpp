@@ -12,8 +12,9 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#include "univalue/univalue.h"
+
 using namespace std;
-using namespace json_spirit;
 
 std::string HelpMessageCli()
 {
@@ -94,7 +95,7 @@ static bool AppInitRPC(int argc, char* argv[])
     return true;
 }
 
-UniValue CallRPC(const string& strMethod, const Array& params)
+UniValue CallRPC(const string& strMethod, const UniValue& params)
 {
     if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
         throw runtime_error(strprintf(
@@ -145,7 +146,7 @@ UniValue CallRPC(const string& strMethod, const Array& params)
     UniValue valReply(UniValue::VSTR);
     if (!valReply.read(strReply))
         throw runtime_error("couldn't parse reply from server");
-    const Object& reply = valReply.get_obj();
+    const UniValue& reply = valReply.get_obj();
     if (reply.empty())
         throw runtime_error("expected reply to have result, error and id properties");
 
@@ -179,13 +180,15 @@ int CommandLineRPC(int argc, char *argv[])
                 const UniValue reply = CallRPC(strMethod, params);
 
                 // Parse reply
-                const Value& result = find_value(reply, "result");
-                const Value& error  = find_value(reply, "error");
+                const UniValue& result = find_value(reply, "result");
+                const UniValue& error  = find_value(reply, "error");
 
                 if (!error.isNull()) {
                     // Error
-                    strPrint = "error: " + error.write();
                     int code = error["code"].get_int();
+                    if (fWait && code == RPC_IN_WARMUP)
+                        throw CConnectionFailed("server in warmup");
+                    strPrint = "error: " + error.write();
                     nRet = abs(code);
                 } else {
                     // Result

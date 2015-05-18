@@ -16,12 +16,11 @@
 
 #include <boost/foreach.hpp>
 
-#include "json_spirit_wrapper.h"
+#include "univalue/univalue.h"
 
-using namespace json_spirit;
 using namespace std;
 
-UniValue getconnectioncount(const Array& params, bool fHelp)
+UniValue getconnectioncount(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -39,7 +38,7 @@ UniValue getconnectioncount(const Array& params, bool fHelp)
     return (int)vNodes.size();
 }
 
-UniValue ping(const Array& params, bool fHelp)
+UniValue ping(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -75,7 +74,7 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
     }
 }
 
-UniValue getpeerinfo(const Array& params, bool fHelp)
+UniValue getpeerinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -165,7 +164,7 @@ UniValue getpeerinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-UniValue addnode(const Array& params, bool fHelp)
+UniValue addnode(const UniValue& params, bool fHelp)
 {
     string strCommand;
     if (params.size() == 2)
@@ -215,7 +214,7 @@ UniValue addnode(const Array& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue getaddednodeinfo(const Array& params, bool fHelp)
+UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -332,7 +331,7 @@ UniValue getaddednodeinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-UniValue getnettotals(const Array& params, bool fHelp)
+UniValue getnettotals(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 0)
         throw runtime_error(
@@ -378,7 +377,7 @@ static UniValue GetNetworksInfo()
     return networks;
 }
 
-UniValue getnetworkinfo(const Array& params, bool fHelp)
+UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(

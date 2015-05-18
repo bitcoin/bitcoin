@@ -13,10 +13,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
-using namespace json_spirit;
+#include "univalue/univalue.h"
 
-Array
+using namespace std;
+
+UniValue
 createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
 {
     UniValue result(UniValue::VARR);
@@ -28,7 +29,7 @@ createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
     return result;
 }
 
-Value CallRPC(string args)
+UniValue CallRPC(string args)
 {
     vector<string> vArgs;
     boost::split(vArgs, args, boost::is_any_of(" \t"));
@@ -38,10 +39,10 @@ Value CallRPC(string args)
 
     rpcfn_type method = tableRPC[strMethod]->actor;
     try {
-        Value result = (*method)(params, false);
+        UniValue result = (*method)(params, false);
         return result;
     }
-    catch (const Object& objError) {
+    catch (const UniValue& objError) {
         throw runtime_error(find_value(objError, "message").get_str());
     }
 }
@@ -52,7 +53,7 @@ BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
     // Test raw transaction API argument handling
-    Value r;
+    UniValue r;
 
     BOOST_CHECK_THROW(CallRPC("getrawtransaction"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("getrawtransaction not_hex"), runtime_error);
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
 
 BOOST_AUTO_TEST_CASE(rpc_rawsign)
 {
-    Value r;
+    UniValue r;
     // input is a 1-of-2 multisig (so is output):
     string prevout =
       "[{\"txid\":\"b4cc287e58f87cdae59417329f710f3ecd75a4ee1d2872b7248f50977c8493f3\","
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK(ValueFromAmount(2099999999999999LL).write() == "20999999.99999999");
 }
 
-static Value ValueFromString(const std::string &str)
+static UniValue ValueFromString(const std::string &str)
 {
     UniValue value;
     BOOST_CHECK(value.setNumStr(str));
