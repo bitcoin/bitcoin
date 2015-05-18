@@ -411,8 +411,8 @@ bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
     int nBitsS = BN_num_bits(sig->s);
     if (nBitsR <= 256 && nBitsS <= 256)
     {
-        int nRecId = -1;
-        for (int i=0; i<4; i++)
+        int8_t nRecId = -1;
+        for (int8_t i=0; i<4; i++)
         {
             CKey keyRec;
             keyRec.fSet = true;

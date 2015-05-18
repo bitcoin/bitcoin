@@ -1155,7 +1155,7 @@ string randomStrGen(int length) {
 
 void createConf()
 {
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(NULL)));
 
     ofstream pConf;
 #if BOOST_FILESYSTEM_VERSION >= 3

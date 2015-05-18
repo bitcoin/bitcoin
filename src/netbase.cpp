@@ -623,7 +623,7 @@ CNetAddr::CNetAddr(const std::string &strIp, bool fAllowLookup)
         *this = vIP[0];
 }
 
-unsigned int CNetAddr::GetByte(int n) const
+uint8_t CNetAddr::GetByte(int n) const
 {
     return ip[15-n];
 }
@@ -851,7 +851,7 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 std::vector<unsigned char> CNetAddr::GetGroup() const
 {
     std::vector<unsigned char> vchRet;
-    int nClass = NET_IPV6;
+    uint8_t nClass = NET_IPV6;
     int nStartByte = 0;
     int nBits = 16;
 
