@@ -74,7 +74,7 @@ dashd/dash-qt (on Linux).
 
 - BIP 66 integration
 - Strict DER signatures
-- Bump block header versoin to 3 (see notes above)
+- Bump block header version to 3 (see notes above)
 - Masternode caching
 - Masternode payment scheduler
 - Better protection from cheating masternodes
@@ -82,6 +82,9 @@ dashd/dash-qt (on Linux).
 - Live Darksend and InstantX fee calculations in CoinControl
 - Darksend input caching
 - Open config file from within the wallet
+- New CSS-based wallet GUI with selectable interface themes
+- Configurable automatic wallet backups
+- Show sum of selected transactions in 'Transactions'-tab
 - Wallet GUI perfomance improvements
 - General stability improvements and bug fixes
 - Code restructure and modularization
@@ -100,7 +103,8 @@ Thanks to who contributed to this release, at least:
 - mkinney
 - elanaint
 - absolutebit
-- crowning
+- Crowning
+- snogcel
 - morcos
 - 21E14
 
