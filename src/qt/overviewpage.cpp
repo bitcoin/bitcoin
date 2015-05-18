@@ -54,7 +54,6 @@
   #include "mastercore_tx.h"
   #include "mastercore_sp.h"
 
-//#include "overviewlistdelegate.h"
 #include <QAbstractItemDelegate>
 #include <QPainter>
 
