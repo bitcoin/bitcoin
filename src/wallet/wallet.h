@@ -615,7 +615,6 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
-    void EraseFromWallet(const uint256 &hash);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime);
