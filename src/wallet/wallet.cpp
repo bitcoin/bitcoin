@@ -30,7 +30,7 @@ using namespace std;
  */
 CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
-unsigned int nTxConfirmTarget = 1;
+unsigned int nTxConfirmTarget = 2;
 bool bSpendZeroConfChange = true;
 bool fSendFreeTransactions = false;
 bool fPayAtLeastCustomFee = true;
