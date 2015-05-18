@@ -36,6 +36,8 @@ class CBloomFilter;
 class CInv;
 class Bitcredit_CWallet;
 class Bitcoin_CWallet;
+class Bitcoin_CBlockUndoClaim;
+class Bitcoin_CBlockIndex;
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int BITCREDIT_MAX_BLOCK_SIZE = 4 * 1000000;
@@ -469,14 +471,14 @@ bool Bitcredit_ReadBlockFromDisk(Credits_CBlock& block, const Credits_CBlockInde
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, bool* pfClean = NULL);
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 /** Calculates resurrection of deposit base. Should be used just before coins are updated */
 void UpdateResurrectedDepositBase(const Credits_CBlockIndex* pBlockToTrim, const Credits_CTransaction &tx, int64_t &nResurrectedDepositBase, Bitcredit_CCoinsViewCache& bitcredit_view);
 /** Calculates trimming of deposit base. Should be used just after coins are updated */
 void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_CBlock &trimBlock, int64_t &nTrimmedDepositBase, Bitcredit_CCoinsViewCache& bitcredit_view);
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, bool fJustCheck);
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcredit_AddToBlockIndex(Credits_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);

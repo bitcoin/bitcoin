@@ -34,6 +34,7 @@
 #include <vector>
 
 class Bitcoin_CBlockIndex;
+class Bitcoin_CBlockUndoClaim;
 class CBloomFilter;
 class CInv;
 
@@ -170,7 +171,7 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &tx, uint2
 /** Find the best known block, and make it the tip of the block chain */
 bool Bitcoin_ActivateBestChain(CValidationState &state);
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
-bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CClaimCoinsViewCache& view, CValidationState &state, bool updateUndo);
+bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CClaimCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 int64_t Bitcoin_GetBlockValue(int nHeight, int64_t nFees);
 unsigned int Bitcoin_GetNextWorkRequired(const Bitcoin_CBlockIndex* pindexLast, const Bitcoin_CBlockHeader *pblock);
 
@@ -500,12 +501,14 @@ bool Bitcoin_ReadBlockFromDisk(Bitcoin_CBlock& block, const Bitcoin_CBlockIndex*
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
+bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, Bitcoin_CClaimCoinsViewCache& claim_coins, bool updateUndo, bool* pfClean = NULL);
-bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CClaimCoinsViewCache& coins, bool updateUndo, bool* pfClean = NULL);
+bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CClaimCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
+bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, Bitcoin_CClaimCoinsViewCache& claim_coins, bool updateUndo, bool fJustCheck);
-bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CClaimCoinsViewCache& coins, bool updateUndo);
+bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CClaimCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 
 bool Bitcoin_WriteChainStateClaim(CValidationState &state);
 
