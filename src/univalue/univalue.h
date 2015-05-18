@@ -161,6 +161,7 @@ public:
         std::istringstream(getValStr()) >> ret;
         return ret;
     }
+    friend const UniValue& find_value( const UniValue& obj, const std::string& name);
 };
 
 //
@@ -248,5 +249,8 @@ extern enum jtokentype getJsonToken(std::string& tokenVal,
 extern const char *uvTypeName(UniValue::VType t);
 
 extern const UniValue NullUniValue;
+
+const UniValue& find_value( const UniValue& obj, const std::string& name);
+
 #endif // BITCOIN_UNIVALUE_UNIVALUE_H
 

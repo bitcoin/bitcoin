@@ -28,10 +28,9 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread.hpp>
 
-#include "json_spirit_wrapper.h"
+#include "univalue/univalue.h"
 
 using namespace boost::asio;
-using namespace json_spirit;
 using namespace RPCServer;
 using namespace std;
 
@@ -79,17 +78,17 @@ void RPCServer::OnPostCommand(boost::function<void (const CRPCCommand&)> slot)
     g_rpcSignals.PostCommand.connect(boost::bind(slot, _1));
 }
 
-void RPCTypeCheck(const Array& params,
-                  const list<Value_type>& typesExpected,
+void RPCTypeCheck(const UniValue& params,
+                  const list<UniValue::VType>& typesExpected,
                   bool fAllowNull)
 {
     unsigned int i = 0;
-    BOOST_FOREACH(Value_type t, typesExpected)
+    BOOST_FOREACH(UniValue::VType t, typesExpected)
     {
         if (params.size() <= i)
             break;
 
-        const Value& v = params[i];
+        const UniValue& v = params[i];
         if (!((v.type() == t) || (fAllowNull && (v.isNull()))))
         {
             string err = strprintf("Expected type %s, got %s",
@@ -104,9 +103,9 @@ void RPCTypeCheckObj(const UniValue& o,
                   const map<string, UniValue::VType>& typesExpected,
                   bool fAllowNull)
 {
-    BOOST_FOREACH(const PAIRTYPE(string, Value_type)& t, typesExpected)
+    BOOST_FOREACH(const PAIRTYPE(string, UniValue::VType)& t, typesExpected)
     {
-        const Value& v = find_value(o, t.first);
+        const UniValue& v = find_value(o, t.first);
         if (!fAllowNull && v.isNull())
             throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing %s", t.first));
 
@@ -124,7 +123,7 @@ static inline int64_t roundint64(double d)
     return (int64_t)(d > 0 ? d + 0.5 : d - 0.5);
 }
 
-CAmount AmountFromValue(const Value& value)
+CAmount AmountFromValue(const UniValue& value)
 {
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
@@ -140,7 +139,7 @@ UniValue ValueFromAmount(const CAmount& amount)
     return (double)amount / (double)COIN;
 }
 
-uint256 ParseHashV(const Value& v, string strName)
+uint256 ParseHashV(const UniValue& v, string strName)
 {
     string strHex;
     if (v.isStr())
@@ -151,11 +150,11 @@ uint256 ParseHashV(const Value& v, string strName)
     result.SetHex(strHex);
     return result;
 }
-uint256 ParseHashO(const Object& o, string strKey)
+uint256 ParseHashO(const UniValue& o, string strKey)
 {
     return ParseHashV(find_value(o, strKey), strKey);
 }
-vector<unsigned char> ParseHexV(const Value& v, string strName)
+vector<unsigned char> ParseHexV(const UniValue& v, string strName)
 {
     string strHex;
     if (v.isStr())
@@ -164,7 +163,7 @@ vector<unsigned char> ParseHexV(const Value& v, string strName)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be hexadecimal string (not '"+strHex+"')");
     return ParseHex(strHex);
 }
-vector<unsigned char> ParseHexO(const Object& o, string strKey)
+vector<unsigned char> ParseHexO(const UniValue& o, string strKey)
 {
     return ParseHexV(find_value(o, strKey), strKey);
 }
@@ -229,7 +228,7 @@ string CRPCTable::help(string strCommand) const
     return strRet;
 }
 
-UniValue help(const Array& params, bool fHelp)
+UniValue help(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -249,7 +248,7 @@ UniValue help(const Array& params, bool fHelp)
 }
 
 
-UniValue stop(const Array& params, bool fHelp)
+UniValue stop(const UniValue& params, bool fHelp)
 {
     // Accept the deprecated and ignored 'detach' boolean argument
     if (fHelp || params.size() > 1)
@@ -411,7 +410,7 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
     return TimingResistantEqual(strUserPass, strRPCUserColonPass);
 }
 
-void ErrorReply(std::ostream& stream, const Object& objError, const Value& id)
+void ErrorReply(std::ostream& stream, const UniValue& objError, const UniValue& id)
 {
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
@@ -830,15 +829,15 @@ public:
     UniValue params;
 
     JSONRequest() { id = NullUniValue; }
-    void parse(const Value& valRequest);
+    void parse(const UniValue& valRequest);
 };
 
-void JSONRequest::parse(const Value& valRequest)
+void JSONRequest::parse(const UniValue& valRequest)
 {
     // Parse request
     if (!valRequest.isObject())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
-    const Object& request = valRequest.get_obj();
+    const UniValue& request = valRequest.get_obj();
 
     // Parse id now so errors from here on will have the id
     id = find_value(request, "id");
@@ -858,13 +857,13 @@ void JSONRequest::parse(const Value& valRequest)
     if (valParams.isArray())
         params = valParams.get_array();
     else if (valParams.isNull())
-        params = Array();
+        params = UniValue(UniValue::VARR);
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array");
 }
 
 
-static UniValue JSONRPCExecOne(const Value& req)
+static UniValue JSONRPCExecOne(const UniValue& req)
 {
     UniValue rpc_result(UniValue::VOBJ);
 
@@ -875,7 +874,7 @@ static UniValue JSONRPCExecOne(const Value& req)
         UniValue result = tableRPC.execute(jreq.strMethod, jreq.params);
         rpc_result = JSONRPCReplyObj(result, NullUniValue, jreq.id);
     }
-    catch (const Object& objError)
+    catch (const UniValue& objError)
     {
         rpc_result = JSONRPCReplyObj(NullUniValue, objError, jreq.id);
     }
@@ -888,7 +887,7 @@ static UniValue JSONRPCExecOne(const Value& req)
     return rpc_result;
 }
 
-static string JSONRPCExecBatch(const Array& vReq)
+static string JSONRPCExecBatch(const UniValue& vReq)
 {
     UniValue ret;
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
@@ -955,7 +954,7 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
 
         conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, strReply.size()) << strReply << std::flush;
     }
-    catch (const Object& objError)
+    catch (const UniValue& objError)
     {
         ErrorReply(conn->stream(), objError, jreq.id);
         return false;

@@ -13,13 +13,12 @@
 
 #include <stdint.h>
 
-#include "json_spirit_wrapper.h"
+#include "univalue/univalue.h"
 
-using namespace json_spirit;
 using namespace std;
 
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry);
-void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
+extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 
 double GetDifficulty(const CBlockIndex* blockindex)
 {
@@ -94,7 +93,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
 }
 
 
-UniValue getblockcount(const Array& params, bool fHelp)
+UniValue getblockcount(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -111,7 +110,7 @@ UniValue getblockcount(const Array& params, bool fHelp)
     return chainActive.Height();
 }
 
-UniValue getbestblockhash(const Array& params, bool fHelp)
+UniValue getbestblockhash(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -128,7 +127,7 @@ UniValue getbestblockhash(const Array& params, bool fHelp)
     return chainActive.Tip()->GetBlockHash().GetHex();
 }
 
-UniValue getdifficulty(const Array& params, bool fHelp)
+UniValue getdifficulty(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -146,7 +145,7 @@ UniValue getdifficulty(const Array& params, bool fHelp)
 }
 
 
-UniValue getrawmempool(const Array& params, bool fHelp)
+UniValue getrawmempool(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -231,7 +230,7 @@ UniValue getrawmempool(const Array& params, bool fHelp)
     }
 }
 
-UniValue getblockhash(const Array& params, bool fHelp)
+UniValue getblockhash(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -256,7 +255,7 @@ UniValue getblockhash(const Array& params, bool fHelp)
     return pblockindex->GetBlockHash().GetHex();
 }
 
-UniValue getblock(const Array& params, bool fHelp)
+UniValue getblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -324,7 +323,7 @@ UniValue getblock(const Array& params, bool fHelp)
     return blockToJSON(block, pblockindex);
 }
 
-UniValue gettxoutsetinfo(const Array& params, bool fHelp)
+UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -364,7 +363,7 @@ UniValue gettxoutsetinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-UniValue gettxout(const Array& params, bool fHelp)
+UniValue gettxout(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
@@ -444,7 +443,7 @@ UniValue gettxout(const Array& params, bool fHelp)
     return ret;
 }
 
-UniValue verifychain(const Array& params, bool fHelp)
+UniValue verifychain(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -472,7 +471,7 @@ UniValue verifychain(const Array& params, bool fHelp)
     return CVerifyDB().VerifyDB(pcoinsTip, nCheckLevel, nCheckDepth);
 }
 
-UniValue getblockchaininfo(const Array& params, bool fHelp)
+UniValue getblockchaininfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -530,7 +529,7 @@ struct CompareBlocksByHeight
     }
 };
 
-UniValue getchaintips(const Array& params, bool fHelp)
+UniValue getchaintips(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -620,7 +619,7 @@ UniValue getchaintips(const Array& params, bool fHelp)
     return res;
 }
 
-UniValue getmempoolinfo(const Array& params, bool fHelp)
+UniValue getmempoolinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -643,7 +642,7 @@ UniValue getmempoolinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-UniValue invalidateblock(const Array& params, bool fHelp)
+UniValue invalidateblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -681,7 +680,7 @@ UniValue invalidateblock(const Array& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue reconsiderblock(const Array& params, bool fHelp)
+UniValue reconsiderblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(

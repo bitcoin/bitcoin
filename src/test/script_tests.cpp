@@ -26,10 +26,10 @@
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-#include "json_spirit_wrapper.h"
+
+#include "univalue/univalue.h"
 
 using namespace std;
-using namespace json_spirit;
 
 // Uncomment if you want to output updated JSON tests.
 // #define UPDATE_JSON_TESTS
@@ -39,15 +39,15 @@ static const unsigned int flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
 unsigned int ParseScriptFlags(string strFlags);
 string FormatScriptFlags(unsigned int flags);
 
-Array
+UniValue
 read_json(const std::string& jsondata)
 {
-    Value v;
+    UniValue v;
 
     if (!v.read(jsondata) || !v.isArray())
     {
         BOOST_ERROR("Parse error.");
-        return Array();
+        return UniValue(UniValue::VARR);
     }
     return v.get_array();
 }
@@ -584,11 +584,11 @@ BOOST_AUTO_TEST_CASE(script_build)
         UniValue json_bad = read_json(std::string(json_tests::script_invalid, json_tests::script_invalid + sizeof(json_tests::script_invalid)));
 
         for (unsigned int idx = 0; idx < json_good.size(); idx++) {
-            const Value& tv = json_good[idx];
+            const UniValue& tv = json_good[idx];
             tests_good.insert(tv.get_array().write());
         }
         for (unsigned int idx = 0; idx < json_bad.size(); idx++) {
-            const Value& tv = json_bad[idx];
+            const UniValue& tv = json_bad[idx];
             tests_bad.insert(tv.get_array().write());
         }
     }

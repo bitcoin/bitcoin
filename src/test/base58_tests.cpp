@@ -17,9 +17,9 @@
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-#include "json_spirit_wrapper.h"
 
-using namespace json_spirit;
+#include "univalue/univalue.h"
+
 extern UniValue read_json(const std::string& jsondata);
 
 BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)

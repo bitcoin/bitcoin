@@ -16,7 +16,8 @@
 #include <string>
 
 #include <boost/function.hpp>
-#include "json_spirit_wrapper.h"
+
+#include "univalue/univalue.h"
 
 class CRPCCommand;
 
