@@ -13,11 +13,9 @@ Please report bugs using the issue tracker at github:
 Masternode enhancements
 -----------------------
 
-* @TODO *
-
-*draft. when restarting the client the masternodes will be stored in the datadir in
-mncache.dat file (make sure you don't have any wallet with such name or this
-functionality will not be available for you)*
+When restarting the client the masternodes will be stored in the datadir in
+*mncache.dat* file (make sure you don't have any wallet with such name or this
+functionality will not be available for you)
 
 
 Mining and relay policy enhancements
