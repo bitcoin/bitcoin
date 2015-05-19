@@ -1879,7 +1879,9 @@ void RevertCoin(const Bitcoin_CTransaction &tx, Bitcoin_CBlockIndex* pindex, Bit
 }
 
 bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
-    for (unsigned int i = 0; i < vBlockUndoClaims.size(); i++)
+	std::vector<Bitcoin_CDiskBlockIndex> vblockindexes;
+
+	for (unsigned int i = 0; i < vBlockUndoClaims.size(); i++)
     {
         Bitcoin_CBlockIndex *pindex = vBlockUndoClaims[i].first;
 
@@ -1890,10 +1892,14 @@ bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<
         pindex->nUndoPosClaim = 0;
         pindex->nStatus = pindex->nStatus & ~BLOCK_HAVE_UNDO_CLAIM;
 
-		Bitcoin_CDiskBlockIndex blockindex(pindex);
-		if (!bitcoin_pblocktree->WriteBlockIndex(blockindex))
-			return state.Abort(_("Failed to write block index"));
+		vblockindexes.push_back(Bitcoin_CDiskBlockIndex(pindex));
     }
+
+	if(vblockindexes.size() > 0) {
+		if (!bitcoin_pblocktree->BatchWriteBlockIndex(vblockindexes))
+			return state.Abort(_("Failed to write block index"));
+	}
+
     return true;
 }
 
@@ -2233,7 +2239,9 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
 }
 
 bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
-    for (unsigned int i = 0; i < vBlockUndoClaims.size(); i++)
+	std::vector<Bitcoin_CDiskBlockIndex> vblockindexes;
+
+	for (unsigned int i = 0; i < vBlockUndoClaims.size(); i++)
     {
         Bitcoin_CBlockIndex *pindex = vBlockUndoClaims[i].first;
         Bitcoin_CBlockUndoClaim &blockUndoClaim = vBlockUndoClaims[i].second;
@@ -2251,12 +2259,16 @@ bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pai
 				pindex->nStatus |= BLOCK_HAVE_UNDO_CLAIM;
 			}
 
-			Bitcoin_CDiskBlockIndex blockindex(pindex);
-			if (!bitcoin_pblocktree->WriteBlockIndex(blockindex))
-				return state.Abort(_("Failed to write block index"));
+			vblockindexes.push_back(Bitcoin_CDiskBlockIndex(pindex));
 		}
     }
-    return true;
+
+	if(vblockindexes.size() > 0) {
+		if (!bitcoin_pblocktree->BatchWriteBlockIndex(vblockindexes))
+			return state.Abort(_("Failed to write block index"));
+	}
+
+	return true;
 }
 
 /**

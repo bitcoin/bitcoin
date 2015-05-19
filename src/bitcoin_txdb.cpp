@@ -127,6 +127,15 @@ bool Bitcoin_CBlockTreeDB::WriteBlockIndex(const Bitcoin_CDiskBlockIndex& blocki
 {
     return Write(make_pair('b', blockindex.GetBlockHash()), blockindex);
 }
+bool Bitcoin_CBlockTreeDB::BatchWriteBlockIndex(std::vector<Bitcoin_CDiskBlockIndex> &vblockindexes)
+{
+    CLevelDBBatch batch;
+    for (unsigned int i = 0; i < vblockindexes.size(); i++) {
+    	Bitcoin_CDiskBlockIndex &blockindex = vblockindexes[i];
+    	batch.Write(make_pair('b', blockindex.GetBlockHash()), blockindex);
+    }
+    return WriteBatch(batch);
+}
 
 bool Bitcoin_CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
     return Write(make_pair('f', nFile), info);
