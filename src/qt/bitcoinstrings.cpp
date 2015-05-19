@@ -242,7 +242,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Show all debugging options (usage: --help -
 QT_TRANSLATE_NOOP("bitcredit-core", "Show benchmark information (default: 0)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Signing transaction failed"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Specify configuration file (default: bitcredit.conf)"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Specify configuration file (default: credits.conf)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify connection timeout in milliseconds (default: 5000)"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify data directory"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Specify pid file (default: creditsd.pid)"),

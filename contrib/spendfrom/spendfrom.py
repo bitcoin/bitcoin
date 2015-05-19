@@ -41,7 +41,7 @@ def determine_db_dir():
     return os.path.expanduser("~/.bitcredit")
 
 def read_bitcoin_config(dbdir):
-    """Read the bitcredit.conf file from dbdir, returns dictionary of settings"""
+    """Read the credits.conf file from dbdir, returns dictionary of settings"""
     from ConfigParser import SafeConfigParser
 
     class FakeSecHead(object):
@@ -59,7 +59,7 @@ def read_bitcoin_config(dbdir):
                 return s
 
     config_parser = SafeConfigParser()
-    config_parser.readfp(FakeSecHead(open(os.path.join(dbdir, "bitcredit.conf"))))
+    config_parser.readfp(FakeSecHead(open(os.path.join(dbdir, "credits.conf"))))
     return dict(config_parser.items("all"))
 
 def connect_JSON(config):
@@ -229,7 +229,7 @@ def main():
     parser.add_option("--fee", dest="fee", default="0.0",
                       help="fee to include")
     parser.add_option("--datadir", dest="datadir", default=determine_db_dir(),
-                      help="location of bitcredit.conf file with RPC username/password (default: %default)")
+                      help="location of credits.conf file with RPC username/password (default: %default)")
     parser.add_option("--testnet", dest="testnet", default=False, action="store_true",
                       help="Use the test network")
     parser.add_option("--dry_run", dest="dry_run", default=False, action="store_true",
