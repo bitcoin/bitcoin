@@ -177,4 +177,13 @@ BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
     BOOST_CHECK_EQUAL(BoostAsioToCNetAddr(boost::asio::ip::address::from_string("::ffff:127.0.0.1")).ToString(), "127.0.0.1");
 }
 
+BOOST_AUTO_TEST_CASE(rpc_ban)
+{
+    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.1 add")));
+    BOOST_CHECK_THROW(CallRPC(string("setban 127.0.0.1:8334")), runtime_error); //portnumber for setban not allowed
+    BOOST_CHECK_NO_THROW(CallRPC(string("listbanned")));
+    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.1 remove")));
+    BOOST_CHECK_NO_THROW(CallRPC(string("clearbanned")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
