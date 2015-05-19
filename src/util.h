@@ -598,4 +598,8 @@ void HandleSIGSEGV(int sig);
 uint256 ReduceByFraction(const uint256 nValue, const int64_t nNumerator, const int64_t nDenominator);
 int64_t ReduceByFraction(const int64_t nValue, const int64_t nNumerator, const int64_t nDenominator);
 
+/** Do renaming of working files from old naming structure. Do not rename working dir itself */
+void RenameBitcreditConfFile();
+void RenameBitcreditFiles();
+
 #endif

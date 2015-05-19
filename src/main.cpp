@@ -1825,7 +1825,7 @@ bool Bitcredit_CheckInputs(const Credits_CTransaction& tx, CValidationState &sta
 
 
 
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, bool* pfClean)
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == bitcredit_view.GetBestBlock());
 
@@ -1937,7 +1937,7 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
     assert(pindex->pprev != NULL);
     //Moving claim pointer here. Note that this invokes the bitcoin *Claim methods,
     //a separate chain of methods to just update the claim state
-    if(!Bitcoin_AlignClaimTip(pindex, (Credits_CBlockIndex*)pindex->pprev, claim_view, state, updateBitcoinUndo)) {
+    if(!Bitcoin_AlignClaimTip(pindex, (Credits_CBlockIndex*)pindex->pprev, claim_view, state, updateBitcoinUndo, vBlockUndoClaims)) {
         return state.Abort(strprintf(_("ERROR: Credits: DisconnectBlock: Failed to move claim tip from bitcoin block %s"), block.hashLinkedBitcoinBlock.GetHex()));
     }
 
@@ -2018,7 +2018,7 @@ void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_C
     }
 }
 
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, bool fJustCheck)
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck)
 {
     AssertLockHeld(bitcredit_mainState.cs_main);
     // Check it again in case a previous version let a bad block in
@@ -2038,7 +2038,7 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
 
     //Moving claim pointer here. Note that this invokes the bitcoin *Claim functions,
     //a separate chain of methods to just update the claim state
-    if(!Bitcoin_AlignClaimTip((Credits_CBlockIndex*)pindex->pprev, pindex, claim_view, state, updateBitcoinUndo)) {
+    if(!Bitcoin_AlignClaimTip((Credits_CBlockIndex*)pindex->pprev, pindex, claim_view, state, updateBitcoinUndo, vBlockUndoClaims)) {
         return state.Abort(strprintf(_("ERROR: Credits: ConnectBlock: Failed to move claim tip to %s\n"), block.hashLinkedBitcoinBlock.GetHex()));
     }
 
@@ -2388,29 +2388,34 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
     }
 	const Bitcoin_CBlockIndex* pmoveFromBitcoinIndex = (*mi).second;
 
+	const int64_t dbThreshold = GetArg("-claimtmpdbthreshold", -1);
 	const bool fastForwardClaimState = FastForwardClaimStateFor(pmoveFromBitcoinIndex->nHeight, pmoveFromBitcoinIndex->GetBlockHash());
-	if(fastForwardClaimState || bitcoinBlockSteps == 0 || bitcoinBlockSteps == -1) {
-    	//If  claim coin tip is +1/-1 blocks ahead/behind no temporary db is needed
+	if(fastForwardClaimState || dbThreshold ==  -1 || bitcoinBlockSteps < dbThreshold) {
+    	//If  claim coin tip is less than dbThreshold blocks ahead/behind no temporary db is used
     	if(fastForwardClaimState) {
     		LogPrintf("Credits: DisconnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
     	} else {
     		LogPrintf("Credits: DisconnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
     	}
+    	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 		Bitcoin_CClaimCoinsViewCache claim_view(*bitcoin_pclaimCoinsTip, 0, true);
-		if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, bitcredit_view, claim_view, true))
+		if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, bitcredit_view, claim_view, true, vBlockUndoClaims))
 			return error("Credits: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
 		assert(bitcredit_view.Flush());
 		if(!fastForwardClaimState) {
+			assert(Bitcoin_DeleteBlockUndoClaimsFromDisk(state, vBlockUndoClaims));
 			assert(claim_view.Flush());
 		}
     } else {
 		const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
 		{
+			std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 			Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(tmpClaimDirPath, Bitcoin_GetCoinDBCacheSize(), true, true, false, true);
 			Bitcoin_CClaimCoinsViewCache claim_view(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
-			if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, bitcredit_view, claim_view, true))
+			if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, bitcredit_view, claim_view, true, vBlockUndoClaims))
 				return error("Credits: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
 			assert(bitcredit_view.Flush());
+			assert(Bitcoin_DeleteBlockUndoClaimsFromDisk(state, vBlockUndoClaims));
 			assert(claim_view.Flush());
 		}
 		TryRemoveDirectory(tmpClaimDirPath);
@@ -2468,17 +2473,19 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     }
 	const Bitcoin_CBlockIndex* palignToBitcoinIndex = (*mi).second;
 
+	const int64_t dbThreshold = GetArg("-claimtmpdbthreshold", -1);
 	const bool fastForwardClaimState = FastForwardClaimStateFor(palignToBitcoinIndex->nHeight, palignToBitcoinIndex->GetBlockHash());
-    if(fastForwardClaimState || bitcoinBlockSteps == 0 || bitcoinBlockSteps == 1) {
-    	//If  claim coin tip is +1/-1 blocks ahead/behind no temporary db is needed
+    if(fastForwardClaimState || dbThreshold ==  -1 || bitcoinBlockSteps < dbThreshold) {
+    	//If  claim coin tip is less than dbThreshold blocks ahead/behind no temporary db is used
     	if(fastForwardClaimState) {
     		LogPrintf("Credits: ConnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
     	} else {
     		LogPrintf("Credits: ConnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
     	}
+    	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 		Bitcoin_CClaimCoinsViewCache claim_view(*bitcoin_pclaimCoinsTip, 0, true);
 		CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
-		if (!Bitcredit_ConnectBlock(block, state, pindexNew, bitcredit_view, claim_view, true, false)) {
+		if (!Bitcredit_ConnectBlock(block, state, pindexNew, bitcredit_view, claim_view, true, vBlockUndoClaims, false)) {
 			if (state.IsInvalid())
 				Bitcredit_InvalidBlockFound(pindexNew, state);
 			return error("Credits: ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
@@ -2486,21 +2493,24 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
 		bitcredit_mapBlockSource.erase(inv.hash);
 		assert(bitcredit_view.Flush());
 		if(!fastForwardClaimState) {
+			assert(Bitcoin_WriteBlockUndoClaimsToDisk(state, vBlockUndoClaims));
 			assert(claim_view.Flush());
 		}
     } else {
 		const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
 		{
+			std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 			Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(tmpClaimDirPath, Bitcoin_GetCoinDBCacheSize(), true, true, false, true);
 			Bitcoin_CClaimCoinsViewCache claim_view(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
 			CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
-			if (!Bitcredit_ConnectBlock(block, state, pindexNew, bitcredit_view, claim_view, true, false)) {
+			if (!Bitcredit_ConnectBlock(block, state, pindexNew, bitcredit_view, claim_view, true, vBlockUndoClaims, false)) {
 				if (state.IsInvalid())
 					Bitcredit_InvalidBlockFound(pindexNew, state);
 				return error("Credits: ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
 			}
 			bitcredit_mapBlockSource.erase(inv.hash);
 			assert(bitcredit_view.Flush());
+			assert(Bitcoin_WriteBlockUndoClaimsToDisk(state, vBlockUndoClaims));
 			assert(claim_view.Flush());
 		}
 		TryRemoveDirectory(tmpClaimDirPath);
@@ -3344,11 +3354,11 @@ bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes)
 }
 
 FILE* Bitcredit_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
-    return OpenDiskFile(pos, "bitcredit_blocks", "blk", fReadOnly);
+    return OpenDiskFile(pos, "credits_blocks", "blk", fReadOnly);
 }
 
 FILE* Bitcredit_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
-    return OpenDiskFile(pos, "bitcredit_blocks", "rev", fReadOnly);
+    return OpenDiskFile(pos, "credits_blocks", "rev", fReadOnly);
 }
 
 Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash)
@@ -3472,7 +3482,8 @@ bool Bitcredit_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 
 	const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
     {
-		//This is a throw away chainstate db
+		//This is a throw away chainstate db + undo vector
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 		Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(tmpClaimDirPath, Bitcoin_GetCoinDBCacheSize(), false, true, false, true);
 		Bitcoin_CClaimCoinsViewCache claim_coins(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
 		Credits_CBlockIndex* pindexState = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
@@ -3507,7 +3518,7 @@ bool Bitcredit_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 					((bitcredit_coins.GetCacheSize() + bitcredit_pcoinsTip->GetCacheSize()) <= 2*bitcredit_nCoinCacheSize + 32000) &&
 					((claim_coins.GetCacheSize() + bitcoin_pclaimCoinsTip->GetCacheSize()) <= 2*bitcoin_nCoinCacheSize + 32000)) {
 				bool fClean = true;
-				if (!Bitcredit_DisconnectBlock(block, state, pindex, bitcredit_coins, claim_coins, false, &fClean))
+				if (!Bitcredit_DisconnectBlock(block, state, pindex, bitcredit_coins, claim_coins, false, vBlockUndoClaims, &fClean))
 					return error("Credits: VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
 				pindexState = (Credits_CBlockIndex*)pindex->pprev;
 				if (!fClean) {
@@ -3530,7 +3541,7 @@ bool Bitcredit_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 				Credits_CBlock block;
 				if (!Bitcredit_ReadBlockFromDisk(block, pindex))
 					return error("Credits: VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-				if (!Bitcredit_ConnectBlock(block, state, pindex, bitcredit_coins, claim_coins, false, false))
+				if (!Bitcredit_ConnectBlock(block, state, pindex, bitcredit_coins, claim_coins, false, vBlockUndoClaims, false))
 					return error("Credits: VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
 			}
 		}

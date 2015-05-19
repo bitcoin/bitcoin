@@ -3349,8 +3349,8 @@ Address: %4
     </message>
     <message>
         <location line="+32"/>
-        <source>Specify configuration file (default: bitcredit.conf)</source>
-        <translation>Specify configuration file (default: bitcredit.conf)</translation>
+        <source>Specify configuration file (default: credits.conf)</source>
+        <translation>Specify configuration file (default: credits.conf)</translation>
     </message>
     <message>
         <location line="+3"/>

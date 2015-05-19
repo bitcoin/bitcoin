@@ -497,7 +497,8 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 
         const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
         {
-			//This is a throw away chainstate db
+			//This is a throw away chainstate db + undo vector
+        	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 			Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId(), Bitcoin_GetCoinDBCacheSize(), false, true, false, true);
 			Bitcoin_CClaimCoinsViewCache claim_viewtmp(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
 
@@ -508,7 +509,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 	        indexDummy.nHeight = pindexPrev->nHeight + 1;
 
 			CValidationState state;
-			if(!Bitcoin_AlignClaimTip(pindexPrev, &indexDummy, claim_viewtmp, state, false)) {
+			if(!Bitcoin_AlignClaimTip(pindexPrev, &indexDummy, claim_viewtmp, state, false, vBlockUndoClaims)) {
 				LogPrintf("\n\nERROR: Miner: Bitcoin_AlignClaimTip: Failed to move claim tip to %s\n", hashLinkedBitcoinBlockIndex->GetBlockHash().GetHex());
 				return NULL;
 			}
@@ -999,12 +1000,13 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 
         const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
         {
-			//This is a throw away chainstate db
+			//This is a throw away chainstate db + undo vector
+        	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 			Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(tmpClaimDirPath, Bitcoin_GetCoinDBCacheSize(), false, true, false, true);
 			Bitcoin_CClaimCoinsViewCache claim_viewNew(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
 
 			CValidationState state;
-			if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, bitcredit_viewNew, claim_viewNew, false, true)) {
+			if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, bitcredit_viewNew, claim_viewNew, false, vBlockUndoClaims, true)) {
 				LogPrintf("\n\nERROR! CreateNewBlock() : ConnectBlock failed when validating new block template. No mining can be done. Miner exiting. \n\n");
 				return NULL;
 			}

@@ -48,7 +48,7 @@ using namespace boost;
 
 #ifdef ENABLE_WALLET
 uint64_t bitcredit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv bitcredit_bitdb("bitcredit_database", "bitcredit_db.log");
+Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
 std::string bitcredit_strWalletFile;
 Bitcredit_CWallet* bitcredit_pwalletMain;
 
@@ -275,7 +275,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 288, 0 = all)") + "\n";
     strUsage += "  -checklevel=<n>        " + _("How thorough the block verification of -checkblocks is (0-4, default: 3)") + "\n";
-    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcredit.conf)") + "\n";
+    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: credits.conf)") + "\n";
     if (hmm == HMM_BITCOIND)
     {
 #if !defined(WIN32)
@@ -302,6 +302,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n";
     strUsage += "  -bind=<addr>           " + _("Bind to given address and always listen on it. Use [host]:port notation for IPv6") + "\n";
     strUsage += "  -bitcoin_bind=<addr>         " + _("Same as above, for bitcoin") + "\n";
+    strUsage += "  -claimtmpdbthreshold=<ip>          " + _("Set the number of bitcoin blocks a claim tip movement should be done without a temporary db. -1 means no tmpdb, memory only. Default -1.") + "\n";
     strUsage += "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n";
     strUsage += "  -bitcoin_connect=<ip>          " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n";
@@ -1170,7 +1171,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     }
     bitcredit_bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
 
-    bitcredit_strWalletFile = GetArg("-bitcredit_wallet", "bitcredit_wallet.dat");
+    bitcredit_strWalletFile = GetArg("-bitcredit_wallet", "credits_wallet.dat");
 #endif
 #ifdef ENABLE_WALLET
     deposit_strWalletFile = GetArg("-deposit_wallet", "deposit_wallet.dat");
@@ -1344,7 +1345,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         {
             // try moving the database env out of the way
             boost::filesystem::path pathDatabase = GetDataDir() / bitcredit_bitdb.dbName;
-            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("bitcredit_database.%d.bak", GetTime());
+            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("credits_database.%d.bak", GetTime());
             try {
                 boost::filesystem::rename(pathDatabase, pathDatabaseBak);
                 LogPrintf("Credits: Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
@@ -1372,14 +1373,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             Bitcredit_CDBEnv::VerifyResult r = bitcredit_bitdb.Verify(bitcredit_strWalletFile, bitcredit_nAccountingEntryNumber, Bitcredit_CWalletDB::Recover);
             if (r == Bitcredit_CDBEnv::RECOVER_OK)
             {
-                string msg = strprintf(_("Credits: Warning: bitcredit_wallet.dat corrupt, data salvaged!"
-                                         " Original bitcredit_wallet.dat saved as bitcredit_wallet.{timestamp}.bak in %s; if"
+                string msg = strprintf(_("Credits: Warning: credits_wallet.dat corrupt, data salvaged!"
+                                         " Original credits_wallet.dat saved as credits_wallet.{timestamp}.bak in %s; if"
                                          " your balance or transactions are incorrect you should"
                                          " restore from a backup."), strDataDir);
                 InitWarning(msg);
             }
             if (r == Bitcredit_CDBEnv::RECOVER_FAIL)
-                return InitError(_("bitcredit_wallet.dat corrupt, salvage failed"));
+                return InitError(_("credits_wallet.dat corrupt, salvage failed"));
         }
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
@@ -1410,7 +1411,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     bitcoin_mainState.fReindex = GetBoolArg("-reindex", false);
     InitDataDir("bitcoin_blocks");
     bitcredit_mainState.fReindex = GetBoolArg("-reindex", false);
-    InitDataDir("bitcredit_blocks");
+    InitDataDir("credits_blocks");
 
     // cache size calculations
     if(!Bitcoin_InitDbAndCache(nStart)) {
@@ -1729,7 +1730,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             bitcredit_pwalletMain = new Bitcredit_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
             Bitcredit_DBErrors nZapWalletRet = bitcredit_pwalletMain->ZapWalletTx();
             if (nZapWalletRet != BITCREDIT_DB_LOAD_OK) {
-                uiInterface.InitMessage(_("Error loading bitcredit_wallet.dat: Wallet corrupted"));
+                uiInterface.InitMessage(_("Error loading credits_wallet.dat: Wallet corrupted"));
                 return false;
             }
 
@@ -1746,15 +1747,15 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         if (nLoadWalletRet != BITCREDIT_DB_LOAD_OK)
         {
             if (nLoadWalletRet == BITCREDIT_DB_CORRUPT)
-                strErrors << _("Error loading bitcredit_wallet.dat: Wallet corrupted") << "\n";
+                strErrors << _("Error loading credits_wallet.dat: Wallet corrupted") << "\n";
             else if (nLoadWalletRet == BITCREDIT_DB_NONCRITICAL_ERROR)
             {
-                string msg(_("Warning: error reading bitcredit_wallet.dat! All keys read correctly, but transaction data"
+                string msg(_("Warning: error reading credits_wallet.dat! All keys read correctly, but transaction data"
                              " or address book entries might be missing or incorrect."));
                 InitWarning(msg);
             }
             else if (nLoadWalletRet == BITCREDIT_DB_TOO_NEW)
-                strErrors << _("Error loading bitcredit_wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
+                strErrors << _("Error loading credits_wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
             else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
             {
                 strErrors << _("Credits wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
@@ -1762,7 +1763,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                 return InitError(strErrors.str());
             }
             else
-                strErrors << _("Error loading bitcredit_wallet.dat") << "\n";
+                strErrors << _("Error loading credits_wallet.dat") << "\n";
         }
 
         if (GetBoolArg("-upgradewallet", fFirstRun))

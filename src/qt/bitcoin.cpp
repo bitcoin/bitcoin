@@ -571,18 +571,21 @@ int main(int argc, char *argv[])
     // User language is set up: pick a data directory
     Intro::pickDataDirectory();
 
-    /// 6. Determine availability of data directory and parse bitcredit.conf
+    /// 6. Determine availability of data directory and parse credits.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
-        QMessageBox::critical(0, QObject::tr("Bitcredit"),
+        QMessageBox::critical(0, QObject::tr("Credits"),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
+
+    RenameBitcreditConfFile();
+
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch(std::exception &e) {
-        QMessageBox::critical(0, QObject::tr("Bitcredit"),
+        QMessageBox::critical(0, QObject::tr("Credits"),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
         return false;
     }
@@ -595,9 +598,12 @@ int main(int argc, char *argv[])
 
     // Check for -testnet or -regtest parameter (Bitcredit_Params() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
-        QMessageBox::critical(0, QObject::tr("Bitcredit"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        QMessageBox::critical(0, QObject::tr("Credits"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
         return 1;
     }
+
+    RenameBitcreditFiles();
+
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
     if (!PaymentServer::ipcParseCommandLine(argc, argv))

@@ -905,13 +905,13 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcredit
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcredit
-    // Mac: ~/Library/Application Support/Bitcredit
-    // Unix: ~/.bitcredit
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Credits
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Credits
+    // Mac: ~/Library/Application Support/Credits
+    // Unix: ~/.credits
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcredit";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Credits";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -923,10 +923,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "Bitcredit";
+    return pathRet / "Credits";
 #else
     // Unix
-    return pathRet / ".bitcredit";
+    return pathRet / ".credits";
 #endif
 #endif
 }
@@ -975,7 +975,7 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "bitcredit.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-conf", "credits.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
     return pathConfigFile;
 }
@@ -985,14 +985,14 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return; // No bitcredit.conf file is OK
+        return; // No credits.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
     for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override bitcredit.conf
+        // Don't overwrite existing settings so command line settings override credits.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
@@ -1515,4 +1515,27 @@ int64_t ReduceByFraction(const int64_t nValue, const int64_t nNumerator, const i
 	assert(nValue >= nValue64);
 	assert(nValue64 >= 0);
 	return nValue64;
+}
+
+void RenamePath(boost::filesystem::path workingDir, std::string oldName, std::string newName) {
+	boost::filesystem::path oldPath = workingDir / oldName;
+	boost::filesystem::path newPath = workingDir / newName;
+	if(boost::filesystem::exists(oldPath) && !boost::filesystem::exists(newPath)) {
+		boost::filesystem::rename(oldPath.c_str(), newPath.c_str());
+	}
+}
+
+void RenameBitcreditConfFile() {
+	boost::filesystem::path rootWorkingDirPath = GetDataDir(false);
+	RenamePath(rootWorkingDirPath, "bitcredit.conf", "credits.conf");
+}
+
+void RenameBitcreditFiles() {
+	boost::filesystem::path workingDirPath = GetDataDir(true);
+	RenamePath(workingDirPath, "bitcredit_wallet.dat", "credits_wallet.dat");
+	RenamePath(workingDirPath, "bitcredit_peers.dat", "credits_peers.dat");
+	RenamePath(workingDirPath, "bitcredit_db.log", "credits_db.log");
+	RenamePath(workingDirPath, "bitcredit_database", "credits_database");
+	RenamePath(workingDirPath, "bitcredit_chainstate", "credits_chainstate");
+	RenamePath(workingDirPath, "bitcredit_blocks", "credits_blocks");
 }

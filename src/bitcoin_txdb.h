@@ -56,6 +56,7 @@ private:
     void operator=(const Bitcoin_CBlockTreeDB&);
 public:
     bool WriteBlockIndex(const Bitcoin_CDiskBlockIndex& blockindex);
+    bool BatchWriteBlockIndex(std::vector<Bitcoin_CDiskBlockIndex>& vblockindexes);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);

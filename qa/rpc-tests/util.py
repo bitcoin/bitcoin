@@ -71,7 +71,7 @@ def initialize_chain(test_dir):
         for i in range(4):
             datadir = os.path.join("cache", "node"+str(i))
             os.makedirs(datadir)
-            with open(os.path.join(datadir, "bitcredit.conf"), 'w') as f:
+            with open(os.path.join(datadir, "credits.conf"), 'w') as f:
                 f.write("regtest=1\n");
                 f.write("rpcuser=rt\n");
                 f.write("rpcpassword=rt\n");

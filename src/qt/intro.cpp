@@ -181,7 +181,7 @@ void Intro::pickDataDirectory()
                 TryCreateDirectory(GUIUtil::qstringToBoostPath(dataDir));
                 break;
             } catch(fs::filesystem_error &e) {
-                QMessageBox::critical(0, tr("Bitcredit"),
+                QMessageBox::critical(0, tr("Credits"),
                     tr("Error: Specified data directory \"%1\" can not be created.").arg(dataDir));
                 /* fall through, back to choosing screen */
             }
@@ -190,7 +190,7 @@ void Intro::pickDataDirectory()
         settings.setValue("strDataDir", dataDir);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the bitcredit.conf file in the default data directory
+     * override -datadir in the credits.conf file in the default data directory
      * (to be consistent with creditsd behavior)
      */
     if(dataDir != getDefaultDataDirectory())
