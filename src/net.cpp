@@ -458,7 +458,7 @@ bool CNode::IsBanned(CNetAddr ip)
     return fResult;
 }
 
-bool CNode::Ban(const CNetAddr &addr, int64_t bantimeoffset) {
+void CNode::Ban(const CNetAddr &addr, int64_t bantimeoffset) {
     int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
     if (bantimeoffset > 0)
         banTime = GetTime()+bantimeoffset;
@@ -466,8 +466,6 @@ bool CNode::Ban(const CNetAddr &addr, int64_t bantimeoffset) {
     LOCK(cs_setBanned);
     if (setBanned[addr] < banTime)
         setBanned[addr] = banTime;
-
-    return true;
 }
 
 bool CNode::Unban(const CNetAddr &addr) {
