@@ -684,6 +684,8 @@ void SendCoinsDialog::coinControlUpdateLabels()
             CoinControlDialog::payAmounts.append(entry->getValue().amount);
     }
 
+    ui->checkUseDarksend->setChecked(CoinControlDialog::coinControl->useDarkSend);
+
     if (CoinControlDialog::coinControl->HasSelected())
     {
         // actual coin control calculation
