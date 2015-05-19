@@ -28,7 +28,7 @@ class COutPoint;
 class Bitcoin_COutput;
 class CPubKey;
 class Bitcoin_CWallet;
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class uint256;
 class Bitcoin_CClaimCoinsViewCache;
 
@@ -101,7 +101,7 @@ class Bitcoin_WalletModel : public QObject
     Q_OBJECT
 
 public:
-    explicit Bitcoin_WalletModel(Bitcoin_CWallet *wallet, Bitcredit_CWallet *bitcredit_wallet, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit Bitcoin_WalletModel(Bitcoin_CWallet *wallet, Credits_CWallet *credits_wallet, OptionsModel *optionsModel, QObject *parent = 0);
     ~Bitcoin_WalletModel();
 
     enum StatusCode // Returned by sendCoins
@@ -195,7 +195,7 @@ public:
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
     Bitcoin_CWallet *wallet;
-    Bitcredit_CWallet *bitcredit_wallet;
+    Credits_CWallet *credits_wallet;
 
 private:
     // Wallet has an options model for wallet-specific options

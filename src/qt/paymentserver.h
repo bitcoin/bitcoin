@@ -49,7 +49,7 @@ class QSslError;
 class QUrl;
 QT_END_NAMESPACE
 
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class Bitcoin_CWallet;
 
 class PaymentServer : public QObject
@@ -102,7 +102,7 @@ public slots:
     void uiReady();
 
     // Submit Payment message to a merchant, get back PaymentACK:
-    void credits_fetchPaymentACK(Bitcredit_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
+    void credits_fetchPaymentACK(Credits_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
     void bitcoin_fetchPaymentACK(Bitcoin_CWallet* wallet, Bitcoin_SendCoinsRecipient recipient, QByteArray transaction);
 
     // Handle an incoming URI, URI with local file scheme or file

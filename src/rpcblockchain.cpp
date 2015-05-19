@@ -24,10 +24,10 @@ double Bitcredit_GetDifficulty(const CBlockIndexBase* blockindex)
     // minimum difficulty = 1.0.
     if (blockindex == NULL)
     {
-        if (bitcredit_chainActive.Tip() == NULL)
+        if (credits_chainActive.Tip() == NULL)
             return 1.0;
         else
-            blockindex = bitcredit_chainActive.Tip();
+            blockindex = credits_chainActive.Tip();
     }
 
     int nShift = (blockindex->nBits >> 24) & 0xff;
@@ -85,10 +85,10 @@ Object blockToJSON(const Credits_CBlock& block, const CBlockIndexBase* blockinde
 {
     Object result;
     result.push_back(Pair("hash", block.GetHash().GetHex()));
-    Bitcredit_CMerkleTx txGen(block.vtx[0]);
+    Credits_CMerkleTx txGen(block.vtx[0]);
     txGen.SetMerkleBranch(&block);
     result.push_back(Pair("confirmations", (int)txGen.GetDepthInMainChain()));
-    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION)));
+    result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, CREDITS_PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
@@ -109,7 +109,7 @@ Object blockToJSON(const Credits_CBlock& block, const CBlockIndexBase* blockinde
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
-    Credits_CBlockIndex *pnext = bitcredit_chainActive.Next((Credits_CBlockIndex*)blockindex);
+    Credits_CBlockIndex *pnext = credits_chainActive.Next((Credits_CBlockIndex*)blockindex);
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
     return result;
@@ -129,7 +129,7 @@ Value bitcredit_getblockcount(const Array& params, bool fHelp)
             + HelpExampleRpc("getblockcount", "")
         );
 
-    return bitcredit_chainActive.Height();
+    return credits_chainActive.Height();
 }
 
 Value bitcoin_getblockcount(const Array& params, bool fHelp)
@@ -161,7 +161,7 @@ Value bitcredit_getbestblockhash(const Array& params, bool fHelp)
             + HelpExampleRpc("getbestblockhash", "")
         );
 
-    return bitcredit_chainActive.Tip()->GetBlockHash().GetHex();
+    return credits_chainActive.Tip()->GetBlockHash().GetHex();
 }
 
 Value bitcoin_getbestblockhash(const Array& params, bool fHelp)
@@ -251,9 +251,9 @@ Value getrawmempool(const Array& params, bool fHelp)
 
     if (fVerbose)
     {
-        LOCK(bitcredit_mempool.cs);
+        LOCK(credits_mempool.cs);
         Object o;
-        BOOST_FOREACH(const PAIRTYPE(uint256, Bitcredit_CTxMemPoolEntry)& entry, bitcredit_mempool.mapTx)
+        BOOST_FOREACH(const PAIRTYPE(uint256, Bitcredit_CTxMemPoolEntry)& entry, credits_mempool.mapTx)
         {
             const uint256& hash = entry.first;
             const Bitcredit_CTxMemPoolEntry& e = entry.second;
@@ -263,12 +263,12 @@ Value getrawmempool(const Array& params, bool fHelp)
             info.push_back(Pair("time", e.GetTime()));
             info.push_back(Pair("height", (int)e.GetHeight()));
             info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
-            info.push_back(Pair("currentpriority", e.GetPriority(bitcredit_chainActive.Height())));
+            info.push_back(Pair("currentpriority", e.GetPriority(credits_chainActive.Height())));
             const Credits_CTransaction& tx = e.GetTx();
             set<string> setDepends;
             BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
             {
-                if (bitcredit_mempool.exists(txin.prevout.hash))
+                if (credits_mempool.exists(txin.prevout.hash))
                     setDepends.insert(txin.prevout.hash.ToString());
             }
             Array depends(setDepends.begin(), setDepends.end());
@@ -280,7 +280,7 @@ Value getrawmempool(const Array& params, bool fHelp)
     else
     {
         vector<uint256> vtxid;
-        bitcredit_mempool.queryHashes(vtxid);
+        credits_mempool.queryHashes(vtxid);
 
         Array a;
         BOOST_FOREACH(const uint256& hash, vtxid)
@@ -306,10 +306,10 @@ Value getblockhash(const Array& params, bool fHelp)
         );
 
     int nHeight = params[0].get_int();
-    if (nHeight < 0 || nHeight > bitcredit_chainActive.Height())
+    if (nHeight < 0 || nHeight > credits_chainActive.Height())
         throw runtime_error("Block number out of range.");
 
-    Credits_CBlockIndex* pblockindex = bitcredit_chainActive[nHeight];
+    Credits_CBlockIndex* pblockindex = credits_chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
 }
 
@@ -359,16 +359,16 @@ Value getblock(const Array& params, bool fHelp)
     if (params.size() > 1)
         fVerbose = params[1].get_bool();
 
-    if (bitcredit_mapBlockIndex.count(hash) == 0)
+    if (credits_mapBlockIndex.count(hash) == 0)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
     Credits_CBlock block;
-    Credits_CBlockIndex* pblockindex = bitcredit_mapBlockIndex[hash];
-    Bitcredit_ReadBlockFromDisk(block, pblockindex);
+    Credits_CBlockIndex* pblockindex = credits_mapBlockIndex[hash];
+    Credits_ReadBlockFromDisk(block, pblockindex);
 
     if (!fVerbose)
     {
-        CDataStream ssBlock(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+        CDataStream ssBlock(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
         ssBlock << block;
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
         return strHex;
@@ -463,11 +463,11 @@ Value gettxout(const Array& params, bool fHelp)
 
     Bitcredit_CCoins coins;
     if (fMempool) {
-        LOCK(bitcredit_mempool.cs);
-        Bitcredit_CCoinsViewMemPool view(*bitcredit_pcoinsTip, bitcredit_mempool);
+        LOCK(credits_mempool.cs);
+        Bitcredit_CCoinsViewMemPool view(*bitcredit_pcoinsTip, credits_mempool);
         if (!view.GetCoins(hash, coins))
             return Value::null;
-        bitcredit_mempool.pruneSpent(hash, coins); // TODO: this should be done by the Bitcredit_CCoinsViewMemPool
+        credits_mempool.pruneSpent(hash, coins); // TODO: this should be done by the Bitcredit_CCoinsViewMemPool
     } else {
         if (!bitcredit_pcoinsTip->GetCoins(hash, coins))
             return Value::null;
@@ -475,7 +475,7 @@ Value gettxout(const Array& params, bool fHelp)
     if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
         return Value::null;
 
-    std::map<uint256, Credits_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(bitcredit_pcoinsTip->GetBestBlock());
+    std::map<uint256, Credits_CBlockIndex*>::iterator it = credits_mapBlockIndex.find(bitcredit_pcoinsTip->GetBestBlock());
     Credits_CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
     if ((unsigned int)coins.nHeight == BITCREDIT_MEMPOOL_HEIGHT)
@@ -547,11 +547,11 @@ Value bitcredit_getblockchaininfo(const Array& params, bool fHelp)
     if(chain.empty())
         chain = "main";
     obj.push_back(Pair("chain",         chain));
-    obj.push_back(Pair("blocks",        (int)bitcredit_chainActive.Height()));
-    obj.push_back(Pair("bestblockhash", bitcredit_chainActive.Tip()->GetBlockHash().GetHex()));
+    obj.push_back(Pair("blocks",        (int)credits_chainActive.Height()));
+    obj.push_back(Pair("bestblockhash", credits_chainActive.Tip()->GetBlockHash().GetHex()));
     obj.push_back(Pair("difficulty",    (double)Bitcredit_GetDifficulty()));
-    obj.push_back(Pair("verificationprogress", Checkpoints::Bitcredit_GuessVerificationProgress((Credits_CBlockIndex*)bitcredit_chainActive.Tip())));
-    obj.push_back(Pair("chainwork",     bitcredit_chainActive.Tip()->nChainWork.GetHex()));
+    obj.push_back(Pair("verificationprogress", Checkpoints::Credits_GuessVerificationProgress((Credits_CBlockIndex*)credits_chainActive.Tip())));
+    obj.push_back(Pair("chainwork",     credits_chainActive.Tip()->nChainWork.GetHex()));
     return obj;
 }
 

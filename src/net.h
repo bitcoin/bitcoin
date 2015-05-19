@@ -223,7 +223,7 @@ public:
 	}
 };
 
-CNetParams * Bitcredit_NetParams() ;
+CNetParams * Credits_NetParams() ;
 CNetParams * Bitcoin_NetParams();
 
 
@@ -800,8 +800,8 @@ public:
 
 
 class Credits_CTransaction;
-void Bitcredit_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, CNetParams * netParams);
-void Bitcredit_RelayTransaction(const Credits_CTransaction& txWrap, const uint256& hash, const CDataStream& ss, CNetParams * netParams);
+void Credits_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, CNetParams * netParams);
+void Credits_RelayTransaction(const Credits_CTransaction& txWrap, const uint256& hash, const CDataStream& ss, CNetParams * netParams);
 
 class Bitcoin_CTransaction;
 void Bitcoin_RelayTransaction(const Bitcoin_CTransaction& tx, const uint256& hash, CNetParams * netParams);

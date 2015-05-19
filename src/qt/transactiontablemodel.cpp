@@ -55,15 +55,15 @@ struct Bitcredit_TxLessThan
 class Bitcredit_TransactionTablePriv
 {
 public:
-    Bitcredit_TransactionTablePriv(Bitcredit_CWallet *bitcredit_wallet, Bitcredit_CWallet *keyholder_wallet, Bitcredit_TransactionTableModel *parent) :
-        bitcredit_wallet(bitcredit_wallet),
+    Bitcredit_TransactionTablePriv(Credits_CWallet *credits_wallet, Credits_CWallet *keyholder_wallet, Bitcredit_TransactionTableModel *parent) :
+        credits_wallet(credits_wallet),
 		keyholder_wallet(keyholder_wallet),
         parent(parent)
     {
     }
 
-    Bitcredit_CWallet *bitcredit_wallet;
-    Bitcredit_CWallet *keyholder_wallet;
+    Credits_CWallet *credits_wallet;
+    Credits_CWallet *keyholder_wallet;
     Bitcredit_TransactionTableModel *parent;
 
     /* Local cache of wallet.
@@ -79,8 +79,8 @@ public:
         qDebug() << "TransactionTablePriv::refreshWallet";
         cachedWallet.clear();
         {
-            LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
-            for(std::map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_wallet->mapWallet.begin(); it != bitcredit_wallet->mapWallet.end(); ++it)
+            LOCK2(credits_mainState.cs_main, credits_wallet->cs_wallet);
+            for(std::map<uint256, Credits_CWalletTx>::iterator it = credits_wallet->mapWallet.begin(); it != credits_wallet->mapWallet.end(); ++it)
             {
                 if(Credits_TransactionRecord::showTransaction(it->second))
                     cachedWallet.append(Credits_TransactionRecord::decomposeTransaction(keyholder_wallet, it->second));
@@ -97,11 +97,11 @@ public:
     {
         qDebug() << "TransactionTablePriv::updateWallet : " + QString::fromStdString(hash.ToString()) + " " + QString::number(status);
         {
-            LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
+            LOCK2(credits_mainState.cs_main, credits_wallet->cs_wallet);
 
             // Find transaction in wallet
-            std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(hash);
-            bool inWallet = mi != bitcredit_wallet->mapWallet.end();
+            std::map<uint256, Credits_CWalletTx>::iterator mi = credits_wallet->mapWallet.find(hash);
+            bool inWallet = mi != credits_wallet->mapWallet.end();
 
             // Find bounds of this transaction in model
             QList<Credits_TransactionRecord>::iterator lower = qLowerBound(
@@ -195,15 +195,15 @@ public:
             // If a status update is needed (blocks came in since last check),
             //  update the status of this transaction from the wallet. Otherwise,
             // simply re-use the cached status.
-            TRY_LOCK(bitcredit_mainState.cs_main, lockMain);
+            TRY_LOCK(credits_mainState.cs_main, lockMain);
             if(lockMain)
             {
-                TRY_LOCK(bitcredit_wallet->cs_wallet, lockWallet);
+                TRY_LOCK(credits_wallet->cs_wallet, lockWallet);
                 if(lockWallet && rec->statusUpdateNeeded())
                 {
-                    std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(rec->hash);
+                    std::map<uint256, Credits_CWalletTx>::iterator mi = credits_wallet->mapWallet.find(rec->hash);
 
-                    if(mi != bitcredit_wallet->mapWallet.end())
+                    if(mi != credits_wallet->mapWallet.end())
                     {
                         rec->updateStatus(mi->second);
                     }
@@ -220,9 +220,9 @@ public:
     QString describe(Credits_TransactionRecord *rec, int unit)
     {
         {
-            LOCK2(bitcredit_mainState.cs_main, bitcredit_wallet->cs_wallet);
-            std::map<uint256, Bitcredit_CWalletTx>::iterator mi = bitcredit_wallet->mapWallet.find(rec->hash);
-            if(mi != bitcredit_wallet->mapWallet.end())
+            LOCK2(credits_mainState.cs_main, credits_wallet->cs_wallet);
+            std::map<uint256, Credits_CWalletTx>::iterator mi = credits_wallet->mapWallet.find(rec->hash);
+            if(mi != credits_wallet->mapWallet.end())
             {
                 return Credits_TransactionDesc::toHTML(keyholder_wallet, mi->second, rec, unit);
             }
@@ -231,14 +231,14 @@ public:
     }
 };
 
-Bitcredit_TransactionTableModel::Bitcredit_TransactionTableModel(Bitcredit_CWallet* bitcredit_wallet, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWalletIn, Bitcredit_WalletModel *parent):
+Bitcredit_TransactionTableModel::Bitcredit_TransactionTableModel(Credits_CWallet* credits_wallet, Credits_CWallet *keyholder_wallet, bool isForDepositWalletIn, Bitcredit_WalletModel *parent):
         QAbstractTableModel(parent),
-        wallet(bitcredit_wallet),
+        wallet(credits_wallet),
         keyholder_wallet(keyholder_wallet),
         walletModel(parent),
-        priv(new Bitcredit_TransactionTablePriv(bitcredit_wallet, keyholder_wallet, this))
+        priv(new Bitcredit_TransactionTablePriv(credits_wallet, keyholder_wallet, this))
 {
-	//This means we are in the normal bitcredit_wallet, otherwise in the deposit_wallet
+	//This means we are in the normal credits_wallet, otherwise in the deposit_wallet
 	isForDepositWallet = isForDepositWalletIn;
 	if(isForDepositWallet) {
 		columns << QString() << tr("Date") << tr("Type") << tr("Address") << tr("Deposit");

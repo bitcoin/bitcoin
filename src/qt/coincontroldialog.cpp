@@ -404,19 +404,19 @@ void Bitcredit_CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int col
 // return human readable label for priority number
 QString Bitcredit_CoinControlDialog::getPriorityLabel(double dPriority)
 {
-    if (Bitcredit_AllowFree(dPriority)) // at least medium
+    if (Credits_AllowFree(dPriority)) // at least medium
     {
-        if      (Bitcredit_AllowFree(dPriority / 1000000))  return tr("highest");
-        else if (Bitcredit_AllowFree(dPriority / 100000))   return tr("higher");
-        else if (Bitcredit_AllowFree(dPriority / 10000))    return tr("high");
-        else if (Bitcredit_AllowFree(dPriority / 1000))     return tr("medium-high");
+        if      (Credits_AllowFree(dPriority / 1000000))  return tr("highest");
+        else if (Credits_AllowFree(dPriority / 100000))   return tr("higher");
+        else if (Credits_AllowFree(dPriority / 10000))    return tr("high");
+        else if (Credits_AllowFree(dPriority / 1000))     return tr("medium-high");
         else                                      return tr("medium");
     }
     else
     {
-        if      (Bitcredit_AllowFree(dPriority * 10))   return tr("low-medium");
-        else if (Bitcredit_AllowFree(dPriority * 100))  return tr("low");
-        else if (Bitcredit_AllowFree(dPriority * 1000)) return tr("lower");
+        if      (Credits_AllowFree(dPriority * 10))   return tr("low-medium");
+        else if (Credits_AllowFree(dPriority * 100))  return tr("low");
+        else if (Credits_AllowFree(dPriority * 1000)) return tr("lower");
         else                                  return tr("lowest");
     }
 }
@@ -473,11 +473,11 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
     int nQuantityUncompressed   = 0;
 
     vector<COutPoint> vCoinControl;
-    vector<Bitcredit_COutput>   vOutputs;
+    vector<Credits_COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
-    BOOST_FOREACH(const Bitcredit_COutput& out, vOutputs)
+    BOOST_FOREACH(const Credits_COutput& out, vOutputs)
     {
         // unselect already spent, very unlikely scenario, this could happen
         // when selected are spent elsewhere, like rpc or another computer
@@ -527,10 +527,10 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
         sPriorityLabel = Bitcredit_CoinControlDialog::getPriorityLabel(dPriority);
 
         // Fee
-        int64_t nFee = bitcredit_nTransactionFee * (1 + (int64_t)nBytes / 1000);
+        int64_t nFee = credits_nTransactionFee * (1 + (int64_t)nBytes / 1000);
 
         // Min Fee
-        int64_t nMinFee = Bitcredit_GetMinFee(txDummy, nBytes, Bitcredit_AllowFree(dPriority), GMF_SEND);
+        int64_t nMinFee = Credits_GetMinFee(txDummy, nBytes, Credits_AllowFree(dPriority), GMF_SEND);
 
         nPayFee = max(nFee, nMinFee);
 
@@ -606,7 +606,7 @@ void Bitcredit_CoinControlDialog::updateLabels(Bitcredit_WalletModel *model, QDi
 
     // turn labels "red"
     l5->setStyleSheet((nBytes >= 1000) ? "color:red;" : "");                            // Bytes >= 1000
-    l6->setStyleSheet((dPriority > 0 && !Bitcredit_AllowFree(dPriority)) ? "color:red;" : "");    // Priority < "medium"
+    l6->setStyleSheet((dPriority > 0 && !Credits_AllowFree(dPriority)) ? "color:red;" : "");    // Priority < "medium"
     l7->setStyleSheet((fLowOutput) ? "color:red;" : "");                                // Low Output = "yes"
     l8->setStyleSheet((nChange > 0 && nChange < CENT) ? "color:red;" : "");             // Change < 0.01CRE
 
@@ -656,10 +656,10 @@ void Bitcredit_CoinControlDialog::updateView()
 
     int nDisplayUnit = bitcredit_model->getOptionsModel()->getDisplayUnit();
 
-    map<QString, vector<Bitcredit_COutput> > mapCoins;
+    map<QString, vector<Credits_COutput> > mapCoins;
     bitcredit_model->listCoins(mapCoins);
 
-    BOOST_FOREACH(PAIRTYPE(QString, vector<Bitcredit_COutput>) coins, mapCoins)
+    BOOST_FOREACH(PAIRTYPE(QString, vector<Credits_COutput>) coins, mapCoins)
     {
         QTreeWidgetItem *itemWalletAddress = new QTreeWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
@@ -687,7 +687,7 @@ void Bitcredit_CoinControlDialog::updateView()
         double dPrioritySum = 0;
         int nChildren = 0;
         int nInputSum = 0;
-        BOOST_FOREACH(const Bitcredit_COutput& out, coins.second)
+        BOOST_FOREACH(const Credits_COutput& out, coins.second)
         {
             int nInputSize = 0;
             nSum += out.tx->vout[out.i].nValue;

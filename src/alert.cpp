@@ -122,7 +122,7 @@ bool CAlert::AppliesTo(int nVersion, std::string strSubVerIn) const
 
 bool CAlert::AppliesToMe() const
 {
-    return AppliesTo(BITCREDIT_PROTOCOL_VERSION, FormatSubVersion(BITCREDIT_CLIENT_NAME, BITCREDIT_CLIENT_VERSION, std::vector<std::string>()));
+    return AppliesTo(CREDITS_PROTOCOL_VERSION, FormatSubVersion(BITCREDIT_CLIENT_NAME, CREDITS_CLIENT_VERSION, std::vector<std::string>()));
 }
 
 bool CAlert::RelayTo(CNode* pnode) const
@@ -150,7 +150,7 @@ bool CAlert::CheckSignature() const
         return error("CAlert::CheckSignature() : verify signature failed");
 
     // Now unserialize the data
-    CDataStream sMsg(vchMsg, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream sMsg(vchMsg, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     sMsg >> *(CUnsignedAlert*)this;
     return true;
 }

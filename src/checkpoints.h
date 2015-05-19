@@ -24,7 +24,7 @@ namespace Checkpoints
     // Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
     Credits_CBlockIndex* Bitcredit_GetLastCheckpoint(const std::map<uint256, Credits_CBlockIndex*>& mapBlockIndex);
 
-    double Bitcredit_GuessVerificationProgress(Credits_CBlockIndex *pindex, bool fSigchecks = true);
+    double Credits_GuessVerificationProgress(Credits_CBlockIndex *pindex, bool fSigchecks = true);
 
     extern bool bitcredit_fEnabled;
 }

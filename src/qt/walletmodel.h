@@ -23,14 +23,14 @@ class OptionsModel;
 class Bitcredit_RecentRequestsTableModel;
 class Bitcredit_TransactionTableModel;
 class Bitcredit_WalletModelTransaction;
-class Bitcredit_CReserveKey;
+class Credits_CReserveKey;
 
 class CCoinControl;
 class CKeyID;
 class COutPoint;
-class Bitcredit_COutput;
+class Credits_COutput;
 class CPubKey;
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class uint256;
 
 QT_BEGIN_NAMESPACE
@@ -102,7 +102,7 @@ class Bitcredit_WalletModel : public QObject
     Q_OBJECT
 
 public:
-    explicit Bitcredit_WalletModel(Bitcredit_CWallet *wallet, Bitcredit_CWallet *deposit_wallet, Bitcoin_CWallet *bitcoin_wallet, OptionsModel *optionsModel, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWallet, QObject *parent = 0);
+    explicit Bitcredit_WalletModel(Credits_CWallet *wallet, Credits_CWallet *deposit_wallet, Bitcoin_CWallet *bitcoin_wallet, OptionsModel *optionsModel, Credits_CWallet *keyholder_wallet, bool isForDepositWallet, QObject *parent = 0);
     ~Bitcredit_WalletModel();
 
     enum StatusCode // Returned by sendCoins
@@ -159,7 +159,7 @@ public:
     SendCoinsReturn prepareTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
     // prepare deposit transaction for getting txfee before sending coins
-    SendCoinsReturn prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Bitcredit_COutput& coin, Bitcredit_CCoinsViewCache &bitcredit_view, Bitcoin_CClaimCoinsViewCache &claim_view);
+    SendCoinsReturn prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view, Bitcoin_CClaimCoinsViewCache &claim_view);
 
     // prepare claim transaction for getting txfee before sending coins
     SendCoinsReturn prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
@@ -201,9 +201,9 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcredit_COutput>& vOutputs);
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Credits_COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
-    void listCoins(std::map<QString, std::vector<Bitcredit_COutput> >& mapCoins) const;
+    void listCoins(std::map<QString, std::vector<Credits_COutput> >& mapCoins) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
@@ -216,8 +216,8 @@ public:
     void checkBalanceChanged();
     void checkMinerStatisticsChanged();
 
-    Bitcredit_CWallet *wallet;
-    Bitcredit_CWallet *deposit_wallet;
+    Credits_CWallet *wallet;
+    Credits_CWallet *deposit_wallet;
     Bitcoin_CWallet *bitcoin_wallet;
 
 private:
@@ -279,7 +279,7 @@ signals:
     void message(const QString &title, const QString &message, unsigned int style);
 
     // Coins sent: from wallet, to recipient, in (serialized) transaction:
-    void coinsSent(Bitcredit_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
+    void coinsSent(Credits_CWallet* wallet, Bitcredit_SendCoinsRecipient recipient, QByteArray transaction);
 
     // Show progress dialog e.g. for rescan
     void showProgress(const QString &title, int nProgress);

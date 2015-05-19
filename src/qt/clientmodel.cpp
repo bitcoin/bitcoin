@@ -41,7 +41,7 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent, CNetParams
 
     nPrevNodeCount = 0;
 
-    isForBitcredit = netParams->MessageStart() == Bitcredit_NetParams()->MessageStart();
+    isForBitcredit = netParams->MessageStart() == Credits_NetParams()->MessageStart();
 
     subscribeToCoreSignals();
 }
@@ -114,7 +114,7 @@ double ClientModel::getVerificationProgress() const
 {
     LOCK(mainState.cs_main);
     if(isForBitcredit) {
-        return Checkpoints::Bitcredit_GuessVerificationProgress((Credits_CBlockIndex*)chainActive.Tip());
+        return Checkpoints::Credits_GuessVerificationProgress((Credits_CBlockIndex*)chainActive.Tip());
     } else {
         return Checkpoints::Bitcoin_GuessVerificationProgress((Bitcoin_CBlockIndex*)chainActive.Tip());
     }

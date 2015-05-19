@@ -68,7 +68,7 @@ bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
-    CHashWriter ss(SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
+    CHashWriter ss(SER_GETHASH, CREDITS_PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
     ss << stats.hashBlock;
     int64_t nTotalAmount = 0;
@@ -76,12 +76,12 @@ bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
         boost::this_thread::interruption_point();
         try {
             leveldb::Slice slKey = pcursor->key();
-            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CREDITS_CLIENT_VERSION);
             char chType;
             ssKey >> chType;
             if (chType == 'c') {
                 leveldb::Slice slValue = pcursor->value();
-                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CREDITS_CLIENT_VERSION);
                 Bitcredit_CCoins coins;
                 ssValue >> coins;
                 uint256 txhash;
@@ -110,7 +110,7 @@ bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
         }
     }
     delete pcursor;
-    stats.nHeight = bitcredit_mapBlockIndex.find(GetBestBlock())->second->nHeight;
+    stats.nHeight = credits_mapBlockIndex.find(GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;
@@ -132,7 +132,7 @@ const unsigned char Credits_CBlockTreeDB::ZERO = '0';
 Credits_CBlockTreeDB::Credits_CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "credits_blocks" / "index", nCacheSize, fMemory, fWipe) {
 }
 
-bool Credits_CBlockTreeDB::WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex)
+bool Credits_CBlockTreeDB::WriteBlockIndex(const Credits_CDiskBlockIndex& blockindex)
 {
     return Write(make_pair(BLOCKINDEX_KEY, blockindex.GetBlockHash()), blockindex);
 }
@@ -192,7 +192,7 @@ bool Credits_CBlockTreeDB::LoadBlockIndexGuts()
 {
     leveldb::Iterator *pcursor = NewIterator();
 
-    CDataStream ssKeySet(SER_DISK, BITCREDIT_CLIENT_VERSION);
+    CDataStream ssKeySet(SER_DISK, CREDITS_CLIENT_VERSION);
     ssKeySet << make_pair(BLOCKINDEX_KEY, uint256(0));
     pcursor->Seek(ssKeySet.str());
 
@@ -201,13 +201,13 @@ bool Credits_CBlockTreeDB::LoadBlockIndexGuts()
         boost::this_thread::interruption_point();
         try {
             leveldb::Slice slKey = pcursor->key();
-            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CREDITS_CLIENT_VERSION);
             char chType;
             ssKey >> chType;
             if (chType == BLOCKINDEX_KEY) {
                 leveldb::Slice slValue = pcursor->value();
-                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, BITCREDIT_CLIENT_VERSION);
-                Bitcredit_CDiskBlockIndex diskindex;
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CREDITS_CLIENT_VERSION);
+                Credits_CDiskBlockIndex diskindex;
                 ssValue >> diskindex;
 
                 // Construct block index object

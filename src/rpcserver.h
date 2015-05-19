@@ -175,13 +175,13 @@ extern json_spirit::Value listsinceblock(const json_spirit::Array& params, bool 
 extern json_spirit::Value gettransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value backupwallet(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value keypoolrefill(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value bitcredit_walletpassphrase(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value credits_walletpassphrase(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value deposit_walletpassphrase(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_walletpassphrase(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value bitcredit_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value credits_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value deposit_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value bitcredit_walletlock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value credits_walletlock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value deposit_walletlock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_walletlock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcredit_encryptwallet(const json_spirit::Array& params, bool fHelp);

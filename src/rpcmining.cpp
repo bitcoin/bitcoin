@@ -26,10 +26,10 @@ static const unsigned int sha256DigestChunkByteSize = 64;
 #ifdef ENABLE_WALLET
 // Key used by getwork miners.
 // Allocated in InitRPCMining, free'd in ShutdownRPCMining
-static Bitcredit_CReserveKey* pMiningKey = NULL;
-static Bitcredit_CReserveKey* pDepositMiningKey = NULL;
-static Bitcredit_CReserveKey* pDepositChangeMiningKey = NULL;
-static Bitcredit_CReserveKey* pDepositSigningMiningKey = NULL;
+static Credits_CReserveKey* pMiningKey = NULL;
+static Credits_CReserveKey* pDepositMiningKey = NULL;
+static Credits_CReserveKey* pDepositChangeMiningKey = NULL;
+static Credits_CReserveKey* pDepositSigningMiningKey = NULL;
 static bool coinbaseDepositDisabled = false;
 
 void InitRPCMining(bool coinbaseDepositDisabledIn)
@@ -43,13 +43,13 @@ void InitRPCMining(bool coinbaseDepositDisabledIn)
     //in the case of using coinbase as deposit the coinbase is spent in the same block and the
     //pDepositMiningKey becomes the holder of the mining reward
     if(bitcredit_pwalletMain->IsLocked() && !coinbaseDepositDisabled) {
-    	pMiningKey = new Bitcredit_CReserveKey(deposit_pwalletMain);
+    	pMiningKey = new Credits_CReserveKey(deposit_pwalletMain);
     } else {
-    	pMiningKey = new Bitcredit_CReserveKey(bitcredit_pwalletMain);
+    	pMiningKey = new Credits_CReserveKey(bitcredit_pwalletMain);
     }
-    pDepositMiningKey = new Bitcredit_CReserveKey(bitcredit_pwalletMain);
-    pDepositChangeMiningKey = new Bitcredit_CReserveKey(bitcredit_pwalletMain);
-    pDepositSigningMiningKey = new Bitcredit_CReserveKey(deposit_pwalletMain);
+    pDepositMiningKey = new Credits_CReserveKey(bitcredit_pwalletMain);
+    pDepositChangeMiningKey = new Credits_CReserveKey(bitcredit_pwalletMain);
+    pDepositSigningMiningKey = new Credits_CReserveKey(deposit_pwalletMain);
 }
 
 void ShutdownRPCMining()
@@ -82,10 +82,10 @@ void ShutdownRPCMining()
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
 Value GetNetworkHashPS(int lookup, int height) {
-    CBlockIndexBase *pb = bitcredit_chainActive.Tip();
+    CBlockIndexBase *pb = credits_chainActive.Tip();
 
-    if (height >= 0 && height < bitcredit_chainActive.Height())
-        pb = bitcredit_chainActive[height];
+    if (height >= 0 && height < credits_chainActive.Height())
+        pb = credits_chainActive[height];
 
     if (pb == NULL || !pb->nHeight)
         return 0;
@@ -222,8 +222,8 @@ Value setgenerate(const Array& params, bool fHelp)
         int nHeight = 0;
         int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
         {   // Don't keep cs_main locked
-            LOCK(bitcredit_mainState.cs_main);
-            nHeightStart = bitcredit_chainActive.Height();
+            LOCK(credits_mainState.cs_main);
+            nHeightStart = credits_chainActive.Height();
             nHeight = nHeightStart;
             nHeightEnd = nHeightStart+nGenerate;
         }
@@ -237,8 +237,8 @@ Value setgenerate(const Array& params, bool fHelp)
             }
             MilliSleep(1);
             {   // Don't keep cs_main locked
-                LOCK(bitcredit_mainState.cs_main);
-                nHeight = bitcredit_chainActive.Height();
+                LOCK(credits_mainState.cs_main);
+                nHeight = credits_chainActive.Height();
             }
         }
     }
@@ -300,11 +300,11 @@ Value getmininginfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getmininginfo", "")
         );
 
-    const Credits_CBlockIndex* ptip = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+    const Credits_CBlockIndex* ptip = (Credits_CBlockIndex*)credits_chainActive.Tip();
     const uint64_t nTotalDepositBase = ptip->nTotalDepositBase;
 
     Object obj;
-    obj.push_back(Pair("blocks",           (int)bitcredit_chainActive.Height()));
+    obj.push_back(Pair("blocks",           (int)credits_chainActive.Height()));
     obj.push_back(Pair("currentblocksize", (uint64_t)bitcredit_nLastBlockSize));
     obj.push_back(Pair("currentblocktx",   (uint64_t)bitcredit_nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)Bitcredit_GetDifficulty()));
@@ -313,7 +313,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
     obj.push_back(Pair("coinbasedepositdisabled",     (bool)GetBoolArg("-coinbasedepositdisabled", false)));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
-    obj.push_back(Pair("pooledtx",         (uint64_t)bitcredit_mempool.size()));
+    obj.push_back(Pair("pooledtx",         (uint64_t)credits_mempool.size()));
     obj.push_back(Pair("testnet",          Bitcredit_TestNet()));
 #ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
@@ -347,7 +347,7 @@ Value getwork(const Array& params, bool fHelp)
             + HelpExampleRpc("getwork", "")
         );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     if (netParams->vNodes.empty())
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Credits is not connected!");
@@ -366,10 +366,10 @@ Value getwork(const Array& params, bool fHelp)
         static Credits_CBlockIndex* pindexPrev;
         static int64_t nStart;
         static Credits_CBlockTemplate* pblocktemplate;
-        if (pindexPrev != bitcredit_chainActive.Tip() ||
-            (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
+        if (pindexPrev != credits_chainActive.Tip() ||
+            (credits_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
         {
-            if (pindexPrev != bitcredit_chainActive.Tip())
+            if (pindexPrev != credits_chainActive.Tip())
             {
                 // Deallocate old blocks since they're obsolete now
                 mapNewBlock.clear();
@@ -382,8 +382,8 @@ Value getwork(const Array& params, bool fHelp)
             pindexPrev = NULL;
 
             // Store the pindexBest used before CreateNewBlock, to avoid races
-            nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
-            Credits_CBlockIndex* pindexPrevNew = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+            nTransactionsUpdatedLast = credits_mempool.GetTransactionsUpdated();
+            Credits_CBlockIndex* pindexPrevNew = (Credits_CBlockIndex*)credits_chainActive.Tip();
             nStart = GetTime();
 
             // Create new block
@@ -574,7 +574,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
             + HelpExampleRpc("getblocktemplate", "")
          );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     std::string strMode = "template";
     if (params.size() > 0)
@@ -610,15 +610,15 @@ Value getblocktemplate(const Array& params, bool fHelp)
     static Credits_CBlockIndex* pindexPrev;
     static int64_t nStart;
     static Credits_CBlockTemplate* pblocktemplate;
-    if (pindexPrev != bitcredit_chainActive.Tip() ||
-        (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
+    if (pindexPrev != credits_chainActive.Tip() ||
+        (credits_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5))
     {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = NULL;
 
         // Store the pindexBest used before CreateNewBlock, to avoid races
-        nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
-        Credits_CBlockIndex* pindexPrevNew = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+        nTransactionsUpdatedLast = credits_mempool.GetTransactionsUpdated();
+        Credits_CBlockIndex* pindexPrevNew = (Credits_CBlockIndex*)credits_chainActive.Tip();
         nStart = GetTime();
 
         // Create new block
@@ -658,7 +658,7 @@ Value getblocktemplate(const Array& params, bool fHelp)
 
         Object entry;
 
-        CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+        CDataStream ssTx(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
         ssTx << tx;
         entry.push_back(Pair("data", HexStr(ssTx.begin(), ssTx.end())));
 
@@ -738,7 +738,7 @@ Value submitblock(const Array& params, bool fHelp)
         );
 
     vector<unsigned char> blockData(ParseHex(params[0].get_str()));
-    CDataStream ssBlock(blockData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssBlock(blockData, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     Credits_CBlock pblock;
     try {
         ssBlock >> pblock;

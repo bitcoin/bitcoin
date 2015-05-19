@@ -21,13 +21,13 @@
 
 using namespace std;
 
-typedef set<pair<const Bitcredit_CWalletTx*,unsigned int> > CoinSet;
+typedef set<pair<const Credits_CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_AUTO_TEST_SUITE(wallet_tests)
 
-static Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
-static Bitcredit_CWallet wallet(&bitcredit_bitdb);
-static vector<Bitcredit_COutput> vCoins;
+static Credits_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
+static Credits_CWallet wallet(&bitcredit_bitdb);
+static vector<Credits_COutput> vCoins;
 
 static void add_coin(int64_t nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0)
 {
@@ -36,7 +36,7 @@ static void add_coin(int64_t nValue, int nAge = 6*24, bool fIsFromMe = false, in
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
     tx.vout.resize(nInput+1);
     tx.vout[nInput].nValue = nValue;
-    Bitcredit_CWalletTx* wtx = new Bitcredit_CWalletTx(&wallet, tx);
+    Credits_CWalletTx* wtx = new Credits_CWalletTx(&wallet, tx);
     if (fIsFromMe)
     {
         // IsFromMe() returns (GetDebit() > 0), and GetDebit() is 0 if vin.empty(),
@@ -45,13 +45,13 @@ static void add_coin(int64_t nValue, int nAge = 6*24, bool fIsFromMe = false, in
         wtx->fDebitCached = true;
         wtx->nDebitCached = 1;
     }
-    Bitcredit_COutput output(wtx, nInput, nAge);
+    Credits_COutput output(wtx, nInput, nAge);
     vCoins.push_back(output);
 }
 
 static void empty_wallet(void)
 {
-    BOOST_FOREACH(Bitcredit_COutput output, vCoins)
+    BOOST_FOREACH(Credits_COutput output, vCoins)
         delete output.tx;
     vCoins.clear();
 }

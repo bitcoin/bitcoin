@@ -86,7 +86,7 @@ void CTxOutClaim::print() const
 
 uint256 Credits_CTransaction::GetHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
+    return SerializeHash(*this, SER_GETHASH, CREDITS_PROTOCOL_VERSION);
 }
 
 int64_t Credits_CTransaction::GetValueOut() const
@@ -116,7 +116,7 @@ double Credits_CTransaction::ComputePriority(double dPriorityInputs, unsigned in
     // Providing any more cleanup incentive than making additional inputs free would
     // risk encouraging people to create junk outputs to redeem later.
     if (nTxSize == 0)
-        nTxSize = ::GetSerializeSize(*this, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+        nTxSize = ::GetSerializeSize(*this, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     BOOST_FOREACH(const Credits_CTxIn& txin, vin)
     {
         unsigned int offset = 41U + std::min(110U, (unsigned int)txin.scriptSig.size());

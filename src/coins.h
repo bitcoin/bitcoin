@@ -334,14 +334,14 @@ public:
 
 
 /** Bitcredit_CCoinsView that adds a memory cache for transactions to another Bitcredit_CCoinsView */
-class Bitcredit_CCoinsViewCache : public Bitcredit_CCoinsViewBacked
+class Credits_CCoinsViewCache : public Bitcredit_CCoinsViewBacked
 {
 protected:
     uint256 hashBlock;
     std::map<uint256,Bitcredit_CCoins> cacheCoins;
 
 public:
-    Bitcredit_CCoinsViewCache(Bitcredit_CCoinsView &baseIn, bool fDummy = false);
+    Credits_CCoinsViewCache(Bitcredit_CCoinsView &baseIn, bool fDummy = false);
 
     // Standard Bitcredit_CCoinsView methods
     bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
@@ -352,7 +352,7 @@ public:
     bool BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock);
 
     // Return a modifiable reference to a Bitcredit_CCoins. Check HaveCoins first.
-    // Many methods explicitly require a Bitcredit_CCoinsViewCache because of this method, to reduce
+    // Many methods explicitly require a Credits_CCoinsViewCache because of this method, to reduce
     // copying.
     Bitcredit_CCoins &GetCoins(const uint256 &txid);
 

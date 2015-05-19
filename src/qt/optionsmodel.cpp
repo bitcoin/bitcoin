@@ -94,8 +94,8 @@ void OptionsModel::Init()
     // Wallet
 #ifdef ENABLE_WALLET
     if (!settings.contains("nTransactionFee"))
-        settings.setValue("nTransactionFee", (qint64)BITCREDIT_DEFAULT_TRANSACTION_FEE);
-    bitcredit_nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
+        settings.setValue("nTransactionFee", (qint64)CREDITS_DEFAULT_TRANSACTION_FEE);
+    credits_nTransactionFee = settings.value("nTransactionFee").toLongLong(); // if -paytxfee is set, this will be overridden later in init.cpp
     if (mapArgs.count("-paytxfee"))
         addOverriddenOption("-paytxfee");
 
@@ -204,8 +204,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             // Attention: Init() is called before nTransactionFee is set in AppInit2()!
             // To ensure we can change the fee on-the-fly update our QSetting when
             // opening OptionsDialog, which queries Fee via the mapper.
-            if (bitcredit_nTransactionFee != settings.value("nTransactionFee").toLongLong())
-                settings.setValue("nTransactionFee", (qint64)bitcredit_nTransactionFee);
+            if (credits_nTransactionFee != settings.value("nTransactionFee").toLongLong())
+                settings.setValue("nTransactionFee", (qint64)credits_nTransactionFee);
             // Todo: Consider to revert back to use just nTransactionFee here, if we don't want
             // -paytxfee to update our QSettings!
             return settings.value("nTransactionFee");
@@ -299,9 +299,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
 #ifdef ENABLE_WALLET
         case Fee: // core option - can be changed on-the-fly
             // Todo: Add is valid check  and warn via message, if not
-            bitcredit_nTransactionFee = value.toLongLong();
-            settings.setValue("nTransactionFee", (qint64)bitcredit_nTransactionFee);
-            emit transactionFeeChanged(bitcredit_nTransactionFee);
+            credits_nTransactionFee = value.toLongLong();
+            settings.setValue("nTransactionFee", (qint64)credits_nTransactionFee);
+            emit transactionFeeChanged(credits_nTransactionFee);
             break;
         case SpendZeroConfChange:
             if (settings.value("bSpendZeroConfChange") != value) {

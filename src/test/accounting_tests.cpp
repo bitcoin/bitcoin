@@ -12,20 +12,20 @@
 
 #ifdef ENABLE_WALLET
 extern uint64_t bitcredit_nAccountingEntryNumber;
-extern  Bitcredit_CDBEnv bitcredit_bitdb;
+extern  Credits_CDBEnv bitcredit_bitdb;
 #endif
 
-extern Bitcredit_CWallet* bitcredit_pwalletMain;
+extern Credits_CWallet* bitcredit_pwalletMain;
 
 BOOST_AUTO_TEST_SUITE(accounting_tests)
 
 static void
-GetResults(Bitcredit_CWalletDB& walletdb, std::map<int64_t, CAccountingEntry>& results)
+GetResults(Credits_CWalletDB& walletdb, std::map<int64_t, CAccountingEntry>& results)
 {
     std::list<CAccountingEntry> aes;
 
     results.clear();
-    BOOST_CHECK(walletdb.ReorderTransactions(bitcredit_pwalletMain) == BITCREDIT_DB_LOAD_OK);
+    BOOST_CHECK(walletdb.ReorderTransactions(bitcredit_pwalletMain) == CREDITS_DB_LOAD_OK);
     walletdb.ListAccountCreditDebit("", aes);
     BOOST_FOREACH(CAccountingEntry& ae, aes)
     {
@@ -35,9 +35,9 @@ GetResults(Bitcredit_CWalletDB& walletdb, std::map<int64_t, CAccountingEntry>& r
 
 BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 {
-    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
-    std::vector<Bitcredit_CWalletTx*> vpwtx;
-    Bitcredit_CWalletTx wtx;
+    Credits_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
+    std::vector<Credits_CWalletTx*> vpwtx;
+    Credits_CWalletTx wtx;
     CAccountingEntry ae;
     std::map<int64_t, CAccountingEntry> results;
 

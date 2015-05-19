@@ -8,7 +8,7 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 
-Bitcredit_RecentRequestsTableModel::Bitcredit_RecentRequestsTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent) :
+Bitcredit_RecentRequestsTableModel::Bitcredit_RecentRequestsTableModel(Credits_CWallet *wallet, Bitcredit_WalletModel *parent) :
     walletModel(parent)
 {
     Q_UNUSED(wallet);

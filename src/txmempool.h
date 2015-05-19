@@ -72,7 +72,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(Bitcredit_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const;
+    void check(Credits_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const;
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const Bitcredit_CTxMemPoolEntry &entry);

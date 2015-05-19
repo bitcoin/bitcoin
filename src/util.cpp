@@ -1532,7 +1532,7 @@ void RenameBitcreditConfFile() {
 
 void RenameBitcreditFiles() {
 	boost::filesystem::path workingDirPath = GetDataDir(true);
-	RenamePath(workingDirPath, "bitcredit_wallet.dat", "credits_wallet.dat");
+	RenamePath(workingDirPath, "credits_wallet.dat", "credits_wallet.dat");
 	RenamePath(workingDirPath, "bitcredit_peers.dat", "credits_peers.dat");
 	RenamePath(workingDirPath, "bitcredit_db.log", "credits_db.log");
 	RenamePath(workingDirPath, "bitcredit_database", "credits_database");

@@ -10,8 +10,8 @@
 #include <QList>
 #include <QString>
 
-class Bitcredit_CWallet;
-class Bitcredit_CWalletTx;
+class Credits_CWallet;
+class Credits_CWalletTx;
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -106,8 +106,8 @@ public:
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction(const Bitcredit_CWalletTx &wtx);
-    static QList<Credits_TransactionRecord> decomposeTransaction(const Bitcredit_CWallet *keyholder_wallet, const Bitcredit_CWalletTx &wtx);
+    static bool showTransaction(const Credits_CWalletTx &wtx);
+    static QList<Credits_TransactionRecord> decomposeTransaction(const Credits_CWallet *keyholder_wallet, const Credits_CWalletTx &wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -133,7 +133,7 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const Bitcredit_CWalletTx &wtx);
+    void updateStatus(const Credits_CWalletTx &wtx);
 
     /** Return whether a status update is needed.
      */

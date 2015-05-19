@@ -85,7 +85,7 @@ MinerCoinsDialog::~MinerCoinsDialog()
 
 void MinerCoinsDialog::on_sendButton_clicked()
 {
-    Bitcredit_CCoinsViewCache &bitcredit_view = *bitcredit_pcoinsTip;
+    Credits_CCoinsViewCache &credits_view = *bitcredit_pcoinsTip;
     Bitcoin_CClaimCoinsViewCache &claim_view = *bitcoin_pclaimCoinsTip;
 
     if(!bitcredit_model || !bitcredit_model->getOptionsModel())
@@ -101,7 +101,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
 	}
 
     vector<COutPoint> vCoinControl;
-    vector<Bitcredit_COutput>   vOutputs;
+    vector<Credits_COutput>   vOutputs;
     Miner_CoinControlDialog::coinControl->ListSelected(vCoinControl);
     bitcredit_model->getOutputs(vCoinControl, vOutputs);
 
@@ -115,7 +115,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
 
     for(unsigned int i = 0; i < vOutputs.size(); ++i)
     {
-    	const Bitcredit_COutput& output = vOutputs[i];
+    	const Credits_COutput& output = vOutputs[i];
     	const int64_t nValue = output.tx->vout[output.i].nValue;
 
     	Bitcredit_SendCoinsRecipient recipient;
@@ -132,7 +132,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
 
 		// prepare transaction
 		Bitcredit_WalletModelTransaction transaction(recipients);
-		Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, bitcredit_view, claim_view);
+		Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, credits_view, claim_view);
 
 		// process prepareStatus and on error generate message shown to user
 		processSendCoinsReturn(prepareStatus,
@@ -176,7 +176,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
     // now create and store the transactions for real
     for(unsigned int i = 0; i < vOutputs.size(); ++i)
     {
-    	const Bitcredit_COutput& output = vOutputs[i];
+    	const Credits_COutput& output = vOutputs[i];
     	const int64_t nValue = output.tx->vout[output.i].nValue;
 
     	Bitcredit_SendCoinsRecipient recipient;
@@ -186,7 +186,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
 
 		// prepare transaction
 		Bitcredit_WalletModelTransaction transaction(recipients);
-		bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, bitcredit_view, claim_view);
+		bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, credits_view, claim_view);
 
 		//Finalize it
 		Bitcredit_WalletModel::SendCoinsReturn sendStatus = deposit_model->storeDepositTransaction(bitcredit_model, transaction);
@@ -414,11 +414,11 @@ void MinerCoinsDialog::coinControlButtonClicked()
         ui->entries->takeAt(0)->widget()->deleteLater();
     }
     vector<COutPoint> vCoinControl;
-    vector<Bitcredit_COutput>   vOutputs;
+    vector<Credits_COutput>   vOutputs;
     Miner_CoinControlDialog::coinControl->ListSelected(vCoinControl);
     bitcredit_model->getOutputs(vCoinControl, vOutputs);
 
-    foreach(const Bitcredit_COutput &output, vOutputs) {
+    foreach(const Credits_COutput &output, vOutputs) {
         addEntry( output.tx->vout[output.i].nValue);
     }
 

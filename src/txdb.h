@@ -64,7 +64,7 @@ private:
     Credits_CBlockTreeDB(const Credits_CBlockTreeDB&);
     void operator=(const Credits_CBlockTreeDB&);
 public:
-    bool WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex);
+    bool WriteBlockIndex(const Credits_CDiskBlockIndex& blockindex);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);

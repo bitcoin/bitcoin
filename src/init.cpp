@@ -48,14 +48,14 @@ using namespace boost;
 
 #ifdef ENABLE_WALLET
 uint64_t bitcredit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
+Credits_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
 std::string bitcredit_strWalletFile;
-Bitcredit_CWallet* bitcredit_pwalletMain;
+Credits_CWallet* bitcredit_pwalletMain;
 
 uint64_t deposit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv deposit_bitdb("deposit_database", "deposit_db.log");
+Credits_CDBEnv deposit_bitdb("deposit_database", "deposit_db.log");
 std::string deposit_strWalletFile;
-Bitcredit_CWallet* deposit_pwalletMain;
+Credits_CWallet* deposit_pwalletMain;
 
 std::string bitcoin_strWalletFile;
 Bitcoin_CWallet* bitcoin_pwalletMain;
@@ -125,7 +125,7 @@ static Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
 
 void Shutdown()
 {
-	CNetParams * bitcredit_netParams = Bitcredit_NetParams();
+	CNetParams * bitcredit_netParams = Credits_NetParams();
 	CNetParams * bitcoin_netParams = Bitcoin_NetParams();
 
     LogPrintf("Shutdown : In progress...\n");
@@ -134,7 +134,7 @@ void Shutdown()
     if (!lockShutdown) return;
 
     RenameThread("bitcoin-shutoff");
-    bitcredit_mempool.AddTransactionsUpdated(1);
+    credits_mempool.AddTransactionsUpdated(1);
     bitcoin_mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
     ShutdownRPCMining();
@@ -154,15 +154,15 @@ void Shutdown()
     StopNode();
     bitcredit_netParams->UnregisterNodeSignals();
     {
-        LOCK(bitcredit_mainState.cs_main);
+        LOCK(credits_mainState.cs_main);
 #ifdef ENABLE_WALLET
         if (bitcredit_pwalletMain)
-            bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
+            bitcredit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
 #endif
 //Deposit wallet should not be involved in the chain
 //#ifdef ENABLE_WALLET
 //        if (deposit_pwalletMain)
-//            deposit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
+//            deposit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
 //#endif
 #ifdef ENABLE_WALLET
         if (bitcoin_pwalletMain) {
@@ -352,7 +352,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
     strUsage += "  -bitcoin_spendzeroconfchange   " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -upgradewallet         " + _("Upgrade wallet to latest format") + " " + _("on startup") + "\n";
-    strUsage += "  -bitcredit_wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
+    strUsage += "  -credits_wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
     strUsage += "  -bitcoin_wallet=<file>         " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
     strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -bitcredit_rescan)") + "\n";
@@ -434,13 +434,13 @@ std::string HelpMessage(HelpMessageMode hmm)
 struct Bitcredit_CImportingNow
 {
     Bitcredit_CImportingNow() {
-        assert(bitcredit_mainState.fImporting == false);
-        bitcredit_mainState.fImporting = true;
+        assert(credits_mainState.fImporting == false);
+        credits_mainState.fImporting = true;
     }
 
     ~Bitcredit_CImportingNow() {
-        assert(bitcredit_mainState.fImporting == true);
-        bitcredit_mainState.fImporting = false;
+        assert(credits_mainState.fImporting == true);
+        credits_mainState.fImporting = false;
     }
 };
 struct Bitcoin_CImportingNow
@@ -468,7 +468,7 @@ void Bitcredit_ThreadImport()
     }
 
     // -reindex
-    if (bitcredit_mainState.fReindex) {
+    if (credits_mainState.fReindex) {
         Bitcredit_CImportingNow imp;
         int nFile = 0;
         while (true) {
@@ -481,7 +481,7 @@ void Bitcredit_ThreadImport()
             nFile++;
         }
         bitcredit_pblocktree->WriteReindexing(false);
-        bitcredit_mainState.fReindex = false;
+        credits_mainState.fReindex = false;
         LogPrintf("Credits: Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         Bitcredit_InitBlockIndex();
@@ -577,10 +577,10 @@ void Bitcoin_ThreadImport()
     Bitcredit_ThreadImport();
 }
 
-void Bitcredit_ThreadFlushWalletDB(const char * threadName, const Bitcredit_CWallet& pwallet)
+void Bitcredit_ThreadFlushWalletDB(const char * threadName, const Credits_CWallet& pwallet)
 {
 	const string& strFile = pwallet.strWalletFile;
-	Bitcredit_CDBEnv *pbitDb = pwallet.pbitDb;
+	Credits_CDBEnv *pbitDb = pwallet.pbitDb;
 
     // Make this thread recognisable as the wallet flushing thread
     RenameThread(threadName);
@@ -781,7 +781,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
 
     bool fLoaded = false;
     while (!fLoaded) {
-        bool fReset = bitcredit_mainState.fReindex;
+        bool fReset = credits_mainState.fReindex;
         std::string strLoadError;
 
         uiInterface.InitMessage(_("Credits: Loading block index..."));
@@ -794,11 +794,11 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 delete bitcredit_pcoinsdbview;
                 delete bitcredit_pblocktree;
 
-                bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, bitcredit_mainState.fReindex);
-                bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(nCoinDBCache, false, bitcredit_mainState.fReindex);
-                bitcredit_pcoinsTip = new Bitcredit_CCoinsViewCache(*bitcredit_pcoinsdbview);
+                bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, credits_mainState.fReindex);
+                bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
+                bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
-                if (bitcredit_mainState.fReindex)
+                if (credits_mainState.fReindex)
                     bitcredit_pblocktree->WriteReindexing(true);
 
                 if (!Bitcredit_LoadBlockIndex()) {
@@ -808,10 +808,10 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
 
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!bitcredit_mapBlockIndex.empty() && bitcredit_chainActive.Genesis() == NULL)
+                if (!credits_mapBlockIndex.empty() && credits_chainActive.Genesis() == NULL)
                     return InitError(_("Credits: Incorrect or no genesis block found. Wrong datadir for network?"));
 
-                if (bitcredit_chainActive.Genesis() != NULL && bitcredit_chainActive.Genesis()->GetBlockHash() != Bitcredit_Params().GenesisBlock().GetHash())
+                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Bitcredit_Params().GenesisBlock().GetHash())
                     return InitError(_("Credits: Genesis block not correct. Unable to start."));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
@@ -848,7 +848,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                     strLoadError + ".\n\n" + _("Credits: Do you want to rebuild the block database now?"),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
-                    bitcredit_mainState.fReindex = true;
+                    credits_mainState.fReindex = true;
                     fRequestShutdown = false;
                 } else {
                     LogPrintf("Credits: Aborted block database rebuild. Exiting.\n");
@@ -968,7 +968,7 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
 
 bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 	CNetParams * bitcoin_netParams = Bitcoin_NetParams();
-	CNetParams * bitcredit_netParams = Bitcredit_NetParams();
+	CNetParams * bitcredit_netParams = Credits_NetParams();
 
     // ********************************************************* Step 2: parameter interactions
 
@@ -1083,7 +1083,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         bitcoin_nScriptCheckThreads = BITCOIN_MAX_SCRIPTCHECK_THREADS;
 
     bitcredit_fBenchmark = GetBoolArg("-benchmark", false);
-    bitcredit_mempool.setSanityCheck(GetBoolArg("-checkmempool", Bitcredit_RegTest()));
+    credits_mempool.setSanityCheck(GetBoolArg("-checkmempool", Bitcredit_RegTest()));
     Checkpoints::bitcredit_fEnabled = GetBoolArg("-checkpoints", true);
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     bitcredit_nScriptCheckThreads = GetArg("-par", BITCREDIT_DEFAULT_SCRIPTCHECK_THREADS);
@@ -1164,14 +1164,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 #ifdef ENABLE_WALLET
     if (mapArgs.count("-paytxfee"))
     {
-        if (!ParseMoney(mapArgs["-paytxfee"], bitcredit_nTransactionFee))
+        if (!ParseMoney(mapArgs["-paytxfee"], credits_nTransactionFee))
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s'"), mapArgs["-paytxfee"]));
-        if (bitcredit_nTransactionFee > bitcredit_nHighTransactionFeeWarning)
+        if (credits_nTransactionFee > credits_nHighTransactionFeeWarning)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
     }
-    bitcredit_bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
+    credits_bSpendZeroConfChange = GetArg("-spendzeroconfchange", true);
 
-    bitcredit_strWalletFile = GetArg("-bitcredit_wallet", "credits_wallet.dat");
+    bitcredit_strWalletFile = GetArg("-credits_wallet", "credits_wallet.dat");
 #endif
 #ifdef ENABLE_WALLET
     deposit_strWalletFile = GetArg("-deposit_wallet", "deposit_wallet.dat");
@@ -1315,14 +1315,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         if (GetBoolArg("-salvagewallet", false))
         {
             // Recover readable keypairs:
-            if (!Bitcredit_CWalletDB::Recover(deposit_bitdb, deposit_strWalletFile, true, deposit_nAccountingEntryNumber))
+            if (!Credits_CWalletDB::Recover(deposit_bitdb, deposit_strWalletFile, true, deposit_nAccountingEntryNumber))
                 return false;
         }
 
         if (filesystem::exists(GetDataDir() / deposit_strWalletFile))
         {
-            Bitcredit_CDBEnv::VerifyResult r = deposit_bitdb.Verify(deposit_strWalletFile, deposit_nAccountingEntryNumber, Bitcredit_CWalletDB::Recover);
-            if (r == Bitcredit_CDBEnv::RECOVER_OK)
+            Credits_CDBEnv::VerifyResult r = deposit_bitdb.Verify(deposit_strWalletFile, deposit_nAccountingEntryNumber, Credits_CWalletDB::Recover);
+            if (r == Credits_CDBEnv::RECOVER_OK)
             {
                 string msg = strprintf(_("Deposit: Warning: deposit_wallet.dat corrupt, data salvaged!"
                                          " Original deposit_wallet.dat saved as deposit_wallet.{timestamp}.bak in %s; if"
@@ -1330,7 +1330,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                                          " restore from a backup."), strDataDir);
                 InitWarning(msg);
             }
-            if (r == Bitcredit_CDBEnv::RECOVER_FAIL)
+            if (r == Credits_CDBEnv::RECOVER_FAIL)
                 return InitError(_("deposit_wallet.dat corrupt, salvage failed"));
         }
     } // (!fDisableWallet)
@@ -1364,14 +1364,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         if (GetBoolArg("-salvagewallet", false))
         {
             // Recover readable keypairs:
-            if (!Bitcredit_CWalletDB::Recover(bitcredit_bitdb, bitcredit_strWalletFile, true, bitcredit_nAccountingEntryNumber))
+            if (!Credits_CWalletDB::Recover(bitcredit_bitdb, bitcredit_strWalletFile, true, bitcredit_nAccountingEntryNumber))
                 return false;
         }
 
         if (filesystem::exists(GetDataDir() / bitcredit_strWalletFile))
         {
-            Bitcredit_CDBEnv::VerifyResult r = bitcredit_bitdb.Verify(bitcredit_strWalletFile, bitcredit_nAccountingEntryNumber, Bitcredit_CWalletDB::Recover);
-            if (r == Bitcredit_CDBEnv::RECOVER_OK)
+            Credits_CDBEnv::VerifyResult r = bitcredit_bitdb.Verify(bitcredit_strWalletFile, bitcredit_nAccountingEntryNumber, Credits_CWalletDB::Recover);
+            if (r == Credits_CDBEnv::RECOVER_OK)
             {
                 string msg = strprintf(_("Credits: Warning: credits_wallet.dat corrupt, data salvaged!"
                                          " Original credits_wallet.dat saved as credits_wallet.{timestamp}.bak in %s; if"
@@ -1379,7 +1379,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                                          " restore from a backup."), strDataDir);
                 InitWarning(msg);
             }
-            if (r == Bitcredit_CDBEnv::RECOVER_FAIL)
+            if (r == Credits_CDBEnv::RECOVER_FAIL)
                 return InitError(_("credits_wallet.dat corrupt, salvage failed"));
         }
     } // (!fDisableWallet)
@@ -1410,7 +1410,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
     bitcoin_mainState.fReindex = GetBoolArg("-reindex", false);
     InitDataDir("bitcoin_blocks");
-    bitcredit_mainState.fReindex = GetBoolArg("-reindex", false);
+    credits_mainState.fReindex = GetBoolArg("-reindex", false);
     InitDataDir("credits_blocks");
 
     // cache size calculations
@@ -1477,14 +1477,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     {
         string strMatch = mapArgs["-printblock"];
         int nFound = 0;
-        for (map<uint256, Credits_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.begin(); mi != bitcredit_mapBlockIndex.end(); ++mi)
+        for (map<uint256, Credits_CBlockIndex*>::iterator mi = credits_mapBlockIndex.begin(); mi != credits_mapBlockIndex.end(); ++mi)
         {
             uint256 hash = (*mi).first;
             if (boost::algorithm::starts_with(hash.ToString(), strMatch))
             {
                 Credits_CBlockIndex* pindex = (*mi).second;
                 Credits_CBlock block;
-                Bitcredit_ReadBlockFromDisk(block, pindex);
+                Credits_ReadBlockFromDisk(block, pindex);
                 block.BuildMerkleTree();
                 block.BuildSigMerkleTree();
                 block.print();
@@ -1616,9 +1616,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         if (GetBoolArg("-zapwallettxes", false)) {
             uiInterface.InitMessage(_("Zapping all transactions from deposit wallet..."));
 
-            deposit_pwalletMain = new Bitcredit_CWallet(deposit_strWalletFile, &deposit_bitdb);
-            Bitcredit_DBErrors nZapWalletRet = deposit_pwalletMain->ZapWalletTx();
-            if (nZapWalletRet != BITCREDIT_DB_LOAD_OK) {
+            deposit_pwalletMain = new Credits_CWallet(deposit_strWalletFile, &deposit_bitdb);
+            Credits_DBErrors nZapWalletRet = deposit_pwalletMain->ZapWalletTx();
+            if (nZapWalletRet != CREDITS_DB_LOAD_OK) {
                 uiInterface.InitMessage(_("Error loading deposit_wallet.dat: Wallet corrupted"));
                 return false;
             }
@@ -1631,9 +1631,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
         nStart = GetTimeMillis();
         bool fFirstRun = true;
-        deposit_pwalletMain = new Bitcredit_CWallet(deposit_strWalletFile, &deposit_bitdb);
-        Bitcredit_DBErrors nLoadWalletRet = deposit_pwalletMain->LoadWallet(fFirstRun, deposit_nAccountingEntryNumber);
-        if (nLoadWalletRet != BITCREDIT_DB_LOAD_OK)
+        deposit_pwalletMain = new Credits_CWallet(deposit_strWalletFile, &deposit_bitdb);
+        Credits_DBErrors nLoadWalletRet = deposit_pwalletMain->LoadWallet(fFirstRun, deposit_nAccountingEntryNumber);
+        if (nLoadWalletRet != CREDITS_DB_LOAD_OK)
         {
             if (nLoadWalletRet == BITCREDIT_DB_CORRUPT)
                 strErrors << _("Error loading deposit_wallet.dat: Wallet corrupted") << "\n";
@@ -1645,7 +1645,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             }
             else if (nLoadWalletRet == BITCREDIT_DB_TOO_NEW)
                 strErrors << _("Error loading deposit_wallet.dat: Wallet requires newer version of Bitcredit") << "\n";
-            else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
+            else if (nLoadWalletRet == CREDITS_DB_NEED_REWRITE)
             {
                 strErrors << _("Deposit wallet needed to be rewritten: restart Credits to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
@@ -1660,9 +1660,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             int nMaxVersion = GetArg("-upgradewallet", 0);
             if (nMaxVersion == 0) // the -upgradewallet without argument case
             {
-                LogPrintf("Performing deposit wallet upgrade to %i\n", BITCREDIT_FEATURE_LATEST);
-                nMaxVersion = BITCREDIT_CLIENT_VERSION;
-                deposit_pwalletMain->SetMinVersion(BITCREDIT_FEATURE_LATEST); // permanently upgrade the wallet immediately
+                LogPrintf("Performing deposit wallet upgrade to %i\n", CREDITS_FEATURE_LATEST);
+                nMaxVersion = CREDITS_CLIENT_VERSION;
+                deposit_pwalletMain->SetMinVersion(CREDITS_FEATURE_LATEST); // permanently upgrade the wallet immediately
             }
             else
                 LogPrintf("Allowing deposit wallet upgrade up to %i\n", nMaxVersion);
@@ -1683,7 +1683,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                     strErrors << _("Cannot write deposit default address") << "\n";
             }
 
-//            deposit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
+//            deposit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
         }
 
         LogPrintf("%s", strErrors.str());
@@ -1692,26 +1692,26 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         //Deposit wallet should not be involved in the chain
 //        Bitcredit_RegisterWallet(deposit_pwalletMain);
 //
-//        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)bitcredit_chainActive.Tip();
+//        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)credits_chainActive.Tip();
 //        if (GetBoolArg("-bitcredit_rescan", false))
-//            pindexRescan = bitcredit_chainActive.Genesis();
+//            pindexRescan = credits_chainActive.Genesis();
 //        else
 //        {
-//            Bitcredit_CWalletDB walletdb(deposit_strWalletFile, &deposit_bitdb);
+//            Credits_CWalletDB walletdb(deposit_strWalletFile, &deposit_bitdb);
 //            CBlockLocator locator;
 //            if (walletdb.ReadBestBlock(locator))
-//                pindexRescan = bitcredit_chainActive.FindFork(locator);
+//                pindexRescan = credits_chainActive.FindFork(locator);
 //            else
-//                pindexRescan = bitcredit_chainActive.Genesis();
+//                pindexRescan = credits_chainActive.Genesis();
 //        }
-//        if (bitcredit_chainActive.Tip() && bitcredit_chainActive.Tip() != pindexRescan)
+//        if (credits_chainActive.Tip() && credits_chainActive.Tip() != pindexRescan)
 //        {
 //            uiInterface.InitMessage(_("Rescanning deposit wallet..."));
-//            LogPrintf("Deposit: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
+//            LogPrintf("Deposit: Rescanning last %i blocks (from block %i)...\n", credits_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
 //            nStart = GetTimeMillis();
 //            deposit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, pindexRescan, true);
 //            LogPrintf("deposit rescan      %15dms\n", GetTimeMillis() - nStart);
-//            deposit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
+//            deposit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
 //            deposit_bitdb.nWalletDBUpdated++;
 //        }
     } // (!fDisableWallet)
@@ -1727,9 +1727,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         if (GetBoolArg("-zapwallettxes", false)) {
             uiInterface.InitMessage(_("Zapping all transactions from credits wallet..."));
 
-            bitcredit_pwalletMain = new Bitcredit_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
-            Bitcredit_DBErrors nZapWalletRet = bitcredit_pwalletMain->ZapWalletTx();
-            if (nZapWalletRet != BITCREDIT_DB_LOAD_OK) {
+            bitcredit_pwalletMain = new Credits_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
+            Credits_DBErrors nZapWalletRet = bitcredit_pwalletMain->ZapWalletTx();
+            if (nZapWalletRet != CREDITS_DB_LOAD_OK) {
                 uiInterface.InitMessage(_("Error loading credits_wallet.dat: Wallet corrupted"));
                 return false;
             }
@@ -1742,9 +1742,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
         nStart = GetTimeMillis();
         bool fFirstRun = true;
-        bitcredit_pwalletMain = new Bitcredit_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
-        Bitcredit_DBErrors nLoadWalletRet = bitcredit_pwalletMain->LoadWallet(fFirstRun, bitcredit_nAccountingEntryNumber);
-        if (nLoadWalletRet != BITCREDIT_DB_LOAD_OK)
+        bitcredit_pwalletMain = new Credits_CWallet(bitcredit_strWalletFile, &bitcredit_bitdb);
+        Credits_DBErrors nLoadWalletRet = bitcredit_pwalletMain->LoadWallet(fFirstRun, bitcredit_nAccountingEntryNumber);
+        if (nLoadWalletRet != CREDITS_DB_LOAD_OK)
         {
             if (nLoadWalletRet == BITCREDIT_DB_CORRUPT)
                 strErrors << _("Error loading credits_wallet.dat: Wallet corrupted") << "\n";
@@ -1756,7 +1756,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             }
             else if (nLoadWalletRet == BITCREDIT_DB_TOO_NEW)
                 strErrors << _("Error loading credits_wallet.dat: Wallet requires newer version of Bitcoin") << "\n";
-            else if (nLoadWalletRet == BITCREDIT_DB_NEED_REWRITE)
+            else if (nLoadWalletRet == CREDITS_DB_NEED_REWRITE)
             {
                 strErrors << _("Credits wallet needed to be rewritten: restart Bitcoin to complete") << "\n";
                 LogPrintf("%s", strErrors.str());
@@ -1771,9 +1771,9 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             int nMaxVersion = GetArg("-upgradewallet", 0);
             if (nMaxVersion == 0) // the -upgradewallet without argument case
             {
-                LogPrintf("Performing credits wallet upgrade to %i\n", BITCREDIT_FEATURE_LATEST);
-                nMaxVersion = BITCREDIT_CLIENT_VERSION;
-                bitcredit_pwalletMain->SetMinVersion(BITCREDIT_FEATURE_LATEST); // permanently upgrade the wallet immediately
+                LogPrintf("Performing credits wallet upgrade to %i\n", CREDITS_FEATURE_LATEST);
+                nMaxVersion = CREDITS_CLIENT_VERSION;
+                bitcredit_pwalletMain->SetMinVersion(CREDITS_FEATURE_LATEST); // permanently upgrade the wallet immediately
             }
             else
                 LogPrintf("Allowing credits wallet upgrade up to %i\n", nMaxVersion);
@@ -1794,7 +1794,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
                     strErrors << _("Cannot write credits default address") << "\n";
             }
 
-            bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
+            bitcredit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
         }
 
         LogPrintf("%s", strErrors.str());
@@ -1802,26 +1802,26 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
-        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)bitcredit_chainActive.Tip();
+        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)credits_chainActive.Tip();
         if (GetBoolArg("-bitcredit_rescan", false))
-            pindexRescan = bitcredit_chainActive.Genesis();
+            pindexRescan = credits_chainActive.Genesis();
         else
         {
-            Bitcredit_CWalletDB walletdb(bitcredit_strWalletFile, &bitcredit_bitdb);
+            Credits_CWalletDB walletdb(bitcredit_strWalletFile, &bitcredit_bitdb);
             CBlockLocator locator;
             if (walletdb.ReadBestBlock(locator))
-                pindexRescan = bitcredit_chainActive.FindFork(locator);
+                pindexRescan = credits_chainActive.FindFork(locator);
             else
-                pindexRescan = bitcredit_chainActive.Genesis();
+                pindexRescan = credits_chainActive.Genesis();
         }
-        if (bitcredit_chainActive.Tip() && bitcredit_chainActive.Tip() != pindexRescan)
+        if (credits_chainActive.Tip() && credits_chainActive.Tip() != pindexRescan)
         {
             uiInterface.InitMessage(_("Rescanning credits wallet..."));
-            LogPrintf("Credits: Rescanning last %i blocks (from block %i)...\n", bitcredit_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
+            LogPrintf("Credits: Rescanning last %i blocks (from block %i)...\n", credits_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
             bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, pindexRescan, true);
             LogPrintf("credits rescan      %15dms\n", GetTimeMillis() - nStart);
-            bitcredit_pwalletMain->SetBestChain(bitcredit_chainActive.GetLocator());
+            bitcredit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
             bitcredit_bitdb.nWalletDBUpdated++;
         }
     } // (!fDisableWallet)
@@ -1849,7 +1849,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     InitPeersFromNetParams(GetTimeMillis(), Bitcoin_NetParams());
 
     uiInterface.InitMessage(_("Loading credits addresses..."));
-    InitPeersFromNetParams(GetTimeMillis(), Bitcredit_NetParams());
+    InitPeersFromNetParams(GetTimeMillis(), Credits_NetParams());
 
     // ********************************************************* Step 11: start node
     if (!Bitcoin_CheckDiskSpace())
@@ -1866,8 +1866,8 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     LogPrintf("bitcoin mapBlockIndex.size() = %u\n",   bitcoin_mapBlockIndex.size());
     LogPrintf("bitcoin nBestHeight = %d\n",                   bitcoin_chainActive.Height());
 
-    LogPrintf("credits mapBlockIndex.size() = %u\n",   bitcredit_mapBlockIndex.size());
-    LogPrintf("credits nBestHeight = %d\n",                   bitcredit_chainActive.Height());
+    LogPrintf("credits mapBlockIndex.size() = %u\n",   credits_mapBlockIndex.size());
+    LogPrintf("credits nBestHeight = %d\n",                   credits_chainActive.Height());
 
 #ifdef ENABLE_WALLET
     LogPrintf("bitcoin setKeyPool.size() = %u\n",      bitcoin_pwalletMain ? bitcoin_pwalletMain->setKeyPool.size() : 0);

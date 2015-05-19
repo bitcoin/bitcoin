@@ -9,8 +9,8 @@
 #include <string>
 #include <stdint.h>
 
-class Bitcredit_CDBEnv;
-class Bitcredit_CWallet;
+class Credits_CDBEnv;
+class Credits_CWallet;
 class Bitcoin_CDBEnv;
 class Bitcoin_CWallet;
 
@@ -23,12 +23,12 @@ namespace boost {
 //extern Bitcoin_CWallet* bitcoin_pwalletMain;
 
 extern uint64_t bitcredit_nAccountingEntryNumber;
-extern Bitcredit_CDBEnv bitcredit_bitdb;
-extern Bitcredit_CWallet* bitcredit_pwalletMain;
+extern Credits_CDBEnv bitcredit_bitdb;
+extern Credits_CWallet* bitcredit_pwalletMain;
 
 extern uint64_t deposit_nAccountingEntryNumber;
-extern Bitcredit_CDBEnv deposit_bitdb;
-extern Bitcredit_CWallet* deposit_pwalletMain;
+extern Credits_CDBEnv deposit_bitdb;
+extern Credits_CWallet* deposit_pwalletMain;
 
 extern Bitcoin_CWallet* bitcoin_pwalletMain;
 

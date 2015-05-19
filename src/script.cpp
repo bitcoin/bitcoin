@@ -1642,7 +1642,7 @@ bool Bitcredit_VerifyScript(const CScript& scriptSig, const CScript& scriptPubKe
 }
 
 
-bool Bitcredit_SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, Credits_CTransaction& txTo, unsigned int nIn, int nHashType)
+bool Credits_SignSignature(const CKeyStore &keystore, const CScript& fromPubKey, Credits_CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     Credits_CTxIn& txin = txTo.vin[nIn];
@@ -1677,14 +1677,14 @@ bool Bitcredit_SignSignature(const CKeyStore &keystore, const CScript& fromPubKe
     return Bitcredit_VerifyScript(txin.scriptSig, fromPubKey, txTo, nIn, STANDARD_SCRIPT_VERIFY_FLAGS, 0);
 }
 
-bool Bitcredit_SignSignature(const CKeyStore &keystore, const Credits_CTransaction& txFrom, Credits_CTransaction& txTo, unsigned int nIn, int nHashType)
+bool Credits_SignSignature(const CKeyStore &keystore, const Credits_CTransaction& txFrom, Credits_CTransaction& txTo, unsigned int nIn, int nHashType)
 {
     assert(nIn < txTo.vin.size());
     Credits_CTxIn& txin = txTo.vin[nIn];
     assert(txin.prevout.n < txFrom.vout.size());
     const CTxOut& txout = txFrom.vout[txin.prevout.n];
 
-    return Bitcredit_SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
+    return Credits_SignSignature(keystore, txout.scriptPubKey, txTo, nIn, nHashType);
 }
 
 static CScript PushAll(const vector<valtype>& values)

@@ -11,7 +11,7 @@
 
 /* Return positive answer if transaction should be shown in list.
  */
-bool Credits_TransactionRecord::showTransaction(const Bitcredit_CWalletTx &wtx)
+bool Credits_TransactionRecord::showTransaction(const Credits_CWalletTx &wtx)
 {
     if (wtx.IsCoinBase())
     {
@@ -24,7 +24,7 @@ bool Credits_TransactionRecord::showTransaction(const Bitcredit_CWalletTx &wtx)
     return true;
 }
 
-void SetupNoneFromMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int& nOut, Credits_TransactionRecord &sub, const Bitcredit_CWallet *keyholder_wallet) {
+void SetupNoneFromMeDepositSub(const Credits_CWalletTx &wtx, const unsigned int& nOut, Credits_TransactionRecord &sub, const Credits_CWallet *keyholder_wallet) {
     if(wtx.IsDeposit()) {
     	if(nOut == 0) {
     		sub.type = Credits_TransactionRecord::Deposit;
@@ -45,7 +45,7 @@ void SetupNoneFromMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned in
     }
 }
 
-void SetupAllFromMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int& nOut, Credits_TransactionRecord &sub, const Bitcredit_CWallet *keyholder_wallet) {
+void SetupAllFromMeDepositSub(const Credits_CWalletTx &wtx, const unsigned int& nOut, Credits_TransactionRecord &sub, const Credits_CWallet *keyholder_wallet) {
     if(wtx.IsDeposit()) {
     	if(nOut == 0) {
     		sub.type = Credits_TransactionRecord::Deposit;
@@ -66,7 +66,7 @@ void SetupAllFromMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int
     }
 }
 
-void SetupAllFromMeAllToMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsigned int& nOut, Credits_TransactionRecord &sub) {
+void SetupAllFromMeAllToMeDepositSub(const Credits_CWalletTx &wtx, const unsigned int& nOut, Credits_TransactionRecord &sub) {
     if(wtx.IsDeposit()) {
     	if(nOut == 0) {
     		sub.type = Credits_TransactionRecord::Deposit;
@@ -95,7 +95,7 @@ void SetupAllFromMeAllToMeDepositSub(const Bitcredit_CWalletTx &wtx, const unsig
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<Credits_TransactionRecord> Credits_TransactionRecord::decomposeTransaction(const Bitcredit_CWallet *keyholder_wallet, const Bitcredit_CWalletTx &wtx)
+QList<Credits_TransactionRecord> Credits_TransactionRecord::decomposeTransaction(const Credits_CWallet *keyholder_wallet, const Credits_CWalletTx &wtx)
 {
     //The decomposed transactions should not be affected by prepared deposits. Passing in empty list.
     map<uint256, set<int> > mapPreparedDepositTxInPoints;
@@ -258,15 +258,15 @@ QList<Credits_TransactionRecord> Credits_TransactionRecord::decomposeTransaction
     return parts;
 }
 
-void Credits_TransactionRecord::updateStatus(const Bitcredit_CWalletTx &wtx)
+void Credits_TransactionRecord::updateStatus(const Credits_CWalletTx &wtx)
 {
-    AssertLockHeld(bitcredit_mainState.cs_main);
+    AssertLockHeld(credits_mainState.cs_main);
     // Determine transaction status
 
     // Find the block the tx is in
     Credits_CBlockIndex* pindex = NULL;
-    std::map<uint256, Credits_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(wtx.hashBlock);
-    if (mi != bitcredit_mapBlockIndex.end())
+    std::map<uint256, Credits_CBlockIndex*>::iterator mi = credits_mapBlockIndex.find(wtx.hashBlock);
+    if (mi != credits_mapBlockIndex.end())
         pindex = (*mi).second;
 
     // Sort order, unrecorded transactions sort to the top
@@ -277,14 +277,14 @@ void Credits_TransactionRecord::updateStatus(const Bitcredit_CWalletTx &wtx)
         idx);
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
-    status.cur_num_blocks = bitcredit_chainActive.Height();
+    status.cur_num_blocks = credits_chainActive.Height();
 
-    if (!Bitcredit_IsFinalTx(wtx, bitcredit_chainActive.Height() + 1))
+    if (!Credits_IsFinalTx(wtx, credits_chainActive.Height() + 1))
     {
         if (wtx.nLockTime < BITCREDIT_LOCKTIME_THRESHOLD)
         {
             status.status = Bitcredit_TransactionStatus::OpenUntilBlock;
-            status.open_for = wtx.nLockTime - bitcredit_chainActive.Height();
+            status.open_for = wtx.nLockTime - credits_chainActive.Height();
         }
         else
         {
@@ -395,8 +395,8 @@ void Credits_TransactionRecord::updateStatus(const Bitcredit_CWalletTx &wtx)
 
 bool Credits_TransactionRecord::statusUpdateNeeded()
 {
-    AssertLockHeld(bitcredit_mainState.cs_main);
-    return status.cur_num_blocks != bitcredit_chainActive.Height();
+    AssertLockHeld(credits_mainState.cs_main);
+    return status.cur_num_blocks != credits_chainActive.Height();
 }
 
 QString Credits_TransactionRecord::getTxID() const

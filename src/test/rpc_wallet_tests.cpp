@@ -17,8 +17,8 @@ using namespace json_spirit;
 extern Array createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL);
 extern Value CallRPC(string args);
 
-extern Bitcredit_CDBEnv bitcredit_bitdb;
-extern Bitcredit_CWallet* bitcredit_pwalletMain;
+extern Credits_CDBEnv bitcredit_bitdb;
+extern Credits_CWallet* bitcredit_pwalletMain;
 
 BOOST_AUTO_TEST_SUITE(rpc_wallet_tests)
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     // Test RPC calls for various wallet statistics
     Value r;
 
-    LOCK2(bitcredit_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
+    LOCK2(credits_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
 
     CPubKey demoPubkey = bitcredit_pwalletMain->GenerateNewKey();
 	CBitcoinAddress demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 	string strAccount = "walletDemoAccount";
 	string strPurpose = "receive";
 	BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
-		Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
+		Credits_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
 		CAccount account;
 		account.vchPubKey = demoPubkey;
 		bitcredit_pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);

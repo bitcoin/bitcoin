@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 //        sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
 //        sh = Bitcredit_SignatureHash(scriptCode, txTo, nIn, nHashType);
 //        #if defined(PRINT_SIGHASH_JSON)
-//        CDataStream ss(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+//        CDataStream ss(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 //        ss << txTo;
 //
 //        std::cout << "\t[\"" ;
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
 //          sigHashHex = test[4].get_str();
 //
 //          uint256 sh;
-//          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+//          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 //          stream >> tx;
 //
 //          CValidationState state;

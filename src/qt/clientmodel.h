@@ -16,7 +16,7 @@ class PeerTableModel;
 class Bitcredit_TransactionTableModel;
 class Bitcoin_TransactionTableModel;
 
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class Bitcoin_CWallet;
 
 QT_BEGIN_NAMESPACE

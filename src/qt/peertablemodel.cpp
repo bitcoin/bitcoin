@@ -75,13 +75,13 @@ public:
         }
 
         // if we can, retrieve the CNodeStateStats for each node.
-        TRY_LOCK(bitcredit_mainState.cs_main, lockMain);
+        TRY_LOCK(credits_mainState.cs_main, lockMain);
         {
             if (lockMain)
             {
                 BOOST_FOREACH(CNodeCombinedStats &stats, cachedNodeStats)
                 {
-                	if(netParams == Bitcredit_NetParams()) {
+                	if(netParams == Credits_NetParams()) {
 						Bitcredit_GetNodeStateStats(stats.nodestats.nodeid, stats.statestats);
                 	} else {
 						Bitcoin_GetNodeStateStats(stats.nodestats.nodeid, stats.statestats);

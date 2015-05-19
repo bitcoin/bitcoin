@@ -12,7 +12,7 @@ class Credits_TransactionRecord;
 class Bitcredit_TransactionTablePriv;
 class Bitcredit_WalletModel;
 
-class Bitcredit_CWallet;
+class Credits_CWallet;
 
 /** UI model for the transaction table of a wallet.
  */
@@ -21,7 +21,7 @@ class Bitcredit_TransactionTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit Bitcredit_TransactionTableModel(Bitcredit_CWallet* bitcredit_wallet, Bitcredit_CWallet *keyholder_wallet, bool isForDepositWallet, Bitcredit_WalletModel *parent = 0);
+    explicit Bitcredit_TransactionTableModel(Credits_CWallet* credits_wallet, Credits_CWallet *keyholder_wallet, bool isForDepositWallet, Bitcredit_WalletModel *parent = 0);
     ~Bitcredit_TransactionTableModel();
 
     enum ColumnIndex {
@@ -70,8 +70,8 @@ public:
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
 
 private:
-    Bitcredit_CWallet* wallet;
-    Bitcredit_CWallet* keyholder_wallet;
+    Credits_CWallet* wallet;
+    Credits_CWallet* keyholder_wallet;
     Bitcredit_WalletModel *walletModel;
     QStringList columns;
     Bitcredit_TransactionTablePriv *priv;

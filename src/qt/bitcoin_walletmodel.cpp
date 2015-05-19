@@ -25,8 +25,8 @@
 #include <QSet>
 #include <QTimer>
 
-Bitcoin_WalletModel::Bitcoin_WalletModel(Bitcoin_CWallet *wallet, Bitcredit_CWallet *bitcredit_wallet, OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), wallet(wallet), bitcredit_wallet(bitcredit_wallet), optionsModel(optionsModel), addressTableModel(0),
+Bitcoin_WalletModel::Bitcoin_WalletModel(Bitcoin_CWallet *wallet, Credits_CWallet *credits_wallet, OptionsModel *optionsModel, QObject *parent) :
+    QObject(parent), wallet(wallet), credits_wallet(credits_wallet), optionsModel(optionsModel), addressTableModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),

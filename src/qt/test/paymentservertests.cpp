@@ -58,7 +58,7 @@ static Bitcredit_SendCoinsRecipient handleRequest(PaymentServer* server, std::ve
 
 void PaymentServerTests::paymentServerTests()
 {
-    OptionsModel optionsModel(0, Bitcredit_NetParams());
+    OptionsModel optionsModel(0, Credits_NetParams());
     PaymentServer* server = new PaymentServer(NULL, false);
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert_BASE64));

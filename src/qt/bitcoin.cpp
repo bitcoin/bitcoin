@@ -343,7 +343,7 @@ void BitcreditApplication::createPaymentServer()
 
 void BitcreditApplication::bitcredit_createOptionsModel()
 {
-    bitcredit_optionsModel = new OptionsModel(0, Bitcredit_NetParams());
+    bitcredit_optionsModel = new OptionsModel(0, Credits_NetParams());
 }
 void BitcreditApplication::bitcoin_createOptionsModel()
 {
@@ -440,7 +440,7 @@ void BitcreditApplication::initializeResult(int retval)
 
         emit splashFinished(window);
 
-        credits_clientModel = new ClientModel(bitcredit_optionsModel, 0, Bitcredit_NetParams(), bitcredit_mainState, bitcredit_chainActive);
+        credits_clientModel = new ClientModel(bitcredit_optionsModel, 0, Credits_NetParams(), credits_mainState, credits_chainActive);
         window->bitcredit_setClientModel(credits_clientModel);
 
         bitcoin_clientModel = new ClientModel(bitcoin_optionsModel, 0, Bitcoin_NetParams(), bitcoin_mainState, bitcoin_chainActive);
@@ -461,7 +461,7 @@ void BitcreditApplication::initializeResult(int retval)
             window->setCurrentWallet("~Default");
 
             connect(bitcredit_model, SIGNAL(coinsSent(CWallet*,Bitcredit_SendCoinsRecipient,QByteArray)),
-                             paymentServer, SLOT(credits_fetchPaymentACK(Bitcredit_CWallet*,const Bitcredit_SendCoinsRecipient&,QByteArray)));
+                             paymentServer, SLOT(credits_fetchPaymentACK(Credits_CWallet*,const Bitcredit_SendCoinsRecipient&,QByteArray)));
             connect(bitcoin_model, SIGNAL(coinsSent(CWallet*,Bitcoin_SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(bitcoin_fetchPaymentACK(Bitcoin_CWallet*,const Bitcoin_SendCoinsRecipient&,QByteArray)));
         }
