@@ -10,6 +10,9 @@
     <height>450</height>
    </rect>
   </property>
+  <property name="windowFlags">
+   <enum>Qt::Window</enum>
+  </property>
   <property name="windowTitle">
    <string>Debug window</string>
   </property>
