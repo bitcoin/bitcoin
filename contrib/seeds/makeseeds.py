@@ -3,9 +3,9 @@
 # Generate seeds.txt from Pieter's DNS seeder
 #
 
-NSEEDS=512
+NSEEDS = 512
 
-MAX_SEEDS_PER_ASN=2
+MAX_SEEDS_PER_ASN = 2
 
 MIN_BLOCKS = 337600
 
@@ -36,7 +36,7 @@ def parseline(line):
         return None
     # Do IPv4 sanity check
     ip = 0
-    for i in range(0,4):
+    for i in range(0, 4):
         if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
             return None
         ip = ip + (int(m.group(i+2)) << (8*(3-i)))

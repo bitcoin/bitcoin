@@ -6,10 +6,12 @@ import subprocess
 import hashlib
 from PIL import Image
 
+
 def file_hash(filename):
     '''Return hash of raw file contents'''
     with open(filename, 'rb') as f:
         return hashlib.sha256(f.read()).hexdigest()
+
 
 def content_hash(filename):
     '''Return hash of RGBA contents of image'''

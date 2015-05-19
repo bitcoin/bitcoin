@@ -36,10 +36,10 @@ import sys
 #   (glibc)    GLIBC_2_11
 #
 MAX_VERSIONS = {
-'GCC':     (4,4,0),
-'CXXABI':  (1,3,3),
-'GLIBCXX': (3,4,13),
-'GLIBC':   (2,11)
+'GCC':     (4, 4, 0),
+'CXXABI':  (1, 3, 3),
+'GLIBCXX': (3, 4, 13),
+'GLIBC':   (2, 11)
 }
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
@@ -103,12 +103,12 @@ if __name__ == '__main__':
     retval = 0
     for filename in sys.argv[1:]:
         # Check imported symbols
-        for sym,version in read_symbols(filename, True):
+        for sym, version in read_symbols(filename, True):
             if version and not check_version(MAX_VERSIONS, version):
                 print('%s: symbol %s from unsupported version %s' % (filename, cppfilt(sym), version))
                 retval = 1
         # Check exported symbols
-        for sym,version in read_symbols(filename, False):
+        for sym, version in read_symbols(filename, False):
             if sym in IGNORE_EXPORTS:
                 continue
             print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym)))

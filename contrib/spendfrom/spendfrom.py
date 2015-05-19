@@ -25,6 +25,7 @@ from jsonrpc import ServiceProxy, json
 
 BASE_FEE=Decimal("0.001")
 
+
 def check_json_precision():
     """Make sure json library being used does not lose precision converting BTC values"""
     n = Decimal("20000000.00000003")
@@ -48,6 +49,7 @@ def read_bitcoin_config(dbdir):
         def __init__(self, fp):
             self.fp = fp
             self.sechead = '[all]\n'
+
         def readline(self):
             if self.sechead:
                 try: return self.sechead
@@ -244,7 +246,7 @@ def main():
 
     if options.amount is None:
         address_summary = list_available(bitcoind)
-        for address,info in address_summary.iteritems():
+        for address, info in address_summary.iteritems():
             n_transactions = len(info['outputs'])
             if n_transactions > 1:
                 print("%s %.8f %s (%d transactions)"%(address, info['total'], info['account'], n_transactions))
