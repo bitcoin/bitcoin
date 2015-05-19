@@ -70,6 +70,9 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
             return false;
         }
+
+        RenameBitcreditConfFile();
+
         try
         {
             ReadConfigFile(mapArgs, mapMultiArgs);
@@ -82,6 +85,8 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
             return false;
         }
+
+        RenameBitcreditFiles();
 
         if (mapArgs.count("-?") || mapArgs.count("--help"))
         {

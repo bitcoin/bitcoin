@@ -579,6 +579,9 @@ int main(int argc, char *argv[])
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
         return 1;
     }
+
+    RenameBitcreditConfFile();
+
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch(std::exception &e) {
@@ -598,6 +601,9 @@ int main(int argc, char *argv[])
         QMessageBox::critical(0, QObject::tr("Credits"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
         return 1;
     }
+
+    RenameBitcreditFiles();
+
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
