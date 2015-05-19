@@ -810,7 +810,7 @@ bool Bitcredit_CWalletDB::Recover(Bitcredit_CDBEnv& dbenv, std::string filename,
     // Set -bitcredit_rescan so any missing transactions will be
     // found.
     int64_t now = GetTime();
-    std::string newFilename = strprintf("bitcredit_wallet.%d.bak", now);
+    std::string newFilename = strprintf("credits_wallet.%d.bak", now);
 
     int result = dbenv.dbenv.dbrename(NULL, filename.c_str(), NULL,
                                       newFilename.c_str(), DB_AUTO_COMMIT);

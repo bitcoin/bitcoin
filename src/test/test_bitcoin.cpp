@@ -78,7 +78,7 @@ struct TestingSetup {
         bitcoin_pwalletMain->LoadWallet(fFirstRun);
         Bitcoin_RegisterWallet(bitcoin_pwalletMain);
 
-        bitcredit_pwalletMain = new Bitcredit_CWallet("bitcredit_wallet.dat", &bitcredit_bitdb);
+        bitcredit_pwalletMain = new Bitcredit_CWallet("credits_wallet.dat", &bitcredit_bitdb);
         bitcredit_pwalletMain->LoadWallet(fFirstRun, bitcredit_nAccountingEntryNumber);
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
