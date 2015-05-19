@@ -5,18 +5,15 @@
 #ifndef METADEXDIALOG_H
 #define METADEXDIALOG_H
 
-#include "walletmodel.h"
+#include <string>
 
 #include <QDialog>
-#include <QString>
-#include <boost/multiprecision/cpp_dec_float.hpp>
 
-using boost::multiprecision::cpp_dec_float_100;
-
-class OptionsModel;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QString;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -29,6 +26,9 @@ class MetaDExDialog : public QDialog
     Q_OBJECT
 
 public:
+    explicit MetaDExDialog(QWidget *parent = 0);
+    ~MetaDExDialog();
+
     void FullRefresh();
     void SwitchMarket();
     void AddRow(bool useBuyList, bool includesMe, const std::string& price, const std::string& available, const std::string& total);
@@ -37,14 +37,8 @@ public:
     void UpdateOffers();
     void UpdateSellOffers();
     void UpdateBuyOffers();
-    explicit MetaDExDialog(QWidget *parent = 0);
     void setModel(WalletModel *model);
     void recalcTotal(bool useBuyFields);
-
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QWidget *setupTabChain(QWidget *prev);
-
 
 public slots:
     void switchButtonClicked();

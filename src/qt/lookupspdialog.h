@@ -5,15 +5,13 @@
 #ifndef LOOKUPSPDIALOG_H
 #define LOOKUPSPDIALOG_H
 
-#include "walletmodel.h"
-
 #include <QDialog>
-#include <QString>
 
-class OptionsModel;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QString;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -27,17 +25,15 @@ class LookupSPDialog : public QDialog
 
 public:
     explicit LookupSPDialog(QWidget *parent = 0);
+    ~LookupSPDialog();
+
     void searchSP();
     void updateDisplayedProperty();
-    void addSPToMatchingResults(unsigned int);
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QWidget *setupTabChain(QWidget *prev);
-
+    void addSPToMatchingResults(unsigned int propertyId);
 
 public slots:
     void searchButtonClicked();
-    void matchingComboBoxChanged(int);
+    void matchingComboBoxChanged(int idx);
 
 private:
     Ui::LookupSPDialog *ui;

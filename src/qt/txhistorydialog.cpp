@@ -5,70 +5,56 @@
 #include "txhistorydialog.h"
 #include "ui_txhistorydialog.h"
 
-#include "clientmodel.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
-#include "txdb.h"
-#include "wallet.h"
-#include "base58.h"
-#include "ui_interface.h"
-#include "walletmodel.h"
-
-#include <boost/filesystem.hpp>
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-// potentially overzealous includes here
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <utility>
-#include <string>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-// end potentially overzealous includes
-
-using namespace json_spirit;
-#include "mastercore.h"
-using namespace mastercore;
-
-// potentially overzealous using here
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace leveldb;
-// end potentially overzealous using
-
-#include "mastercore_dex.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
-#include "mastercore_rpc.h"
-#include "mastercore_parse_string.h"
 #include "omnicore_qtutils.h"
 
+#include "clientmodel.h"
+#include "guiutil.h"
+#include "walletmodel.h"
+
+#include "mastercore.h"
+#include "mastercore_rpc.h"
+#include "mastercore_sp.h"
+#include "mastercore_tx.h"
+#include "omnicore_pending.h"
+
+#include "init.h"
+#include "main.h"
+#include "primitives/transaction.h"
+#include "sync.h"
+#include "txdb.h"
+#include "uint256.h"
+#include "wallet.h"
+
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <stdint.h>
+#include <list>
+#include <map>
+#include <string>
+#include <vector>
+
+#include <QAbstractItemModel>
+#include <QAction>
 #include <QDateTime>
-#include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
-#include <QListWidget>
+#include <QDialog>
+#include <QHeaderView>
+#include <QIcon>
 #include <QMenu>
-#include <QTextEdit>
+#include <QModelIndex>
+#include <QPoint>
+#include <QResizeEvent>
 #include <QSortFilterProxyModel>
+#include <QString>
+#include <QTableWidgetItem>
+#include <QWidget>
+
+using std::string;
+using namespace json_spirit;
+using namespace mastercore;
 
 TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     QDialog(parent),
@@ -77,7 +63,6 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
     walletModel(0)
 {
     ui->setupUi(this);
-    this->walletModel = walletModel;
     // setup
     ui->txHistoryTable->setColumnCount(7);
     ui->txHistoryTable->setHorizontalHeaderItem(2, new QTableWidgetItem(" "));
@@ -145,10 +130,15 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
 
 }
 
+TXHistoryDialog::~TXHistoryDialog()
+{
+    delete ui;
+}
+
 void TXHistoryDialog::setClientModel(ClientModel *model)
 {
+    this->clientModel = model;
     if (model != NULL) {
-        this->clientModel = model;
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(UpdateHistory()));
         connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(UpdateConfirmations()));
     }
@@ -156,8 +146,8 @@ void TXHistoryDialog::setClientModel(ClientModel *model)
 
 void TXHistoryDialog::setWalletModel(WalletModel *model)
 {
+    this->walletModel = model;
     if (model != NULL) {
-        this->walletModel = model;
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateHistory()));
     }
 }
@@ -209,7 +199,7 @@ int TXHistoryDialog::PopulateHistoryMap()
     // STO has no inbound transaction, so we need to use an insert methodology here - get STO receipts affecting me
     string mySTOReceipts = s_stolistdb->getMySTOReceipts("");
     std::vector<std::string> vecReceipts;
-    boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
+    boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), boost::token_compress_on);
     int64_t lastTXBlock = 999999; // set artificially high initially until first wallet tx is processed
     // iterate through wallet entries backwards
     std::list<CAccountingEntry> acentries;
@@ -244,15 +234,15 @@ int TXHistoryDialog::PopulateHistoryMap()
             uint256 blockHash = 0;
             if (!GetTransaction(hash, wtx, blockHash, true)) continue;
             blockHash = pwtx->hashBlock;
-            if ((0 == blockHash) || (NULL == mapBlockIndex[blockHash])) continue;
-            CBlockIndex* pBlockIndex = mapBlockIndex[blockHash];
+            if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
+            CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
             if (NULL == pBlockIndex) continue;
             int blockHeight = pBlockIndex->nHeight; // get the height of the transaction
 
             // ### START STO INSERTION CHECK ###
             for(uint32_t i = 0; i<vecReceipts.size(); i++) {
                 std::vector<std::string> svstr;
-                boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), token_compress_on);
+                boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), boost::token_compress_on);
                 if(4 == svstr.size()) // make sure expected num items
                 {
                     if((atoi(svstr[1]) < lastTXBlock) && (atoi(svstr[1]) > blockHeight))
@@ -568,11 +558,6 @@ void TXHistoryDialog::showDetails()
     if (!strTXText.empty()) {
         PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
     }
-}
-
-void TXHistoryDialog::accept()
-{
-
 }
 
 void TXHistoryDialog::resizeEvent(QResizeEvent* event)

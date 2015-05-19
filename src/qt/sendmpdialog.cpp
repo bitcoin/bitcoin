@@ -5,70 +5,41 @@
 #include "sendmpdialog.h"
 #include "ui_sendmpdialog.h"
 
-#include "addresstablemodel.h"
-#include "bitcoinunits.h"
+#include "omnicore_qtutils.h"
+
 #include "clientmodel.h"
-#include "coincontroldialog.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
 #include "walletmodel.h"
-#include "wallet.h"
-#include "base58.h"
-#include "coincontrol.h"
-#include "ui_interface.h"
-
-#include <boost/filesystem.hpp>
-
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-
-// potentially overzealous includes here
-#include "base58.h"
-#include "rpcserver.h"
-#include "init.h"
-#include "util.h"
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <utility>
-#include <string>
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-#include <boost/filesystem.hpp>
-#include "json/json_spirit_utils.h"
-#include "json/json_spirit_value.h"
-#include "leveldb/db.h"
-#include "leveldb/write_batch.h"
-// end potentially overzealous includes
-using namespace json_spirit; // since now using Array in mastercore.h this needs to come first
 
 #include "mastercore.h"
-using namespace mastercore;
-
-// potentially overzealous using here
-using namespace std;
-using namespace boost;
-using namespace boost::assign;
-using namespace leveldb;
-// end potentially overzealous using
-
-#include "mastercore_dex.h"
-#include "mastercore_parse_string.h"
-#include "mastercore_tx.h"
-#include "mastercore_sp.h"
 #include "mastercore_errors.h"
-#include "omnicore_qtutils.h"
+#include "mastercore_parse_string.h"
 #include "omnicore_createpayload.h"
 #include "omnicore_pending.h"
 
+#include "amount.h"
+#include "base58.h"
+#include "main.h"
+#include "sync.h"
+#include "uint256.h"
+#include "wallet.h"
+
+#include <stdint.h>
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include <QDateTime>
+#include <QDialog>
+#include <QLineEdit>
 #include <QMessageBox>
-#include <QScrollBar>
-#include <QTextDocument>
+#include <QString>
+#include <QWidget>
+
+using std::ostringstream;
+using std::string;
+
+using namespace mastercore;
 
 SendMPDialog::SendMPDialog(QWidget *parent) :
     QDialog(parent),
@@ -97,18 +68,23 @@ SendMPDialog::SendMPDialog(QWidget *parent) :
     balancesUpdated();
 }
 
+SendMPDialog::~SendMPDialog()
+{
+    delete ui;
+}
+
 void SendMPDialog::setClientModel(ClientModel *model)
 {
+    this->clientModel = model;
     if (model != NULL) {
-        this->clientModel = model;
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(balancesUpdated()));
     }
 }
 
 void SendMPDialog::setWalletModel(WalletModel *model)
 {
+    this->walletModel = model;
     if (model != NULL) {
-        this->walletModel = model;
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balancesUpdated()));
     }
 }
@@ -192,7 +168,7 @@ void SendMPDialog::updateProperty()
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     uint32_t propertyId = spId.toUInt();
     LOCK(cs_tally);
-    for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         string address = (my_it->first).c_str();
         uint32_t id = 0;
         bool includeAddress=false;

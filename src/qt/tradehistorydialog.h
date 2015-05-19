@@ -6,19 +6,18 @@
 #define TRADEHISTORYDIALOG_H
 
 #include "guiutil.h"
-#include "walletmodel.h"
+#include "uint256.h"
 
 #include <QDialog>
-#include <QString>
-#include <QTableWidget>
-#include <QMenu>
-#include <QDialogButtonBox>
-#include <QTextEdit>
 
-class OptionsModel;
+class WalletModel;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QMenu;
+class QPoint;
+class QResizeEvent;
+class QString;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -27,16 +26,16 @@ namespace Ui {
 
 class TradeHistoryObject
 {
-
 public:
-  int blockHeight; // block transaction was mined in
-  int blockByteOffset; // byte offset the tx is stored in the block (used for ordering multiple txs same block)
-  bool valid; // whether the transaction is valid from an Omni perspective
-  std::string status; // string containing status of trade
-  std::string info; // string containing human readable description of trade
-  std::string amountOut; // string containing formatted amount out
-  std::string amountIn; // string containing formatted amount in
-
+    TradeHistoryObject()
+      : blockHeight(-1), blockByteOffset(0), valid(false) {};
+    int blockHeight; // block transaction was mined in
+    int blockByteOffset; // byte offset the tx is stored in the block (used for ordering multiple txs same block)
+    bool valid; // whether the transaction is valid from an Omni perspective
+    std::string status; // string containing status of trade
+    std::string info; // string containing human readable description of trade
+    std::string amountOut; // string containing formatted amount out
+    std::string amountIn; // string containing formatted amount in
 };
 
 typedef std::map<uint256, TradeHistoryObject> TradeHistoryMap;
@@ -47,41 +46,23 @@ class TradeHistoryDialog : public QDialog
     Q_OBJECT
 
 public:
-    //void FullRefresh();
     explicit TradeHistoryDialog(QWidget *parent = 0);
+    ~TradeHistoryDialog();
     void setModel(WalletModel *model);
-
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QWidget *setupTabChain(QWidget *prev);
- //   QDialog *txDlg;
-    QTableWidgetItem *iconCell;
-    QTableWidgetItem *dateCell;
-    QTableWidgetItem *statusCell;
-    QTableWidgetItem *Cell;
-    QTableWidgetItem *amountOutCell;
-    QTableWidgetItem *amountInCell;
-    QTableWidgetItem *txidCell;
-    QLayout *dlgLayout;
-    QTextEdit *dlgTextEdit;
-    QDialogButtonBox *buttonBox;
-    QPushButton *closeButton;
-
     GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
     virtual void resizeEvent(QResizeEvent* event);
-
-    TradeHistoryMap tradeHistoryMap;
-
-public slots:
-    void Update();
-    void contextualMenu(const QPoint &);
-    void showDetails();
-    void copyTxID();
 
 private:
     Ui::tradeHistoryDialog *ui;
     WalletModel *model;
     QMenu *contextMenu;
+    TradeHistoryMap tradeHistoryMap;
+
+public slots:
+    void update();
+    void contextualMenu(const QPoint &point);
+    void showDetails();
+    void copyTxID();
 
 private slots:
     int PopulateTradeHistoryMap();

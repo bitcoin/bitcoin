@@ -14,48 +14,33 @@
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
 
-  #include "wallet.h"
+#include "mastercore.h"
 
-  // potentially overzealous includes here
-  #include "base58.h"
-  #include "rpcserver.h"
-  #include "init.h"
-  #include "util.h"
-  #include <fstream>
-  #include <algorithm>
-  #include <vector>
-  #include <utility>
-  #include <string>
-  #include <boost/assign/list_of.hpp>
-  #include <boost/algorithm/string.hpp>
-  #include <boost/algorithm/string/find.hpp>
-  #include <boost/algorithm/string/join.hpp>
-  #include <boost/lexical_cast.hpp>
-  #include <boost/format.hpp>
-  #include <boost/filesystem.hpp>
-  #include "json/json_spirit_utils.h"
-  #include "json/json_spirit_value.h"
-  #include "leveldb/db.h"
-  #include "leveldb/write_batch.h"
-  // end potentially overzealous includes
-  using namespace json_spirit; // since now using Array in mastercore.h this needs to come first
+#include "main.h"
 
-  #include "mastercore.h"
-  using namespace mastercore;
-
-  // potentially overzealous using here
-  using namespace std;
-  using namespace boost;
-  using namespace boost::assign;
-  using namespace leveldb;
-  // end potentially overzealous using
-
-  #include "mastercore_dex.h"
-  #include "mastercore_tx.h"
-  #include "mastercore_sp.h"
+#include <sstream>
+#include <string>
 
 #include <QAbstractItemDelegate>
+#include <QBrush>
+#include <QColor>
+#include <QDateTime>
+#include <QHBoxLayout>
+#include <QIcon>
+#include <QLabel>
+#include <QListWidgetItem>
 #include <QPainter>
+#include <QRect>
+#include <QString>
+#include <QStyleOptionViewItem>
+#include <QVariant>
+#include <QVBoxLayout>
+#include <QWidget>
+
+using std::ostringstream;
+using std::string;
+
+using namespace mastercore;
 
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 6 // 3 - number of recent transactions to display

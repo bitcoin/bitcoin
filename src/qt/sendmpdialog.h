@@ -11,12 +11,9 @@
 #include <QString>
 
 class ClientModel;
-class OptionsModel;
-class SendMPEntry;
-class SendCoinsRecipient;
 
 QT_BEGIN_NAMESPACE
-class QUrl;
+class QWidget;
 QT_END_NAMESPACE
 
 namespace Ui {
@@ -30,6 +27,8 @@ class SendMPDialog : public QDialog
 
 public:
     explicit SendMPDialog(QWidget *parent = 0);
+    ~SendMPDialog();
+
     void setClientModel(ClientModel *model);
     void setWalletModel(WalletModel *model);
 
@@ -38,16 +37,9 @@ public:
     void updateFrom();
     void updateProperty();
     void updatePropSelector();
-    /** Set up the tab chain manually, as Qt messes up the tab chain by default in some cases (issue https://bugreports.qt-project.org/browse/QTBUG-10907).
-     */
-    QWidget *setupTabChain(QWidget *prev);
-
-    void setAddress(const QString &address);
-    void pasteEntry(const SendCoinsRecipient &rv);
-    bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
 public slots:
-//    void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+//  void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
     void propertyComboBoxChanged(int idx);
     void sendFromComboBoxChanged(int idx);
     void clearButtonClicked();
@@ -58,15 +50,6 @@ private:
     Ui::SendMPDialog *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
-    bool fNewRecipientAllowed;
-
-    // Process WalletModel::SendCoinsReturn and generate a pair consisting
-    // of a message and message flags for use in emit message().
-    // Additional parameter msgArg can be used via .arg(msgArg).
-    void processSendMPReturn(const WalletModel::SendCoinsReturn &SendCoinsReturn, const QString &msgArg = QString());
-
-private slots:
-//    void on_sendButton_clicked();
 
 signals:
     // Fired when a message should be reported to the user
