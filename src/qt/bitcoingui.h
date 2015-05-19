@@ -23,7 +23,7 @@ class WalletFrame;
 class Bitcredit_WalletModel;
 class Bitcoin_WalletModel;
 
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class Bitcoin_CWallet;
 
 QT_BEGIN_NAMESPACE

@@ -60,7 +60,7 @@ public:
 		return BITCREDIT_CLIENT_NAME;
 	}
 	const int& ProtocolVersion() {
-		return BITCREDIT_PROTOCOL_VERSION;
+		return CREDITS_PROTOCOL_VERSION;
 	}
 	unsigned short GetListenPort() {
 		return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
@@ -103,7 +103,7 @@ public:
 };
 static CBitcoinNetParams bitcoin_NetParams;
 
-CNetParams * Bitcredit_NetParams() {
+CNetParams * Credits_NetParams() {
 	return &bitcredit_NetParams;
 }
 CNetParams * Bitcoin_NetParams() {
@@ -432,7 +432,7 @@ void GetMyExternalIP(CNetParams * netParams)
     }
 }
 void Bitcredit_ThreadGetMyExternalIP() {
-	GetMyExternalIP(Bitcredit_NetParams());
+	GetMyExternalIP(Credits_NetParams());
 }
 void Bitcoin_ThreadGetMyExternalIP() {
 	GetMyExternalIP(Bitcoin_NetParams());
@@ -1086,7 +1086,7 @@ void SocketHandler(CNetParams * netParams)
 }
 
 void Bitcredit_ThreadSocketHandler() {
-	SocketHandler(Bitcredit_NetParams());
+	SocketHandler(Credits_NetParams());
 }
 void Bitcoin_ThreadSocketHandler() {
 	SocketHandler(Bitcoin_NetParams());
@@ -1181,7 +1181,7 @@ void InternalThreadMapPort(CNetParams * netParams)
     }
 }
 void Bitcredit_ThreadMapPort() {
-	InternalThreadMapPort(Bitcredit_NetParams());
+	InternalThreadMapPort(Credits_NetParams());
 }
 void Bitcoin_ThreadMapPort() {
 	InternalThreadMapPort(Bitcoin_NetParams());
@@ -1268,7 +1268,7 @@ void DNSAddressSeed(std::string logPrefix, CNetParams * netParams)
     LogPrintf("%s: %d addresses found from DNS seeds\n", logPrefix, found);
 }
 void Bitcredit_ThreadDNSAddressSeed() {
-	DNSAddressSeed("Credits", Bitcredit_NetParams());
+	DNSAddressSeed("Credits", Credits_NetParams());
 }
 void Bitcoin_ThreadDNSAddressSeed() {
 	DNSAddressSeed("Bitcoin", Bitcoin_NetParams());
@@ -1299,7 +1299,7 @@ void DumpAddresses(CNetParams * netParams)
     }
 }
 void Bitcredit_ThreadDumpAddresses() {
-	DumpAddresses(Bitcredit_NetParams());
+	DumpAddresses(Credits_NetParams());
 }
 void Bitcoin_ThreadDumpAddresses() {
 	DumpAddresses(Bitcoin_NetParams());
@@ -1423,7 +1423,7 @@ void OpenConnections(CNetParams * netParams, std::string connectKey)
     }
 }
 void Bitcredit_ThreadOpenConnections() {
-	OpenConnections(Bitcredit_NetParams(), "-connect");
+	OpenConnections(Credits_NetParams(), "-connect");
 }
 void Bitcoin_ThreadOpenConnections() {
 	OpenConnections(Bitcoin_NetParams(), "-bitcoin_connect");
@@ -1501,7 +1501,7 @@ void OpenAddedConnections(CNetParams * netParams, std::string addnodeKey)
     }
 }
 void Bitcredit_ThreadOpenAddedConnections() {
-	OpenAddedConnections(Bitcredit_NetParams(), "-addnode");
+	OpenAddedConnections(Credits_NetParams(), "-addnode");
 }
 void Bitcoin_ThreadOpenAddedConnections() {
 	OpenAddedConnections(Bitcoin_NetParams(), "-bitcoin_addnode");
@@ -1643,7 +1643,7 @@ void MessageHandler(CNetParams * netParams)
     }
 }
 void Bitcredit_ThreadMessageHandler() {
-	MessageHandler(Bitcredit_NetParams());
+	MessageHandler(Credits_NetParams());
 }
 void Bitcoin_ThreadMessageHandler() {
 	MessageHandler(Bitcoin_NetParams());
@@ -1809,7 +1809,7 @@ void InitializeNetParams(CNetParams * netParams) {
 void StartNode(boost::thread_group& threadGroup)
 {
 	CNetParams * bitcoin_netParams = Bitcoin_NetParams();
-	CNetParams * bitcredit_netParams = Bitcredit_NetParams();
+	CNetParams * bitcredit_netParams = Credits_NetParams();
 
 	InitializeNetParams(bitcoin_netParams);
 	InitializeNetParams(bitcredit_netParams);
@@ -1873,10 +1873,10 @@ bool StopNode()
 {
     LogPrintf("StopNode()\n");
 
-    StopConnections(Bitcredit_NetParams());
+    StopConnections(Credits_NetParams());
     StopConnections(Bitcoin_NetParams());
 
-    DumpAddresses(Bitcredit_NetParams());
+    DumpAddresses(Credits_NetParams());
     DumpAddresses(Bitcoin_NetParams());
 
     return true;
@@ -1914,7 +1914,7 @@ public:
     }
     ~CNetCleanup()
     {
-        CleanUpParams(Bitcredit_NetParams());
+        CleanUpParams(Credits_NetParams());
         CleanUpParams(Bitcoin_NetParams());
 
 #ifdef WIN32
@@ -1931,14 +1931,14 @@ instance_of_cnetcleanup;
 
 
 
-void Bitcredit_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, CNetParams * netParams)
+void Credits_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, CNetParams * netParams)
 {
     CDataStream ss(SER_NETWORK, netParams->ProtocolVersion());
     ss.reserve(10000);
     ss << tx;
-    Bitcredit_RelayTransaction(tx, hash, ss, netParams);
+    Credits_RelayTransaction(tx, hash, ss, netParams);
 }
-void Bitcredit_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, const CDataStream& ss, CNetParams * netParams)
+void Credits_RelayTransaction(const Credits_CTransaction& tx, const uint256& hash, const CDataStream& ss, CNetParams * netParams)
 {
     CInv inv(MSG_TX, hash);
     {

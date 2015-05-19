@@ -18,13 +18,13 @@
 #include <stdint.h>
 #include <string>
 
-QString Credits_TransactionDesc::FormatTxStatus(const Bitcredit_CWalletTx& wtx)
+QString Credits_TransactionDesc::FormatTxStatus(const Credits_CWalletTx& wtx)
 {
-    AssertLockHeld(bitcredit_mainState.cs_main);
-    if (!Bitcredit_IsFinalTx(wtx, bitcredit_chainActive.Height() + 1))
+    AssertLockHeld(credits_mainState.cs_main);
+    if (!Credits_IsFinalTx(wtx, credits_chainActive.Height() + 1))
     {
         if (wtx.nLockTime < BITCREDIT_LOCKTIME_THRESHOLD)
-            return tr("Open for %n more block(s)", "", wtx.nLockTime - bitcredit_chainActive.Height());
+            return tr("Open for %n more block(s)", "", wtx.nLockTime - credits_chainActive.Height());
         else
             return tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx.nLockTime));
     }
@@ -42,11 +42,11 @@ QString Credits_TransactionDesc::FormatTxStatus(const Bitcredit_CWalletTx& wtx)
     }
 }
 
-QString Credits_TransactionDesc::toHTML(Bitcredit_CWallet *keyholder_wallet, Bitcredit_CWalletTx &wtx, Credits_TransactionRecord *rec, int unit)
+QString Credits_TransactionDesc::toHTML(Credits_CWallet *keyholder_wallet, Credits_CWalletTx &wtx, Credits_TransactionRecord *rec, int unit)
 {
     QString strHTML;
 
-    LOCK2(bitcredit_mainState.cs_main, keyholder_wallet->cs_wallet);
+    LOCK2(credits_mainState.cs_main, keyholder_wallet->cs_wallet);
     strHTML.reserve(4000);
     strHTML += "<html><font face='verdana, arial, helvetica, sans-serif'>";
 

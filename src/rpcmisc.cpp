@@ -60,8 +60,8 @@ Value bitcredit_getinfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    obj.push_back(Pair("version",       (int)BITCREDIT_CLIENT_VERSION));
-    obj.push_back(Pair("protocolversion",(int)BITCREDIT_PROTOCOL_VERSION));
+    obj.push_back(Pair("version",       (int)CREDITS_CLIENT_VERSION));
+    obj.push_back(Pair("protocolversion",(int)CREDITS_PROTOCOL_VERSION));
 #ifdef ENABLE_WALLET
     if (bitcredit_pwalletMain) {
         //Find all prepared deposit transactions
@@ -72,9 +72,9 @@ Value bitcredit_getinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("balance",       ValueFromAmount(bitcredit_pwalletMain->GetBalance(mapPreparedDepositTxInPoints))));
     }
 #endif
-    obj.push_back(Pair("blocks",        (int)bitcredit_chainActive.Height()));
+    obj.push_back(Pair("blocks",        (int)credits_chainActive.Height()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)Bitcredit_NetParams()->vNodes.size()));
+    obj.push_back(Pair("connections",   (int)Credits_NetParams()->vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)Bitcredit_GetDifficulty()));
     obj.push_back(Pair("testnet",       Bitcredit_TestNet()));
@@ -85,7 +85,7 @@ Value bitcredit_getinfo(const Array& params, bool fHelp)
     }
     if (bitcredit_pwalletMain && bitcredit_pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", bitcredit_nWalletUnlockTime));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(bitcredit_nTransactionFee)));
+    obj.push_back(Pair("paytxfee",      ValueFromAmount(credits_nTransactionFee)));
 #endif
     obj.push_back(Pair("relayfee",      ValueFromAmount(Credits_CTransaction::nMinRelayTxFee)));
     obj.push_back(Pair("errors",        Bitcredit_GetWarnings("statusbar")));

@@ -133,7 +133,7 @@ Bitcredit_CMainParams::Bitcredit_CMainParams() {
     vAlertPubKey = ParseHex("041604c6a3b185d784199e836841099a7f84fd15e9ed467350f58d2b1d0db3bce10c9527480dc35dd8415b9d86a9b021dc83d5e11e4ff0738e751a68e7a1c860a");
     nDefaultPort = 9333;
     nRPCPort = 9332;
-    nClientVersion = BITCREDIT_CLIENT_VERSION;
+    nClientVersion = CREDITS_CLIENT_VERSION;
     nAcceptDepthLinkedBitcoinBlock = 10000;
     nDepositLockDepth = 15000;
     bnProofOfWorkLimit = ~uint256(0) >> 32;

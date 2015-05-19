@@ -95,7 +95,7 @@ namespace Checkpoints
     }
 
     // Guess how far we are in the verification process at the given block index
-    double Bitcredit_GuessVerificationProgress(Credits_CBlockIndex *pindex, bool fSigchecks) {
+    double Credits_GuessVerificationProgress(Credits_CBlockIndex *pindex, bool fSigchecks) {
         if (pindex==NULL)
             return 0.0;
 

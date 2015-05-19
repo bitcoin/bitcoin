@@ -11,7 +11,7 @@
 #include <QStringList>
 #include <QDateTime>
 
-class Bitcredit_CWallet;
+class Credits_CWallet;
 
 class Credits_RecentRequestEntry
 {
@@ -61,7 +61,7 @@ class Bitcredit_RecentRequestsTableModel: public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit Bitcredit_RecentRequestsTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent);
+    explicit Bitcredit_RecentRequestsTableModel(Credits_CWallet *wallet, Bitcredit_WalletModel *parent);
     ~Bitcredit_RecentRequestsTableModel();
 
     enum ColumnIndex {

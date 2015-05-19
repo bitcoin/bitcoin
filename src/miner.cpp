@@ -230,7 +230,7 @@ bool RecalculateCoinbaseDeposit(Credits_CBlock *pblock, const uint256 &oldCoinBa
 			if(txDepositIn.prevout.hash == oldCoinBaseHash) {
 				txDepositIn.prevout = COutPoint(txCoinbase.GetHash(), 0);
 
-			    if (!Bitcredit_SignSignature(*tmpKeyStore, txCoinbase, txDeposit, 0)) {
+			    if (!Credits_SignSignature(*tmpKeyStore, txCoinbase, txDeposit, 0)) {
 			        LogPrintf("ERROR: deposit transaction could not sign coinbase\n");
 			        return false;
 			    }
@@ -413,7 +413,7 @@ void SelectLargestDepositTxs(int64_t nTargetValue, vector<Credits_CTransaction> 
     }
 }
 
-Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, const CScript& scriptPubKeyDeposit, const CScript& scriptPubKeyDepositChange, CPubKey& pubKeySigningDeposit, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
+Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, const CScript& scriptPubKeyDeposit, const CScript& scriptPubKeyDepositChange, CPubKey& pubKeySigningDeposit, CKeyStore * keystore, Credits_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
     // Create new block
     auto_ptr<Credits_CBlockTemplate> pblocktemplate(new Credits_CBlockTemplate());
@@ -452,8 +452,8 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
     // Collect memory pool transactions into the block
     int64_t nFees = 0;
     {
-        LOCK2(bitcredit_mainState.cs_main, bitcredit_mempool.cs);
-        Credits_CBlockIndex* pindexPrev = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+        LOCK2(credits_mainState.cs_main, credits_mempool.cs);
+        Credits_CBlockIndex* pindexPrev = (Credits_CBlockIndex*)credits_chainActive.Tip();
 
         //Verify linked block
         Bitcoin_CBlockIndex* pprevLinkedBlock;
@@ -493,7 +493,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
         }
         const Bitcoin_CBlockIndex * hashLinkedBitcoinBlockIndex = bitcoin_chainActive[nAcceptHeight];
 
-        Bitcredit_CCoinsViewCache bitcredit_view(*bitcredit_pcoinsTip, true);
+        Credits_CCoinsViewCache credits_view(*bitcredit_pcoinsTip, true);
 
         const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
         {
@@ -521,12 +521,12 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 
 			// This vector will be sorted into a priority queue:
 			vector<TxPriority> vecPriority;
-			vecPriority.reserve(bitcredit_mempool.mapTx.size());
-			for (map<uint256, Bitcredit_CTxMemPoolEntry>::iterator mi = bitcredit_mempool.mapTx.begin();
-				 mi != bitcredit_mempool.mapTx.end(); ++mi)
+			vecPriority.reserve(credits_mempool.mapTx.size());
+			for (map<uint256, Bitcredit_CTxMemPoolEntry>::iterator mi = credits_mempool.mapTx.begin();
+				 mi != credits_mempool.mapTx.end(); ++mi)
 			{
 				const Credits_CTransaction& tx = mi->second.GetTx();
-				if (tx.IsCoinBase() || tx.IsDeposit() || !Bitcredit_IsFinalTx(tx, pindexPrev->nHeight + 1))
+				if (tx.IsCoinBase() || tx.IsDeposit() || !Credits_IsFinalTx(tx, pindexPrev->nHeight + 1))
 					continue;
 
 				if(tx.IsStandard()) {
@@ -537,12 +537,12 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
 					{
 						// Read prev transaction
-						if (!bitcredit_view.HaveCoins(txin.prevout.hash))
+						if (!credits_view.HaveCoins(txin.prevout.hash))
 						{
 							// This should never happen; all transactions in the memory
 							// pool should connect to either transactions in the chain
 							// or other transactions in the memory pool.
-							if (!bitcredit_mempool.mapTx.count(txin.prevout.hash))
+							if (!credits_mempool.mapTx.count(txin.prevout.hash))
 							{
 								LogPrintf("ERROR: mempool transaction missing input\n");
 								if (fDebug) assert("mempool transaction missing input" == 0);
@@ -561,10 +561,10 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 							}
 							mapDependers[txin.prevout.hash].push_back(porphan);
 							porphan->setDependsOn.insert(txin.prevout.hash);
-							nTotalIn += bitcredit_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+							nTotalIn += credits_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
 							continue;
 						}
-						const Bitcredit_CCoins &coins = bitcredit_view.GetCoins(txin.prevout.hash);
+						const Bitcredit_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
 
 						int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
 						nTotalIn += nValueIn;
@@ -575,7 +575,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 					if (fMissingInputs) continue;
 
 					// Priority is sum(valuein * age) / modified_txsize
-					unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+					unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 					dPriority = tx.ComputePriority(dPriority, nTxSize);
 
 					// This is a more accurate fee-per-kilobyte than is used by the client code, because the
@@ -646,7 +646,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 					if (fMissingInputs) continue;
 
 					// Priority is sum(valuein * age) / modified_txsize
-					unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+					unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 					dPriority = tx.ComputePriority(dPriority, nTxSize);
 
 					// This is a more accurate fee-per-kilobyte than is used by the client code, because the
@@ -670,9 +670,9 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 			unsigned int currentHeight = pindexPrev->nHeight + 1 ;
 			if(currentHeight > BITCREDIT_DEPOSIT_CUTOFF_DEPTH) {
 				//Find trim block in active chain
-				pBlockToTrim = bitcredit_chainActive[currentHeight - BITCREDIT_DEPOSIT_CUTOFF_DEPTH - 1];
+				pBlockToTrim = credits_chainActive[currentHeight - BITCREDIT_DEPOSIT_CUTOFF_DEPTH - 1];
 				// Read block from disk.
-				if (!Bitcredit_ReadBlockFromDisk(trimBlock, pBlockToTrim)) {
+				if (!Credits_ReadBlockFromDisk(trimBlock, pBlockToTrim)) {
 					LogPrintf("Failed to read trim block");
 					return NULL;
 				}
@@ -702,7 +702,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				vecPriority.pop_back();
 
 				// Size limits
-				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 				if (nBlockSize + nTxSize >= nBlockMaxSize)
 					continue;
 
@@ -718,7 +718,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				// Prioritize by fee once past the priority size or we run out of high-priority
 				// transactions:
 				if (!fSortedByFee &&
-					((nBlockSize + nTxSize >= nBlockPrioritySize) || !Bitcredit_AllowFree(dPriority)))
+					((nBlockSize + nTxSize >= nBlockPrioritySize) || !Credits_AllowFree(dPriority)))
 				{
 					fSortedByFee = true;
 					comparer = TxPriorityCompare(fSortedByFee);
@@ -727,10 +727,10 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 
 				int64_t nTxFees = 0;
 				if(tx.IsStandard()) {
-					if (!bitcredit_view.HaveInputs(tx))
+					if (!credits_view.HaveInputs(tx))
 						continue;
 
-					nTxFees = bitcredit_view.GetValueIn(tx)-tx.GetValueOut();
+					nTxFees = credits_view.GetValueIn(tx)-tx.GetValueOut();
 				} else if(tx.IsClaim()) {
 					if (!claim_viewtmp.HaveInputs(tx))
 						continue;
@@ -738,7 +738,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 					nTxFees = claim_viewtmp.GetValueIn(tx)-tx.GetValueOut();
 				}
 
-				nTxSigOps += Bitcredit_GetP2SHSigOpCount(tx, bitcredit_view, claim_viewtmp);
+				nTxSigOps += Bitcredit_GetP2SHSigOpCount(tx, credits_view, claim_viewtmp);
 				if (nBlockSigOps + nTxSigOps >= BITCREDIT_MAX_BLOCK_SIGOPS)
 					continue;
 
@@ -747,7 +747,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				// policy here, but we still have to ensure that the block we
 				// create only contains transactions that are valid in new blocks.
 				CValidationState state;
-				if (!Bitcredit_CheckInputs(tx, state, bitcredit_view, claim_viewtmp, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+				if (!Credits_CheckInputs(tx, state, credits_view, claim_viewtmp, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
 					continue;
 
 				if(!Bitcredit_CheckClaimsAreInBounds(claim_viewtmp, nClaimedCoinsForBlock + nClaimedCoins, nAcceptHeight)) {
@@ -755,11 +755,11 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				}
 				nClaimedCoinsForBlock += nClaimedCoins;
 
-				UpdateResurrectedDepositBase(pBlockToTrim, tx, nResurrectedDepositBase, bitcredit_view);
+				UpdateResurrectedDepositBase(pBlockToTrim, tx, nResurrectedDepositBase, credits_view);
 
 				Credits_CTxUndo txundoUnused;
 				uint256 hash = tx.GetHash();
-				Bitcredit_UpdateCoins(tx, state, bitcredit_view, claim_viewtmp, txundoUnused, pindexPrev->nHeight+1, hash);
+				Bitcredit_UpdateCoins(tx, state, credits_view, claim_viewtmp, txundoUnused, pindexPrev->nHeight+1, hash);
 
 				// Added
 				pblock->vtx.push_back(tx);
@@ -794,7 +794,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				}
 			}
 
-			UpdateTrimmedDepositBase(pBlockToTrim, trimBlock, nTrimmedDepositBase, bitcredit_view);
+			UpdateTrimmedDepositBase(pBlockToTrim, trimBlock, nTrimmedDepositBase, credits_view);
 
 			//These values do not include coinbase and deposit tx. Should they?
 			bitcredit_nLastBlockTx = nBlockTx;
@@ -836,21 +836,21 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				const uint64_t nRequiredExtraDeposit = requiredDepositLevel - (coinbaseDepositDisabled ? 0 : maxBlockSubsidyIncFee);
 
 				{
-					LOCK(bitcredit_mainState.cs_main);
+					LOCK(credits_mainState.cs_main);
 
 					//Create a set of deposit txs to choose from
-					vector<const Bitcredit_CWalletTx*> vDepositWalletTxs;
+					vector<const Credits_CWalletTx*> vDepositWalletTxs;
 					pdepositWallet->GetAllWalletTxs(vDepositWalletTxs);
 					LogPrintf("Wallet contains %d transactions\n", vDepositWalletTxs.size());
 
 					vector<Credits_CTransaction> vDepositTxs;
-					BOOST_FOREACH(const Bitcredit_CWalletTx* walletTx, vDepositWalletTxs)
+					BOOST_FOREACH(const Credits_CWalletTx* walletTx, vDepositWalletTxs)
 					{
-						const Bitcredit_CWalletTx &tx = *walletTx;
+						const Credits_CWalletTx &tx = *walletTx;
 
 						//Do some basic sanity checks. Failure should probably
 						//occur here, as it does, since deposit wallet should never contain faulty deposits
-						assert(Bitcredit_IsFinalTx(tx));
+						assert(Credits_IsFinalTx(tx));
 						assert(tx.IsValidDeposit());
 						for (unsigned int i = 0; i < tx.vout.size(); i++) {
 							assert(tx.vout[i].nValue > 0);
@@ -862,7 +862,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 						//may be disconnected through a chain rollback
 						int64_t nClaimedCoins = 0;
 						CValidationState state;
-						if (!Bitcredit_CheckInputs(tx, state, bitcredit_view, claim_viewtmp, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+						if (!Credits_CheckInputs(tx, state, credits_view, claim_viewtmp, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
 							continue;
 
 						vDepositTxs.push_back(tx);
@@ -996,7 +996,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
         indexDummy.pprev = pindexPrev;
         indexDummy.nHeight = pindexPrev->nHeight + 1;
 
-        Bitcredit_CCoinsViewCache bitcredit_viewNew(*bitcredit_pcoinsTip, true);
+        Credits_CCoinsViewCache credits_viewNew(*bitcredit_pcoinsTip, true);
 
         const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
         {
@@ -1006,7 +1006,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 			Bitcoin_CClaimCoinsViewCache claim_viewNew(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
 
 			CValidationState state;
-			if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, bitcredit_viewNew, claim_viewNew, false, vBlockUndoClaims, true)) {
+			if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, credits_viewNew, claim_viewNew, false, vBlockUndoClaims, true)) {
 				LogPrintf("\n\nERROR! CreateNewBlock() : ConnectBlock failed when validating new block template. No mining can be done. Miner exiting. \n\n");
 				return NULL;
 			}
@@ -1114,7 +1114,7 @@ unsigned int static ScanHash_CryptoPP(char* pdata, char* midHash, char* phash, c
     }
 }
 
-Credits_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseReservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey, CKeyStore * keystore, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
+Credits_CBlockTemplate* CreateNewBlockWithKey(Credits_CReserveKey& coinbaseReservekey, Credits_CReserveKey& depositReserveKey, Credits_CReserveKey& depositChangeReserveKey, Credits_CReserveKey& depositReserveSigningKey, CKeyStore * keystore, Credits_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
     CPubKey pubkeyCoinbase;
     if (!coinbaseReservekey.GetReservedKey(pubkeyCoinbase)) {
@@ -1146,7 +1146,7 @@ Credits_CBlockTemplate* CreateNewBlockWithKey(Bitcredit_CReserveKey& coinbaseRes
     return CreateNewBlock(scriptPubKeyCoinbase, scriptPubKeyDeposit, scriptPubKeyDepositChange, pubkeySigningDeposit, keystore, pdepositWallet, coinbaseDepositDisabled);
 }
 
-bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitcredit_CWallet& deposit_wallet, Bitcredit_CReserveKey& reservekey, Bitcredit_CReserveKey& depositReserveKey, Bitcredit_CReserveKey& depositChangeReserveKey, Bitcredit_CReserveKey& depositReserveSigningKey)
+bool CheckWork(Credits_CBlock* pblock, Credits_CWallet& credits_wallet, Credits_CWallet& deposit_wallet, Credits_CReserveKey& reservekey, Credits_CReserveKey& depositReserveKey, Credits_CReserveKey& depositChangeReserveKey, Credits_CReserveKey& depositReserveSigningKey)
 {
     if(!VerifyDepositSignatures("CheckWork", pblock)) {
     	return false;
@@ -1164,8 +1164,8 @@ bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitc
 
     // Found a solution
     {
-        LOCK(bitcredit_mainState.cs_main);
-        if (pblock->hashPrevBlock != bitcredit_chainActive.Tip()->GetBlockHash())
+        LOCK(credits_mainState.cs_main);
+        if (pblock->hashPrevBlock != credits_chainActive.Tip()->GetBlockHash())
             return error("BitcreditMiner : generated block is stale");
 
         // Remove key from key pool
@@ -1178,7 +1178,7 @@ bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitc
         	if(tx.IsDeposit() && tx.vin[0].prevout != COutPoint(pblock->vtx[0].GetHash(), 0)) {
 				uint256 txHash = tx.GetHash();
 				if(deposit_wallet.GetWalletTx(txHash) != NULL) {
-					deposit_wallet.EraseFromWallet(&bitcredit_wallet, txHash);
+					deposit_wallet.EraseFromWallet(&credits_wallet, txHash);
 				} else {
 					LogPrintf("\n\n ERROR: deposit tx used in mining could not be deleted from deposit db: %s\n\n", txHash.GetHex());
 				}
@@ -1187,8 +1187,8 @@ bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitc
 
         // Track how many getdata requests this block gets
         {
-            LOCK(bitcredit_wallet.cs_wallet);
-            bitcredit_wallet.mapRequestCount[pblock->GetHash()] = 0;
+            LOCK(credits_wallet.cs_wallet);
+            credits_wallet.mapRequestCount[pblock->GetHash()] = 0;
         }
 
         // Process this block the same as if we had received it from another node
@@ -1200,24 +1200,24 @@ bool CheckWork(Credits_CBlock* pblock, Bitcredit_CWallet& bitcredit_wallet, Bitc
     return true;
 }
 
-void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
+void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWallet, bool coinbaseDepositDisabled)
 {
     LogPrintf("Credits Miner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcredit-miner");
 
     // Each thread has its own key and counter
-    Bitcredit_CReserveKey reservekey(pwallet);
+    Credits_CReserveKey reservekey(pwallet);
     if(bitcredit_pwalletMain->IsLocked() && !coinbaseDepositDisabled) {
-    	reservekey = Bitcredit_CReserveKey(pdepositWallet);
+    	reservekey = Credits_CReserveKey(pdepositWallet);
     }
-    Bitcredit_CReserveKey depositReservekey(pwallet);
-    Bitcredit_CReserveKey depositChangeReservekey(pwallet);
-    Bitcredit_CReserveKey depositReserveSigningKey(pdepositWallet);
+    Credits_CReserveKey depositReservekey(pwallet);
+    Credits_CReserveKey depositChangeReservekey(pwallet);
+    Credits_CReserveKey depositReserveSigningKey(pdepositWallet);
 
     unsigned int nExtraNonce = 0;
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     try { while (true) {
     	//Checkpoint that waits until the ->bitcoin<- blockchain is (reasonably) up to date
@@ -1241,8 +1241,8 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
         //
         // Create new block
         //
-        unsigned int nTransactionsUpdatedLast = bitcredit_mempool.GetTransactionsUpdated();
-        Credits_CBlockIndex* pindexPrev = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+        unsigned int nTransactionsUpdatedLast = credits_mempool.GetTransactionsUpdated();
+        Credits_CBlockIndex* pindexPrev = (Credits_CBlockIndex*)credits_chainActive.Tip();
 
         auto_ptr<Credits_CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey, depositReservekey, depositChangeReservekey, depositReserveSigningKey, pwallet, pdepositWallet, coinbaseDepositDisabled));
         if (!pblocktemplate.get())
@@ -1255,7 +1255,7 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
         }
 
         LogPrintf("Running BitcreditMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
-               ::GetSerializeSize(*pblock, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION));
+               ::GetSerializeSize(*pblock, SER_NETWORK, CREDITS_PROTOCOL_VERSION));
 
         //Just used to get chunk size
         MiningStructure tmp;
@@ -1356,9 +1356,9 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
                 break;
             if (nBlockNonce >= 0xffff0000)
                 break;
-            if (bitcredit_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
+            if (credits_mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                 break;
-            if (pindexPrev != bitcredit_chainActive.Tip())
+            if (pindexPrev != credits_chainActive.Tip())
                 break;
 
             // Update nTime every few seconds
@@ -1380,7 +1380,7 @@ void static BitcoinMiner(Bitcredit_CWallet *pwallet, Bitcredit_CWallet* pdeposit
     }
 }
 
-void GenerateBitcredits(bool fGenerate, Bitcredit_CWallet* pwallet, Bitcredit_CWallet* pdepositWallet, int nThreads, bool coinbaseDepositDisabled)
+void GenerateBitcredits(bool fGenerate, Credits_CWallet* pwallet, Credits_CWallet* pdepositWallet, int nThreads, bool coinbaseDepositDisabled)
 {
     static boost::thread_group* minerThreads = NULL;
 

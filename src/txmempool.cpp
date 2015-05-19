@@ -18,7 +18,7 @@ Bitcredit_CTxMemPoolEntry::Bitcredit_CTxMemPoolEntry(const Credits_CTransaction&
                                  unsigned int _nHeight):
     tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight)
 {
-    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 }
 
 Bitcredit_CTxMemPoolEntry::Bitcredit_CTxMemPoolEntry(const Bitcredit_CTxMemPoolEntry& other)
@@ -136,7 +136,7 @@ void Bitcredit_CTxMemPool::clear()
     ++nTransactionsUpdated;
 }
 
-void Bitcredit_CTxMemPool::check(Bitcredit_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const
+void Bitcredit_CTxMemPool::check(Credits_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const
 {
     if (!fSanityCheck)
         return;

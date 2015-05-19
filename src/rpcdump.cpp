@@ -110,7 +110,7 @@ Value bitcredit_importprivkey(const Array& params, bool fHelp)
     CPubKey pubkey = key.GetPubKey();
     CKeyID vchAddress = pubkey.GetID();
     {
-        LOCK2(bitcredit_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
+        LOCK2(credits_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
 
         bitcredit_pwalletMain->MarkDirty();
         bitcredit_pwalletMain->SetAddressBook(vchAddress, strLabel, "receive");
@@ -128,7 +128,7 @@ Value bitcredit_importprivkey(const Array& params, bool fHelp)
         bitcredit_pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, bitcredit_chainActive.Genesis(), true);
+            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, credits_chainActive.Genesis(), true);
         }
     }
 
@@ -228,7 +228,7 @@ Value bitcredit_importwallet(const Array& params, bool fHelp)
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-    int64_t nTimeBegin = bitcredit_chainActive.Tip()->nTime;
+    int64_t nTimeBegin = credits_chainActive.Tip()->nTime;
 
     bool fGood = true;
 
@@ -285,14 +285,14 @@ Value bitcredit_importwallet(const Array& params, bool fHelp)
     file.close();
     bitcredit_pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
 
-    Credits_CBlockIndex *pindex = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+    Credits_CBlockIndex *pindex = (Credits_CBlockIndex*)credits_chainActive.Tip();
     while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
         pindex = (Credits_CBlockIndex*)pindex->pprev;
 
     if (!bitcredit_pwalletMain->nTimeFirstKey || nTimeBegin < bitcredit_pwalletMain->nTimeFirstKey)
         bitcredit_pwalletMain->nTimeFirstKey = nTimeBegin;
 
-    LogPrintf("Rescanning last %i blocks\n", bitcredit_chainActive.Height() - pindex->nHeight + 1);
+    LogPrintf("Rescanning last %i blocks\n", credits_chainActive.Height() - pindex->nHeight + 1);
     bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, pindex);
     bitcredit_pwalletMain->MarkDirty();
 
@@ -501,8 +501,8 @@ Value bitcredit_dumpwallet(const Array& params, bool fHelp)
     // produce output
     file << strprintf("# Wallet dump created by Credits %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", bitcredit_chainActive.Height(), bitcredit_chainActive.Tip()->GetBlockHash().ToString());
-    file << strprintf("#   mined on %s\n", EncodeDumpTime(bitcredit_chainActive.Tip()->nTime));
+    file << strprintf("# * Best block at time of backup was %i (%s),\n", credits_chainActive.Height(), credits_chainActive.Tip()->GetBlockHash().ToString());
+    file << strprintf("#   mined on %s\n", EncodeDumpTime(credits_chainActive.Tip()->nTime));
     file << "\n";
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;

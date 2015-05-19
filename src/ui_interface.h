@@ -13,7 +13,7 @@
 #include <boost/signals2/signal.hpp>
 
 class CBasicKeyStore;
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class Bitcoin_CWallet;
 class uint256;
 
@@ -91,7 +91,7 @@ public:
     boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
 
     /** A wallet has been loaded. */
-    boost::signals2::signal<void (Bitcredit_CWallet* wallet)> LoadWallet;
+    boost::signals2::signal<void (Credits_CWallet* wallet)> LoadWallet;
     boost::signals2::signal<void (Bitcoin_CWallet* wallet)> Bitcoin_LoadWallet;
 
     /** Show progress e.g. for verifychain */

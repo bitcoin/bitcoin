@@ -821,8 +821,8 @@ bool IsMine(const CKeyStore& keystore, const CTxDestination &dest);
 void ExtractAffectedKeys(const CKeyStore &keystore, const CScript& scriptPubKey, std::vector<CKeyID> &vKeys);
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
-bool Bitcredit_SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, Credits_CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
-bool Bitcredit_SignSignature(const CKeyStore& keystore, const Credits_CTransaction& txFrom, Credits_CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
+bool Credits_SignSignature(const CKeyStore& keystore, const CScript& fromPubKey, Credits_CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
+bool Credits_SignSignature(const CKeyStore& keystore, const Credits_CTransaction& txFrom, Credits_CTransaction& txTo, unsigned int nIn, int nHashType=SIGHASH_ALL);
 bool Bitcredit_VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 
 // Given two sets of signatures for scriptPubKey, possibly with OP_0 placeholders,

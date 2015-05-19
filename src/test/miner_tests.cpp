@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    CScript script;
 //    uint256 hash;
 //
-//    LOCK(bitcredit_mainState.cs_main);
+//    LOCK(credits_mainState.cs_main);
 //
 //    // Simple block creation, nothing special yet:
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
@@ -77,11 +77,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    {
 //    	Credits_CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 //        pblock->nVersion = 1;
-//        Credits_CBlockIndex * tmp = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+//        Credits_CBlockIndex * tmp = (Credits_CBlockIndex*)credits_chainActive.Tip();
 //        pblock->nTime = tmp->GetMedianTimePast()+1;
 //        pblock->vtx[0].vin[0].scriptSig = CScript();
 //        pblock->vtx[0].vin[0].scriptSig.push_back(blockinfo[i].extranonce);
-//        pblock->vtx[0].vin[0].scriptSig.push_back(bitcredit_chainActive.Height());
+//        pblock->vtx[0].vin[0].scriptSig.push_back(credits_chainActive.Height());
 //        pblock->vtx[0].vout[0].scriptPubKey = CScript();
 //        if (txFirst.size() < 2)
 //            txFirst.push_back(new Credits_CTransaction(pblock->vtx[0]));
@@ -116,12 +116,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    {
 //        tx.vout[0].nValue -= 1000000;
 //        hash = tx.GetHash();
-//        bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//        credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //        tx.vin[0].prevout.hash = hash;
 //    }
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // block size > limit
 //    tx.vin[0].scriptSig = CScript();
@@ -136,26 +136,26 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    {
 //        tx.vout[0].nValue -= 10000000;
 //        hash = tx.GetHash();
-//        bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//        credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //        tx.vin[0].prevout.hash = hash;
 //    }
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // orphan in mempool
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // child with higher priority than parent
 //    tx.vin[0].scriptSig = CScript() << OP_1;
 //    tx.vin[0].prevout.hash = txFirst[1]->GetHash();
 //    tx.vout[0].nValue = 4900000000LL;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    tx.vin[0].prevout.hash = hash;
 //    tx.vin.resize(2);
 //    tx.vin[1].scriptSig = CScript() << OP_1;
@@ -163,10 +163,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    tx.vin[1].prevout.n = 0;
 //    tx.vout[0].nValue = 5900000000LL;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // coinbase in mempool
 //    tx.vin.resize(1);
@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    tx.vin[0].scriptSig = CScript() << OP_0 << OP_1;
 //    tx.vout[0].nValue = 0;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // invalid (pre-p2sh) txn in mempool
 //    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
@@ -187,15 +187,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    script = CScript() << OP_0;
 //    tx.vout[0].scriptPubKey.SetDestination(script.GetID());
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    tx.vin[0].prevout.hash = hash;
 //    tx.vin[0].scriptSig = CScript() << (std::vector<unsigned char>)script;
 //    tx.vout[0].nValue -= 1000000;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // double spend txn pair in mempool
 //    tx.vin[0].prevout.hash = txFirst[0]->GetHash();
@@ -203,26 +203,26 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    tx.vout[0].nValue = 4900000000LL;
 //    tx.vout[0].scriptPubKey = CScript() << OP_1;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    tx.vout[0].scriptPubKey = CScript() << OP_2;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_mempool.clear();
+//    credits_mempool.clear();
 //
 //    // subsidy changing
-//    int nHeight = bitcredit_chainActive.Height();
-//    bitcredit_chainActive.Tip()->nHeight = 209999;
+//    int nHeight = credits_chainActive.Height();
+//    credits_chainActive.Tip()->nHeight = 209999;
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_chainActive.Tip()->nHeight = 210000;
+//    credits_chainActive.Tip()->nHeight = 210000;
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    delete pblocktemplate;
-//    bitcredit_chainActive.Tip()->nHeight = nHeight;
+//    credits_chainActive.Tip()->nHeight = nHeight;
 //
 //    // non-final txs in mempool
-//    Credits_CBlockIndex * tmp = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+//    Credits_CBlockIndex * tmp = (Credits_CBlockIndex*)credits_chainActive.Tip();
 //    SetMockTime(tmp->GetMedianTimePast()+1);
 //
 //    // height locked
@@ -231,10 +231,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    tx.vin[0].scriptSig = CScript() << OP_1;
 //    tx.vout[0].nValue = 4900000000LL;
 //    tx.vout[0].scriptPubKey = CScript() << OP_1;
-//    tx.nLockTime = bitcredit_chainActive.Tip()->nHeight+1;
+//    tx.nLockTime = credits_chainActive.Tip()->nHeight+1;
 //    hash = tx.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
-//    BOOST_CHECK(!Bitcredit_IsFinalTx(tx, bitcredit_chainActive.Tip()->nHeight + 1));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+//    BOOST_CHECK(!Credits_IsFinalTx(tx, credits_chainActive.Tip()->nHeight + 1));
 //
 //    // time locked
 //    tx2.nTxType = TX_TYPE_STANDARD;
@@ -245,11 +245,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    tx2.vout.resize(1);
 //    tx2.vout[0].nValue = 4900000000LL;
 //    tx2.vout[0].scriptPubKey = CScript() << OP_1;
-//    Credits_CBlockIndex * tmp2 = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+//    Credits_CBlockIndex * tmp2 = (Credits_CBlockIndex*)credits_chainActive.Tip();
 //    tx2.nLockTime = tmp2->GetMedianTimePast()+1;
 //    hash = tx2.GetHash();
-//    bitcredit_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
-//    BOOST_CHECK(!Bitcredit_IsFinalTx(tx2));
+//    credits_mempool.addUnchecked(hash, Bitcredit_CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+//    BOOST_CHECK(!Credits_IsFinalTx(tx2));
 //
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //
@@ -258,18 +258,18 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 //    delete pblocktemplate;
 //
 //    // However if we advance height and time by one, both will.
-//    bitcredit_chainActive.Tip()->nHeight++;
-//    Credits_CBlockIndex * tmp3 = (Credits_CBlockIndex*)bitcredit_chainActive.Tip();
+//    credits_chainActive.Tip()->nHeight++;
+//    Credits_CBlockIndex * tmp3 = (Credits_CBlockIndex*)credits_chainActive.Tip();
 //    SetMockTime(tmp3->GetMedianTimePast()+2);
 //
-//    BOOST_CHECK(Bitcredit_IsFinalTx(tx, bitcredit_chainActive.Tip()->nHeight + 1));
-//    BOOST_CHECK(Bitcredit_IsFinalTx(tx2));
+//    BOOST_CHECK(Credits_IsFinalTx(tx, credits_chainActive.Tip()->nHeight + 1));
+//    BOOST_CHECK(Credits_IsFinalTx(tx2));
 //
 //    BOOST_CHECK(pblocktemplate = CreateNewBlock(scriptPubKey, scriptPubKeyDeposit, pubkeySigningDeposit, tmpKeyStorePointer));
 //    BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 3);
 //    delete pblocktemplate;
 //
-//    bitcredit_chainActive.Tip()->nHeight--;
+//    credits_chainActive.Tip()->nHeight--;
 //    SetMockTime(0);
 //
 //    BOOST_FOREACH(Credits_CTransaction *tx, txFirst)

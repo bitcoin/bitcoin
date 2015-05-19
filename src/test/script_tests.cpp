@@ -362,14 +362,14 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     BOOST_CHECK(combined.empty());
 
     // Single signature case:
-    Bitcredit_SignSignature(keystore, txFrom, txTo, 0); // changes scriptSig
+    Credits_SignSignature(keystore, txFrom, txTo, 0); // changes scriptSig
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     CScript scriptSigCopy = scriptSig;
     // Signing again will give a different, valid signature:
-    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    Credits_SignSignature(keystore, txFrom, txTo, 0);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
 
@@ -377,13 +377,13 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript pkSingle; pkSingle << keys[0].GetPubKey() << OP_CHECKSIG;
     keystore.AddCScript(pkSingle);
     scriptPubKey.SetDestination(pkSingle.GetID());
-    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    Credits_SignSignature(keystore, txFrom, txTo, 0);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);
     BOOST_CHECK(combined == scriptSig);
     scriptSigCopy = scriptSig;
-    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    Credits_SignSignature(keystore, txFrom, txTo, 0);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
     BOOST_CHECK(combined == scriptSigCopy || combined == scriptSig);
     // dummy scriptSigCopy with placeholder, should always choose non-placeholder:
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     // Hardest case:  Multisig 2-of-3
     scriptPubKey.SetMultisig(2, pubkeys);
     keystore.AddCScript(scriptPubKey);
-    Bitcredit_SignSignature(keystore, txFrom, txTo, 0);
+    Credits_SignSignature(keystore, txFrom, txTo, 0);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, scriptSig, empty);
     BOOST_CHECK(combined == scriptSig);
     combined = Bitcredit_CombineSignatures(scriptPubKey, txTo, 0, empty, scriptSig);

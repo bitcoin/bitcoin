@@ -130,14 +130,14 @@ bool CBloomFilter::bitcredit_IsRelevantAndUpdate(const Credits_CTransaction& tx,
             {
                 fFound = true;
                 if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
-                    insert(COutPoint(hash, i), BITCREDIT_PROTOCOL_VERSION);
+                    insert(COutPoint(hash, i), CREDITS_PROTOCOL_VERSION);
                 else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
                 {
                     txnouttype type;
                     vector<vector<unsigned char> > vSolutions;
                     if (Solver(txout.scriptPubKey, type, vSolutions) &&
                             (type == TX_PUBKEY || type == TX_MULTISIG))
-                        insert(COutPoint(hash, i), BITCREDIT_PROTOCOL_VERSION);
+                        insert(COutPoint(hash, i), CREDITS_PROTOCOL_VERSION);
                 }
                 break;
             }
@@ -150,7 +150,7 @@ bool CBloomFilter::bitcredit_IsRelevantAndUpdate(const Credits_CTransaction& tx,
     BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
     {
         // Match if the filter contains an outpoint tx spends
-        if (contains(txin.prevout, BITCREDIT_PROTOCOL_VERSION))
+        if (contains(txin.prevout, CREDITS_PROTOCOL_VERSION))
             return true;
 
         // Match if the filter contains any arbitrary script data element in any scriptSig in tx

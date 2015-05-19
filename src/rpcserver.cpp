@@ -325,13 +325,13 @@ static const CRPCCommand vRPCCommands[] =
     { "setaccount",             &setaccount,             true,      false,      true },
     { "settxfee",               &settxfee,               false,     false,      true },
     { "signmessage",            &signmessage,            false,     false,      true },
-    { "walletlock",             &bitcredit_walletlock,             true,      false,      true },
+    { "walletlock",             &credits_walletlock,             true,      false,      true },
     { "deposit_walletlock",             &deposit_walletlock,             true,      false,      true },
     { "bitcoin_walletlock",             &bitcoin_walletlock,             true,      false,      true },
-    { "walletpassphrasechange", &bitcredit_walletpassphrasechange, false,     false,      true },
+    { "walletpassphrasechange", &credits_walletpassphrasechange, false,     false,      true },
     { "deposit_walletpassphrasechange", &deposit_walletpassphrasechange, false,     false,      true },
     { "bitcoin_walletpassphrasechange", &bitcoin_walletpassphrasechange, false,     false,      true },
-    { "walletpassphrase",       &bitcredit_walletpassphrase,       true,      false,      true },
+    { "walletpassphrase",       &credits_walletpassphrase,       true,      false,      true },
     { "deposit_walletpassphrase",       &deposit_walletpassphrase,       true,      false,      true },
     { "bitcoin_walletpassphrase",       &bitcoin_walletpassphrase,       true,      false,      true },
 
@@ -941,10 +941,10 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
                 result = pcmd->actor(params, false);
 #ifdef ENABLE_WALLET
             else if (!bitcredit_pwalletMain) {
-                LOCK(bitcredit_mainState.cs_main);
+                LOCK(credits_mainState.cs_main);
                 result = pcmd->actor(params, false);
             } else {
-                LOCK2(bitcredit_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
+                LOCK2(credits_mainState.cs_main, bitcredit_pwalletMain->cs_wallet);
                 result = pcmd->actor(params, false);
             }
 #else // ENABLE_WALLET

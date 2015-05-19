@@ -31,7 +31,7 @@ CService ip(uint32_t i)
 {
     struct in_addr s;
     s.s_addr = i;
-    return CService(CNetAddr(s), Bitcredit_NetParams()->GetDefaultPort());
+    return CService(CNetAddr(s), Credits_NetParams()->GetDefaultPort());
 }
 
 BOOST_AUTO_TEST_SUITE(DoS_tests)
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 {
     CNode::ClearBanned();
     CAddress addr1(ip(0xa0b0c001));
-    CNode dummyNode1(INVALID_SOCKET, addr1, "", true, Bitcredit_NetParams());
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true, Credits_NetParams());
     dummyNode1.nVersion = 1;
     Bitcredit_Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     Bitcredit_SendMessages(&dummyNode1, false);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     BOOST_CHECK(!CNode::IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002));
-    CNode dummyNode2(INVALID_SOCKET, addr2, "", true, Bitcredit_NetParams());
+    CNode dummyNode2(INVALID_SOCKET, addr2, "", true, Credits_NetParams());
     dummyNode2.nVersion = 1;
     Bitcredit_Misbehaving(dummyNode2.GetId(), 50);
     Bitcredit_SendMessages(&dummyNode2, false);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     CNode::ClearBanned();
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001));
-    CNode dummyNode1(INVALID_SOCKET, addr1, "", true, Bitcredit_NetParams());
+    CNode dummyNode1(INVALID_SOCKET, addr1, "", true, Credits_NetParams());
     dummyNode1.nVersion = 1;
     Bitcredit_Misbehaving(dummyNode1.GetId(), 100);
     Bitcredit_SendMessages(&dummyNode1, false);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
     CAddress addr(ip(0xa0b0c001));
-    CNode dummyNode(INVALID_SOCKET, addr, "", true, Bitcredit_NetParams());
+    CNode dummyNode(INVALID_SOCKET, addr, "", true, Credits_NetParams());
     dummyNode.nVersion = 1;
 
     Bitcredit_Misbehaving(dummyNode.GetId(), 100);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
 
-        Bitcredit_SignSignature(keystore, txPrev, tx, 0);
+        Credits_SignSignature(keystore, txPrev, tx, 0);
 
         Bitcredit_AddOrphanTx(tx);
     }
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
             tx.vin[j].prevout.hash = txPrev.GetHash();
         }
 
-        Bitcredit_SignSignature(keystore, txPrev, tx, 0);
+        Credits_SignSignature(keystore, txPrev, tx, 0);
         // Re-use same signature for other inputs
         // (they don't have to be valid for this test)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     // Creating signatures primes the cache:
     boost::posix_time::ptime mst1 = boost::posix_time::microsec_clock::local_time();
     for (unsigned int j = 0; j < tx.vin.size(); j++) {
-        BOOST_CHECK(Bitcredit_SignSignature(keystore, orphans[j], tx, j));
+        BOOST_CHECK(Credits_SignSignature(keystore, orphans[j], tx, j));
     }
     boost::posix_time::ptime mst2 = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration msdiff = mst2 - mst1;
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(DoS_checkSig)
     // Generate a new, different signature for vin[0] to trigger cache clear:
     CScript oldSig = tx.vin[0].scriptSig;
 
-    BOOST_CHECK(Bitcredit_SignSignature(keystore, orphans[0], tx, 0));
+    BOOST_CHECK(Credits_SignSignature(keystore, orphans[0], tx, 0));
     BOOST_CHECK(tx.vin[0].scriptSig != oldSig);
     for (unsigned int j = 0; j < tx.vin.size(); j++)
         BOOST_CHECK(Bitcredit_VerifySignature(Bitcredit_CCoins(orphans[j], BITCREDIT_MEMPOOL_HEIGHT), tx, j, flags, SIGHASH_ALL));

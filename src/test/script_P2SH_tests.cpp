@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_SUITE(script_P2SH_tests)
 
 BOOST_AUTO_TEST_CASE(sign)
 {
-    LOCK(bitcredit_mainState.cs_main);
+    LOCK(credits_mainState.cs_main);
     // Pay-to-script-hash looks like this:
     // scriptSig:    <sig> <sig...> <serialized_script>
     // scriptPubKey: HASH160 <hash> EQUAL
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(sign)
     }
     for (int i = 0; i < 8; i++)
     {
-        BOOST_CHECK_MESSAGE(Bitcredit_SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
+        BOOST_CHECK_MESSAGE(Credits_SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
     }
     // All of the above should be OK, and the txTos have valid signatures
     // Check to make sure signature verification fails if we use the wrong ScriptSig:
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(norecurse)
 
 BOOST_AUTO_TEST_CASE(set)
 {
-    LOCK(bitcredit_mainState.cs_main);
+    LOCK(credits_mainState.cs_main);
     // Test the CScript::Set* methods
     CBasicKeyStore keystore;
     CKey key[4];
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(set)
     }
     for (int i = 0; i < 4; i++)
     {
-        BOOST_CHECK_MESSAGE(Bitcredit_SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
+        BOOST_CHECK_MESSAGE(Credits_SignSignature(keystore, txFrom, txTo[i], 0), strprintf("SignSignature %d", i));
         BOOST_CHECK_MESSAGE(Bitcredit_IsStandardTx(txTo[i], reason), strprintf("txTo[%d].IsStandard", i));
     }
 }
@@ -249,10 +249,10 @@ BOOST_AUTO_TEST_CASE(switchover)
 
 BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
-    LOCK(bitcredit_mainState.cs_main);
+    LOCK(credits_mainState.cs_main);
 
     Bitcredit_CCoinsView coinsDummy;
-    Bitcredit_CCoinsViewCache bitcredit_coins(coinsDummy);
+    Credits_CCoinsViewCache bitcredit_coins(coinsDummy);
     Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
     Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
 
@@ -307,13 +307,13 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin.resize(3);
     txTo.vin[0].prevout.n = 0;
     txTo.vin[0].prevout.hash = txFrom.GetHash();
-    BOOST_CHECK(Bitcredit_SignSignature(keystore, txFrom, txTo, 0));
+    BOOST_CHECK(Credits_SignSignature(keystore, txFrom, txTo, 0));
     txTo.vin[1].prevout.n = 1;
     txTo.vin[1].prevout.hash = txFrom.GetHash();
-    BOOST_CHECK(Bitcredit_SignSignature(keystore, txFrom, txTo, 1));
+    BOOST_CHECK(Credits_SignSignature(keystore, txFrom, txTo, 1));
     txTo.vin[2].prevout.n = 2;
     txTo.vin[2].prevout.hash = txFrom.GetHash();
-    BOOST_CHECK(Bitcredit_SignSignature(keystore, txFrom, txTo, 2));
+    BOOST_CHECK(Credits_SignSignature(keystore, txFrom, txTo, 2));
 
     BOOST_CHECK(::Bitcredit_AreInputsStandard(txTo, bitcredit_coins, bitcoin_coins));
     BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txTo, bitcredit_coins, bitcoin_coins), 1U);

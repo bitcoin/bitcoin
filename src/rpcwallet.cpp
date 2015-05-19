@@ -53,7 +53,7 @@ void Bitcoin_EnsureWalletIsUnlocked()
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the bitcoin wallet passphrase with bitcoin_walletpassphrase first.");
 }
 
-void WalletTxToJSON(const Bitcredit_CWalletTx& wtx, Object& entry)
+void WalletTxToJSON(const Credits_CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
     entry.push_back(Pair("confirmations", confirms));
@@ -63,7 +63,7 @@ void WalletTxToJSON(const Bitcredit_CWalletTx& wtx, Object& entry)
     {
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
-        entry.push_back(Pair("blocktime", (int64_t)(bitcredit_mapBlockIndex[wtx.hashBlock]->nTime)));
+        entry.push_back(Pair("blocktime", (int64_t)(credits_mapBlockIndex[wtx.hashBlock]->nTime)));
     }
     uint256 hash = wtx.GetHash();
     entry.push_back(Pair("txid", hash.GetHex()));
@@ -126,7 +126,7 @@ Value getnewaddress(const Array& params, bool fHelp)
 
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
+    Credits_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
 
     CAccount account;
     walletdb.ReadAccount(strAccount, account);
@@ -138,11 +138,11 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
     {
         CScript scriptPubKey;
         scriptPubKey.SetDestination(account.vchPubKey.GetID());
-        for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin();
+        for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin();
              it != bitcredit_pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
              ++it)
         {
-            const Bitcredit_CWalletTx& wtx = (*it).second;
+            const Credits_CWalletTx& wtx = (*it).second;
             BOOST_FOREACH(const CTxOut& txout, wtx.vout)
                 if (txout.scriptPubKey == scriptPubKey)
                     bKeyUsed = true;
@@ -207,7 +207,7 @@ Value getrawchangeaddress(const Array& params, bool fHelp)
     if (!bitcredit_pwalletMain->IsLocked())
         bitcredit_pwalletMain->TopUpKeyPool();
 
-    Bitcredit_CReserveKey reservekey(bitcredit_pwalletMain);
+    Credits_CReserveKey reservekey(bitcredit_pwalletMain);
     CPubKey vchPubKey;
     if (!reservekey.GetReservedKey(vchPubKey))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Unable to obtain key for change");
@@ -347,7 +347,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     int64_t nAmount = AmountFromValue(params[1]);
 
     // Wallet comments
-    Bitcredit_CWalletTx wtx;
+    Credits_CWalletTx wtx;
     if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
         wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
@@ -498,10 +498,10 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 
     // Tally
     int64_t nAmount = 0;
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const Bitcredit_CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !Bitcredit_IsFinalTx(wtx))
+        const Credits_CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !Credits_IsFinalTx(wtx))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -547,10 +547,10 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
     // Tally
     int64_t nAmount = 0;
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const Bitcredit_CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !Bitcredit_IsFinalTx(wtx))
+        const Credits_CWalletTx& wtx = (*it).second;
+        if (wtx.IsCoinBase() || !Credits_IsFinalTx(wtx))
             continue;
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
@@ -566,15 +566,15 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 }
 
 
-int64_t GetAccountBalance(Bitcredit_CWalletDB& walletdb, const string& strAccount, int nMinDepth)
+int64_t GetAccountBalance(Credits_CWalletDB& walletdb, const string& strAccount, int nMinDepth)
 {
     int64_t nBalance = 0;
 
     // Tally wallet transactions
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const Bitcredit_CWalletTx& wtx = (*it).second;
-        if (!Bitcredit_IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetFirstDepositOutBlocksToMaturity() || wtx.GetSecondDepositOutBlocksToMaturity() || wtx.GetDepthInMainChain() < 0)
+        const Credits_CWalletTx& wtx = (*it).second;
+        if (!Credits_IsFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetFirstDepositOutBlocksToMaturity() || wtx.GetSecondDepositOutBlocksToMaturity() || wtx.GetDepthInMainChain() < 0)
             continue;
 
         int64_t nReceived, nSent, nFee;
@@ -593,7 +593,7 @@ int64_t GetAccountBalance(Bitcredit_CWalletDB& walletdb, const string& strAccoun
 
 int64_t GetAccountBalance(const string& strAccount, int nMinDepth)
 {
-    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
+    Credits_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
     return GetAccountBalance(walletdb, strAccount, nMinDepth);
 }
 
@@ -642,9 +642,9 @@ Value getbalance(const Array& params, bool fHelp)
         // (GetBalance() sums up all unspent TxOuts)
         // getbalance and getbalance '*' 0 should return the same number
         int64_t nBalance = 0;
-        for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
+        for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
         {
-            const Bitcredit_CWalletTx& wtx = (*it).second;
+            const Credits_CWalletTx& wtx = (*it).second;
             if (!wtx.IsTrusted() || wtx.GetBlocksToMaturity() > 0 || wtx.GetFirstDepositOutBlocksToMaturity() > 0 || wtx.GetSecondDepositOutBlocksToMaturity() > 0)
                 continue;
 
@@ -719,7 +719,7 @@ Value movecmd(const Array& params, bool fHelp)
     if (params.size() > 4)
         strComment = params[4].get_str();
 
-    Bitcredit_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
+    Credits_CWalletDB walletdb(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb);
     if (!walletdb.TxnBegin())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
 
@@ -790,7 +790,7 @@ Value sendfrom(const Array& params, bool fHelp)
     if (params.size() > 3)
         nMinDepth = params[3].get_int();
 
-    Bitcredit_CWalletTx wtx;
+    Credits_CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty())
         wtx.mapValue["comment"] = params[4].get_str();
@@ -847,7 +847,7 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 2)
         nMinDepth = params[2].get_int();
 
-    Bitcredit_CWalletTx wtx;
+    Credits_CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["comment"] = params[3].get_str();
@@ -882,7 +882,7 @@ Value sendmany(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
     // Send
-    Bitcredit_CReserveKey keyChange(bitcredit_pwalletMain);
+    Credits_CReserveKey keyChange(bitcredit_pwalletMain);
     int64_t nFeeRequired = 0;
     string strFailReason;
     bool fCreated = bitcredit_pwalletMain->CreateTransaction(deposit_pwalletMain, vecSend, wtx, keyChange, nFeeRequired, strFailReason);
@@ -890,7 +890,7 @@ Value sendmany(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
 
     //Just an empty vector
-    std::vector<Bitcredit_CReserveKey *> keyRecipients;
+    std::vector<Credits_CReserveKey *> keyRecipients;
     if (!bitcredit_pwalletMain->CommitTransaction(bitcoin_pwalletMain, wtx, keyChange, keyRecipients))
         throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
 
@@ -970,11 +970,11 @@ Value ListReceived(const Array& params, bool fByAccounts)
 
     // Tally
     map<CBitcoinAddress, tallyitem> mapTally;
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const Bitcredit_CWalletTx& wtx = (*it).second;
+        const Credits_CWalletTx& wtx = (*it).second;
 
-        if (wtx.IsCoinBase() || !Bitcredit_IsFinalTx(wtx))
+        if (wtx.IsCoinBase() || !Credits_IsFinalTx(wtx))
             continue;
 
         int nDepth = wtx.GetDepthInMainChain();
@@ -1122,7 +1122,7 @@ static void MaybePushAddress(Object & entry, const CTxDestination &dest)
         entry.push_back(Pair("address", addr.ToString()));
 }
 
-void ListTransactions(const Bitcredit_CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+void ListTransactions(const Credits_CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64_t nFee;
     string strSentAccount;
@@ -1276,12 +1276,12 @@ Value listtransactions(const Array& params, bool fHelp)
     Array ret;
 
     std::list<CAccountingEntry> acentries;
-    Bitcredit_CWallet::TxItems txOrdered = bitcredit_pwalletMain->OrderedTxItems(acentries, strAccount);
+    Credits_CWallet::TxItems txOrdered = bitcredit_pwalletMain->OrderedTxItems(acentries, strAccount);
 
     // iterate backwards until we have nCount items to return:
-    for (Bitcredit_CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+    for (Credits_CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        Bitcredit_CWalletTx *const pwtx = (*it).second.first;
+        Credits_CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
             ListTransactions(*pwtx, strAccount, 0, true, ret);
         CAccountingEntry *const pacentry = (*it).second.second;
@@ -1343,9 +1343,9 @@ Value listaccounts(const Array& params, bool fHelp)
             mapAccountBalances[entry.second.name] = 0;
     }
 
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
+    for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); ++it)
     {
-        const Bitcredit_CWalletTx& wtx = (*it).second;
+        const Credits_CWalletTx& wtx = (*it).second;
         int64_t nFee;
         string strSentAccount;
         list<pair<CTxDestination, int64_t> > listReceived;
@@ -1372,7 +1372,7 @@ Value listaccounts(const Array& params, bool fHelp)
     }
 
     list<CAccountingEntry> acentries;
-    Bitcredit_CWalletDB(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb).ListAccountCreditDebit("*", acentries);
+    Credits_CWalletDB(bitcredit_pwalletMain->strWalletFile, &bitcredit_bitdb).ListAccountCreditDebit("*", acentries);
     BOOST_FOREACH(const CAccountingEntry& entry, acentries)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
@@ -1427,8 +1427,8 @@ Value listsinceblock(const Array& params, bool fHelp)
         uint256 blockId = 0;
 
         blockId.SetHex(params[0].get_str());
-        std::map<uint256, Credits_CBlockIndex*>::iterator it = bitcredit_mapBlockIndex.find(blockId);
-        if (it != bitcredit_mapBlockIndex.end())
+        std::map<uint256, Credits_CBlockIndex*>::iterator it = credits_mapBlockIndex.find(blockId);
+        if (it != credits_mapBlockIndex.end())
             pindex = it->second;
     }
 
@@ -1440,19 +1440,19 @@ Value listsinceblock(const Array& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
-    int depth = pindex ? (1 + bitcredit_chainActive.Height() - pindex->nHeight) : -1;
+    int depth = pindex ? (1 + credits_chainActive.Height() - pindex->nHeight) : -1;
 
     Array transactions;
 
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); it++)
+    for (map<uint256, Credits_CWalletTx>::iterator it = bitcredit_pwalletMain->mapWallet.begin(); it != bitcredit_pwalletMain->mapWallet.end(); it++)
     {
-        Bitcredit_CWalletTx tx = (*it).second;
+        Credits_CWalletTx tx = (*it).second;
 
         if (depth == -1 || tx.GetDepthInMainChain() < depth)
             ListTransactions(tx, "*", 0, true, transactions);
     }
 
-    Credits_CBlockIndex *pblockLast = bitcredit_chainActive[bitcredit_chainActive.Height() + 1 - target_confirms];
+    Credits_CBlockIndex *pblockLast = credits_chainActive[credits_chainActive.Height() + 1 - target_confirms];
     uint256 lastblock = pblockLast ? pblockLast->GetBlockHash() : 0;
 
     Object ret;
@@ -1506,7 +1506,7 @@ Value gettransaction(const Array& params, bool fHelp)
     Object entry;
     if (!bitcredit_pwalletMain->mapWallet.count(hash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
-    const Bitcredit_CWalletTx& wtx = bitcredit_pwalletMain->mapWallet[hash];
+    const Credits_CWalletTx& wtx = bitcredit_pwalletMain->mapWallet[hash];
 
     int64_t nCredit = wtx.GetCredit(mapPreparedDepositTxInPoints);
     int64_t nDebit = wtx.GetDebit();
@@ -1523,7 +1523,7 @@ Value gettransaction(const Array& params, bool fHelp)
     ListTransactions(wtx, "*", 0, false, details);
     entry.push_back(Pair("details", details));
 
-    CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     ssTx << static_cast<Credits_CTransaction>(wtx);
     string strHex = HexStr(ssTx.begin(), ssTx.end());
     entry.push_back(Pair("hex", strHex));
@@ -1585,13 +1585,13 @@ Value keypoolrefill(const Array& params, bool fHelp)
 }
 
 
-static void Bitcredit_LockWallet(Bitcredit_CWallet* pWallet)
+static void Bitcredit_LockWallet(Credits_CWallet* pWallet)
 {
     LOCK(bitcredit_cs_nWalletUnlockTime);
     bitcredit_nWalletUnlockTime = 0;
     pWallet->Lock();
 }
-static void Deposit_LockWallet(Bitcredit_CWallet* pWallet)
+static void Deposit_LockWallet(Credits_CWallet* pWallet)
 {
     LOCK(deposit_cs_nWalletUnlockTime);
     deposit_nWalletUnlockTime = 0;
@@ -1604,7 +1604,7 @@ static void Bitcoin_LockWallet(Bitcoin_CWallet* pWallet)
     pWallet->Lock();
 }
 
-Value bitcredit_walletpassphrase(const Array& params, bool fHelp)
+Value credits_walletpassphrase(const Array& params, bool fHelp)
 {
     if (bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
@@ -1767,7 +1767,7 @@ Value bitcoin_walletpassphrase(const Array& params, bool fHelp)
 }
 
 
-Value bitcredit_walletpassphrasechange(const Array& params, bool fHelp)
+Value credits_walletpassphrasechange(const Array& params, bool fHelp)
 {
     if (bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
@@ -1888,7 +1888,7 @@ Value bitcoin_walletpassphrasechange(const Array& params, bool fHelp)
 }
 
 
-Value bitcredit_walletlock(const Array& params, bool fHelp)
+Value credits_walletlock(const Array& params, bool fHelp)
 {
     if (bitcredit_pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
@@ -2287,7 +2287,7 @@ Value settxfee(const Array& params, bool fHelp)
     if (params[0].get_real() != 0.0)
         nAmount = AmountFromValue(params[0]);        // rejects 0.0 amounts
 
-    bitcredit_nTransactionFee = nAmount;
+    credits_nTransactionFee = nAmount;
     return true;
 }
 

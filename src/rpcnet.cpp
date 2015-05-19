@@ -30,7 +30,7 @@ Value bitcredit_getconnectioncount(const Array& params, bool fHelp)
             + HelpExampleRpc("getconnectioncount", "")
         );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     LOCK(netParams->cs_vNodes);
     return (int)netParams->vNodes.size();
@@ -68,7 +68,7 @@ Value bitcredit_ping(const Array& params, bool fHelp)
             + HelpExampleRpc("ping", "")
         );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     // Request that each node send a ping during next message processing pass
     LOCK(netParams->cs_vNodes);
@@ -151,7 +151,7 @@ Value bitcredit_getpeerinfo(const Array& params, bool fHelp)
         );
 
     vector<CNodeStats> vstats;
-    CopyNodeStats(vstats, Bitcredit_NetParams());
+    CopyNodeStats(vstats, Credits_NetParams());
 
     Array ret;
 
@@ -281,7 +281,7 @@ Value bitcredit_addnode(const Array& params, bool fHelp)
             + HelpExampleRpc("addnode", "\"192.168.0.6:9333\", \"onetry\"")
         );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     string strNode = params[0].get_str();
 
@@ -399,7 +399,7 @@ Value bitcredit_getaddednodeinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getaddednodeinfo", "true, \"192.168.0.201\"")
         );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     bool fDns = params[0].get_bool();
 
@@ -679,14 +679,14 @@ Value bitcredit_getnetworkinfo(const Array& params, bool fHelp)
             + HelpExampleRpc("getnetworkinfo", "")
         );
 
-    CNetParams * netParams = Bitcredit_NetParams();
+    CNetParams * netParams = Credits_NetParams();
 
     proxyType proxy;
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
     obj.push_back(Pair("version",       (int)netParams->ClientVersion()));
-    obj.push_back(Pair("protocolversion",(int)BITCREDIT_PROTOCOL_VERSION));
+    obj.push_back(Pair("protocolversion",(int)CREDITS_PROTOCOL_VERSION));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)netParams->vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));

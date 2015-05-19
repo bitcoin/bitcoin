@@ -21,13 +21,13 @@ using namespace boost;
 // CWalletDB
 //
 
-bool Bitcredit_CWalletDB::WriteName(const string& strAddress, const string& strName)
+bool Credits_CWalletDB::WriteName(const string& strAddress, const string& strName)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(make_pair(string("name"), strAddress), strName);
 }
 
-bool Bitcredit_CWalletDB::EraseName(const string& strAddress)
+bool Credits_CWalletDB::EraseName(const string& strAddress)
 {
     // This should only be used for sending addresses, never for receiving addresses,
     // receiving addresses must always have an address book entry if they're not change return.
@@ -35,31 +35,31 @@ bool Bitcredit_CWalletDB::EraseName(const string& strAddress)
     return Erase(make_pair(string("name"), strAddress));
 }
 
-bool Bitcredit_CWalletDB::WritePurpose(const string& strAddress, const string& strPurpose)
+bool Credits_CWalletDB::WritePurpose(const string& strAddress, const string& strPurpose)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(make_pair(string("purpose"), strAddress), strPurpose);
 }
 
-bool Bitcredit_CWalletDB::ErasePurpose(const string& strPurpose)
+bool Credits_CWalletDB::ErasePurpose(const string& strPurpose)
 {
     pbitDb->nWalletDBUpdated++;
     return Erase(make_pair(string("purpose"), strPurpose));
 }
 
-bool Bitcredit_CWalletDB::WriteTx(uint256 hash, const Bitcredit_CWalletTx& wtx)
+bool Credits_CWalletDB::WriteTx(uint256 hash, const Credits_CWalletTx& wtx)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::make_pair(std::string("tx"), hash), wtx);
 }
 
-bool Bitcredit_CWalletDB::EraseTx(uint256 hash)
+bool Credits_CWalletDB::EraseTx(uint256 hash)
 {
     pbitDb->nWalletDBUpdated++;
     return Erase(std::make_pair(std::string("tx"), hash));
 }
 
-bool Bitcredit_CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const Bitcredit_CKeyMetadata& keyMeta)
+bool Credits_CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const Credits_CKeyMetadata& keyMeta)
 {
     pbitDb->nWalletDBUpdated++;
 
@@ -76,9 +76,9 @@ bool Bitcredit_CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vch
     return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
 }
 
-bool Bitcredit_CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
+bool Credits_CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
-                                const Bitcredit_CKeyMetadata &keyMeta)
+                                const Credits_CKeyMetadata &keyMeta)
 {
     const bool fEraseUnencryptedKey = true;
     pbitDb->nWalletDBUpdated++;
@@ -97,85 +97,85 @@ bool Bitcredit_CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
     return true;
 }
 
-bool Bitcredit_CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
+bool Credits_CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
 }
 
-bool Bitcredit_CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
+bool Credits_CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::make_pair(std::string("cscript"), hash), redeemScript, false);
 }
 
-bool Bitcredit_CWalletDB::WriteBestBlock(const CBlockLocator& locator)
+bool Credits_CWalletDB::WriteBestBlock(const CBlockLocator& locator)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::string("bestblock"), locator);
 }
 
-bool Bitcredit_CWalletDB::ReadBestBlock(CBlockLocator& locator)
+bool Credits_CWalletDB::ReadBestBlock(CBlockLocator& locator)
 {
     return Read(std::string("bestblock"), locator);
 }
 
-bool Bitcredit_CWalletDB::WriteOrderPosNext(int64_t nOrderPosNext)
+bool Credits_CWalletDB::WriteOrderPosNext(int64_t nOrderPosNext)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::string("orderposnext"), nOrderPosNext);
 }
 
-bool Bitcredit_CWalletDB::WriteDefaultKey(const CPubKey& vchPubKey)
+bool Credits_CWalletDB::WriteDefaultKey(const CPubKey& vchPubKey)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::string("defaultkey"), vchPubKey);
 }
 
-bool Bitcredit_CWalletDB::ReadPool(int64_t nPool, CKeyPool& keypool)
+bool Credits_CWalletDB::ReadPool(int64_t nPool, CKeyPool& keypool)
 {
     return Read(std::make_pair(std::string("pool"), nPool), keypool);
 }
 
-bool Bitcredit_CWalletDB::WritePool(int64_t nPool, const CKeyPool& keypool)
+bool Credits_CWalletDB::WritePool(int64_t nPool, const CKeyPool& keypool)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(std::make_pair(std::string("pool"), nPool), keypool);
 }
 
-bool Bitcredit_CWalletDB::ErasePool(int64_t nPool)
+bool Credits_CWalletDB::ErasePool(int64_t nPool)
 {
     pbitDb->nWalletDBUpdated++;
     return Erase(std::make_pair(std::string("pool"), nPool));
 }
 
-bool Bitcredit_CWalletDB::WriteMinVersion(int nVersion)
+bool Credits_CWalletDB::WriteMinVersion(int nVersion)
 {
     return Write(std::string("minversion"), nVersion);
 }
 
-bool Bitcredit_CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
+bool Credits_CWalletDB::ReadAccount(const string& strAccount, CAccount& account)
 {
     account.SetNull();
     return Read(make_pair(string("acc"), strAccount), account);
 }
 
-bool Bitcredit_CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
+bool Credits_CWalletDB::WriteAccount(const string& strAccount, const CAccount& account)
 {
     return Write(make_pair(string("acc"), strAccount), account);
 }
 
-bool Bitcredit_CWalletDB::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
+bool Credits_CWalletDB::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
 {
     return Write(boost::make_tuple(string("acentry"), acentry.strAccount, nAccEntryNum), acentry);
 }
 
-bool Bitcredit_CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry, uint64_t &nAccountingEntryNumber)
+bool Credits_CWalletDB::WriteAccountingEntry(const CAccountingEntry& acentry, uint64_t &nAccountingEntryNumber)
 {
     return WriteAccountingEntry(++nAccountingEntryNumber, acentry);
 }
 
-int64_t Bitcredit_CWalletDB::GetAccountCreditDebit(const string& strAccount)
+int64_t Credits_CWalletDB::GetAccountCreditDebit(const string& strAccount)
 {
     list<CAccountingEntry> entries;
     ListAccountCreditDebit(strAccount, entries);
@@ -187,7 +187,7 @@ int64_t Bitcredit_CWalletDB::GetAccountCreditDebit(const string& strAccount)
     return nCreditDebit;
 }
 
-void Bitcredit_CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& entries)
+void Credits_CWalletDB::ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& entries)
 {
     bool fAllAccounts = (strAccount == "*");
 
@@ -198,10 +198,10 @@ void Bitcredit_CWalletDB::ListAccountCreditDebit(const string& strAccount, list<
     while (true)
     {
         // Read next record
-        CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, CREDITS_CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
             ssKey << boost::make_tuple(string("acentry"), (fAllAccounts? string("") : strAccount), uint64_t(0));
-        CDataStream ssValue(SER_DISK, BITCREDIT_CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, CREDITS_CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
         if (ret == DB_NOTFOUND)
@@ -231,28 +231,28 @@ void Bitcredit_CWalletDB::ListAccountCreditDebit(const string& strAccount, list<
 }
 
 
-Bitcredit_DBErrors
-Bitcredit_CWalletDB::ReorderTransactions(Bitcredit_CWallet* pwallet)
+Credits_DBErrors
+Credits_CWalletDB::ReorderTransactions(Credits_CWallet* pwallet)
 {
     LOCK(pwallet->cs_wallet);
     // Old wallets didn't have any defined order for transactions
     // Probably a bad idea to change the output of this
 
     // First: get all CWalletTx and CAccountingEntry into a sorted-by-time multimap.
-    typedef pair<Bitcredit_CWalletTx*, CAccountingEntry*> TxPair;
+    typedef pair<Credits_CWalletTx*, CAccountingEntry*> TxPair;
     typedef multimap<int64_t, TxPair > TxItems;
     TxItems txByTime;
 
-    for (map<uint256, Bitcredit_CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
+    for (map<uint256, Credits_CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it)
     {
-        Bitcredit_CWalletTx* wtx = &((*it).second);
+        Credits_CWalletTx* wtx = &((*it).second);
         txByTime.insert(make_pair(wtx->nTimeReceived, TxPair(wtx, (CAccountingEntry*)0)));
     }
     list<CAccountingEntry> acentries;
     ListAccountCreditDebit("", acentries);
     BOOST_FOREACH(CAccountingEntry& entry, acentries)
     {
-        txByTime.insert(make_pair(entry.nTime, TxPair((Bitcredit_CWalletTx*)0, &entry)));
+        txByTime.insert(make_pair(entry.nTime, TxPair((Credits_CWalletTx*)0, &entry)));
     }
 
     int64_t& nOrderPosNext = pwallet->nOrderPosNext;
@@ -260,7 +260,7 @@ Bitcredit_CWalletDB::ReorderTransactions(Bitcredit_CWallet* pwallet)
     std::vector<int64_t> nOrderPosOffsets;
     for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
     {
-        Bitcredit_CWalletTx *const pwtx = (*it).second.first;
+        Credits_CWalletTx *const pwtx = (*it).second.first;
         CAccountingEntry *const pacentry = (*it).second.second;
         int64_t& nOrderPos = (pwtx != 0) ? pwtx->nOrderPos : pacentry->nOrderPos;
 
@@ -300,10 +300,10 @@ Bitcredit_CWalletDB::ReorderTransactions(Bitcredit_CWallet* pwallet)
         }
     }
 
-    return BITCREDIT_DB_LOAD_OK;
+    return CREDITS_DB_LOAD_OK;
 }
 
-class Bitcredit_CWalletScanState {
+class Credits_CWalletScanState {
 public:
     unsigned int nKeys;
     unsigned int nCKeys;
@@ -313,7 +313,7 @@ public:
     int nFileVersion;
     vector<uint256> vWalletUpgrade;
 
-    Bitcredit_CWalletScanState() {
+    Credits_CWalletScanState() {
         nKeys = nCKeys = nKeyMeta = 0;
         fIsEncrypted = false;
         fAnyUnordered = false;
@@ -322,8 +322,8 @@ public:
 };
 
 bool
-Bitcredit_ReadKeyValue(Bitcredit_CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
-             Bitcredit_CWalletScanState &wss, string& strType, string& strErr, uint64_t &nAccountingEntryNumber)
+Bitcredit_ReadKeyValue(Credits_CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
+             Credits_CWalletScanState &wss, string& strType, string& strErr, uint64_t &nAccountingEntryNumber)
 {
     try {
         // Unserialize
@@ -346,7 +346,7 @@ Bitcredit_ReadKeyValue(Bitcredit_CWallet* pwallet, CDataStream& ssKey, CDataStre
         {
             uint256 hash;
             ssKey >> hash;
-            Bitcredit_CWalletTx wtx;
+            Credits_CWalletTx wtx;
             ssValue >> wtx;
             CValidationState state;
             if (!(Bitcredit_CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
@@ -499,7 +499,7 @@ Bitcredit_ReadKeyValue(Bitcredit_CWallet* pwallet, CDataStream& ssKey, CDataStre
         {
             CPubKey vchPubKey;
             ssKey >> vchPubKey;
-            Bitcredit_CKeyMetadata keyMeta;
+            Credits_CKeyMetadata keyMeta;
             ssValue >> keyMeta;
             wss.nKeyMeta++;
 
@@ -527,7 +527,7 @@ Bitcredit_ReadKeyValue(Bitcredit_CWallet* pwallet, CDataStream& ssKey, CDataStre
             // stored metadata for that key later, which is fine.
             CKeyID keyid = keypool.vchPubKey.GetID();
             if (pwallet->mapKeyMetadata.count(keyid) == 0)
-                pwallet->mapKeyMetadata[keyid] = Bitcredit_CKeyMetadata(keypool.nTime);
+                pwallet->mapKeyMetadata[keyid] = Credits_CKeyMetadata(keypool.nTime);
         }
         else if (strType == "version")
         {
@@ -576,19 +576,19 @@ static bool IsKeyType(string strType)
             strType == "mkey" || strType == "ckey");
 }
 
-Bitcredit_DBErrors Bitcredit_CWalletDB::LoadWallet(Bitcredit_CWallet* pwallet, uint64_t &nAccountingEntryNumber)
+Credits_DBErrors Credits_CWalletDB::LoadWallet(Credits_CWallet* pwallet, uint64_t &nAccountingEntryNumber)
 {
     pwallet->vchDefaultKey = CPubKey();
-    Bitcredit_CWalletScanState wss;
+    Credits_CWalletScanState wss;
     bool fNoncriticalErrors = false;
-    Bitcredit_DBErrors result = BITCREDIT_DB_LOAD_OK;
+    Credits_DBErrors result = CREDITS_DB_LOAD_OK;
 
     try {
         LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
-            if (nMinVersion > BITCREDIT_CLIENT_VERSION)
+            if (nMinVersion > CREDITS_CLIENT_VERSION)
                 return BITCREDIT_DB_TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
         }
@@ -604,8 +604,8 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::LoadWallet(Bitcredit_CWallet* pwallet, u
         while (true)
         {
             // Read next record
-            CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
-            CDataStream ssValue(SER_DISK, BITCREDIT_CLIENT_VERSION);
+            CDataStream ssKey(SER_DISK, CREDITS_CLIENT_VERSION);
+            CDataStream ssValue(SER_DISK, CREDITS_CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;
@@ -644,12 +644,12 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::LoadWallet(Bitcredit_CWallet* pwallet, u
         result = BITCREDIT_DB_CORRUPT;
     }
 
-    if (fNoncriticalErrors && result == BITCREDIT_DB_LOAD_OK)
+    if (fNoncriticalErrors && result == CREDITS_DB_LOAD_OK)
         result = BITCREDIT_DB_NONCRITICAL_ERROR;
 
     // Any wallet corruption at all: skip any rewriting or
     // upgrading, we don't want to make it worse.
-    if (result != BITCREDIT_DB_LOAD_OK)
+    if (result != CREDITS_DB_LOAD_OK)
         return result;
 
     LogPrintf("nFileVersion = %d\n", wss.nFileVersion);
@@ -666,10 +666,10 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::LoadWallet(Bitcredit_CWallet* pwallet, u
 
     // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
     if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
-        return BITCREDIT_DB_NEED_REWRITE;
+        return CREDITS_DB_NEED_REWRITE;
 
-    if (wss.nFileVersion < BITCREDIT_CLIENT_VERSION) // Update
-        WriteVersion(BITCREDIT_CLIENT_VERSION);
+    if (wss.nFileVersion < CREDITS_CLIENT_VERSION) // Update
+        WriteVersion(CREDITS_CLIENT_VERSION);
 
     if (wss.fAnyUnordered)
         result = ReorderTransactions(pwallet);
@@ -677,19 +677,19 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::LoadWallet(Bitcredit_CWallet* pwallet, u
     return result;
 }
 
-Bitcredit_DBErrors Bitcredit_CWalletDB::FindWalletTx(Bitcredit_CWallet* pwallet, vector<uint256>& vTxHash)
+Credits_DBErrors Credits_CWalletDB::FindWalletTx(Credits_CWallet* pwallet, vector<uint256>& vTxHash)
 {
     pwallet->vchDefaultKey = CPubKey();
-    Bitcredit_CWalletScanState wss;
+    Credits_CWalletScanState wss;
     bool fNoncriticalErrors = false;
-    Bitcredit_DBErrors result = BITCREDIT_DB_LOAD_OK;
+    Credits_DBErrors result = CREDITS_DB_LOAD_OK;
 
     try {
         LOCK(pwallet->cs_wallet);
         int nMinVersion = 0;
         if (Read((string)"minversion", nMinVersion))
         {
-            if (nMinVersion > BITCREDIT_CLIENT_VERSION)
+            if (nMinVersion > CREDITS_CLIENT_VERSION)
                 return BITCREDIT_DB_TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
         }
@@ -705,8 +705,8 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::FindWalletTx(Bitcredit_CWallet* pwallet,
         while (true)
         {
             // Read next record
-            CDataStream ssKey(SER_DISK, BITCREDIT_CLIENT_VERSION);
-            CDataStream ssValue(SER_DISK, BITCREDIT_CLIENT_VERSION);
+            CDataStream ssKey(SER_DISK, CREDITS_CLIENT_VERSION);
+            CDataStream ssValue(SER_DISK, CREDITS_CLIENT_VERSION);
             int ret = ReadAtCursor(pcursor, ssKey, ssValue);
             if (ret == DB_NOTFOUND)
                 break;
@@ -734,18 +734,18 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::FindWalletTx(Bitcredit_CWallet* pwallet,
         result = BITCREDIT_DB_CORRUPT;
     }
 
-    if (fNoncriticalErrors && result == BITCREDIT_DB_LOAD_OK)
+    if (fNoncriticalErrors && result == CREDITS_DB_LOAD_OK)
         result = BITCREDIT_DB_NONCRITICAL_ERROR;
 
     return result;
 }
 
-Bitcredit_DBErrors Bitcredit_CWalletDB::ZapWalletTx(Bitcredit_CWallet* pwallet)
+Credits_DBErrors Credits_CWalletDB::ZapWalletTx(Credits_CWallet* pwallet)
 {
     // build list of wallet TXs
     vector<uint256> vTxHash;
-    Bitcredit_DBErrors err = FindWalletTx(pwallet, vTxHash);
-    if (err != BITCREDIT_DB_LOAD_OK)
+    Credits_DBErrors err = FindWalletTx(pwallet, vTxHash);
+    if (err != CREDITS_DB_LOAD_OK)
         return err;
 
     // erase each wallet TX
@@ -754,10 +754,10 @@ Bitcredit_DBErrors Bitcredit_CWalletDB::ZapWalletTx(Bitcredit_CWallet* pwallet)
             return BITCREDIT_DB_CORRUPT;
     }
 
-    return BITCREDIT_DB_LOAD_OK;
+    return CREDITS_DB_LOAD_OK;
 }
 
-bool Bitcredit_BackupWallet(const Bitcredit_CWallet& wallet, const string& strDest)
+bool Bitcredit_BackupWallet(const Credits_CWallet& wallet, const string& strDest)
 {
     if (!wallet.fFileBacked)
         return false;
@@ -800,7 +800,7 @@ bool Bitcredit_BackupWallet(const Bitcredit_CWallet& wallet, const string& strDe
 //
 // Try to (very carefully!) recover wallet.dat if there is a problem.
 //
-bool Bitcredit_CWalletDB::Recover(Bitcredit_CDBEnv& dbenv, std::string filename, bool fOnlyKeys, uint64_t &nAccountingEntryNumber)
+bool Credits_CWalletDB::Recover(Credits_CDBEnv& dbenv, std::string filename, bool fOnlyKeys, uint64_t &nAccountingEntryNumber)
 {
     // Recovery procedure:
     // move wallet.dat to wallet.timestamp.bak
@@ -822,7 +822,7 @@ bool Bitcredit_CWalletDB::Recover(Bitcredit_CDBEnv& dbenv, std::string filename,
         return false;
     }
 
-    std::vector<Bitcredit_CDBEnv::KeyValPair> salvagedData;
+    std::vector<Credits_CDBEnv::KeyValPair> salvagedData;
     bool allOK = dbenv.Salvage(newFilename, true, salvagedData);
     if (salvagedData.empty())
     {
@@ -844,16 +844,16 @@ bool Bitcredit_CWalletDB::Recover(Bitcredit_CDBEnv& dbenv, std::string filename,
         LogPrintf("Cannot create database file %s\n", filename);
         return false;
     }
-    Bitcredit_CWallet dummyWallet(&dbenv);
-    Bitcredit_CWalletScanState wss;
+    Credits_CWallet dummyWallet(&dbenv);
+    Credits_CWalletScanState wss;
 
     DbTxn* ptxn = dbenv.TxnBegin();
-    BOOST_FOREACH(Bitcredit_CDBEnv::KeyValPair& row, salvagedData)
+    BOOST_FOREACH(Credits_CDBEnv::KeyValPair& row, salvagedData)
     {
         if (fOnlyKeys)
         {
-            CDataStream ssKey(row.first, SER_DISK, BITCREDIT_CLIENT_VERSION);
-            CDataStream ssValue(row.second, SER_DISK, BITCREDIT_CLIENT_VERSION);
+            CDataStream ssKey(row.first, SER_DISK, CREDITS_CLIENT_VERSION);
+            CDataStream ssValue(row.second, SER_DISK, CREDITS_CLIENT_VERSION);
             string strType, strErr;
             bool fReadOK = Bitcredit_ReadKeyValue(&dummyWallet, ssKey, ssValue,
                                         wss, strType, strErr, nAccountingEntryNumber);
@@ -878,18 +878,18 @@ bool Bitcredit_CWalletDB::Recover(Bitcredit_CDBEnv& dbenv, std::string filename,
     return fSuccess;
 }
 
-bool Bitcredit_CWalletDB::Recover(Bitcredit_CDBEnv& dbenv, std::string filename, uint64_t &nAccountingEntryNumber)
+bool Credits_CWalletDB::Recover(Credits_CDBEnv& dbenv, std::string filename, uint64_t &nAccountingEntryNumber)
 {
-    return Bitcredit_CWalletDB::Recover(dbenv, filename, false, nAccountingEntryNumber);
+    return Credits_CWalletDB::Recover(dbenv, filename, false, nAccountingEntryNumber);
 }
 
-bool Bitcredit_CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
+bool Credits_CWalletDB::WriteDestData(const std::string &address, const std::string &key, const std::string &value)
 {
     pbitDb->nWalletDBUpdated++;
     return Write(boost::make_tuple(std::string("destdata"), address, key), value);
 }
 
-bool Bitcredit_CWalletDB::EraseDestData(const std::string &address, const std::string &key)
+bool Credits_CWalletDB::EraseDestData(const std::string &address, const std::string &key)
 {
     pbitDb->nWalletDBUpdated++;
     return Erase(boost::make_tuple(string("destdata"), address, key));

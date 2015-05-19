@@ -28,15 +28,15 @@ uint64_t bitcoin_nAccountingEntryNumber = 0;
 //Bitcoin_CDBEnv bitcoin_bitdb;
 
 uint64_t bitcredit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
+Credits_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
 
 uint64_t deposit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv deposit_bitdb("deposit_database", "deposit_db.log");
+Credits_CDBEnv deposit_bitdb("deposit_database", "deposit_db.log");
 #endif
 
 Bitcoin_CWallet* bitcoin_pwalletMain;
-Bitcredit_CWallet* bitcredit_pwalletMain;
-Bitcredit_CWallet* deposit_pwalletMain;
+Credits_CWallet* bitcredit_pwalletMain;
+Credits_CWallet* deposit_pwalletMain;
 
 extern void noui_connect();
 
@@ -61,7 +61,7 @@ struct TestingSetup {
 
         bitcredit_pblocktree = new Credits_CBlockTreeDB(1 << 20, true);
         bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(1 << 23, true);
-        bitcredit_pcoinsTip = new Bitcredit_CCoinsViewCache(*bitcredit_pcoinsdbview);
+        bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
         bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(1 << 20, true);
         bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(1 << 23, true);
@@ -78,24 +78,24 @@ struct TestingSetup {
         bitcoin_pwalletMain->LoadWallet(fFirstRun);
         Bitcoin_RegisterWallet(bitcoin_pwalletMain);
 
-        bitcredit_pwalletMain = new Bitcredit_CWallet("credits_wallet.dat", &bitcredit_bitdb);
+        bitcredit_pwalletMain = new Credits_CWallet("credits_wallet.dat", &bitcredit_bitdb);
         bitcredit_pwalletMain->LoadWallet(fFirstRun, bitcredit_nAccountingEntryNumber);
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
-        deposit_pwalletMain = new Bitcredit_CWallet("deposit_wallet.dat", &deposit_bitdb);
+        deposit_pwalletMain = new Credits_CWallet("deposit_wallet.dat", &deposit_bitdb);
         deposit_pwalletMain->LoadWallet(fFirstRun, deposit_nAccountingEntryNumber);
         Bitcredit_RegisterWallet(deposit_pwalletMain);
 #endif
         bitcredit_nScriptCheckThreads = 3;
         for (int i=0; i < bitcredit_nScriptCheckThreads-1; i++)
             threadGroup.create_thread(&Bitcredit_ThreadScriptCheck);
-        Bitcredit_RegisterNodeSignals(Bitcredit_NetParams()->GetNodeSignals());
+        Bitcredit_RegisterNodeSignals(Credits_NetParams()->GetNodeSignals());
     }
     ~TestingSetup()
     {
         threadGroup.interrupt_all();
         threadGroup.join_all();
-        Bitcredit_UnregisterNodeSignals(Bitcredit_NetParams()->GetNodeSignals());
+        Bitcredit_UnregisterNodeSignals(Credits_NetParams()->GetNodeSignals());
 #ifdef ENABLE_WALLET
         delete bitcoin_pwalletMain;
         bitcoin_pwalletMain = NULL;

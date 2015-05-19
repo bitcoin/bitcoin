@@ -67,11 +67,11 @@ static Bitcredit_AddressTableEntry::Type translateTransactionType(const QString 
 class Bitcredit_AddressTablePriv
 {
 public:
-    Bitcredit_CWallet *wallet;
+    Credits_CWallet *wallet;
     QList<Bitcredit_AddressTableEntry> cachedAddressTable;
     Bitcredit_AddressTableModel *parent;
 
-    Bitcredit_AddressTablePriv(Bitcredit_CWallet *wallet, Bitcredit_AddressTableModel *parent):
+    Bitcredit_AddressTablePriv(Credits_CWallet *wallet, Bitcredit_AddressTableModel *parent):
         wallet(wallet), parent(parent) {}
 
     void refreshAddressTable()
@@ -162,7 +162,7 @@ public:
     }
 };
 
-Bitcredit_AddressTableModel::Bitcredit_AddressTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent) :
+Bitcredit_AddressTableModel::Bitcredit_AddressTableModel(Credits_CWallet *wallet, Bitcredit_WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
     columns << tr("Label") << tr("Address");

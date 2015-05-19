@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             }
 
             string transaction = test[1].get_str();
-            CDataStream stream(ParseHex(transaction), SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+            CDataStream stream(ParseHex(transaction), SER_NETWORK, CREDITS_PROTOCOL_VERSION);
             Credits_CTransaction tx;
             stream >> tx;
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 //            }
 //
 //            string transaction = test[1].get_str();
-//            CDataStream stream(ParseHex(transaction), SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+//            CDataStream stream(ParseHex(transaction), SER_NETWORK, CREDITS_PROTOCOL_VERSION);
 //            Credits_CTransaction tx;
 //            stream >> tx;
 //
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 {
     // Random real transaction
     string transaction = "010000000100000001b14bdcbc3e01bdaad36cc08e81e69c82e1060bc14e518db2b49aa43ad90ba26000000000490047304402203f16c6f40162ab686621ef3000b04e75418a0c0cb2d8aebeac894ae360ac1e780220ddc15ecdfc3507ac48e1681a33eb60996631bf6bf5bc0a0682c4db743ce7ca2b010140420f00000000001976a914660d4ef3a743e3e696ad990364e555c271ad504b88ac00000000";
-    CDataStream stream(ParseHex(transaction), SER_DISK, BITCREDIT_CLIENT_VERSION);
+    CDataStream stream(ParseHex(transaction), SER_DISK, CREDITS_CLIENT_VERSION);
     Credits_CTransaction tx;
     stream >> tx;
     CValidationState state;
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
 {
     CBasicKeyStore keystore;
     Bitcredit_CCoinsView coinsDummy;
-    Bitcredit_CCoinsViewCache bitcredit_coins(coinsDummy);
+    Credits_CCoinsViewCache bitcredit_coins(coinsDummy);
     Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
     Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
     std::vector<Credits_CTransaction> dummyTransactions = SetupDummyInputs(keystore, bitcredit_coins);
@@ -295,10 +295,10 @@ BOOST_AUTO_TEST_CASE(test_Get)
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
-    LOCK(bitcredit_mainState.cs_main);
+    LOCK(credits_mainState.cs_main);
     CBasicKeyStore keystore;
     Bitcredit_CCoinsView coinsDummy;
-    Bitcredit_CCoinsViewCache coins(coinsDummy);
+    Credits_CCoinsViewCache coins(coinsDummy);
     std::vector<Credits_CTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
     Credits_CTransaction t;

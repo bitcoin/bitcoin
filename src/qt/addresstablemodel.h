@@ -11,7 +11,7 @@
 class Bitcredit_AddressTablePriv;
 class Bitcredit_WalletModel;
 
-class Bitcredit_CWallet;
+class Credits_CWallet;
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
@@ -21,7 +21,7 @@ class Bitcredit_AddressTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit Bitcredit_AddressTableModel(Bitcredit_CWallet *wallet, Bitcredit_WalletModel *parent = 0);
+    explicit Bitcredit_AddressTableModel(Credits_CWallet *wallet, Bitcredit_WalletModel *parent = 0);
     ~Bitcredit_AddressTableModel();
 
     enum ColumnIndex {
@@ -76,7 +76,7 @@ public:
 
 private:
     Bitcredit_WalletModel *walletModel;
-    Bitcredit_CWallet *wallet;
+    Credits_CWallet *wallet;
     Bitcredit_AddressTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;

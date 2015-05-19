@@ -93,13 +93,13 @@ void TxToJSON(const Credits_CTransaction& tx, const uint256 hashBlock, Object& e
     if (hashBlock != 0)
     {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
-        map<uint256, Credits_CBlockIndex*>::iterator mi = bitcredit_mapBlockIndex.find(hashBlock);
-        if (mi != bitcredit_mapBlockIndex.end() && (*mi).second)
+        map<uint256, Credits_CBlockIndex*>::iterator mi = credits_mapBlockIndex.find(hashBlock);
+        if (mi != credits_mapBlockIndex.end() && (*mi).second)
         {
             Credits_CBlockIndex* pindex = (*mi).second;
-            if (bitcredit_chainActive.Contains(pindex))
+            if (credits_chainActive.Contains(pindex))
             {
-                entry.push_back(Pair("confirmations", 1 + bitcredit_chainActive.Height() - pindex->nHeight));
+                entry.push_back(Pair("confirmations", 1 + credits_chainActive.Height() - pindex->nHeight));
                 entry.push_back(Pair("time", (int64_t)pindex->nTime));
                 entry.push_back(Pair("blocktime", (int64_t)pindex->nTime));
             }
@@ -183,7 +183,7 @@ Value getrawtransaction(const Array& params, bool fHelp)
     if (!Bitcredit_GetTransaction(hash, tx, hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
-    CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     ssTx << tx;
     string strHex = HexStr(ssTx.begin(), ssTx.end());
 
@@ -264,10 +264,10 @@ Value listunspent(const Array& params, bool fHelp)
     map<uint256, set<int> > mapPreparedDepositTxInPoints;
 
     Array results;
-    vector<Bitcredit_COutput> vecOutputs;
+    vector<Credits_COutput> vecOutputs;
     assert(bitcredit_pwalletMain != NULL);
     bitcredit_pwalletMain->AvailableCoins(vecOutputs, mapPreparedDepositTxInPoints, false);
-    BOOST_FOREACH(const Bitcredit_COutput& out, vecOutputs)
+    BOOST_FOREACH(const Credits_COutput& out, vecOutputs)
     {
         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
             continue;
@@ -392,7 +392,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
         rawTx.vout.push_back(out);
     }
 
-    CDataStream ss(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ss(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     ss << rawTx;
     return HexStr(ss.begin(), ss.end());
 }
@@ -449,7 +449,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
         );
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument"));
-    CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssData(txData, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     Credits_CTransaction tx;
     try {
         ssData >> tx;
@@ -558,7 +558,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 
     vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
-    CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssData(txData, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     vector<Credits_CTransaction> txVariants;
     while (!ssData.empty())
     {
@@ -582,11 +582,11 @@ Value signrawtransaction(const Array& params, bool fHelp)
 
     // Fetch previous transactions (inputs):
     Bitcredit_CCoinsView viewDummy;
-    Bitcredit_CCoinsViewCache view(viewDummy);
+    Credits_CCoinsViewCache view(viewDummy);
     {
-        LOCK(bitcredit_mempool.cs);
-        Bitcredit_CCoinsViewCache &viewChain = *bitcredit_pcoinsTip;
-        Bitcredit_CCoinsViewMemPool viewMempool(viewChain, bitcredit_mempool);
+        LOCK(credits_mempool.cs);
+        Credits_CCoinsViewCache &viewChain = *bitcredit_pcoinsTip;
+        Bitcredit_CCoinsViewMemPool viewMempool(viewChain, credits_mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(Credits_CTxIn& txin, mergedTx.vin) {
@@ -716,7 +716,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
         txin.scriptSig.clear();
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mergedTx.vout.size()))
-            Bitcredit_SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
+            Credits_SignSignature(keystore, prevPubKey, mergedTx, i, nHashType);
 
         // ... and merge in other signatures:
         BOOST_FOREACH(const Credits_CTransaction& txv, txVariants)
@@ -728,7 +728,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     }
 
     Object result;
-    CDataStream ssTx(SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     ssTx << mergedTx;
     result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
     result.push_back(Pair("complete", fComplete));
@@ -762,7 +762,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
 
     // parse hex string from parameter
     vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
-    CDataStream ssData(txData, SER_NETWORK, BITCREDIT_PROTOCOL_VERSION);
+    CDataStream ssData(txData, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
     Credits_CTransaction tx;
 
     bool fOverrideFees = false;
@@ -778,14 +778,14 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     }
     uint256 hashTx = tx.GetHash();
 
-    Bitcredit_CCoinsViewCache &view = *bitcredit_pcoinsTip;
+    Credits_CCoinsViewCache &view = *bitcredit_pcoinsTip;
     Bitcredit_CCoins existingCoins;
-    bool fHaveMempool = bitcredit_mempool.exists(hashTx);
+    bool fHaveMempool = credits_mempool.exists(hashTx);
     bool fHaveChain = view.GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
     if (!fHaveMempool && !fHaveChain) {
         // push to local node and sync with wallets
     	CValidationState state;
-        if (Bitcredit_AcceptToMemoryPool(bitcredit_mempool, state, tx, false, NULL, !fOverrideFees)) {
+        if (Bitcredit_AcceptToMemoryPool(credits_mempool, state, tx, false, NULL, !fOverrideFees)) {
             Bitcredit_SyncWithWallets(bitcoin_pwalletMain, hashTx, tx, NULL);
         } else {
             if(state.IsInvalid())
@@ -796,7 +796,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
     }
-    Bitcredit_RelayTransaction(tx, hashTx, Bitcredit_NetParams());
+    Credits_RelayTransaction(tx, hashTx, Credits_NetParams());
 
     return hashTx.GetHex();
 }

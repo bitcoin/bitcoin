@@ -34,7 +34,7 @@
 class Credits_CBlockIndex;
 class CBloomFilter;
 class CInv;
-class Bitcredit_CWallet;
+class Credits_CWallet;
 class Bitcoin_CWallet;
 class Bitcoin_CBlockUndoClaim;
 class Bitcoin_CBlockIndex;
@@ -47,7 +47,7 @@ static const unsigned int BITCREDIT_DEFAULT_BLOCK_MIN_SIZE = 0;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
 static const unsigned int BITCREDIT_DEFAULT_BLOCK_PRIORITY_SIZE = 50000;
 /** The maximum size for transactions we're willing to relay/mine */
-static const unsigned int BITCREDIT_MAX_STANDARD_TX_SIZE = 100000;
+static const unsigned int CREDITS_MAX_STANDARD_TX_SIZE = 100000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
 static const unsigned int BITCREDIT_MAX_BLOCK_SIGOPS = BITCREDIT_MAX_BLOCK_SIZE/50;
 /** The maximum number of orphan transactions kept in memory */
@@ -105,15 +105,15 @@ static const unsigned char BITCREDIT_REJECT_INSUFFICIENTFEE = 0x42;
 static const unsigned char BITCREDIT_REJECT_CHECKPOINT = 0x43;
 static const unsigned char BITCREDIT_REJECT_INVALID_BITCOIN_BLOCK_LINK = 0x44;
 
-extern MainState bitcredit_mainState;
+extern MainState credits_mainState;
 
 extern CScript BITCREDIT_COINBASE_FLAGS;
-extern Bitcredit_CTxMemPool bitcredit_mempool;
-extern std::map<uint256, Credits_CBlockIndex*> bitcredit_mapBlockIndex;
+extern Bitcredit_CTxMemPool credits_mempool;
+extern std::map<uint256, Credits_CBlockIndex*> credits_mapBlockIndex;
 extern uint64_t bitcredit_nLastBlockTx;
 extern uint64_t bitcredit_nLastBlockSize;
 extern const std::string bitcredit_strMessageMagic;
-extern int64_t bitcredit_nTimeBestReceived;
+extern int64_t credits_nTimeBestReceived;
 extern bool bitcredit_fBenchmark;
 extern int bitcredit_nScriptCheckThreads;
 extern bool bitcredit_fTxIndex;
@@ -127,14 +127,14 @@ class Credits_CBlockTreeDB;
 class Credits_CTxUndo;
 class Bitcredit_CScriptCheck;
 class CValidationState;
-class Bitcredit_CWalletInterface;
+class Credits_CWalletInterface;
 
 struct Credits_CBlockTemplate;
 
 /** Register a wallet to receive updates from core */
-void Bitcredit_RegisterWallet(Bitcredit_CWalletInterface* pwalletIn);
+void Bitcredit_RegisterWallet(Credits_CWalletInterface* pwalletIn);
 /** Unregister a wallet from core */
-void Bitcredit_UnregisterWallet(Bitcredit_CWalletInterface* pwalletIn);
+void Bitcredit_UnregisterWallet(Credits_CWalletInterface* pwalletIn);
 /** Unregister all wallets from core */
 void Bitcredit_UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
@@ -227,7 +227,7 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
 
 
 
-int64_t Bitcredit_GetMinFee(const Credits_CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode);
+int64_t Credits_GetMinFee(const Credits_CTransaction& tx, unsigned int nBytes, bool fAllowFree, enum GetMinFee_mode mode);
 
 //
 // Check transaction inputs, and make sure any
@@ -245,7 +245,7 @@ int64_t Bitcredit_GetMinFee(const Credits_CTransaction& tx, unsigned int nBytes,
     @param[in] mapInputs    Map of previous transactions that have outputs we're spending
     @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view);
+bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Credits_CCoinsViewCache& credits_view, Bitcoin_CClaimCoinsViewCache& claim_view);
 
 /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
     @return number of sigops this transaction's outputs will produce when spent
@@ -259,10 +259,10 @@ unsigned int Bitcredit_GetLegacySigOpCount(const Credits_CTransaction& tx);
     @return maximum number of sigops required to validate this transaction's inputs
     @see Credits_CTransaction::FetchInputs
  */
-unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Bitcredit_CCoinsViewCache& bitcredit_inputs, Bitcoin_CClaimCoinsViewCache& claim_inputs);
+unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Credits_CCoinsViewCache& bitcredit_inputs, Bitcoin_CClaimCoinsViewCache& claim_inputs);
 
 
-inline bool Bitcredit_AllowFree(double dPriority)
+inline bool Credits_AllowFree(double dPriority)
 {
     // Large (in bytes) low-priority (new, small-coin) transactions
     // need a fee.
@@ -276,12 +276,12 @@ bool Bitcredit_CheckClaimsAreInBounds(Bitcoin_CClaimCoinsViewCache &bitcoin_inpu
 // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
 // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
 // instead of being performed inline.
-bool Bitcredit_CheckInputs(const Credits_CTransaction& tx, CValidationState &state, Bitcredit_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
+bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
                  unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS,
                  std::vector<Bitcredit_CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
-void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &state, Bitcredit_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, Credits_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
+void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, Credits_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
 
 // Context-independent validity checks
 bool Bitcredit_CheckTransaction(const Credits_CTransaction& tx, CValidationState& state);
@@ -291,7 +291,7 @@ bool Bitcredit_CheckTransaction(const Credits_CTransaction& tx, CValidationState
 */
 bool Bitcredit_IsStandardTx(const Credits_CTransaction& tx, std::string& reason);
 
-bool Bitcredit_IsFinalTx(const Credits_CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
+bool Credits_IsFinalTx(const Credits_CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
 
 /** Undo information for a CBlock */
 class Credits_CBlockUndo
@@ -322,7 +322,7 @@ public:
         fileout << *this;
 
         // calculate & write checksum
-        CHashWriter hasher(SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
+        CHashWriter hasher(SER_GETHASH, CREDITS_PROTOCOL_VERSION);
         hasher << hashBlock;
         hasher << *this;
         fileout << hasher.GetHash();
@@ -353,7 +353,7 @@ public:
         }
 
         // Verify checksum
-        CHashWriter hasher(SER_GETHASH, BITCREDIT_PROTOCOL_VERSION);
+        CHashWriter hasher(SER_GETHASH, CREDITS_PROTOCOL_VERSION);
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
@@ -396,7 +396,7 @@ public:
 };
 
 /** A transaction with a merkle branch linking it to the block chain. */
-class Bitcredit_CMerkleTx : public Credits_CTransaction
+class Credits_CMerkleTx : public Credits_CTransaction
 {
 private:
     int GetDepthInMainChainINTERNAL(Credits_CBlockIndex* &pindexRet) const;
@@ -410,12 +410,12 @@ public:
     mutable bool fMerkleVerified;
 
 
-    Bitcredit_CMerkleTx()
+    Credits_CMerkleTx()
     {
         Init();
     }
 
-    Bitcredit_CMerkleTx(const Credits_CTransaction& txIn) : Credits_CTransaction(txIn)
+    Credits_CMerkleTx(const Credits_CTransaction& txIn) : Credits_CTransaction(txIn)
     {
         Init();
     }
@@ -461,8 +461,8 @@ public:
 
 /** Functions for disk access for blocks */
 bool Bitcredit_WriteBlockToDisk(Credits_CBlock& block, CDiskBlockPos& pos);
-bool Bitcredit_ReadBlockFromDisk(Credits_CBlock& block, const CDiskBlockPos& pos);
-bool Bitcredit_ReadBlockFromDisk(Credits_CBlock& block, const Credits_CBlockIndex* pindex);
+bool Credits_ReadBlockFromDisk(Credits_CBlock& block, const CDiskBlockPos& pos);
+bool Credits_ReadBlockFromDisk(Credits_CBlock& block, const Credits_CBlockIndex* pindex);
 
 
 /** Functions for validating blocks and updating the block tree */
@@ -471,14 +471,14 @@ bool Bitcredit_ReadBlockFromDisk(Credits_CBlock& block, const Credits_CBlockInde
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 /** Calculates resurrection of deposit base. Should be used just before coins are updated */
-void UpdateResurrectedDepositBase(const Credits_CBlockIndex* pBlockToTrim, const Credits_CTransaction &tx, int64_t &nResurrectedDepositBase, Bitcredit_CCoinsViewCache& bitcredit_view);
+void UpdateResurrectedDepositBase(const Credits_CBlockIndex* pBlockToTrim, const Credits_CTransaction &tx, int64_t &nResurrectedDepositBase, Credits_CCoinsViewCache& credits_view);
 /** Calculates trimming of deposit base. Should be used just after coins are updated */
-void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_CBlock &trimBlock, int64_t &nTrimmedDepositBase, Bitcredit_CCoinsViewCache& bitcredit_view);
+void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_CBlock &trimBlock, int64_t &nTrimmedDepositBase, Credits_CCoinsViewCache& credits_view);
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Bitcredit_CCoinsViewCache& bitcredit_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcredit_AddToBlockIndex(Credits_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
@@ -669,16 +669,16 @@ public:
 };
 
 /** Used to marshal pointers into hashes for db storage. */
-class Bitcredit_CDiskBlockIndex : public Credits_CBlockIndex
+class Credits_CDiskBlockIndex : public Credits_CBlockIndex
 {
 public:
     uint256 hashPrev;
 
-    Bitcredit_CDiskBlockIndex() {
+    Credits_CDiskBlockIndex() {
         hashPrev = 0;
     }
 
-    explicit Bitcredit_CDiskBlockIndex(Credits_CBlockIndex* pindex) : Credits_CBlockIndex(*pindex) {
+    explicit Credits_CDiskBlockIndex(Credits_CBlockIndex* pindex) : Credits_CBlockIndex(*pindex) {
         hashPrev = (pprev ? pprev->GetBlockHash() : 0);
     }
 
@@ -800,13 +800,13 @@ public:
 };
 
 /** The currently-connected chain of blocks. */
-extern Bitcredit_CChain bitcredit_chainActive;
+extern Bitcredit_CChain credits_chainActive;
 
 /** The currently best known chain of headers (some of which may be invalid). */
 extern Bitcredit_CChain bitcredit_chainMostWork;
 
 /** Global variable that points to the active Bitcredit_CCoinsView (protected by cs_main) */
-extern Bitcredit_CCoinsViewCache *bitcredit_pcoinsTip;
+extern Credits_CCoinsViewCache *bitcredit_pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern Credits_CBlockTreeDB *bitcredit_pblocktree;
@@ -851,16 +851,16 @@ public:
 };
 
 
-class Bitcredit_CWalletInterface {
+class Credits_CWalletInterface {
 protected:
     virtual void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Credits_CTransaction &tx, const Credits_CBlock *pblock) =0;
-    virtual void EraseFromWallet(Bitcredit_CWallet *bitcredit_wallet, const uint256 &hash) =0;
+    virtual void EraseFromWallet(Credits_CWallet *credits_wallet, const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;
     virtual void Inventory(const uint256 &hash) =0;
     virtual void ResendWalletTransactions() =0;
-    friend void ::Bitcredit_RegisterWallet(Bitcredit_CWalletInterface*);
-    friend void ::Bitcredit_UnregisterWallet(Bitcredit_CWalletInterface*);
+    friend void ::Bitcredit_RegisterWallet(Credits_CWalletInterface*);
+    friend void ::Bitcredit_UnregisterWallet(Credits_CWalletInterface*);
     friend void ::Bitcredit_UnregisterAllWallets();
 };
 

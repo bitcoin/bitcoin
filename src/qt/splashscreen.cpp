@@ -119,7 +119,7 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
 }
 
 #ifdef ENABLE_WALLET
-static void ConnectWallet(SplashScreen *splash, Bitcredit_CWallet* wallet)
+static void ConnectWallet(SplashScreen *splash, Credits_CWallet* wallet)
 {
     wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
 }

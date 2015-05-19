@@ -14,13 +14,13 @@ Bitcredit_WalletModelTransaction::Bitcredit_WalletModelTransaction(const QList<B
     keyRecipients(),
     fee(0)
 {
-    walletTransaction = new Bitcredit_CWalletTx();
+    walletTransaction = new Credits_CWalletTx();
 }
 
 Bitcredit_WalletModelTransaction::~Bitcredit_WalletModelTransaction()
 {
     while (!keyRecipients.empty()){
-    	Bitcredit_CReserveKey* key = keyRecipients.back();
+    	Credits_CReserveKey* key = keyRecipients.back();
     	keyRecipients.pop_back();
         delete key;
     }
@@ -34,7 +34,7 @@ QList<Bitcredit_SendCoinsRecipient> Bitcredit_WalletModelTransaction::getRecipie
     return recipients;
 }
 
-Bitcredit_CWalletTx *Bitcredit_WalletModelTransaction::getTransaction()
+Credits_CWalletTx *Bitcredit_WalletModelTransaction::getTransaction()
 {
     return walletTransaction;
 }
@@ -59,32 +59,32 @@ qint64 Bitcredit_WalletModelTransaction::getTotalTransactionAmount()
     return totalTransactionAmount;
 }
 
-void Bitcredit_WalletModelTransaction::newPossibleKeyChange(Bitcredit_CWallet *wallet)
+void Bitcredit_WalletModelTransaction::newPossibleKeyChange(Credits_CWallet *wallet)
 {
-    keyChange = new Bitcredit_CReserveKey(wallet);
+    keyChange = new Credits_CReserveKey(wallet);
 }
 
-Bitcredit_CReserveKey *Bitcredit_WalletModelTransaction::getPossibleKeyChange()
+Credits_CReserveKey *Bitcredit_WalletModelTransaction::getPossibleKeyChange()
 {
     return keyChange;
 }
 
-void Bitcredit_WalletModelTransaction::newKeyDepositSignature(Bitcredit_CWallet *deposit_wallet)
+void Bitcredit_WalletModelTransaction::newKeyDepositSignature(Credits_CWallet *deposit_wallet)
 {
-    keyDepositSignature = new Bitcredit_CReserveKey(deposit_wallet);
+    keyDepositSignature = new Credits_CReserveKey(deposit_wallet);
 }
 
-Bitcredit_CReserveKey *Bitcredit_WalletModelTransaction::getKeyDepositSignature()
+Credits_CReserveKey *Bitcredit_WalletModelTransaction::getKeyDepositSignature()
 {
     return keyDepositSignature;
 }
 
-void Bitcredit_WalletModelTransaction::newKeyRecipient(Bitcredit_CWallet *wallet)
+void Bitcredit_WalletModelTransaction::newKeyRecipient(Credits_CWallet *wallet)
 {
-	keyRecipients.push_back(new Bitcredit_CReserveKey(wallet));
+	keyRecipients.push_back(new Credits_CReserveKey(wallet));
 }
 
-std::vector<Bitcredit_CReserveKey *> & Bitcredit_WalletModelTransaction::getKeyRecipients()
+std::vector<Credits_CReserveKey *> & Bitcredit_WalletModelTransaction::getKeyRecipients()
 {
     return keyRecipients;
 }

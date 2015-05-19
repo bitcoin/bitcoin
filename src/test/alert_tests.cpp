@@ -81,7 +81,7 @@ struct ReadAlerts
     ReadAlerts()
     {
         std::vector<unsigned char> vch(alert_tests::alertTests, alert_tests::alertTests + sizeof(alert_tests::alertTests));
-        CDataStream stream(vch, SER_DISK, BITCREDIT_CLIENT_VERSION);
+        CDataStream stream(vch, SER_DISK, CREDITS_CLIENT_VERSION);
         try {
             while (stream.good())
             {
