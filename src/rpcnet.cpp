@@ -465,3 +465,92 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("warnings",       GetWarnings("statusbar")));
     return obj;
 }
+
+Value setban(const Array& params, bool fHelp)
+{
+    string strCommand;
+    if (params.size() >= 2)
+        strCommand = params[1].get_str();
+    if (fHelp || params.size() < 2 ||
+        (strCommand != "add" && strCommand != "remove"))
+        throw runtime_error(
+                            "setban \"node\" \"add|remove\" (bantime)\n"
+                            "\nAttempts add or remove a IP from the banned list.\n"
+                            "\nArguments:\n"
+                            "1. \"ip\"       (string, required) The IP (see getpeerinfo for nodes ip)\n"
+                            "2. \"command\"  (string, required) 'add' to add a IP to the list, 'remove' to remove a IP from the list\n"
+                            "1. \"bantime\"  (numeric, optional) time in seconds how long the ip is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("setban", "\"192.168.0.6\" \"add\" 86400")
+                            + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\" 86400")
+                            );
+
+    CNetAddr netAddr(params[0].get_str());
+    if (!netAddr.IsValid())
+        throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Invalid IP Address");
+
+    if (strCommand == "add")
+    {
+        if (CNode::IsBanned(netAddr))
+            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP already banned");
+
+        int64_t banTime = 0; //use standard bantime if not specified
+        if (params.size() == 3 && !params[2].is_null())
+            banTime = params[2].get_int64();
+
+        CNode::Ban(netAddr, banTime);
+
+        //disconnect possible nodes
+        while(CNode *bannedNode = FindNode(netAddr))
+            bannedNode->CloseSocketDisconnect();
+    }
+    else if(strCommand == "remove")
+    {
+        if (!CNode::Unban(netAddr))
+            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Unban failed");
+    }
+
+    return Value::null;
+}
+
+Value listbanned(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                            "listbanned\n"
+                            "\nList all banned IPs.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("listbanned", "")
+                            + HelpExampleRpc("listbanned", "")
+                            );
+
+    std::map<CNetAddr, int64_t> banMap;
+    CNode::GetBanned(banMap);
+
+    Array bannedAddresses;
+    for (std::map<CNetAddr, int64_t>::iterator it = banMap.begin(); it != banMap.end(); it++)
+    {
+        Object rec;
+        rec.push_back(Pair("address", (*it).first.ToString()));
+        rec.push_back(Pair("bannedtill", (*it).second));
+        bannedAddresses.push_back(rec);
+    }
+
+    return bannedAddresses;
+}
+
+Value clearbanned(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                            "clearbanned\n"
+                            "\nClear all banned IPs.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("clearbanned", "")
+                            + HelpExampleRpc("clearbanned", "")
+                            );
+
+    CNode::ClearBanned();
+
+    return Value::null;
+}
