@@ -3246,7 +3246,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
 }
 
 // MPTradeList here
-bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, uint64_t *totalSold, uint64_t *totalBought)
+bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, int64_t *totalSold, int64_t *totalBought)
 {
   if (!pdb) return false;
   leveldb::Slice skey, svalue;

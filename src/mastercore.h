@@ -338,7 +338,7 @@ public:
     bool exists(const uint256 &txid);
     void printStats();
     void printAll();
-    bool getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, uint64_t *totalSold, uint64_t *totalBought);
+    bool getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, int64_t *totalSold, int64_t *totalBought);
     int getMPTradeCountTotal();
 };
 

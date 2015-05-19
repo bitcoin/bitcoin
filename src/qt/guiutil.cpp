@@ -552,7 +552,7 @@ void TableViewLastColumnResizingFixer::on_geometriesChanged()
         bool omniTradeHistoryLayout = false;
         if (abstractModel->columnCount() > 3) { // ensure the columns are there before we try to reference them
             if (abstractModel->headerData(2, Qt::Horizontal).toString()=="Reserved") { omniLayout = true; omniBalanceLayout = true; }
-            if (abstractModel->headerData(2, Qt::Horizontal).toString()=="Date") { omniLayout = true; omniTradeHistoryLayout = true; }
+            if (abstractModel->headerData(3, Qt::Horizontal).toString()=="Date") { omniLayout = true; omniTradeHistoryLayout = true; }
         }
         if (omniLayout) { // this is an Omni balance or trade layout, override column resize
             if (omniBalanceLayout) resizeColumn(omniBalanceOverrideColumnIndex, getAvailableWidthForColumn(omniBalanceOverrideColumnIndex));
@@ -577,7 +577,7 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
     lastColumnIndex = columnCount - 1;
     secondToLastColumnIndex = columnCount - 2;
     omniBalanceOverrideColumnIndex = 1; // we can safely hardcode this for now
-    omniTradeHistoryOverrideColumnIndex = 4; // as above
+    omniTradeHistoryOverrideColumnIndex = 5; // as above
     tableView->horizontalHeader()->setMinimumSectionSize(allColumnsMinimumWidth);
     setViewHeaderResizeMode(secondToLastColumnIndex, QHeaderView::Interactive);
     setViewHeaderResizeMode(lastColumnIndex, QHeaderView::Interactive);

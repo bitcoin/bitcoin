@@ -28,10 +28,12 @@ class TradeHistoryObject
 {
 public:
     TradeHistoryObject()
-      : blockHeight(-1), blockByteOffset(0), valid(false) {};
+      : blockHeight(-1), valid(false) {};
     int blockHeight; // block transaction was mined in
-    int blockByteOffset; // byte offset the tx is stored in the block (used for ordering multiple txs same block)
     bool valid; // whether the transaction is valid from an Omni perspective
+    uint32_t propertyIdForSale; // the property being sold
+    uint32_t propertyIdDesired; // the property being requested
+    int64_t amountForSale; // the amount being sold
     std::string status; // string containing status of trade
     std::string info; // string containing human readable description of trade
     std::string amountOut; // string containing formatted amount out
@@ -59,13 +61,15 @@ private:
     TradeHistoryMap tradeHistoryMap;
 
 public slots:
-    void update();
+//    void update();
     void contextualMenu(const QPoint &point);
     void showDetails();
     void copyTxID();
 
 private slots:
     int PopulateTradeHistoryMap();
+    void UpdateData();
+    void UpdateTradeHistoryTable();
 
 signals:
     // Fired when a message should be reported to the user

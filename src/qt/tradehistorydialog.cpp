@@ -65,28 +65,29 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
 {
     // Setup the UI
     ui->setupUi(this);
-    ui->tradeHistoryTable->setColumnCount(7);
-    ui->tradeHistoryTable->setHorizontalHeaderItem(1, new QTableWidgetItem(" "));
-    ui->tradeHistoryTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Date"));
-    ui->tradeHistoryTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Status"));
-    ui->tradeHistoryTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Trade Details"));
-    ui->tradeHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Sold"));
-    ui->tradeHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Received"));
+    ui->tradeHistoryTable->setColumnCount(8);
+    // Note there are two hidden fields in tradeHistoryTable: 0=txid, 1=lastUpdateBlock
+    ui->tradeHistoryTable->setHorizontalHeaderItem(2, new QTableWidgetItem(" "));
+    ui->tradeHistoryTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Date"));
+    ui->tradeHistoryTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Status"));
+    ui->tradeHistoryTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Trade Details"));
+    ui->tradeHistoryTable->setHorizontalHeaderItem(6, new QTableWidgetItem("Sold"));
+    ui->tradeHistoryTable->setHorizontalHeaderItem(7, new QTableWidgetItem("Received"));
     borrowedColumnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(ui->tradeHistoryTable,100,100);
     #if QT_VERSION < 0x050000
-       ui->tradeHistoryTable->horizontalHeader()->setResizeMode(1, QHeaderView::Fixed);
-       ui->tradeHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Interactive);
+       ui->tradeHistoryTable->horizontalHeader()->setResizeMode(2, QHeaderView::Fixed);
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(3, QHeaderView::Interactive);
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(4, QHeaderView::Interactive);
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(5, QHeaderView::Interactive);
        ui->tradeHistoryTable->horizontalHeader()->setResizeMode(6, QHeaderView::Interactive);
+       ui->tradeHistoryTable->horizontalHeader()->setResizeMode(7, QHeaderView::Interactive);
     #else
-       ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
-       ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Interactive);
+       ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
        ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Interactive);
        ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Interactive);
        ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Interactive);
        ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
+       ui->tradeHistoryTable->horizontalHeader()->setSectionResizeMode(7, QHeaderView::Interactive);
     #endif
     ui->tradeHistoryTable->setAlternatingRowColors(true);
     ui->tradeHistoryTable->verticalHeader()->setVisible(false);
@@ -96,16 +97,17 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     ui->tradeHistoryTable->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tradeHistoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->tradeHistoryTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    update(); // make sure we're populated before attempting to resize to contents
+    UpdateTradeHistoryTable(); // make sure we're populated before attempting to resize to contents
     ui->tradeHistoryTable->setColumnHidden(0, true);
-    ui->tradeHistoryTable->setColumnWidth(1, 23);
-    ui->tradeHistoryTable->resizeColumnToContents(2);
+    ui->tradeHistoryTable->setColumnHidden(1, true);
+    ui->tradeHistoryTable->setColumnWidth(2, 23);
     ui->tradeHistoryTable->resizeColumnToContents(3);
-    ui->tradeHistoryTable->resizeColumnToContents(5);
+    ui->tradeHistoryTable->resizeColumnToContents(4);
     ui->tradeHistoryTable->resizeColumnToContents(6);
-    borrowedColumnResizingFixer->stretchColumnWidth(4);
-//  ui->orderHistoryTable->setSortingEnabled(true);
-//  ui->orderHistoryTable->horizontalHeader()->setSortIndicator(2, Qt::DescendingOrder);
+    ui->tradeHistoryTable->resizeColumnToContents(7);
+    borrowedColumnResizingFixer->stretchColumnWidth(5);
+    ui->tradeHistoryTable->setSortingEnabled(true);
+    ui->tradeHistoryTable->horizontalHeader()->setSortIndicator(3, Qt::DescendingOrder);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *showDetailsAction = new QAction(tr("Show trade details"), this);
     contextMenu = new QMenu();
@@ -120,6 +122,89 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
 TradeHistoryDialog::~TradeHistoryDialog()
 {
     delete ui;
+}
+
+// The main function to update the UI tradeHistoryTable
+void TradeHistoryDialog::UpdateTradeHistoryTable()
+{
+    // Populate tradeHistoryMap
+    int newTXCount = PopulateTradeHistoryMap();
+
+    // Process any new transactions that were added to the map
+    if (newTXCount > 0) {
+        ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
+        QAbstractItemModel* tradeHistoryAbstractModel = ui->tradeHistoryTable->model();
+        int chainHeight = chainActive.Height();
+
+        // Loop through tradeHistoryMap and search tradeHistoryTable for the transaction, adding it if not already there
+        for (TradeHistoryMap::iterator it = tradeHistoryMap.begin(); it != tradeHistoryMap.end(); ++it) {
+            uint256 txid = it->first;
+            QSortFilterProxyModel tradeHistoryProxy;
+            tradeHistoryProxy.setSourceModel(tradeHistoryAbstractModel);
+            tradeHistoryProxy.setFilterKeyColumn(0);
+            tradeHistoryProxy.setFilterFixedString(QString::fromStdString(txid.GetHex()));
+            QModelIndex rowIndex = tradeHistoryProxy.mapToSource(tradeHistoryProxy.index(0,0));
+            if (rowIndex.isValid()) continue; // Found tx in tradeHistoryTable already, do nothing
+
+            TradeHistoryObject objTH = it->second;
+            int newRow = ui->tradeHistoryTable->rowCount();
+            ui->tradeHistoryTable->insertRow(newRow); // append a new row (sorting will take care of ordering)
+
+            // Create the cells to be added to the new row and setup their formatting
+            QTableWidgetItem *dateCell = new QTableWidgetItem;
+            QDateTime txTime;
+            if (objTH.blockHeight > 0) {
+                CBlockIndex* pBlkIdx = chainActive[objTH.blockHeight];
+                if (NULL != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
+                dateCell->setData(Qt::DisplayRole, txTime);
+            } else {
+                dateCell->setData(Qt::DisplayRole, QString::fromStdString("Unconfirmed"));
+            }
+            QTableWidgetItem *lastUpdateBlockCell = new QTableWidgetItem(QString::fromStdString(FormatIndivisibleMP(chainHeight)));
+            QTableWidgetItem *statusCell = new QTableWidgetItem(QString::fromStdString(objTH.status));
+            QTableWidgetItem *infoCell = new QTableWidgetItem(QString::fromStdString(objTH.info));
+            QTableWidgetItem *amountOutCell = new QTableWidgetItem(QString::fromStdString(objTH.amountOut));
+            QTableWidgetItem *amountInCell = new QTableWidgetItem(QString::fromStdString(objTH.amountIn));
+            QTableWidgetItem *txidCell = new QTableWidgetItem(QString::fromStdString(txid.GetHex()));
+            QTableWidgetItem *iconCell = new QTableWidgetItem;
+            QIcon ic = QIcon(":/icons/transaction_0");
+            if (objTH.status == "Cancelled") ic =QIcon(":/icons/meta_cancelled");
+            if (objTH.status == "Part Cancel") ic = QIcon(":/icons/meta_partialclosed");
+            if (objTH.status == "Filled") ic = QIcon(":/icons/meta_filled");
+            if (objTH.status == "Open") ic = QIcon(":/icons/meta_open");
+            if (objTH.status == "Part Filled") ic = QIcon(":/icons/meta_partial");
+            if (!objTH.valid) ic = QIcon(":/icons/transaction_invalid");
+            iconCell->setIcon(ic);
+            amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+            amountOutCell->setForeground(QColor("#EE0000"));
+            amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+            amountInCell->setForeground(QColor("#00AA00"));
+            if (objTH.status == "Cancelled" || objTH.status == "Filled") {
+                // dull the colors for non-active trades
+                dateCell->setForeground(QColor("#707070"));
+                statusCell->setForeground(QColor("#707070"));
+                infoCell->setForeground(QColor("#707070"));
+                amountOutCell->setForeground(QColor("#993333"));
+                amountInCell->setForeground(QColor("#006600"));
+            }
+            if(objTH.amountIn.substr(0,2) == "0 ") amountInCell->setForeground(QColor("#000000"));
+            if(objTH.amountOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
+
+            // Set the cells in the new row accordingly
+            ui->tradeHistoryTable->setItem(newRow, 0, txidCell);
+            ui->tradeHistoryTable->setItem(newRow, 1, lastUpdateBlockCell);
+            ui->tradeHistoryTable->setItem(newRow, 2, iconCell);
+            ui->tradeHistoryTable->setItem(newRow, 3, dateCell);
+            ui->tradeHistoryTable->setItem(newRow, 4, statusCell);
+            ui->tradeHistoryTable->setItem(newRow, 5, infoCell);
+            ui->tradeHistoryTable->setItem(newRow, 6, amountOutCell);
+            ui->tradeHistoryTable->setItem(newRow, 7, amountInCell);
+        }
+        ui->tradeHistoryTable->setSortingEnabled(true); // re-enable sorting
+    }
+
+    // Update any existing rows that may have changed data
+    UpdateData();
 }
 
 // Used to cache trades so we don't need to reparse all our transactions on every update
@@ -146,19 +231,16 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         // grab pending object, extract details and skip if not a metadex trade
         CMPPending *p_pending = &(it->second);
         if (p_pending->type != MSC_TYPE_METADEX) continue;
-        uint64_t propertyId = p_pending->prop;
+        uint32_t propertyId = p_pending->prop;
         int64_t amount = p_pending->amount;
 
         // create a TradeHistoryObject and populate it
         TradeHistoryObject objTH;
         objTH.blockHeight = 0;
-        objTH.blockByteOffset = 0; // attempt to use the position of the transaction in the wallet to provide a sortkey for pending
-        std::map<uint256, CWalletTx>::const_iterator walletIt = wallet->mapWallet.find(txid);
-        if (walletIt != wallet->mapWallet.end()) {
-            const CWalletTx* pendingWTx = &(*walletIt).second;
-            objTH.blockByteOffset = pendingWTx->nOrderPos;
-        }
         objTH.valid = true; // all pending transactions are assumed to be valid
+        objTH.propertyIdForSale = propertyId;
+        objTH.propertyIdDesired = 0; // unknown at this stage & not needed for pending
+        objTH.amountForSale = amount;
         objTH.status = "Pending";
         objTH.amountIn = "---";
         objTH.amountOut = "---";
@@ -227,15 +309,15 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         CMPTransaction mp_obj;
         CMPMetaDEx temp_metadexoffer;
         std::string statusText;
-        unsigned int propertyIdForSale = 0;
-        unsigned int propertyIdDesired = 0;
-        uint64_t amountForSale = 0;
-        uint64_t amountDesired = 0;
+        uint32_t propertyIdForSale = 0;
+        uint32_t propertyIdDesired = 0;
+        int64_t amountForSale = 0;
+        int64_t amountDesired = 0;
         bool divisibleForSale = false;
         bool divisibleDesired = false;
         Array tradeArray;
-        uint64_t totalBought = 0;
-        uint64_t totalSold = 0;
+        int64_t totalBought = 0;
+        int64_t totalSold = 0;
         bool orderOpen = false;
         bool valid = false;
 
@@ -289,19 +371,14 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         if(totalSold == 0) displayOut = "0";
         displayIn += getTokenLabel(propertyIdDesired);
         displayOut += getTokenLabel(propertyIdForSale);
-        QDateTime txTime;
-        txTime.setTime_t(pwtx->GetTxTime());
-        QString txTimeStr = txTime.toString(Qt::SystemLocaleShortDate);
 
         // create a TradeHistoryObject and populate it
         TradeHistoryObject objTH;
         objTH.blockHeight = blockHeight;
-        objTH.blockByteOffset = 0;
-        CDiskTxPos position;
-        if (pblocktree->ReadTxIndex(hash, position)) {
-            objTH.blockByteOffset = position.nTxOffset;
-        }
         objTH.valid = valid;
+        objTH.propertyIdForSale = propertyIdForSale;
+        objTH.propertyIdDesired = propertyIdDesired;
+        objTH.amountForSale = amountForSale;
         objTH.status = statusText;
         objTH.amountIn = displayIn;
         objTH.amountOut = displayOut;
@@ -316,6 +393,76 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
     return nProcessed;
 }
 
+// Each time an update is called it's feasible that the status and amounts traded for open trades may have changed
+// This function will loop through each of the rows in tradeHistoryTable and check if the details need updating
+void TradeHistoryDialog::UpdateData()
+{
+    int chainHeight = chainActive.Height();
+    int rowCount = ui->tradeHistoryTable->rowCount();
+    for (int row = 0; row < rowCount; row++) {
+        // check if we need to refresh the details for this row
+        int lastUpdateBlock = ui->tradeHistoryTable->item(row,1)->text().toInt();
+        uint256 txid;
+        txid.SetHex(ui->tradeHistoryTable->item(row,0)->text().toStdString());
+        TradeHistoryMap::iterator hIter = tradeHistoryMap.find(txid);
+        if (hIter == tradeHistoryMap.end()) {
+            file_log("UI Error: Transaction %s appears in tradeHistoryTable but cannot be found in tradeHistoryMap.\n", txid.GetHex());
+            continue;
+        }
+        TradeHistoryObject *tmpObjTH = &(hIter->second);
+        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled") continue; // once a trade hits this status the details should never change
+        if (tmpObjTH->blockHeight > 0 && lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
+
+        // at this point we have an active trade and there have been new block(s) since the last update - refresh status and amounts
+        uint32_t propertyIdForSale = tmpObjTH->propertyIdForSale;
+        uint32_t propertyIdDesired = tmpObjTH->propertyIdDesired;
+        int64_t amountForSale = tmpObjTH->amountForSale;
+        Array tradeArray;
+        int64_t totalBought = 0;
+        int64_t totalSold = 0;
+        bool orderOpen = false;
+        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+        orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
+
+        // work out new status & icon
+        bool partialFilled = false;
+        bool filled = false;
+        if (totalSold > 0) partialFilled = true;
+        if (totalSold >= amountForSale) filled = true;
+        std::string statusText = "Unknown";
+        QIcon ic = QIcon(":/icons/transaction_0");
+        if (!orderOpen && !partialFilled) { statusText = "Cancelled"; ic = QIcon(":/icons/meta_cancelled"); }
+        if (!orderOpen && partialFilled) { statusText = "Part Cancel"; ic = QIcon(":/icons/meta_partialclosed"); }
+        if (!orderOpen && filled) { statusText = "Filled"; ic = QIcon(":/icons/meta_filled"); }
+        if (orderOpen && !partialFilled) { statusText = "Open"; ic = QIcon(":/icons/meta_open"); }
+        if (orderOpen && partialFilled) { statusText = "Part Filled"; ic = QIcon(":/icons/meta_partial"); }
+
+        // format new amounts
+        std::string displayIn = "";
+        std::string displayOut = "-";
+        if (isPropertyDivisible(propertyIdDesired)) { displayIn += FormatDivisibleShortMP(totalBought); } else { displayIn += FormatIndivisibleMP(totalBought); }
+        if (isPropertyDivisible(propertyIdForSale)) { displayOut += FormatDivisibleShortMP(totalSold); } else { displayOut += FormatIndivisibleMP(totalSold); }
+        if (totalBought == 0) displayIn = "0";
+        if (totalSold == 0) displayOut = "0";
+        displayIn += getTokenLabel(propertyIdDesired);
+        displayOut += getTokenLabel(propertyIdForSale);
+
+        // replace cells in row accordingly
+        QTableWidgetItem *lastUpdateBlockCell = new QTableWidgetItem(QString::fromStdString(FormatIndivisibleMP(chainHeight)));
+        QTableWidgetItem *statusCell = new QTableWidgetItem(QString::fromStdString(statusText));
+        QTableWidgetItem *amountOutCell = new QTableWidgetItem(QString::fromStdString(displayOut));
+        QTableWidgetItem *amountInCell = new QTableWidgetItem(QString::fromStdString(displayIn));
+        QTableWidgetItem *iconCell = new QTableWidgetItem;
+        iconCell->setIcon(ic);
+        ui->tradeHistoryTable->setItem(row, 1, lastUpdateBlockCell);
+        ui->tradeHistoryTable->setItem(row, 2, iconCell);
+        ui->tradeHistoryTable->setItem(row, 4, statusCell);
+        ui->tradeHistoryTable->setItem(row, 6, amountOutCell);
+        ui->tradeHistoryTable->setItem(row, 7, amountInCell);
+    }
+}
+
+/*
 void TradeHistoryDialog::update()
 {
     //pending orders
@@ -390,12 +537,12 @@ void TradeHistoryDialog::update()
             amountOutCell->setForeground(QColor("#000000"));
 
             ui->tradeHistoryTable->setItem(rowcount, 0, txidCell);
-            ui->tradeHistoryTable->setItem(rowcount, 1, iconCell);
-            ui->tradeHistoryTable->setItem(rowcount, 2, dateCell);
-            ui->tradeHistoryTable->setItem(rowcount, 3, statusCell);
-            ui->tradeHistoryTable->setItem(rowcount, 4, infoCell);
-            ui->tradeHistoryTable->setItem(rowcount, 5, amountOutCell);
-            ui->tradeHistoryTable->setItem(rowcount, 6, amountInCell);
+            ui->tradeHistoryTable->setItem(rowcount, 2, iconCell);
+            ui->tradeHistoryTable->setItem(rowcount, 3, dateCell);
+            ui->tradeHistoryTable->setItem(rowcount, 4, statusCell);
+            ui->tradeHistoryTable->setItem(rowcount, 5, infoCell);
+            ui->tradeHistoryTable->setItem(rowcount, 6, amountOutCell);
+            ui->tradeHistoryTable->setItem(rowcount, 7, amountInCell);
             rowcount += 1;
         }
     }
@@ -453,8 +600,8 @@ void TradeHistoryDialog::update()
                         bool divisibleForSale = false;
                         bool divisibleDesired = false;
                         Array tradeArray;
-                        uint64_t totalBought = 0;
-                        uint64_t totalSold = 0;
+                        int64_t totalBought = 0;
+                        int64_t totalSold = 0;
                         bool orderOpen = false;
                         bool valid = false;
 
@@ -610,12 +757,12 @@ void TradeHistoryDialog::update()
                         if(displayOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
 
                         ui->tradeHistoryTable->setItem(rowcount, 0, txidCell);
-                        ui->tradeHistoryTable->setItem(rowcount, 1, iconCell);
-                        ui->tradeHistoryTable->setItem(rowcount, 2, dateCell);
-                        ui->tradeHistoryTable->setItem(rowcount, 3, statusCell);
-                        ui->tradeHistoryTable->setItem(rowcount, 4, infoCell);
-                        ui->tradeHistoryTable->setItem(rowcount, 5, amountOutCell);
-                        ui->tradeHistoryTable->setItem(rowcount, 6, amountInCell);
+                        ui->tradeHistoryTable->setItem(rowcount, 2, iconCell);
+                        ui->tradeHistoryTable->setItem(rowcount, 3, dateCell);
+                        ui->tradeHistoryTable->setItem(rowcount, 4, statusCell);
+                        ui->tradeHistoryTable->setItem(rowcount, 5, infoCell);
+                        ui->tradeHistoryTable->setItem(rowcount, 6, amountOutCell);
+                        ui->tradeHistoryTable->setItem(rowcount, 7, amountInCell);
                         rowcount += 1;
                     }
                 }
@@ -623,12 +770,13 @@ void TradeHistoryDialog::update()
         }
     }
 }
+*/
 
 void TradeHistoryDialog::setModel(WalletModel *model)
 {
     this->model = model;
     if (NULL != model) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(update()));
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateTradeHistoryTable()));
     }
 }
 
@@ -675,7 +823,7 @@ void TradeHistoryDialog::showDetails()
                     if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
                 }
             }
-            uint64_t amountForSale = mp_obj.getAmount();
+            int64_t amountForSale = mp_obj.getAmount();
 
             // obtain action byte
             int actionByte = 0;
@@ -683,7 +831,7 @@ void TradeHistoryDialog::showDetails()
 
             // obtain an array of matched trades (action 1) or array of cancelled trades (action 2/3/4)
             Array tradeArray, cancelArray;
-            uint64_t totalBought = 0, totalSold = 0;
+            int64_t totalBought = 0, totalSold = 0;
             if (actionByte == 1) {
                 t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
             } else {
@@ -741,6 +889,6 @@ void TradeHistoryDialog::showDetails()
 void TradeHistoryDialog::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    borrowedColumnResizingFixer->stretchColumnWidth(4);
+    borrowedColumnResizingFixer->stretchColumnWidth(5);
 }
 
