@@ -129,7 +129,7 @@ Bitcredit_CMainParams::Bitcredit_CMainParams() {
     pchMessageStart[1] = 0xf9;
     pchMessageStart[2] = 0xd9;
     pchMessageStart[3] = 0xb4;
-    addrFileName = "bitcredit_peers.dat";
+    addrFileName = "credits_peers.dat";
     vAlertPubKey = ParseHex("041604c6a3b185d784199e836841099a7f84fd15e9ed467350f58d2b1d0db3bce10c9527480dc35dd8415b9d86a9b021dc83d5e11e4ff0738e751a68e7a1c860a");
     nDefaultPort = 9333;
     nRPCPort = 9332;
