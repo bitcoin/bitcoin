@@ -1118,7 +1118,7 @@ void BitcreditGUI::bitcoin_setNumBlocks(int count)
 
 void BitcreditGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Bitcredit"); // default title
+    QString strTitle = tr("Credits"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;

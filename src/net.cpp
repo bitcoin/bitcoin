@@ -1268,7 +1268,7 @@ void DNSAddressSeed(std::string logPrefix, CNetParams * netParams)
     LogPrintf("%s: %d addresses found from DNS seeds\n", logPrefix, found);
 }
 void Bitcredit_ThreadDNSAddressSeed() {
-	DNSAddressSeed("Bitcredit", Bitcredit_NetParams());
+	DNSAddressSeed("Credits", Bitcredit_NetParams());
 }
 void Bitcoin_ThreadDNSAddressSeed() {
 	DNSAddressSeed("Bitcoin", Bitcoin_NetParams());

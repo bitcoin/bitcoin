@@ -36,7 +36,7 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
-.bitcredit
+.credits
 *.a
 *.pb.cc
 *.pb.h

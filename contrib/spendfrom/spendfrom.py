@@ -35,10 +35,10 @@ def check_json_precision():
 def determine_db_dir():
     """Return the default location of the bitcoin data directory"""
     if platform.system() == "Darwin":
-        return os.path.expanduser("~/Library/Application Support/Bitcredit/")
+        return os.path.expanduser("~/Library/Application Support/Credits/")
     elif platform.system() == "Windows":
-        return os.path.join(os.environ['APPDATA'], "Bitcredit")
-    return os.path.expanduser("~/.bitcredit")
+        return os.path.join(os.environ['APPDATA'], "Credits")
+    return os.path.expanduser("~/.credits")
 
 def read_bitcoin_config(dbdir):
     """Read the credits.conf file from dbdir, returns dictionary of settings"""

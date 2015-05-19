@@ -905,13 +905,13 @@ void PrintExceptionContinue(std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcredit
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcredit
-    // Mac: ~/Library/Application Support/Bitcredit
-    // Unix: ~/.bitcredit
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Credits
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Credits
+    // Mac: ~/Library/Application Support/Credits
+    // Unix: ~/.credits
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Bitcredit";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Credits";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -923,10 +923,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "Bitcredit";
+    return pathRet / "Credits";
 #else
     // Unix
-    return pathRet / ".bitcredit";
+    return pathRet / ".credits";
 #endif
 #endif
 }
