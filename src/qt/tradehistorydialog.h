@@ -61,7 +61,6 @@ private:
     TradeHistoryMap tradeHistoryMap;
 
 public slots:
-//    void update();
     void contextualMenu(const QPoint &point);
     void showDetails();
     void copyTxID();
