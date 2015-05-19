@@ -3354,11 +3354,11 @@ bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes)
 }
 
 FILE* Bitcredit_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
-    return OpenDiskFile(pos, "bitcredit_blocks", "blk", fReadOnly);
+    return OpenDiskFile(pos, "credits_blocks", "blk", fReadOnly);
 }
 
 FILE* Bitcredit_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
-    return OpenDiskFile(pos, "bitcredit_blocks", "rev", fReadOnly);
+    return OpenDiskFile(pos, "credits_blocks", "rev", fReadOnly);
 }
 
 Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash)

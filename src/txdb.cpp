@@ -116,7 +116,7 @@ bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
     return true;
 }
 
-Bitcredit_CCoinsViewDB::Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "bitcredit_chainstate", nCacheSize, fMemory, fWipe) { }
+Bitcredit_CCoinsViewDB::Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "credits_chainstate", nCacheSize, fMemory, fWipe) { }
 
 //-----------------------------------------------
 
@@ -129,7 +129,7 @@ const unsigned char Credits_CBlockTreeDB::TX_KEY = 't';
 const unsigned char Credits_CBlockTreeDB::ONE = '1';
 const unsigned char Credits_CBlockTreeDB::ZERO = '0';
 
-Credits_CBlockTreeDB::Credits_CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "bitcredit_blocks" / "index", nCacheSize, fMemory, fWipe) {
+Credits_CBlockTreeDB::Credits_CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) : CLevelDBWrapper(GetDataDir() / "credits_blocks" / "index", nCacheSize, fMemory, fWipe) {
 }
 
 bool Credits_CBlockTreeDB::WriteBlockIndex(const Bitcredit_CDiskBlockIndex& blockindex)

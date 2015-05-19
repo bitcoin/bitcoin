@@ -1411,7 +1411,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     bitcoin_mainState.fReindex = GetBoolArg("-reindex", false);
     InitDataDir("bitcoin_blocks");
     bitcredit_mainState.fReindex = GetBoolArg("-reindex", false);
-    InitDataDir("bitcredit_blocks");
+    InitDataDir("credits_blocks");
 
     // cache size calculations
     if(!Bitcoin_InitDbAndCache(nStart)) {
