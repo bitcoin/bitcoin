@@ -28,7 +28,7 @@ uint64_t bitcoin_nAccountingEntryNumber = 0;
 //Bitcoin_CDBEnv bitcoin_bitdb;
 
 uint64_t bitcredit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv bitcredit_bitdb("bitcredit_database", "bitcredit_db.log");
+Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
 
 uint64_t deposit_nAccountingEntryNumber = 0;
 Bitcredit_CDBEnv deposit_bitdb("deposit_database", "deposit_db.log");

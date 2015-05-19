@@ -25,7 +25,7 @@ typedef set<pair<const Bitcredit_CWalletTx*,unsigned int> > CoinSet;
 
 BOOST_AUTO_TEST_SUITE(wallet_tests)
 
-static Bitcredit_CDBEnv bitcredit_bitdb("bitcredit_database", "bitcredit_db.log");
+static Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
 static Bitcredit_CWallet wallet(&bitcredit_bitdb);
 static vector<Bitcredit_COutput> vCoins;
 

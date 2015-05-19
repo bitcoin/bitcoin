@@ -48,7 +48,7 @@ using namespace boost;
 
 #ifdef ENABLE_WALLET
 uint64_t bitcredit_nAccountingEntryNumber = 0;
-Bitcredit_CDBEnv bitcredit_bitdb("bitcredit_database", "bitcredit_db.log");
+Bitcredit_CDBEnv bitcredit_bitdb("credits_database", "credits_db.log");
 std::string bitcredit_strWalletFile;
 Bitcredit_CWallet* bitcredit_pwalletMain;
 
@@ -1345,7 +1345,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         {
             // try moving the database env out of the way
             boost::filesystem::path pathDatabase = GetDataDir() / bitcredit_bitdb.dbName;
-            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("bitcredit_database.%d.bak", GetTime());
+            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("credits_database.%d.bak", GetTime());
             try {
                 boost::filesystem::rename(pathDatabase, pathDatabaseBak);
                 LogPrintf("Credits: Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
