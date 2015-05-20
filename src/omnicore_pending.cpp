@@ -68,7 +68,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
             txobj.push_back(Pair("action", action));
         break;
     }
-    std::string txDesc = write_string(Value(txobj), false);
+    std::string txDesc = write_string(Value(txobj), true);
     CMPPending pending;
     if (msc_debug_pending) file_log("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
                                         type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
