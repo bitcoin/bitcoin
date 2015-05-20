@@ -176,8 +176,12 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     unitDisplayControl = new UnitDisplayStatusBarControl();
     labelEncryptionIcon = new QLabel();
     labelConnectionsIcon = new QPushButton();
-    labelConnectionsIcon->setFlat(true); // Make the button look like a label, but clickable 
+    labelConnectionsIcon->setFlat(true); // Make the button look like a label, but clickable
+#ifndef Q_OS_MAC
     labelConnectionsIcon->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
+#else
+    labelConnectionsIcon->setStyleSheet("QPushButton { background-color: rgba(255, 255, 255, 0);} QPushButton QToolTip { background-color: black;}");
+#endif
     labelConnectionsIcon->setMaximumSize(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE);
     labelBlocksIcon = new QLabel();
     if(enableWallet)
