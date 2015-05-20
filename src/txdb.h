@@ -42,7 +42,7 @@ private:
     void Claim_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
     void Claim_BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash);
     void Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins);
-    void Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CClaimCoins &coins);
+    void Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Claim_CCoins &coins);
 protected:
     CLevelDBWrapper db;
 public:
@@ -56,8 +56,8 @@ public:
     bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
     bool Credits_GetStats(Credits_CCoinsStats &stats);
 
-    bool Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins);
-    bool Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins);
+    bool Claim_GetCoins(const uint256 &txid, Claim_CCoins &coins);
+    bool Claim_SetCoins(const uint256 &txid, const Claim_CCoins &coins);
     bool Claim_HaveCoins(const uint256 &txid);
     uint256 Claim_GetBestBlock();
     bool Claim_SetBestBlock(const uint256 &hashBlock);
@@ -65,9 +65,9 @@ public:
     bool Claim_SetBitcreditClaimTip(const uint256 &hashBlock);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
-    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    bool Claim_GetCoinSlice(std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const int& size, const bool& firstInvocation, bool& fMore);
-    bool Claim_GetStats(Bitcoin_CClaimCoinsStats &stats);
+    bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
+    bool Claim_GetCoinSlice(std::map<uint256, Claim_CCoins> &mapCoins, const int& size, const bool& firstInvocation, bool& fMore);
+    bool Claim_GetStats(Claim_CCoinsStats &stats);
 };
 
 /** Access to the block database (blocks/index/) */

@@ -42,7 +42,6 @@ extern void noui_connect();
 struct TestingSetup {
     Credits_CCoinsViewDB *bitcredit_pcoinsdbview;
     Bitcoin_CCoinsViewDB *bitcoin_pcoinsdbview;
-    Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
 
@@ -60,13 +59,11 @@ struct TestingSetup {
 
         bitcredit_pblocktree = new Credits_CBlockTreeDB(1 << 20, true);
         bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(1 << 23, true);
-        bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
+        credits_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
         bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(1 << 20, true);
         bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(1 << 23, true);
         bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
-        bitcoin_pclaimcoinsdbview = new Bitcoin_CClaimCoinsViewDB(GetDataDir() / "bitcoin_chainstatecla", 1 << 23, false, false, true);
-        bitcoin_pclaimCoinsTip = new Bitcoin_CClaimCoinsViewCache(*bitcoin_pclaimcoinsdbview, bitcoin_nClaimCoinCacheFlushSize);
 
         Bitcoin_InitBlockIndex();
         Bitcredit_InitBlockIndex();
@@ -103,14 +100,12 @@ struct TestingSetup {
         delete deposit_pwalletMain;
         deposit_pwalletMain = NULL;
 #endif
-        delete bitcredit_pcoinsTip;
+        delete credits_pcoinsTip;
         delete bitcredit_pcoinsdbview;
         delete bitcredit_pblocktree;
 
         delete bitcoin_pcoinsTip;
         delete bitcoin_pcoinsdbview;
-        delete bitcoin_pclaimCoinsTip;
-        delete bitcoin_pclaimcoinsdbview;
         delete bitcoin_pblocktree;
 #ifdef ENABLE_WALLET
         bitcoin_bitdb.Flush(true);

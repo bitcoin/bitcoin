@@ -136,7 +136,7 @@ void Bitcredit_CTxMemPool::clear()
     ++nTransactionsUpdated;
 }
 
-void Bitcredit_CTxMemPool::check(Credits_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const
+void Bitcredit_CTxMemPool::check(Credits_CCoinsViewCache *pcoins) const
 {
     if (!fSanityCheck)
         return;
@@ -155,7 +155,7 @@ void Bitcredit_CTxMemPool::check(Credits_CCoinsViewCache *pcoins, Bitcoin_CClaim
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
             	if(tx.IsClaim()) {
-            		Bitcoin_CClaimCoins &coins = pclaimcoins->Claim_GetCoins(txin.prevout.hash);
+            		Claim_CCoins &coins = pcoins->Claim_GetCoins(txin.prevout.hash);
             		assert(coins.HasClaimable(txin.prevout.n));
             	} else {
             		Credits_CCoins &coins = pcoins->Credits_GetCoins(txin.prevout.hash);

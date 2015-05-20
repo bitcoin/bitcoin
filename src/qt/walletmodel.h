@@ -159,10 +159,10 @@ public:
     SendCoinsReturn prepareTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
     // prepare deposit transaction for getting txfee before sending coins
-    SendCoinsReturn prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view, Bitcoin_CClaimCoinsViewCache &claim_view);
+    SendCoinsReturn prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view);
 
     // prepare claim transaction for getting txfee before sending coins
-    SendCoinsReturn prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
+    SendCoinsReturn prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Credits_CCoinsViewCache *credits_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
     // Store deposit coins for later use
     SendCoinsReturn storeDepositTransaction(Bitcredit_WalletModel *bitcredit_model, Bitcredit_WalletModelTransaction &transaction);

@@ -128,7 +128,7 @@ Value bitcredit_importprivkey(const Array& params, bool fHelp)
         bitcredit_pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, credits_chainActive.Genesis(), true);
+            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, credits_chainActive.Genesis(), true);
         }
     }
 
@@ -293,7 +293,7 @@ Value bitcredit_importwallet(const Array& params, bool fHelp)
         bitcredit_pwalletMain->nTimeFirstKey = nTimeBegin;
 
     LogPrintf("Rescanning last %i blocks\n", credits_chainActive.Height() - pindex->nHeight + 1);
-    bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, pindex);
+    bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, pindex);
     bitcredit_pwalletMain->MarkDirty();
 
     if (!fGood)

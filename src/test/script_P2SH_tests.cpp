@@ -253,8 +253,6 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 
     Credits_CCoinsView coinsDummy;
     Credits_CCoinsViewCache bitcredit_coins(coinsDummy);
-    Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
-    Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
 
     CBasicKeyStore keystore;
     CKey key[3];
@@ -315,15 +313,15 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[2].prevout.hash = txFrom.GetHash();
     BOOST_CHECK(Credits_SignSignature(keystore, txFrom, txTo, 2));
 
-    BOOST_CHECK(::Bitcredit_AreInputsStandard(txTo, bitcredit_coins, bitcoin_coins));
-    BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txTo, bitcredit_coins, bitcoin_coins), 1U);
+    BOOST_CHECK(::Bitcredit_AreInputsStandard(txTo, bitcredit_coins));
+    BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txTo, bitcredit_coins), 1U);
 
     // Make sure adding crap to the scriptSigs makes them non-standard:
     for (int i = 0; i < 3; i++)
     {
         CScript t = txTo.vin[i].scriptSig;
         txTo.vin[i].scriptSig = (CScript() << 11) + t;
-        BOOST_CHECK(!::Bitcredit_AreInputsStandard(txTo, bitcredit_coins, bitcoin_coins));
+        BOOST_CHECK(!::Bitcredit_AreInputsStandard(txTo, bitcredit_coins));
         txTo.vin[i].scriptSig = t;
     }
 
@@ -339,11 +337,11 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd.vin[1].prevout.hash = txFrom.GetHash();
     txToNonStd.vin[1].scriptSig << OP_0 << Serialize(oneOfEleven);
 
-    BOOST_CHECK(!::Bitcredit_AreInputsStandard(txToNonStd, bitcredit_coins, bitcoin_coins));
-    BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txToNonStd, bitcredit_coins, bitcoin_coins), 11U);
+    BOOST_CHECK(!::Bitcredit_AreInputsStandard(txToNonStd, bitcredit_coins));
+    BOOST_CHECK_EQUAL(Bitcredit_GetP2SHSigOpCount(txToNonStd, bitcredit_coins), 11U);
 
     txToNonStd.vin[0].scriptSig.clear();
-    BOOST_CHECK(!::Bitcredit_AreInputsStandard(txToNonStd, bitcredit_coins, bitcoin_coins));
+    BOOST_CHECK(!::Bitcredit_AreInputsStandard(txToNonStd, bitcredit_coins));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

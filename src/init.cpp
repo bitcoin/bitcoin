@@ -120,7 +120,6 @@ bool ShutdownRequested()
 
 static Credits_CCoinsViewDB *bitcredit_pcoinsdbview;
 static Bitcoin_CCoinsViewDB *bitcoin_pcoinsdbview;
-static Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
 
 void Shutdown()
 {
@@ -170,9 +169,11 @@ void Shutdown()
 #endif
         if (bitcredit_pblocktree)
             bitcredit_pblocktree->Flush();
-        if (bitcredit_pcoinsTip)
-            bitcredit_pcoinsTip->Credits_Flush();
-        delete bitcredit_pcoinsTip; bitcredit_pcoinsTip = NULL;
+        if (credits_pcoinsTip) {
+            credits_pcoinsTip->Credits_Flush();
+            credits_pcoinsTip->Claim_Flush();
+        }
+        delete credits_pcoinsTip; credits_pcoinsTip = NULL;
         delete bitcredit_pcoinsdbview; bitcredit_pcoinsdbview = NULL;
         delete bitcredit_pblocktree; bitcredit_pblocktree = NULL;
     }
@@ -216,11 +217,6 @@ void Shutdown()
             bitcoin_pcoinsTip->Flush();
         delete bitcoin_pcoinsTip; bitcoin_pcoinsTip = NULL;
         delete bitcoin_pcoinsdbview; bitcoin_pcoinsdbview = NULL;
-
-        if (bitcoin_pclaimCoinsTip)
-        	bitcoin_pclaimCoinsTip->Claim_Flush();
-        delete bitcoin_pclaimCoinsTip; bitcoin_pclaimCoinsTip = NULL;
-        delete bitcoin_pclaimcoinsdbview; bitcoin_pclaimcoinsdbview = NULL;
     }
 
     boost::filesystem::remove(GetPidFile());
@@ -789,13 +785,13 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
         do {
             try {
                 Bitcredit_UnloadBlockIndex();
-                delete bitcredit_pcoinsTip;
+                delete credits_pcoinsTip;
                 delete bitcredit_pcoinsdbview;
                 delete bitcredit_pblocktree;
 
                 bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, credits_mainState.fReindex);
                 bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
-                bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
+                credits_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
                 if (credits_mainState.fReindex)
                     bitcredit_pblocktree->WriteReindexing(true);
@@ -874,8 +870,6 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
     const size_t nCoinDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
     nTotalCache -= nCoinDBCache;
     bitcoin_nCoinCacheSize = nTotalCache / 300; // coins in memory require around 300 bytes
-    //TODO - This size may not be ideal. Since this cache has been added extra it will heighten the total memory usage.
-    const size_t nClaimCoinDBCache = nCoinDBCache;
 
     bool fLoaded = false;
     while (!fLoaded) {
@@ -891,18 +885,12 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 delete bitcoin_pcoinsTip;
                 delete bitcoin_pcoinsdbview;
 
-                delete bitcoin_pclaimCoinsTip;
-                delete bitcoin_pclaimcoinsdbview;
-
                 delete bitcoin_pblocktree;
 
                 bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(nBlockTreeDBCache, false, bitcoin_mainState.fReindex);
 
                 bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(nCoinDBCache, false, bitcoin_mainState.fReindex);
                 bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
-
-                bitcoin_pclaimcoinsdbview = new Bitcoin_CClaimCoinsViewDB(GetDataDir() / "bitcoin_chainstatecla", nClaimCoinDBCache, false, false, false, bitcoin_mainState.fReindex);
-                bitcoin_pclaimCoinsTip = new Bitcoin_CClaimCoinsViewCache(*bitcoin_pclaimcoinsdbview, bitcoin_nClaimCoinCacheFlushSize);
 
                 if (bitcoin_mainState.fReindex)
                     bitcoin_pblocktree->WriteReindexing(true);
@@ -1818,7 +1806,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             uiInterface.InitMessage(_("Rescanning credits wallet..."));
             LogPrintf("Credits: Rescanning last %i blocks (from block %i)...\n", credits_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
-            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, pindexRescan, true);
+            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, pindexRescan, true);
             LogPrintf("credits rescan      %15dms\n", GetTimeMillis() - nStart);
             bitcredit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
             bitcredit_bitdb.nWalletDBUpdated++;

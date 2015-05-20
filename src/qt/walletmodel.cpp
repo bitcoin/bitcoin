@@ -418,7 +418,7 @@ Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareTransaction
     return SendCoinsReturn(OK);
 }
 
-Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view, Bitcoin_CClaimCoinsViewCache &claim_view)
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareDepositTransaction(Bitcredit_WalletModel *deposit_model, Bitcredit_WalletModelTransaction &transaction, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view)
 {
     QList<Bitcredit_SendCoinsRecipient> recipients = transaction.getRecipients();
     if(recipients.size() != 1) {
@@ -468,7 +468,7 @@ Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareDepositTran
 
         Credits_CWalletTx *newTx = transaction.getTransaction();
         Credits_CReserveKey *keyDepositSignature = transaction.getKeyDepositSignature();
-        bool fCreated = wallet->CreateDepositTransaction(deposit_model->wallet, send, *newTx, *keyDepositSignature, rcp.amount, strFailReason, coin, credits_view, claim_view);
+        bool fCreated = wallet->CreateDepositTransaction(deposit_model->wallet, send, *newTx, *keyDepositSignature, rcp.amount, strFailReason, coin, credits_view);
         //transaction.setTransactionFee(nFeeRequired);
 
         //Basic checks to make sure nothing has gone wrong in deposit creation
@@ -489,7 +489,7 @@ Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareDepositTran
     return SendCoinsReturn(OK);
 }
 
-Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Bitcoin_CClaimCoinsViewCache *claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl)
+Bitcredit_WalletModel::SendCoinsReturn Bitcredit_WalletModel::prepareClaimTransaction(Bitcoin_WalletModel *bitcoin_model, Credits_CCoinsViewCache *claim_view, Bitcredit_WalletModelTransaction &transaction, const CCoinControl *coinControl)
 {
     qint64 total = 0;
     QList<Bitcredit_SendCoinsRecipient> recipients = transaction.getRecipients();

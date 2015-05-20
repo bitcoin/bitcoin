@@ -27,7 +27,7 @@ void Credits_CCoinsViewDB::Credits_BatchWriteCoins(CLevelDBBatch &batch, const u
     else
         batch.Write(make_pair(CREDITS_COIN_KEY, hash), coins);
 }
-void Credits_CCoinsViewDB::Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CClaimCoins &coins) {
+void Credits_CCoinsViewDB::Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Claim_CCoins &coins) {
     if (coins.IsPruned())
     	batch.Erase(make_pair(CLAIM_COIN_KEY, hash));
     else
@@ -49,7 +49,7 @@ void Credits_CCoinsViewDB::Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batc
 bool Credits_CCoinsViewDB::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) {
     return db.Read(make_pair(CREDITS_COIN_KEY, txid), coins);
 }
-bool Credits_CCoinsViewDB::Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins) {
+bool Credits_CCoinsViewDB::Claim_GetCoins(const uint256 &txid, Claim_CCoins &coins) {
     return db.Read(make_pair(CLAIM_COIN_KEY, txid), coins);
 }
 
@@ -58,7 +58,7 @@ bool Credits_CCoinsViewDB::Credits_SetCoins(const uint256 &txid, const Credits_C
     Credits_BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
-bool Credits_CCoinsViewDB::Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins) {
+bool Credits_CCoinsViewDB::Claim_SetCoins(const uint256 &txid, const Claim_CCoins &coins) {
     CLevelDBBatch batch;
     Claim_BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
@@ -130,11 +130,11 @@ bool Credits_CCoinsViewDB::Credits_BatchWrite(const std::map<uint256, Credits_CC
 
     return db.WriteBatch(batch);
 }
-bool Credits_CCoinsViewDB::Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) {
+bool Credits_CCoinsViewDB::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
-    for (std::map<uint256, Bitcoin_CClaimCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+    for (std::map<uint256, Claim_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
     	Claim_BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
     	Claim_BatchWriteHashBestChain(batch, hashBlock);
@@ -198,7 +198,7 @@ bool Credits_CCoinsViewDB::Credits_GetStats(Credits_CCoinsStats &stats) {
     return true;
 }
 
-bool Credits_CCoinsViewDB::Claim_GetStats(Bitcoin_CClaimCoinsStats &stats) {
+bool Credits_CCoinsViewDB::Claim_GetStats(Claim_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
@@ -221,7 +221,7 @@ bool Credits_CCoinsViewDB::Claim_GetStats(Bitcoin_CClaimCoinsStats &stats) {
             if (chType == 'c') {
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, Bitcoin_Params().ClientVersion());
-                Bitcoin_CClaimCoins coins;
+                Claim_CCoins coins;
                 ssValue >> coins;
                 uint256 txhash;
                 ssKey >> txhash;

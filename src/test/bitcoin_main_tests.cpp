@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(bitcoin_main_tests)
 
 BOOST_AUTO_TEST_CASE(claim_bounds_test)
 {
-	Bitcoin_CClaimCoinsViewCache claim_inputs1(*bitcoin_pclaimCoinsTip, 1000, true);
+	Credits_CCoinsViewCache claim_inputs1(*credits_pcoinsTip, true);
 
 	claim_inputs1.Claim_SetTotalClaimedCoins(BITCREDIT_MAX_BITCOIN_CLAIM);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 500000));

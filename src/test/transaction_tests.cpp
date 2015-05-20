@@ -262,8 +262,6 @@ BOOST_AUTO_TEST_CASE(test_Get)
     CBasicKeyStore keystore;
     Credits_CCoinsView coinsDummy;
     Credits_CCoinsViewCache bitcredit_coins(coinsDummy);
-    Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
-    Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
     std::vector<Credits_CTransaction> dummyTransactions = SetupDummyInputs(keystore, bitcredit_coins);
 
     Credits_CTransaction t1;
@@ -281,16 +279,16 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(Bitcredit_AreInputsStandard(t1, bitcredit_coins, bitcoin_coins));
+    BOOST_CHECK(Bitcredit_AreInputsStandard(t1, bitcredit_coins));
     BOOST_CHECK_EQUAL(bitcredit_coins.Credits_GetValueIn(t1), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;
-    BOOST_CHECK(!Bitcredit_AreInputsStandard(t1, bitcredit_coins, bitcoin_coins));
+    BOOST_CHECK(!Bitcredit_AreInputsStandard(t1, bitcredit_coins));
 
     // ... as should not having enough:
     t1.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!Bitcredit_AreInputsStandard(t1, bitcredit_coins, bitcoin_coins));
+    BOOST_CHECK(!Bitcredit_AreInputsStandard(t1, bitcredit_coins));
 }
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)

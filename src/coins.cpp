@@ -50,7 +50,7 @@ bool Credits_CCoins::Spend(int nPos) {
     return Spend(out, undo);
 }
 
-void Bitcoin_CClaimCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes, const std::vector<CTxOutClaim>& vout) const {
+void Claim_CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroBytes, const std::vector<CTxOutClaim>& vout) const {
     unsigned int nLastUsedByte = 0;
     for (unsigned int b = 0; 2+b*8 < vout.size(); b++) {
         bool fZero = true;
@@ -68,7 +68,7 @@ void Bitcoin_CClaimCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonz
     nBytes += nLastUsedByte;
 }
 
-bool Bitcoin_CClaimCoins::Spend(const COutPoint &out, Bitcoin_CTxInUndoClaim &undo) {
+bool Claim_CCoins::Spend(const COutPoint &out, Bitcoin_CTxInUndoClaim &undo) {
     if (out.n >= vout.size())
         return false;
     if (vout[out.n].IsNull())
@@ -83,7 +83,7 @@ bool Bitcoin_CClaimCoins::Spend(const COutPoint &out, Bitcoin_CTxInUndoClaim &un
     }
     return true;
 }
-bool Bitcoin_CClaimCoins::SpendByClaiming(const COutPoint &out, Credits_CTxInUndo &undo) {
+bool Claim_CCoins::SpendByClaiming(const COutPoint &out, Credits_CTxInUndo &undo) {
     if (out.n >= vout.size())
         return false;
     if (vout[out.n].IsNull())
@@ -100,7 +100,7 @@ bool Bitcoin_CClaimCoins::SpendByClaiming(const COutPoint &out, Credits_CTxInUnd
     return true;
 }
 
-std::string Bitcoin_CClaimCoins::ToString() const
+std::string Claim_CCoins::ToString() const
 {
     std::string str;
     str += strprintf("Bitcredit_CClaimCoin(ver=%d, height=%d, coinbase=%b)\n",
@@ -114,7 +114,7 @@ std::string Bitcoin_CClaimCoins::ToString() const
     return str;
 }
 
-void Bitcoin_CClaimCoins::print() const
+void Claim_CCoins::print() const
 {
     LogPrintf("%s", ToString());
 }
@@ -122,9 +122,9 @@ void Bitcoin_CClaimCoins::print() const
 
 
 bool Credits_CCoinsView::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) { return false; }
-bool Credits_CCoinsView::Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins) { return false; }
+bool Credits_CCoinsView::Claim_GetCoins(const uint256 &txid, Claim_CCoins &coins) { return false; }
 bool Credits_CCoinsView::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) { return false; }
-bool Credits_CCoinsView::Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins) { return false; }
+bool Credits_CCoinsView::Claim_SetCoins(const uint256 &txid, const Claim_CCoins &coins) { return false; }
 bool Credits_CCoinsView::Credits_HaveCoins(const uint256 &txid) { return false; }
 bool Credits_CCoinsView::Claim_HaveCoins(const uint256 &txid) { return false; }
 uint256 Credits_CCoinsView::Credits_GetBestBlock() { return uint256(0); }
@@ -136,16 +136,16 @@ bool Credits_CCoinsView::Claim_SetBitcreditClaimTip(const uint256 &hashBitcredit
 int64_t Credits_CCoinsView::Claim_GetTotalClaimedCoins() { return int64_t(0); }
 bool Credits_CCoinsView::Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins) { return false; }
 bool Credits_CCoinsView::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
-bool Credits_CCoinsView::Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return false; }
+bool Credits_CCoinsView::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return false; }
 bool Credits_CCoinsView::Credits_GetStats(Credits_CCoinsStats &stats) { return false; }
-bool Credits_CCoinsView::Claim_GetStats(Bitcoin_CClaimCoinsStats &stats) { return false; }
+bool Credits_CCoinsView::Claim_GetStats(Claim_CCoinsStats &stats) { return false; }
 
 
 Credits_CCoinsViewBacked::Credits_CCoinsViewBacked(Credits_CCoinsView &viewIn) : base(&viewIn) { }
 bool Credits_CCoinsViewBacked::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) { return base->Credits_GetCoins(txid, coins); }
-bool Credits_CCoinsViewBacked::Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins) { return base->Claim_GetCoins(txid, coins); }
+bool Credits_CCoinsViewBacked::Claim_GetCoins(const uint256 &txid, Claim_CCoins &coins) { return base->Claim_GetCoins(txid, coins); }
 bool Credits_CCoinsViewBacked::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) { return base->Credits_SetCoins(txid, coins); }
-bool Credits_CCoinsViewBacked::Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins) { return base->Claim_SetCoins(txid, coins); }
+bool Credits_CCoinsViewBacked::Claim_SetCoins(const uint256 &txid, const Claim_CCoins &coins) { return base->Claim_SetCoins(txid, coins); }
 bool Credits_CCoinsViewBacked::Credits_HaveCoins(const uint256 &txid) { return base->Credits_HaveCoins(txid); }
 bool Credits_CCoinsViewBacked::Claim_HaveCoins(const uint256 &txid) { return base->Claim_HaveCoins(txid); }
 uint256 Credits_CCoinsViewBacked::Credits_GetBestBlock() { return base->Credits_GetBestBlock(); }
@@ -158,9 +158,9 @@ int64_t Credits_CCoinsViewBacked::Claim_GetTotalClaimedCoins() { return base->Cl
 bool Credits_CCoinsViewBacked::Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins) { return base->Claim_SetTotalClaimedCoins(totalClaimedCoins); }
 void Credits_CCoinsViewBacked::Credits_SetBackend(Credits_CCoinsView &viewIn) { base = &viewIn; }
 bool Credits_CCoinsViewBacked::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return base->Credits_BatchWrite(mapCoins, hashBlock); }
-bool Credits_CCoinsViewBacked::Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return base->Claim_BatchWrite(mapCoins, hashBlock, hashBitcreditClaimTip, totalClaimedCoins); }
+bool Credits_CCoinsViewBacked::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return base->Claim_BatchWrite(mapCoins, hashBlock, hashBitcreditClaimTip, totalClaimedCoins); }
 bool Credits_CCoinsViewBacked::Credits_GetStats(Credits_CCoinsStats &stats) { return base->Credits_GetStats(stats); }
-bool Credits_CCoinsViewBacked::Claim_GetStats(Bitcoin_CClaimCoinsStats &stats) { return base->Claim_GetStats(stats); }
+bool Credits_CCoinsViewBacked::Claim_GetStats(Claim_CCoinsStats &stats) { return base->Claim_GetStats(stats); }
 
 
 Credits_CCoinsViewCache::Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy) : Credits_CCoinsViewBacked(baseIn), credits_hashBlock(0), claim_hashBlock(0), claim_hashBitcreditClaimTip(0), claim_totalClaimedCoins(0){ }
@@ -176,7 +176,7 @@ bool Credits_CCoinsViewCache::Credits_GetCoins(const uint256 &txid, Credits_CCoi
     }
     return false;
 }
-bool Credits_CCoinsViewCache::Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins) {
+bool Credits_CCoinsViewCache::Claim_GetCoins(const uint256 &txid, Claim_CCoins &coins) {
     if (claim_cacheCoins.count(txid)) {
         coins = claim_cacheCoins[txid];
         return true;
@@ -199,13 +199,13 @@ std::map<uint256,Credits_CCoins>::iterator Credits_CCoinsViewCache::Credits_Fetc
     tmp.swap(ret->second);
     return ret;
 }
-std::map<uint256,Bitcoin_CClaimCoins>::iterator Credits_CCoinsViewCache::Claim_FetchCoins(const uint256 &txid) {
-    std::map<uint256,Bitcoin_CClaimCoins>::iterator it = claim_cacheCoins.lower_bound(txid);
+std::map<uint256,Claim_CCoins>::iterator Credits_CCoinsViewCache::Claim_FetchCoins(const uint256 &txid) {
+    std::map<uint256,Claim_CCoins>::iterator it = claim_cacheCoins.lower_bound(txid);
     if (it != claim_cacheCoins.end() && it->first == txid)
         return it;
-    Bitcoin_CClaimCoins tmp;
+    Claim_CCoins tmp;
     if (base->Claim_GetCoins(txid,tmp)) {
-    	std::map<uint256,Bitcoin_CClaimCoins>::iterator ret = claim_cacheCoins.insert(it, std::make_pair(txid, Bitcoin_CClaimCoins()));
+    	std::map<uint256,Claim_CCoins>::iterator ret = claim_cacheCoins.insert(it, std::make_pair(txid, Claim_CCoins()));
     	tmp.swap(ret->second);
     	return ret;
     }
@@ -217,8 +217,8 @@ Credits_CCoins &Credits_CCoinsViewCache::Credits_GetCoins(const uint256 &txid) {
     assert_with_stacktrace(it != credits_cacheCoins.end(), strprintf("Credits_CCoinsViewCache::GetCoins() tx could not be found, txid: %s", txid.GetHex()));
     return it->second;
 }
-Bitcoin_CClaimCoins &Credits_CCoinsViewCache::Claim_GetCoins(const uint256 &txid) {
-    std::map<uint256,Bitcoin_CClaimCoins>::iterator it = Claim_FetchCoins(txid);
+Claim_CCoins &Credits_CCoinsViewCache::Claim_GetCoins(const uint256 &txid) {
+    std::map<uint256,Claim_CCoins>::iterator it = Claim_FetchCoins(txid);
     assert(it != claim_cacheCoins.end());
     return it->second;
 }
@@ -228,7 +228,7 @@ bool Credits_CCoinsViewCache::Credits_SetCoins(const uint256 &txid, const Credit
 	credits_cacheCoins[txid] = coins;
     return true;
 }
-bool Credits_CCoinsViewCache::Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins) {
+bool Credits_CCoinsViewCache::Claim_SetCoins(const uint256 &txid, const Claim_CCoins &coins) {
 	claim_cacheCoins[txid] = coins;
     return true;
 }
@@ -287,8 +287,8 @@ bool Credits_CCoinsViewCache::Credits_BatchWrite(const std::map<uint256, Credits
     credits_hashBlock = hashBlockIn;
     return true;
 }
-bool Credits_CCoinsViewCache::Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlockIn, const uint256 &hashBitcreditClaimTipIn, const int64_t &totalClaimedCoinsIn) {
-    for (std::map<uint256, Bitcoin_CClaimCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+bool Credits_CCoinsViewCache::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlockIn, const uint256 &hashBitcreditClaimTipIn, const int64_t &totalClaimedCoinsIn) {
+    for (std::map<uint256, Claim_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
     	claim_cacheCoins[it->first] = it->second;
     claim_hashBlock = hashBlockIn;
     claim_hashBitcreditClaimTip = hashBitcreditClaimTipIn;
@@ -324,7 +324,7 @@ const CTxOut &Credits_CCoinsViewCache::Credits_GetOutputFor(const Credits_CTxIn&
     return coins.vout[input.prevout.n];
 }
 const CTxOutClaim& Credits_CCoinsViewCache::Claim_GetOut(const COutPoint &outpoint) {
-	const Bitcoin_CClaimCoins &coins = Claim_GetCoins(outpoint.hash);
+	const Claim_CCoins &coins = Claim_GetCoins(outpoint.hash);
 	assert(coins.IsAvailable(outpoint.n));
 	return coins.vout[outpoint.n];
 }
@@ -353,7 +353,7 @@ void Credits_CCoinsViewCache::Claim_GetValueIn(const Bitcoin_CTransaction& tx, C
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const COutPoint &prevout = tx.vin[i].prevout;
-		const Bitcoin_CClaimCoins &coins = Claim_GetCoins(prevout.hash);
+		const Claim_CCoins &coins = Claim_GetCoins(prevout.hash);
 
 		assert(coins.IsAvailable(prevout.n));
 
@@ -372,7 +372,7 @@ int64_t Credits_CCoinsViewCache::Claim_GetValueIn(const Credits_CTransaction& tx
     int64_t nResult = 0;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const COutPoint &prevout = tx.vin[i].prevout;
-		const Bitcoin_CClaimCoins &coins = Claim_GetCoins(prevout.hash);
+		const Claim_CCoins &coins = Claim_GetCoins(prevout.hash);
 
 		assert(coins.IsAvailable(prevout.n));
 
@@ -421,7 +421,7 @@ bool Credits_CCoinsViewCache::Claim_HaveInputs(const Credits_CTransaction& tx) {
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const Credits_CTxIn &txIn = tx.vin[i];
 		const COutPoint &prevout = txIn.prevout;
-		const Bitcoin_CClaimCoins &coins = Claim_GetCoins(prevout.hash);
+		const Claim_CCoins &coins = Claim_GetCoins(prevout.hash);
 		if (!coins.HasClaimable(prevout.n))
 			return false;
 	}
@@ -453,7 +453,7 @@ double Credits_CCoinsViewCache::Claim_GetPriority(const Credits_CTransaction &tx
     double dResult = 0.0;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const Credits_CTxIn &txIn = tx.vin[i];
-		const Bitcoin_CClaimCoins &coins = Claim_GetCoins(txIn.prevout.hash);
+		const Claim_CCoins &coins = Claim_GetCoins(txIn.prevout.hash);
 
 		if(coins.HasClaimable(txIn.prevout.n)) {
 			if (coins.nHeight < nHeight) {

@@ -280,7 +280,7 @@ QString Credits_TransactionDesc::toHTML(Credits_CWallet *keyholder_wallet, Credi
         	COutPoint prevout = txin.prevout;
 
             Credits_CCoins prev;
-            if(bitcredit_pcoinsTip->Credits_GetCoins(prevout.hash, prev))
+            if(credits_pcoinsTip->Credits_GetCoins(prevout.hash, prev))
             {
                 if (prevout.n < prev.vout.size())
                 {

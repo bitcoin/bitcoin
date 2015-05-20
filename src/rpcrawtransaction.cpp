@@ -585,7 +585,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     Credits_CCoinsViewCache view(viewDummy);
     {
         LOCK(credits_mempool.cs);
-        Credits_CCoinsViewCache &viewChain = *bitcredit_pcoinsTip;
+        Credits_CCoinsViewCache &viewChain = *credits_pcoinsTip;
         Credits_CCoinsViewMemPool viewMempool(viewChain, credits_mempool);
         view.Credits_SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
@@ -778,7 +778,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     }
     uint256 hashTx = tx.GetHash();
 
-    Credits_CCoinsViewCache &view = *bitcredit_pcoinsTip;
+    Credits_CCoinsViewCache &view = *credits_pcoinsTip;
     Credits_CCoins existingCoins;
     bool fHaveMempool = credits_mempool.exists(hashTx);
     bool fHaveChain = view.Credits_GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
