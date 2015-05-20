@@ -191,9 +191,15 @@ void MetaDExCancelDialog::SendCancelTransaction()
         return;
     }
 
-    int64_t action = 0;
-    if (ui->radioCancelPair->isChecked()) action = 2;
-    if (ui->radioCancelPrice->isChecked()) action = 3;
+    uint8_t action = 0;
+    /*
+     * 1 = NEW
+     * 2 = CANCEL_AT_PRICE
+     * 3 = CANCEL_ALL_FOR_PAIR
+     * 4 = CANCEL_EVERYTHING
+     */
+    if (ui->radioCancelPrice->isChecked()) action = 2;
+    if (ui->radioCancelPair->isChecked()) action = 3;
     if (ui->radioCancelEverything->isChecked()) action = 4;
     if (action == 0) {
         // no cancellation method selected
@@ -230,11 +236,22 @@ void MetaDExCancelDialog::SendCancelTransaction()
         propertyIdDesiredStr = dataStr.substr(slashPos+1,colonPos-slashPos-1);
         priceStr = dataStr.substr(colonPos+1,std::string::npos);
     }
-    unsigned int propertyIdForSale = boost::lexical_cast<uint32_t>(propertyIdForSaleStr);
-    unsigned int propertyIdDesired = boost::lexical_cast<uint32_t>(propertyIdDesiredStr);
+
+    uint32_t propertyIdForSale = 0;
+    uint32_t propertyIdDesired = 0;
+
+    if (action != 4) {
+        try {
+            propertyIdForSale = boost::lexical_cast<uint32_t>(propertyIdForSaleStr);
+            propertyIdDesired = boost::lexical_cast<uint32_t>(propertyIdDesiredStr);
+        } catch(boost::bad_lexical_cast& e) {
+            printf("Failed to parse property identifiers: %s\n", e.what()); // TODO: print to log instead
+        }
+    }
+
     int64_t amountForSale = 0, amountDesired = 0;
 
-    if (action == 3) { // do not attempt to reverse calc values from price, pull suitable ForSale/Desired amounts from metadex map
+    if (action == 2) { // do not attempt to reverse calc values from price, pull suitable ForSale/Desired amounts from metadex map
         bool matched = false;
         for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
             if (my_it->first != propertyIdForSale) { continue; } // move along, this isn't the prop you're looking for
@@ -256,14 +273,15 @@ void MetaDExCancelDialog::SendCancelTransaction()
         }
     }
 
-    printf("ForSale \"%s\"=%u  Desired \"%s\"=%u  Price \"%s\"  Action %lu  AmountForSale %lu  AmountDesired %lu\n", propertyIdForSaleStr.c_str(), propertyIdForSale, propertyIdDesiredStr.c_str(), propertyIdDesired, priceStr.c_str(), action, amountForSale, amountDesired);
+    // TODO: print to log (?)
+    printf("ForSale \"%s\"=%u  Desired \"%s\"=%u  Price \"%s\"  Action %d  AmountForSale %lu  AmountDesired %lu\n", propertyIdForSaleStr.c_str(), propertyIdForSale, propertyIdDesiredStr.c_str(), propertyIdDesired, priceStr.c_str(), (int)action, amountForSale, amountDesired);
 
     // confirmation dialog
     string strMsgText = "You are about to send the following MetaDEx trade cancellation transaction, please check the details thoroughly:\n\n";
     strMsgText += "Type: Cancel Trade Request\nFrom: " + fromAddress + "\nAction: ";
     switch (action) {
-        case 2: strMsgText += "2 (Cancel by pair)\n"; break;
-        case 3: strMsgText += "3 (Cancel by price)\n"; break;
+        case 2: strMsgText += "2 (Cancel by price)\n"; break;
+        case 3: strMsgText += "3 (Cancel by pair)\n"; break;
         case 4: strMsgText += "4 (Cancel all)\n"; break;
     }
     string sellToken = getPropertyName(propertyIdForSale).c_str();
@@ -280,7 +298,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
     } else {
         messageStr += "selling " + sellToken;
     }
-    if (action == 3) { // append price if needed - display the first 24 digits
+    if (action == 2) { // append price if needed - display the first 24 digits
          std::string displayPrice = StripTrailingZeros(priceStr);
          if (displayPrice.size()>24) displayPrice = displayPrice.substr(0,24)+"...";
          messageStr += " priced at " + displayPrice;
