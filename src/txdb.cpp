@@ -14,9 +14,8 @@
 using namespace std;
 
 const unsigned char Credits_CCoinsViewDB::CREDITS_COIN_KEY = 'c';
-const unsigned char Credits_CCoinsViewDB::CREDITS_BEST_CHAIN_KEY = 'B';
-
 const unsigned char Credits_CCoinsViewDB::CLAIM_COIN_KEY = 'd';
+const unsigned char Credits_CCoinsViewDB::CREDITS_BEST_CHAIN_KEY = 'B';
 const unsigned char Credits_CCoinsViewDB::CLAIM_BEST_CHAIN_KEY = 'C';
 const unsigned char Credits_CCoinsViewDB::CLAIM_BITCREDIT_CLAIM_TIP_KEY = 'R';
 const unsigned char Credits_CCoinsViewDB::CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY = 'T';
@@ -197,7 +196,6 @@ bool Credits_CCoinsViewDB::Credits_GetStats(Credits_CCoinsStats &stats) {
     stats.nTotalAmount = nTotalAmount;
     return true;
 }
-
 bool Credits_CCoinsViewDB::Claim_GetStats(Claim_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();

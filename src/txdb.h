@@ -28,45 +28,41 @@ static const int64_t bitcredit_nMinDbCache = 4;
 class Credits_CCoinsViewDB : public Credits_CCoinsView {
 private:
 	static const unsigned char CREDITS_COIN_KEY;
-	static const unsigned char CREDITS_BEST_CHAIN_KEY;
-
 	static const unsigned char CLAIM_COIN_KEY;
-	static const unsigned char CLAIM_PRUNED_COIN_KEY;
+	static const unsigned char CREDITS_BEST_CHAIN_KEY;
 	static const unsigned char CLAIM_BEST_CHAIN_KEY;
 	static const unsigned char CLAIM_BITCREDIT_CLAIM_TIP_KEY;
 	static const unsigned char CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY;
 
     void Credits_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
-    void Credits_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins);
-
     void Claim_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
     void Claim_BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash);
     void Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins);
+    void Credits_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins);
     void Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Claim_CCoins &coins);
+
 protected:
     CLevelDBWrapper db;
 public:
     Credits_CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins);
-    bool Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins);
-    bool Credits_HaveCoins(const uint256 &txid);
-    uint256 Credits_GetBestBlock();
-    bool Credits_SetBestBlock(const uint256 &hashBlock);
-    bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool Credits_GetStats(Credits_CCoinsStats &stats);
-
     bool Claim_GetCoins(const uint256 &txid, Claim_CCoins &coins);
+    bool Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins);
     bool Claim_SetCoins(const uint256 &txid, const Claim_CCoins &coins);
+    bool Credits_HaveCoins(const uint256 &txid);
     bool Claim_HaveCoins(const uint256 &txid);
+    uint256 Credits_GetBestBlock();
     uint256 Claim_GetBestBlock();
+    bool Credits_SetBestBlock(const uint256 &hashBlock);
     bool Claim_SetBestBlock(const uint256 &hashBlock);
     uint256 Claim_GetBitcreditClaimTip();
     bool Claim_SetBitcreditClaimTip(const uint256 &hashBlock);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
+    bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
     bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    bool Claim_GetCoinSlice(std::map<uint256, Claim_CCoins> &mapCoins, const int& size, const bool& firstInvocation, bool& fMore);
+    bool Credits_GetStats(Credits_CCoinsStats &stats);
     bool Claim_GetStats(Claim_CCoinsStats &stats);
 };
 

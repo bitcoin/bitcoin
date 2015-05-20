@@ -309,11 +309,8 @@ bool Credits_CCoinsViewCache::Claim_Flush() {
     return fOk;
 }
 
-unsigned int Credits_CCoinsViewCache::Credits_GetCacheSize() {
-    return credits_cacheCoins.size();
-}
-unsigned int Credits_CCoinsViewCache::Claim_GetCacheSize() {
-    return claim_cacheCoins.size();
+unsigned int Credits_CCoinsViewCache::GetCacheSize() {
+    return credits_cacheCoins.size() + claim_cacheCoins.size();
 }
 
 

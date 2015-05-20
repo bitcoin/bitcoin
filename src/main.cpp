@@ -2261,13 +2261,13 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
 // Update the on-disk chain state.
 bool static Bitcredit_WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (!Bitcredit_IsInitialBlockDownload() || credits_pcoinsTip->Credits_GetCacheSize() > bitcredit_nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
+    if (!Bitcredit_IsInitialBlockDownload() || credits_pcoinsTip->GetCacheSize() > bitcredit_nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-        if (!Bitcredit_CheckDiskSpace(100 * 2 * 2 * credits_pcoinsTip->Credits_GetCacheSize() + 100 * 2 * 2 * credits_pcoinsTip->Claim_GetCacheSize()))
+        if (!Bitcredit_CheckDiskSpace(100 * 2 * 2 * credits_pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
         Bitcredit_FlushBlockFile(credits_mainState);
         bitcredit_pblocktree->Sync();
@@ -3454,8 +3454,7 @@ bool Bitcredit_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 		// check level 3: check for inconsistencies during memory-only disconnect of tip blocks
 		if (nCheckLevel >= 3 &&
 				pindex == pindexState &&
-				((bitcredit_coins.Credits_GetCacheSize() + credits_pcoinsTip->Credits_GetCacheSize()) <= 2*bitcredit_nCoinCacheSize + 32000) &&
-				((bitcredit_coins.Claim_GetCacheSize() + credits_pcoinsTip->Claim_GetCacheSize()) <= 2*bitcoin_nCoinCacheSize + 32000)) {
+				((bitcredit_coins.GetCacheSize() + credits_pcoinsTip->GetCacheSize()) <= 2*bitcredit_nCoinCacheSize + 32000)) {
 			bool fClean = true;
 			if (!Bitcredit_DisconnectBlock(block, state, pindex, bitcredit_coins, false, vBlockUndoClaims, &fClean))
 				return error("Credits: VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());

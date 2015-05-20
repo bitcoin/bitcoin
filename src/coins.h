@@ -716,8 +716,7 @@ public:
     bool Claim_Flush();
 
     // Calculate the size of the cache (in number of transactions)
-    unsigned int Credits_GetCacheSize();
-    unsigned int Claim_GetCacheSize();
+    unsigned int GetCacheSize();
 
     /** Amount of bitcoins coming in to a transaction
         Note that lightweight clients may not know anything besides the hash of previous transactions,
