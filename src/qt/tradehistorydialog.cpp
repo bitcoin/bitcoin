@@ -187,8 +187,8 @@ void TradeHistoryDialog::UpdateTradeHistoryTable()
                 amountOutCell->setForeground(QColor("#993333"));
                 amountInCell->setForeground(QColor("#006600"));
             }
-            if(objTH.amountIn.substr(0,2) == "0 ") amountInCell->setForeground(QColor("#000000"));
-            if(objTH.amountOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
+            if(objTH.amountIn.substr(0,2) == "0 " || objTH.amountIn == "---" ) amountInCell->setForeground(QColor("#000000"));
+            if(objTH.amountOut.substr(0,2) == "0 " || objTH.amountOut == "---" ) amountOutCell->setForeground(QColor("#000000"));
 
             // Set the cells in the new row accordingly
             ui->tradeHistoryTable->setItem(newRow, 0, txidCell);
@@ -411,7 +411,8 @@ void TradeHistoryDialog::UpdateData()
         }
         TradeHistoryObject *tmpObjTH = &(hIter->second);
         if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled") continue; // once a trade hits this status the details should never change
-        if (tmpObjTH->blockHeight > 0 && lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
+        if (tmpObjTH->blockHeight == 0) continue; // do not attempt to refresh details for a trade that's still pending
+        if (lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
 
         // at this point we have an active trade and there have been new block(s) since the last update - refresh status and amounts
         uint32_t propertyIdForSale = tmpObjTH->propertyIdForSale;
