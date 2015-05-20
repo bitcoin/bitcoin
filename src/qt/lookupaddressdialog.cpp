@@ -7,7 +7,7 @@
 
 #include "guiutil.h"
 
-#include "mastercore.h"
+#include "omnicore/omnicore.h"
 
 #include "base58.h"
 

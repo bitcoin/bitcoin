@@ -5,15 +5,16 @@
 #include "metadexcanceldialog.h"
 #include "ui_metadexcanceldialog.h"
 
-#include "mastercore.h"
-#include "mastercore_errors.h"
-#include "mastercore_mdex.h"
-#include "omnicore_createpayload.h"
 #include "omnicore_qtutils.h"
 
 #include "clientmodel.h"
 #include "ui_interface.h"
 #include "walletmodel.h"
+
+#include "omnicore/createpayload.h"
+#include "omnicore/errors.h"
+#include "omnicore/mdex.h"
+#include "omnicore/omnicore.h"
 
 #include <stdint.h>
 #include <stdio.h> // printf!

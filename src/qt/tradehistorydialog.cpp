@@ -7,15 +7,15 @@
 
 #include "omnicore_qtutils.h"
 
-#include "mastercore.h"
-#include "mastercore_mdex.h"
-#include "mastercore_rpc.h"
-#include "mastercore_tx.h"
-#include "omnicore_pending.h"
-
 #include "guiutil.h"
 #include "ui_interface.h"
 #include "walletmodel.h"
+
+#include "omnicore/mdex.h"
+#include "omnicore/omnicore.h"
+#include "omnicore/pending.h"
+#include "omnicore/rpc.h"
+#include "omnicore/tx.h"
 
 #include "amount.h"
 #include "init.h"

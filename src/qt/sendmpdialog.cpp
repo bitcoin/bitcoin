@@ -10,11 +10,11 @@
 #include "clientmodel.h"
 #include "walletmodel.h"
 
-#include "mastercore.h"
-#include "mastercore_errors.h"
-#include "mastercore_parse_string.h"
-#include "omnicore_createpayload.h"
-#include "omnicore_pending.h"
+#include "omnicore/createpayload.h"
+#include "omnicore/errors.h"
+#include "omnicore/omnicore.h"
+#include "omnicore/parse_string.h"
+#include "omnicore/pending.h"
 
 #include "amount.h"
 #include "base58.h"

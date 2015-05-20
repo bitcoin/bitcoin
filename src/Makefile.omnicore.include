@@ -1,0 +1,44 @@
+OMNICORE_H = \
+  omnicore/convert.h \
+  omnicore/createpayload.h \
+  omnicore/dex.h \
+  omnicore/encoding.h \
+  omnicore/errors.h \
+  omnicore/log.h \
+  omnicore/mdex.h \
+  omnicore/omnicore.h \
+  omnicore/parse_string.h \
+  omnicore/pending.h \
+  omnicore/persistence.h \
+  omnicore/rpc.h \
+  omnicore/rpctx.h \
+  omnicore/script.h \
+  omnicore/sp.h \
+  omnicore/tx.h \
+  omnicore/utils.h \
+  omnicore/version.h
+
+OMNICORE_CPP = \
+  omnicore/convert.cpp \
+  omnicore/createpayload.cpp \
+  omnicore/dex.cpp \
+  omnicore/encoding.cpp \
+  omnicore/log.cpp \
+  omnicore/mdex.cpp \
+  omnicore/omnicore.cpp \
+  omnicore/parse_string.cpp \
+  omnicore/pending.cpp \
+  omnicore/persistence.cpp \
+  omnicore/rpc.cpp \
+  omnicore/rpctx.cpp \
+  omnicore/script.cpp \
+  omnicore/sp.cpp \
+  omnicore/tx.cpp \
+  omnicore/utils.cpp \
+  omnicore/version.cpp
+
+libbitcoin_server_a_SOURCES += \
+  $(OMNICORE_CPP) \
+  $(OMNICORE_H)
+
+libbitcoin_server_a-omnicore/version.$(OBJEXT): obj/build.h # build info

@@ -11,11 +11,11 @@
 #include "guiutil.h"
 #include "walletmodel.h"
 
-#include "mastercore.h"
-#include "mastercore_rpc.h"
-#include "mastercore_sp.h"
-#include "mastercore_tx.h"
-#include "omnicore_pending.h"
+#include "omnicore/omnicore.h"
+#include "omnicore/pending.h"
+#include "omnicore/rpc.h"
+#include "omnicore/sp.h"
+#include "omnicore/tx.h"
 
 #include "init.h"
 #include "main.h"

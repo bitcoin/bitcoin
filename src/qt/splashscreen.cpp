@@ -15,7 +15,7 @@
 #include "wallet.h"
 #endif
 
-#include "mastercore_version.h"
+#include "omnicore/version.h"
 
 #include <QApplication>
 #include <QCloseEvent>
