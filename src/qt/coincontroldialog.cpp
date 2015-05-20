@@ -385,8 +385,17 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
             coinControl->UnSelect(outpt);
         else if (item->isDisabled()) // locked (this happens if "check all" through parent node)
             item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
-        else
+        else {
             coinControl->Select(outpt);
+            CTxIn vin(outpt);
+            int rounds = GetInputDarksendRounds(vin);
+            if(coinControl->useDarkSend && rounds < nDarksendRounds) {
+                QMessageBox::warning(this, windowTitle(),
+                    tr("Non-anonymized input selected. <b>Darksend will be disabled.</b><br><br>If you still want to use Darksend, please deselect all non-nonymized inputs first and then check Darksend checkbox again."),
+                    QMessageBox::Ok, QMessageBox::Ok);
+                coinControl->useDarkSend = false;
+            }
+        }
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
