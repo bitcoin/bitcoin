@@ -447,16 +447,36 @@ void TradeHistoryDialog::UpdateData()
         displayIn += getTokenLabel(propertyIdDesired);
         displayOut += getTokenLabel(propertyIdForSale);
 
-        // replace cells in row accordingly
+        // create and format replacement cells
         QTableWidgetItem *lastUpdateBlockCell = new QTableWidgetItem(QString::fromStdString(FormatIndivisibleMP(chainHeight)));
         QTableWidgetItem *statusCell = new QTableWidgetItem(QString::fromStdString(statusText));
         QTableWidgetItem *amountOutCell = new QTableWidgetItem(QString::fromStdString(displayOut));
         QTableWidgetItem *amountInCell = new QTableWidgetItem(QString::fromStdString(displayIn));
         QTableWidgetItem *iconCell = new QTableWidgetItem;
+        QTableWidgetItem *dateCell = ui->tradeHistoryTable->item(row, 3); // values don't change so can be copied
+        QTableWidgetItem *infoCell = ui->tradeHistoryTable->item(row, 5); // as above
         iconCell->setIcon(ic);
+        amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+        amountOutCell->setForeground(QColor("#EE0000"));
+        amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
+        amountInCell->setForeground(QColor("#00AA00"));
+        if (statusText == "Cancelled" || statusText == "Filled") {
+            // dull the colors for non-active trades
+            dateCell->setForeground(QColor("#707070"));
+            statusCell->setForeground(QColor("#707070"));
+            infoCell->setForeground(QColor("#707070"));
+            amountOutCell->setForeground(QColor("#993333"));
+            amountInCell->setForeground(QColor("#006600"));
+        }
+        if(displayIn.substr(0,2) == "0 ") amountInCell->setForeground(QColor("#000000"));
+        if(displayOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
+
+        // replace cells in row accordingly
         ui->tradeHistoryTable->setItem(row, 1, lastUpdateBlockCell);
         ui->tradeHistoryTable->setItem(row, 2, iconCell);
+        ui->tradeHistoryTable->setItem(row, 3, dateCell);
         ui->tradeHistoryTable->setItem(row, 4, statusCell);
+        ui->tradeHistoryTable->setItem(row, 5, infoCell);
         ui->tradeHistoryTable->setItem(row, 6, amountOutCell);
         ui->tradeHistoryTable->setItem(row, 7, amountInCell);
     }
