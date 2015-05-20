@@ -813,8 +813,7 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
     if (senderAvailableBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance (due to pending transactions)");
 
     // create a payload for the transaction
-    uint8_t action = CMPTransaction::ADD; // TODO: move into payload creation
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
@@ -828,6 +827,7 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
+            uint8_t action = CMPTransaction::ADD; // TODO: move into pending creation
             PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
             return txid.GetHex();
         }
@@ -877,8 +877,7 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
-    uint8_t action = CMPTransaction::CANCEL_AT_PRICE; // TODO: move into payload creation
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExCancelPrice(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
@@ -892,6 +891,7 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
+            uint8_t action = CMPTransaction::CANCEL_AT_PRICE; // TODO: move into pending creation
             PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
             return txid.GetHex();
         }
@@ -930,10 +930,7 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
-    uint8_t action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // TODO: move into payload creation
-    int64_t amountForSale = 0;
-    int64_t amountDesired = 0;
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExCancelPair(propertyIdForSale, propertyIdDesired);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
@@ -947,6 +944,9 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
+            uint8_t action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // TODO: move into pending creation
+            int64_t amountForSale = 0;
+            int64_t amountDesired = 0;
             PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
             return txid.GetHex();
         }
@@ -980,12 +980,7 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
-    uint8_t action = CMPTransaction::CANCEL_EVERYTHING; // TODO: move into payload creation
-    int64_t amountForSale = 0;
-    int64_t amountDesired = 0;
-    uint32_t propertyIdForSale = ecosystem;
-    uint32_t propertyIdDesired = ecosystem;
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExCancelEcosystem(ecosystem);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;
@@ -999,6 +994,11 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
+            uint8_t action = CMPTransaction::CANCEL_EVERYTHING; // TODO: move into pending creation
+            int64_t amountForSale = 0;
+            int64_t amountDesired = 0;
+            uint32_t propertyIdForSale = ecosystem;
+            uint32_t propertyIdDesired = ecosystem;
             PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
             return txid.GetHex();
         }
