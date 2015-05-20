@@ -12,7 +12,6 @@
 
 #include "chainparams.h"
 #include "bitcoin_coins.h"
-#include "bitcoin_claimcoins.h"
 #include "core.h"
 #include "bitcoin_core.h"
 #include "net.h"

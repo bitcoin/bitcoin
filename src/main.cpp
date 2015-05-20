@@ -13,7 +13,6 @@
 #include "init.h"
 #include "net.h"
 #include "txdb.h"
-#include "bitcoin_claimtxdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"

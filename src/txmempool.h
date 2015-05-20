@@ -11,8 +11,6 @@
 #include "core.h"
 #include "sync.h"
 
-#include "bitcoin_claimcoins.h"
-
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int BITCREDIT_MEMPOOL_HEIGHT = 0x7FFFFFFF;
 

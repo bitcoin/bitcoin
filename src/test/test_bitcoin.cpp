@@ -10,7 +10,6 @@
 #include "bitcoin_main.h"
 #include "txdb.h"
 #include "bitcoin_txdb.h"
-#include "bitcoin_claimtxdb.h"
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET

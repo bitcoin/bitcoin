@@ -6,6 +6,7 @@
 #include "txdb.h"
 
 #include "core.h"
+#include "bitcoin_core.h"
 #include "uint256.h"
 
 #include <stdint.h>
@@ -15,18 +16,41 @@ using namespace std;
 const unsigned char Credits_CCoinsViewDB::CREDITS_COIN_KEY = 'c';
 const unsigned char Credits_CCoinsViewDB::CREDITS_BEST_CHAIN_KEY = 'B';
 
+const unsigned char Credits_CCoinsViewDB::CLAIM_COIN_KEY = 'd';
+const unsigned char Credits_CCoinsViewDB::CLAIM_BEST_CHAIN_KEY = 'C';
+const unsigned char Credits_CCoinsViewDB::CLAIM_BITCREDIT_CLAIM_TIP_KEY = 'R';
+const unsigned char Credits_CCoinsViewDB::CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY = 'T';
+
 void Credits_CCoinsViewDB::Credits_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins) {
     if (coins.IsPruned())
         batch.Erase(make_pair(CREDITS_COIN_KEY, hash));
     else
         batch.Write(make_pair(CREDITS_COIN_KEY, hash), coins);
 }
+void Credits_CCoinsViewDB::Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CClaimCoins &coins) {
+    if (coins.IsPruned())
+    	batch.Erase(make_pair(CLAIM_COIN_KEY, hash));
+    else
+        batch.Write(make_pair(CLAIM_COIN_KEY, hash), coins);
+}
 void Credits_CCoinsViewDB::Credits_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
     batch.Write(CREDITS_BEST_CHAIN_KEY, hash);
+}
+void Credits_CCoinsViewDB::Claim_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+    batch.Write(CLAIM_BEST_CHAIN_KEY, hash);
+}
+void Credits_CCoinsViewDB::Claim_BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash) {
+    batch.Write(CLAIM_BITCREDIT_CLAIM_TIP_KEY, hash);
+}
+void Credits_CCoinsViewDB::Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins) {
+    batch.Write(CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY, totalClaimedCoins);
 }
 
 bool Credits_CCoinsViewDB::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) {
     return db.Read(make_pair(CREDITS_COIN_KEY, txid), coins);
+}
+bool Credits_CCoinsViewDB::Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins) {
+    return db.Read(make_pair(CLAIM_COIN_KEY, txid), coins);
 }
 
 bool Credits_CCoinsViewDB::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
@@ -34,9 +58,17 @@ bool Credits_CCoinsViewDB::Credits_SetCoins(const uint256 &txid, const Credits_C
     Credits_BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
+bool Credits_CCoinsViewDB::Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins) {
+    CLevelDBBatch batch;
+    Claim_BatchWriteCoins(batch, txid, coins);
+    return db.WriteBatch(batch);
+}
 
 bool Credits_CCoinsViewDB::Credits_HaveCoins(const uint256 &txid) {
     return db.Exists(make_pair(CREDITS_COIN_KEY, txid));
+}
+bool Credits_CCoinsViewDB::Claim_HaveCoins(const uint256 &txid) {
+    return db.Exists(make_pair(CLAIM_COIN_KEY, txid));
 }
 
 uint256 Credits_CCoinsViewDB::Credits_GetBestBlock() {
@@ -45,10 +77,45 @@ uint256 Credits_CCoinsViewDB::Credits_GetBestBlock() {
         return uint256(0);
     return hashBestChain;
 }
+uint256 Credits_CCoinsViewDB::Claim_GetBestBlock() {
+    uint256 hashBestChain;
+    if (!db.Read(CLAIM_BEST_CHAIN_KEY, hashBestChain))
+        return uint256(0);
+    return hashBestChain;
+}
 
 bool Credits_CCoinsViewDB::Credits_SetBestBlock(const uint256 &hashBlock) {
     CLevelDBBatch batch;
     Credits_BatchWriteHashBestChain(batch, hashBlock);
+    return db.WriteBatch(batch);
+}
+bool Credits_CCoinsViewDB::Claim_SetBestBlock(const uint256 &hashBlock) {
+    CLevelDBBatch batch;
+    Claim_BatchWriteHashBestChain(batch, hashBlock);
+    return db.WriteBatch(batch);
+}
+
+uint256 Credits_CCoinsViewDB::Claim_GetBitcreditClaimTip() {
+    uint256 hash;
+    if (!db.Read(CLAIM_BITCREDIT_CLAIM_TIP_KEY, hash))
+        return uint256(0);
+    return hash;
+}
+bool Credits_CCoinsViewDB::Claim_SetBitcreditClaimTip(const uint256 &hashBlock) {
+    CLevelDBBatch batch;
+    Claim_BatchWriteHashBitcreditClaimTip(batch, hashBlock);
+    return db.WriteBatch(batch);
+}
+
+int64_t Credits_CCoinsViewDB::Claim_GetTotalClaimedCoins() {
+	int64_t totalClaimedCoins;
+    if (!db.Read(CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY, totalClaimedCoins))
+        return int64_t(0);
+    return totalClaimedCoins;
+}
+bool Credits_CCoinsViewDB::Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins) {
+    CLevelDBBatch batch;
+    Claim_BatchWriteTotalClaimedCoins(batch, totalClaimedCoins);
     return db.WriteBatch(batch);
 }
 
@@ -60,6 +127,21 @@ bool Credits_CCoinsViewDB::Credits_BatchWrite(const std::map<uint256, Credits_CC
     	Credits_BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
     	Credits_BatchWriteHashBestChain(batch, hashBlock);
+
+    return db.WriteBatch(batch);
+}
+bool Credits_CCoinsViewDB::Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) {
+    LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
+
+    CLevelDBBatch batch;
+    for (std::map<uint256, Bitcoin_CClaimCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+    	Claim_BatchWriteCoins(batch, it->first, it->second);
+    if (hashBlock != uint256(0))
+    	Claim_BatchWriteHashBestChain(batch, hashBlock);
+    if (hashBitcreditClaimTip != uint256(0))
+    	Claim_BatchWriteHashBitcreditClaimTip(batch, hashBitcreditClaimTip);
+    if (totalClaimedCoins != int64_t(0))
+    	Claim_BatchWriteTotalClaimedCoins(batch, totalClaimedCoins);
 
     return db.WriteBatch(batch);
 }
@@ -113,6 +195,68 @@ bool Credits_CCoinsViewDB::Credits_GetStats(Credits_CCoinsStats &stats) {
     stats.nHeight = credits_mapBlockIndex.find(Credits_GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
+    return true;
+}
+
+bool Credits_CCoinsViewDB::Claim_GetStats(Bitcoin_CClaimCoinsStats &stats) {
+    leveldb::Iterator *pcursor = db.NewIterator();
+    pcursor->SeekToFirst();
+
+    CHashWriter ss(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
+    stats.hashBlock = Claim_GetBestBlock();
+    ss << stats.hashBlock;
+    stats.hashBitcreditClaimTip = Claim_GetBitcreditClaimTip();
+    ss << stats.hashBitcreditClaimTip;
+    stats.totalClaimedCoins = Claim_GetTotalClaimedCoins();
+    ss << stats.totalClaimedCoins;
+    int64_t nTotalAmountOriginal = 0;
+    int64_t nTotalAmountClaimable = 0;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, Bitcoin_Params().ClientVersion());
+            char chType;
+            ssKey >> chType;
+            if (chType == 'c') {
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, Bitcoin_Params().ClientVersion());
+                Bitcoin_CClaimCoins coins;
+                ssValue >> coins;
+                uint256 txhash;
+                ssKey >> txhash;
+                ss << txhash;
+                ss << VARINT(coins.nVersion);
+                ss << (coins.fCoinBase ? 'c' : 'n');
+                ss << VARINT(coins.nHeight);
+                for (unsigned int i=0; i<coins.vout.size(); i++) {
+                    const CTxOutClaim &out = coins.vout[i];
+                    if (!out.IsNull()) {
+                        ss << VARINT(i+1);
+                        ss << out;
+
+                        stats.nTransactionOutputsOriginal++;
+                        nTotalAmountOriginal += out.nValueOriginal;
+
+						if (out.nValueClaimable > 0) {
+							stats.nTransactionOutputsClaimable++;
+							nTotalAmountClaimable += out.nValueClaimable;
+						}
+                    }
+                }
+                stats.nSerializedSize += 32 + slValue.size();
+                ss << VARINT(0);
+            }
+            pcursor->Next();
+        } catch (std::exception &e) {
+            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        }
+    }
+    delete pcursor;
+    stats.nHeight = bitcoin_mapBlockIndex.find(Claim_GetBestBlock())->second->nHeight;
+    stats.hashSerialized = ss.GetHash();
+    stats.nTotalAmountOriginal = nTotalAmountOriginal;
+    stats.nTotalAmountClaimable = nTotalAmountClaimable;
     return true;
 }
 

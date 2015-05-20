@@ -38,7 +38,6 @@ BITCOIN_CORE_H = \
   coincontrol.h \
   coins.h \
   bitcoin_coins.h \
-  bitcoin_claimcoins.h \
   compat.h \
   core.h \
   bitcoin_core.h \
@@ -72,7 +71,6 @@ BITCOIN_CORE_H = \
   tinyformat.h \
   txdb.h \
   bitcoin_txdb.h \
-  bitcoin_claimtxdb.h \
   txmempool.h \
   bitcoin_txmempool.h \
   ui_interface.h \
@@ -109,7 +107,6 @@ libcredits_server_a_SOURCES = \
   bitcoin_checkpoints.cpp \
   coins.cpp \
   bitcoin_coins.cpp \
-  bitcoin_claimcoins.cpp \
   init.cpp \
   keystore.cpp \
   leveldbwrapper.cpp \
@@ -127,7 +124,6 @@ libcredits_server_a_SOURCES = \
   rpcserver.cpp \
   txdb.cpp \
   bitcoin_txdb.cpp \
-  bitcoin_claimtxdb.cpp \
   txmempool.cpp \
   bitcoin_txmempool.cpp \
   $(JSON_H) \

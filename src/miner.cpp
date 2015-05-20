@@ -12,7 +12,6 @@
 #include "net.h"
 #include "script.h"
 #include "txdb.h"
-#include "bitcoin_claimtxdb.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
