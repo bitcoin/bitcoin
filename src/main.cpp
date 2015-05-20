@@ -2271,9 +2271,7 @@ bool static Bitcredit_WriteChainState(CValidationState &state) {
             return state.Error("out of disk space");
         Bitcredit_FlushBlockFile(credits_mainState);
         bitcredit_pblocktree->Sync();
-        if (!credits_pcoinsTip->Credits_Flush())
-            return state.Abort(_("Failed to write to coin database"));
-        if (!credits_pcoinsTip->Claim_Flush())
+        if (!credits_pcoinsTip->All_Flush())
             return state.Abort(_("Failed to write to coin database"));
         nLastWrite = GetTimeMicros();
     }
@@ -2385,10 +2383,11 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
 	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 	if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, credits_view, true, vBlockUndoClaims))
 		return error("Credits: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-	assert(credits_view.Credits_Flush());
-	if(!fastForwardClaimState) {
+	if(fastForwardClaimState) {
+		assert(credits_view.Credits_Flush());
+	} else {
 		assert(Bitcoin_DeleteBlockUndoClaimsFromDisk(state, vBlockUndoClaims));
-		assert(credits_view.Claim_Flush());
+		assert(credits_view.All_Flush());
 	}
 
     if (bitcredit_fBenchmark)
@@ -2456,10 +2455,11 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
 		return error("Credits: ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
 	}
 	bitcredit_mapBlockSource.erase(inv.hash);
-	assert(credits_view.Credits_Flush());
-	if(!fastForwardClaimState) {
+	if(fastForwardClaimState) {
+		assert(credits_view.Credits_Flush());
+	} else {
 		assert(Bitcoin_WriteBlockUndoClaimsToDisk(state, vBlockUndoClaims));
-		assert(credits_view.Claim_Flush());
+		assert(credits_view.All_Flush());
 	}
 
     if (bitcredit_fBenchmark)

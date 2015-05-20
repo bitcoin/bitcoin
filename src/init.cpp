@@ -170,8 +170,7 @@ void Shutdown()
         if (bitcredit_pblocktree)
             bitcredit_pblocktree->Flush();
         if (credits_pcoinsTip) {
-            credits_pcoinsTip->Credits_Flush();
-            credits_pcoinsTip->Claim_Flush();
+            credits_pcoinsTip->All_Flush();
         }
         delete credits_pcoinsTip; credits_pcoinsTip = NULL;
         delete bitcredit_pcoinsdbview; bitcredit_pcoinsdbview = NULL;

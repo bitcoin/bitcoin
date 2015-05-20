@@ -62,6 +62,7 @@ public:
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
     bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
     bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
+    bool All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
     bool Credits_GetStats(Credits_CCoinsStats &stats);
     bool Claim_GetStats(Claim_CCoinsStats &stats);
 };

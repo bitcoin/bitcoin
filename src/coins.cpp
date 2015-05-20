@@ -137,6 +137,7 @@ int64_t Credits_CCoinsView::Claim_GetTotalClaimedCoins() { return int64_t(0); }
 bool Credits_CCoinsView::Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins) { return false; }
 bool Credits_CCoinsView::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
 bool Credits_CCoinsView::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return false; }
+bool Credits_CCoinsView::All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins) { return false; }
 bool Credits_CCoinsView::Credits_GetStats(Credits_CCoinsStats &stats) { return false; }
 bool Credits_CCoinsView::Claim_GetStats(Claim_CCoinsStats &stats) { return false; }
 
@@ -159,6 +160,7 @@ bool Credits_CCoinsViewBacked::Claim_SetTotalClaimedCoins(const int64_t &totalCl
 void Credits_CCoinsViewBacked::Credits_SetBackend(Credits_CCoinsView &viewIn) { base = &viewIn; }
 bool Credits_CCoinsViewBacked::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return base->Credits_BatchWrite(mapCoins, hashBlock); }
 bool Credits_CCoinsViewBacked::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return base->Claim_BatchWrite(mapCoins, hashBlock, hashBitcreditClaimTip, totalClaimedCoins); }
+bool Credits_CCoinsViewBacked::All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins) { return base->All_BatchWrite(credits_mapCoins, credits_hashBlock, claim_mapCoins, claim_hashBlock, claim_hashBitcreditClaimTip, claim_totalClaimedCoins); }
 bool Credits_CCoinsViewBacked::Credits_GetStats(Credits_CCoinsStats &stats) { return base->Credits_GetStats(stats); }
 bool Credits_CCoinsViewBacked::Claim_GetStats(Claim_CCoinsStats &stats) { return base->Claim_GetStats(stats); }
 
@@ -295,6 +297,18 @@ bool Credits_CCoinsViewCache::Claim_BatchWrite(const std::map<uint256, Claim_CCo
     claim_totalClaimedCoins = totalClaimedCoinsIn;
     return true;
 }
+bool Credits_CCoinsViewCache::All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlockIn, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlockIn, const uint256 &claim_hashBitcreditClaimTipIn, const int64_t &claim_totalClaimedCoinsIn) {
+    for (std::map<uint256, Credits_CCoins>::const_iterator it = credits_mapCoins.begin(); it != credits_mapCoins.end(); it++)
+    	credits_cacheCoins[it->first] = it->second;
+    credits_hashBlock = credits_hashBlockIn;
+
+    for (std::map<uint256, Claim_CCoins>::const_iterator it = claim_mapCoins.begin(); it != claim_mapCoins.end(); it++)
+    	claim_cacheCoins[it->first] = it->second;
+    claim_hashBlock = claim_hashBlockIn;
+    claim_hashBitcreditClaimTip = claim_hashBitcreditClaimTipIn;
+    claim_totalClaimedCoins = claim_totalClaimedCoinsIn;
+    return true;
+}
 
 bool Credits_CCoinsViewCache::Credits_Flush() {
     bool fOk = base->Credits_BatchWrite(credits_cacheCoins, credits_hashBlock);
@@ -306,6 +320,14 @@ bool Credits_CCoinsViewCache::Claim_Flush() {
     bool  fOk = base->Claim_BatchWrite(claim_cacheCoins, claim_hashBlock, claim_hashBitcreditClaimTip, claim_totalClaimedCoins);
 	if (fOk)
 		claim_cacheCoins.clear();
+    return fOk;
+}
+bool Credits_CCoinsViewCache::All_Flush() {
+    bool  fOk = base->All_BatchWrite(credits_cacheCoins, credits_hashBlock, claim_cacheCoins, claim_hashBlock, claim_hashBitcreditClaimTip, claim_totalClaimedCoins);
+	if (fOk) {
+    	credits_cacheCoins.clear();
+		claim_cacheCoins.clear();
+	}
     return fOk;
 }
 

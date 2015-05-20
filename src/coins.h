@@ -631,6 +631,7 @@ public:
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
     virtual bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
     virtual bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
+    virtual bool All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
 
     // Calculate statistics about the unspent transaction output set
     virtual bool Credits_GetStats(Credits_CCoinsStats &stats);
@@ -666,6 +667,7 @@ public:
     void Credits_SetBackend(Credits_CCoinsView &viewIn);
     bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
     bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
+    bool All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
     bool Credits_GetStats(Credits_CCoinsStats &stats);
     bool Claim_GetStats(Claim_CCoinsStats &stats);
 };
@@ -703,6 +705,7 @@ public:
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
     bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
     bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
+    bool All_BatchWrite(const std::map<uint256, Credits_CCoins> &credits_mapCoins, const uint256 &credits_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
 
     // Return a modifiable reference to a Credits_CCoins. Check HaveCoins first.
     // Many methods explicitly require a Credits_CCoinsViewCache because of this method, to reduce
@@ -714,6 +717,7 @@ public:
     // Failure to call this method before destruction will cause the changes to be forgotten.
     bool Credits_Flush();
     bool Claim_Flush();
+    bool All_Flush();
 
     // Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize();
