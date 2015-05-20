@@ -104,9 +104,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getallbalancesforid_MP", 0 },
     { "listblocktransactions_MP", 0 },
     { "setautocommit_OMNI", 0 },
-    { "trade_MP", 2 },
-    { "trade_MP", 4 },
-    { "trade_MP", 5 },
     { "getorderbook_MP", 0 },
     { "getorderbook_MP", 1 },
     { "gettradessince_MP", 0 },
@@ -117,9 +114,16 @@ static const CRPCConvertParam vRPCConvertParams[] =
     // omni_rpctx
     { "send_OMNI", 2 },
     { "sendsto_OMNI", 1 },
+    { "trade_MP", 1 }, // depreciated
+    { "trade_MP", 3 }, // depreciated
+    { "trade_MP", 5 }, // depreciated
     { "sendtrade_OMNI", 1 },
     { "sendtrade_OMNI", 3 },
-    { "sendtrade_OMNI", 5 },
+    { "sendcanceltradesbyprice_OMNI", 1 },
+    { "sendcanceltradesbyprice_OMNI", 3 },
+    { "sendcanceltradesbypair_OMNI", 1 },
+    { "sendcanceltradesbypair_OMNI", 2 },
+    { "sendcancelalltrades_OMNI", 1 },
     { "sendissuancefixed_OMNI", 1 },
     { "sendissuancefixed_OMNI", 2 },
     { "sendissuancefixed_OMNI", 3 },

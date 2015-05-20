@@ -704,63 +704,287 @@ Value sendclosecrowdsale_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendtrade_OMNI - MetaDEx trade
-Value sendtrade_OMNI(const Array& params, bool fHelp)
+// trade_MP - MetaDEx trade
+Value trade_MP(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
-            "sendtrade_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\" action\n"
-            "\nPlace or cancel a trade offer on the distributed token exchange.\n"
+            "trade_MP \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\" action\n"
+            "\nNote: this command is depreciated, and was replaced by:\n"
+            " - sendtrade_OMNI\n"
+            " - sendcanceltradebyprice_OMNI\n"
+            " - sendcanceltradebypair_OMNI\n"
+            " - sendcanceltradebypair_OMNI\n"
+        );
+
+    Array values;
+    uint8_t action = params[5].get_int64();
+
+    // Forward to the new commands, based on action value
+    switch (action) {
+        case CMPTransaction::ADD:
+        {
+            values.push_back(params[0]); // fromAddress
+            values.push_back(params[1]); // propertyIdForSale
+            values.push_back(params[2]); // amountForSale
+            values.push_back(params[3]); // propertyIdDesired
+            values.push_back(params[4]); // amountDesired
+            return sendtrade_OMNI(values, fHelp);
+        }
+        case CMPTransaction::CANCEL_AT_PRICE:
+        {
+            values.push_back(params[0]); // fromAddress
+            values.push_back(params[1]); // propertyIdForSale
+            values.push_back(params[2]); // amountForSale
+            values.push_back(params[3]); // propertyIdDesired
+            values.push_back(params[4]); // amountDesired
+            return sendcanceltradesbyprice_OMNI(values, fHelp);
+        }
+        case CMPTransaction::CANCEL_ALL_FOR_PAIR:
+        {
+            values.push_back(params[0]); // fromAddress
+            values.push_back(params[1]); // propertyIdForSale
+            values.push_back(params[3]); // propertyIdDesired
+            return sendcanceltradesbypair_OMNI(values, fHelp);
+        }
+        case CMPTransaction::CANCEL_EVERYTHING:
+        {
+            uint8_t ecosystem = 0;
+            if (isMainEcosystemProperty(params[1].get_int64())
+                    && isMainEcosystemProperty(params[3].get_int64())) {
+                ecosystem = OMNI_PROPERTY_MSC;
+            }
+            if (isTestEcosystemProperty(params[1].get_int64())
+                    && isTestEcosystemProperty(params[3].get_int64())) {
+                ecosystem = OMNI_PROPERTY_TMSC;
+            }
+            values.push_back(params[0]); // fromAddress
+            values.push_back(ecosystem);
+            return sendcancelalltrades_OMNI(values, fHelp);
+        }
+    }
+
+    throw JSONRPCError(RPC_TYPE_ERROR, "Invalid action (1,2,3,4 only)");
+}
+
+// Send a new MetaDEx trade
+Value sendtrade_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 5)
+        throw runtime_error(
+            "sendtrade_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
+            "\nPlace a trade offer on the distributed token exchange.\n"
             "\nParameters:\n"
             "FromAddress         : the address to send this transaction from\n"
             "PropertyIDForSale   : the property to list for sale\n"
             "AmountForSale       : the amount to list for sale\n"
             "PropertyIDDesired   : the property desired\n"
             "AmountDesired       : the amount desired\n"
-            "Action              : the action to take: (1) new, (2) cancel by price, (3) cancel by pair, (4) cancel all\n"
             "Result:\n"
             "txid    (string) The transaction ID of the sent transaction\n"
             "\nExamples:\n"
-            ">omnicored sendtrade_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\" Action\n"
+            ">omnicored sendtrade_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\"\n"
         );
 
     // obtain parameters & info
     std::string fromAddress = params[0].get_str();
-    unsigned int propertyIdForSale = int64Touint32Safe(params[1].get_int64());
-    string strAmountForSale = params[2].get_str();
-    unsigned int propertyIdDesired = int64Touint32Safe(params[3].get_int64());
-    string strAmountDesired = params[4].get_str();
-    int64_t action = params[5].get_int64();
-    const int64_t senderBalance = getMPbalance(fromAddress, propertyIdForSale, BALANCE);
-    const int64_t senderAvailableBalance = getUserAvailableMPbalance(fromAddress, propertyIdForSale);
+    uint32_t propertyIdForSale = int64Touint32Safe(params[1].get_int64());
+    std::string strAmountForSale = params[2].get_str();
+    uint32_t propertyIdDesired = int64Touint32Safe(params[3].get_int64());
+    std::string strAmountDesired = params[4].get_str();
 
-    // setup a few vars
-    int64_t amountForSale = 0, amountDesired = 0;
     CMPSPInfo::Entry spForSale;
     CMPSPInfo::Entry spDesired;
+    if (false == _my_sps->getSP(propertyIdForSale, spForSale)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale does not exist");
+    if (false == _my_sps->getSP(propertyIdDesired, spDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property desired does not exist");
+    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
+    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
 
-    // perform conversions & checks
-    if (action <= 0 || CMPTransaction::CANCEL_EVERYTHING < action) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid action (1,2,3,4 only)");
-    if (action != CMPTransaction::CANCEL_EVERYTHING) { // these checks are not applicable to cancel everything
-        if (false == _my_sps->getSP(propertyIdForSale, spForSale)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale does not exist");
-        if (false == _my_sps->getSP(propertyIdDesired, spDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property desired does not exist");
-        if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-        if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
-    }
-    if (action <= CMPTransaction::CANCEL_AT_PRICE) { // cancel pair and cancel everything permit zero values
-        amountForSale = StrToInt64(strAmountForSale, spForSale.isDivisible());
-        amountDesired = StrToInt64(strAmountDesired, spDesired.isDivisible());
-        if (0 >= amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for sale");
-        if (!isRangeOK(amountForSale)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount for sale not in range");
-        if (0 >= amountDesired) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount desired");
-        if (!isRangeOK(amountDesired)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount desired not in range");
-    }
-    if (action == CMPTransaction::ADD) { // only check for sufficient balance for new trades
-        if (senderBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance");
-        if (senderAvailableBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance (due to pending transactions)");
-    }
+    int64_t amountForSale = StrToInt64(strAmountForSale, spForSale.isDivisible());
+    int64_t amountDesired = StrToInt64(strAmountDesired, spDesired.isDivisible());
+    if (0 >= amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for sale");
+    if (!isRangeOK(amountForSale)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount for sale not in range");
+    if (0 >= amountDesired) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount desired");
+    if (!isRangeOK(amountDesired)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount desired not in range");
+
+    const int64_t senderBalance = getMPbalance(fromAddress, propertyIdForSale, BALANCE);
+    const int64_t senderAvailableBalance = getUserAvailableMPbalance(fromAddress, propertyIdForSale);
+    if (senderBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance");
+    if (senderAvailableBalance < amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Sender has insufficient balance (due to pending transactions)");
 
     // create a payload for the transaction
+    uint8_t action = CMPTransaction::ADD; // TODO: move into payload creation
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid = 0;
+    std::string rawHex;
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            return txid.GetHex();
+        }
+    }
+}
+
+// Cancel MetaDEx by price
+Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 5)
+        throw runtime_error(
+            "sendcanceltradesbyprice_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
+            "\nCancel offers on the distributed token exchange with the given price.\n"
+            "\nParameters:\n"
+            "FromAddress         : the address to send this transaction from\n"
+            "PropertyIDForSale   : the property listed for sale\n"
+            "AmountForSale       : the amount listed for sale\n"
+            "PropertyIDDesired   : the property desired\n"
+            "AmountDesired       : the desired amount\n"
+            "Result:\n"
+            "txid    (string) The transaction ID of the sent transaction\n"
+            "\nExamples:\n"
+            ">omnicored sendcanceltradesbyprice_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\"\n"
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = params[0].get_str();
+    uint32_t propertyIdForSale = int64Touint32Safe(params[1].get_int64());
+    std::string strAmountForSale = params[2].get_str();
+    uint32_t propertyIdDesired = int64Touint32Safe(params[3].get_int64());
+    std::string strAmountDesired = params[4].get_str();
+
+    CMPSPInfo::Entry spForSale;
+    CMPSPInfo::Entry spDesired;
+    if (false == _my_sps->getSP(propertyIdForSale, spForSale)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale does not exist");
+    if (false == _my_sps->getSP(propertyIdDesired, spDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property desired does not exist");
+    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
+    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+
+    int64_t amountForSale = StrToInt64(strAmountForSale, spForSale.isDivisible());
+    int64_t amountDesired = StrToInt64(strAmountDesired, spDesired.isDivisible());
+    if (0 >= amountForSale) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for sale");
+    if (!isRangeOK(amountForSale)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount for sale not in range");
+    if (0 >= amountDesired) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount desired");
+    if (!isRangeOK(amountDesired)) throw JSONRPCError(RPC_TYPE_ERROR, "Amount desired not in range");
+
+    // TODO: check, if there are matching offers to cancel
+
+    // create a payload for the transaction
+    uint8_t action = CMPTransaction::CANCEL_AT_PRICE; // TODO: move into payload creation
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid = 0;
+    std::string rawHex;
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            return txid.GetHex();
+        }
+    }
+}
+
+// Cancel MetaDEx orders by currency pair
+Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "sendcanceltradesbypair_OMNI \"fromaddress\" propertyidforsale propertiddesired\n"
+            "\nCancel offers on the distributed token exchange with the given currency pair.\n"
+            "\nParameters:\n"
+            "FromAddress         : the address to send this transaction from\n"
+            "PropertyIDForSale   : the property listed for sale\n"
+            "PropertyIDDesired   : the property desired\n"
+            "Result:\n"
+            "txid    (string) The transaction ID of the sent transaction\n"
+            "\nExamples:\n"
+            ">omnicored sendcanceltradesbypair_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\"\n"
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = params[0].get_str();
+    uint32_t propertyIdForSale = int64Touint32Safe(params[1].get_int64());
+    uint32_t propertyIdDesired = int64Touint32Safe(params[2].get_int64());
+
+    CMPSPInfo::Entry spForSale;
+    CMPSPInfo::Entry spDesired;
+    if (false == _my_sps->getSP(propertyIdForSale, spForSale)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale does not exist");
+    if (false == _my_sps->getSP(propertyIdDesired, spDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property desired does not exist");
+    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
+    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+
+    // TODO: check, if there are matching offers to cancel
+
+    // create a payload for the transaction
+    uint8_t action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // TODO: move into payload creation
+    int64_t amountForSale = 0;
+    int64_t amountDesired = 0;
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid = 0;
+    std::string rawHex;
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            return txid.GetHex();
+        }
+    }
+}
+
+// Cancel MetaDEx orders by ecosystem
+Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "sendcancelalltrades_OMNI \"fromaddress\" ecosystem\n"
+            "\nCancel all offers on the distributed token exchange in the given ecosystem.\n"
+            "\nParameters:\n"
+            "FromAddress         : the address to send this transaction from\n"
+            "Ecosystem           : the ecosystem of the offers to cancel - (0) both, (1) main, (2) test\n"
+            "Result:\n"
+            "txid    (string) The transaction ID of the sent transaction\n"
+            "\nExamples:\n"
+            ">omnicored sendcancelalltrades_OMNI \"1FromAddress\" Ecosystem\n"
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = params[0].get_str();
+    uint8_t ecosystem = params[1].get_uint64();
+
+    if (OMNI_PROPERTY_TMSC < ecosystem) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid ecosystem");
+    }
+
+    // TODO: check, if there are matching offers to cancel
+
+    // create a payload for the transaction
+    uint8_t action = CMPTransaction::CANCEL_EVERYTHING; // TODO: move into payload creation
+    int64_t amountForSale = 0;
+    int64_t amountDesired = 0;
+    uint32_t propertyIdForSale = ecosystem;
+    uint32_t propertyIdDesired = ecosystem;
     std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
 
     // request the wallet build the transaction (and if needed commit it)
