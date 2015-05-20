@@ -9,8 +9,8 @@ enum MPRPCErrorCode
     MP_INSUF_FUNDS_BPENDI =         -1,     // balance before pending
     MP_INSUF_FUNDS_APENDI =         -2,     // balance after pending
     MP_INPUT_NOT_IN_RANGE =         -11,    // input value larger than supported
-    
-    //ClassAgnostic_send
+
+    //ClassAgnosticWalletTXBuilder(
     MP_INPUTS_INVALID =             -212,
     MP_ENCODING_ERROR =             -250,
     MP_REDEMP_ILLEGAL =             -233,
@@ -22,7 +22,7 @@ enum MPRPCErrorCode
     MP_ERR_INPUTSELECT_FAIL =       -206,
     MP_ERR_CREATE_TX =              -211,
     MP_ERR_COMMIT_TX =              -213,
-    
+
     //gettransaction_MP, listtransactions_MP
     MP_TX_NOT_FOUND =               -3331,  // No information available about transaction. (GetTransaction failed)
     MP_TX_UNCONFIRMED =             -3332,  // Unconfirmed transactions are not supported. (blockHash is 0)
@@ -34,7 +34,7 @@ enum MPRPCErrorCode
 
 inline std::string error_str(int ec) {
   std::string ec_str;
-  
+
   switch (ec)
   {
       case MP_INSUF_FUNDS_BPENDI:

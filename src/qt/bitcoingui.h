@@ -87,8 +87,11 @@ private:
 
     QMenuBar *appMenuBar;
     QAction *overviewAction;
+    QAction *balancesAction;
     QAction *historyAction;
     QAction *quitAction;
+    QAction *toolboxAction;
+    QAction *exchangeAction;
     QAction *sendCoinsAction;
     QAction *usedSendingAddressesAction;
     QAction *usedReceivingAddressesAction;
@@ -170,8 +173,16 @@ private slots:
 #ifdef ENABLE_WALLET
     /** Switch to overview (home) page */
     void gotoOverviewPage();
+    /** Switch to balances page */
+    void gotoBalancesPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch directly to bitcoin history tab */
+    void gotoBitcoinHistoryTab();
+    /** Switch to utility page */
+    void gotoToolboxPage();
+    /** Switch to exchange page */
+    void gotoExchangePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */

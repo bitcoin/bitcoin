@@ -127,6 +127,11 @@ void ClientModel::updateNumConnections(int numConnections)
     emit numConnectionsChanged(numConnections);
 }
 
+void ClientModel::updateOmniState()
+{
+    emit refreshOmniState();
+}
+
 void ClientModel::updateAlert(const QString &hash, int status)
 {
     // Show error message notification for new alert
@@ -202,6 +207,12 @@ QString ClientModel::formatClientStartupTime() const
 }
 
 // Handlers for core signals
+static void OmniStateChanged(ClientModel *clientmodel)
+{
+    // This will be triggered for each block that contains Omni layer transactions
+    QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
+}
+
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
@@ -231,6 +242,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    uiInterface.OmniStateChanged.connect(boost::bind(OmniStateChanged, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -239,4 +251,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    uiInterface.OmniStateChanged.disconnect(boost::bind(OmniStateChanged, this));
 }

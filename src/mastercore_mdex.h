@@ -142,6 +142,9 @@ public:
     rational_t unitPrice() const;
     rational_t inversePrice() const;
 
+    std::string displayUnitPrice() const;
+    std::string displayInversePrice() const;
+
     void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const;
 };
 
@@ -173,6 +176,7 @@ int MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256&, uint32_t, const std::string&, ui
 int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, uint32_t block, const std::string& sender_addr, unsigned char ecosystem);
 bool MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx);
 void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
+bool MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale = 0);
 }
 
 #endif // MASTERCORE_MDEX_H

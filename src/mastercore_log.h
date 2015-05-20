@@ -40,6 +40,7 @@ extern bool msc_debug_txdb;
 extern bool msc_debug_tradedb;
 extern bool msc_debug_persistence;
 extern bool msc_debug_ui;
+extern bool msc_debug_pending;
 extern bool msc_debug_metadex1;
 extern bool msc_debug_metadex2;
 extern bool msc_debug_metadex3;

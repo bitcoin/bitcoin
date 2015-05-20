@@ -1948,12 +1948,12 @@ Value gettrade_MP(const Array& params, bool fHelp)
     }
 
     // get the amount for sale in this sell offer to see if filled
-    uint64_t amountForSale = mp_obj.getAmount();
+    int64_t amountForSale = mp_obj.getAmount();
 
     // create array of matches
     Array tradeArray;
-    uint64_t totalBought = 0;
-    uint64_t totalSold = 0;
+    int64_t totalBought = 0;
+    int64_t totalSold = 0;
     t_tradelistdb->getMatchingTrades(hash, propertyId, &tradeArray, &totalSold, &totalBought);
 
     // get action byte

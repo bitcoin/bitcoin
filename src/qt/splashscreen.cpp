@@ -15,6 +15,8 @@
 #include "wallet.h"
 #endif
 
+#include "mastercore_version.h"
+
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDesktopWidget>
@@ -24,17 +26,19 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QWidget(0, f), curAlignment(0)
 {
     // set reference point, paddings
-    int paddingRight            = 50;
-    int paddingTop              = 50;
-    int titleVersionVSpace      = 17;
-    int titleCopyrightVSpace    = 40;
+    int paddingLeft             = 33;
+    int paddingTop              = 245;
+    int titleVersionVSpace      = 40;
+    int titleCopyrightVSpace    = 58;
 
     float fontFactor            = 1.0;
 
     // define text to place
-    QString titleText       = tr("Bitcoin Core");
-    QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
+    QString titleText       = tr("Omni Core");
+    QString versionText     = QString("Experimental UI %1").arg(QString::fromStdString(OmniCoreVersion()));
     QString copyrightText   = QChar(0xA9)+QString(" 2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Core developers"));
+            copyrightText  += QString(", ");
+            copyrightText  += QChar(0xA9)+QString(" 2013-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Omni Core developers"));
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
@@ -54,25 +58,11 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
         fontFactor = 0.75;
     }
 
-    pixPaint.setFont(QFont(font, 33*fontFactor));
+    pixPaint.setFont(QFont(font, 20*fontFactor));
     fm = pixPaint.fontMetrics();
-    titleTextWidth  = fm.width(titleText);
-    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop,titleText);
-
-    pixPaint.setFont(QFont(font, 15*fontFactor));
-
-    // if the version string is to long, reduce size
-    fm = pixPaint.fontMetrics();
-    int versionTextWidth  = fm.width(versionText);
-    if(versionTextWidth > titleTextWidth+paddingRight-10) {
-        pixPaint.setFont(QFont(font, 10*fontFactor));
-        titleVersionVSpace -= 5;
-    }
-    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight+2,paddingTop+titleVersionVSpace,versionText);
-
-    // draw copyright stuff
+    pixPaint.drawText(paddingLeft,paddingTop+titleVersionVSpace,versionText);
     pixPaint.setFont(QFont(font, 10*fontFactor));
-    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
+    pixPaint.drawText(paddingLeft,paddingTop+titleCopyrightVSpace,copyrightText);
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
@@ -113,9 +103,9 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
 {
     QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
-        Q_ARG(QString, QString::fromStdString(message)),
-        Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
-        Q_ARG(QColor, QColor(55,55,55)));
+        Q_ARG(QString, QString::fromStdString("\n\n\n\n" + message)), // shift down a little from absolute center
+        Q_ARG(int, Qt::AlignCenter),
+        Q_ARG(QColor, QColor(100,100,100)));
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress)

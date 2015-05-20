@@ -1140,7 +1140,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 failMsg += _("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown.");
                 return InitError(failMsg);
             }
-            fprintf(fp, "\ntxindex=1");
+            fprintf(fp, "\ntxindex=1\n");
             fflush(fp);
             fclose(fp);
             return InitError(_("Your configuration file has been updated.\n\n"

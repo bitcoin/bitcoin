@@ -261,6 +261,29 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
     return NewReturn;
 }
 
+// Used for display of unit prices to 8 decimal places at UI layer - automatically returns unit or inverse price as needed
+std::string CMPMetaDEx::displayUnitPrice() const
+{
+     rational_t tmpDisplayPrice;
+     if (desired_property == OMNI_PROPERTY_MSC || desired_property == OMNI_PROPERTY_TMSC) {
+         tmpDisplayPrice = unitPrice();
+         if (isPropertyDivisible(property)) tmpDisplayPrice = tmpDisplayPrice * COIN;
+     } else {
+         tmpDisplayPrice = inversePrice();
+         if (isPropertyDivisible(desired_property)) tmpDisplayPrice = tmpDisplayPrice * COIN;
+     }
+
+     // offers with unit prices under 0.00000001 will be excluded from UI layer - TODO: find a better way to identify sub 0.00000001 prices
+     std::string tmpDisplayPriceStr = xToString(tmpDisplayPrice);
+     if (!tmpDisplayPriceStr.empty()) { if (tmpDisplayPriceStr.substr(0,1) == "0") return "0.00000000"; }
+
+     // we must always round up here - for example if the actual price required is 0.3333333344444
+     // round: 0.33333333 - price is insufficient and thus won't result in a trade
+     // round: 0.33333334 - price will be sufficient to result in a trade
+     std::string displayValue = FormatDivisibleMP(xToInt64(tmpDisplayPrice, true));
+     return displayValue;
+}
+
 rational_t CMPMetaDEx::unitPrice() const
 {
     rational_t effectivePrice(int128_t(0));
@@ -570,6 +593,24 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
     if (msc_debug_metadex2) MetaDEx_debug_print();
 
     return rc;
+}
+
+// searches the metadex maps to see if a trade is still open
+// allows search to be optimized if propertyIdForSale is specified
+bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)
+{
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if (propertyIdForSale != 0 && propertyIdForSale != my_it->first) continue;
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set & indexes = (it->second);
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                CMPMetaDEx obj = *it;
+                if( obj.getHash().GetHex() == txid.GetHex() ) return true;
+            }
+        }
+    }
+    return false;
 }
 
 void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
