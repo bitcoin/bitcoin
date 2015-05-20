@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-class Bitcredit_CCoins;
+class Credits_CCoins;
 class uint256;
 
 // -dbcache default (MiB)
@@ -25,25 +25,25 @@ static const int64_t bitcredit_nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
 static const int64_t bitcredit_nMinDbCache = 4;
 
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
-class Bitcredit_CCoinsViewDB : public Bitcredit_CCoinsView {
+class Credits_CCoinsViewDB : public Credits_CCoinsView {
 private:
 	static const unsigned char COIN_KEY;
 	static const unsigned char BEST_CHAIN_KEY;
 
     void BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
-    void BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcredit_CCoins &coins);
+    void BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins);
 protected:
     CLevelDBWrapper db;
 public:
-    Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    Credits_CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins);
+    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
+    bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool GetStats(Bitcredit_CCoinsStats &stats);
+    bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool GetStats(Credits_CCoinsStats &stats);
 };
 
 /** Access to the block database (blocks/index/) */

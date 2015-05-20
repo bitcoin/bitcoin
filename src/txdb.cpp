@@ -12,51 +12,51 @@
 
 using namespace std;
 
-const unsigned char Bitcredit_CCoinsViewDB::COIN_KEY = 'c';
-const unsigned char Bitcredit_CCoinsViewDB::BEST_CHAIN_KEY = 'B';
+const unsigned char Credits_CCoinsViewDB::COIN_KEY = 'c';
+const unsigned char Credits_CCoinsViewDB::BEST_CHAIN_KEY = 'B';
 
-void Bitcredit_CCoinsViewDB::BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcredit_CCoins &coins) {
+void Credits_CCoinsViewDB::BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins) {
     if (coins.IsPruned())
         batch.Erase(make_pair(COIN_KEY, hash));
     else
         batch.Write(make_pair(COIN_KEY, hash), coins);
 }
-void Bitcredit_CCoinsViewDB::BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+void Credits_CCoinsViewDB::BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
     batch.Write(BEST_CHAIN_KEY, hash);
 }
 
-bool Bitcredit_CCoinsViewDB::GetCoins(const uint256 &txid, Bitcredit_CCoins &coins) {
+bool Credits_CCoinsViewDB::GetCoins(const uint256 &txid, Credits_CCoins &coins) {
     return db.Read(make_pair(COIN_KEY, txid), coins);
 }
 
-bool Bitcredit_CCoinsViewDB::SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins) {
+bool Credits_CCoinsViewDB::SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
     CLevelDBBatch batch;
     BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
 
-bool Bitcredit_CCoinsViewDB::HaveCoins(const uint256 &txid) {
+bool Credits_CCoinsViewDB::HaveCoins(const uint256 &txid) {
     return db.Exists(make_pair(COIN_KEY, txid));
 }
 
-uint256 Bitcredit_CCoinsViewDB::GetBestBlock() {
+uint256 Credits_CCoinsViewDB::GetBestBlock() {
     uint256 hashBestChain;
     if (!db.Read(BEST_CHAIN_KEY, hashBestChain))
         return uint256(0);
     return hashBestChain;
 }
 
-bool Bitcredit_CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
+bool Credits_CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
     CLevelDBBatch batch;
     BatchWriteHashBestChain(batch, hashBlock);
     return db.WriteBatch(batch);
 }
 
-bool Bitcredit_CCoinsViewDB::BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock) {
+bool Credits_CCoinsViewDB::BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
-    for (std::map<uint256, Bitcredit_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
+    for (std::map<uint256, Credits_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
         BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
         BatchWriteHashBestChain(batch, hashBlock);
@@ -64,7 +64,7 @@ bool Bitcredit_CCoinsViewDB::BatchWrite(const std::map<uint256, Bitcredit_CCoins
     return db.WriteBatch(batch);
 }
 
-bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
+bool Credits_CCoinsViewDB::GetStats(Credits_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
@@ -82,7 +82,7 @@ bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
             if (chType == 'c') {
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CREDITS_CLIENT_VERSION);
-                Bitcredit_CCoins coins;
+                Credits_CCoins coins;
                 ssValue >> coins;
                 uint256 txhash;
                 ssKey >> txhash;
@@ -116,7 +116,7 @@ bool Bitcredit_CCoinsViewDB::GetStats(Bitcredit_CCoinsStats &stats) {
     return true;
 }
 
-Bitcredit_CCoinsViewDB::Bitcredit_CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "credits_chainstate", nCacheSize, fMemory, fWipe) { }
+Credits_CCoinsViewDB::Credits_CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "credits_chainstate", nCacheSize, fMemory, fWipe) { }
 
 //-----------------------------------------------
 

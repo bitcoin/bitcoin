@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 // paid to a TX_PUBKEYHASH.
 //
 static std::vector<Credits_CTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, Bitcredit_CCoinsView & coinsRet)
+SetupDummyInputs(CBasicKeyStore& keystoreRet, Credits_CCoinsView & coinsRet)
 {
     std::vector<Credits_CTransaction> dummyTransactions;
     dummyTransactions.resize(2);
@@ -245,14 +245,14 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, Bitcredit_CCoinsView & coinsRet)
     dummyTransactions[0].vout[0].scriptPubKey << key[0].GetPubKey() << OP_CHECKSIG;
     dummyTransactions[0].vout[1].nValue = 50*CENT;
     dummyTransactions[0].vout[1].scriptPubKey << key[1].GetPubKey() << OP_CHECKSIG;
-    coinsRet.SetCoins(dummyTransactions[0].GetHash(), Bitcredit_CCoins(dummyTransactions[0], 0));
+    coinsRet.SetCoins(dummyTransactions[0].GetHash(), Credits_CCoins(dummyTransactions[0], 0));
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21*CENT;
     dummyTransactions[1].vout[0].scriptPubKey.SetDestination(key[2].GetPubKey().GetID());
     dummyTransactions[1].vout[1].nValue = 22*CENT;
     dummyTransactions[1].vout[1].scriptPubKey.SetDestination(key[3].GetPubKey().GetID());
-    coinsRet.SetCoins(dummyTransactions[1].GetHash(), Bitcredit_CCoins(dummyTransactions[1], 0));
+    coinsRet.SetCoins(dummyTransactions[1].GetHash(), Credits_CCoins(dummyTransactions[1], 0));
 
     return dummyTransactions;
 }
@@ -260,7 +260,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, Bitcredit_CCoinsView & coinsRet)
 BOOST_AUTO_TEST_CASE(test_Get)
 {
     CBasicKeyStore keystore;
-    Bitcredit_CCoinsView coinsDummy;
+    Credits_CCoinsView coinsDummy;
     Credits_CCoinsViewCache bitcredit_coins(coinsDummy);
     Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
     Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     LOCK(credits_mainState.cs_main);
     CBasicKeyStore keystore;
-    Bitcredit_CCoinsView coinsDummy;
+    Credits_CCoinsView coinsDummy;
     Credits_CCoinsViewCache coins(coinsDummy);
     std::vector<Credits_CTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 

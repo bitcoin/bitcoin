@@ -401,7 +401,7 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
 
     Object ret;
 
-    Bitcredit_CCoinsStats stats;
+    Credits_CCoinsStats stats;
     if (bitcredit_pcoinsTip->GetStats(stats)) {
         ret.push_back(Pair("height", (int64_t)stats.nHeight));
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
@@ -461,13 +461,13 @@ Value gettxout(const Array& params, bool fHelp)
     if (params.size() > 2)
         fMempool = params[2].get_bool();
 
-    Bitcredit_CCoins coins;
+    Credits_CCoins coins;
     if (fMempool) {
         LOCK(credits_mempool.cs);
-        Bitcredit_CCoinsViewMemPool view(*bitcredit_pcoinsTip, credits_mempool);
+        Credits_CCoinsViewMemPool view(*bitcredit_pcoinsTip, credits_mempool);
         if (!view.GetCoins(hash, coins))
             return Value::null;
-        credits_mempool.pruneSpent(hash, coins); // TODO: this should be done by the Bitcredit_CCoinsViewMemPool
+        credits_mempool.pruneSpent(hash, coins); // TODO: this should be done by the Credits_CCoinsViewMemPool
     } else {
         if (!bitcredit_pcoinsTip->GetCoins(hash, coins))
             return Value::null;

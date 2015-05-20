@@ -581,17 +581,17 @@ Value signrawtransaction(const Array& params, bool fHelp)
     bool fComplete = true;
 
     // Fetch previous transactions (inputs):
-    Bitcredit_CCoinsView viewDummy;
+    Credits_CCoinsView viewDummy;
     Credits_CCoinsViewCache view(viewDummy);
     {
         LOCK(credits_mempool.cs);
         Credits_CCoinsViewCache &viewChain = *bitcredit_pcoinsTip;
-        Bitcredit_CCoinsViewMemPool viewMempool(viewChain, credits_mempool);
+        Credits_CCoinsViewMemPool viewMempool(viewChain, credits_mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(Credits_CTxIn& txin, mergedTx.vin) {
             const uint256& prevHash = txin.prevout.hash;
-            Bitcredit_CCoins coins;
+            Credits_CCoins coins;
             view.GetCoins(prevHash, coins); // this is certainly allowed to fail
         }
 
@@ -642,7 +642,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             vector<unsigned char> pkData(ParseHexO(prevOut, "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
-            Bitcredit_CCoins coins;
+            Credits_CCoins coins;
             if (view.GetCoins(txid, coins)) {
                 if (coins.IsAvailable(nOut) && coins.vout[nOut].scriptPubKey != scriptPubKey) {
                     string err("Previous output scriptPubKey mismatch:\n");
@@ -705,7 +705,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     for (unsigned int i = 0; i < mergedTx.vin.size(); i++)
     {
         Credits_CTxIn& txin = mergedTx.vin[i];
-        Bitcredit_CCoins coins;
+        Credits_CCoins coins;
         if (!view.GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n))
         {
             fComplete = false;
@@ -779,7 +779,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     uint256 hashTx = tx.GetHash();
 
     Credits_CCoinsViewCache &view = *bitcredit_pcoinsTip;
-    Bitcredit_CCoins existingCoins;
+    Credits_CCoins existingCoins;
     bool fHaveMempool = credits_mempool.exists(hashTx);
     bool fHaveChain = view.GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
     if (!fHaveMempool && !fHaveChain) {

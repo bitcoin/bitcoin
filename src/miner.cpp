@@ -196,7 +196,7 @@ bool VerifyDepositSignatures (std::string prefix, Credits_CBlock *pblock) {
 			if(txDepositIn.prevout == coinbaseOutPoint) {
 		        scriptPubKey = &pblock->vtx[0].vout[0].scriptPubKey;
 			} else {
-				const Bitcredit_CCoins &coinsSpent = bitcredit_pcoinsTip->GetCoins(txDepositIn.prevout.hash);
+				const Credits_CCoins &coinsSpent = bitcredit_pcoinsTip->GetCoins(txDepositIn.prevout.hash);
 				assert(coinsSpent.IsAvailable(txDepositIn.prevout.n));
 				scriptPubKey = &coinsSpent.vout[txDepositIn.prevout.n].scriptPubKey;
 			}
@@ -564,7 +564,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 							nTotalIn += credits_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
 							continue;
 						}
-						const Bitcredit_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
+						const Credits_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
 
 						int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
 						nTotalIn += nValueIn;

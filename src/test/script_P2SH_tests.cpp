@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(sign)
         {
             CScript sigSave = txTo[i].vin[0].scriptSig;
             txTo[i].vin[0].scriptSig = txTo[j].vin[0].scriptSig;
-            bool sigOK = Bitcredit_VerifySignature(Bitcredit_CCoins(txFrom, 0), txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0);
+            bool sigOK = Bitcredit_VerifySignature(Credits_CCoins(txFrom, 0), txTo[i], 0, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, 0);
             if (i == j)
                 BOOST_CHECK_MESSAGE(sigOK, strprintf("VerifySignature %d %d", i, j));
             else
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
 {
     LOCK(credits_mainState.cs_main);
 
-    Bitcredit_CCoinsView coinsDummy;
+    Credits_CCoinsView coinsDummy;
     Credits_CCoinsViewCache bitcredit_coins(coinsDummy);
     Bitcoin_CClaimCoinsView bitcoin_coinsDummy;
     Bitcoin_CClaimCoinsViewCache bitcoin_coins(bitcoin_coinsDummy, bitcoin_nClaimCoinCacheFlushSize);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[5].scriptPubKey.SetDestination(oneOfEleven.GetID());
     txFrom.vout[5].nValue = 6000;
 
-    bitcredit_coins.SetCoins(txFrom.GetHash(), Bitcredit_CCoins(txFrom, 0));
+    bitcredit_coins.SetCoins(txFrom.GetHash(), Credits_CCoins(txFrom, 0));
 
     Credits_CTransaction txTo;
     txTo.vout.resize(1);

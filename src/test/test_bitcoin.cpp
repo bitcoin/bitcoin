@@ -41,7 +41,7 @@ Credits_CWallet* deposit_pwalletMain;
 extern void noui_connect();
 
 struct TestingSetup {
-    Bitcredit_CCoinsViewDB *bitcredit_pcoinsdbview;
+    Credits_CCoinsViewDB *bitcredit_pcoinsdbview;
     Bitcoin_CCoinsViewDB *bitcoin_pcoinsdbview;
     Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
     boost::filesystem::path pathTemp;
@@ -60,7 +60,7 @@ struct TestingSetup {
         mapArgs["-datadir"] = pathTemp.string();
 
         bitcredit_pblocktree = new Credits_CBlockTreeDB(1 << 20, true);
-        bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(1 << 23, true);
+        bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(1 << 23, true);
         bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
         bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(1 << 20, true);

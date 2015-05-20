@@ -80,7 +80,7 @@ public:
     void removeConflicts(const Credits_CTransaction &tx, std::list<Credits_CTransaction>& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, Bitcredit_CCoins &coins);
+    void pruneSpent(const uint256& hash, Credits_CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
@@ -101,14 +101,14 @@ public:
 
 /** CCoinsView that brings transactions from a memorypool into view.
     It does not check for spendings by memory pool transactions. */
-class Bitcredit_CCoinsViewMemPool : public Bitcredit_CCoinsViewBacked
+class Credits_CCoinsViewMemPool : public Credits_CCoinsViewBacked
 {
 protected:
     Bitcredit_CTxMemPool &mempool;
 
 public:
-    Bitcredit_CCoinsViewMemPool(Bitcredit_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
+    Credits_CCoinsViewMemPool(Credits_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn);
+    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
 };
 

@@ -66,7 +66,7 @@
  *              * 8c988f1a4a4de2161e0f50aac7f17e7f9555caa4: address uint160
  *  - height = 120891
  */
-class Bitcredit_CCoins
+class Credits_CCoins
 {
 public:
     // whether transaction is a coinbase
@@ -85,13 +85,13 @@ public:
     // as new tx version will probably only be introduced at certain heights
     int nVersion;
 
-    // construct a Bitcredit_CCoins from a CTransaction, at a given height
-    Bitcredit_CCoins(const Credits_CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), vout(tx.vout), nHeight(nHeightIn), nMetaData(tx.IsDeposit() ? 1 : 0), nVersion(tx.nVersion) {
+    // construct a Credits_CCoins from a CTransaction, at a given height
+    Credits_CCoins(const Credits_CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), vout(tx.vout), nHeight(nHeightIn), nMetaData(tx.IsDeposit() ? 1 : 0), nVersion(tx.nVersion) {
         ClearUnspendable();
     }
 
     // empty constructor
-    Bitcredit_CCoins() : fCoinBase(false), vout(0), nHeight(0), nMetaData(0), nVersion(0) { }
+    Credits_CCoins() : fCoinBase(false), vout(0), nHeight(0), nMetaData(0), nVersion(0) { }
 
     // remove spent outputs at the end of vout
     void Cleanup() {
@@ -109,7 +109,7 @@ public:
         Cleanup();
     }
 
-    void swap(Bitcredit_CCoins &to) {
+    void swap(Credits_CCoins &to) {
         std::swap(to.fCoinBase, fCoinBase);
         to.vout.swap(vout);
         std::swap(to.nHeight, nHeight);
@@ -118,8 +118,8 @@ public:
     }
 
     // equality test
-    friend bool operator==(const Bitcredit_CCoins &a, const Bitcredit_CCoins &b) {
-         // Empty Bitcredit_CCoins objects are always equal.
+    friend bool operator==(const Credits_CCoins &a, const Credits_CCoins &b) {
+         // Empty Credits_CCoins objects are always equal.
          if (a.IsPruned() && b.IsPruned())
              return true;
          return a.fCoinBase == b.fCoinBase &&
@@ -128,7 +128,7 @@ public:
                 a.nVersion == b.nVersion &&
                 a.vout == b.vout;
     }
-    friend bool operator!=(const Bitcredit_CCoins &a, const Bitcredit_CCoins &b) {
+    friend bool operator!=(const Credits_CCoins &a, const Credits_CCoins &b) {
         return !(a == b);
     }
 
@@ -244,8 +244,8 @@ public:
         return (nPos < vout.size() && !vout[nPos].IsNull());
     }
 
-    // check whether the entire Bitcredit_CCoins is spent
-    // note that only !IsPruned() Bitcredit_CCoins can be serialized
+    // check whether the entire Credits_CCoins is spent
+    // note that only !IsPruned() Credits_CCoins can be serialized
     bool IsPruned() const {
         BOOST_FOREACH(const CTxOut &out, vout)
             if (!out.IsNull())
@@ -256,7 +256,7 @@ public:
     std::string ToString() const
     {
         std::string str;
-        str += strprintf("Bitcredit_CCoins(coinbase=%d, height=%d, metadata=%d, ver=%d, vout.size=%u)\n",
+        str += strprintf("Credits_CCoins(coinbase=%d, height=%d, metadata=%d, ver=%d, vout.size=%u)\n",
             fCoinBase,
             nHeight,
             nMetaData,
@@ -269,7 +269,7 @@ public:
 };
 
 
-struct Bitcredit_CCoinsStats
+struct Credits_CCoinsStats
 {
     int nHeight;
     uint256 hashBlock;
@@ -279,82 +279,82 @@ struct Bitcredit_CCoinsStats
     uint256 hashSerialized;
     int64_t nTotalAmount;
 
-    Bitcredit_CCoinsStats() : nHeight(0), hashBlock(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), hashSerialized(0), nTotalAmount(0) {}
+    Credits_CCoinsStats() : nHeight(0), hashBlock(0), nTransactions(0), nTransactionOutputs(0), nSerializedSize(0), hashSerialized(0), nTotalAmount(0) {}
 };
 
 
 /** Abstract view on the open txout dataset. */
-class Bitcredit_CCoinsView
+class Credits_CCoinsView
 {
 public:
-    // Retrieve the Bitcredit_CCoins (unspent transaction outputs) for a given txid
-    virtual bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
+    // Retrieve the Credits_CCoins (unspent transaction outputs) for a given txid
+    virtual bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
 
-    // Modify the Bitcredit_CCoins for a given txid
-    virtual bool SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins);
+    // Modify the Credits_CCoins for a given txid
+    virtual bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
 
     // Just check whether we have data for a given txid.
     // This may (but cannot always) return true for fully spent transactions
     virtual bool HaveCoins(const uint256 &txid);
 
-    // Retrieve the block hash whose state this Bitcredit_CCoinsView currently represents
+    // Retrieve the block hash whose state this Credits_CCoinsView currently represents
     virtual uint256 GetBestBlock();
 
     // Modify the currently active block hash
     virtual bool SetBestBlock(const uint256 &hashBlock);
 
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
-    virtual bool BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock);
+    virtual bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
 
     // Calculate statistics about the unspent transaction output set
-    virtual bool GetStats(Bitcredit_CCoinsStats &stats);
+    virtual bool GetStats(Credits_CCoinsStats &stats);
 
-    // As we use Bitcredit_CCoinsViews polymorphically, have a virtual destructor
-    virtual ~Bitcredit_CCoinsView() {}
+    // As we use Credits_CCoinsViews polymorphically, have a virtual destructor
+    virtual ~Credits_CCoinsView() {}
 };
 
 
-/** Bitcredit_CCoinsView backed by another Bitcredit_CCoinsView */
-class Bitcredit_CCoinsViewBacked : public Bitcredit_CCoinsView
+/** Credits_CCoinsView backed by another Credits_CCoinsView */
+class Credits_CCoinsViewBacked : public Credits_CCoinsView
 {
 protected:
-    Bitcredit_CCoinsView *base;
+    Credits_CCoinsView *base;
 
 public:
-    Bitcredit_CCoinsViewBacked(Bitcredit_CCoinsView &viewIn);
-    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins);
+    Credits_CCoinsViewBacked(Credits_CCoinsView &viewIn);
+    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
+    bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    void SetBackend(Bitcredit_CCoinsView &viewIn);
-    bool BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool GetStats(Bitcredit_CCoinsStats &stats);
+    void SetBackend(Credits_CCoinsView &viewIn);
+    bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool GetStats(Credits_CCoinsStats &stats);
 };
 
 
-/** Bitcredit_CCoinsView that adds a memory cache for transactions to another Bitcredit_CCoinsView */
-class Credits_CCoinsViewCache : public Bitcredit_CCoinsViewBacked
+/** Credits_CCoinsView that adds a memory cache for transactions to another Credits_CCoinsView */
+class Credits_CCoinsViewCache : public Credits_CCoinsViewBacked
 {
 protected:
     uint256 hashBlock;
-    std::map<uint256,Bitcredit_CCoins> cacheCoins;
+    std::map<uint256,Credits_CCoins> cacheCoins;
 
 public:
-    Credits_CCoinsViewCache(Bitcredit_CCoinsView &baseIn, bool fDummy = false);
+    Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy = false);
 
-    // Standard Bitcredit_CCoinsView methods
-    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcredit_CCoins &coins);
+    // Standard Credits_CCoinsView methods
+    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
+    bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, Bitcredit_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
 
-    // Return a modifiable reference to a Bitcredit_CCoins. Check HaveCoins first.
+    // Return a modifiable reference to a Credits_CCoins. Check HaveCoins first.
     // Many methods explicitly require a Credits_CCoinsViewCache because of this method, to reduce
     // copying.
-    Bitcredit_CCoins &GetCoins(const uint256 &txid);
+    Credits_CCoins &GetCoins(const uint256 &txid);
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
@@ -381,7 +381,7 @@ public:
     const CTxOut &GetOutputFor(const Credits_CTxIn& input);
 
 private:
-    std::map<uint256,Bitcredit_CCoins>::iterator FetchCoins(const uint256 &txid);
+    std::map<uint256,Credits_CCoins>::iterator FetchCoins(const uint256 &txid);
 };
 
 #endif

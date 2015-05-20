@@ -119,7 +119,7 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
-static Bitcredit_CCoinsViewDB *bitcredit_pcoinsdbview;
+static Credits_CCoinsViewDB *bitcredit_pcoinsdbview;
 static Bitcoin_CCoinsViewDB *bitcoin_pcoinsdbview;
 static Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
 
@@ -795,7 +795,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 delete bitcredit_pblocktree;
 
                 bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, credits_mainState.fReindex);
-                bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
+                bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
                 bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
                 if (credits_mainState.fReindex)

@@ -208,7 +208,7 @@ void Bitcredit_UpdateTime(Credits_CBlockHeader& block, const Credits_CBlockIndex
 /** Create a new block index entry for a given block hash */
 Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash);
 /** Verify a signature */
-bool Bitcredit_VerifySignature(const Bitcredit_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+bool Bitcredit_VerifySignature(const Credits_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Get statistics from node state */
 bool Bitcredit_GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
@@ -377,7 +377,7 @@ private:
 
 public:
     Bitcredit_CScriptCheck() {}
-    Bitcredit_CScriptCheck(const Bitcredit_CCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+    Bitcredit_CScriptCheck(const Credits_CCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
         scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
     Bitcredit_CScriptCheck(const Bitcoin_CClaimCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
@@ -805,7 +805,7 @@ extern Bitcredit_CChain credits_chainActive;
 /** The currently best known chain of headers (some of which may be invalid). */
 extern Bitcredit_CChain bitcredit_chainMostWork;
 
-/** Global variable that points to the active Bitcredit_CCoinsView (protected by cs_main) */
+/** Global variable that points to the active Credits_CCoinsView (protected by cs_main) */
 extern Credits_CCoinsViewCache *bitcredit_pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */

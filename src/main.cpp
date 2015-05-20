@@ -627,7 +627,7 @@ int Credits_CMerkleTx::SetMerkleBranch(const Credits_CBlock* pblock)
     Credits_CBlock blockTmp;
 
     if (pblock == NULL) {
-    	Bitcredit_CCoins coins;
+    	Credits_CCoins coins;
         if (bitcredit_pcoinsTip->GetCoins(GetHash(), coins)) {
             Credits_CBlockIndex *pindex = credits_chainActive[coins.nHeight];
             if (pindex) {
@@ -825,11 +825,11 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
 
     {
 
-    	Bitcredit_CCoinsView bitcredit_dummy;
+    	Credits_CCoinsView bitcredit_dummy;
         Credits_CCoinsViewCache credits_view(bitcredit_dummy);
         {
         LOCK(pool.cs);
-        Bitcredit_CCoinsViewMemPool credits_viewMemPool(*bitcredit_pcoinsTip, pool);
+        Credits_CCoinsViewMemPool credits_viewMemPool(*bitcredit_pcoinsTip, pool);
         credits_view.SetBackend(credits_viewMemPool);
 
         // do we already have it?
@@ -1082,7 +1082,7 @@ bool Bitcredit_GetTransaction(const uint256 &hash, Credits_CTransaction &txOut, 
             int nHeight = -1;
             {
                 Credits_CCoinsViewCache &view = *bitcredit_pcoinsTip;
-                Bitcredit_CCoins coins;
+                Credits_CCoins coins;
                 if (view.GetCoins(hash, coins))
                     nHeight = coins.nHeight;
             }
@@ -1566,7 +1566,7 @@ void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &sta
     	} else {
             BOOST_FOREACH(const Credits_CTxIn &txin, tx.vin) {
             	Credits_CTxInUndo undo;
-				Bitcredit_CCoins &coins = bitcredit_inputs.GetCoins(txin.prevout.hash);
+				Credits_CCoins &coins = bitcredit_inputs.GetCoins(txin.prevout.hash);
 				ret = coins.Spend(txin.prevout, undo);
 				assert(ret);
 				txundo.vprevout.push_back(undo);
@@ -1575,7 +1575,7 @@ void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &sta
     }
 
     // add outputs
-    ret = bitcredit_inputs.SetCoins(txhash, Bitcredit_CCoins(tx, nHeight));
+    ret = bitcredit_inputs.SetCoins(txhash, Credits_CCoins(tx, nHeight));
     assert(ret);
 }
 
@@ -1586,7 +1586,7 @@ bool Bitcredit_CScriptCheck::operator()() const {
     return true;
 }
 
-bool Bitcredit_VerifySignature(const Bitcredit_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
+bool Bitcredit_VerifySignature(const Credits_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
     return Bitcredit_CScriptCheck(txFrom, txTo, nIn, flags, nHashType)();
 }
@@ -1681,7 +1681,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
             	const COutPoint &prevout = tx.vin[i].prevout;
 
-				const Bitcredit_CCoins &coins = bitcredit_inputs.GetCoins(prevout.hash);
+				const Credits_CCoins &coins = bitcredit_inputs.GetCoins(prevout.hash);
 
 				// If prev is coinbase, check that it's matured
 				//An exception is made where the deposit can spend the coinbase IF the coinbase
@@ -1786,7 +1786,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
               for (unsigned int i = 0; i < tx.vin.size(); i++) {
               	const COutPoint &prevout = tx.vin[i].prevout;
 
-				const Bitcredit_CCoins &coins = bitcredit_inputs.GetCoins(prevout.hash);
+				const Credits_CCoins &coins = bitcredit_inputs.GetCoins(prevout.hash);
 
 				// Verify signature
 				Bitcredit_CScriptCheck check(coins, tx, i, flags, 0);
@@ -1855,11 +1855,11 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
         // exactly. Note that transactions with only provably unspendable outputs won't
         // have outputs available even in the block itself, so we handle that case
         // specially with outsEmpty.
-        Bitcredit_CCoins outsEmpty;
-        Bitcredit_CCoins &outs = credits_view.HaveCoins(hash) ? credits_view.GetCoins(hash) : outsEmpty;
+        Credits_CCoins outsEmpty;
+        Credits_CCoins &outs = credits_view.HaveCoins(hash) ? credits_view.GetCoins(hash) : outsEmpty;
         outs.ClearUnspendable();
 
-        Bitcredit_CCoins outsBlock = Bitcredit_CCoins(tx, pindex->nHeight);
+        Credits_CCoins outsBlock = Credits_CCoins(tx, pindex->nHeight);
         // The CCoins serialization does not serialize negative numbers.
         // No network rules currently depend on the version here, so an inconsistency is harmless
         // but it must be corrected before txout nversion ever influences a network rule.
@@ -1869,7 +1869,7 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
             fClean = fClean && error("Credits: DisconnectBlock() : added transaction mismatch? database corrupted. \nExpected:\n%s\nFound:\n%s\n", outs.ToString(), outsBlock.ToString());
 
         // remove outputs
-        outs = Bitcredit_CCoins();
+        outs = Credits_CCoins();
 
         // restore inputs
         if (i > 0) { // not coinbases
@@ -1899,13 +1899,13 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
                 for (unsigned int j = tx.vin.size(); j-- > 0;) {
 					const COutPoint &out = tx.vin[j].prevout;
 					const Credits_CTxInUndo &undo = txundo.vprevout[j];
-					Bitcredit_CCoins coins;
+					Credits_CCoins coins;
 					credits_view.GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
 					if (undo.nHeight != 0) {
 						// undo data contains height: this is the last output of the prevout tx being spent
 						if (!coins.IsPruned())
 							fClean = fClean && error("Credits: DisconnectBlock() : undo data overwriting existing transaction");
-						coins = Bitcredit_CCoins();
+						coins = Credits_CCoins();
 						coins.fCoinBase = undo.fCoinBase;
 						coins.nHeight = undo.nHeight;
 						coins.nMetaData = undo.nMetaData;
@@ -1989,7 +1989,7 @@ void UpdateResurrectedDepositBase(const Credits_CBlockIndex* pBlockToTrim, const
     if(pBlockToTrim != NULL) {
 		if (!tx.IsClaim()) {
 			BOOST_FOREACH(const Credits_CTxIn &txin, tx.vin) {
-				const Bitcredit_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
+				const Credits_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
 
 				if(coins.nHeight < pBlockToTrim->nHeight) {
 					nResurrectedDepositBase += coins.vout[txin.prevout.n].nValue;
@@ -2006,7 +2006,7 @@ void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_C
 			const uint256 txHash = tx.GetHash();
 
 			if(credits_view.HaveCoins(txHash)) {
-				const Bitcredit_CCoins &coins = credits_view.GetCoins(txHash);
+				const Credits_CCoins &coins = credits_view.GetCoins(txHash);
 
 				BOOST_FOREACH(const CTxOut &txout, coins.vout) {
 					if(txout.nValue > 0) {
