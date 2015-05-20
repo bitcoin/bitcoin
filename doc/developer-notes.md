@@ -102,7 +102,7 @@ CXXFLAGS="-g -ggdb -O0" or whatever debug flags you need.
 If the code is behaving strangely, take a look in the debug.log file in the data directory;
 error and debugging messages are written there.
 
-The -debug=... command-line option controls debugging; running with just -debug will turn
+The -debug=... command-line option controls debugging; running with just -debug or -debug=1 will turn
 on all categories (and give you a very large debug.log file).
 
 The Qt code routes qDebug() output to debug.log under category "qt": run with -debug=qt
