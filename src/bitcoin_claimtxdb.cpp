@@ -12,9 +12,9 @@
 
 using namespace std;
 
-const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_COIN_KEY = 'c';
+const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_COIN_KEY = 'd';
 const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_PRUNED_COIN_KEY = 'p';
-const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_BEST_CHAIN_KEY = 'B';
+const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_BEST_CHAIN_KEY = 'C';
 const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_BITCREDIT_CLAIM_TIP_KEY = 'R';
 const unsigned char Bitcoin_CClaimCoinsViewDB::CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY = 'T';
 
