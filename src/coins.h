@@ -337,8 +337,8 @@ public:
 class Credits_CCoinsViewCache : public Credits_CCoinsViewBacked
 {
 protected:
-    uint256 hashBlock;
-    std::map<uint256,Credits_CCoins> cacheCoins;
+    uint256 credits_hashBlock;
+    std::map<uint256,Credits_CCoins> credits_cacheCoins;
 
 public:
     Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy = false);

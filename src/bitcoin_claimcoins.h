@@ -402,11 +402,11 @@ public:
 class Bitcoin_CClaimCoinsViewCache : public Bitcoin_CClaimCoinsViewBacked
 {
 protected:
-    unsigned int coinsCacheSize;
-    uint256 hashBlock;
-    uint256 hashBitcreditClaimTip;
-    int64_t totalClaimedCoins;
-    std::map<uint256,Bitcoin_CClaimCoins> cacheCoins;
+    unsigned int claim_coinsCacheSize;
+    uint256 claim_hashBlock;
+    uint256 claim_hashBitcreditClaimTip;
+    int64_t claim_totalClaimedCoins;
+    std::map<uint256,Bitcoin_CClaimCoins> claim_cacheCoins;
 
 
 public:

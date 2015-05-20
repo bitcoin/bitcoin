@@ -70,74 +70,74 @@ void Credits_CCoinsViewBacked::Credits_SetBackend(Credits_CCoinsView &viewIn) { 
 bool Credits_CCoinsViewBacked::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return base->Credits_BatchWrite(mapCoins, hashBlock); }
 bool Credits_CCoinsViewBacked::Credits_GetStats(Credits_CCoinsStats &stats) { return base->Credits_GetStats(stats); }
 
-Credits_CCoinsViewCache::Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy) : Credits_CCoinsViewBacked(baseIn), hashBlock(0) { }
+Credits_CCoinsViewCache::Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy) : Credits_CCoinsViewBacked(baseIn), credits_hashBlock(0) { }
 
 bool Credits_CCoinsViewCache::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) {
-    if (cacheCoins.count(txid)) {
-        coins = cacheCoins[txid];
+    if (credits_cacheCoins.count(txid)) {
+        coins = credits_cacheCoins[txid];
         return true;
     }
     if (base->Credits_GetCoins(txid, coins)) {
-        cacheCoins[txid] = coins;
+    	credits_cacheCoins[txid] = coins;
         return true;
     }
     return false;
 }
 
 std::map<uint256,Credits_CCoins>::iterator Credits_CCoinsViewCache::Credits_FetchCoins(const uint256 &txid) {
-    std::map<uint256,Credits_CCoins>::iterator it = cacheCoins.lower_bound(txid);
-    if (it != cacheCoins.end() && it->first == txid)
+    std::map<uint256,Credits_CCoins>::iterator it = credits_cacheCoins.lower_bound(txid);
+    if (it != credits_cacheCoins.end() && it->first == txid)
         return it;
     Credits_CCoins tmp;
     if (!base->Credits_GetCoins(txid,tmp))
-        return cacheCoins.end();
-    std::map<uint256,Credits_CCoins>::iterator ret = cacheCoins.insert(it, std::make_pair(txid, Credits_CCoins()));
+        return credits_cacheCoins.end();
+    std::map<uint256,Credits_CCoins>::iterator ret = credits_cacheCoins.insert(it, std::make_pair(txid, Credits_CCoins()));
     tmp.swap(ret->second);
     return ret;
 }
 
 Credits_CCoins &Credits_CCoinsViewCache::Credits_GetCoins(const uint256 &txid) {
     std::map<uint256,Credits_CCoins>::iterator it = Credits_FetchCoins(txid);
-    assert_with_stacktrace(it != cacheCoins.end(), strprintf("Credits_CCoinsViewCache::GetCoins() tx could not be found, txid: %s", txid.GetHex()));
+    assert_with_stacktrace(it != credits_cacheCoins.end(), strprintf("Credits_CCoinsViewCache::GetCoins() tx could not be found, txid: %s", txid.GetHex()));
     return it->second;
 }
 
 bool Credits_CCoinsViewCache::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
-    cacheCoins[txid] = coins;
+	credits_cacheCoins[txid] = coins;
     return true;
 }
 
 bool Credits_CCoinsViewCache::Credits_HaveCoins(const uint256 &txid) {
-    return Credits_FetchCoins(txid) != cacheCoins.end();
+    return Credits_FetchCoins(txid) != credits_cacheCoins.end();
 }
 
 uint256 Credits_CCoinsViewCache::Credits_GetBestBlock() {
-    if (hashBlock == uint256(0))
-        hashBlock = base->Credits_GetBestBlock();
-    return hashBlock;
+    if (credits_hashBlock == uint256(0))
+    	credits_hashBlock = base->Credits_GetBestBlock();
+    return credits_hashBlock;
 }
 
 bool Credits_CCoinsViewCache::Credits_SetBestBlock(const uint256 &hashBlockIn) {
-    hashBlock = hashBlockIn;
+	credits_hashBlock = hashBlockIn;
     return true;
 }
 
 bool Credits_CCoinsViewCache::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlockIn) {
     for (std::map<uint256, Credits_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
-        cacheCoins[it->first] = it->second;
-    hashBlock = hashBlockIn;
+    	credits_cacheCoins[it->first] = it->second;
+    credits_hashBlock = hashBlockIn;
     return true;
 }
 
 bool Credits_CCoinsViewCache::Credits_Flush() {
-    bool fOk = base->Credits_BatchWrite(cacheCoins, hashBlock);
+    bool fOk = base->Credits_BatchWrite(credits_cacheCoins, credits_hashBlock);
     if (fOk)
-        cacheCoins.clear();
+    	credits_cacheCoins.clear();
     return fOk;
 }
 
 unsigned int Credits_CCoinsViewCache::Credits_GetCacheSize() {
-    return cacheCoins.size();
+    return credits_cacheCoins.size();
 }
 
 const CTxOut &Credits_CCoinsViewCache::Credits_GetOutputFor(const Credits_CTxIn& input)
