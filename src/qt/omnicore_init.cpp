@@ -69,11 +69,9 @@ static bool showDisclaimer()
     if (GetBoolArg("-min", false))
         return false;
 
-/* //TODO replace with 0.10 compatible mainnet check (see networkstyle)
     // Only mainnet users face the risk of monetary loss
-    if (Params().NetworkID() != CChainParams::MAIN)
+    if (Params().NetworkIDString() != "main")
         return false;
-*/
 
     QSettings settings;
 
