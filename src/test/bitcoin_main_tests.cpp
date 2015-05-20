@@ -13,18 +13,18 @@ BOOST_AUTO_TEST_CASE(claim_bounds_test)
 {
 	Bitcoin_CClaimCoinsViewCache claim_inputs1(*bitcoin_pclaimCoinsTip, 1000, true);
 
-	claim_inputs1.SetTotalClaimedCoins(BITCREDIT_MAX_BITCOIN_CLAIM);
+	claim_inputs1.Claim_SetTotalClaimedCoins(BITCREDIT_MAX_BITCOIN_CLAIM);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 500000));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 1, 500000));
 
-	claim_inputs1.SetTotalClaimedCoins(0);
+	claim_inputs1.Claim_SetTotalClaimedCoins(0);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 1));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 1000, 1));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 45 * COIN, 1));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 45 * COIN + 1, 1));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 100 * COIN, 1));
 
-	claim_inputs1.SetTotalClaimedCoins(0);
+	claim_inputs1.Claim_SetTotalClaimedCoins(0);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 2));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 1000, 2));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 90 * COIN, 2));
@@ -32,25 +32,25 @@ BOOST_AUTO_TEST_CASE(claim_bounds_test)
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 200 * COIN, 2));
 
 	int64_t allowedLimit= (210000 * 50 * 9) /10;
-	claim_inputs1.SetTotalClaimedCoins(0);
+	claim_inputs1.Claim_SetTotalClaimedCoins(0);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 210000));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN, 210000));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN  + 1 , 210000));
 
 	allowedLimit= (210000 * 50 * 9) /10;
-	claim_inputs1.SetTotalClaimedCoins(500 * COIN);
+	claim_inputs1.Claim_SetTotalClaimedCoins(500 * COIN);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 210000));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN - 500 * COIN, 210000));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN - 500 * COIN  + 1 , 210000));
 
 	allowedLimit= ((210000 * 50 + 210000 * 25) * 9) /10;
-	claim_inputs1.SetTotalClaimedCoins(0);
+	claim_inputs1.Claim_SetTotalClaimedCoins(0);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 420000));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN, 420000));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN  + 1 , 420000));
 
 	allowedLimit= ((210000 * 50 + 210000 * 25) * 9) /10;
-	claim_inputs1.SetTotalClaimedCoins(1050000 * COIN);
+	claim_inputs1.Claim_SetTotalClaimedCoins(1050000 * COIN);
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, 0, 420000));
 	BOOST_CHECK(Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN - 1050000 * COIN, 420000));
 	BOOST_CHECK(!Bitcredit_CheckClaimsAreInBounds(claim_inputs1, allowedLimit * COIN - 1050000 * COIN + 1 , 420000));

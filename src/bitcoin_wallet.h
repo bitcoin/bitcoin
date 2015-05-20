@@ -376,8 +376,8 @@ public:
     			}
             }
     	} else {
-    		if(claim_view->HaveCoins(hashTx)) {
-    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+    		if(claim_view->Claim_HaveCoins(hashTx)) {
+    			const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
@@ -410,8 +410,8 @@ public:
                 assert_with_stacktrace(Credits_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
             }
     	} else {
-    		if(claim_view->HaveCoins(hashTx)) {
-    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+    		if(claim_view->Claim_HaveCoins(hashTx)) {
+    			const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(claimCoins.HasClaimable(i)) {
@@ -776,9 +776,9 @@ public:
 
         int64_t nCredit = 0;
         const uint256 &hashTx = GetHash();
-		if(claim_view->HaveCoins(hashTx)) {
+		if(claim_view->Claim_HaveCoins(hashTx)) {
 			const int nClaimBestBlockDepth = pwallet->GetBestBlockClaimDepth(claim_view);
-			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+			const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
 			for(unsigned int i = 0; i < vout.size(); i++) {
 				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {

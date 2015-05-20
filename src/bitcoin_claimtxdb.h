@@ -27,16 +27,16 @@ static const int64_t bitcoin_claim_nMinDbCache = 4;
 /** Bitcoin_CClaimCoinsView backed by the LevelDB coin database (chainstate/) */
 class Bitcoin_CClaimCoinsViewDB : public Bitcoin_CClaimCoinsView {
 private:
-	static const unsigned char COIN_KEY;
-	static const unsigned char PRUNED_COIN_KEY;
-	static const unsigned char BEST_CHAIN_KEY;
-	static const unsigned char BITCREDIT_CLAIM_TIP_KEY;
-	static const unsigned char BITCREDIT_TOTAL_CLAIMED_COINS_KEY;
+	static const unsigned char CLAIM_COIN_KEY;
+	static const unsigned char CLAIM_PRUNED_COIN_KEY;
+	static const unsigned char CLAIM_BEST_CHAIN_KEY;
+	static const unsigned char CLAIM_BITCREDIT_CLAIM_TIP_KEY;
+	static const unsigned char CLAIM_BITCREDIT_TOTAL_CLAIMED_COINS_KEY;
 
-    void BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
-    void BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash);
-    void BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins);
-    void BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CClaimCoins &coins);
+    void Claim_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
+    void Claim_BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash);
+    void Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins);
+    void Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CClaimCoins &coins);
 protected:
     CLevelDBWrapper db;
     bool trackPruned;
@@ -49,18 +49,18 @@ public:
     Bitcoin_CClaimCoinsViewDB(const boost::filesystem::path &path, size_t nCacheSize, bool trackPruned = true, bool deleteOnDestroy = false, bool fMemory = false, bool fWipe = false);
    ~Bitcoin_CClaimCoinsViewDB();
 
-    bool GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    uint256 GetBitcreditClaimTip();
-    bool SetBitcreditClaimTip(const uint256 &hashBlock);
-    int64_t GetTotalClaimedCoins();
-    bool SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
-    bool BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    bool GetCoinSlice(std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const int& size, const bool& firstInvocation, bool& fMore);
-    bool GetStats(Bitcoin_CClaimCoinsStats &stats);
+    bool Claim_GetCoins(const uint256 &txid, Bitcoin_CClaimCoins &coins);
+    bool Claim_SetCoins(const uint256 &txid, const Bitcoin_CClaimCoins &coins);
+    bool Claim_HaveCoins(const uint256 &txid);
+    uint256 Claim_GetBestBlock();
+    bool Claim_SetBestBlock(const uint256 &hashBlock);
+    uint256 Claim_GetBitcreditClaimTip();
+    bool Claim_SetBitcreditClaimTip(const uint256 &hashBlock);
+    int64_t Claim_GetTotalClaimedCoins();
+    bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
+    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
+    bool Claim_GetCoinSlice(std::map<uint256, Bitcoin_CClaimCoins> &mapCoins, const int& size, const bool& firstInvocation, bool& fMore);
+    bool Claim_GetStats(Bitcoin_CClaimCoinsStats &stats);
 };
 
 #endif // BITCOIN_CLAIMTXDB_LEVELDB_H

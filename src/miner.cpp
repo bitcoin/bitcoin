@@ -598,7 +598,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
 					{
 						// Read prev transaction
-						if (!claim_viewtmp.HaveCoins(txin.prevout.hash))
+						if (!claim_viewtmp.Claim_HaveCoins(txin.prevout.hash))
 						{
 							// This should never happen; all transactions in the memory
 							// pool should connect to either transactions in the chain
@@ -626,7 +626,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 	//						continue;
 						}
 
-						const Bitcoin_CClaimCoins &coins = claim_viewtmp.GetCoins(txin.prevout.hash);
+						const Bitcoin_CClaimCoins &coins = claim_viewtmp.Claim_GetCoins(txin.prevout.hash);
 
 						if(!coins.HasClaimable(txin.prevout.n)) {
 							LogPrintf("ERROR: transaction missing input\n");
@@ -732,10 +732,10 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 
 					nTxFees = credits_view.Credits_GetValueIn(tx)-tx.GetValueOut();
 				} else if(tx.IsClaim()) {
-					if (!claim_viewtmp.HaveInputs(tx))
+					if (!claim_viewtmp.Claim_HaveInputs(tx))
 						continue;
 
-					nTxFees = claim_viewtmp.GetValueIn(tx)-tx.GetValueOut();
+					nTxFees = claim_viewtmp.Claim_GetValueIn(tx)-tx.GetValueOut();
 				}
 
 				nTxSigOps += Bitcredit_GetP2SHSigOpCount(tx, credits_view, claim_viewtmp);

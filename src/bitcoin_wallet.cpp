@@ -664,8 +664,8 @@ int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CClaimCoins
                 	if(claim_view == NULL) {
                 		return prev.vout[txin.prevout.n].nValue;
                 	} else {
-						if(claim_view->HaveCoins(txin.prevout.hash)) {
-							const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(txin.prevout.hash);
+						if(claim_view->Claim_HaveCoins(txin.prevout.hash)) {
+							const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(txin.prevout.hash);
 
 							if(claimCoins.HasClaimable(txin.prevout.n)) {
 								return claimCoins.vout[txin.prevout.n].nValueClaimable;
@@ -690,8 +690,8 @@ int64_t Bitcoin_CWallet::GetDebit(const Credits_CTxIn &txin, Bitcoin_CClaimCoins
                 	if(claim_view == NULL) {
                 		return prev.vout[txin.prevout.n].nValue;
                 	} else {
-						if(claim_view->HaveCoins(txin.prevout.hash)) {
-							const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(txin.prevout.hash);
+						if(claim_view->Claim_HaveCoins(txin.prevout.hash)) {
+							const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(txin.prevout.hash);
 
 							if(claimCoins.HasClaimable(txin.prevout.n)) {
 								return claimCoins.vout[txin.prevout.n].nValueClaimable;
@@ -786,8 +786,8 @@ void Bitcoin_CWalletTx::Claim_GetAmounts(Bitcoin_CClaimCoinsViewCache* claim_vie
         nFee = Claim_GetDebit(claim_view) - GetValueOut();
     }
 
-    if(claim_view->HaveCoins(GetHash())) {
-		const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(GetHash());
+    if(claim_view->Claim_HaveCoins(GetHash())) {
+		const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(GetHash());
 
 		// Sent/received.
 		for(unsigned int i = 0; i < vout.size(); i++) {
@@ -1159,7 +1159,7 @@ int64_t Bitcoin_CWallet::GetImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_
 int Bitcoin_CWallet::GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache* claim_view) const
 {
 	int nHeight = 0;
-	uint256 bestBlockHash = claim_view->GetBestBlock();
+	uint256 bestBlockHash = claim_view->Claim_GetBestBlock();
 	if(bestBlockHash != uint256(0)) {
 		map<uint256, Bitcoin_CBlockIndex*>::iterator mi = bitcoin_mapBlockIndex.find(bestBlockHash);
 		assert(mi != bitcoin_mapBlockIndex.end());
@@ -1211,8 +1211,8 @@ void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CC
             } else {
         		nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
 
-				if(claim_view->HaveCoins(wtxid)) {
-					Bitcoin_CClaimCoins & claimCoin = claim_view->GetCoins(wtxid);
+				if(claim_view->Claim_HaveCoins(wtxid)) {
+					Bitcoin_CClaimCoins & claimCoin = claim_view->Claim_GetCoins(wtxid);
 
 					for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 						if (!(IsSpent(wtxid, i, nClaimBestBlockDepth)) && IsMine(pcoin->vout[i]) && !IsLockedCoin((*it).first, i) &&
@@ -1957,8 +1957,8 @@ std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Bitcoin_CC
                 if(claim_view == NULL) {
                     n = IsSpent(walletEntry.first, i, 0) ? 0 : pcoin->vout[i].nValue;
                 } else {
-					if(claim_view->HaveCoins(pcoin->GetHash())) {
-						const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(pcoin->GetHash());
+					if(claim_view->Claim_HaveCoins(pcoin->GetHash())) {
+						const Bitcoin_CClaimCoins & claimCoins = claim_view->Claim_GetCoins(pcoin->GetHash());
 
 						if(!IsSpent(walletEntry.first, i, nClaimBestBlockDepth)) {
 							if(claimCoins.HasClaimable(i)) {

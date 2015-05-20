@@ -219,7 +219,7 @@ void Shutdown()
         delete bitcoin_pcoinsdbview; bitcoin_pcoinsdbview = NULL;
 
         if (bitcoin_pclaimCoinsTip)
-        	bitcoin_pclaimCoinsTip->Flush();
+        	bitcoin_pclaimCoinsTip->Claim_Flush();
         delete bitcoin_pclaimCoinsTip; bitcoin_pclaimCoinsTip = NULL;
         delete bitcoin_pclaimcoinsdbview; bitcoin_pclaimcoinsdbview = NULL;
     }
