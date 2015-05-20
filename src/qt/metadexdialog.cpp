@@ -314,6 +314,10 @@ void MetaDExDialog::UpdateOffers()
             }
         }
     }
+    // update the balances for the buy and sell addreses
+    UpdateBuyAddressBalance();
+    UpdateSellAddressBalance();
+
 }
 
 // This function updates the balance for the currently selected sell address
