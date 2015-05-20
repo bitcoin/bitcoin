@@ -16,6 +16,7 @@
 #include <QMap>
 #include <QMenu>
 #include <QPoint>
+#include <QPushButton>
 #include <QSystemTrayIcon>
 
 class ClientModel;
@@ -79,7 +80,7 @@ private:
 
     UnitDisplayStatusBarControl *unitDisplayControl;
     QLabel *labelEncryptionIcon;
-    QLabel *labelConnectionsIcon;
+    QPushButton *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
