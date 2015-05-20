@@ -196,7 +196,7 @@ bool VerifyDepositSignatures (std::string prefix, Credits_CBlock *pblock) {
 			if(txDepositIn.prevout == coinbaseOutPoint) {
 		        scriptPubKey = &pblock->vtx[0].vout[0].scriptPubKey;
 			} else {
-				const Credits_CCoins &coinsSpent = bitcredit_pcoinsTip->GetCoins(txDepositIn.prevout.hash);
+				const Credits_CCoins &coinsSpent = bitcredit_pcoinsTip->Credits_GetCoins(txDepositIn.prevout.hash);
 				assert(coinsSpent.IsAvailable(txDepositIn.prevout.n));
 				scriptPubKey = &coinsSpent.vout[txDepositIn.prevout.n].scriptPubKey;
 			}
@@ -537,7 +537,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
 					{
 						// Read prev transaction
-						if (!credits_view.HaveCoins(txin.prevout.hash))
+						if (!credits_view.Credits_HaveCoins(txin.prevout.hash))
 						{
 							// This should never happen; all transactions in the memory
 							// pool should connect to either transactions in the chain
@@ -564,7 +564,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 							nTotalIn += credits_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
 							continue;
 						}
-						const Credits_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
+						const Credits_CCoins &coins = credits_view.Credits_GetCoins(txin.prevout.hash);
 
 						int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
 						nTotalIn += nValueIn;
@@ -727,10 +727,10 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 
 				int64_t nTxFees = 0;
 				if(tx.IsStandard()) {
-					if (!credits_view.HaveInputs(tx))
+					if (!credits_view.Credits_HaveInputs(tx))
 						continue;
 
-					nTxFees = credits_view.GetValueIn(tx)-tx.GetValueOut();
+					nTxFees = credits_view.Credits_GetValueIn(tx)-tx.GetValueOut();
 				} else if(tx.IsClaim()) {
 					if (!claim_viewtmp.HaveInputs(tx))
 						continue;

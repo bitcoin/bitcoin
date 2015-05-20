@@ -245,14 +245,14 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, Credits_CCoinsView & coinsRet)
     dummyTransactions[0].vout[0].scriptPubKey << key[0].GetPubKey() << OP_CHECKSIG;
     dummyTransactions[0].vout[1].nValue = 50*CENT;
     dummyTransactions[0].vout[1].scriptPubKey << key[1].GetPubKey() << OP_CHECKSIG;
-    coinsRet.SetCoins(dummyTransactions[0].GetHash(), Credits_CCoins(dummyTransactions[0], 0));
+    coinsRet.Credits_SetCoins(dummyTransactions[0].GetHash(), Credits_CCoins(dummyTransactions[0], 0));
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21*CENT;
     dummyTransactions[1].vout[0].scriptPubKey.SetDestination(key[2].GetPubKey().GetID());
     dummyTransactions[1].vout[1].nValue = 22*CENT;
     dummyTransactions[1].vout[1].scriptPubKey.SetDestination(key[3].GetPubKey().GetID());
-    coinsRet.SetCoins(dummyTransactions[1].GetHash(), Credits_CCoins(dummyTransactions[1], 0));
+    coinsRet.Credits_SetCoins(dummyTransactions[1].GetHash(), Credits_CCoins(dummyTransactions[1], 0));
 
     return dummyTransactions;
 }
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].scriptPubKey << OP_1;
 
     BOOST_CHECK(Bitcredit_AreInputsStandard(t1, bitcredit_coins, bitcoin_coins));
-    BOOST_CHECK_EQUAL(bitcredit_coins.GetValueIn(t1), (50+21+22)*CENT);
+    BOOST_CHECK_EQUAL(bitcredit_coins.Credits_GetValueIn(t1), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;

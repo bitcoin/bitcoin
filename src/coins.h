@@ -288,26 +288,26 @@ class Credits_CCoinsView
 {
 public:
     // Retrieve the Credits_CCoins (unspent transaction outputs) for a given txid
-    virtual bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
+    virtual bool Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins);
 
     // Modify the Credits_CCoins for a given txid
-    virtual bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
+    virtual bool Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins);
 
     // Just check whether we have data for a given txid.
     // This may (but cannot always) return true for fully spent transactions
-    virtual bool HaveCoins(const uint256 &txid);
+    virtual bool Credits_HaveCoins(const uint256 &txid);
 
     // Retrieve the block hash whose state this Credits_CCoinsView currently represents
-    virtual uint256 GetBestBlock();
+    virtual uint256 Credits_GetBestBlock();
 
     // Modify the currently active block hash
-    virtual bool SetBestBlock(const uint256 &hashBlock);
+    virtual bool Credits_SetBestBlock(const uint256 &hashBlock);
 
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
-    virtual bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
+    virtual bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
 
     // Calculate statistics about the unspent transaction output set
-    virtual bool GetStats(Credits_CCoinsStats &stats);
+    virtual bool Credits_GetStats(Credits_CCoinsStats &stats);
 
     // As we use Credits_CCoinsViews polymorphically, have a virtual destructor
     virtual ~Credits_CCoinsView() {}
@@ -322,14 +322,14 @@ protected:
 
 public:
     Credits_CCoinsViewBacked(Credits_CCoinsView &viewIn);
-    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    void SetBackend(Credits_CCoinsView &viewIn);
-    bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool GetStats(Credits_CCoinsStats &stats);
+    bool Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins);
+    bool Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins);
+    bool Credits_HaveCoins(const uint256 &txid);
+    uint256 Credits_GetBestBlock();
+    bool Credits_SetBestBlock(const uint256 &hashBlock);
+    void Credits_SetBackend(Credits_CCoinsView &viewIn);
+    bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool Credits_GetStats(Credits_CCoinsStats &stats);
 };
 
 
@@ -344,24 +344,24 @@ public:
     Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy = false);
 
     // Standard Credits_CCoinsView methods
-    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Credits_CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins);
+    bool Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins);
+    bool Credits_HaveCoins(const uint256 &txid);
+    uint256 Credits_GetBestBlock();
+    bool Credits_SetBestBlock(const uint256 &hashBlock);
+    bool Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock);
 
     // Return a modifiable reference to a Credits_CCoins. Check HaveCoins first.
     // Many methods explicitly require a Credits_CCoinsViewCache because of this method, to reduce
     // copying.
-    Credits_CCoins &GetCoins(const uint256 &txid);
+    Credits_CCoins &Credits_GetCoins(const uint256 &txid);
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
-    bool Flush();
+    bool Credits_Flush();
 
     // Calculate the size of the cache (in number of transactions)
-    unsigned int GetCacheSize();
+    unsigned int Credits_GetCacheSize();
 
     /** Amount of bitcoins coming in to a transaction
         Note that lightweight clients may not know anything besides the hash of previous transactions,
@@ -370,18 +370,18 @@ public:
         @param[in] tx	transaction for which we are checking input total
         @return	Sum of value of all inputs (scriptSigs)
      */
-    int64_t GetValueIn(const Credits_CTransaction& tx);
+    int64_t Credits_GetValueIn(const Credits_CTransaction& tx);
 
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const Credits_CTransaction& tx);
+    bool Credits_HaveInputs(const Credits_CTransaction& tx);
 
     // Return priority of tx at height nHeight
-    double GetPriority(const Credits_CTransaction &tx, int nHeight);
+    double Credits_GetPriority(const Credits_CTransaction &tx, int nHeight);
 
-    const CTxOut &GetOutputFor(const Credits_CTxIn& input);
+    const CTxOut &Credits_GetOutputFor(const Credits_CTxIn& input);
 
 private:
-    std::map<uint256,Credits_CCoins>::iterator FetchCoins(const uint256 &txid);
+    std::map<uint256,Credits_CCoins>::iterator Credits_FetchCoins(const uint256 &txid);
 };
 
 #endif

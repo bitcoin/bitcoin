@@ -51,103 +51,103 @@ bool Credits_CCoins::Spend(int nPos) {
 }
 
 
-bool Credits_CCoinsView::GetCoins(const uint256 &txid, Credits_CCoins &coins) { return false; }
-bool Credits_CCoinsView::SetCoins(const uint256 &txid, const Credits_CCoins &coins) { return false; }
-bool Credits_CCoinsView::HaveCoins(const uint256 &txid) { return false; }
-uint256 Credits_CCoinsView::GetBestBlock() { return uint256(0); }
-bool Credits_CCoinsView::SetBestBlock(const uint256 &hashBlock) { return false; }
-bool Credits_CCoinsView::BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
-bool Credits_CCoinsView::GetStats(Credits_CCoinsStats &stats) { return false; }
+bool Credits_CCoinsView::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) { return false; }
+bool Credits_CCoinsView::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) { return false; }
+bool Credits_CCoinsView::Credits_HaveCoins(const uint256 &txid) { return false; }
+uint256 Credits_CCoinsView::Credits_GetBestBlock() { return uint256(0); }
+bool Credits_CCoinsView::Credits_SetBestBlock(const uint256 &hashBlock) { return false; }
+bool Credits_CCoinsView::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
+bool Credits_CCoinsView::Credits_GetStats(Credits_CCoinsStats &stats) { return false; }
 
 
 Credits_CCoinsViewBacked::Credits_CCoinsViewBacked(Credits_CCoinsView &viewIn) : base(&viewIn) { }
-bool Credits_CCoinsViewBacked::GetCoins(const uint256 &txid, Credits_CCoins &coins) { return base->GetCoins(txid, coins); }
-bool Credits_CCoinsViewBacked::SetCoins(const uint256 &txid, const Credits_CCoins &coins) { return base->SetCoins(txid, coins); }
-bool Credits_CCoinsViewBacked::HaveCoins(const uint256 &txid) { return base->HaveCoins(txid); }
-uint256 Credits_CCoinsViewBacked::GetBestBlock() { return base->GetBestBlock(); }
-bool Credits_CCoinsViewBacked::SetBestBlock(const uint256 &hashBlock) { return base->SetBestBlock(hashBlock); }
-void Credits_CCoinsViewBacked::SetBackend(Credits_CCoinsView &viewIn) { base = &viewIn; }
-bool Credits_CCoinsViewBacked::BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
-bool Credits_CCoinsViewBacked::GetStats(Credits_CCoinsStats &stats) { return base->GetStats(stats); }
+bool Credits_CCoinsViewBacked::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) { return base->Credits_GetCoins(txid, coins); }
+bool Credits_CCoinsViewBacked::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) { return base->Credits_SetCoins(txid, coins); }
+bool Credits_CCoinsViewBacked::Credits_HaveCoins(const uint256 &txid) { return base->Credits_HaveCoins(txid); }
+uint256 Credits_CCoinsViewBacked::Credits_GetBestBlock() { return base->Credits_GetBestBlock(); }
+bool Credits_CCoinsViewBacked::Credits_SetBestBlock(const uint256 &hashBlock) { return base->Credits_SetBestBlock(hashBlock); }
+void Credits_CCoinsViewBacked::Credits_SetBackend(Credits_CCoinsView &viewIn) { base = &viewIn; }
+bool Credits_CCoinsViewBacked::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) { return base->Credits_BatchWrite(mapCoins, hashBlock); }
+bool Credits_CCoinsViewBacked::Credits_GetStats(Credits_CCoinsStats &stats) { return base->Credits_GetStats(stats); }
 
 Credits_CCoinsViewCache::Credits_CCoinsViewCache(Credits_CCoinsView &baseIn, bool fDummy) : Credits_CCoinsViewBacked(baseIn), hashBlock(0) { }
 
-bool Credits_CCoinsViewCache::GetCoins(const uint256 &txid, Credits_CCoins &coins) {
+bool Credits_CCoinsViewCache::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) {
     if (cacheCoins.count(txid)) {
         coins = cacheCoins[txid];
         return true;
     }
-    if (base->GetCoins(txid, coins)) {
+    if (base->Credits_GetCoins(txid, coins)) {
         cacheCoins[txid] = coins;
         return true;
     }
     return false;
 }
 
-std::map<uint256,Credits_CCoins>::iterator Credits_CCoinsViewCache::FetchCoins(const uint256 &txid) {
+std::map<uint256,Credits_CCoins>::iterator Credits_CCoinsViewCache::Credits_FetchCoins(const uint256 &txid) {
     std::map<uint256,Credits_CCoins>::iterator it = cacheCoins.lower_bound(txid);
     if (it != cacheCoins.end() && it->first == txid)
         return it;
     Credits_CCoins tmp;
-    if (!base->GetCoins(txid,tmp))
+    if (!base->Credits_GetCoins(txid,tmp))
         return cacheCoins.end();
     std::map<uint256,Credits_CCoins>::iterator ret = cacheCoins.insert(it, std::make_pair(txid, Credits_CCoins()));
     tmp.swap(ret->second);
     return ret;
 }
 
-Credits_CCoins &Credits_CCoinsViewCache::GetCoins(const uint256 &txid) {
-    std::map<uint256,Credits_CCoins>::iterator it = FetchCoins(txid);
+Credits_CCoins &Credits_CCoinsViewCache::Credits_GetCoins(const uint256 &txid) {
+    std::map<uint256,Credits_CCoins>::iterator it = Credits_FetchCoins(txid);
     assert_with_stacktrace(it != cacheCoins.end(), strprintf("Credits_CCoinsViewCache::GetCoins() tx could not be found, txid: %s", txid.GetHex()));
     return it->second;
 }
 
-bool Credits_CCoinsViewCache::SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
+bool Credits_CCoinsViewCache::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
     cacheCoins[txid] = coins;
     return true;
 }
 
-bool Credits_CCoinsViewCache::HaveCoins(const uint256 &txid) {
-    return FetchCoins(txid) != cacheCoins.end();
+bool Credits_CCoinsViewCache::Credits_HaveCoins(const uint256 &txid) {
+    return Credits_FetchCoins(txid) != cacheCoins.end();
 }
 
-uint256 Credits_CCoinsViewCache::GetBestBlock() {
+uint256 Credits_CCoinsViewCache::Credits_GetBestBlock() {
     if (hashBlock == uint256(0))
-        hashBlock = base->GetBestBlock();
+        hashBlock = base->Credits_GetBestBlock();
     return hashBlock;
 }
 
-bool Credits_CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
+bool Credits_CCoinsViewCache::Credits_SetBestBlock(const uint256 &hashBlockIn) {
     hashBlock = hashBlockIn;
     return true;
 }
 
-bool Credits_CCoinsViewCache::BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlockIn) {
+bool Credits_CCoinsViewCache::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlockIn) {
     for (std::map<uint256, Credits_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
         cacheCoins[it->first] = it->second;
     hashBlock = hashBlockIn;
     return true;
 }
 
-bool Credits_CCoinsViewCache::Flush() {
-    bool fOk = base->BatchWrite(cacheCoins, hashBlock);
+bool Credits_CCoinsViewCache::Credits_Flush() {
+    bool fOk = base->Credits_BatchWrite(cacheCoins, hashBlock);
     if (fOk)
         cacheCoins.clear();
     return fOk;
 }
 
-unsigned int Credits_CCoinsViewCache::GetCacheSize() {
+unsigned int Credits_CCoinsViewCache::Credits_GetCacheSize() {
     return cacheCoins.size();
 }
 
-const CTxOut &Credits_CCoinsViewCache::GetOutputFor(const Credits_CTxIn& input)
+const CTxOut &Credits_CCoinsViewCache::Credits_GetOutputFor(const Credits_CTxIn& input)
 {
-    const Credits_CCoins &coins = GetCoins(input.prevout.hash);
+    const Credits_CCoins &coins = Credits_GetCoins(input.prevout.hash);
     assert(coins.IsAvailable(input.prevout.n));
     return coins.vout[input.prevout.n];
 }
 
-int64_t Credits_CCoinsViewCache::GetValueIn(const Credits_CTransaction& tx)
+int64_t Credits_CCoinsViewCache::Credits_GetValueIn(const Credits_CTransaction& tx)
 {
 	assert(!tx.IsClaim());
 
@@ -156,13 +156,13 @@ int64_t Credits_CCoinsViewCache::GetValueIn(const Credits_CTransaction& tx)
 
     int64_t nResult = 0;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		nResult += GetOutputFor(tx.vin[i]).nValue;
+		nResult += Credits_GetOutputFor(tx.vin[i]).nValue;
 	}
 
     return nResult;
 }
 
-bool Credits_CCoinsViewCache::HaveInputs(const Credits_CTransaction& tx)
+bool Credits_CCoinsViewCache::Credits_HaveInputs(const Credits_CTransaction& tx)
 {
 	assert(!tx.IsClaim());
 
@@ -171,7 +171,7 @@ bool Credits_CCoinsViewCache::HaveInputs(const Credits_CTransaction& tx)
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			const Credits_CTxIn &ctxIn = tx.vin[i];
 			const COutPoint &prevout = ctxIn.prevout;
-			if (!HaveCoins(prevout.hash))
+			if (!Credits_HaveCoins(prevout.hash))
 				return false;
 		}
 
@@ -179,7 +179,7 @@ bool Credits_CCoinsViewCache::HaveInputs(const Credits_CTransaction& tx)
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			const Credits_CTxIn &ctxIn = tx.vin[i];
 			const COutPoint &prevout = ctxIn.prevout;
-			const Credits_CCoins &coins = GetCoins(prevout.hash);
+			const Credits_CCoins &coins = Credits_GetCoins(prevout.hash);
 			if (!coins.IsAvailable(prevout.n))
 				return false;
 		}
@@ -187,7 +187,7 @@ bool Credits_CCoinsViewCache::HaveInputs(const Credits_CTransaction& tx)
     return true;
 }
 
-double Credits_CCoinsViewCache::GetPriority(const Credits_CTransaction &tx, int nHeight)
+double Credits_CCoinsViewCache::Credits_GetPriority(const Credits_CTransaction &tx, int nHeight)
 {
 	assert(!tx.IsClaim());
 
@@ -197,7 +197,7 @@ double Credits_CCoinsViewCache::GetPriority(const Credits_CTransaction &tx, int 
     double dResult = 0.0;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const Credits_CTxIn &ctxIn = tx.vin[i];
-		const Credits_CCoins &coins = GetCoins(ctxIn.prevout.hash);
+		const Credits_CCoins &coins = Credits_GetCoins(ctxIn.prevout.hash);
 		if (!coins.IsAvailable(ctxIn.prevout.n)) continue;
 		if (coins.nHeight < nHeight) {
 			dResult += coins.vout[ctxIn.prevout.n].nValue * (nHeight-coins.nHeight);

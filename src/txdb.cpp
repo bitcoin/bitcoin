@@ -12,64 +12,64 @@
 
 using namespace std;
 
-const unsigned char Credits_CCoinsViewDB::COIN_KEY = 'c';
-const unsigned char Credits_CCoinsViewDB::BEST_CHAIN_KEY = 'B';
+const unsigned char Credits_CCoinsViewDB::CREDITS_COIN_KEY = 'c';
+const unsigned char Credits_CCoinsViewDB::CREDITS_BEST_CHAIN_KEY = 'B';
 
-void Credits_CCoinsViewDB::BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins) {
+void Credits_CCoinsViewDB::Credits_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Credits_CCoins &coins) {
     if (coins.IsPruned())
-        batch.Erase(make_pair(COIN_KEY, hash));
+        batch.Erase(make_pair(CREDITS_COIN_KEY, hash));
     else
-        batch.Write(make_pair(COIN_KEY, hash), coins);
+        batch.Write(make_pair(CREDITS_COIN_KEY, hash), coins);
 }
-void Credits_CCoinsViewDB::BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
-    batch.Write(BEST_CHAIN_KEY, hash);
-}
-
-bool Credits_CCoinsViewDB::GetCoins(const uint256 &txid, Credits_CCoins &coins) {
-    return db.Read(make_pair(COIN_KEY, txid), coins);
+void Credits_CCoinsViewDB::Credits_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+    batch.Write(CREDITS_BEST_CHAIN_KEY, hash);
 }
 
-bool Credits_CCoinsViewDB::SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
+bool Credits_CCoinsViewDB::Credits_GetCoins(const uint256 &txid, Credits_CCoins &coins) {
+    return db.Read(make_pair(CREDITS_COIN_KEY, txid), coins);
+}
+
+bool Credits_CCoinsViewDB::Credits_SetCoins(const uint256 &txid, const Credits_CCoins &coins) {
     CLevelDBBatch batch;
-    BatchWriteCoins(batch, txid, coins);
+    Credits_BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
 
-bool Credits_CCoinsViewDB::HaveCoins(const uint256 &txid) {
-    return db.Exists(make_pair(COIN_KEY, txid));
+bool Credits_CCoinsViewDB::Credits_HaveCoins(const uint256 &txid) {
+    return db.Exists(make_pair(CREDITS_COIN_KEY, txid));
 }
 
-uint256 Credits_CCoinsViewDB::GetBestBlock() {
+uint256 Credits_CCoinsViewDB::Credits_GetBestBlock() {
     uint256 hashBestChain;
-    if (!db.Read(BEST_CHAIN_KEY, hashBestChain))
+    if (!db.Read(CREDITS_BEST_CHAIN_KEY, hashBestChain))
         return uint256(0);
     return hashBestChain;
 }
 
-bool Credits_CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
+bool Credits_CCoinsViewDB::Credits_SetBestBlock(const uint256 &hashBlock) {
     CLevelDBBatch batch;
-    BatchWriteHashBestChain(batch, hashBlock);
+    Credits_BatchWriteHashBestChain(batch, hashBlock);
     return db.WriteBatch(batch);
 }
 
-bool Credits_CCoinsViewDB::BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) {
+bool Credits_CCoinsViewDB::Credits_BatchWrite(const std::map<uint256, Credits_CCoins> &mapCoins, const uint256 &hashBlock) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
     for (std::map<uint256, Credits_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
-        BatchWriteCoins(batch, it->first, it->second);
+    	Credits_BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
-        BatchWriteHashBestChain(batch, hashBlock);
+    	Credits_BatchWriteHashBestChain(batch, hashBlock);
 
     return db.WriteBatch(batch);
 }
 
-bool Credits_CCoinsViewDB::GetStats(Credits_CCoinsStats &stats) {
+bool Credits_CCoinsViewDB::Credits_GetStats(Credits_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
     CHashWriter ss(SER_GETHASH, CREDITS_PROTOCOL_VERSION);
-    stats.hashBlock = GetBestBlock();
+    stats.hashBlock = Credits_GetBestBlock();
     ss << stats.hashBlock;
     int64_t nTotalAmount = 0;
     while (pcursor->Valid()) {
@@ -110,7 +110,7 @@ bool Credits_CCoinsViewDB::GetStats(Credits_CCoinsStats &stats) {
         }
     }
     delete pcursor;
-    stats.nHeight = credits_mapBlockIndex.find(GetBestBlock())->second->nHeight;
+    stats.nHeight = credits_mapBlockIndex.find(Credits_GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;

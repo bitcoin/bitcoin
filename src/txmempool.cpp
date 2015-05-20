@@ -158,7 +158,7 @@ void Bitcredit_CTxMemPool::check(Credits_CCoinsViewCache *pcoins, Bitcoin_CClaim
             		Bitcoin_CClaimCoins &coins = pclaimcoins->GetCoins(txin.prevout.hash);
             		assert(coins.HasClaimable(txin.prevout.n));
             	} else {
-            		Credits_CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
+            		Credits_CCoins &coins = pcoins->Credits_GetCoins(txin.prevout.hash);
             		assert(coins.IsAvailable(txin.prevout.n));
                 }
             }
@@ -203,7 +203,7 @@ bool Bitcredit_CTxMemPool::lookup(uint256 hash, Credits_CTransaction& result) co
 Credits_CCoinsViewMemPool::Credits_CCoinsViewMemPool(Credits_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn) : Credits_CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
 bool Credits_CCoinsViewMemPool::GetCoins(const uint256 &txid, Credits_CCoins &coins) {
-    if (base->GetCoins(txid, coins))
+    if (base->Credits_GetCoins(txid, coins))
         return true;
     Credits_CTransaction tx;
     if (mempool.lookup(txid, tx)) {
@@ -214,6 +214,6 @@ bool Credits_CCoinsViewMemPool::GetCoins(const uint256 &txid, Credits_CCoins &co
 }
 
 bool Credits_CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
-    return mempool.exists(txid) || base->HaveCoins(txid);
+    return mempool.exists(txid) || base->Credits_HaveCoins(txid);
 }
 

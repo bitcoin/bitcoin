@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txFrom.vout[5].scriptPubKey.SetDestination(oneOfEleven.GetID());
     txFrom.vout[5].nValue = 6000;
 
-    bitcredit_coins.SetCoins(txFrom.GetHash(), Credits_CCoins(txFrom, 0));
+    bitcredit_coins.Credits_SetCoins(txFrom.GetHash(), Credits_CCoins(txFrom, 0));
 
     Credits_CTransaction txTo;
     txTo.vout.resize(1);

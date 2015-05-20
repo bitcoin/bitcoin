@@ -402,7 +402,7 @@ Value gettxoutsetinfo(const Array& params, bool fHelp)
     Object ret;
 
     Credits_CCoinsStats stats;
-    if (bitcredit_pcoinsTip->GetStats(stats)) {
+    if (bitcredit_pcoinsTip->Credits_GetStats(stats)) {
         ret.push_back(Pair("height", (int64_t)stats.nHeight));
         ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
         ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
@@ -469,13 +469,13 @@ Value gettxout(const Array& params, bool fHelp)
             return Value::null;
         credits_mempool.pruneSpent(hash, coins); // TODO: this should be done by the Credits_CCoinsViewMemPool
     } else {
-        if (!bitcredit_pcoinsTip->GetCoins(hash, coins))
+        if (!bitcredit_pcoinsTip->Credits_GetCoins(hash, coins))
             return Value::null;
     }
     if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
         return Value::null;
 
-    std::map<uint256, Credits_CBlockIndex*>::iterator it = credits_mapBlockIndex.find(bitcredit_pcoinsTip->GetBestBlock());
+    std::map<uint256, Credits_CBlockIndex*>::iterator it = credits_mapBlockIndex.find(bitcredit_pcoinsTip->Credits_GetBestBlock());
     Credits_CBlockIndex *pindex = it->second;
     ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
     if ((unsigned int)coins.nHeight == BITCREDIT_MEMPOOL_HEIGHT)

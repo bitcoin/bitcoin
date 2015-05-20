@@ -587,15 +587,15 @@ Value signrawtransaction(const Array& params, bool fHelp)
         LOCK(credits_mempool.cs);
         Credits_CCoinsViewCache &viewChain = *bitcredit_pcoinsTip;
         Credits_CCoinsViewMemPool viewMempool(viewChain, credits_mempool);
-        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
+        view.Credits_SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         BOOST_FOREACH(Credits_CTxIn& txin, mergedTx.vin) {
             const uint256& prevHash = txin.prevout.hash;
             Credits_CCoins coins;
-            view.GetCoins(prevHash, coins); // this is certainly allowed to fail
+            view.Credits_GetCoins(prevHash, coins); // this is certainly allowed to fail
         }
 
-        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+        view.Credits_SetBackend(viewDummy); // switch back to avoid locking mempool for too long
     }
 
     bool fGivenKeys = false;
@@ -643,7 +643,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
             Credits_CCoins coins;
-            if (view.GetCoins(txid, coins)) {
+            if (view.Credits_GetCoins(txid, coins)) {
                 if (coins.IsAvailable(nOut) && coins.vout[nOut].scriptPubKey != scriptPubKey) {
                     string err("Previous output scriptPubKey mismatch:\n");
                     err = err + coins.vout[nOut].scriptPubKey.ToString() + "\nvs:\n"+
@@ -656,7 +656,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
                 coins.vout.resize(nOut+1);
             coins.vout[nOut].scriptPubKey = scriptPubKey;
             coins.vout[nOut].nValue = 0; // we don't know the actual output value
-            view.SetCoins(txid, coins);
+            view.Credits_SetCoins(txid, coins);
 
             // if redeemScript given and not using the local wallet (private keys
             // given), add redeemScript to the tempKeystore so it can be signed:
@@ -706,7 +706,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
     {
         Credits_CTxIn& txin = mergedTx.vin[i];
         Credits_CCoins coins;
-        if (!view.GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n))
+        if (!view.Credits_GetCoins(txin.prevout.hash, coins) || !coins.IsAvailable(txin.prevout.n))
         {
             fComplete = false;
             continue;
@@ -781,7 +781,7 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     Credits_CCoinsViewCache &view = *bitcredit_pcoinsTip;
     Credits_CCoins existingCoins;
     bool fHaveMempool = credits_mempool.exists(hashTx);
-    bool fHaveChain = view.GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
+    bool fHaveChain = view.Credits_GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
     if (!fHaveMempool && !fHaveChain) {
         // push to local node and sync with wallets
     	CValidationState state;
