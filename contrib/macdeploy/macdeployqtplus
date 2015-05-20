@@ -155,7 +155,7 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path):
         self.path = path
-        appName = os.path.splitext(os.path.basename(path))[0]
+        appName = "Bitcoin-Qt"
         self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
         if not os.path.exists(self.binaryPath):
             raise RuntimeError("Could not find bundle binary for " + path)
@@ -596,7 +596,7 @@ if os.path.exists("dist"):
 
 # ------------------------------------------------
 
-target = os.path.join("dist", app_bundle)
+target = os.path.join("dist", "Bitcoin Core.app")
 
 if verbose >= 2:
     print "+ Copying source bundle +"
@@ -837,7 +837,7 @@ if config.dmg is not None:
                 items_positions.append(itemscript.substitute(params))
 
         params = {
-            "disk" : "Bitcoin-Qt",
+            "disk" : "Bitcoin-Core",
             "window_bounds" : "300,300,800,620",
             "icon_size" : "96",
             "background_commands" : "",
