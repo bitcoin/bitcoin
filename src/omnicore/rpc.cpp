@@ -983,56 +983,61 @@ Value getopenorders_MP(const Array& params, bool fHelp)
 
 Value gettradehistory_MP(const Array& params, bool fHelp)
 {
-   if (fHelp || params.size() < 1)
+    if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
             "gettradehistory_MP\n"
-            "\nAllows user to retreive trade history for some address on the Metadex\n"
-            
+            "\nAllows user to retrieve MetaDEx trade history for the supplied address\n"
             "\nArguments:\n"
-            "1. address          (string, required) address to query history on\n"
-            "2. number            (int, optional ) number of trades to retreive\n"
-            "3. property_id         (int, optional) filter by propertyid on one side\n"
+            "1. address          (string, required) address to retrieve history for\n"
+            "2. count            (int, optional) number of trades to retrieve (default: 10)\n"
+            "3. propertyid       (int, optional) filter by propertyid for sale\n"
         );
 
-  string address = params[0].get_str();
-  unsigned int number_trades = (params.size() == 2 ? (unsigned int) params[1].get_int64() : 512);
-  unsigned int propertyIdFilter = 0;
-
-  bool filter_by_one = (params.size() == 3) ? true : false;
-
-  if( filter_by_one ) {
-    propertyIdFilter = check_prop_valid( params[2].get_int64() , "Invalid property identifier (Sale)", "Property identifier does not exist (Sale)"); 
-  }
-  
-  std::vector<CMPMetaDEx> vMetaDexObjects;
-
-  for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-  {
-    md_PricesMap & prices = my_it->second;
-    for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-    {
-      md_Set & indexes = (it->second);
-      for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-      {
-          CMPMetaDEx obj = *it;
-
-          bool filter = 1;
-
-          //this filter, the first part is filtering by two currencies, the second part is filtering by the first only
-          filter = (obj.getAddr() == address) && 
-                   ( ( ( filter_by_one && (obj.getProperty() == propertyIdFilter) == 1 ) ) || !filter_by_one ) && 
-                   (vMetaDexObjects.size() < number_trades);
-          if ( filter ) {
-            vMetaDexObjects.push_back(obj);
-          }
-      }
+    string address = params[0].get_str();
+    int64_t count = 10;
+    if (params.size() > 1) {
+        count = params[1].get_int64();
+        if (count < 1) // TODO: do we need a maximum here?
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid value for count parameter");
     }
-  }
-  
-  Array response;
-  MetaDexObjectsToJSON(vMetaDexObjects, response);
-  
-  return response;
+    uint32_t propertyId = 0;
+    if (params.size() > 2) {
+        int64_t tmpPropertyId = params[1].get_int64();
+        if (tmpPropertyId < 1 || tmpPropertyId > 4294967295) // not safe to do conversion
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
+        propertyId = boost::lexical_cast<uint32_t>(tmpPropertyId);
+        CMPSPInfo::Entry sp;
+        if (false == _my_sps->getSP(propertyId, sp))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+    }
+
+    // to provide a proper trade history for an address we must utilize a two part methodology:
+    // 1) check the metadex maps for open trades
+    // 2) check the trades database for closed trades
+
+    // stage 1
+    std::vector<CMPMetaDEx> vMetaDexObjects;
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if (propertyId != 0 && propertyId != my_it->first) continue;
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set & indexes = (it->second);
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                CMPMetaDEx obj = *it;
+                if (obj.getAddr() == address) vMetaDexObjects.push_back(obj);
+                // just a metadex object? probably should return the full trade status along with matches if partial filled?
+            }
+        }
+    }
+
+    // stage 2
+    // need to look at implementing a new find function for trades database - it's keyed by TXID1+TXID2 for matches, but the value does
+    // contain the addresses of the participants - we could likely get away with iterating the entire db just the once pulling out address
+    // matches to enable history for an address.  TODO
+
+    Array response;
+    MetaDexObjectsToJSON(vMetaDexObjects, response);
+    return response;
 }
 
 Value getactivedexsells_MP(const Array& params, bool fHelp)
