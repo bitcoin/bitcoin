@@ -2143,38 +2143,6 @@ int mastercore_init()
     exodus_address = exodus_testnet;
   }*/
 
-  // when providing support recompiling to enable debug levels is not always feasible
-  // determine whether to override debug levels via enumerating startup option --omnidebug
-  // example usage: --omnidebug=parser --omnidebug=metadex1 --omnidebug=ui
-  if (!mapMultiArgs["-omnidebug"].empty()) {
-      const vector<string>& debugLevels = mapMultiArgs["-omnidebug"];
-      for (vector<string>::const_iterator it = debugLevels.begin(); it != debugLevels.end(); ++it) {
-          if (*it == "parser_data") msc_debug_parser_data = true;
-          if (*it == "parser") msc_debug_parser = true;
-          if (*it == "verbose") msc_debug_verbose = true;
-          if (*it == "verbose2") msc_debug_verbose2 = true;
-          if (*it == "verbose3") msc_debug_verbose3 = true;
-          if (*it == "vin") msc_debug_vin = true;
-          if (*it == "script") msc_debug_script = true;
-          if (*it == "dex") msc_debug_dex = true;
-          if (*it == "send") msc_debug_send = true;
-          if (*it == "tokens") msc_debug_tokens = true;
-          if (*it == "spec") msc_debug_spec = true;
-          if (*it == "exo") msc_debug_exo = true;
-          if (*it == "tally") msc_debug_tally = true;
-          if (*it == "sp") msc_debug_sp = true;
-          if (*it == "sto") msc_debug_sto = true;
-          if (*it == "txdb") msc_debug_txdb = true;
-          if (*it == "tradedb") msc_debug_tradedb = true;
-          if (*it == "persistence") msc_debug_persistence = true;
-          if (*it == "ui") msc_debug_ui = true;
-          if (*it == "pending") msc_debug_pending = true;
-          if (*it == "metadex1") msc_debug_metadex1 = true;
-          if (*it == "metadex2") msc_debug_metadex2 = true;
-          if (*it == "metadex3") msc_debug_metadex3 = true;
-      }
-  }
-
   // check for --autocommit option and set transaction commit flag accordingly
   if (!GetBoolArg("-autocommit", true)) {
       file_log("Process was started with --autocommit set to false.  Created omni transactions will not be committed to wallet or broadcast.");
