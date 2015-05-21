@@ -3230,6 +3230,9 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
   if (!pdb) return false;
   leveldb::Slice skey, svalue;
   unsigned int count = 0;
+  *totalBought = 0;
+  *totalSold = 0;
+
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
   leveldb::Iterator* it = NewIterator();
