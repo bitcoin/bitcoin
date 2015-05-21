@@ -1186,15 +1186,11 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
 }
 
 // this function standardizes the RPC output for gettransaction_MP and listtransaction_MP into a central function
-int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string filterAddress = "")
+int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string filterAddress, bool typeSpecificDetails)
 {
-    //uint256 hash;
-    //hash.SetHex(params[0].get_str());
-
     CTransaction wtx;
     uint256 blockHash = 0;
     if (!GetTransaction(txid, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
-
     CMPTransaction mp_obj;
     uint256 wtxid = txid;
     bool bIsMine = false;
@@ -1246,18 +1242,14 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     CMPMetaDEx temp_metadexoffer;
 
     // replace initial MP detection with levelDB lookup instead of parse, this is much faster especially in calls like list/search
-    if (p_txlistdb->exists(wtxid))
-    {
+    if (p_txlistdb->exists(wtxid)) {
         //transaction is in levelDB, so we can attempt to parse it
         int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
-        if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
-        {
+        if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
             // do we have a non-zero RC, if so it's a payment, handle differently
-            if (0 < parseRC)
-            {
+            if (0 < parseRC) {
                 // handle as payment TX - this doesn't fit nicely into the kind of output for a MP tx so we'll do this seperately
                 // add generic TX data to the output
-                //Object txobj;
                 txobj->push_back(Pair("txid", wtxid.GetHex()));
                 txobj->push_back(Pair("confirmations", confirmations));
                 txobj->push_back(Pair("blocktime", blockTime));
@@ -1273,10 +1265,8 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                 // get the details of sub records for payment(s) in the tx and push into an array
                 Array purchases;
                 int numberOfPurchases=p_txlistdb->getNumberOfPurchases(wtxid);
-                if (0<numberOfPurchases)
-                {
-                    for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++)
-                    {
+                if (0<numberOfPurchases) {
+                    for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
                         Object purchaseObj;
                         string buyer;
                         string seller;
@@ -1285,11 +1275,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                         p_txlistdb->getPurchaseDetails(wtxid,purchaseNumber,&buyer,&seller,&vout,&propertyId,&nValue);
                         bIsMine = false;
                         bIsMine = IsMyAddress(buyer);
-                        if (!bIsMine)
-                        {
-                            bIsMine = IsMyAddress(seller);
+                        if (!bIsMine) bIsMine = IsMyAddress(seller);
+                        if (!filterAddress.empty()) {
+                            if ((buyer != filterAddress) && (seller != filterAddress)) return -1; // return negative rc if filtering & no match
                         }
-                        if (!filterAddress.empty()) if ((buyer != filterAddress) && (seller != filterAddress)) return -1; // return negative rc if filtering & no match
                         uint64_t amountPaid = wtx.vout[vout].nValue;
                         purchaseObj.push_back(Pair("vout", vout));
                         purchaseObj.push_back(Pair("amountpaid", FormatDivisibleMP(amountPaid)));
@@ -1304,17 +1293,16 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                 txobj->push_back(Pair("purchases", purchases));
                 // return the object
                 return 0;
-            }
-            else
-            {
+            } else {
                 // otherwise RC was 0, a valid MP transaction so far
-                if (0<=mp_obj.step1())
-                {
+                if (0<=mp_obj.step1()) {
                     MPTxType = mp_obj.getTypeString();
                     MPTxTypeInt = mp_obj.getType();
                     senderAddress = mp_obj.getSender();
                     refAddress = mp_obj.getReceiver();
-                    if (!filterAddress.empty()) if ((senderAddress != filterAddress) && (refAddress != filterAddress)) return -1; // return negative rc if filtering & no match
+                    if (!filterAddress.empty()) {
+                        if ((senderAddress != filterAddress) && (refAddress != filterAddress)) return -1; // return negative rc if filtering & no match
+                    }
                     isMPTx = true;
                     nFee = mp_obj.getFeePaid();
                     int tmpblock=0;
@@ -1322,66 +1310,58 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                     uint64_t amountNew=0;
                     valid=getValidMPTX(wtxid, &tmpblock, &tmptype, &amountNew);
                     //populate based on type of tx
-                    switch (MPTxTypeInt)
-                    {
+                    switch (MPTxTypeInt) {
                         case MSC_TYPE_METADEX:
-                             if (0 == mp_obj.step2_Value())
-                             {
-                                 propertyId = mp_obj.getProperty();
-                                 amount = mp_obj.getAmount();
-                                 mdex_propertyId_Div = isPropertyDivisible(propertyId);
-                                 if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer))
-                                 {
-                                     mdex_propertyWanted = temp_metadexoffer.getDesProperty();
-                                     mdex_propertyWanted_Div = isPropertyDivisible(mdex_propertyWanted);
-                                     mdex_amountWanted = temp_metadexoffer.getAmountDesired();
-                                     mdex_amountRemaining = temp_metadexoffer.getAmountRemaining();
-                                     mdex_action = temp_metadexoffer.getAction();
-                                     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
-                                     rational_t tempUnitPrice(int128_t(0));
-                                     if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
-                                         tempUnitPrice = temp_metadexoffer.inversePrice();
-                                         if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
-                                     } else {
-                                         tempUnitPrice = temp_metadexoffer.unitPrice();
-                                         if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
-                                     }
-                                     mdex_unitPriceStr = xToString(tempUnitPrice);
-                                     if(1 == mdex_action) mdex_actionStr = "new sell";
-                                     if(2 == mdex_action) mdex_actionStr = "cancel price";
-                                     if(3 == mdex_action) mdex_actionStr = "cancel pair";
-                                     if(4 == mdex_action) mdex_actionStr = "cancel all";
-                                 }
-                             }
-
+                            if (0 == mp_obj.step2_Value()) {
+                                propertyId = mp_obj.getProperty();
+                                amount = mp_obj.getAmount();
+                                mdex_propertyId_Div = isPropertyDivisible(propertyId);
+                                if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
+                                    mdex_propertyWanted = temp_metadexoffer.getDesProperty();
+                                    mdex_propertyWanted_Div = isPropertyDivisible(mdex_propertyWanted);
+                                    mdex_amountWanted = temp_metadexoffer.getAmountDesired();
+                                    mdex_amountRemaining = temp_metadexoffer.getAmountRemaining();
+                                    mdex_action = temp_metadexoffer.getAction();
+                                    // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
+                                    rational_t tempUnitPrice(int128_t(0));
+                                    if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
+                                        tempUnitPrice = temp_metadexoffer.inversePrice();
+                                        if (!mdex_propertyWanted_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                    } else {
+                                        tempUnitPrice = temp_metadexoffer.unitPrice();
+                                        if (!mdex_propertyId_Div) tempUnitPrice = tempUnitPrice/COIN;
+                                    }
+                                    mdex_unitPriceStr = xToString(tempUnitPrice);
+                                    if(1 == mdex_action) mdex_actionStr = "new sell";
+                                    if(2 == mdex_action) mdex_actionStr = "cancel price";
+                                    if(3 == mdex_action) mdex_actionStr = "cancel pair";
+                                    if(4 == mdex_action) mdex_actionStr = "cancel all";
+                                }
+                            }
                         break;
                         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
-                             if (0 == mp_obj.step2_Value())
-                             {
+                            if (0 == mp_obj.step2_Value()) {
                                 showReference = true;
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
-                             }
+                            }
                         break;
                         case MSC_TYPE_GRANT_PROPERTY_TOKENS:
-                             if (0 == mp_obj.step2_Value())
-                             {
+                            if (0 == mp_obj.step2_Value()) {
                                 showReference = true;
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
-                             }
+                            }
                         break;
                         case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
-                             if (0 == mp_obj.step2_Value())
-                             {
+                            if (0 == mp_obj.step2_Value()) {
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
-                             }
+                            }
                         break;
                         case MSC_TYPE_CREATE_PROPERTY_FIXED:
                             mp_obj.step2_SmartProperty(rc);
-                            if (0 == rc)
-                            {
+                            if (0 == rc) {
                                 propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
                                 amount = getTotalTokens(propertyId);
                                 propertyName = mp_obj.getSPName();
@@ -1389,51 +1369,42 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                         break;
                         case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
                             mp_obj.step2_SmartProperty(rc);
-                            if (0 == rc)
-                            {
+                            if (0 == rc) {
                                 propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
                                 amount = 0; // crowdsale txs always create zero tokens
                                 propertyName = mp_obj.getSPName();
                             }
                         break;
                         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-                            //propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
-                            //amount = 0; // issuance of a managed token does not create tokens
                             mp_obj.step2_SmartProperty(rc);
-                            if (0 == rc)
-                            {
+                            if (0 == rc) {
                                 propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
-                                amount = 0; // crowdsale txs always create zero tokens
+                                amount = 0; // issuance of a managed token does not create tokens
                                 propertyName = mp_obj.getSPName();
                             }
                         break;
                         case MSC_TYPE_SIMPLE_SEND:
-                            if (0 == mp_obj.step2_Value())
-                            {
+                            if (0 == mp_obj.step2_Value()) {
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
                                 showReference = true;
                                 //check crowdsale invest?
                                 crowdPurchase = isCrowdsalePurchase(wtxid, refAddress, &crowdPropertyId, &crowdTokens, &issuerTokens);
-                                if (crowdPurchase)
-                                {
+                                if (crowdPurchase) {
                                     MPTxType = "Crowdsale Purchase";
                                     CMPSPInfo::Entry sp;
-                                    if (false == _my_sps->getSP(crowdPropertyId, sp)) { return MP_CROWDSALE_WITHOUT_PROPERTY; }
-
+                                    if (false == _my_sps->getSP(crowdPropertyId, sp)) return MP_CROWDSALE_WITHOUT_PROPERTY;
                                     crowdName = sp.name;
                                     crowdDivisible = sp.isDivisible();
                                 }
                             }
                         break;
                         case MSC_TYPE_TRADE_OFFER:
-                            if (0 == mp_obj.step2_Value())
-                            {
+                            if (0 == mp_obj.step2_Value()) {
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
                             }
-                            if (0 <= mp_obj.interpretPacket(&temp_offer))
-                            {
+                            if (0 <= mp_obj.interpretPacket(&temp_offer)) {
                                 sell_minfee = temp_offer.getMinFee();
                                 sell_timelimit = temp_offer.getBlockTimeLimit();
                                 sell_subaction = temp_offer.getSubaction();
@@ -1446,8 +1417,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                             if ((valid) && (amountNew>0)) amount=amountNew; //amount has been amended, update
                         break;
                         case MSC_TYPE_ACCEPT_OFFER_BTC:
-                            if (0 == mp_obj.step2_Value())
-                            {
+                            if (0 == mp_obj.step2_Value()) {
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
                                 showReference = true;
@@ -1455,46 +1425,34 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                             if ((valid) && (amountNew>0)) amount=amountNew; //amount has been amended, update
                         break;
                         case MSC_TYPE_CLOSE_CROWDSALE:
-                            if (0 == mp_obj.step2_Value())
-                            {
+                            if (0 == mp_obj.step2_Value()) {
                                 propertyId = mp_obj.getProperty();
                             }
                         break;
                         case  MSC_TYPE_SEND_TO_OWNERS:
-                            if (0 == mp_obj.step2_Value())
-                            {
+                            if (0 == mp_obj.step2_Value()) {
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
                             }
                         break;
                     } // end switch
                     divisible=isPropertyDivisible(propertyId);
-                } // end step 1 if
-                else
-                {
+                } else { // end step 1 if
                     return -3336; // "Not a Master Protocol transaction"
                 }
             } // end payment check if
-        } //negative RC check
-        else
-        {
+        } else { //negative RC check
             return MP_INVALID_TX_IN_DB_FOUND;
         }
-    }
-    else
-    {
+    } else {
         return MP_TX_IS_NOT_MASTER_PROTOCOL;
     }
 
-    if (isMPTx)
-    {
+    if (isMPTx) {
         // test sender and reference against ismine to determine which address is ours
         // if both ours (eg sending to another address in wallet) use reference
         bIsMine = IsMyAddress(senderAddress);
-        if (!bIsMine)
-        {
-            bIsMine = IsMyAddress(refAddress);
-        }
+        if (!bIsMine) bIsMine = IsMyAddress(refAddress);
         txobj->push_back(Pair("txid", wtxid.GetHex()));
         txobj->push_back(Pair("sendingaddress", senderAddress));
         if (showReference) txobj->push_back(Pair("referenceaddress", refAddress));
@@ -1506,22 +1464,19 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
         txobj->push_back(Pair("type_int", (int64_t)mp_obj.getType()));
         txobj->push_back(Pair("type", MPTxType));
         if (MSC_TYPE_METADEX != MPTxTypeInt) txobj->push_back(Pair("propertyid", propertyId));
-        if ((MSC_TYPE_CREATE_PROPERTY_VARIABLE == MPTxTypeInt) || (MSC_TYPE_CREATE_PROPERTY_FIXED == MPTxTypeInt) || (MSC_TYPE_CREATE_PROPERTY_MANUAL == MPTxTypeInt))
-        {
+        if ((MSC_TYPE_CREATE_PROPERTY_VARIABLE == MPTxTypeInt) || (MSC_TYPE_CREATE_PROPERTY_FIXED == MPTxTypeInt) || (MSC_TYPE_CREATE_PROPERTY_MANUAL == MPTxTypeInt)) {
             txobj->push_back(Pair("propertyname", propertyName));
         }
         if (MSC_TYPE_METADEX != MPTxTypeInt) txobj->push_back(Pair("divisible", divisible));
         if (MSC_TYPE_METADEX != MPTxTypeInt) txobj->push_back(Pair("amount", FormatMP(propertyId, amount)));
-        if (crowdPurchase)
-        {
+        if (crowdPurchase) {
             txobj->push_back(Pair("purchasedpropertyid", crowdPropertyId));
             txobj->push_back(Pair("purchasedpropertyname", crowdName));
             txobj->push_back(Pair("purchasedpropertydivisible", crowdDivisible));
             txobj->push_back(Pair("purchasedtokens", FormatMP(crowdPropertyId, crowdTokens)));
             txobj->push_back(Pair("issuertokens", FormatMP(crowdPropertyId, issuerTokens)));
         }
-        if (MSC_TYPE_TRADE_OFFER == MPTxTypeInt)
-        {
+        if (MSC_TYPE_TRADE_OFFER == MPTxTypeInt) {
             txobj->push_back(Pair("feerequired", ValueFromAmount(sell_minfee)));
             txobj->push_back(Pair("timelimit", sell_timelimit));
             if (1 == sell_subaction) txobj->push_back(Pair("subaction", "New"));
@@ -1529,8 +1484,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
             if (3 == sell_subaction) txobj->push_back(Pair("subaction", "Cancel"));
             txobj->push_back(Pair("bitcoindesired", ValueFromAmount(sell_btcdesired)));
         }
-        if (MSC_TYPE_METADEX == MPTxTypeInt)
-        {
+        if (MSC_TYPE_METADEX == MPTxTypeInt) {
             txobj->push_back(Pair("propertyidforsale", propertyId));
             txobj->push_back(Pair("propertyidforsaleisdivisible", mdex_propertyId_Div));
             txobj->push_back(Pair("amountforsale", FormatMP(propertyId, amount)));
