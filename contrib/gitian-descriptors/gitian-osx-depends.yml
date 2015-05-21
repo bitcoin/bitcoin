@@ -30,7 +30,7 @@ script: |
   echo "13bfc5ae543cf3aa180ac2485c0bc89495e3ae711fc6fab4f8ffe90dfb4bb677  protobuf-2.5.0.tar.bz2" | sha256sum -c
   echo "dfd71487513c871bad485806bfd1fdb304dedc84d2b01a8fb8e0940b50597a98  qrencode-3.4.3.tar.bz2" | sha256sum -c
 
-  REVISION=r7
+  REVISION=r8
   export SOURCES_PATH=`pwd`
   export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export PATH=$HOME:$PATH
@@ -95,9 +95,9 @@ script: |
   pushd ${BUILD_DIR}
   sed -ie "s|cc:|${INT_CC}:|" ${BUILD_DIR}/Configure
   sed -ie "s|\(-arch [_a-zA-Z0-9]*\)|\1 --sysroot ${SDK}  -target ${HOST} -msse2|" ${BUILD_DIR}/Configure
+  sed -i "/define DATE/d" ${BUILD_DIR}/util/mkbuildinf.pl
+  sed -i "s|engines apps test|engines|" ${BUILD_DIR}/Makefile.org
   AR="${INT_AR}" RANLIB="${INT_RANLIB}" ./Configure --prefix=${PREFIX} --openssldir=${PREFIX}/etc/openssl zlib shared no-krb5 darwin64-x86_64-cc ${INT_LDFLAGS} ${INT_CLANG_LDFLAGS} ${INT_CPPFLAGS}
-  sed -i "s|engines apps test|engines|" ${BUILD_DIR}/Makefile
-  sed -i "/define DATE/d" ${BUILD_DIR}/crypto/Makefile
   make -j1 build_libs libcrypto.pc libssl.pc openssl.pc
   make -j1 install_sw
   popd
