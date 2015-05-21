@@ -998,7 +998,7 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. address          (string, required) address to retrieve history for\n"
             "2. count            (int, optional) number of trades to retrieve (default: 10)\n"
-            "3. propertyid       (int, optional) filter by propertyid for sale\n"
+            "3. propertyid       (int, optional) filter by propertyid transacted\n"
         );
 
     Array response;
@@ -1012,7 +1012,7 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
     }
     uint32_t propertyId = 0;
     if (params.size() > 2) {
-        int64_t tmpPropertyId = params[1].get_int64();
+        int64_t tmpPropertyId = params[2].get_int64();
         if (tmpPropertyId < 1 || tmpPropertyId > 4294967295) // not safe to do conversion
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
         propertyId = boost::lexical_cast<uint32_t>(tmpPropertyId);
@@ -1025,29 +1025,39 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
     // 1) check the metadex maps for open trades
     // 2) check the trades database for closed trades
 
+    // vector vecTransactions will hold the txids from both stage 1 and stage 2 to avoid duplicates
+    std::vector<uint256> vecTransactions;
+
     // stage 1
-    std::vector<CMPMetaDEx> vMetaDexObjects;
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-        if (propertyId != 0 && propertyId != my_it->first) continue;
         md_PricesMap & prices = my_it->second;
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
             md_Set & indexes = (it->second);
             for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 CMPMetaDEx obj = *it;
                 if (obj.getAddr() == address) {
+                    if (propertyId != 0 && propertyId != obj.getProperty() && propertyId != obj.getDesProperty()) continue;
                     Object txobj;
                     int populateResult = populateRPCTransactionObject(obj.getHash(), &txobj, "", true);
-                    if (0 == populateResult) response.push_back(txobj);
+                    if (0 == populateResult) {
+                        vecTransactions.push_back(obj.getHash());
+                    }
                 }
             }
         }
     }
 
     // stage 2
-    // need to look at implementing a new find function for trades database - it's keyed by TXID1+TXID2 for matches, but the value does
-    // contain the addresses of the participants - we could likely get away with iterating the entire db just the once pulling out address
-    // matches to enable history for an address.  TODO
+    t_tradelistdb->getTradesForAddress(address, &vecTransactions, propertyId);
 
+    // populate
+    for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
+        Object txobj;
+        int populateResult = populateRPCTransactionObject(*it, &txobj, "", true);
+        if (0 == populateResult) response.push_back(txobj);
+    }
+
+    // TODO: sort response array on confirmations attribute and crop response to (count) most recent transactions
     return response;
 }
 
