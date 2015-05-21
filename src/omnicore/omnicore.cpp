@@ -2980,11 +2980,9 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
 {
   if (!pdb) return "";
   string mySTOReceipts = "";
-
   Slice skey, svalue;
   Iterator* it = NewIterator();
-  for(it->SeekToFirst(); it->Valid(); it->Next())
-  {
+  for(it->SeekToFirst(); it->Valid(); it->Next()) {
       skey = it->key();
       string recipientAddress = skey.ToString();
       if(!IsMyAddress(recipientAddress)) continue; // not ours, not interested
@@ -2995,19 +2993,19 @@ std::string CMPSTOList::getMySTOReceipts(string filterAddress)
       // break into individual receipts
       std::vector<std::string> vstr;
       boost::split(vstr, strValue, boost::is_any_of(","), token_compress_on);
-      for(uint32_t i = 0; i<vstr.size(); i++)
-      {
+      for(uint32_t i = 0; i<vstr.size(); i++) {
           // add to array
           std::vector<std::string> svstr;
           boost::split(svstr, vstr[i], boost::is_any_of(":"), token_compress_on);
-          if(4 == svstr.size())
-          {
+          if(4 == svstr.size()) {
               size_t txidMatch = mySTOReceipts.find(svstr[0]);
               if(txidMatch==std::string::npos) mySTOReceipts += svstr[0]+":"+svstr[1]+":"+recipientAddress+":"+svstr[2]+",";
           }
       }
   }
   delete it;
+  // above code will leave a trailing comma - strip it
+  if (mySTOReceipts.size() > 0) mySTOReceipts.resize(mySTOReceipts.size()-1);
   return mySTOReceipts;
 }
 
