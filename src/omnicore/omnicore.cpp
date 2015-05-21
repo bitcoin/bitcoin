@@ -3317,7 +3317,7 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
 }
 
 // obtains a vector of txids where the supplied address participated in a trade (needed for gettradehistory_MP)
-// optional property ID parameter will filter on propertyIdForSale if supplied
+// optional property ID parameter will filter on propertyId transacted if supplied
 void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>* vecTransactions, uint32_t propertyIdForSale)
 {
   if (!pdb) return;

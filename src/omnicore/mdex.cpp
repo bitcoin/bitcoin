@@ -636,9 +636,6 @@ std::string mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t property
     return statusText;
 }
 
-
-
-
 void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
 {
     file_log("<<<\n");
