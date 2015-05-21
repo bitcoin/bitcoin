@@ -1189,10 +1189,6 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     if (!lock.try_lock())
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Credits Core is probably already running."), strDataDir));
 
-    const boost::filesystem::path tmpDirPath = GetDataDir() / ".tmp";
-	TryRemoveDirectory(tmpDirPath);
-	TryCreateDirectory(tmpDirPath);
-
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
