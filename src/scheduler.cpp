@@ -29,8 +29,6 @@ void CScheduler::serviceQueue()
 {
     boost::unique_lock<boost::mutex> lock(newTaskMutex);
     ++nThreadsServicingQueue;
-    stopRequested = false;
-    stopWhenEmpty = false;
 
     // newTaskMutex is locked throughout this loop EXCEPT
     // when the thread is waiting or when the user's function
