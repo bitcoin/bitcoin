@@ -12,6 +12,9 @@ int LogFilePrint(const std::string& str);
 /** Prints to the console. */
 int ConsolePrint(const std::string& str);
 
+/** Determine whether to override compiled debug levels. */
+void InitDebugLogLevels();
+
 /** Scrolls log file, if it's getting too big. */
 void ShrinkDebugLog();
 
