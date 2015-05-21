@@ -398,27 +398,6 @@ bool mastercore::isMainEcosystemProperty(unsigned int property)
   return false;
 }
 
-bool mastercore::isMetaDExOfferActive(const uint256 txid, unsigned int propertyId)
-{
-  for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-  {
-      if (my_it->first == propertyId) //at bear minimum only go deeper if it's the right property id
-      {
-           md_PricesMap & prices = my_it->second;
-           for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-           {
-                md_Set & indexes = (it->second);
-                for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-                {
-                     CMPMetaDEx obj = *it;
-                     if( obj.getHash().GetHex() == txid.GetHex() ) return true;
-                }
-           }
-      }
-  }
-  return false;
-}
-
 std::string mastercore::getMasterCoreAlertString()
 {
     return global_alert_message;

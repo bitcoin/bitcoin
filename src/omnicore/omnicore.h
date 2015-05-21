@@ -458,7 +458,6 @@ uint32_t GetNextPropertyId(bool maineco);
 
 CMPTally *getTally(const string & address);
 
-bool isMetaDExOfferActive(const uint256 txid, unsigned int propertyId);
 int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
 bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime);
 int set_wallet_totals();
