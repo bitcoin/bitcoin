@@ -79,7 +79,12 @@ static void DebugLogInit()
 
     boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME;
     fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // Unbuffered
+
+    if (fileout) {
+        setbuf(fileout, NULL); // Unbuffered
+    } else {
+        PrintToConsole("Failed to open debug log file: %s\n", pathDebug.string());
+    }
 
     mutexDebugLog = new boost::mutex();
 
