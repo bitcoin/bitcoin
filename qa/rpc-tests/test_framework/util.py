@@ -8,7 +8,6 @@
 # Add python-bitcoinrpc to module search path:
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
 
 from decimal import Decimal, ROUND_DOWN
 import json
@@ -18,7 +17,7 @@ import subprocess
 import time
 import re
 
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
 def p2p_port(n):
