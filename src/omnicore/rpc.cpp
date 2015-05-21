@@ -1186,7 +1186,7 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
 }
 
 // this function standardizes the RPC output for gettransaction_MP and listtransaction_MP into a central function
-int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string filterAddress, bool typeSpecificDetails)
+int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
 {
     CTransaction wtx;
     uint256 blockHash = 0;
@@ -1498,6 +1498,18 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                 isTestEcosystemProperty(propertyId) ? "Test" : "Main"));
         }
         txobj->push_back(Pair("valid", valid));
+
+        // add extended details if requested
+        if (extendedDetails) {
+            if (MSC_TYPE_SEND_TO_OWNERS == MPTxTypeInt) {
+                Array receiveArray;
+                uint64_t tmpAmount = 0;
+                uint64_t stoFee = 0;
+                s_stolistdb->getRecipients(wtxid, extendedDetailsFilter, &receiveArray, &tmpAmount, &stoFee);
+                txobj->push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
+                txobj->push_back(Pair("recipients", receiveArray));
+            }
+        }
     }
     return 0;
 }
@@ -1570,9 +1582,6 @@ Value gettransaction_MP(const Array& params, bool fHelp)
 
 Value listtransactions_MP(const Array& params, bool fHelp)
 {
-    // note this call has been refactored to use the singular populateRPCTransactionObject function
-    // note address filtering has been readded to this call, and searchtransactions_MP has been removed since performance hit no longer an issue
-
     if (fHelp || params.size() > 5)
         throw runtime_error(
             "listtransactions_MP ( \"address\" count skip startblock endblock )\n" //todo increase verbosity in help
@@ -1586,13 +1595,11 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     string addressParam = "";
     bool addressFilter;
 
-    //if 0 params consider all addresses in wallet, otherwise first param is filter address
+    // if 0 params consider all addresses in wallet, otherwise first param is filter address
     addressFilter = false;
-    if (params.size() > 0)
-    {
+    if (params.size() > 0) {
         // allow setting "" or "*" to use nCount and nFrom params with all addresses in wallet
-        if ( ("*" != params[0].get_str()) && ("" != params[0].get_str()) )
-        {
+        if ( ("*" != params[0].get_str()) && ("" != params[0].get_str()) ) {
             addressParam = params[0].get_str();
             addressFilter = true;
         }
@@ -1626,11 +1633,9 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
 
     // iterate backwards until we have nCount items to return:
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
-    {
+    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
         CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx != 0)
-        {
+        if (pwtx != 0) {
             // get the height of the transaction and check it's within the chosen parameters
             uint256 blockHash = pwtx->hashBlock;
             if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
@@ -1639,37 +1644,24 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             int blockHeight = pBlockIndex->nHeight;
             if ((blockHeight < nStartBlock) || (blockHeight > nEndBlock)) continue; // ignore it if not within our range
 
-            // look for an STO receipt to see if we need to insert it
-            for(uint32_t i = 0; i<vecReceipts.size(); i++)
-            {
+            // ### START STO CHECK ### (was a STO received between last and next wallet transactions)
+            for(uint32_t i = 0; i<vecReceipts.size(); i++) {
                 std::vector<std::string> svstr;
                 boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), token_compress_on);
-                if(4 == svstr.size()) // make sure expected num items
-                {
-                    if((atoi(svstr[1]) < lastTXBlock) && (atoi(svstr[1]) > blockHeight))
-                    {
-                        // STO receipt insert here - add STO receipt to response array
-                        uint256 hash;
-                        hash.SetHex(svstr[0]);
-                        Object txobj;
-                        int populateResult = -1;
-                        populateResult = populateRPCTransactionObject(hash, &txobj);
-                        if (0 == populateResult)
-                        {
-                            Array receiveArray;
-                            uint64_t tmpAmount = 0;
-                            uint64_t stoFee = 0;
-                            s_stolistdb->getRecipients(hash, addressParam, &receiveArray, &tmpAmount, &stoFee);
-                            // add matches array and stofee to object
-                            txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
-                            txobj.push_back(Pair("recipients", receiveArray));
-                            response.push_back(txobj); // add the transaction object to the response array
-                        }
-                        // don't burn time doing more work than we need to
-                        if ((int)response.size() >= (nCount+nFrom)) break;
-                    }
+                if (svstr.size() != 4) {
+                    file_log("STODB Error - number of tokens is not as expected (%s)\n", vecReceipts[i]);
+                    continue;
+                }
+                if (atoi(svstr[1]) < lastTXBlock && atoi(svstr[1]) > blockHeight) { // STO receipt found - insert into response
+                    uint256 hash;
+                    hash.SetHex(svstr[0]);
+                    Object txobj;
+                    int populateResult = -1;
+                    populateResult = populateRPCTransactionObject(hash, &txobj); // don't spam listtransactions output with STO extended details
+                    if (0 == populateResult) response.push_back(txobj);
                 }
             }
+            // ### END STO CHECK ###
 
             // populateRPCTransactionObject will throw us a non-0 rc if this isn't a MP transaction, speeds up search by orders of magnitude
             uint256 hash = pwtx->GetHash();
@@ -1677,12 +1669,9 @@ Value listtransactions_MP(const Array& params, bool fHelp)
 
             // make a request to new RPC populator function to populate a transaction object (if it is a MP transaction)
             int populateResult = -1;
-            if (addressFilter)
-            {
+            if (addressFilter) {
                 populateResult = populateRPCTransactionObject(hash, &txobj, addressParam); // pass in an address filter
-            }
-            else
-            {
+            } else {
                 populateResult = populateRPCTransactionObject(hash, &txobj); // no address filter
             }
             if (0 == populateResult) response.push_back(txobj); // add the transaction object to the response array if we get a 0 rc
@@ -1692,11 +1681,10 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             if ((int)response.size() >= (nCount+nFrom)) break;
         }
     }
+
     // sort array here and cut on nFrom and nCount
-    if (nFrom > (int)response.size())
-        nFrom = response.size();
-    if ((nFrom + nCount) > (int)response.size())
-        nCount = response.size() - nFrom;
+    if (nFrom > (int)response.size()) nFrom = response.size();
+    if ((nFrom + nCount) > (int)response.size()) nCount = response.size() - nFrom;
     Array::iterator first = response.begin();
     std::advance(first, nFrom);
     Array::iterator last = response.begin();
@@ -1783,61 +1771,34 @@ Value getsto_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("getsto_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    Object txobj;
     uint256 hash;
     hash.SetHex(params[0].get_str());
     string filterAddress = "";
     if (params.size() == 2) filterAddress=params[1].get_str();
-    Object txobj;
-    CTransaction wtx;
-    uint256 blockHash = 0;
-    if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
-    uint64_t propertyId = 0;
-    CMPTransaction mp_obj;
-    int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
-    if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for safety
-    {
-        if (0<=mp_obj.step1())
-        {
-            if (0 == mp_obj.step2_Value())
-            {
-                propertyId = mp_obj.getProperty();
-            }
-        }
-        if (propertyId == 0) // something went wrong, couldn't decode property ID - bad packet?
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
 
-        // make a request to new RPC populator function to populate a transaction object
-        int populateResult = populateRPCTransactionObject(hash, &txobj);
-        // check the response, throw any error codes if false
-        if (0>populateResult)
-        {
-            // TODO: consider throwing other error codes, check back with Bitcoin Core
-            switch (populateResult)
-            {
-                case MP_TX_NOT_FOUND:
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
-                case MP_TX_UNCONFIRMED:
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unconfirmed transactions are not supported");
-                case MP_BLOCK_NOT_IN_CHAIN:
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not part of the active chain");
-                case MP_CROWDSALE_WITHOUT_PROPERTY:
-                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: \
-                                                          \"Crowdsale Purchase\" without valid property identifier");
-                case MP_INVALID_TX_IN_DB_FOUND:
-                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: Invalid transaction found");
-                case MP_TX_IS_NOT_MASTER_PROTOCOL:
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
-            }
+    // make a request to RPC populator function to populate a transaction object
+    int populateResult = populateRPCTransactionObject(hash, &txobj, "", true, filterAddress);
+    // check the response, throw any error codes if false
+    if (0>populateResult) {
+        // TODO: consider throwing other error codes, check back with Bitcoin Core
+        switch (populateResult) {
+            case MP_TX_NOT_FOUND:
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+            case MP_TX_UNCONFIRMED:
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unconfirmed transactions are not supported");
+            case MP_BLOCK_NOT_IN_CHAIN:
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not part of the active chain");
+            case MP_CROWDSALE_WITHOUT_PROPERTY:
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: \
+                                                      \"Crowdsale Purchase\" without valid property identifier");
+            case MP_INVALID_TX_IN_DB_FOUND:
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: Invalid transaction found");
+            case MP_TX_IS_NOT_MASTER_PROTOCOL:
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
         }
-        // create array of recipients
-        Array receiveArray;
-        uint64_t tmpAmount = 0;
-        uint64_t stoFee = 0;
-        s_stolistdb->getRecipients(hash, filterAddress, &receiveArray, &tmpAmount, &stoFee);
-        // add matches array and stofee to object
-        txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
-        txobj.push_back(Pair("recipients", receiveArray));
     }
+
     // return object
     return txobj;
 }

@@ -7,7 +7,7 @@
 
 class uint256;
 
-int populateRPCTransactionObject(const uint256& txid, json_spirit::Object* txobj, std::string filterAddress = "", bool typeSpecificDetails = false);
+int populateRPCTransactionObject(const uint256& txid, json_spirit::Object* txobj, std::string filterAddress = "", bool extendedDetails = false, std::string extendedDetailsFilter = "");
 
 
 #endif // OMNICORE_RPC_H
