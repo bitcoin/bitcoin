@@ -2371,6 +2371,8 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     Bitcoin_CBlockIndex *pindexDelete = (Bitcoin_CBlockIndex*)bitcoin_chainActive.Tip();
     assert(pindexDelete);
     bitcoin_mempool.check(bitcoin_pcoinsTip);
+
+    bool fastForwardClaimState = FastForwardClaimStateFor(pindexDelete->nHeight, pindexDelete->GetBlockHash());
     // Read block from disk.
     Bitcoin_CBlock block;
     if (!Bitcoin_ReadBlockFromDisk(block, pindexDelete))
@@ -2383,7 +2385,7 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
         if (!Bitcoin_DisconnectBlock(block, state, pindexDelete, view, credits_view, true))
             return error("Bitcoin: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         assert(view.Flush());
-        if(FastForwardClaimStateFor(pindexDelete->nHeight, pindexDelete->GetBlockHash())) {
+        if(fastForwardClaimState) {
             LogPrintf("Bitcoin: DisconnectTip(): fastforward claim state applied\n");
         	assert(credits_view.Claim_Flush());
         }
@@ -2393,6 +2395,13 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!Bitcoin_WriteChainState(state))
         return false;
+    if(fastForwardClaimState) {
+    	//Workaround to flush coins
+        if (credits_pcoinsTip->GetCacheSize() > bitcredit_nCoinCacheSize) {
+            if (!credits_pcoinsTip->Claim_Flush())
+                return state.Abort(_("Failed to write to coin database"));
+        }
+    }
     // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
@@ -2436,6 +2445,8 @@ bool static Bitcoin_DisconnectTipForClaim(CValidationState &state, Credits_CCoin
 bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pindexNew) {
     assert(pindexNew->pprev == bitcoin_chainActive.Tip());
     bitcoin_mempool.check(bitcoin_pcoinsTip);
+
+    bool fastForwardClaimState = FastForwardClaimStateFor(pindexNew->nHeight, pindexNew->GetBlockHash());
     // Read block from disk.
     Bitcoin_CBlock block;
     if (!Bitcoin_ReadBlockFromDisk(block, pindexNew))
@@ -2453,7 +2464,7 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
         }
         bitcoin_mapBlockSource.erase(inv.hash);
         assert(view.Flush());
-        if(FastForwardClaimStateFor(pindexNew->nHeight, pindexNew->GetBlockHash())) {
+        if(fastForwardClaimState) {
             LogPrintf("Bitcoin: ConnectTip(): fastforward claim state applied\n");
         	assert(claim_view.Claim_Flush());
         }
@@ -2463,6 +2474,13 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
     // Write the chain state to disk, if necessary.
     if (!Bitcoin_WriteChainState(state))
         return false;
+    if(fastForwardClaimState) {
+    	//Workaround to flush coins
+        if (credits_pcoinsTip->GetCacheSize() > bitcredit_nCoinCacheSize) {
+            if (!credits_pcoinsTip->Claim_Flush())
+                return state.Abort(_("Failed to write to coin database"));
+        }
+    }
     // Remove conflicting transactions from the mempool.
     list<Bitcoin_CTransaction> txConflicted;
     BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
