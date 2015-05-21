@@ -148,7 +148,7 @@ public:
       //Iterate through fundraiser data, serializing it with txid:val:val:val:val;
       bool crowdsale = !fixed && !manual;
       for(it = historicalData.begin(); it != historicalData.end(); it++) {
-         values += it->first.c_str();
+         values += it->first;
          if (crowdsale) {
            values += ":" + boost::lexical_cast<std::string>(it->second.at(0));
            values += ":" + boost::lexical_cast<std::string>(it->second.at(1));
@@ -296,7 +296,7 @@ public:
 
   virtual ~CMPSPInfo()
   {
-    if (msc_debug_persistence) file_log("CMPSPInfo closed\n");
+    if (msc_debug_persistence) PrintToLog("CMPSPInfo closed\n");
   }
 
   void init(unsigned int nextSPID = 0x3UL, unsigned int nextTestSPID = TEST_ECO_PROPERTY_1)

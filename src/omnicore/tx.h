@@ -201,12 +201,12 @@ public:
 
   void print()
   {
-    file_log("BLOCK: %d =txid: %s =fee: %1.8lf\n", block, txid.GetHex(), (double)tx_fee_paid/(double)COIN);
-    file_log("sender: %s ; receiver: %s\n", sender, receiver);
+    PrintToLog("BLOCK: %d =txid: %s =fee: %1.8lf\n", block, txid.GetHex(), (double)tx_fee_paid/(double)COIN);
+    PrintToLog("sender: %s ; receiver: %s\n", sender, receiver);
 
     if (0<pkt_size)
     {
-      file_log("pkt: %s\n", HexStr(pkt, pkt_size + pkt, false));
+      PrintToLog("pkt: %s\n", HexStr(pkt, pkt_size + pkt, false));
     }
     else
     {

@@ -406,7 +406,7 @@ void TradeHistoryDialog::UpdateData()
         txid.SetHex(ui->tradeHistoryTable->item(row,0)->text().toStdString());
         TradeHistoryMap::iterator hIter = tradeHistoryMap.find(txid);
         if (hIter == tradeHistoryMap.end()) {
-            file_log("UI Error: Transaction %s appears in tradeHistoryTable but cannot be found in tradeHistoryMap.\n", txid.GetHex());
+            PrintToLog("UI Error: Transaction %s appears in tradeHistoryTable but cannot be found in tradeHistoryMap.\n", txid.GetHex());
             continue;
         }
         TradeHistoryObject *tmpObjTH = &(hIter->second);

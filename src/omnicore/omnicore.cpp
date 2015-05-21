@@ -447,12 +447,12 @@ bool mastercore::parseAlertMessage(std::string rawAlertStr, int32_t *alertType, 
             *typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
             *verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
         } catch (const boost::bad_lexical_cast &e) {
-            file_log("DEBUG ALERT - error in converting values from global alert string\n");
+            PrintToLog("DEBUG ALERT - error in converting values from global alert string\n");
             return false; //(something went wrong)
         }
         *alertMessage = vstr[4];
         if ((*alertType < 1) || (*alertType > 4) || (*expiryValue == 0)) {
-            file_log("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, values are not as expected.\n");
+            PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, values are not as expected.\n");
             return false;
         }
         return true;
@@ -473,7 +473,7 @@ std::string mastercore::getMasterCoreAlertTextOnly()
         }
         else
         {
-            file_log("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, there are not 5 tokens\n");
+            PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, there are not 5 tokens\n");
             return "";
         }
     }
@@ -499,7 +499,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                      if (curBlock > expiryValue)
                      {
                          //the alert has expired, clear the global alert string
-                         file_log("DEBUG ALERT - Expiring alert string %s\n",global_alert_message.c_str());
+                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
                          global_alert_message = "";
                          return true;
                      }
@@ -508,7 +508,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                      if (curTime > expiryValue)
                      {
                          //the alert has expired, clear the global alert string
-                         file_log("DEBUG ALERT - Expiring alert string %s\n",global_alert_message.c_str());
+                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
                          global_alert_message = "";
                          return true;
                      }
@@ -517,7 +517,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                      if (OMNICORE_VERSION > expiryValue)
                      {
                          //the alert has expired, clear the global alert string
-                         file_log("DEBUG ALERT - Expiring alert string %s\n",global_alert_message.c_str());
+                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
                          global_alert_message = "";
                          return true;
                      }
@@ -537,7 +537,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                      {
                          // we know we have transactions live we don't understand
                          // can't be trusted to provide valid data, shutdown
-                         file_log("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
+                         PrintToLog("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
                          PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
                          if (!GetBoolArg("-overrideforcedshutdown", false)) {
                              std::string msgText = "Shutting down due to alert: " + getMasterCoreAlertTextOnly();
@@ -555,7 +555,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                      if (txSupported)
                      {
                          // we can simply expire this update as this version supports the new coming TX
-                         file_log("DEBUG ALERT - Expiring alert string %s\n",global_alert_message.c_str());
+                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n",global_alert_message);
                          global_alert_message = "";
                          return true;
                      }
@@ -587,7 +587,7 @@ int64_t prev = 0, owners = 0;
   {
       for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
       {
-          string address = (my_it->first).c_str();
+          string address = my_it->first;
           totalTokens += getMPbalance(address, propertyId, BALANCE);
           totalTokens += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
           totalTokens += getMPbalance(address, propertyId, METADEX_RESERVE);
@@ -619,7 +619,7 @@ int64_t before, after;
 
   if (0 == amount)
   {
-    file_log("%s(%s, %u=0x%X, %+ld, ttype= %d) 0 FUNDS !\n", __FUNCTION__, who.c_str(), which_property, which_property, amount, ttype);
+    PrintToLog("%s(%s, %u=0x%X, %+ld, ttype= %d) 0 FUNDS !\n", __FUNCTION__, who, which_property, which_property, amount, ttype);
     return false;
   }
 
@@ -639,14 +639,14 @@ int64_t before, after;
   bRet = tally.updateMoney(which_property, amount, ttype);
 
   after = getMPbalance(who, which_property, ttype);
-  if (!bRet) file_log("%s(%s, %u=0x%X, %+ld, ttype=%d) INSUFFICIENT FUNDS\n", __FUNCTION__, who.c_str(), which_property, which_property, amount, ttype);
+  if (!bRet) PrintToLog("%s(%s, %u=0x%X, %+ld, ttype=%d) INSUFFICIENT FUNDS\n", __FUNCTION__, who, which_property, which_property, amount, ttype);
 
   if (msc_debug_tally)
   {
     if ((exodus_address != who) || (exodus_address == who && msc_debug_exo))
     {
-      file_log("%s(%s, %u=0x%X, %+ld, ttype=%d); before=%ld, after=%ld\n",
-       __FUNCTION__, who.c_str(), which_property, which_property, amount, ttype, before, after);
+      PrintToLog("%s(%s, %u=0x%X, %+ld, ttype=%d); before=%ld, after=%ld\n",
+       __FUNCTION__, who, which_property, which_property, amount, ttype, before, after);
     }
   }
 
@@ -743,7 +743,7 @@ unsigned short version_TopAllowed;
 
     if (version_TopAllowed < version)
     {
-      file_log("Black Hole identified !!! %d, %u, %u, %u\n", txBlock, txProperty, txType, version);
+      PrintToLog("Black Hole identified !!! %d, %u, %u, %u\n", txBlock, txProperty, txType, version);
 
       bBlackHole = true;
 
@@ -786,7 +786,7 @@ const double available_reward=all_reward * part_available;
   devmsc = rounduint64(available_reward);
   exodus_delta = devmsc - exodus_prev;
 
-  if (msc_debug_exo) file_log("devmsc=%lu, exodus_prev=%lu, exodus_delta=%ld\n", devmsc, exodus_prev, exodus_delta);
+  if (msc_debug_exo) PrintToLog("devmsc=%lu, exodus_prev=%lu, exodus_delta=%ld\n", devmsc, exodus_prev, exodus_delta);
 
   // skip if a block's timestamp is older than that of a previous one!
   if (0>exodus_delta) return 0;
@@ -872,7 +872,7 @@ int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t Ex
     }
 
     uint64_t msc_tot= round( 100 * ExodusHighestValue * bonus ); 
-    if (msc_debug_exo) file_log("Exodus Fundraiser tx detected, tx %s generated %lu.%08lu\n",wtx.GetHash().ToString().c_str(), msc_tot / COIN, msc_tot % COIN);
+    if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %lu.%08lu\n",wtx.GetHash().ToString(), msc_tot / COIN, msc_tot % COIN);
  
     update_tally_map(sender, OMNI_PROPERTY_MSC, msc_tot, BALANCE);
     update_tally_map(sender, OMNI_PROPERTY_TMSC, msc_tot, BALANCE);
@@ -966,8 +966,8 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       }
   }
   if ((isNonMainNet() && getmoney_count)) {} else if ((!marker_count) && (!hasOmniBytes)) { return -1; } // no Exodus/omni marker, not a valid Omni transaction
-  file_log("____________________________________________________________________________________________________________________________________\n");
-  file_log("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime).c_str(), idx, wtx.GetHash().GetHex().c_str());
+  PrintToLog("____________________________________________________________________________________________________________________________________\n");
+  PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
 
 
   // ### DATA POPULATION ### - save output addresses, scripts, multsig and op_return data and determine tx class
@@ -981,7 +981,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
           strAddress = CBitcoinAddress(dest).ToString();
           if ((exodus_address != strAddress) && (validType)) {
-              if (msc_debug_parser_data) file_log("saving address_data #%d: %s:%s\n", i, strAddress.c_str(), wtx.vout[i].scriptPubKey.ToString().c_str());
+              if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", i, strAddress, wtx.vout[i].scriptPubKey.ToString());
               // saving for Class A processing or reference
               GetScriptPushes(wtx.vout[i].scriptPubKey, script_data);
               address_data.push_back(strAddress);
@@ -993,7 +993,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
               GetScriptPushes(wtx.vout[i].scriptPubKey, op_return_script_data); // only one OP_RETURN output permitted per tx
               string debug_op_string;
               if (op_return_script_data.size() > 0) debug_op_string=op_return_script_data[0];
-              if (msc_debug_parser_data) file_log("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex().c_str(), debug_op_string.c_str(), i);
+              if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, i);
           } else { // likeky a multisig
               txnouttype type;
               std::vector<CTxDestination> vDest;
@@ -1002,7 +1002,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
           }
       }
   }
-  if (msc_debug_parser_data) file_log(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
+  if (msc_debug_parser_data) PrintToLog(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
 
 
   // ### CLASS IDENTIFICATION ###
@@ -1015,7 +1015,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   int inputs_errors = 0;  // several types of erroroneous MP TX inputs
   map <string, uint64_t> inputs_sum_of_values;
   for (unsigned int i = 0; i < wtx.vin.size(); i++) {
-      if (msc_debug_vin) file_log("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString().c_str());
+      if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
       CTransaction txPrev;
       uint256 hashBlock;
       if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; } // get the vin's previous transaction
@@ -1030,7 +1030,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
           inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
       }
       else ++inputs_errors;
-      if (msc_debug_vin) file_log("vin=%d:%s\n", i, wtx.vin[i].ToString().c_str());
+      if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
   }
   if (inputs_errors) { return -101; } // not a valid Omni TX, disallowed inputs invalidate the transaction
   txFee = inAll - outAll; // miner fee
@@ -1039,14 +1039,14 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       uint64_t nTemp = my_it->second;
       if (nTemp > nMax) {
           strSender = my_it->first;
-          if (msc_debug_exo) file_log("looking for The Sender: %s , nMax=%lu, nTemp=%lu\n", strSender.c_str(), nMax, nTemp);
+          if (msc_debug_exo) PrintToLog("looking for The Sender: %s , nMax=%lu, nTemp=%lu\n", strSender, nMax, nTemp);
           nMax = nTemp;
       }
   }
   if (!strSender.empty()) {
-      if (msc_debug_verbose) file_log("The Sender: %s : His Input Sum of Values= %lu.%08lu ; fee= %lu.%08lu\n", strSender.c_str(), nMax / COIN, nMax % COIN, txFee/COIN, txFee%COIN);
+      if (msc_debug_verbose) PrintToLog("The Sender: %s : His Input Sum of Values= %lu.%08lu ; fee= %lu.%08lu\n", strSender, nMax / COIN, nMax % COIN, txFee/COIN, txFee%COIN);
   } else {
-      file_log("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex().c_str());
+      PrintToLog("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex());
       return -5;
   }
 
@@ -1065,16 +1065,16 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
           txnouttype type;
           std::vector<CTxDestination> vDest;
           int nRequired;
-          if (msc_debug_script) file_log("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
+          if (msc_debug_script) PrintToLog("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
           if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) {
-              if (msc_debug_script) file_log(" >> multisig: ");
+              if (msc_debug_script) PrintToLog(" >> multisig: ");
               BOOST_FOREACH(const CTxDestination &dest, vDest) {
                   CBitcoinAddress address = CBitcoinAddress(dest);
                   CKeyID keyID;
                   if (!address.GetKeyID(keyID)) { } // TODO: add an error handler
-                  if (msc_debug_script) file_log("%s ; ", address.ToString().c_str());
+                  if (msc_debug_script) PrintToLog("%s ; ", address.ToString());
               }
-              if (msc_debug_script) file_log("\n");
+              if (msc_debug_script) PrintToLog("\n");
               // ignore first public key, as it should belong to the sender
               // and it be used to avoid the creation of unspendable dust
               GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
@@ -1110,10 +1110,10 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
                   strDataAddress = address_data[k]; // record data address
                   dataAddressSeq = seq; // record data address seq num for reference matching
                   dataAddressValue = value_data[k]; // record data address amount for reference matching
-                  if (msc_debug_parser_data) file_log("Data Address located - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k].c_str(), address_data[k].c_str(), value_data[k] / COIN, value_data[k] % COIN);
+                  if (msc_debug_parser_data) PrintToLog("Data Address located - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], address_data[k], value_data[k] / COIN, value_data[k] % COIN);
               } else { // invalidate - Class A cannot be more than one data packet - possible collision, treat as default (BTC payment)
                   strDataAddress = ""; //empty strScriptData to block further parsing
-                  if (msc_debug_parser_data) file_log("Multiple Data Addresses found (collision?) Class A invalidated, defaulting to BTC payment\n");
+                  if (msc_debug_parser_data) PrintToLog("Multiple Data Addresses found (collision?) Class A invalidated, defaulting to BTC payment\n");
                   break;
               }
           }
@@ -1128,10 +1128,10 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
               if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (expectedRefAddressSeq == seq)) { // found reference address with matching sequence number
                   if (strRefAddress.empty()) { // confirm we have not already located a reference address
                       strRefAddress = address_data[k]; // set ref address
-                      if (msc_debug_parser_data) file_log("Reference Address located via seqnum - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k].c_str(), address_data[k].c_str(), value_data[k] / COIN, value_data[k] % COIN);
+                      if (msc_debug_parser_data) PrintToLog("Reference Address located via seqnum - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], address_data[k], value_data[k] / COIN, value_data[k] % COIN);
                   } else { // can't trust sequence numbers to provide reference address, there is a collision with >1 address with expected seqnum
                       strRefAddress = ""; // blank ref address
-                      if (msc_debug_parser_data) file_log("Reference Address sequence number collision, will fall back to evaluating matching output amounts\n");
+                      if (msc_debug_parser_data) PrintToLog("Reference Address sequence number collision, will fall back to evaluating matching output amounts\n");
                       break;
                   }
               }
@@ -1146,10 +1146,10 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
                           if (value_data[k] == ExodusValues[exodus_idx]) { //this output matches data address value and exodus address value, choose as ref
                               if (strRefAddress.empty()) {
                                   strRefAddress = address_data[k];
-                                  if (msc_debug_parser_data) file_log("Reference Address located via matching amounts - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k].c_str(), address_data[k].c_str(), value_data[k] / COIN, value_data[k] % COIN);
+                                  if (msc_debug_parser_data) PrintToLog("Reference Address located via matching amounts - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], address_data[k], value_data[k] / COIN, value_data[k] % COIN);
                               } else {
                                   strRefAddress = "";
-                                  if (msc_debug_parser_data) file_log("Reference Address collision, multiple potential candidates. Class A invalidated, defaulting to BTC payment\n");
+                                  if (msc_debug_parser_data) PrintToLog("Reference Address collision, multiple potential candidates. Class A invalidated, defaulting to BTC payment\n");
                                   break;
                               }
                           }
@@ -1161,13 +1161,13 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
       if (!strRefAddress.empty()) strReference=strRefAddress; // populate expected var strReference with chosen address (if not empty)
       if (strRefAddress.empty()) strDataAddress=""; // last validation step, if strRefAddress is empty, blank strDataAddress so we default to BTC payment
       if (!strDataAddress.empty()) { // valid Class A packet almost ready
-          if (msc_debug_parser_data) file_log("valid Class A:from=%s:to=%s:data=%s\n", strSender.c_str(), strReference.c_str(), strScriptData.c_str());
+          if (msc_debug_parser_data) PrintToLog("valid Class A:from=%s:to=%s:data=%s\n", strSender, strReference, strScriptData);
           packet_size = PACKET_SIZE_CLASS_A;
           memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
       } else {
           // ### BTC PAYMENT FOR DEX HANDLING ###
-          file_log("!! sender: %s , receiver: %s\n", strSender.c_str(), strReference.c_str());
-          file_log("!! this may be the BTC payment for an offer !!\n");
+          PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+          PrintToLog("!! this may be the BTC payment for an offer !!\n");
           // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
           int count = 0;
           for (unsigned int i = 0; i < wtx.vout.size(); i++) {
@@ -1175,7 +1175,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
               if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
                   const string strAddress = CBitcoinAddress(dest).ToString();
                   if (exodus_address == strAddress) continue;
-                  file_log("payment #%d %s %11.8lf\n", count, strAddress.c_str(), (double)wtx.vout[i].nValue/(double)COIN);
+                  PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double)wtx.vout[i].nValue/(double)COIN);
                   // check everything & pay BTC for the property we are buying here...
                   if (bRPConly) count = 55555;  // no real way to validate a payment during simple RPC call
                   else if (0 == DEx_payment(wtx.GetHash(), i, strAddress, strSender, wtx.vout[i].nValue, nBlock)) ++count;
@@ -1189,52 +1189,52 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   // ### CLASS B / CLASS C PARSING ###
   if ((omniClass == OMNI_CLASS_B) || (omniClass == OMNI_CLASS_C)) {
       unsigned int k = 0;
-      if (msc_debug_parser_data) file_log("Beginning reference identification\n");
+      if (msc_debug_parser_data) PrintToLog("Beginning reference identification\n");
       bool referenceFound = false; // bool to hold whether we've found the reference yet
       bool changeRemoved = false; // bool to hold whether we've ignored the first output to sender as change
       unsigned int potentialReferenceOutputs = 0; // int to hold number of potential reference outputs
       BOOST_FOREACH(const string &addr, address_data) { // how many potential reference outputs do we have, if just one select it right here
-          if (msc_debug_parser_data) file_log("ref? data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k].c_str(), addr.c_str(), value_data[k] / COIN, value_data[k] % COIN);
+          if (msc_debug_parser_data) PrintToLog("ref? data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], addr, value_data[k] / COIN, value_data[k] % COIN);
           ++k;
           if (addr != exodus_address) {
               ++potentialReferenceOutputs;
               if (1 == potentialReferenceOutputs) {
                   strReference = addr;
                   referenceFound = true;
-                  if (msc_debug_parser_data) file_log("Single reference potentially id'd as follows: %s \n", strReference.c_str());
+                  if (msc_debug_parser_data) PrintToLog("Single reference potentially id'd as follows: %s \n", strReference);
               } else { //as soon as potentialReferenceOutputs > 1 we need to go fishing
                   strReference = ""; // avoid leaving strReference populated for sanity
                   referenceFound = false;
-                  if (msc_debug_parser_data) file_log("More than one potential reference candidate, blanking strReference, need to go fishing\n");
+                  if (msc_debug_parser_data) PrintToLog("More than one potential reference candidate, blanking strReference, need to go fishing\n");
               }
           }
       }
       if (!referenceFound) { // do we have a reference now? or do we need to dig deeper
-          if (msc_debug_parser_data) file_log("Reference has not been found yet, going fishing\n");
+          if (msc_debug_parser_data) PrintToLog("Reference has not been found yet, going fishing\n");
           BOOST_FOREACH(const string &addr, address_data) {
               if (addr != exodus_address) { // removed strSender restriction, not to spec
                   if ((addr == strSender) && (!changeRemoved)) {
                       changeRemoved = true; // per spec ignore first output to sender as change if multiple possible ref addresses
-                      if (msc_debug_parser_data) file_log("Removed change\n");
+                      if (msc_debug_parser_data) PrintToLog("Removed change\n");
                   } else {
                       strReference = addr; // this may be set several times, but last time will be highest vout
-                      if (msc_debug_parser_data) file_log("Resetting strReference as follows: %s \n ", strReference.c_str());
+                      if (msc_debug_parser_data) PrintToLog("Resetting strReference as follows: %s \n ", strReference);
                   }
               }
           }
       }
-      if (msc_debug_parser_data) file_log("Ending reference identification\nFinal decision on reference identification is: %s\n", strReference.c_str());
-      if (msc_debug_parser) file_log("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+      if (msc_debug_parser_data) PrintToLog("Ending reference identification\nFinal decision on reference identification is: %s\n", strReference);
+      if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
       // ### CLASS B SPECIFC PARSING ###
       if (omniClass == OMNI_CLASS_B) {
           for (unsigned int k = 0; k<multisig_script_data.size();k++) {
-              if (msc_debug_parser) file_log("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+              if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
               CPubKey key(ParseHex(multisig_script_data[k]));
               CKeyID keyID = key.GetID();
               string strAddress = CBitcoinAddress(keyID).ToString();
               char *c_addr_type = (char *)"";
               string strPacket;
-              if (msc_debug_parser) file_log("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+              if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
               vector<unsigned char>hash = ParseHex(strObfuscatedHashes[mdata_count+1]);
               vector<unsigned char>packet = ParseHex(multisig_script_data[k].substr(2*1,2*PACKET_SIZE));
               for (unsigned int i=0;i<packet.size();i++) { // this is a data packet, must deobfuscate now
@@ -1244,16 +1244,16 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
               strPacket = HexStr(packet.begin(),packet.end(), false);
               ++mdata_count;
               if (MAX_PACKETS <= mdata_count) {
-                  file_log("increase MAX_PACKETS ! mdata_count= %d\n", mdata_count);
+                  PrintToLog("increase MAX_PACKETS ! mdata_count= %d\n", mdata_count);
                   return -222;
               }
-              if (msc_debug_parser_data) file_log("multisig_data[%d]:%s: %s%s\n", k, multisig_script_data[k].c_str(), strAddress.c_str(), c_addr_type);
-              if (!strPacket.empty()) { if (msc_debug_parser) file_log("packet #%d: %s\n", mdata_count, strPacket.c_str()); }
-              if (msc_debug_parser) file_log("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+              if (msc_debug_parser_data) PrintToLog("multisig_data[%d]:%s: %s%s\n", k, multisig_script_data[k], strAddress, c_addr_type);
+              if (!strPacket.empty()) { if (msc_debug_parser) PrintToLog("packet #%d: %s\n", mdata_count, strPacket); }
+              if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
           }
           packet_size = mdata_count * (PACKET_SIZE - 1);
           if (sizeof(single_pkt)<packet_size) return -111;
-          if (msc_debug_parser) file_log("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+          if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
       }
       // ### CLASS C SPECIFIC PARSING ###
       if (omniClass == OMNI_CLASS_C) {
@@ -1271,17 +1271,17 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
 
   // ### FINALIZE CLASS B ###
   for (int m=0;m<mdata_count;m++) { // now decode mastercoin packets
-      if (msc_debug_parser) file_log("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false).c_str());
+      if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
       // check to ensure the sequence numbers are sequential and begin with 01 !
       if (1+m != packets[m][0]) {
-          if (msc_debug_spec) file_log("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1+m, packets[m][0]);
+          if (msc_debug_spec) PrintToLog("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1+m, packets[m][0]);
       }
       memcpy(m*(PACKET_SIZE-1)+single_pkt, 1+packets[m], PACKET_SIZE-1); // now ignoring sequence numbers for Class B packets
   }
 
 
   // ### SET MP TX INFO ###
-  if (msc_debug_verbose) file_log("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false).c_str());
+  if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
   mp_tx->Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
   return 0;
 }
@@ -1342,7 +1342,7 @@ static int msc_initial_scan(int nFirstBlock)
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
         if (ShutdownRequested()) {
-            file_log("Shutdown requested, stop scan at block %d of %d\n", nBlock, nLastBlock);
+            PrintToLog("Shutdown requested, stop scan at block %d of %d\n", nBlock, nLastBlock);
             break;
         }
 
@@ -1355,7 +1355,7 @@ static int msc_initial_scan(int nFirstBlock)
         if (NULL == pblockindex) break;
         std::string strBlockHash = pblockindex->GetBlockHash().GetHex();
 
-        if (msc_debug_exo) file_log("%s(%d; max=%d):%s, line %d, file: %s\n",
+        if (msc_debug_exo) PrintToLog("%s(%d; max=%d):%s, line %d, file: %s\n",
             __FUNCTION__, nBlock, nLastBlock, strBlockHash, __LINE__, __FILE__);
 
         CBlock block;
@@ -1652,14 +1652,14 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
   if (msc_debug_persistence)
   {
     LogPrintf("Loading %s ... \n", filename);
-    file_log("%s(%s), line %d, file: %s\n", __FUNCTION__, filename.c_str(), __LINE__, __FILE__);
+    PrintToLog("%s(%s), line %d, file: %s\n", __FUNCTION__, filename, __LINE__, __FILE__);
   }
 
   std::ifstream file;
   file.open(filename.c_str());
   if (!file.is_open())
   {
-    if (msc_debug_persistence) LogPrintf("%s(%s): file not found, line %d, file: %s\n", __FUNCTION__, filename.c_str(), __LINE__, __FILE__);
+    if (msc_debug_persistence) LogPrintf("%s(%s): file not found, line %d, file: %s\n", __FUNCTION__, filename, __LINE__, __FILE__);
     return -1;
   }
 
@@ -1706,12 +1706,12 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
     SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
 
     if (false == boost::iequals(hash2.ToString(), fileHash)) {
-      file_log("File %s loaded, but failed hash validation!\n", filename.c_str());
+      PrintToLog("File %s loaded, but failed hash validation!\n", filename);
       res = -1;
     }
   }
 
-  file_log("%s(%s), loaded lines= %d, res= %d\n", __FUNCTION__, filename.c_str(), lines, res);
+  PrintToLog("%s(%s), loaded lines= %d, res= %d\n", __FUNCTION__, filename, lines, res);
   LogPrintf("%s(): file: %s , loaded lines= %d, res= %d\n", __FUNCTION__, filename, lines, res);
 
   return res;
@@ -2032,7 +2032,7 @@ static void prune_state_files( CBlockIndex const *topIndex )
     std::string fName = dIter->path().empty() ? "<invalid>" : (*--dIter->path().end()).string();
     if (false == boost::filesystem::is_regular_file(dIter->status())) {
       // skip funny business
-      file_log("Non-regular file found in persistence directory : %s\n", fName.c_str());
+      PrintToLog("Non-regular file found in persistence directory : %s\n", fName);
       continue;
     }
 
@@ -2045,7 +2045,7 @@ static void prune_state_files( CBlockIndex const *topIndex )
       blockHash.SetHex(vstr[1]);
       statefulBlockHashes.insert(blockHash);
     } else {
-      file_log("None state file found in persistence directory : %s\n", fName.c_str());
+      PrintToLog("None state file found in persistence directory : %s\n", fName);
     }
   }
 
@@ -2060,9 +2060,9 @@ static void prune_state_files( CBlockIndex const *topIndex )
      if (msc_debug_persistence)
      {
       if (curIndex) {
-        file_log("State from Block:%s is no longer need, removing files (age-from-tip: %d)\n", (*iter).ToString().c_str(), topIndex->nHeight - curIndex->nHeight);
+        PrintToLog("State from Block:%s is no longer need, removing files (age-from-tip: %d)\n", (*iter).ToString(), topIndex->nHeight - curIndex->nHeight);
       } else {
-        file_log("State from Block:%s is no longer need, removing files (not in index)\n", (*iter).ToString().c_str());
+        PrintToLog("State from Block:%s is no longer need, removing files (not in index)\n", (*iter).ToString());
       }
      }
 
@@ -2132,7 +2132,7 @@ int mastercore_init()
   InitDebugLogLevels();
   ShrinkDebugLog();
 
-  file_log("\n%s OMNICORE INIT, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+  PrintToLog("\n%s OMNICORE INIT, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
 
   if (isNonMainNet())
   {
@@ -2146,12 +2146,12 @@ int mastercore_init()
 
   // check for --autocommit option and set transaction commit flag accordingly
   if (!GetBoolArg("-autocommit", true)) {
-      file_log("Process was started with --autocommit set to false.  Created omni transactions will not be committed to wallet or broadcast.");
+      PrintToLog("Process was started with --autocommit set to false.  Created omni transactions will not be committed to wallet or broadcast.");
       autoCommit = false;
   }
   // check for --startclean option and delete MP_ folders if present
   if (GetBoolArg("-startclean", false)) {
-      file_log("Process was started with --startclean option, attempting to clear persistence files...");
+      PrintToLog("Process was started with --startclean option, attempting to clear persistence files...");
       try
       {
           boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
@@ -2164,11 +2164,11 @@ int mastercore_init()
           if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
           if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
           if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
-          file_log("Success clearing persistence files (did not raise any exceptions).");
+          PrintToLog("Success clearing persistence files (did not raise any exceptions).");
       }
       catch(boost::filesystem::filesystem_error const & e)
       {
-          file_log("Exception deleting folders for --startclean option.\n");
+          PrintToLog("Exception deleting folders for --startclean option.\n");
           PrintToConsole("Exception deleting folders for --startclean option.\n");
       }
   }
@@ -2257,7 +2257,7 @@ int mastercore_init()
   // collect the real Exodus balances available at the snapshot time
   // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  file_log("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+  PrintToLog("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
   // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
   (void) p_txlistdb->setLastAlert(nWaterlineBlock);
@@ -2266,7 +2266,7 @@ int mastercore_init()
 
   // display Exodus balance
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  file_log("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+  PrintToLog("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
   PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
   PrintToConsole("Omni Core initialization completed\n");
@@ -2301,7 +2301,7 @@ int mastercore_shutdown()
         _my_sps = NULL;
     }
 
-    file_log("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToLog("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     PrintToConsole("Omni Core shutdown completed\n");
 
     return 0;
@@ -2332,7 +2332,7 @@ int interp_ret = -555555, pop_ret;
   // true MP transaction, validity (such as insufficient funds, or offer not found) is determined elsewhere
 
     interp_ret = mp_obj.interpretPacket();
-    if (interp_ret) file_log("!!! interpretPacket() returned %d !!!\n", interp_ret);
+    if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
 
     // of course only MP-related TXs get recorded
     if (!disableLevelDB)
@@ -2430,9 +2430,9 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
 
           sAddress = CBitcoinAddress(dest).ToString();
           if (msc_debug_tokens)
-            file_log("%s:IsMine()=%s:IsSpent()=%s:%s: i=%d, nValue= %lu\n",
-                sAddress.c_str(), bIsMine ? "yes" : "NO",
-                bIsSpent ? "YES" : "no", wtxid.ToString().c_str(), i, n);
+            PrintToLog("%s:IsMine()=%s:IsSpent()=%s:%s: i=%d, nValue= %lu\n",
+                sAddress, bIsMine ? "yes" : "NO",
+                bIsSpent ? "YES" : "no", wtxid.ToString(), i, n);
 
           // only use funds from the Sender's address for our MP transaction
           // TODO: may want to a little more selective here, i.e. use smallest possible (~0.1 BTC), but large amounts lead to faster confirmations !
@@ -2505,7 +2505,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const 
             if (!redemptionAddress.empty()) { address.SetString(redemptionAddress); } else { address.SetString(senderAddress); }
             if (wallet && address.IsValid()) { // validate the redemption address
                 if (address.IsScript()) {
-                    file_log("%s() ERROR: Redemption Address must be specified !\n", __FUNCTION__);
+                    PrintToLog("%s() ERROR: Redemption Address must be specified !\n", __FUNCTION__);
                     return MP_REDEMP_ILLEGAL;
                 } else {
                     CKeyID keyID;
@@ -2544,7 +2544,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const 
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
-        file_log("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString().c_str(), nFeeRet, __LINE__, __FILE__);
+        PrintToLog("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString(), nFeeRet, __LINE__, __FILE__);
         if (!wallet->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
         txid = wtxNew.GetHash();
         return 0;
@@ -2559,13 +2559,12 @@ int CMPTxList::setLastAlert(int blockHeight)
     Iterator* it = NewIterator();
     string lastAlertTxid;
     string lastAlertData;
-    string itData;
     int64_t lastAlertBlock = 0;
     for(it->SeekToFirst(); it->Valid(); it->Next())
     {
        skey = it->key();
        svalue = it->value();
-       string itData = svalue.ToString().c_str();
+       string itData = svalue.ToString();
        std::vector<std::string> vstr;
        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
        // we expect 5 tokens
@@ -2577,8 +2576,8 @@ int CMPTxList::setLastAlert(int blockHeight)
                {
                    if ( (atoi(vstr[1]) > lastAlertBlock) && (atoi(vstr[1]) < blockHeight) ) // is it the most recent and within our parsed range?
                    {
-                      lastAlertTxid = skey.ToString().c_str();
-                      lastAlertData = svalue.ToString().c_str();
+                      lastAlertTxid = skey.ToString();
+                      lastAlertData = svalue.ToString();
                       lastAlertBlock = atoi(vstr[1]);
                    }
                }
@@ -2590,11 +2589,11 @@ int CMPTxList::setLastAlert(int blockHeight)
     // if lastAlertTxid is not empty, load the alert and see if it's still valid - if so, copy to global_alert_message
     if(lastAlertTxid.empty())
     {
-        file_log("DEBUG ALERT No alerts found to load\n");
+        PrintToLog("DEBUG ALERT No alerts found to load\n");
     }
     else
     {
-        file_log("DEBUG ALERT Loading lastAlertTxid %s\n", lastAlertTxid);
+        PrintToLog("DEBUG ALERT Loading lastAlertTxid %s\n", lastAlertTxid);
 
         // reparse lastAlertTxid
         uint256 hash;
@@ -2603,7 +2602,7 @@ int CMPTxList::setLastAlert(int blockHeight)
         uint256 blockHash = 0;
         if (!GetTransaction(hash, wtx, blockHash, true)) //can't find transaction
         {
-            file_log("DEBUG ALERT Unable to load lastAlertTxid, transaction not found\n");
+            PrintToLog("DEBUG ALERT Unable to load lastAlertTxid, transaction not found\n");
         }
         else // note reparsing here is unavoidable because we've only loaded a txid and have no other alert info stored
         {
@@ -2642,12 +2641,12 @@ uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
   {
       skey = it->key();
       svalue = it->value();
-      string svalueStr = svalue.ToString().c_str();
+      string svalueStr = svalue.ToString();
       boost::split(vstr, svalueStr, boost::is_any_of(":"), token_compress_on);
       // obtain the existing affected tx count
       if (3 <= vstr.size())
       {
-          if (vstr[0] == txidStr) { delete it; cancelTxid.SetHex(skey.ToString().c_str()); return cancelTxid; }
+          if (vstr[0] == txidStr) { delete it; cancelTxid.SetHex(skey.ToString()); return cancelTxid; }
       }
   }
 
@@ -2720,7 +2719,7 @@ int CMPTxList::getMPTransactionCountBlock(int block)
         svalue = it->value();
         if (skey.ToString().length() == 64)
         {
-            string strValue = svalue.ToString().c_str();
+            string strValue = svalue.ToString();
             std::vector<std::string> vstr;
             boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
             if (4 == vstr.size())
@@ -2797,11 +2796,11 @@ void CMPTxList::recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &
        // Step 3 - Create new/update master record for cancel tx in TXList
        const string key = txidMasterStr;
        const string value = strprintf("%u:%d:%u:%lu", fValid ? 1:0, nBlock, type, refNumber);
-       file_log("METADEXCANCELDEBUG : Writing master record %s(%s, valid=%s, block= %d, type= %d, number of affected transactions= %d)\n", __FUNCTION__, txidMaster.ToString().c_str(), fValid ? "YES":"NO", nBlock, type, refNumber);
+       PrintToLog("METADEXCANCELDEBUG : Writing master record %s(%s, valid=%s, block= %d, type= %d, number of affected transactions= %d)\n", __FUNCTION__, txidMaster.ToString(), fValid ? "YES":"NO", nBlock, type, refNumber);
        if (pdb)
        {
            status = pdb->Put(writeoptions, key, value);
-           file_log("METADEXCANCELDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+           PrintToLog("METADEXCANCELDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
        }
 
        // Step 4 - Write sub-record with cancel details
@@ -2809,11 +2808,11 @@ void CMPTxList::recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &
        const string subKey = STR_REF_SUBKEY_TXID_REF_COMBO(txidStr);
        const string subValue = strprintf("%s:%d:%lu", txidSub.ToString(), propertyId, nValue);
        Status subStatus;
-       file_log("METADEXCANCELDEBUG : Writing sub-record %s with value %s\n", subKey.c_str(), subValue.c_str());
+       PrintToLog("METADEXCANCELDEBUG : Writing sub-record %s with value %s\n", subKey, subValue);
        if (pdb)
        {
            subStatus = pdb->Put(writeoptions, subKey, subValue);
-           file_log("METADEXCANCELDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, subStatus.ToString().c_str(), __LINE__, __FILE__);
+           PrintToLog("METADEXCANCELDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, subStatus.ToString(), __LINE__, __FILE__);
        }
 }
 
@@ -2857,11 +2856,11 @@ void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, un
        const string key = txid.ToString();
        const string value = strprintf("%u:%d:%u:%lu", fValid ? 1:0, nBlock, type, numberOfPayments); 
        Status status;
-       file_log("DEXPAYDEBUG : Writing master record %s(%s, valid=%s, block= %d, type= %d, number of payments= %lu)\n", __FUNCTION__, txid.ToString().c_str(), fValid ? "YES":"NO", nBlock, type, numberOfPayments);
+       PrintToLog("DEXPAYDEBUG : Writing master record %s(%s, valid=%s, block= %d, type= %d, number of payments= %lu)\n", __FUNCTION__, txid.ToString(), fValid ? "YES":"NO", nBlock, type, numberOfPayments);
        if (pdb)
        {
            status = pdb->Put(writeoptions, key, value);
-           file_log("DEXPAYDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+           PrintToLog("DEXPAYDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
        }
 
        // Step 4 - Write sub-record with payment details
@@ -2869,11 +2868,11 @@ void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, un
        const string subKey = STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(txidStr);
        const string subValue = strprintf("%d:%s:%s:%d:%lu", vout, buyer, seller, propertyId, nValue);
        Status subStatus;
-       file_log("DEXPAYDEBUG : Writing sub-record %s with value %s\n", subKey.c_str(), subValue.c_str());
+       PrintToLog("DEXPAYDEBUG : Writing sub-record %s with value %s\n", subKey, subValue);
        if (pdb)
        {
            subStatus = pdb->Put(writeoptions, subKey, subValue);
-           file_log("DEXPAYDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, subStatus.ToString().c_str(), __LINE__, __FILE__);
+           PrintToLog("DEXPAYDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, subStatus.ToString(), __LINE__, __FILE__);
        }
 }
 
@@ -2883,20 +2882,20 @@ void CMPTxList::recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned 
 
   // overwrite detection, we should never be overwriting a tx, as that means we have redone something a second time
   // reorgs delete all txs from levelDB above reorg_chain_height
-  if (p_txlistdb->exists(txid)) file_log("LEVELDB TX OVERWRITE DETECTION - %s\n", txid.ToString().c_str());
+  if (p_txlistdb->exists(txid)) PrintToLog("LEVELDB TX OVERWRITE DETECTION - %s\n", txid.ToString());
 
 const string key = txid.ToString();
 const string value = strprintf("%u:%d:%u:%lu", fValid ? 1:0, nBlock, type, nValue);
 Status status;
 
-  file_log("%s(%s, valid=%s, block= %d, type= %d, value= %lu)\n",
-   __FUNCTION__, txid.ToString().c_str(), fValid ? "YES":"NO", nBlock, type, nValue);
+  PrintToLog("%s(%s, valid=%s, block= %d, type= %d, value= %lu)\n",
+   __FUNCTION__, txid.ToString(), fValid ? "YES":"NO", nBlock, type, nValue);
 
   if (pdb)
   {
     status = pdb->Put(writeoptions, key, value);
     ++nWritten;
-    if (msc_debug_txdb) file_log("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+    if (msc_debug_txdb) PrintToLog("%s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
   }
 }
 
@@ -2931,7 +2930,7 @@ Status status = pdb->Get(readoptions, txid.ToString(), &value);
 
 void CMPTxList::printStats()
 {
-  file_log("CMPTxList stats: nWritten= %d , nRead= %d\n", nWritten, nRead);
+  PrintToLog("CMPTxList stats: nWritten= %d , nRead= %d\n", nWritten, nRead);
 }
 
 void CMPTxList::printAll()
@@ -2984,7 +2983,7 @@ unsigned int n_found = 0;
       if ((starting_block <= block) && (block <= ending_block))
       {
         ++n_found;
-        file_log("%s() DELETING: %s=%s\n", __FUNCTION__, skey.ToString().c_str(), svalue.ToString().c_str());
+        PrintToLog("%s() DELETING: %s=%s\n", __FUNCTION__, skey.ToString(), svalue.ToString());
         if (bDeleteFound) pdb->Delete(writeoptions, skey);
       }
     }
@@ -3089,7 +3088,7 @@ void CMPSTOList::getRecipients(const uint256 txid, string filterAddress, Array *
                           propertyId = boost::lexical_cast<uint64_t>(svstr[2]);
                       } catch (const boost::bad_lexical_cast &e)
                       {
-                          file_log("DEBUG STO - error in converting values from leveldb\n");
+                          PrintToLog("DEBUG STO - error in converting values from leveldb\n");
                           delete it;
                           return; //(something went wrong)
                       }
@@ -3147,7 +3146,7 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
           // add details to record
           // see if we are overwriting (check)
           size_t txidMatch = strValue.find(txid.ToString());
-          if(txidMatch!=std::string::npos) file_log("STODEBUG : Duplicating entry for %s : %s\n",address,txid.ToString());
+          if(txidMatch!=std::string::npos) PrintToLog("STODEBUG : Duplicating entry for %s : %s\n",address,txid.ToString());
 
           const string key = address;
           const string newValue = strprintf("%s:%d:%u:%lu,", txid.ToString(), nBlock, propertyId, amount);
@@ -3157,7 +3156,7 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
           if (pdb)
           {
               status = pdb->Put(writeoptions, key, strValue);
-              file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+              PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
           }
       }
   }
@@ -3169,7 +3168,7 @@ void CMPSTOList::recordSTOReceive(string address, const uint256 &txid, int nBloc
       if (pdb)
       {
           status = pdb->Put(writeoptions, key, value);
-          file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+          PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
       }
   }
 }
@@ -3193,7 +3192,7 @@ void CMPSTOList::printAll()
 
 void CMPSTOList::printStats()
 {
-  file_log("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
+  PrintToLog("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 // delete any STO receipts after blockNum
@@ -3233,8 +3232,8 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
         if (pdb)
         {
             status = pdb->Put(writeoptions, key, newValue);
-            file_log("DEBUG STO - rewriting STO data after reorg\n");
-            file_log("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString().c_str(), __LINE__, __FILE__);
+            PrintToLog("DEBUG STO - rewriting STO data after reorg\n");
+            PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
         }
     }
   }
@@ -3347,7 +3346,7 @@ void CMPTradeList::recordTrade(const uint256 txid1, const uint256 txid2, string 
   {
     status = pdb->Put(writeoptions, key, value);
     ++nWritten;
-    if (msc_debug_tradedb) file_log("%s(): %s\n", __FUNCTION__, status.ToString().c_str());
+    if (msc_debug_tradedb) PrintToLog("%s(): %s\n", __FUNCTION__, status.ToString());
   }
 }
 
@@ -3375,7 +3374,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
       if (block >= blockNum)
       {
         ++n_found;
-        file_log("%s() DELETING FROM TRADEDB: %s=%s\n", __FUNCTION__, skey.ToString().c_str(), svalue.ToString().c_str());
+        PrintToLog("%s() DELETING FROM TRADEDB: %s=%s\n", __FUNCTION__, skey.ToString(), svalue.ToString());
         pdb->Delete(writeoptions, skey);
       }
     }
@@ -3390,7 +3389,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
 
 void CMPTradeList::printStats()
 {
-  file_log("CMPTradeList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
+  PrintToLog("CMPTradeList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
 int CMPTradeList::getMPTradeCountTotal()
@@ -3417,7 +3416,7 @@ void CMPTradeList::printAll()
     skey = it->key();
     svalue = it->value();
     ++count;
-    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString().c_str(), svalue.ToString().c_str());
+    PrintToConsole("entry #%8d= %s:%s\n", count, skey.ToString(), svalue.ToString());
   }
 
   delete it;
@@ -3445,7 +3444,7 @@ bool mastercore::getValidMPTX(const uint256 &txid, int *block, unsigned int *typ
 string result;
 int validity = 0;
 
-  if (msc_debug_txdb) file_log("%s()\n", __FUNCTION__);
+  if (msc_debug_txdb) PrintToLog("%s()\n", __FUNCTION__);
 
   if (!p_txlistdb) return false;
 
@@ -3455,7 +3454,7 @@ int validity = 0;
   std::vector<std::string> vstr;
   boost::split(vstr, result, boost::is_any_of(":"), token_compress_on);
 
-  file_log("%s() size=%lu : %s\n", __FUNCTION__, vstr.size(), result.c_str());
+  PrintToLog("%s() size=%lu : %s\n", __FUNCTION__, vstr.size(), result);
 
   if (1 <= vstr.size()) validity = atoi(vstr[0]);
 
@@ -3544,14 +3543,14 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
   unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
 
   if (how_many_erased)
-    file_log("%s(%d); erased %u accepts this block, line %d, file: %s\n",
+    PrintToLog("%s(%d); erased %u accepts this block, line %d, file: %s\n",
         __FUNCTION__, how_many_erased, nBlockNow, __LINE__, __FILE__);
 
   // calculate devmsc as of this block and update the Exodus' balance
   devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
 
   if (msc_debug_exo)
-    file_log("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
+    PrintToLog("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
         devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
 
   // get the total MSC for this wallet, for QT display
@@ -3720,7 +3719,7 @@ std::string new_global_alert_message;
 
         const unsigned int id = _my_sps->putSP(ecosystem, newSP);
         my_crowds.insert(std::make_pair(sender, CMPCrowd(id, nValue, property, deadline, early_bird, percentage, 0, 0)));
-        file_log("CREATED CROWDSALE id: %u value: %lu property: %u\n", id, nValue, property);  
+        PrintToLog("CREATED CROWDSALE id: %u value: %lu property: %u\n", id, nValue, property);  
       }
       rc = 0;
       break;
@@ -3736,7 +3735,7 @@ std::string new_global_alert_message;
         memcpy(&property, &pkt[4], 4);
         swapByteOrder32(property);
 
-        if (msc_debug_sp) file_log("%s() trying to ERASE CROWDSALE for propid= %u=%X\n", __FUNCTION__, property, property);
+        if (msc_debug_sp) PrintToLog("%s() trying to ERASE CROWDSALE for propid= %u=%X\n", __FUNCTION__, property, property);
 
         // ensure we are closing the crowdsale which we opened by checking the property
         if ((it->second).getPropertyId() != property)
@@ -3804,7 +3803,7 @@ std::string new_global_alert_message;
         newSP.manual = true;
 
         const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        file_log("CREATED MANUAL PROPERTY id: %u admin: %s \n", id, sender.c_str());
+        PrintToLog("CREATED MANUAL PROPERTY id: %u admin: %s \n", id, sender);
       }
       rc = 0;
       break;
@@ -3840,7 +3839,7 @@ std::string new_global_alert_message;
       }
       else
       {
-        file_log("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
+        PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
       }
 
       rc = logicMath_SendToOwners(fp);
@@ -3937,7 +3936,7 @@ int invalid = 0;  // unused
           CMPSPInfo::Entry sp;
           bool spFound = _my_sps->getSP(crowd->getPropertyId(), sp);
 
-          file_log("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver.c_str());
+          PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
           
           if (spFound)
           {
@@ -3946,7 +3945,7 @@ int invalid = 0;  // unused
             //pass this in by reference to determine if max_tokens has been reached
             bool close_crowdsale = false; 
             //get txid
-            string sp_txid =  sp.txid.GetHex().c_str();
+            string sp_txid =  sp.txid.GetHex();
 
             //Units going into the calculateFundraiser function must
             //match the unit of the fundraiser's property_type.
@@ -4019,7 +4018,7 @@ int rc = PKT_ERROR_STO -1000;
       // totalTokens will be 0 for non-existing property
       int64_t totalTokens = getTotalTokens(property);
 
-      file_log("\t    Total Tokens: %s\n", FormatMP(property, totalTokens).c_str());
+      PrintToLog("\t    Total Tokens: %s\n", FormatMP(property, totalTokens));
 
       if (0 >= totalTokens)
       {
@@ -4060,7 +4059,7 @@ int rc = PKT_ERROR_STO -1000;
         }
       }
 
-      file_log("  Excluding Sender: %s\n", FormatMP(property, totalTokens).c_str());
+      PrintToLog("  Excluding Sender: %s\n", FormatMP(property, totalTokens));
 
       // determine which property the fee will be paid in
       const unsigned int feeProperty = isTestEcosystemProperty(property) ? OMNI_PROPERTY_TMSC : OMNI_PROPERTY_MSC;
@@ -4110,7 +4109,7 @@ int rc = PKT_ERROR_STO -1000;
 
           if (sent_so_far >= nValue)
           {
-            file_log("SendToOwners: DONE HERE : those who could get paid got paid, SOME DID NOT, but that's ok\n");
+            PrintToLog("SendToOwners: DONE HERE : those who could get paid got paid, SOME DID NOT, but that's ok\n");
             break; // done here, everybody who could get paid got paid
           }
         }
@@ -4120,8 +4119,8 @@ int rc = PKT_ERROR_STO -1000;
           if (will_really_receive > 0) ++n_owners;
 
           if (msc_debug_sto)
-            file_log("%14lu = %s, temp= %38s, should_get= %19lu, will_really_get= %14lu, sent_so_far= %14lu\n",
-            owns, address.c_str(), temp.str(), should_receive, will_really_receive, sent_so_far);
+            PrintToLog("%14lu = %s, temp= %38s, should_get= %19lu, will_really_get= %14lu, sent_so_far= %14lu\n",
+            owns, address, temp.str(), should_receive, will_really_receive, sent_so_far);
 
           // record the detailed info as needed
           if (fhandle) fprintf(fhandle, "%s = %s\n", address.c_str(), FormatMP(property, will_really_receive).c_str());
@@ -4136,10 +4135,10 @@ int rc = PKT_ERROR_STO -1000;
           return (PKT_ERROR_STO -4);
         }
 
-        file_log("\t          Owners: %lu\n", n_owners);
+        PrintToLog("\t          Owners: %lu\n", n_owners);
 
         const int64_t nXferFee = TRANSFER_FEE_PER_OWNER * n_owners;
-        file_log("\t    Transfer fee: %lu.%08lu %s\n", nXferFee/COIN, nXferFee%COIN, strMPProperty(feeProperty).c_str());
+        PrintToLog("\t    Transfer fee: %lu.%08lu %s\n", nXferFee/COIN, nXferFee%COIN, strMPProperty(feeProperty));
 
         // enough coins to pay the fee?
         if (getMPbalance(sender, feeProperty, BALANCE) < nXferFee)
@@ -4167,7 +4166,7 @@ int rc = PKT_ERROR_STO -1000;
       // sent_so_far must equal nValue here
       if (sent_so_far != nValue)
       {
-        file_log("sent_so_far= %14lu, nValue= %14lu, n_owners= %lu\n", sent_so_far, nValue, n_owners);
+        PrintToLog("sent_so_far= %14lu, nValue= %14lu, n_owners= %lu\n", sent_so_far, nValue, n_owners);
 
         // rc = ???
       }
