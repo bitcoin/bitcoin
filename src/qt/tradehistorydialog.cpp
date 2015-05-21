@@ -567,7 +567,7 @@ void TradeHistoryDialog::showDetails()
             }
 
             // obtain the status of the trade
-            bool orderOpen = isMetaDExOfferActive(txid, propertyId);
+            bool orderOpen = MetaDEx_isOpen(txid, propertyId);
             bool partialFilled = false, filled = false;
             string statusText = "unknown";
             if (totalSold>0) partialFilled = true;

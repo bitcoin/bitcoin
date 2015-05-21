@@ -1962,7 +1962,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
 
     // everything seems ok, now add status and add array of matches to the object
     // work out status
-    bool orderOpen = isMetaDExOfferActive(hash, propertyId);
+    bool orderOpen = MetaDEx_isOpen(hash, propertyId);
     bool partialFilled = false;
     bool filled = false;
     string statusText;
