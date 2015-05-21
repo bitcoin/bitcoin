@@ -3316,6 +3316,46 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
   if (count) { return true; } else { return false; }
 }
 
+// obtains a vector of txids where the supplied address participated in a trade (needed for gettradehistory_MP)
+// optional property ID parameter will filter on propertyIdForSale if supplied
+void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>* vecTransactions, uint32_t propertyIdForSale)
+{
+  if (!pdb) return;
+  leveldb::Iterator* it = NewIterator();
+  for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      std::string strKey = it->key().ToString();
+      std::string strValue = it->value().ToString();
+      std::vector<std::string> vecKeys;
+      std::vector<std::string> vecValues;
+      uint256 txid = 0;
+      size_t addressMatch = strValue.find(address);
+      if (addressMatch != std::string::npos) {
+          boost::split(vecKeys, strKey, boost::is_any_of("+"), token_compress_on);
+          if (vecKeys.size() != 2) {
+              file_log("TRADEDB error - unexpected number of tokens in key (%s)\n", strKey);
+              continue;
+          }
+          boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);
+          if (vecValues.size() != 7) {
+              file_log("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
+              continue;
+          }
+          uint32_t tradePropertyIdSideA = boost::lexical_cast<uint32_t>(vecValues[2]);
+          uint32_t tradePropertyIdSideB = boost::lexical_cast<uint32_t>(vecValues[3]);
+          if (address == vecValues[0]) {
+              txid.SetHex(vecKeys[0]);
+          } else if (address == vecValues[1]) {
+              txid.SetHex(vecKeys[1]);
+          }
+          if (propertyIdForSale != 0 && propertyIdForSale != tradePropertyIdSideA && propertyIdForSale != tradePropertyIdSideB) continue;
+          if (std::find(vecTransactions->begin(), vecTransactions->end(), txid) == vecTransactions->end()) { // avoid duplicates
+              vecTransactions->push_back(txid);
+          }
+      }
+  }
+  delete it;
+}
+
 void CMPTradeList::recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum)
 {
   if (!pdb) return;
