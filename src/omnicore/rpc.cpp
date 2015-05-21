@@ -981,6 +981,14 @@ Value getopenorders_MP(const Array& params, bool fHelp)
   return "\nNot Implemented";
 }
 
+/* TODO: point for discussion - "trade history" is ambiguous; providing trade history for a
+ * pair is likely to be more useful than trade history for an address.  Regardless the existing
+ * function did neither (only showing open trades, not trade history) so has been rewritten.
+ *
+ * Perhaps consider renaming this to gettradehistoryforaddress_OMNI to match existing naming
+ * (eg getallbalancesforaddress_MP) then look at addition of new gettradehistoryforpair_OMNI
+ * call.
+ */
 Value gettradehistory_MP(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
@@ -992,6 +1000,8 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
             "2. count            (int, optional) number of trades to retrieve (default: 10)\n"
             "3. propertyid       (int, optional) filter by propertyid for sale\n"
         );
+
+    Array response;
 
     string address = params[0].get_str();
     int64_t count = 10;
@@ -1024,8 +1034,11 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
             md_Set & indexes = (it->second);
             for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 CMPMetaDEx obj = *it;
-                if (obj.getAddr() == address) vMetaDexObjects.push_back(obj);
-                // just a metadex object? probably should return the full trade status along with matches if partial filled?
+                if (obj.getAddr() == address) {
+                    Object txobj;
+                    int populateResult = populateRPCTransactionObject(obj.getHash(), &txobj, "", true);
+                    if (0 == populateResult) response.push_back(txobj);
+                }
             }
         }
     }
@@ -1035,8 +1048,6 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
     // contain the addresses of the participants - we could likely get away with iterating the entire db just the once pulling out address
     // matches to enable history for an address.  TODO
 
-    Array response;
-    MetaDexObjectsToJSON(vMetaDexObjects, response);
     return response;
 }
 
