@@ -99,9 +99,9 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `dashd` for your own use.
 
-dashd/dash-cli binaries are not included in the Bitcoin-Qt.app bundle.
+dashd/dash-cli binaries are not included in the Dash-Qt.app bundle.
 
-If you are building `dashd` or `Bitcoin-Qt` for others, your build machine should be set up
+If you are building `dashd` or `Dash-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
 
 All dependencies should be compiled with these flags:
@@ -110,7 +110,7 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk
 
-Once dependencies are compiled, see release-process.md for how the Bitcoin-Qt.app
+Once dependencies are compiled, see release-process.md for how the Dash-Qt.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running
