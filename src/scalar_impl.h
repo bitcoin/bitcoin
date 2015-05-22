@@ -299,7 +299,7 @@ static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_
  * The function below splits a in r1 and r2, such that r1 + lambda * r2 == a (mod order).
  */
 
-static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a) {
+static void secp256k1_scalar_split_lambda(secp256k1_scalar_t *r1, secp256k1_scalar_t *r2, const secp256k1_scalar_t *a) {
     secp256k1_scalar_t c1, c2;
     static const secp256k1_scalar_t minus_lambda = SECP256K1_SCALAR_CONST(
         0xAC9C52B3UL, 0x3FA3CF1FUL, 0x5AD9E3FDUL, 0x77ED9BA4UL,
@@ -323,6 +323,7 @@ static void secp256k1_scalar_split_lambda_var(secp256k1_scalar_t *r1, secp256k1_
     );
     VERIFY_CHECK(r1 != a);
     VERIFY_CHECK(r2 != a);
+    /* these _var calls are constant time since the shift amount is constant */
     secp256k1_scalar_mul_shift_var(&c1, a, &g1, 272);
     secp256k1_scalar_mul_shift_var(&c2, a, &g2, 272);
     secp256k1_scalar_mul(&c1, &c1, &minus_b1);

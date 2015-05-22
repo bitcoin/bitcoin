@@ -98,7 +98,7 @@ void bench_scalar_split(void* arg) {
 
     for (i = 0; i < 20000; i++) {
         secp256k1_scalar_t l, r;
-        secp256k1_scalar_split_lambda_var(&l, &r, &data->scalar_x);
+        secp256k1_scalar_split_lambda(&l, &r, &data->scalar_x);
         secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }

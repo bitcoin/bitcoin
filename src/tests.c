@@ -558,7 +558,10 @@ void scalar_test(void) {
         r2 = s1;
         if (!secp256k1_scalar_add(&r1, &r1, &b)) {
             /* No overflow happened. */
-            secp256k1_scalar_add_bit(&r2, bit);
+            secp256k1_scalar_cadd_bit(&r2, bit, 1);
+            CHECK(secp256k1_scalar_eq(&r1, &r2));
+            /* cadd is a noop when flag is zero */
+            secp256k1_scalar_cadd_bit(&r2, bit, 0);
             CHECK(secp256k1_scalar_eq(&r1, &r2));
         }
     }
@@ -1680,7 +1683,7 @@ void test_scalar_split(void) {
     unsigned char tmp[32];
 
     random_scalar_order_test(&full);
-    secp256k1_scalar_split_lambda_var(&s1, &slam, &full);
+    secp256k1_scalar_split_lambda(&s1, &slam, &full);
 
     /* check that both are <= 128 bits in size */
     if (secp256k1_scalar_is_high(&s1))
