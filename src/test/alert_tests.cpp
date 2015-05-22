@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     // Test PartitionCheck
     CCriticalSection csDummy;
     CBlockIndex indexDummy[100];
-    CChainParams& params = Params(CBaseChainParams::MAIN);
+    const CChainParams& params = Params(CBaseChainParams::MAIN);
     int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
 
     // Generate fake blockchain timestamps relative to

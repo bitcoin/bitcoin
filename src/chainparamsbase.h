@@ -32,12 +32,19 @@ protected:
 };
 
 /**
+ * Creates a CBaseChainParams of the chosen chain and returns a
+ * pointer to it. The caller has to delete the object.
+ * Raises an error if the chain is not supported.
+ */
+CBaseChainParams* FactoryBaseParams(std::string chain);
+/**
  * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
  * Returns CBaseChainParams::MAIN by default.
  * Returns CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given.
  */
 std::string ChainNameFromCommandLine();
 
+/** Functions that relay on internal state */
 /**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
