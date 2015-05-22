@@ -360,6 +360,11 @@ void CMPTransaction::printInfo(FILE *fp)
 
 int CMPTransaction::logicMath_TradeOffer(CMPOffer *obj_o)
 {
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
 int rc = PKT_ERROR_TRADEOFFER;
 uint64_t amount_desired, min_fee;
 unsigned char blocktimelimit, subaction = 0;
@@ -472,7 +477,12 @@ static const char * const subaction_name[] = { "empty", "new", "update", "cancel
 
 int CMPTransaction::logicMath_AcceptOffer_BTC()
 {
-int rc = DEX_ERROR_ACCEPT;
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
+    int rc = DEX_ERROR_ACCEPT;
 
     // the min fee spec requirement is checked in the following function
     rc = DEx_acceptCreate(sender, receiver, property, nValue, block, tx_fee_paid, &nNewValue);
@@ -482,6 +492,11 @@ int rc = DEX_ERROR_ACCEPT;
 
 int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx *mdex_o)
 {
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
     int rc = PKT_ERROR_METADEX -100;
     unsigned char action = 0;
 
@@ -727,6 +742,11 @@ int CMPTransaction::logicMath_CreatePropertyMananged()
 
 int CMPTransaction::logicMath_GrantTokens()
 {
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
     int rc = PKT_ERROR_TOKENS - 1000;
 
     if (!isTransactionTypeAllowed(block, property, type, version)) {
@@ -792,6 +812,11 @@ int CMPTransaction::logicMath_GrantTokens()
 
 int CMPTransaction::logicMath_RevokeTokens()
 {
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
     int rc = PKT_ERROR_TOKENS - 1000;
 
     if (!isTransactionTypeAllowed(block, property, type, version)) {

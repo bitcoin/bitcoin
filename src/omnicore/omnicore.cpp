@@ -3769,6 +3769,11 @@ int step_rc;
 
 int CMPTransaction::logicMath_SimpleSend()
 {
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
     int rc = PKT_ERROR_SEND -1000;
 
     if (!isTransactionTypeAllowed(block, property, type, version)) {
@@ -3851,7 +3856,12 @@ int CMPTransaction::logicMath_SimpleSend()
 
 int CMPTransaction::logicMath_SendToOwners(FILE *fhandle)
 {
-int rc = PKT_ERROR_STO -1000;
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
+    int rc = PKT_ERROR_STO -1000;
 
       if (!isTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_STO -888);
 
