@@ -215,7 +215,7 @@ public:
   }
 };
 
-int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigned int idx, CMPTransaction *mp_tx, unsigned int nTime=0);
+int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction* pmptx, unsigned int nTime=0);
 
 
 #endif // OMNICORE_TX_H

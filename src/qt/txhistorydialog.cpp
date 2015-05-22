@@ -293,7 +293,7 @@ int TXHistoryDialog::PopulateHistoryMap()
             bool valid = false;
             string MPTxType;
             CMPTransaction mp_obj;
-            int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+            int parseRC = ParseTransaction(wtx, blockHeight, 0, &mp_obj);
             string displayAmount;
             string displayToken;
             string displayValid;

@@ -322,7 +322,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool valid = false;
 
         // parse the transaction
-        int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+        int parseRC = ParseTransaction(wtx, blockHeight, 0, &mp_obj);
         if (0 != parseRC) continue;
         if (0<=mp_obj.step1()) {
             int tmpblock=0;
@@ -527,7 +527,7 @@ void TradeHistoryDialog::showDetails()
             uint256 blockHash = 0;
             if (!GetTransaction(txid, wtx, blockHash, true)) { return; }
             CMPTransaction mp_obj;
-            int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
+            int parseRC = ParseTransaction(wtx, 0, 0, &mp_obj);
             if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
                 if (0<=mp_obj.step1()) {
                     senderAddress = mp_obj.getSender();

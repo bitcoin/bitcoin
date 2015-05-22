@@ -893,7 +893,7 @@ static bool isAllowedOutputType(int whichType, int nBlock)
 // RETURNS: 0 if parsed a MP TX
 // RETURNS: < 0 if a non-MP-TX or invalid
 // RETURNS: >0 if 1 or more payments have been made
-int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigned int idx, CMPTransaction *mp_tx, unsigned int nTime)
+static int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigned int idx, CMPTransaction *mp_tx, unsigned int nTime)
 {
   string strSender;
   vector<string>script_data;
@@ -901,7 +901,6 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   vector<int64_t>value_data;
   vector<string>multisig_script_data;
   vector<string>op_return_script_data;
-  CScript op_return_script;
   int64_t ExodusValues[MAX_BTC_OUTPUTS] = { 0 };
   int64_t TestNetMoneyValues[MAX_BTC_OUTPUTS] = { 0 };  // new way to get funded on TestNet, send TBTC to moneyman address
   string strReference;
@@ -915,7 +914,9 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   uint64_t outAll = 0;
   uint64_t txFee = 0;
   int omniClass = 0;
-  mp_tx->Set(wtx.GetHash(), nBlock, idx, nTime);
+  if (NULL != mp_tx) {
+      mp_tx->Set(wtx.GetHash(), nBlock, idx, nTime);
+  }
 
 
   // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
@@ -1265,8 +1266,18 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
 
   // ### SET MP TX INFO ###
   if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
-  mp_tx->Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+  if (NULL != mp_tx) {
+    mp_tx->Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+  }
   return 0;
+}
+
+/**
+ * Provides access to parseTransaction in read-only mode.
+ */
+int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction* pmptx, unsigned int nTime)
+{
+    return parseTransaction(true, tx, nBlock, idx, pmptx, nTime);
 }
 
 /**
@@ -2598,7 +2609,7 @@ int CMPTxList::setLastAlert(int blockHeight)
         else // note reparsing here is unavoidable because we've only loaded a txid and have no other alert info stored
         {
             CMPTransaction mp_obj;
-            int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+            int parseRC = ParseTransaction(wtx, blockHeight, 0, &mp_obj);
             string new_global_alert_message;
             if (0 <= parseRC)
             {

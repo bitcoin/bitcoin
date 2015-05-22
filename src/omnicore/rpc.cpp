@@ -1244,7 +1244,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     if (p_txlistdb->exists(wtxid))
     {
         //transaction is in levelDB, so we can attempt to parse it
-        int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+        int parseRC = ParseTransaction(wtx, blockHeight, 0, &mp_obj);
         if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
         {
             // do we have a non-zero RC, if so it's a payment, handle differently
@@ -1834,7 +1834,7 @@ Value getsto_MP(const Array& params, bool fHelp)
     if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
     uint64_t propertyId = 0;
     CMPTransaction mp_obj;
-    int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
+    int parseRC = ParseTransaction(wtx, 0, 0, &mp_obj);
     if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for safety
     {
         if (0<=mp_obj.step1())
@@ -1914,7 +1914,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
     if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
 
     // Ensure it can be parsed OK
-    int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
+    int parseRC = ParseTransaction(wtx, 0, 0, &mp_obj);
     if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
         if (0<=mp_obj.step1()) {
             senderAddress = mp_obj.getSender();
