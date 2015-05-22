@@ -1961,16 +1961,16 @@ bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& st
     }
 }
 
-void static Bitcoin_FlushBlockFile(MainState &mainState, bool fFinalize = false)
+void static Bitcoin_FlushBlockFile(bool fFinalize = false)
 {
-    LOCK(mainState.cs_LastBlockFile);
+    LOCK(bitcoin_mainState.cs_LastBlockFile);
 
-    CDiskBlockPos posOld(mainState.nLastBlockFile, 0);
+    CDiskBlockPos posOld(bitcoin_mainState.nLastBlockFile, 0);
 
     FILE *fileOld = Bitcoin_OpenBlockFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, mainState.infoLastBlockFile.nSize);
+            TruncateFile(fileOld, bitcoin_mainState.infoLastBlockFile.nSize);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -1978,7 +1978,7 @@ void static Bitcoin_FlushBlockFile(MainState &mainState, bool fFinalize = false)
     fileOld = Bitcoin_OpenUndoFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, mainState.infoLastBlockFile.nUndoSize);
+            TruncateFile(fileOld, bitcoin_mainState.infoLastBlockFile.nUndoSize);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -1986,7 +1986,7 @@ void static Bitcoin_FlushBlockFile(MainState &mainState, bool fFinalize = false)
     fileOld = Bitcoin_OpenUndoFileClaim(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, mainState.infoLastBlockFile.nUndoSizeClaim);
+            TruncateFile(fileOld, bitcoin_mainState.infoLastBlockFile.nUndoSizeClaim);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -2321,7 +2321,7 @@ bool static Bitcoin_WriteChainState(CValidationState &state) {
         // overwrite one. Still, use a conservative safety factor of 2.
         if (!Bitcoin_CheckDiskSpace(100 * 2 * 2 * bitcoin_pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
-        Bitcoin_FlushBlockFile(bitcoin_mainState);
+        Bitcoin_FlushBlockFile();
         bitcoin_pblocktree->Sync();
         if (!bitcoin_pcoinsTip->Flush())
             return state.Abort(_("Failed to write to coin database"));
@@ -2396,7 +2396,11 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     if (!Bitcoin_WriteChainState(state))
         return false;
     if(fastForwardClaimState) {
-    	//Workaround to flush coins
+    	//Workaround to flush coins - used instead of Bitcredit_WriteChainState()
+    	//If bitcredit_mainState.cs_main is used here, we will end up in deadlock
+    	//This flushing will only happen on fast forward, which can be assumed to be initial block download or reindex
+    	//Therefore, flush only when cache grows to big. This could cause corruption on power failure or similar
+    	//Question is, do flushing to *_pcoinsTip require a lock? Does not seem that way in *_WriteChainState.
         if (credits_pcoinsTip->GetCacheSize() > bitcredit_nCoinCacheSize) {
             if (!credits_pcoinsTip->Claim_Flush())
                 return state.Abort(_("Failed to write to coin database"));
@@ -2475,7 +2479,11 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
     if (!Bitcoin_WriteChainState(state))
         return false;
     if(fastForwardClaimState) {
-    	//Workaround to flush coins
+    	//Workaround to flush coins - used instead of Bitcredit_WriteChainState()
+    	//If bitcredit_mainState.cs_main is used here, we will end up in deadlock
+    	//This flushing will only happen on fast forward, which can be assumed to be initial block download or reindex
+    	//Therefore, flush only when cache grows to big. This could cause corruption on power failure or similar
+    	//Question is, do flushing to *_pcoinsTip require a lock? Does not seem that way in *_WriteChainState.
         if (credits_pcoinsTip->GetCacheSize() > bitcredit_nCoinCacheSize) {
             if (!credits_pcoinsTip->Claim_Flush())
                 return state.Abort(_("Failed to write to coin database"));
@@ -2849,38 +2857,38 @@ bool Bitcoin_ReceivedBlockTransactions(const Bitcoin_CBlock &block, CValidationS
 }
 
 
-bool Bitcoin_FindBlockPos(MainState& mainState, CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown = false)
+bool Bitcoin_FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown = false)
 {
     bool fUpdatedLast = false;
 
-    LOCK(mainState.cs_LastBlockFile);
+    LOCK(bitcoin_mainState.cs_LastBlockFile);
 
     if (fKnown) {
-        if (mainState.nLastBlockFile != pos.nFile) {
-            mainState.nLastBlockFile = pos.nFile;
-            mainState.infoLastBlockFile.SetNull();
-            bitcoin_pblocktree->ReadBlockFileInfo(mainState.nLastBlockFile, mainState.infoLastBlockFile);
+        if (bitcoin_mainState.nLastBlockFile != pos.nFile) {
+        	bitcoin_mainState.nLastBlockFile = pos.nFile;
+        	bitcoin_mainState.infoLastBlockFile.SetNull();
+            bitcoin_pblocktree->ReadBlockFileInfo(bitcoin_mainState.nLastBlockFile, bitcoin_mainState.infoLastBlockFile);
             fUpdatedLast = true;
         }
     } else {
-        while (mainState.infoLastBlockFile.nSize + nAddSize >= BITCOIN_MAX_BLOCKFILE_SIZE) {
-            LogPrintf("Bitcoin: Leaving block file %i: %s\n", mainState.nLastBlockFile, mainState.infoLastBlockFile.ToString());
-            Bitcoin_FlushBlockFile(mainState, true);
-            mainState.nLastBlockFile++;
-            mainState.infoLastBlockFile.SetNull();
-            bitcoin_pblocktree->ReadBlockFileInfo(mainState.nLastBlockFile, mainState.infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
+        while (bitcoin_mainState.infoLastBlockFile.nSize + nAddSize >= BITCOIN_MAX_BLOCKFILE_SIZE) {
+            LogPrintf("Bitcoin: Leaving block file %i: %s\n", bitcoin_mainState.nLastBlockFile, bitcoin_mainState.infoLastBlockFile.ToString());
+            Bitcoin_FlushBlockFile(true);
+            bitcoin_mainState.nLastBlockFile++;
+            bitcoin_mainState.infoLastBlockFile.SetNull();
+            bitcoin_pblocktree->ReadBlockFileInfo(bitcoin_mainState.nLastBlockFile, bitcoin_mainState.infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
             fUpdatedLast = true;
         }
-        pos.nFile = mainState.nLastBlockFile;
-        pos.nPos = mainState.infoLastBlockFile.nSize;
+        pos.nFile = bitcoin_mainState.nLastBlockFile;
+        pos.nPos = bitcoin_mainState.infoLastBlockFile.nSize;
     }
 
-    mainState.infoLastBlockFile.nSize += nAddSize;
-    mainState.infoLastBlockFile.AddBlock(nHeight, nTime);
+    bitcoin_mainState.infoLastBlockFile.nSize += nAddSize;
+    bitcoin_mainState.infoLastBlockFile.AddBlock(nHeight, nTime);
 
     if (!fKnown) {
         unsigned int nOldChunks = (pos.nPos + BITCOIN_BLOCKFILE_CHUNK_SIZE - 1) / BITCOIN_BLOCKFILE_CHUNK_SIZE;
-        unsigned int nNewChunks = (mainState.infoLastBlockFile.nSize + BITCOIN_BLOCKFILE_CHUNK_SIZE - 1) / BITCOIN_BLOCKFILE_CHUNK_SIZE;
+        unsigned int nNewChunks = (bitcoin_mainState.infoLastBlockFile.nSize + BITCOIN_BLOCKFILE_CHUNK_SIZE - 1) / BITCOIN_BLOCKFILE_CHUNK_SIZE;
         if (nNewChunks > nOldChunks) {
             if (Bitcoin_CheckDiskSpace(nNewChunks * BITCOIN_BLOCKFILE_CHUNK_SIZE - pos.nPos)) {
                 FILE *file = Bitcoin_OpenBlockFile(pos);
@@ -2895,10 +2903,10 @@ bool Bitcoin_FindBlockPos(MainState& mainState, CValidationState &state, CDiskBl
         }
     }
 
-    if (!bitcoin_pblocktree->WriteBlockFileInfo(mainState.nLastBlockFile, mainState.infoLastBlockFile))
+    if (!bitcoin_pblocktree->WriteBlockFileInfo(bitcoin_mainState.nLastBlockFile, bitcoin_mainState.infoLastBlockFile))
         return state.Abort(_("Failed to write file info"));
     if (fUpdatedLast)
-        bitcoin_pblocktree->WriteLastBlockFile(mainState.nLastBlockFile);
+        bitcoin_pblocktree->WriteLastBlockFile(bitcoin_mainState.nLastBlockFile);
 
     return true;
 }
@@ -3194,7 +3202,7 @@ bool Bitcoin_AcceptBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin
         CDiskBlockPos blockPos;
         if (dbp != NULL)
             blockPos = *dbp;
-        if (!Bitcoin_FindBlockPos(bitcoin_mainState, state, blockPos, nBlockSize+8, nHeight, block.nTime, dbp != NULL))
+        if (!Bitcoin_FindBlockPos(state, blockPos, nBlockSize+8, nHeight, block.nTime, dbp != NULL))
             return error("Bitcoin: AcceptBlock() : FindBlockPos failed");
         if (dbp == NULL)
             if (!Bitcoin_WriteBlockToDisk(block, blockPos))
@@ -3590,7 +3598,7 @@ bool Bitcoin_InitBlockIndex() {
             unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, Bitcoin_Params().ClientVersion());
             CDiskBlockPos blockPos;
             CValidationState state;
-            if (!Bitcoin_FindBlockPos(bitcoin_mainState, state, blockPos, nBlockSize+8, 0, block.nTime))
+            if (!Bitcoin_FindBlockPos(state, blockPos, nBlockSize+8, 0, block.nTime))
                 return error("Bitcoin: LoadBlockIndex() : FindBlockPos failed");
             if (!Bitcoin_WriteBlockToDisk(block, blockPos))
                 return error("Bitcoin: LoadBlockIndex() : writing genesis block to disk failed");

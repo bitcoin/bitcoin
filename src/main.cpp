@@ -1938,16 +1938,16 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
     }
 }
 
-void static Bitcredit_FlushBlockFile(MainState& mainState, bool fFinalize = false)
+void static Bitcredit_FlushBlockFile(bool fFinalize = false)
 {
-    LOCK(mainState.cs_LastBlockFile);
+    LOCK(credits_mainState.cs_LastBlockFile);
 
-    CDiskBlockPos posOld(mainState.nLastBlockFile, 0);
+    CDiskBlockPos posOld(credits_mainState.nLastBlockFile, 0);
 
     FILE *fileOld = Bitcredit_OpenBlockFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, mainState.infoLastBlockFile.nSize);
+            TruncateFile(fileOld, credits_mainState.infoLastBlockFile.nSize);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -1955,7 +1955,7 @@ void static Bitcredit_FlushBlockFile(MainState& mainState, bool fFinalize = fals
     fileOld = Bitcredit_OpenUndoFile(posOld);
     if (fileOld) {
         if (fFinalize)
-            TruncateFile(fileOld, mainState.infoLastBlockFile.nUndoSize);
+            TruncateFile(fileOld, credits_mainState.infoLastBlockFile.nUndoSize);
         FileCommit(fileOld);
         fclose(fileOld);
     }
@@ -2269,7 +2269,7 @@ bool static Bitcredit_WriteChainState(CValidationState &state) {
         // overwrite one. Still, use a conservative safety factor of 2.
         if (!Bitcredit_CheckDiskSpace(100 * 2 * 2 * credits_pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
-        Bitcredit_FlushBlockFile(credits_mainState);
+        Bitcredit_FlushBlockFile();
         bitcredit_pblocktree->Sync();
         if (!credits_pcoinsTip->All_Flush())
             return state.Abort(_("Failed to write to coin database"));
@@ -2676,38 +2676,38 @@ bool Bitcredit_ReceivedBlockTransactions(const Credits_CBlock &block, CValidatio
 }
 
 
-bool Bitcredit_FindBlockPos(MainState& mainState, CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown = false)
+bool Bitcredit_FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAddSize, unsigned int nHeight, uint64_t nTime, bool fKnown = false)
 {
     bool fUpdatedLast = false;
 
-    LOCK(mainState.cs_LastBlockFile);
+    LOCK(credits_mainState.cs_LastBlockFile);
 
     if (fKnown) {
-        if (mainState.nLastBlockFile != pos.nFile) {
-            mainState.nLastBlockFile = pos.nFile;
-            mainState.infoLastBlockFile.SetNull();
-            bitcredit_pblocktree->ReadBlockFileInfo(mainState.nLastBlockFile, mainState.infoLastBlockFile);
+        if (credits_mainState.nLastBlockFile != pos.nFile) {
+            credits_mainState.nLastBlockFile = pos.nFile;
+            credits_mainState.infoLastBlockFile.SetNull();
+            bitcredit_pblocktree->ReadBlockFileInfo(credits_mainState.nLastBlockFile, credits_mainState.infoLastBlockFile);
             fUpdatedLast = true;
         }
     } else {
-        while (mainState.infoLastBlockFile.nSize + nAddSize >= BITCREDIT_MAX_BLOCKFILE_SIZE) {
-            LogPrintf("Credits: Leaving block file %i: %s\n", mainState.nLastBlockFile, mainState.infoLastBlockFile.ToString());
-            Bitcredit_FlushBlockFile(mainState, true);
-            mainState.nLastBlockFile++;
-            mainState.infoLastBlockFile.SetNull();
-            bitcredit_pblocktree->ReadBlockFileInfo(mainState.nLastBlockFile, mainState.infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
+        while (credits_mainState.infoLastBlockFile.nSize + nAddSize >= BITCREDIT_MAX_BLOCKFILE_SIZE) {
+            LogPrintf("Credits: Leaving block file %i: %s\n", credits_mainState.nLastBlockFile, credits_mainState.infoLastBlockFile.ToString());
+            Bitcredit_FlushBlockFile(true);
+            credits_mainState.nLastBlockFile++;
+            credits_mainState.infoLastBlockFile.SetNull();
+            bitcredit_pblocktree->ReadBlockFileInfo(credits_mainState.nLastBlockFile, credits_mainState.infoLastBlockFile); // check whether data for the new file somehow already exist; can fail just fine
             fUpdatedLast = true;
         }
-        pos.nFile = mainState.nLastBlockFile;
-        pos.nPos = mainState.infoLastBlockFile.nSize;
+        pos.nFile = credits_mainState.nLastBlockFile;
+        pos.nPos = credits_mainState.infoLastBlockFile.nSize;
     }
 
-    mainState.infoLastBlockFile.nSize += nAddSize;
-    mainState.infoLastBlockFile.AddBlock(nHeight, nTime);
+    credits_mainState.infoLastBlockFile.nSize += nAddSize;
+    credits_mainState.infoLastBlockFile.AddBlock(nHeight, nTime);
 
     if (!fKnown) {
         unsigned int nOldChunks = (pos.nPos + BITCREDIT_BLOCKFILE_CHUNK_SIZE - 1) / BITCREDIT_BLOCKFILE_CHUNK_SIZE;
-        unsigned int nNewChunks = (mainState.infoLastBlockFile.nSize + BITCREDIT_BLOCKFILE_CHUNK_SIZE - 1) / BITCREDIT_BLOCKFILE_CHUNK_SIZE;
+        unsigned int nNewChunks = (credits_mainState.infoLastBlockFile.nSize + BITCREDIT_BLOCKFILE_CHUNK_SIZE - 1) / BITCREDIT_BLOCKFILE_CHUNK_SIZE;
         if (nNewChunks > nOldChunks) {
             if (Bitcredit_CheckDiskSpace(nNewChunks * BITCREDIT_BLOCKFILE_CHUNK_SIZE - pos.nPos)) {
                 FILE *file = Bitcredit_OpenBlockFile(pos);
@@ -2722,10 +2722,10 @@ bool Bitcredit_FindBlockPos(MainState& mainState, CValidationState &state, CDisk
         }
     }
 
-    if (!bitcredit_pblocktree->WriteBlockFileInfo(mainState.nLastBlockFile, mainState.infoLastBlockFile))
+    if (!bitcredit_pblocktree->WriteBlockFileInfo(credits_mainState.nLastBlockFile, credits_mainState.infoLastBlockFile))
         return state.Abort(_("Credits: Failed to write file info"));
     if (fUpdatedLast)
-        bitcredit_pblocktree->WriteLastBlockFile(mainState.nLastBlockFile);
+        bitcredit_pblocktree->WriteLastBlockFile(credits_mainState.nLastBlockFile);
 
     return true;
 }
@@ -3112,7 +3112,7 @@ bool Bitcredit_AcceptBlock(Credits_CBlock& block, CValidationState& state, Credi
         CDiskBlockPos blockPos;
         if (dbp != NULL)
             blockPos = *dbp;
-        if (!Bitcredit_FindBlockPos(credits_mainState, state, blockPos, nBlockSize+8, nHeight, block.nTime, dbp != NULL))
+        if (!Bitcredit_FindBlockPos(state, blockPos, nBlockSize+8, nHeight, block.nTime, dbp != NULL))
             return error("Credits: AcceptBlock() : Bitcredit_FindBlockPos failed");
         if (dbp == NULL)
             if (!Bitcredit_WriteBlockToDisk(block, blockPos))
@@ -3524,7 +3524,7 @@ bool Bitcredit_InitBlockIndex() {
             unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CREDITS_CLIENT_VERSION);
             CDiskBlockPos blockPos;
             CValidationState state;
-            if (!Bitcredit_FindBlockPos(credits_mainState, state, blockPos, nBlockSize+8, 0, block.nTime))
+            if (!Bitcredit_FindBlockPos(state, blockPos, nBlockSize+8, 0, block.nTime))
                 return error("Credits: LoadBlockIndex() : Bitcredit_FindBlockPos failed");
             if (!Bitcredit_WriteBlockToDisk(block, blockPos))
                 return error("Credits: LoadBlockIndex() : writing genesis block to disk failed");
