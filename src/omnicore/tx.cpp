@@ -352,6 +352,447 @@ int CMPTransaction::step3_sp_variable(const char *p)
   return 0;
 }
 
+/** Interpret transaction based on type */
+bool CMPTransaction::interpret_Transaction()
+{
+    if (!interpret_TransactionType()) {
+        PrintToConsole("Failed to interpret type and version\n");
+        return false;
+    }
+
+    switch (type) {
+        case MSC_TYPE_SIMPLE_SEND:
+            return interpret_SimpleSend();
+
+        case MSC_TYPE_SEND_TO_OWNERS:
+            return interpret_SendToOwners();
+
+        case MSC_TYPE_TRADE_OFFER:
+            return interpret_TradeOffer();
+
+        case MSC_TYPE_METADEX:
+            return interpret_MetaDEx();
+
+        case MSC_TYPE_ACCEPT_OFFER_BTC:
+            return interpret_AcceptOfferBTC();
+
+        case MSC_TYPE_CREATE_PROPERTY_FIXED:
+            return interpret_CreatePropertyFixed();
+
+        case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
+            return interpret_CreatePropertyVariable();
+
+        case MSC_TYPE_CLOSE_CROWDSALE:
+            return interpret_CloseCrowdsale();
+
+        case MSC_TYPE_CREATE_PROPERTY_MANUAL:
+            return interpret_CreatePropertyMananged();
+
+        case MSC_TYPE_GRANT_PROPERTY_TOKENS:
+            return interpret_GrantTokens();
+
+        case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
+            return interpret_RevokeTokens();
+
+        case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
+            return interpret_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_ALERT:
+            return interpret_Alert();
+    }
+
+    return false;
+}
+
+static std::string intToClass(int multi)
+{
+    switch (multi) {
+        case 1:
+            return "B";
+        case 2:
+            return "C";
+    }
+    return "A";
+}
+
+/** Version and type */
+bool CMPTransaction::interpret_TransactionType()
+{
+    if (pkt_size < 4) {
+        return false;
+    }
+
+    uint16_t txVersion = 0;
+    uint16_t txType = 0;
+
+    memcpy(&txVersion, &pkt[0], 2);
+    swapByteOrder16(txVersion);
+
+    memcpy(&txType, &pkt[2], 2);
+    swapByteOrder16(txType);
+
+    PrintToConsole("\t------------------------------\n");
+    PrintToConsole("\t         version: %d, class %s\n", txVersion, intToClass(multi));
+    PrintToConsole("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
+
+    // ------------------------------------------
+    version = txVersion;
+    type = txType;
+
+    return true;
+}
+
+/** Tx 1 */
+bool CMPTransaction::interpret_SimpleSend()
+{
+    if (pkt_size < 16) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+
+    return true;
+}
+
+/** Tx 3 */
+bool CMPTransaction::interpret_SendToOwners()
+{
+    if (pkt_size < 16) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+
+    return true;
+}
+
+/** Tx 20 */
+bool CMPTransaction::interpret_TradeOffer()
+{
+    if (pkt_size < 34) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    memcpy(&amount_desired, &pkt[16], 8);
+    memcpy(&blocktimelimit, &pkt[24], 1);
+    memcpy(&min_fee, &pkt[25], 8);
+    memcpy(&subaction, &pkt[33], 1);
+    swapByteOrder64(amount_desired);
+    swapByteOrder64(min_fee);
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToConsole("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
+    PrintToConsole("\tblock time limit: %d\n", blocktimelimit);
+    PrintToConsole("\t         min fee: %s\n", FormatDivisibleMP(min_fee));
+    PrintToConsole("\t      sub-action: %d\n", subaction);
+
+    return true;
+}
+
+/** Tx 21 */
+bool CMPTransaction::interpret_MetaDEx()
+{
+    if (pkt_size < 29) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    memcpy(&desired_property, &pkt[16], 4);
+    swapByteOrder32(desired_property);
+    memcpy(&desired_value, &pkt[20], 8);
+    swapByteOrder64(desired_value);
+    memcpy(&action, &pkt[28], 1);
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToConsole("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
+    PrintToConsole("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
+    PrintToConsole("\t          action: %d\n", action);
+
+    return true;
+}
+
+/** Tx 22 */
+bool CMPTransaction::interpret_AcceptOfferBTC()
+{
+    if (pkt_size < 16) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+
+    return true;
+}
+
+/** Tx 50 */
+bool CMPTransaction::interpret_CreatePropertyFixed()
+{
+    if (pkt_size < 25) {
+        return false;
+    }
+
+    const char* p = 11 + (char*) &pkt;
+    std::vector<std::string> spstr;
+    memcpy(&ecosystem, &pkt[4], 1);
+    memcpy(&prop_type, &pkt[5], 2);
+    swapByteOrder16(prop_type);
+    memcpy(&prev_prop_id, &pkt[7], 4);
+    swapByteOrder32(prev_prop_id);
+    for (int i = 0; i < 5; i++) {
+        spstr.push_back(std::string(p));
+        p += spstr.back().size() + 1;
+    }
+    int i = 0;
+    memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
+    memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
+    memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+    memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
+    memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
+
+    memcpy(&nValue, p, 8);
+    swapByteOrder64(nValue);
+    p += 8;
+    nNewValue = nValue;
+
+    PrintToConsole("\t       ecosystem: %d\n", ecosystem);
+    PrintToConsole("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+    PrintToConsole("\tprev property id: %d\n", prev_prop_id);
+    PrintToConsole("\t        category: %s\n", category);
+    PrintToConsole("\t     subcategory: %s\n", subcategory);
+    PrintToConsole("\t            name: %s\n", name);
+    PrintToConsole("\t             url: %s\n", url);
+    PrintToConsole("\t            data: %s\n", data);
+    PrintToConsole("\t           value: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+
+    if (isOverrun(p, __LINE__)) {
+        return false;
+    }
+
+    return true;
+}
+
+/** Tx 51 */
+bool CMPTransaction::interpret_CreatePropertyVariable()
+{
+    if (pkt_size < 39) {
+        return false;
+    }
+
+    const char* p = 11 + (char*) &pkt;
+    std::vector<std::string> spstr;
+    memcpy(&ecosystem, &pkt[4], 1);
+    memcpy(&prop_type, &pkt[5], 2);
+    swapByteOrder16(prop_type);
+    memcpy(&prev_prop_id, &pkt[7], 4);
+    swapByteOrder32(prev_prop_id);
+    for (int i = 0; i < 5; i++) {
+        spstr.push_back(std::string(p));
+        p += spstr.back().size() + 1;
+    }
+    int i = 0;
+    memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
+    memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
+    memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+    memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
+    memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
+
+    memcpy(&property, p, 4);
+    swapByteOrder32(property);
+    p += 4;
+    memcpy(&nValue, p, 8);
+    swapByteOrder64(nValue);
+    p += 8;
+    nNewValue = nValue;
+    memcpy(&deadline, p, 8);
+    swapByteOrder64(deadline);
+    p += 8;
+    memcpy(&early_bird, p++, 1);
+    memcpy(&percentage, p++, 1);
+
+    PrintToConsole("\t       ecosystem: %d\n", ecosystem);
+    PrintToConsole("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+    PrintToConsole("\tprev property id: %d\n", prev_prop_id);
+    PrintToConsole("\t        category: %s\n", category);
+    PrintToConsole("\t     subcategory: %s\n", subcategory);
+    PrintToConsole("\t            name: %s\n", name);
+    PrintToConsole("\t             url: %s\n", url);
+    PrintToConsole("\t            data: %s\n", data);
+    PrintToConsole("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t tokens per unit: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+    PrintToConsole("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
+    PrintToConsole("\tearly bird bonus: %d\n", early_bird);
+    PrintToConsole("\t    issuer bonus: %d\n", percentage);
+
+    if (isOverrun(p, __LINE__)) {
+        return false;
+    }
+
+    return true;
+}
+
+/** Tx 53 */
+bool CMPTransaction::interpret_CloseCrowdsale()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+
+    return true;
+}
+
+/** Tx 54 */
+bool CMPTransaction::interpret_CreatePropertyMananged()
+{
+    if (pkt_size < 17) {
+        return false;
+    }
+
+    const char* p = 11 + (char*) &pkt;
+    std::vector<std::string> spstr;
+    memcpy(&ecosystem, &pkt[4], 1);
+    memcpy(&prop_type, &pkt[5], 2);
+    swapByteOrder16(prop_type);
+    memcpy(&prev_prop_id, &pkt[7], 4);
+    swapByteOrder32(prev_prop_id);
+    for (int i = 0; i < 5; i++) {
+        spstr.push_back(std::string(p));
+        p += spstr.back().size() + 1;
+    }
+    int i = 0;
+    memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
+    memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
+    memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+    memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
+    memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
+
+    PrintToConsole("\t       ecosystem: %d\n", ecosystem);
+    PrintToConsole("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+    PrintToConsole("\tprev property id: %d\n", prev_prop_id);
+    PrintToConsole("\t        category: %s\n", category);
+    PrintToConsole("\t     subcategory: %s\n", subcategory);
+    PrintToConsole("\t            name: %s\n", name);
+    PrintToConsole("\t             url: %s\n", url);
+    PrintToConsole("\t            data: %s\n", data);
+
+    if (isOverrun(p, __LINE__)) {
+        return false;
+    }
+
+    return true;
+}
+
+/** Tx 55 */
+bool CMPTransaction::interpret_GrantTokens()
+{
+    if (pkt_size < 16) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+
+    return true;
+}
+
+/** Tx 56 */
+bool CMPTransaction::interpret_RevokeTokens()
+{
+    if (pkt_size < 16) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+    memcpy(&nValue, &pkt[8], 8);
+    swapByteOrder64(nValue);
+    nNewValue = nValue;
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+
+    return true;
+}
+
+/** Tx 70 */
+bool CMPTransaction::interpret_ChangeIssuer()
+{
+    if (pkt_size < 8) {
+        return false;
+    }
+
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+
+    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+
+    return true;
+}
+
+/** Tx 65535 */
+bool CMPTransaction::interpret_Alert()
+{
+    if (pkt_size < 5) {
+        return false;
+    }
+
+    const char* p = 4 + (char*) &pkt;
+    std::string spstr(p);
+    memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
+
+    PrintToConsole("\t           alert: %s\n", alertString);
+
+    if (isOverrun(p, __LINE__)) {
+        return false;
+    }
+
+    return true;
+}
+
+
 void CMPTransaction::printInfo(FILE *fp)
 {
   fprintf(fp, "BLOCK: %d txid: %s, Block Time: %s\n", block, txid.GetHex().c_str(), DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime).c_str());

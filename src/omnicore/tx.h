@@ -67,6 +67,19 @@ private:
   unsigned int desired_property;
   uint64_t desired_value;
 
+  // TradeOffer
+  uint64_t amount_desired;
+  unsigned char blocktimelimit;
+  uint64_t min_fee;
+  unsigned char subaction;
+
+  // MetaDEx
+  unsigned char action;
+
+  // Alert
+  char alertString[SP_STRING_FIELD_LEN];
+
+
   class SendToOwners_compare
   {
   public:
@@ -147,6 +160,22 @@ public:
   {
     SetNull();
   }
+
+  bool interpret_Transaction();
+  bool interpret_TransactionType();
+  bool interpret_SimpleSend();                  //  1
+  bool interpret_SendToOwners();                //  3
+  bool interpret_TradeOffer();                  // 20
+  bool interpret_MetaDEx();                     // 21
+  bool interpret_AcceptOfferBTC();              // 22
+  bool interpret_CreatePropertyFixed();         // 50
+  bool interpret_CreatePropertyVariable();      // 51
+  bool interpret_CloseCrowdsale();              // 53
+  bool interpret_CreatePropertyMananged();      // 54
+  bool interpret_GrantTokens();                 // 55
+  bool interpret_RevokeTokens();                // 56
+  bool interpret_ChangeIssuer();                // 70
+  bool interpret_Alert();                       // 65535
 
   int logicMath_SimpleSend();                   //  1
   int logicMath_SendToOwners(FILE* fp = NULL);  //  3
