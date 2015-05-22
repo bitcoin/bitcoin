@@ -81,13 +81,19 @@ public:
     }
 };
 
-void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    int64_t nOldTime = pblock->nTime;
+    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+
+    if (nOldTime < nNewTime)
+        pblock->nTime = nNewTime;
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+
+    return nNewTime - nOldTime;
 }
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -138,6 +144,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
+        pblock->nTime = GetAdjustedTime();
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
@@ -152,7 +159,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
              mi != mempool.mapTx.end(); ++mi)
         {
             const CTransaction& tx = mi->second.GetTx();
-            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight))
+            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight, pblock->nTime))
                 continue;
 
             COrphan* porphan = NULL;
@@ -529,7 +536,9 @@ void static BitcoinMiner(CWallet *pwallet)
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
+                if (UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev) < 0)
+                    break; // Recreate the block if the clock has run backwards,
+                           // so that we can use the correct time.
                 if (chainparams.GetConsensus().fPowAllowMinDifficultyBlocks)
                 {
                     // Changing pblock->nTime can change work required on testnet:
