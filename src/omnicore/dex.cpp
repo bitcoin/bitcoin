@@ -46,7 +46,7 @@ OfferMap::iterator my_it = my_offers.find(combo);
 // TODO: locks are needed around map's insert & erase
 CMPOffer *mastercore::DEx_getOffer(const string &seller_addr, unsigned int prop)
 {
-  if (msc_debug_dex) file_log("%s(%s, %u)\n", __FUNCTION__, seller_addr, prop);
+  if (msc_debug_dex) PrintToLog("%s(%s, %u)\n", __FUNCTION__, seller_addr, prop);
 const string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr);
 OfferMap::iterator my_it = my_offers.find(combo);
 
@@ -58,7 +58,7 @@ OfferMap::iterator my_it = my_offers.find(combo);
 // TODO: locks are needed around map's insert & erase
 CMPAccept *mastercore::DEx_getAccept(const string &seller_addr, unsigned int prop, const string &buyer_addr)
 {
-  if (msc_debug_dex) file_log("%s(%s, %u, %s)\n", __FUNCTION__, seller_addr, prop, buyer_addr);
+  if (msc_debug_dex) PrintToLog("%s(%s, %u, %s)\n", __FUNCTION__, seller_addr, prop, buyer_addr);
 const string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller_addr, buyer_addr);
 AcceptMap::iterator my_it = my_accepts.find(combo);
 
@@ -80,7 +80,7 @@ int rc = DEX_ERROR_SELLOFFER;
   const string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr);
 
   if (msc_debug_dex)
-   file_log("%s(%s|%s), nValue=%lu)\n", __FUNCTION__, seller_addr, combo, nValue);
+   PrintToLog("%s(%s|%s), nValue=%lu)\n", __FUNCTION__, seller_addr, combo, nValue);
 
   const uint64_t balanceReallyAvailable = getMPbalance(seller_addr, prop, BALANCE);
 
@@ -134,7 +134,7 @@ const uint64_t amount = getMPbalance(seller_addr, prop, SELLOFFER_RESERVE);
   my_offers.erase(my_it);
 
   if (msc_debug_dex)
-   file_log("%s(%s|%s)\n", __FUNCTION__, seller_addr, combo);
+   PrintToLog("%s(%s|%s)\n", __FUNCTION__, seller_addr, combo);
 
   return 0;
 }
@@ -144,7 +144,7 @@ int mastercore::DEx_offerUpdate(const string &seller_addr, unsigned int prop, ui
 {
 int rc = DEX_ERROR_SELLOFFER;
 
-  file_log("%s(%s, %d)\n", __FUNCTION__, seller_addr, prop);
+  PrintToLog("%s(%s, %d)\n", __FUNCTION__, seller_addr, prop);
 
   if (!DEx_offerExists(seller_addr, prop)) return (DEX_ERROR_SELLOFFER -12); // offer does not exist
 
@@ -173,21 +173,21 @@ uint64_t nActualAmount = getMPbalance(seller, prop, SELLOFFER_RESERVE);
 
   CMPOffer &offer = my_it->second;
 
-  if (msc_debug_dex) file_log("%s(offer: %s)\n", __FUNCTION__, offer.getHash().GetHex());
+  if (msc_debug_dex) PrintToLog("%s(offer: %s)\n", __FUNCTION__, offer.getHash().GetHex());
 
   // here we ensure the correct BTC fee was paid in this acceptance message, per spec
   if (fee_paid < offer.getMinFee())
   {
-    file_log("ERROR: fee too small -- the ACCEPT is rejected! (%lu is smaller than %lu)\n", fee_paid, offer.getMinFee());
+    PrintToLog("ERROR: fee too small -- the ACCEPT is rejected! (%lu is smaller than %lu)\n", fee_paid, offer.getMinFee());
     return DEX_ERROR_ACCEPT -105;
   }
 
-  file_log("%s(%s) OFFER FOUND\n", __FUNCTION__, selloffer_combo);
+  PrintToLog("%s(%s) OFFER FOUND\n", __FUNCTION__, selloffer_combo);
 
   // the older accept is the valid one: do not accept any new ones!
   if (DEx_getAccept(seller, prop, buyer))
   {
-    file_log("%s() ERROR: an accept from this same seller for this same offer is already open !!!!!\n", __FUNCTION__);
+    PrintToLog("%s() ERROR: an accept from this same seller for this same offer is already open !!!!!\n", __FUNCTION__);
     return DEX_ERROR_ACCEPT -205;
   }
 
@@ -237,7 +237,7 @@ const string accept_combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller, buyer);
   }
   else
   {
-    file_log("%s() HASHES: offer=%s, accept=%s\n", __FUNCTION__, p_offer->getHash().GetHex(), p_accept->getHash().GetHex());
+    PrintToLog("%s() HASHES: offer=%s, accept=%s\n", __FUNCTION__, p_offer->getHash().GetHex(), p_accept->getHash().GetHex());
 
     // offer exists, determine whether it's the original offer or some random new one
     if (p_offer->getHash() == p_accept->getHash())
@@ -299,7 +299,7 @@ p_accept = DEx_getAccept(seller, prop, buyer);
     p_accept = DEx_getAccept(seller, prop, buyer); 
   }
 
-  if (msc_debug_dex) file_log("%s(%s, %s)\n", __FUNCTION__, seller, buyer);
+  if (msc_debug_dex) PrintToLog("%s(%s, %s)\n", __FUNCTION__, seller, buyer);
 
   if (!p_accept) return (DEX_ERROR_PAYMENT -1);  // there must be an active Accept for this payment
 
@@ -316,7 +316,7 @@ p_accept = DEx_getAccept(seller, prop, buyer);
   const uint64_t nActualAmount = p_accept->getAcceptAmountRemaining();  // actual amount desired, in the Accept
 
   if (msc_debug_dex)
-   file_log("BTC_desired= %30.20lf , offer_amount=%30.20lf , perc_X= %30.20lf , Purchased= %30.20lf , units_purchased= %lu\n",
+   PrintToLog("BTC_desired= %30.20lf , offer_amount=%30.20lf , perc_X= %30.20lf , Purchased= %30.20lf , units_purchased= %lu\n",
    BTC_desired_original, offer_amount_original, perc_X, Purchased, units_purchased);
 
   // if units_purchased is greater than what's in the Accept, the buyer gets only what's in the Accept
@@ -334,7 +334,7 @@ p_accept = DEx_getAccept(seller, prop, buyer);
       bool bValid = true;
       p_txlistdb->recordPaymentTX(txid, bValid, blockNow, vout, prop, units_purchased, buyer, seller);
 
-      file_log("#######################################################\n");
+      PrintToLog("#######################################################\n");
   }
 
   // reduce the amount of units still desired by the buyer and if 0 must destroy the Accept
@@ -369,7 +369,7 @@ AcceptMap::iterator my_it = my_accepts.begin();
 
     if ((blockNow - mpaccept.block) >= (int) mpaccept.getBlockTimeLimit())
     {
-      file_log("%s() FOUND EXPIRED ACCEPT, erasing: blockNow=%d, offer block=%d, blocktimelimit= %d\n",
+      PrintToLog("%s() FOUND EXPIRED ACCEPT, erasing: blockNow=%d, offer block=%d, blocktimelimit= %d\n",
        __FUNCTION__, blockNow, mpaccept.block, mpaccept.getBlockTimeLimit());
 
       // extract the seller, buyer & property from the Key

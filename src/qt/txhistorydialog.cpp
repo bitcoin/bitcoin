@@ -256,7 +256,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                         // STO not in historyMap, get details
                         uint64_t propertyId = 0;
                         try { propertyId = boost::lexical_cast<uint64_t>(svstr[3]); } // attempt to extract propertyId
-                          catch (const boost::bad_lexical_cast &e) { file_log("DEBUG STO - error in converting values from leveldb\n"); continue; } //(something went wrong)
+                          catch (const boost::bad_lexical_cast &e) { PrintToLog("DEBUG STO - error in converting values from leveldb\n"); continue; } //(something went wrong)
                         Array receiveArray;
                         uint64_t total = 0;
                         uint64_t stoFee = 0;

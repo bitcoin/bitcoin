@@ -62,7 +62,7 @@ unsigned int CMPSPInfo::updateSP(unsigned int propertyID, Entry const &info)
     commitBatch.Put(spKey, spValue);
     pdb->Write(syncoptions, &commitBatch);
 
-    file_log("Updated LevelDB with SP data successfully\n");
+    PrintToLog("Updated LevelDB with SP data successfully\n");
     return res;
 }
 
@@ -91,9 +91,9 @@ unsigned int CMPSPInfo::putSP(unsigned char ecosystem, Entry const &info)
     // sanity checking
     string existingEntry;
     if (false == pdb->Get(readoptions, spKey, &existingEntry).IsNotFound() && false == boost::equals(spValue, existingEntry)) {
-      file_log("%s WRITING SP %d TO LEVELDB WHEN A DIFFERENT SP ALREADY EXISTS FOR THAT ID!!!\n", __FUNCTION__, res);
+      PrintToLog("%s WRITING SP %d TO LEVELDB WHEN A DIFFERENT SP ALREADY EXISTS FOR THAT ID!!!\n", __FUNCTION__, res);
     } else if (false == pdb->Get(readoptions, txIndexKey, &existingEntry).IsNotFound() && false == boost::equals(txValue, existingEntry)) {
-      file_log("%s WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!\n", __FUNCTION__, info.txid.ToString(), res);
+      PrintToLog("%s WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!\n", __FUNCTION__, info.txid.ToString(), res);
     }
 
     // atomically write both the the SP and the index to the database
@@ -270,7 +270,7 @@ void mastercore::dumpCrowdsaleInfo(const string &address, CMPCrowd &crowd, bool 
 
   if (!fp)
   {
-    file_log("\nPROBLEM writing %s, errno= %d\n", INFO_FILENAME, errno);
+    PrintToLog("\nPROBLEM writing %s, errno= %d\n", INFO_FILENAME, errno);
     return;
   }
 
@@ -450,7 +450,7 @@ void mastercore::eraseMaxedCrowdsale(const string &address, uint64_t blockTime, 
     if (it != my_crowds.end()) {
 
       CMPCrowd &crowd = it->second;
-      file_log("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
+      PrintToLog("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
 
       dumpCrowdsaleInfo(address, crowd);
 
@@ -486,7 +486,7 @@ CrowdMap::iterator my_it = my_crowds.begin();
 
     if (blockTime > (int64_t)crowd.getDeadline())
     {
-      file_log("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, my_it->first);
+      PrintToLog("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, my_it->first);
 
       // TODO: dump the info about this crowdsale being delete into a TXT file (JSON perhaps)
       dumpCrowdsaleInfo(my_it->first, my_it->second, true);

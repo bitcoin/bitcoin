@@ -70,7 +70,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     }
     std::string txDesc = write_string(Value(txobj), true);
     CMPPending pending;
-    if (msc_debug_pending) file_log("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
+    if (msc_debug_pending) PrintToLog("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
                                         type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
     if (update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
         pending.src = sendingAddress;
@@ -93,7 +93,7 @@ void PendingDelete(const uint256& txid)
     if (it != my_pending.end()) {
         CMPPending *p_pending = &(it->second);
         int64_t src_amount = getMPbalance(p_pending->src, p_pending->prop, PENDING);
-        if (msc_debug_pending) file_log("%s(%s): amount=%d\n", __FUNCTION__, txid.GetHex(), src_amount);
+        if (msc_debug_pending) PrintToLog("%s(%s): amount=%d\n", __FUNCTION__, txid.GetHex(), src_amount);
         if (src_amount) update_tally_map(p_pending->src, p_pending->prop, p_pending->amount, PENDING);
         my_pending.erase(it);
     }

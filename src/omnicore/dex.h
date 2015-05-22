@@ -62,7 +62,7 @@ public:
       : offerBlock(b), offer_amount_original(a), property(cu), BTC_desired_original(d), min_fee(fee), blocktimelimit(btl),
         txid(tx), subaction(0)
   {
-    if (msc_debug_dex) file_log("%s(%lu): %s , line %d, file: %s\n", __FUNCTION__, a, txid.GetHex(), __LINE__, __FILE__);
+    if (msc_debug_dex) PrintToLog("%s(%lu): %s , line %d, file: %s\n", __FUNCTION__, a, txid.GetHex(), __LINE__, __FILE__);
   }
 
   void Set(uint64_t d, uint64_t fee, unsigned char btl, unsigned char suba)
@@ -128,24 +128,24 @@ public:
    offer_amount_original(o), BTC_desired_original(btc),offer_txid(txid),block(b)
   {
     accept_amount_original = accept_amount_remaining;
-    file_log("%s(%lu), line %d, file: %s\n", __FUNCTION__, a, __LINE__, __FILE__);
+    PrintToLog("%s(%lu), line %d, file: %s\n", __FUNCTION__, a, __LINE__, __FILE__);
   }
 
   CMPAccept(uint64_t origA, uint64_t remA, int b, unsigned char blt, unsigned int c, uint64_t o, uint64_t btc, const uint256 &txid):accept_amount_original(origA),accept_amount_remaining(remA),blocktimelimit(blt),property(c),
    offer_amount_original(o), BTC_desired_original(btc),offer_txid(txid),block(b)
   {
-    file_log("%s(%lu[%lu]), line %d, file: %s\n", __FUNCTION__, remA, origA, __LINE__, __FILE__);
+    PrintToLog("%s(%lu[%lu]), line %d, file: %s\n", __FUNCTION__, remA, origA, __LINE__, __FILE__);
   }
 
   void print()
   {
-    file_log("buying: %12.8lf (originally= %12.8lf) in block# %d\n",
+    PrintToLog("buying: %12.8lf (originally= %12.8lf) in block# %d\n",
      (double)accept_amount_remaining/(double)COIN, (double)accept_amount_original/(double)COIN, block);
   }
 
   uint64_t getAcceptAmountRemaining() const
   { 
-    file_log("%s(); buyer still wants = %lu, line %d, file: %s\n", __FUNCTION__, accept_amount_remaining, __LINE__, __FILE__);
+    PrintToLog("%s(); buyer still wants = %lu, line %d, file: %s\n", __FUNCTION__, accept_amount_remaining, __LINE__, __FILE__);
 
     return accept_amount_remaining;
   }
