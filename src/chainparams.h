@@ -11,6 +11,7 @@
 #include "primitives/block.h"
 #include "protocol.h"
 
+#include <memory>
 #include <vector>
 
 struct CDNSSeedData {
@@ -77,6 +78,7 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
+    void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 protected:
     CChainParams() {}
 
@@ -98,6 +100,13 @@ protected:
 };
 
 /**
+ * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.
+ * @returns a CChainParams* of the chosen chain.
+ * @throws a std::runtime_error if the chain is not supported.
+ */
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
+
+/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
@@ -106,7 +115,7 @@ const CChainParams &Params();
 /**
  * @returns CChainParams for the given BIP70 chain name.
  */
-CChainParams& Params(const std::string& chain);
+const CChainParams& Params(const std::string& chain);
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
@@ -117,6 +126,6 @@ void SelectParams(const std::string& chain);
 /**
  * Allows modifying the BIP9 regtest parameters.
  */
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
 #endif // BITCOIN_CHAINPARAMS_H
