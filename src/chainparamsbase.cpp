@@ -8,7 +8,7 @@
 #include "tinyformat.h"
 #include "util.h"
 
-#include <assert.h>
+#include <boost/scoped_ptr.hpp>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
@@ -35,7 +35,6 @@ public:
         nRPCPort = 8332;
     }
 };
-static CBaseMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -49,7 +48,6 @@ public:
         strDataDir = "testnet3";
     }
 };
-static CBaseTestNetParams testNetParams;
 
 /*
  * Regression test
@@ -63,31 +61,30 @@ public:
         strDataDir = "regtest";
     }
 };
-static CBaseRegTestParams regTestParams;
 
-static CBaseChainParams* pCurrentBaseParams = 0;
+static boost::scoped_ptr<CBaseChainParams> globalChainBaseParams;
 
 const CBaseChainParams& BaseParams()
 {
-    assert(pCurrentBaseParams);
-    return *pCurrentBaseParams;
+    assert(globalChainBaseParams.get());
+    return *globalChainBaseParams;
 }
 
-CBaseChainParams& BaseParams(const std::string& chain)
+CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        return mainParams;
+        return new CBaseMainParams();
     else if (chain == CBaseChainParams::TESTNET)
-        return testNetParams;
+        return new CBaseTestNetParams();
     else if (chain == CBaseChainParams::REGTEST)
-        return regTestParams;
+        return new CBaseRegTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
 void SelectBaseParams(const std::string& chain)
 {
-    pCurrentBaseParams = &BaseParams(chain);
+    globalChainBaseParams.reset(CBaseChainParams::Factory(chain));
 }
 
 std::string ChainNameFromCommandLine()
@@ -106,5 +103,5 @@ std::string ChainNameFromCommandLine()
 
 bool AreBaseParamsConfigured()
 {
-    return pCurrentBaseParams != NULL;
+    return globalChainBaseParams.get();
 }
