@@ -589,6 +589,34 @@ int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx *mdex_o)
     return rc;
 }
 
+int CMPTransaction::logicMath_CreatePropertyFixed()
+{
+    int rc = -1;
+
+    return rc;
+}
+
+int CMPTransaction::logicMath_CreatePropertyVariable()
+{
+    int rc = -1;
+
+    return rc;
+}
+
+int CMPTransaction::logicMath_CloseCrowdsale()
+{
+    int rc = -1;
+
+    return rc;
+}
+
+int CMPTransaction::logicMath_CreatePropertyMananged()
+{
+    int rc = -1;
+
+    return rc;
+}
+
 int CMPTransaction::logicMath_GrantTokens()
 {
     int rc = PKT_ERROR_TOKENS - 1000;
@@ -741,6 +769,13 @@ int CMPTransaction::logicMath_ChangeIssuer()
 
   rc = 0;
   return rc;
+}
+
+int CMPTransaction::logicMath_Alert()
+{
+    int rc = -1;
+
+    return rc;
 }
 
 int CMPTransaction::logicMath_SavingsMark()

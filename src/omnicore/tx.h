@@ -148,16 +148,21 @@ public:
     SetNull();
   }
 
-  int logicMath_SimpleSend(void);
-  int logicMath_TradeOffer(CMPOffer *);
-  int logicMath_AcceptOffer_BTC(void);
-  int logicMath_SendToOwners(FILE *fp = NULL);
-  int logicMath_MetaDEx(CMPMetaDEx *);
-  int logicMath_GrantTokens(void);
-  int logicMath_RevokeTokens(void);
-  int logicMath_ChangeIssuer(void);
-  int logicMath_SavingsMark(void);
-  int logicMath_SavingsCompromised(void);
+  int logicMath_SimpleSend();                   //  1
+  int logicMath_SendToOwners(FILE* fp = NULL);  //  3
+  int logicMath_TradeOffer(CMPOffer*);          // 20
+  int logicMath_MetaDEx(CMPMetaDEx*);           // 21
+  int logicMath_AcceptOffer_BTC();              // 22
+  int logicMath_CreatePropertyFixed();          // 50
+  int logicMath_CreatePropertyVariable();       // 51
+  int logicMath_CloseCrowdsale();               // 53
+  int logicMath_CreatePropertyMananged();       // 54
+  int logicMath_GrantTokens();                  // 55
+  int logicMath_RevokeTokens();                 // 56
+  int logicMath_ChangeIssuer();                 // 70
+  int logicMath_Alert();                        // 65535
+  int logicMath_SavingsMark(void);              // missing
+  int logicMath_SavingsCompromised(void);       // missing
 
  int interpretPacket(CMPOffer *obj_o = NULL, CMPMetaDEx *mdex_o = NULL);
  int step1(void);
