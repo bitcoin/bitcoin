@@ -19,7 +19,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "Bitcoin Core (OSS GUI client for Bitcoin)"
+            VALUE "FileDescription",    "Bitcoin Core (GUI node for Bitcoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "bitcoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
