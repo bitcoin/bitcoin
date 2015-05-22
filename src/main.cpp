@@ -2373,7 +2373,6 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
     }
 	const Bitcoin_CBlockIndex* pmoveFromBitcoinIndex = (*mi).second;
 
-	const int64_t dbThreshold = GetArg("-claimtmpdbthreshold", -1);
 	const bool fastForwardClaimState = FastForwardClaimStateFor(pmoveFromBitcoinIndex->nHeight, pmoveFromBitcoinIndex->GetBlockHash());
 	if(fastForwardClaimState) {
 		LogPrintf("Credits: DisconnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
@@ -2440,7 +2439,6 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     }
 	const Bitcoin_CBlockIndex* palignToBitcoinIndex = (*mi).second;
 
-	const int64_t dbThreshold = GetArg("-claimtmpdbthreshold", -1);
 	const bool fastForwardClaimState = FastForwardClaimStateFor(palignToBitcoinIndex->nHeight, palignToBitcoinIndex->GetBlockHash());
 	if(fastForwardClaimState) {
 		LogPrintf("Credits: ConnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);

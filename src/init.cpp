@@ -296,7 +296,6 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n";
     strUsage += "  -bind=<addr>           " + _("Bind to given address and always listen on it. Use [host]:port notation for IPv6") + "\n";
     strUsage += "  -bitcoin_bind=<addr>         " + _("Same as above, for bitcoin") + "\n";
-    strUsage += "  -claimtmpdbthreshold=<ip>          " + _("Set the number of bitcoin blocks a claim tip movement should be done without a temporary db. -1 means no tmpdb, memory only. Default -1.") + "\n";
     strUsage += "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n";
     strUsage += "  -bitcoin_connect=<ip>          " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n";
