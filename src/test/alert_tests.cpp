@@ -21,6 +21,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
 #if 0
@@ -199,8 +200,8 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     // Test PartitionCheck
     CCriticalSection csDummy;
     CBlockIndex indexDummy[100];
-    CChainParams& params = Params(CBaseChainParams::MAIN);
-    int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
+    const boost::scoped_ptr<CChainParams> testChainParams(CChainParams::Factory(CBaseChainParams::MAIN));
+    int64_t nPowTargetSpacing = testChainParams->GetConsensus().nPowTargetSpacing;
 
     // Generate fake blockchain timestamps relative to
     // an arbitrary time:
