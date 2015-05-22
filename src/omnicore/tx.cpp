@@ -606,6 +606,21 @@ int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx *mdex_o)
 
 int CMPTransaction::logicMath_CreatePropertyFixed()
 {
+    if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
+        return (PKT_ERROR_SP -501);
+    }
+    if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
+        return (PKT_ERROR_SP -502);
+    }
+    unsigned int prop_id = _my_sps->peekNextSPID(ecosystem);
+    if (!isTransactionTypeAllowed(block, prop_id, type, version)) {
+        return (PKT_ERROR_SP -503);
+    }
+    if ('\0' == name[0]) {
+        return (PKT_ERROR_SP -505);
+    }
+    // ------------------------------------------
+
     int rc = -1;
 
     CMPSPInfo::Entry newSP;
@@ -630,6 +645,21 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
 
 int CMPTransaction::logicMath_CreatePropertyVariable()
 {
+    if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
+        return (PKT_ERROR_SP -501);
+    }
+    if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
+        return (PKT_ERROR_SP -502);
+    }
+    unsigned int prop_id = _my_sps->peekNextSPID(ecosystem);
+    if (!isTransactionTypeAllowed(block, prop_id, type, version)) {
+        return (PKT_ERROR_SP -503);
+    }
+    if ('\0' == name[0]) {
+        return (PKT_ERROR_SP -505);
+    }
+    // ------------------------------------------
+
     int rc = -1;
 
     // check if one exists for this address already !
@@ -719,6 +749,21 @@ int CMPTransaction::logicMath_CloseCrowdsale()
 
 int CMPTransaction::logicMath_CreatePropertyMananged()
 {
+    if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
+        return (PKT_ERROR_SP -501);
+    }
+    if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
+        return (PKT_ERROR_SP -502);
+    }
+    unsigned int prop_id = _my_sps->peekNextSPID(ecosystem);
+    if (!isTransactionTypeAllowed(block, prop_id, type, version)) {
+        return (PKT_ERROR_SP -503);
+    }
+    if ('\0' == name[0]) {
+        return (PKT_ERROR_SP -505);
+    }
+    // ------------------------------------------
+
     int rc = -1;
 
     CMPSPInfo::Entry newSP;
