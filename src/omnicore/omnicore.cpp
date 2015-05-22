@@ -2129,10 +2129,12 @@ int mastercore_init()
 
   PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
 
+  PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
+  PrintToLog("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+  PrintToLog("Build date: %s, based on commit: %s\n", BuildDate(), BuildCommit());
+
   InitDebugLogLevels();
   ShrinkDebugLog();
-
-  PrintToLog("\n%s OMNICORE INIT, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
 
   if (isNonMainNet())
   {
@@ -2146,14 +2148,14 @@ int mastercore_init()
 
   // check for --autocommit option and set transaction commit flag accordingly
   if (!GetBoolArg("-autocommit", true)) {
-      PrintToLog("Process was started with --autocommit set to false.  Created omni transactions will not be committed to wallet or broadcast.");
+      PrintToLog("Process was started with --autocommit set to false. "
+                 "Created Omni transactions will not be committed to wallet or broadcast.\n");
       autoCommit = false;
   }
   // check for --startclean option and delete MP_ folders if present
   if (GetBoolArg("-startclean", false)) {
-      PrintToLog("Process was started with --startclean option, attempting to clear persistence files...");
-      try
-      {
+      PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
+      try {
           boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
           boost::filesystem::path txlistPath = GetDataDir() / "MP_txlist";
           boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
@@ -2164,12 +2166,12 @@ int mastercore_init()
           if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
           if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
           if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
-          PrintToLog("Success clearing persistence files (did not raise any exceptions).");
+          PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
       }
-      catch(boost::filesystem::filesystem_error const & e)
+      catch (const boost::filesystem::filesystem_error& e)
       {
-          PrintToLog("Exception deleting folders for --startclean option.\n");
-          PrintToConsole("Exception deleting folders for --startclean option.\n");
+          PrintToLog("Failed to delete persistence folders: %s\n", e.what());
+          PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
       }
   }
   
@@ -2201,8 +2203,12 @@ int mastercore_init()
   if (readPersistence())
   {
     nWaterlineBlock = load_most_relevant_state();
-    PrintToConsole("Loading persistent state: %s\n", nWaterlineBlock>0 ?
-        "OK" : "FAILED (this is normal if this is the first time OmniCore is being run)");
+    if (nWaterlineBlock > 0) {
+        PrintToConsole("Loading persistent state: OK [block %d]\n", nWaterlineBlock);
+    } else {
+        PrintToConsole("Loading persistent state: NONE\n");
+    }
+
     if (nWaterlineBlock < 0) {
       // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
       clear_all_state();
@@ -2301,7 +2307,9 @@ int mastercore_shutdown()
         _my_sps = NULL;
     }
 
-    PrintToLog("\n%s OMNICORE SHUTDOWN, build date: " __DATE__ " " __TIME__ "\n\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToLog("\nOmni Core shutdown completed\n");
+    PrintToLog("Shutdown time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+
     PrintToConsole("Omni Core shutdown completed\n");
 
     return 0;
