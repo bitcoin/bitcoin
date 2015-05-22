@@ -32,6 +32,12 @@ protected:
 };
 
 /**
+ * Creates a CBaseChainParams of the chosen chain and returns a
+ * pointer to it. The caller has to delete the object.
+ * Raises an error if the chain is not supported.
+ */
+CBaseChainParams* FactoryBaseParams(std::string chain);
+/**
  * Returns a string with the help messages for the chainparams options. 
  */
 std::string GetParamsHelpMessages();
@@ -42,6 +48,7 @@ std::string GetParamsHelpMessages();
  */
 std::string ChainNameFromCommandLine();
 
+/** Functions that relay on internal state */
 /**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.

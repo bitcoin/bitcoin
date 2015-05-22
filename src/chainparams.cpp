@@ -5,6 +5,7 @@
 
 #include "chainparams.h"
 
+#include "templates.hpp"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -135,7 +136,6 @@ public:
         };
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -196,7 +196,6 @@ public:
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -242,30 +241,35 @@ public:
         };
     }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
+static Container<CChainParams> currentParams;
+static Container<CChainParams> switchingParams;
 
 const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+    return currentParams.Get();
 }
 
-CChainParams& Params(std::string chain)
+CChainParams* ParamsFactory(std::string chain)
 {
     if (chain == CBaseChainParams::MAIN)
-            return mainParams;
+        return new CMainParams();
     else if (chain == CBaseChainParams::TESTNET)
-            return testNetParams;
+        return new CTestNetParams();
     else if (chain == CBaseChainParams::REGTEST)
-            return regTestParams;
+        return new CRegTestParams();
     throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
+}
+
+const CChainParams& Params(std::string chain)
+{
+    switchingParams.Set(ParamsFactory(chain));
+    return switchingParams.Get();
 }
 
 void SelectParams(std::string chain)
 {
     SelectBaseParams(chain);
-    pCurrentParams = &Params(chain);
+    currentParams.Set(ParamsFactory(chain));
 }
 
 void SelectParamsFromCommandLine()

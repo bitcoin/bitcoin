@@ -5,10 +5,9 @@
 
 #include "chainparamsbase.h"
 
+#include "templates.hpp"
 #include "tinyformat.h"
 #include "util.h"
-
-#include <assert.h>
 
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
@@ -36,7 +35,6 @@ public:
         nRPCPort = 8332;
     }
 };
-static CBaseMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -50,7 +48,6 @@ public:
         strDataDir = "testnet3";
     }
 };
-static CBaseTestNetParams testNetParams;
 
 /*
  * Regression test
@@ -63,7 +60,6 @@ public:
         strDataDir = CBaseChainParams::REGTEST;
     }
 };
-static CBaseRegTestParams regTestParams;
 
 /*
  * Unit test
@@ -78,24 +74,27 @@ public:
 };
 static CBaseUnitTestParams unitTestParams;
 
-static CBaseChainParams* pCurrentBaseParams = 0;
+static Container<CBaseChainParams> currentBaseParams;
 
 const CBaseChainParams& BaseParams()
 {
-    assert(pCurrentBaseParams);
-    return *pCurrentBaseParams;
+    return currentBaseParams.Get();
+}
+
+CBaseChainParams* FactoryBaseParams(std::string chain)
+{
+    if (chain == CBaseChainParams::MAIN)
+        return new CBaseMainParams();
+    else if (chain == CBaseChainParams::TESTNET)
+        return new CBaseTestNetParams();
+    else if (chain == CBaseChainParams::REGTEST)
+        return new CBaseRegTestParams();
+    throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
 }
 
 void SelectBaseParams(std::string chain)
 {
-    if (chain == CBaseChainParams::MAIN)
-        pCurrentBaseParams = &mainParams;
-    else if (chain == CBaseChainParams::TESTNET)
-        pCurrentBaseParams = &testNetParams;
-    else if (chain == CBaseChainParams::REGTEST)
-        pCurrentBaseParams = &regTestParams;
-    else
-        throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
+    currentBaseParams.Set(FactoryBaseParams(chain));
 }
 
 std::string ChainNameFromCommandLine()
@@ -119,5 +118,5 @@ void SelectBaseParamsFromCommandLine()
 
 bool AreBaseParamsConfigured()
 {
-    return pCurrentBaseParams != NULL;
+    return !currentBaseParams.IsNull();
 }

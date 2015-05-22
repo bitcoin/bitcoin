@@ -101,6 +101,14 @@ protected:
 };
 
 /**
+ * Creates a CChainParams of the chosen chain and returns a
+ * pointer to it. The caller has to delete the object.
+ * Raises a std::runtime_error if the chain is not supported.
+ */
+CChainParams* ParamsFactory(std::string chain);
+
+/** Functions that relay on internal state */
+/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
@@ -109,7 +117,7 @@ const CChainParams &Params();
 /**
  * Returns parameters for the given BIP70 chain name.
  */
-CChainParams& Params(std::string chain);
+const CChainParams& Params(std::string chain);
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
