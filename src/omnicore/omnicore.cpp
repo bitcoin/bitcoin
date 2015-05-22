@@ -3640,11 +3640,55 @@ std::string new_global_alert_message;
       rc = logicMath_SimpleSend();
       break;
 
+    case MSC_TYPE_SEND_TO_OWNERS:
+    if (disable_Divs) break;
+    else
+    {
+      step_rc = step2_Value();
+      if (0>step_rc) return step_rc;
+
+      boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
+      FILE *fp = fopen(pathOwners.string().c_str(), "a");
+
+      if (fp)
+      {
+        printInfo(fp);
+      }
+      else
+      {
+        PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
+      }
+
+      rc = logicMath_SendToOwners(fp);
+
+      if (fp) fclose(fp);
+    }
+    break;
+
     case MSC_TYPE_TRADE_OFFER:
       step_rc = step2_Value();
       if (0>step_rc) return step_rc;
 
       rc = logicMath_TradeOffer(obj_o);
+      break;
+
+    case MSC_TYPE_METADEX:
+#ifdef  MY_HACK
+//      if (304500 > block) return -31337;
+//      if (305100 > block) return -31337;
+
+//      if (304930 > block) return -31337;
+//      if (307057 > block) return -31337;
+
+//      if (307234 > block) return -31337;
+//      if (307607 > block) return -31337;
+
+      if (307057 > block) return -31337;
+#endif
+      step_rc = step2_Value();
+      if (0>step_rc) return step_rc;
+
+      rc = logicMath_MetaDEx(mdex_o);
       break;
 
     case MSC_TYPE_ACCEPT_OFFER_BTC:
@@ -3825,64 +3869,12 @@ std::string new_global_alert_message;
       rc = logicMath_RevokeTokens();
       break;
 
-    case MSC_TYPE_SEND_TO_OWNERS:
-    if (disable_Divs) break;
-    else
-    {
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
-      FILE *fp = fopen(pathOwners.string().c_str(), "a");
-
-      if (fp)
-      {
-        printInfo(fp);
-      }
-      else
-      {
-        PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
-      }
-
-      rc = logicMath_SendToOwners(fp);
-
-      if (fp) fclose(fp);
-    }
-    break;
-
-    case MSC_TYPE_METADEX:
-#ifdef  MY_HACK
-//      if (304500 > block) return -31337;
-//      if (305100 > block) return -31337;
-
-//      if (304930 > block) return -31337;
-//      if (307057 > block) return -31337;
-
-//      if (307234 > block) return -31337;
-//      if (307607 > block) return -31337;
-
-      if (307057 > block) return -31337;
-#endif
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_MetaDEx(mdex_o);
-      break;
-
     case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
       // parse the property from the packet
       memcpy(&property, &pkt[4], 4);
       swapByteOrder32(property);
 
       rc = logicMath_ChangeIssuer();
-      break;
-
-    case MSC_TYPE_SAVINGS_MARK:
-      rc = logicMath_SavingsMark();
-      break;
-
-    case MSC_TYPE_SAVINGS_COMPROMISED:
-      rc = logicMath_SavingsCompromised();
       break;
 
     case OMNICORE_MESSAGE_TYPE_ALERT:
@@ -3893,6 +3885,14 @@ std::string new_global_alert_message;
           if (rc == 0) global_alert_message = new_global_alert_message;
           // end of block handler will expire any old alerts
       }
+      break;
+
+    case MSC_TYPE_SAVINGS_MARK:
+      rc = logicMath_SavingsMark();
+      break;
+
+    case MSC_TYPE_SAVINGS_COMPROMISED:
+      rc = logicMath_SavingsCompromised();
       break;
 
     default:
