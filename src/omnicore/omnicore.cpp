@@ -632,64 +632,68 @@ int64_t before, after;
   return bRet;
 }
 
-//calculateFundraiser does token calculations per transaction
-//calcluateFractional does calculations for missed tokens
-void calculateFundraiser(unsigned short int propType, uint64_t amtTransfer, unsigned char bonusPerc, 
-  uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens, 
-  std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale )
+// calculateFundraiser does token calculations per transaction
+// calcluateFractional does calculations for missed tokens
+void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
+        uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens,
+        std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale)
 {
-  int128_t weeks_sec_ = 604800L;
-  //define weeks in seconds
-  int128_t precision_ = 1000000000000L;
-  //define precision for all non-bitcoin values (bonus percentages, for example)
-  int128_t percentage_precision = 100L;
-  //define precision for all percentages (10/100 = 10%)
+    // Weeks in seconds
+    int128_t weeks_sec_ = 604800L;
 
-  //calcluate the bonusseconds
-  int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
+    // Precision for all non-bitcoin values (bonus percentages, for example)
+    int128_t precision_ = 1000000000000L;
 
-  int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_ + ( (bonusSeconds_ % weeks_sec_ ) * precision_) / weeks_sec_;
-  //calculate the whole number of weeks to apply bonus
+    // Precision for all percentages (10/100 = 10%)
+    int128_t percentage_precision = 100L;
 
-  int128_t ebPercentage_ = weeks_ * bonusPerc;
-  //calculate the earlybird percentage to be applied
+    // Calculate the bonus seconds
+    int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
 
-  int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision) ) / percentage_precision; 
-  //calcluate the bonus percentage to apply up to 'percentage_precision' number of digits
+    // Calculate the whole number of weeks to apply bonus
+    int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_ + ((bonusSeconds_ % weeks_sec_) * precision_) / weeks_sec_;
 
-  int128_t issuerPercentage_ = (int128_t)issuerPerc * precision_ / percentage_precision;
+    // Calculate the earlybird percentage to be applied
+    int128_t ebPercentage_ = weeks_ * bonusPerc;
 
-  int128_t satoshi_precision_ = 100000000;
-  //define the precision for bitcoin amounts (satoshi)
-  //declare used variables for total created tokens
+    // Calcluate the bonus percentage to apply up to percentage_precision number of digits
+    int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision)) / percentage_precision;
 
-  //declare used variables for total issuer tokens
+    // Calculate the bonus percentage for the issuer
+    int128_t issuerPercentage_ = int128_t(issuerPerc) * precision_ / percentage_precision;
 
-  cpp_int createdTokens = boost::lexical_cast<cpp_int>((int128_t)amtTransfer*(int128_t)numProps)* boost::lexical_cast<cpp_int>(bonusPercentage_);
+    // Precision for bitcoin amounts (satoshi)
+    int128_t satoshi_precision_ = 100000000;
 
-  cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_ )) * (issuerPercentage_ / 100) * precision_;
+    // Total tokens including remainders
+    cpp_int createdTokens = cpp_int(amtTransfer) * cpp_int(numProps) * cpp_int(bonusPercentage_);
+    cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_)) * (issuerPercentage_ / 100) * precision_;
 
-  //total tokens including remainders
+    cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
+    cpp_int issuerTokens_int = issuerTokens / (precision_ * satoshi_precision_ * 100);
+    cpp_int newTotalCreated = totalTokens + createdTokens_int + issuerTokens_int;
 
-  cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
-  cpp_int issuerTokens_int = issuerTokens / (precision_ * satoshi_precision_ * 100 );
-  cpp_int newTotalCreated = totalTokens + createdTokens_int  + issuerTokens_int;
+    if (newTotalCreated > MAX_INT_8_BYTES) {
+        cpp_int maxCreatable = MAX_INT_8_BYTES - totalTokens;
+        cpp_int created = createdTokens_int + issuerTokens_int;
 
-  if ( newTotalCreated > MAX_INT_8_BYTES) {
-    cpp_int maxCreatable = MAX_INT_8_BYTES - totalTokens;
+        // Calcluate the ratio of tokens for what we can create and apply it
+        cpp_int ratio = (created * precision_ * satoshi_precision_) / maxCreatable;
 
-    cpp_int created = createdTokens_int + issuerTokens_int;
-    cpp_int ratio = (created * precision_ * satoshi_precision_) / maxCreatable;
-  
-    issuerTokens_int = (issuerTokens_int * precision_ * satoshi_precision_)/ratio;
-    //calcluate the ratio of tokens for what we can create and apply it
-    createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int ;
-    //give the rest to the user
+        // The tokens for the issuer
+        issuerTokens_int = (issuerTokens_int * precision_ * satoshi_precision_) / ratio;
 
-    close_crowdsale = true; //close up the crowdsale after assigning all tokens
-  }
-  tokens = std::make_pair(boost::lexical_cast<uint64_t>(createdTokens_int) , boost::lexical_cast<uint64_t>(issuerTokens_int));
-  //give tokens
+        // The tokens for the user
+        createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int;
+
+        // Close the crowdsale after assigning all tokens
+        close_crowdsale = true;
+    }
+
+    // The tokens to credit
+    assert(createdTokens_int <= std::numeric_limits<int64_t>::max());
+    assert(issuerTokens_int <= std::numeric_limits<int64_t>::max());
+    tokens = std::make_pair(createdTokens_int.convert_to<uint64_t>(), issuerTokens_int.convert_to<uint64_t>());
 }
 
 // certain transaction types are not live on the network until some specific block height
@@ -3889,109 +3893,82 @@ std::string new_global_alert_message;
 
 int CMPTransaction::logicMath_SimpleSend()
 {
-int rc = PKT_ERROR_SEND -1000;
-int invalid = 0;  // unused
+    int rc = PKT_ERROR_SEND -1000;
 
-      if (!isTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_SEND -22);
+    if (!isTransactionTypeAllowed(block, property, type, version)) {
+        return PKT_ERROR_SEND -22;
+    }
 
-      if (sender.empty()) ++invalid;
-      // special case: if can't find the receiver -- assume sending to itself !
-      // may also be true for BTC payments........
-      // TODO: think about this..........
-      if (receiver.empty())
-      {
+    // Special case: if can't find the receiver -- assume send to self!
+    if (receiver.empty()) {
         receiver = sender;
-      }
-      if (receiver.empty()) ++invalid;
+    }
 
-      // insufficient funds check & return
-      if (!update_tally_map(sender, property, - nValue, BALANCE))
-      {
-        return (PKT_ERROR -111);
-      }
+    // Cancel send, if the sender has sufficient funds
+    if (!update_tally_map(sender, property, -nValue, BALANCE)) {
+        return PKT_ERROR -111;
+    }
 
-      update_tally_map(receiver, property, nValue, BALANCE);
+    update_tally_map(receiver, property, nValue, BALANCE);
 
-      // is there a crowdsale running from this recepient ?
-      {
-      CMPCrowd *crowd;
+    // Is there an active crowdsale running from this recepient?
+    {
+        CMPCrowd* pcrowdsale = getCrowd(receiver);
 
-        crowd = getCrowd(receiver);
+        if (pcrowdsale && pcrowdsale->getCurrDes() == property) {
+            CMPSPInfo::Entry sp;
+            bool spFound = _my_sps->getSP(pcrowdsale->getPropertyId(), sp);
 
-        if (crowd && (crowd->getCurrDes() == property) )
-        {
-          CMPSPInfo::Entry sp;
-          bool spFound = _my_sps->getSP(crowd->getPropertyId(), sp);
+            PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
 
-          PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
-          
-          if (spFound)
-          {
-            //init this struct
-            std::pair <uint64_t,uint64_t> tokens;
-            //pass this in by reference to determine if max_tokens has been reached
-            bool close_crowdsale = false; 
-            //get txid
-            string sp_txid =  sp.txid.GetHex();
+            if (spFound) {
+                // Holds the tokens to be credited to the sender and receiver
+                std::pair<uint64_t, uint64_t> tokens;
 
-            //Units going into the calculateFundraiser function must
-            //match the unit of the fundraiser's property_type.
-            //By default this means Satoshis in and satoshis out.
-            //In the condition that your fundraiser is Divisible,
-            //but you are accepting indivisible tokens, you must
-            //account for 1.0 Div != 1 Indiv but actually 1.0 Div == 100000000 Indiv.
-            //The unit must be shifted or your values will be incorrect,
-            //that is what we check for below.
-            if ( !(isPropertyDivisible(property)) ) {
-              nValue = nValue * 1e8;
+                // Passed by reference to determine, if max_tokens has been reached
+                bool close_crowdsale = false;
+
+                // Units going into the calculateFundraiser function must
+                // match the unit of the fundraiser's property_type.
+                // By default this means satoshis in and satoshis out.
+                // In the condition that the fundraiser is divisible,
+                // but indivisible tokens are accepted, it must account for
+                // 1.0 Div != 1 Indiv, but actually 1.0 Div == 100000000 Indiv.
+                // The unit must be shifted or the values will be incorrect,
+                // which is what is checked below.
+                if (!isPropertyDivisible(property)) {
+                    nValue = nValue * 1e8;
+                }
+
+                // Calculate the amounts to credit for this fundraiser
+                calculateFundraiser(nValue, sp.early_bird, sp.deadline, (uint64_t) blockTime,
+                        sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
+                        tokens, close_crowdsale);
+
+                // Update the crowdsale object
+                pcrowdsale->incTokensUserCreated(tokens.first);
+                pcrowdsale->incTokensIssuerCreated(tokens.second);
+
+                // Data to pass to txFundraiserData
+                uint64_t txdata[] = {(uint64_t) nValue, (uint64_t) blockTime, (uint64_t) tokens.first, (uint64_t) tokens.second};
+                std::vector<uint64_t> txDataVec(txdata, txdata + sizeof (txdata) / sizeof (txdata[0]));
+
+                // Insert data about crowdsale participation
+                pcrowdsale->insertDatabase(txid.GetHex(), txDataVec);
+
+                // Credit tokens for this fundraiser
+                update_tally_map(sender, pcrowdsale->getPropertyId(), tokens.first, BALANCE);
+                update_tally_map(receiver, pcrowdsale->getPropertyId(), tokens.second, BALANCE);
+
+                // Close crowdsale, if we hit MAX_TOKENS
+                if (close_crowdsale) {
+                    eraseMaxedCrowdsale(receiver, blockTime, block);
+                }
             }
-
-            //file_log("\nValues going into calculateFundraiser(): hexid %s nValue %lu earlyBird %d deadline %lu blockTime %ld numProps %lu issuerPerc %d \n", txid.GetHex().c_str(), nValue, sp.early_bird, sp.deadline, (uint64_t) blockTime, sp.num_tokens, sp.percentage);
-
-            // calc tokens per this fundraise
-            calculateFundraiser(sp.prop_type,         //u short
-                                nValue,               // u int 64
-                                sp.early_bird,        // u char
-                                sp.deadline,          // u int 64
-                                (uint64_t) blockTime, // int 64
-                                sp.num_tokens,      // u int 64
-                                sp.percentage,        // u char
-                                getTotalTokens(crowd->getPropertyId()),
-                                tokens,
-                                close_crowdsale);
-
-            //file_log(mp_fp,"\n before incrementing global tokens user: %ld issuer: %ld\n", crowd->getUserCreated(), crowd->getIssuerCreated());
-            
-            //getIssuerCreated() is passed into calcluateFractional() at close
-            //getUserCreated() is a convenient way to get user created during a crowdsale
-            crowd->incTokensUserCreated(tokens.first);
-            crowd->incTokensIssuerCreated(tokens.second);
-            
-            //file_log(mp_fp,"\n after incrementing global tokens user: %ld issuer: %ld\n", crowd->getUserCreated(), crowd->getIssuerCreated());
-            
-            //init data to pass to txFundraiserData
-            uint64_t txdata[] = { (uint64_t) nValue, (uint64_t) blockTime, (uint64_t) tokens.first, (uint64_t) tokens.second };
-            
-            std::vector<uint64_t> txDataVec(txdata, txdata + sizeof(txdata)/sizeof(txdata[0]) );
-
-            //insert data
-            crowd->insertDatabase(txid.GetHex().c_str(), txDataVec  );
-
-            //file_log(mp_fp,"\nValues coming out of calculateFundraiser(): hex %s: Tokens created, Tokens for issuer: %ld %ld\n",txid.GetHex().c_str(), tokens.first, tokens.second);
-
-            //update sender/rec
-            update_tally_map(sender, crowd->getPropertyId(), tokens.first, BALANCE);
-            update_tally_map(receiver, crowd->getPropertyId(), tokens.second, BALANCE);
-
-            // close crowdsale if we hit MAX_TOKENS
-            if( close_crowdsale ) {
-              eraseMaxedCrowdsale(receiver, blockTime, block);
-            }
-          }
         }
-      }
+    }
 
-      rc = 0;
+    rc = 0;
 
     return rc;
 }
