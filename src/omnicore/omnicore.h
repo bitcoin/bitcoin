@@ -305,7 +305,7 @@ public:
 
     virtual ~CMPSTOList()
     {
-        if (msc_debug_persistence) file_log("CMPSTOList closed\n");
+        if (msc_debug_persistence) PrintToLog("CMPSTOList closed\n");
     }
 
     void getRecipients(const uint256 txid, string filterAddress, Array *recipientArray, uint64_t *total, uint64_t *stoFee);
@@ -330,7 +330,7 @@ public:
 
     virtual ~CMPTradeList()
     {
-        if (msc_debug_persistence) file_log("CMPTradeList closed\n");
+        if (msc_debug_persistence) PrintToLog("CMPTradeList closed\n");
     }
 
     void recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
@@ -355,7 +355,7 @@ public:
 
     virtual ~CMPTxList()
     {
-        if (msc_debug_persistence) file_log("CMPTxList closed\n");
+        if (msc_debug_persistence) PrintToLog("CMPTxList closed\n");
     }
 
     void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
