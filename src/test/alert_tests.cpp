@@ -15,6 +15,7 @@
 #include "main.h"
 #include "serialize.h"
 #include "streams.h"
+#include "templates.hpp"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -202,8 +203,8 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     // Test PartitionCheck
     CCriticalSection csDummy;
     CBlockIndex indexDummy[100];
-    CChainParams& params = Params(CBaseChainParams::MAIN);
-    int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
+    const Container<CChainParams> cTestChainParams(CChainParams::Factory(CBaseChainParams::MAIN));
+    int64_t nPowTargetSpacing = cTestChainParams.Get().GetConsensus().nPowTargetSpacing;
 
     // Generate fake blockchain timestamps relative to
     // an arbitrary time:

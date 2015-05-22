@@ -11,6 +11,7 @@
 #include "consensus/params.h"
 #include "primitives/block.h"
 #include "protocol.h"
+#include "templates.hpp"
 
 #include <vector>
 
@@ -71,6 +72,12 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const Checkpoints::CCheckpointData& Checkpoints() const { return checkpointData; }
+    /**
+     * Creates and returns a CChainParams* of the chosen chain. The caller has to delete the object.
+     * @returns a CChainParams* of the chosen chain.
+     * @throws a std::runtime_error if the chain is not supported.
+     */
+    static CChainParams* Factory(const std::string& chain);
 protected:
     CChainParams() {}
 
@@ -104,7 +111,7 @@ const CChainParams &Params();
 /**
  * @returns CChainParams for the given BIP70 chain name.
  */
-CChainParams& Params(const std::string& chain);
+const CChainParams& Params(const std::string& chain);
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
@@ -117,5 +124,7 @@ void SelectParams(const std::string& chain);
  * Returns false if an invalid combination is given.
  */
 bool SelectParamsFromCommandLine();
+
+extern Container<CChainParams> cGlobalChainParams;
 
 #endif // BITCOIN_CHAINPARAMS_H

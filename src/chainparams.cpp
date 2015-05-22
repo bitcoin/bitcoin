@@ -129,7 +129,6 @@ public:
         };
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -189,7 +188,6 @@ public:
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -235,30 +233,35 @@ public:
         };
     }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
+Container<CChainParams> cGlobalChainParams;
+static Container<CChainParams> cGlobalSwitchingChainParams;
 
 const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+    return cGlobalChainParams.Get();
 }
 
-CChainParams& Params(const std::string& chain)
+CChainParams* CChainParams::Factory(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-            return mainParams;
+        return new CMainParams();
     else if (chain == CBaseChainParams::TESTNET)
-            return testNetParams;
+        return new CTestNetParams();
     else if (chain == CBaseChainParams::REGTEST)
-            return regTestParams;
+        return new CRegTestParams();
     throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
+}
+
+const CChainParams& Params(const std::string& chain)
+{
+    cGlobalSwitchingChainParams.Set(CChainParams::Factory(chain));
+    return cGlobalSwitchingChainParams.Get();
 }
 
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+    cGlobalChainParams.Set(CChainParams::Factory(network));
 }
 
 bool SelectParamsFromCommandLine()

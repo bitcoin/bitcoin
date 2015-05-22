@@ -8,8 +8,6 @@
 #include "tinyformat.h"
 #include "util.h"
 
-#include <assert.h>
-
 const std::string CBaseChainParams::MAIN = "main";
 const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
@@ -26,7 +24,6 @@ public:
         nRPCPort = 8332;
     }
 };
-static CBaseMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -40,7 +37,6 @@ public:
         strDataDir = "testnet3";
     }
 };
-static CBaseTestNetParams testNetParams;
 
 /*
  * Regression test
@@ -53,7 +49,6 @@ public:
         strDataDir = "regtest";
     }
 };
-static CBaseRegTestParams regTestParams;
 
 /*
  * Unit test
@@ -68,24 +63,27 @@ public:
 };
 static CBaseUnitTestParams unitTestParams;
 
-static CBaseChainParams* pCurrentBaseParams = 0;
+Container<CBaseChainParams> cGlobalChainBaseParams;
 
 const CBaseChainParams& BaseParams()
 {
-    assert(pCurrentBaseParams);
-    return *pCurrentBaseParams;
+    return cGlobalChainBaseParams.Get();
+}
+
+CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
+{
+    if (chain == CBaseChainParams::MAIN)
+        return new CBaseMainParams();
+    else if (chain == CBaseChainParams::TESTNET)
+        return new CBaseTestNetParams();
+    else if (chain == CBaseChainParams::REGTEST)
+        return new CBaseRegTestParams();
+    throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
 }
 
 void SelectBaseParams(const std::string& chain)
 {
-    if (chain == CBaseChainParams::MAIN)
-        pCurrentBaseParams = &mainParams;
-    else if (chain == CBaseChainParams::TESTNET)
-        pCurrentBaseParams = &testNetParams;
-    else if (chain == CBaseChainParams::REGTEST)
-        pCurrentBaseParams = &regTestParams;
-    else
-        throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
+    cGlobalChainBaseParams.Set(CBaseChainParams::Factory(chain));
 }
 
 std::string ChainNameFromCommandLine()
@@ -114,5 +112,5 @@ bool SelectBaseParamsFromCommandLine()
 
 bool AreBaseParamsConfigured()
 {
-    return pCurrentBaseParams != NULL;
+    return !cGlobalChainBaseParams.IsNull();
 }
