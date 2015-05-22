@@ -8,6 +8,21 @@
 #include <string>
 #include <vector>
 
+/**
+ * Pushes bytes to the end of a vector.
+ */
+#define PUSH_BACK_BYTES(vector, value)\
+    vector.insert(vector.end(), reinterpret_cast<unsigned char *>(&(value)),\
+    reinterpret_cast<unsigned char *>(&(value)) + sizeof((value)));
+
+/**
+ * Pushes bytes to the end of a vector based on a pointer.
+ */
+#define PUSH_BACK_BYTES_PTR(vector, ptr, size)\
+    vector.insert(vector.end(), reinterpret_cast<unsigned char *>((ptr)),\
+    reinterpret_cast<unsigned char *>((ptr)) + (size));
+
+
 std::vector<unsigned char> CreatePayload_SimpleSend(uint32_t propertyId, uint64_t amount)
 {
     std::vector<unsigned char> payload;
@@ -386,4 +401,7 @@ std::vector<unsigned char> CreatePayload_MetaDExCancelEcosystem(uint8_t ecosyste
 
     return payload;
 }
+
+#undef PUSH_BACK_BYTES
+#undef PUSH_BACK_BYTES_PTR
 
