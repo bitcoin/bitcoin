@@ -398,6 +398,11 @@ bool mastercore::isMainEcosystemProperty(unsigned int property)
   return false;
 }
 
+void mastercore::setOmniCoreAlert(const std::string& alertMessage)
+{
+    global_alert_message = alertMessage;
+}
+
 std::string mastercore::getMasterCoreAlertString()
 {
     return global_alert_message;
@@ -3622,7 +3627,6 @@ int CMPTransaction::interpretPacket(CMPOffer *obj_o, CMPMetaDEx *mdex_o)
 {
 int rc = PKT_ERROR;
 int step_rc;
-std::string new_global_alert_message;
 
   if (0>step1()) return -98765;
 
@@ -3641,29 +3645,23 @@ std::string new_global_alert_message;
       break;
 
     case MSC_TYPE_SEND_TO_OWNERS:
-    if (disable_Divs) break;
-    else
     {
       step_rc = step2_Value();
       if (0>step_rc) return step_rc;
 
       boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
       FILE *fp = fopen(pathOwners.string().c_str(), "a");
-
-      if (fp)
-      {
+      if (fp) {
         printInfo(fp);
-      }
-      else
-      {
+      } else {
         PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
       }
 
       rc = logicMath_SendToOwners(fp);
 
       if (fp) fclose(fp);
+      break;
     }
-    break;
 
     case MSC_TYPE_TRADE_OFFER:
       step_rc = step2_Value();
@@ -3673,18 +3671,6 @@ std::string new_global_alert_message;
       break;
 
     case MSC_TYPE_METADEX:
-#ifdef  MY_HACK
-//      if (304500 > block) return -31337;
-//      if (305100 > block) return -31337;
-
-//      if (304930 > block) return -31337;
-//      if (307057 > block) return -31337;
-
-//      if (307234 > block) return -31337;
-//      if (307607 > block) return -31337;
-
-      if (307057 > block) return -31337;
-#endif
       step_rc = step2_Value();
       if (0>step_rc) return step_rc;
 
@@ -3707,25 +3693,7 @@ std::string new_global_alert_message;
       step_rc = step3_sp_fixed(p);
       if (0>step_rc) return step_rc;
 
-      if (0 == step_rc)
-      {
-        CMPSPInfo::Entry newSP;
-        newSP.issuer = sender;
-        newSP.txid = txid;
-        newSP.prop_type = prop_type;
-        newSP.num_tokens = nValue;
-        newSP.category.assign(category);
-        newSP.subcategory.assign(subcategory);
-        newSP.name.assign(name);
-        newSP.url.assign(url);
-        newSP.data.assign(data);
-        newSP.fixed = true;
-        newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
-
-        const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        update_tally_map(sender, id, nValue, BALANCE);
-      }
-      rc = 0;
+      rc = logicMath_CreatePropertyFixed();
       break;
     }
 
@@ -3738,93 +3706,13 @@ std::string new_global_alert_message;
       step_rc = step3_sp_variable(p);
       if (0>step_rc) return step_rc;
 
-      // check if one exists for this address already !
-      if (NULL != getCrowd(sender)) return (PKT_ERROR_SP -20);
-
-      // must check that the desired property exists in our universe
-      if (false == _my_sps->hasSP(property)) return (PKT_ERROR_SP -30);
-
-      if (0 == step_rc)
-      {
-        CMPSPInfo::Entry newSP;
-        newSP.issuer = sender;
-        newSP.txid = txid;
-        newSP.prop_type = prop_type;
-        newSP.num_tokens = nValue;
-        newSP.category.assign(category);
-        newSP.subcategory.assign(subcategory);
-        newSP.name.assign(name);
-        newSP.url.assign(url);
-        newSP.data.assign(data);
-        newSP.fixed = false;
-        newSP.property_desired = property;
-        newSP.deadline = deadline;
-        newSP.early_bird = early_bird;
-        newSP.percentage = percentage;
-        newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
-
-        const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        my_crowds.insert(std::make_pair(sender, CMPCrowd(id, nValue, property, deadline, early_bird, percentage, 0, 0)));
-        PrintToLog("CREATED CROWDSALE id: %u value: %lu property: %u\n", id, nValue, property);  
-      }
-      rc = 0;
+      rc = logicMath_CreatePropertyVariable();
       break;
     }
 
     case MSC_TYPE_CLOSE_CROWDSALE:
     {
-    CrowdMap::iterator it = my_crowds.find(sender);
-
-      if (it != my_crowds.end())
-      {
-        // retrieve the property id from the incoming packet
-        memcpy(&property, &pkt[4], 4);
-        swapByteOrder32(property);
-
-        if (msc_debug_sp) PrintToLog("%s() trying to ERASE CROWDSALE for propid= %u=%X\n", __FUNCTION__, property, property);
-
-        // ensure we are closing the crowdsale which we opened by checking the property
-        if ((it->second).getPropertyId() != property)
-        {
-          rc = (PKT_ERROR_SP -606);
-          break;
-        }
-
-        dumpCrowdsaleInfo(it->first, it->second);
-
-        // Begin calculate Fractional 
-
-        CMPCrowd &crowd = it->second;
-        
-        CMPSPInfo::Entry sp;
-        _my_sps->getSP(crowd.getPropertyId(), sp);
-
-        //file_log("\nValues going into calculateFractional(): hexid %s earlyBird %d deadline %lu numProps %lu issuerPerc %d, issuerCreated %ld \n", sp.txid.GetHex().c_str(), sp.early_bird, sp.deadline, sp.num_tokens, sp.percentage, crowd.getIssuerCreated());
-
-        double missedTokens = calculateFractional(sp.prop_type,
-                            sp.early_bird,
-                            sp.deadline,
-                            sp.num_tokens,
-                            sp.percentage,
-                            crowd.getDatabase(),
-                            crowd.getIssuerCreated());
-
-        //file_log("\nValues coming out of calculateFractional(): Total tokens, Tokens created, Tokens for issuer, amountMissed: issuer %s %ld %ld %ld %f\n",sp.issuer.c_str(), crowd.getUserCreated() + crowd.getIssuerCreated(), crowd.getUserCreated(), crowd.getIssuerCreated(), missedTokens);
-        sp.historicalData = crowd.getDatabase();
-        sp.update_block = chainActive[block]->GetBlockHash();
-        sp.close_early = 1;
-        sp.timeclosed = blockTime;
-        sp.txid_close = txid;
-        sp.missedTokens = (int64_t) missedTokens;
-        _my_sps->updateSP(crowd.getPropertyId() , sp);
-        
-        update_tally_map(sp.issuer, crowd.getPropertyId(), missedTokens, BALANCE);
-        //End
-
-        my_crowds.erase(it);
-
-        rc = 0;
-      }
+      rc = logicMath_CloseCrowdsale();
       break;
     }
 
@@ -3834,24 +3722,7 @@ std::string new_global_alert_message;
       if (0>step_rc) return step_rc;
       if (!p) return (PKT_ERROR_SP -11);
 
-      if (0 == step_rc)
-      {
-        CMPSPInfo::Entry newSP;
-        newSP.issuer = sender;
-        newSP.txid = txid;
-        newSP.prop_type = prop_type;
-        newSP.category.assign(category);
-        newSP.subcategory.assign(subcategory);
-        newSP.name.assign(name);
-        newSP.url.assign(url);
-        newSP.data.assign(data);
-        newSP.fixed = false;
-        newSP.manual = true;
-
-        const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        PrintToLog("CREATED MANUAL PROPERTY id: %u admin: %s \n", id, sender);
-      }
-      rc = 0;
+      rc = logicMath_CreatePropertyMananged();
       break;
     }
 
@@ -3878,13 +3749,7 @@ std::string new_global_alert_message;
       break;
 
     case OMNICORE_MESSAGE_TYPE_ALERT:
-      // check the packet version is also FF
-      if ((int)version == 65535)
-      {
-          rc = step2_Alert(&new_global_alert_message);
-          if (rc == 0) global_alert_message = new_global_alert_message;
-          // end of block handler will expire any old alerts
-      }
+      rc = logicMath_Alert();
       break;
 
     case MSC_TYPE_SAVINGS_MARK:

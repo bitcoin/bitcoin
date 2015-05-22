@@ -593,6 +593,23 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
 {
     int rc = -1;
 
+    CMPSPInfo::Entry newSP;
+    newSP.issuer = sender;
+    newSP.txid = txid;
+    newSP.prop_type = prop_type;
+    newSP.num_tokens = nValue;
+    newSP.category.assign(category);
+    newSP.subcategory.assign(subcategory);
+    newSP.name.assign(name);
+    newSP.url.assign(url);
+    newSP.data.assign(data);
+    newSP.fixed = true;
+    newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
+
+    const unsigned int id = _my_sps->putSP(ecosystem, newSP);
+    update_tally_map(sender, id, nValue, BALANCE);
+
+    rc = 0;
     return rc;
 }
 
@@ -600,6 +617,34 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
 {
     int rc = -1;
 
+    // check if one exists for this address already !
+    if (NULL != getCrowd(sender)) return (PKT_ERROR_SP -20);
+
+    // must check that the desired property exists in our universe
+    if (false == _my_sps->hasSP(property)) return (PKT_ERROR_SP -30);
+
+    CMPSPInfo::Entry newSP;
+    newSP.issuer = sender;
+    newSP.txid = txid;
+    newSP.prop_type = prop_type;
+    newSP.num_tokens = nValue;
+    newSP.category.assign(category);
+    newSP.subcategory.assign(subcategory);
+    newSP.name.assign(name);
+    newSP.url.assign(url);
+    newSP.data.assign(data);
+    newSP.fixed = false;
+    newSP.property_desired = property;
+    newSP.deadline = deadline;
+    newSP.early_bird = early_bird;
+    newSP.percentage = percentage;
+    newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
+
+    const unsigned int id = _my_sps->putSP(ecosystem, newSP);
+    my_crowds.insert(std::make_pair(sender, CMPCrowd(id, nValue, property, deadline, early_bird, percentage, 0, 0)));
+    PrintToLog("CREATED CROWDSALE id: %u value: %lu property: %u\n", id, nValue, property);
+
+    rc = 0;
     return rc;
 }
 
@@ -607,6 +652,53 @@ int CMPTransaction::logicMath_CloseCrowdsale()
 {
     int rc = -1;
 
+    CrowdMap::iterator it = my_crowds.find(sender);
+
+    if (it == my_crowds.end()) {
+        return (PKT_ERROR_SP -605);
+    }
+
+    // retrieve the property id from the incoming packet
+    memcpy(&property, &pkt[4], 4);
+    swapByteOrder32(property);
+
+    if (msc_debug_sp) PrintToLog("%s() trying to ERASE CROWDSALE for propid= %u=%X\n", __FUNCTION__, property, property);
+
+    // ensure we are closing the crowdsale which we opened by checking the property
+    if ((it->second).getPropertyId() != property) {
+        return (PKT_ERROR_SP -606);
+    }
+
+    dumpCrowdsaleInfo(it->first, it->second);
+
+    // Begin calculate Fractional
+    CMPCrowd &crowd = it->second;
+
+    CMPSPInfo::Entry sp;
+    _my_sps->getSP(crowd.getPropertyId(), sp);
+
+    double missedTokens = calculateFractional(sp.prop_type,
+            sp.early_bird,
+            sp.deadline,
+            sp.num_tokens,
+            sp.percentage,
+            crowd.getDatabase(),
+            crowd.getIssuerCreated());
+
+    sp.historicalData = crowd.getDatabase();
+    sp.update_block = chainActive[block]->GetBlockHash();
+    sp.close_early = 1;
+    sp.timeclosed = blockTime;
+    sp.txid_close = txid;
+    sp.missedTokens = (int64_t) missedTokens;
+    _my_sps->updateSP(crowd.getPropertyId(), sp);
+
+    update_tally_map(sp.issuer, crowd.getPropertyId(), missedTokens, BALANCE);
+    //End
+
+    my_crowds.erase(it);
+
+    rc = 0;
     return rc;
 }
 
@@ -614,6 +706,22 @@ int CMPTransaction::logicMath_CreatePropertyMananged()
 {
     int rc = -1;
 
+    CMPSPInfo::Entry newSP;
+    newSP.issuer = sender;
+    newSP.txid = txid;
+    newSP.prop_type = prop_type;
+    newSP.category.assign(category);
+    newSP.subcategory.assign(subcategory);
+    newSP.name.assign(name);
+    newSP.url.assign(url);
+    newSP.data.assign(data);
+    newSP.fixed = false;
+    newSP.manual = true;
+
+    const unsigned int id = _my_sps->putSP(ecosystem, newSP);
+    PrintToLog("CREATED MANUAL PROPERTY id: %u admin: %s \n", id, sender);
+
+    rc = 0;
     return rc;
 }
 
@@ -773,9 +881,78 @@ int CMPTransaction::logicMath_ChangeIssuer()
 
 int CMPTransaction::logicMath_Alert()
 {
-    int rc = -1;
+    // check the packet version is also FF
+    if (version != 65535) {
+        return PKT_ERROR;
+    }
 
-    return rc;
+    const char *p = 4 + (char *)&pkt;
+    std::vector<std::string> spstr;
+    char alertString[SP_STRING_FIELD_LEN];
+
+    // is sender authorized?
+    bool authorized = false;
+    if (
+        // TESTNET
+        (sender == "mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j") || // Michael
+        (sender == "mCraigAddress") || // Craig
+        (sender == "mpZATHupfCLqet5N1YL48ByCM1ZBfddbGJ") || // Zathras
+        // MAINNET
+        (sender == "1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY") || // Michael
+        (sender == "16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj") || // Craig
+        (sender == "1zAtHRASgdHvZDfHs6xJquMghga4eG7gy") || // Zathras
+        (sender == "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") // Exodus
+        //(sender=="1Anyone2Else3Who4Should5Be6Here") // Who else?  JR? David? DexX?
+        ) authorized = true;
+
+    if (!authorized) {
+        // not authorized, ignore alert
+        PrintToLog("\t      alert auth: false\n");
+        return (PKT_ERROR -912);
+    }
+    // authorized, decode and make sure there are 4 tokens, then replace global_alert_message
+    spstr.push_back(std::string(p));
+    memcpy(alertString, spstr[0].c_str(), std::min(spstr[0].length(), sizeof(alertString)-1));
+
+    std::vector<std::string> vstr;
+    boost::split(vstr, alertString, boost::is_any_of(":"), token_compress_on);
+    PrintToLog("\t      alert auth: true\n");
+    PrintToLog("\t    alert sender: %s\n", sender);
+
+    if (5 != vstr.size()) {
+        // there are not 5 tokens in the alert, badly formed alert and must discard
+        PrintToLog("\t    packet error: badly formed alert != 5 tokens\n");
+        return (PKT_ERROR -911);
+    }
+
+    int32_t alertType;
+    uint64_t expiryValue;
+    uint32_t typeCheck;
+    uint32_t verCheck;
+    std::string alertMessage;
+    try {
+        alertType = boost::lexical_cast<int32_t>(vstr[0]);
+        expiryValue = boost::lexical_cast<uint64_t>(vstr[1]);
+        typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
+        verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
+    } catch (const boost::bad_lexical_cast &e) {
+        PrintToLog("DEBUG ALERT - error in converting values from global alert string\n");
+        return (PKT_ERROR -910); //(something went wrong)
+    }
+    alertMessage = vstr[4];
+    PrintToLog("\t    message type: %llu\n", alertType);
+    PrintToLog("\t    expiry value: %llu\n", expiryValue);
+    PrintToLog("\t      type check: %llu\n", typeCheck);
+    PrintToLog("\t       ver check: %llu\n", verCheck);
+    PrintToLog("\t   alert message: %s\n", alertMessage);
+
+    // copy the alert string into the global_alert_message and return a 0 rc
+    setOmniCoreAlert(alertString);
+
+    // we have a new alert, fire a notify event if needed
+    CAlert::Notify(alertMessage, true);
+
+    return 0;
 }
 
 int CMPTransaction::logicMath_SavingsMark()
