@@ -39,6 +39,7 @@ typedef enum bitcoinconsensus_error_t
     bitcoinconsensus_ERR_TX_INDEX,
     bitcoinconsensus_ERR_TX_SIZE_MISMATCH,
     bitcoinconsensus_ERR_TX_DESERIALIZE,
+    bitcoinconsensus_ERR_UNKNOWN,
 } bitcoinconsensus_error;
 
 /** Script verification flags */

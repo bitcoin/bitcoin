@@ -60,6 +60,48 @@ inline int set_error(bitcoinconsensus_error* ret, bitcoinconsensus_error serror)
     return 0;
 }
 
+
+class bitcoinconsensus_txTo_sigchecker {
+public:
+    CTransaction *tx;
+    BaseSignatureChecker *checker;
+
+    bitcoinconsensus_txTo_sigchecker() : tx(NULL), checker(NULL) { }
+
+    ~bitcoinconsensus_txTo_sigchecker() {
+        delete tx;
+        delete checker;
+    };
+};
+
+bool bitcoinconsensus_parse_txTo(bitcoinconsensus_txTo_sigchecker& o, const unsigned char *txTo, unsigned int txToLen, unsigned int nIn, bitcoinconsensus_error* err)
+{
+    CTransaction *ptx = new CTransaction();
+    try {
+        CTransaction& tx = *ptx;
+        try {
+            TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
+            stream >> tx;
+        } catch (const std::exception&) {
+            delete ptx;
+            return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+        }
+
+        if (nIn >= tx.vin.size())
+            return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
+        if (tx.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != txToLen)
+            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+
+        o.checker = new TransactionSignatureChecker(&tx, nIn);
+        o.tx = ptx;
+    } catch (...) {
+        delete ptx;
+        throw;
+    }
+
+    return true;
+}
+
 } // anon namespace
 
 int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
@@ -67,20 +109,16 @@ int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned i
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
     try {
-        TxInputStream stream(SER_NETWORK, PROTOCOL_VERSION, txTo, txToLen);
-        CTransaction tx;
-        stream >> tx;
-        if (nIn >= tx.vin.size())
-            return set_error(err, bitcoinconsensus_ERR_TX_INDEX);
-        if (tx.GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) != txToLen)
-            return set_error(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
+        bitcoinconsensus_txTo_sigchecker o;
+        if (!bitcoinconsensus_parse_txTo(o, txTo, txToLen, nIn, err))
+            return false;
 
          // Regardless of the verification result, the tx did not error.
          set_error(err, bitcoinconsensus_ERR_OK);
 
-        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, TransactionSignatureChecker(&tx, nIn), NULL);
+        return VerifyScript(o.tx->vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, *o.checker, NULL);
     } catch (const std::exception&) {
-        return set_error(err, bitcoinconsensus_ERR_TX_DESERIALIZE); // Error deserializing
+        return set_error(err, bitcoinconsensus_ERR_UNKNOWN);
     }
 }
 
