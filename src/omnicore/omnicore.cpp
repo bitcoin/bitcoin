@@ -3623,12 +3623,9 @@ const CBitcoinAddress ExodusAddress()
  // optional: provide the pointer to the CMPOffer object, it will get filled in
  // verify that it does via if (MSC_TYPE_TRADE_OFFER == mp_obj.getType())
  //
-
 int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 {
-    int rc = PKT_ERROR;
-
-    if (!interpret_TransactionType()) {
+    if (!interpret_Transaction()) {
         return -98765;
     }
 
@@ -3642,119 +3639,58 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 
     switch (type) {
         case MSC_TYPE_SIMPLE_SEND:
-            if (!interpret_SimpleSend()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_SimpleSend();
-            break;
+            return logicMath_SimpleSend();
 
         case MSC_TYPE_SEND_TO_OWNERS:
-            if (!interpret_SendToOwners()) {
-                return PKT_ERROR;
+        {
+            // TODO: remove file stuff
+            boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
+            FILE *fp = fopen(pathOwners.string().c_str(), "a");
+            if (fp) {
+                printInfo(fp);
+            } else {
+                PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
             }
-            {   // TODO: remove file stuff
-                boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
-                FILE *fp = fopen(pathOwners.string().c_str(), "a");
-                if (fp) {
-                    printInfo(fp);
-                } else {
-                    PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
-                }
-                rc = logicMath_SendToOwners(fp);
-                if (fp) fclose(fp);
-            }
-            break;
+            int rc = logicMath_SendToOwners(fp);
+            if (fp) fclose(fp);
+            return rc;
+        }
 
         case MSC_TYPE_TRADE_OFFER:
-            if (!interpret_TradeOffer()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_TradeOffer(obj_o);
-            break;
+            return logicMath_TradeOffer(obj_o);
 
         case MSC_TYPE_METADEX:
-            if (!interpret_MetaDEx()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_MetaDEx(mdex_o);
-            break;
+            return logicMath_MetaDEx(mdex_o);
 
         case MSC_TYPE_ACCEPT_OFFER_BTC:
-            if (!interpret_AcceptOfferBTC()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_AcceptOffer_BTC();
-            break;
+            return logicMath_AcceptOffer_BTC();
 
         case MSC_TYPE_CREATE_PROPERTY_FIXED:
-            if (!interpret_CreatePropertyFixed()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_CreatePropertyFixed();
-            break;
+            return logicMath_CreatePropertyFixed();
 
         case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
-            if (!interpret_CreatePropertyVariable()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_CreatePropertyVariable();
-            break;
+            return logicMath_CreatePropertyVariable();
 
         case MSC_TYPE_CLOSE_CROWDSALE:
-            if (!interpret_CloseCrowdsale()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_CloseCrowdsale();
-            break;
+            return logicMath_CloseCrowdsale();
 
         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-            if (!interpret_CreatePropertyMananged()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_CreatePropertyMananged();
-            break;
+            return logicMath_CreatePropertyMananged();
 
         case MSC_TYPE_GRANT_PROPERTY_TOKENS:
-            if (!interpret_GrantTokens()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_GrantTokens();
-            break;
+            return logicMath_GrantTokens();
 
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
-            if (!interpret_RevokeTokens()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_RevokeTokens();
-            break;
+            return logicMath_RevokeTokens();
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
-            if (!interpret_ChangeIssuer()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_ChangeIssuer();
-            break;
+            return logicMath_ChangeIssuer();
 
         case OMNICORE_MESSAGE_TYPE_ALERT:
-            if (!interpret_Alert()) {
-                return PKT_ERROR;
-            }
-            rc = logicMath_Alert();
-            break;
-
-        case MSC_TYPE_SAVINGS_MARK:
-            rc = logicMath_SavingsMark();
-            break;
-
-        case MSC_TYPE_SAVINGS_COMPROMISED:
-            rc = logicMath_SavingsCompromised();
-            break;
-
-        default:
-            rc = (PKT_ERROR -100);
+            return logicMath_Alert();
     }
 
-    return rc;
+    return (PKT_ERROR -100);
 }
 
 int CMPTransaction::logicMath_SimpleSend()
