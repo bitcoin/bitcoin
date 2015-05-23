@@ -356,7 +356,7 @@ int CMPTransaction::step3_sp_variable(const char *p)
 bool CMPTransaction::interpret_Transaction()
 {
     if (!interpret_TransactionType()) {
-        PrintToConsole("Failed to interpret type and version\n");
+        PrintToLog("Failed to interpret type and version\n");
         return false;
     }
 
@@ -431,9 +431,9 @@ bool CMPTransaction::interpret_TransactionType()
     memcpy(&txType, &pkt[2], 2);
     swapByteOrder16(txType);
 
-    PrintToConsole("\t------------------------------\n");
-    PrintToConsole("\t         version: %d, class %s\n", txVersion, intToClass(multi));
-    PrintToConsole("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
+    PrintToLog("\t------------------------------\n");
+    PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(multi));
+    PrintToLog("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
 
     // ------------------------------------------
     version = txVersion;
@@ -455,8 +455,8 @@ bool CMPTransaction::interpret_SimpleSend()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
 
     return true;
 }
@@ -474,8 +474,8 @@ bool CMPTransaction::interpret_SendToOwners()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
 
     return true;
 }
@@ -500,12 +500,12 @@ bool CMPTransaction::interpret_TradeOffer()
     swapByteOrder64(amount_desired);
     swapByteOrder64(min_fee);
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
-    PrintToConsole("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
-    PrintToConsole("\tblock time limit: %d\n", blocktimelimit);
-    PrintToConsole("\t         min fee: %s\n", FormatDivisibleMP(min_fee));
-    PrintToConsole("\t      sub-action: %d\n", subaction);
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
+    PrintToLog("\tblock time limit: %d\n", blocktimelimit);
+    PrintToLog("\t         min fee: %s\n", FormatDivisibleMP(min_fee));
+    PrintToLog("\t      sub-action: %d\n", subaction);
 
     return true;
 }
@@ -529,11 +529,11 @@ bool CMPTransaction::interpret_MetaDEx()
     swapByteOrder64(desired_value);
     memcpy(&action, &pkt[28], 1);
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
-    PrintToConsole("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
-    PrintToConsole("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
-    PrintToConsole("\t          action: %d\n", action);
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
+    PrintToLog("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
+    PrintToLog("\t          action: %d\n", action);
 
     return true;
 }
@@ -551,8 +551,8 @@ bool CMPTransaction::interpret_AcceptOfferBTC()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
 
     return true;
 }
@@ -587,15 +587,15 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
     p += 8;
     nNewValue = nValue;
 
-    PrintToConsole("\t       ecosystem: %d\n", ecosystem);
-    PrintToConsole("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
-    PrintToConsole("\tprev property id: %d\n", prev_prop_id);
-    PrintToConsole("\t        category: %s\n", category);
-    PrintToConsole("\t     subcategory: %s\n", subcategory);
-    PrintToConsole("\t            name: %s\n", name);
-    PrintToConsole("\t             url: %s\n", url);
-    PrintToConsole("\t            data: %s\n", data);
-    PrintToConsole("\t           value: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+    PrintToLog("\t       ecosystem: %d\n", ecosystem);
+    PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+    PrintToLog("\tprev property id: %d\n", prev_prop_id);
+    PrintToLog("\t        category: %s\n", category);
+    PrintToLog("\t     subcategory: %s\n", subcategory);
+    PrintToLog("\t            name: %s\n", name);
+    PrintToLog("\t             url: %s\n", url);
+    PrintToLog("\t            data: %s\n", data);
+    PrintToLog("\t           value: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -642,19 +642,19 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
     memcpy(&early_bird, p++, 1);
     memcpy(&percentage, p++, 1);
 
-    PrintToConsole("\t       ecosystem: %d\n", ecosystem);
-    PrintToConsole("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
-    PrintToConsole("\tprev property id: %d\n", prev_prop_id);
-    PrintToConsole("\t        category: %s\n", category);
-    PrintToConsole("\t     subcategory: %s\n", subcategory);
-    PrintToConsole("\t            name: %s\n", name);
-    PrintToConsole("\t             url: %s\n", url);
-    PrintToConsole("\t            data: %s\n", data);
-    PrintToConsole("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t tokens per unit: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
-    PrintToConsole("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
-    PrintToConsole("\tearly bird bonus: %d\n", early_bird);
-    PrintToConsole("\t    issuer bonus: %d\n", percentage);
+    PrintToLog("\t       ecosystem: %d\n", ecosystem);
+    PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+    PrintToLog("\tprev property id: %d\n", prev_prop_id);
+    PrintToLog("\t        category: %s\n", category);
+    PrintToLog("\t     subcategory: %s\n", subcategory);
+    PrintToLog("\t            name: %s\n", name);
+    PrintToLog("\t             url: %s\n", url);
+    PrintToLog("\t            data: %s\n", data);
+    PrintToLog("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t tokens per unit: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+    PrintToLog("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
+    PrintToLog("\tearly bird bonus: %d\n", early_bird);
+    PrintToLog("\t    issuer bonus: %d\n", percentage);
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -673,7 +673,7 @@ bool CMPTransaction::interpret_CloseCrowdsale()
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
 
     return true;
 }
@@ -703,14 +703,14 @@ bool CMPTransaction::interpret_CreatePropertyMananged()
     memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
     memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
 
-    PrintToConsole("\t       ecosystem: %d\n", ecosystem);
-    PrintToConsole("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
-    PrintToConsole("\tprev property id: %d\n", prev_prop_id);
-    PrintToConsole("\t        category: %s\n", category);
-    PrintToConsole("\t     subcategory: %s\n", subcategory);
-    PrintToConsole("\t            name: %s\n", name);
-    PrintToConsole("\t             url: %s\n", url);
-    PrintToConsole("\t            data: %s\n", data);
+    PrintToLog("\t       ecosystem: %d\n", ecosystem);
+    PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+    PrintToLog("\tprev property id: %d\n", prev_prop_id);
+    PrintToLog("\t        category: %s\n", category);
+    PrintToLog("\t     subcategory: %s\n", subcategory);
+    PrintToLog("\t            name: %s\n", name);
+    PrintToLog("\t             url: %s\n", url);
+    PrintToLog("\t            data: %s\n", data);
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -732,8 +732,8 @@ bool CMPTransaction::interpret_GrantTokens()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
 
     return true;
 }
@@ -751,8 +751,8 @@ bool CMPTransaction::interpret_RevokeTokens()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToConsole("\t           value: %s\n", FormatMP(property, nValue));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
 
     return true;
 }
@@ -767,7 +767,7 @@ bool CMPTransaction::interpret_ChangeIssuer()
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
 
-    PrintToConsole("\t        property: %d (%s)\n", property, strMPProperty(property));
+    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
 
     return true;
 }
@@ -783,7 +783,7 @@ bool CMPTransaction::interpret_Alert()
     std::string spstr(p);
     memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
 
-    PrintToConsole("\t           alert: %s\n", alertString);
+    PrintToLog("\t           alert: %s\n", alertString);
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -807,7 +807,6 @@ int CMPTransaction::logicMath_TradeOffer(CMPOffer *obj_o)
     // ------------------------------------------
 
 int rc = PKT_ERROR_TRADEOFFER;
-static const char * const subaction_name[] = { "empty", "new", "update", "cancel" };
 
       if ((OMNI_PROPERTY_TMSC != property) && (OMNI_PROPERTY_MSC != property))
       {
@@ -817,11 +816,6 @@ static const char * const subaction_name[] = { "empty", "new", "update", "cancel
 
       // block height checks, for instance DEX is only available on MSC starting with block 290630
       if (!isTransactionTypeAllowed(block, property, type, version)) return -88888;
-
-    PrintToLog("\t  amount desired: %lu.%08lu\n", amount_desired / COIN, amount_desired % COIN);
-    PrintToLog("\tblock time limit: %u\n", blocktimelimit);
-    PrintToLog("\t         min fee: %lu.%08lu\n", min_fee / COIN, min_fee % COIN);
-    PrintToLog("\t      sub-action: %u (%s)\n", subaction, subaction < sizeof(subaction_name)/sizeof(subaction_name[0]) ? subaction_name[subaction] : "");
 
       if (obj_o)
       {
@@ -930,10 +924,6 @@ int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx *mdex_o)
 
     int rc = PKT_ERROR_METADEX -100;
 
-    PrintToLog("\tdesired property: %u (%s)\n", desired_property, strMPProperty(desired_property));
-    PrintToLog("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
-    PrintToLog("\t          action: %u\n", action);
-
     if (mdex_o)
     {
       mdex_o->Set(sender, block, property, nValue, desired_property, desired_value, txid, tx_idx, action);
@@ -1041,13 +1031,8 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
         return (PKT_ERROR_SP -505);
     }
     // ------------------------------------------
-    if (MSC_PROPERTY_TYPE_INDIVISIBLE == prop_type) {
-        PrintToLog("\t           value: %lu\n", nValue);
-        if (0 == nValue) return (PKT_ERROR_SP -101);
-    } else
-        if (MSC_PROPERTY_TYPE_DIVISIBLE == prop_type) {
-        PrintToLog("\t           value: %s\n", FormatDivisibleMP(nValue));
-        if (0 == nValue) return (PKT_ERROR_SP -102);
+    if (0 == nValue) {
+        return (PKT_ERROR_SP -101);
     }
     if (MAX_INT_8_BYTES < nValue) {
         return (PKT_ERROR -802); // out of range
@@ -1092,12 +1077,8 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
         return (PKT_ERROR_SP -505);
     }
     // ------------------------------------------
-    if (MSC_PROPERTY_TYPE_INDIVISIBLE == prop_type) {
-        PrintToLog("\t           value: %lu\n", nValue);
-        if (0 == nValue) return (PKT_ERROR_SP - 201);
-    } else if (MSC_PROPERTY_TYPE_DIVISIBLE == prop_type) {
-        PrintToLog("\t           value: %s\n", FormatDivisibleMP(nValue));
-        if (0 == nValue) return (PKT_ERROR_SP - 202);
+    if (0 == nValue) {
+        return (PKT_ERROR_SP - 201);
     }
     if (MAX_INT_8_BYTES < nValue) {
         return (PKT_ERROR - 803); // out of range
