@@ -97,6 +97,7 @@ public:
 
 //  mutable CCriticalSection cs_msc;  // TODO: need to refactor first...
 
+  uint256 getHash() const { return txid; }
   unsigned int getType() const { return type; }
   const string getTypeString() const { return string(c_strMasterProtocolTXType(getType())); }
   unsigned int getProperty() const { return property; }

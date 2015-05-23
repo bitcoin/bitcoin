@@ -3344,12 +3344,12 @@ void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>
       if (addressMatch != std::string::npos) {
           boost::split(vecKeys, strKey, boost::is_any_of("+"), token_compress_on);
           if (vecKeys.size() != 2) {
-              file_log("TRADEDB error - unexpected number of tokens in key (%s)\n", strKey);
+              PrintToLog("TRADEDB error - unexpected number of tokens in key (%s)\n", strKey);
               continue;
           }
           boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);
           if (vecValues.size() != 7) {
-              file_log("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
+              PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
               continue;
           }
           uint32_t tradePropertyIdSideA = boost::lexical_cast<uint32_t>(vecValues[2]);

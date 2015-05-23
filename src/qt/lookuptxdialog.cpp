@@ -7,6 +7,7 @@
 
 #include "omnicore/errors.h"
 #include "omnicore/rpc.h"
+#include "omnicore/rpctxobject.h"
 
 #include "uint256.h"
 

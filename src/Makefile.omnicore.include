@@ -12,6 +12,7 @@ OMNICORE_H = \
   omnicore/persistence.h \
   omnicore/rpc.h \
   omnicore/rpctx.h \
+  omnicore/rpctxobject.h \
   omnicore/script.h \
   omnicore/sp.h \
   omnicore/tx.h \
@@ -31,6 +32,7 @@ OMNICORE_CPP = \
   omnicore/persistence.cpp \
   omnicore/rpc.cpp \
   omnicore/rpctx.cpp \
+  omnicore/rpctxobject.cpp \
   omnicore/script.cpp \
   omnicore/sp.cpp \
   omnicore/tx.cpp \
