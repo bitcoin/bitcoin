@@ -87,6 +87,7 @@ using leveldb::Status;
 using std::make_pair;
 using std::map;
 using std::ofstream;
+using std::pair;
 using std::string;
 using std::vector;
 
