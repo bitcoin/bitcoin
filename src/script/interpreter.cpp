@@ -235,7 +235,20 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+CScriptExecution::CScriptExecution(std::vector<valtype>& stackIn, const CScript& scriptIn, unsigned int flagsIn, const BaseSignatureChecker& checkerIn, ScriptError* serrorIn)
+: stack(stackIn), script(scriptIn), flags(flagsIn), checker(checkerIn), serror(serrorIn), pc(script.begin()), pbegincodehash(pc), vfExec(), altstack(), nOpCount(0), fEof(false)
+{
+}
+
+bool CScriptExecution::Start()
+{
+    set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
+    if (script.size() > 10000)
+        return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
+    return true;
+}
+
+bool CScriptExecution::Step()
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -245,22 +258,15 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
     static const valtype vchZero(0);
     static const valtype vchTrue(1, 1);
 
-    CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
-    CScript::const_iterator pbegincodehash = script.begin();
     opcodetype opcode;
     valtype vchPushValue;
-    vector<bool> vfExec;
-    vector<valtype> altstack;
-    set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-    if (script.size() > 10000)
-        return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
-    int nOpCount = 0;
     bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
 
+    fEof = (pc >= pend);
     try
     {
-        while (pc < pend)
+        if (!fEof)
         {
             bool fExec = !count(vfExec.begin(), vfExec.end(), false);
 
@@ -921,6 +927,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
             // Size limits
             if (stack.size() + altstack.size() > 1000)
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
+
+            return true;
         }
     }
     catch (...)
@@ -932,6 +940,20 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
         return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
 
     return set_success(serror);
+}
+
+bool EvalScript(std::vector<valtype>& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+{
+    CScriptExecution sexec(stack, script, flags, checker, serror);
+
+    if (!sexec.Start())
+        return false;
+
+    while (!sexec.fEof)
+        if (!sexec.Step())
+            return false;
+
+    return true;
 }
 
 namespace {
