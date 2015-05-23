@@ -659,6 +659,20 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
         return (PKT_ERROR_SP -505);
     }
     // ------------------------------------------
+    if (MSC_PROPERTY_TYPE_INDIVISIBLE == prop_type) {
+        PrintToLog("\t           value: %lu\n", nValue);
+        if (0 == nValue) return (PKT_ERROR_SP - 201);
+    } else if (MSC_PROPERTY_TYPE_DIVISIBLE == prop_type) {
+        PrintToLog("\t           value: %s\n", FormatDivisibleMP(nValue));
+        if (0 == nValue) return (PKT_ERROR_SP - 202);
+    }
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR - 803); // out of range
+    }
+    if (!deadline) return (PKT_ERROR_SP - 203); // deadline cannot be 0
+    // deadline can not be smaller than the timestamp of the current block
+    if (deadline < (uint64_t) blockTime) return (PKT_ERROR_SP - 204);
+    // ------------------------------------------
 
     int rc = -1;
 
