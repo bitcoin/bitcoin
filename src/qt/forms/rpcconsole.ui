@@ -1064,6 +1064,257 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_repair">
+      <attribute name="title">
+       <string>&amp;Wallet Repair</string>
+      </attribute>
+      <widget class="QPushButton" name="btn_salvagewallet">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>90</y>
+         <width>180</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>23</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Salvage Wallet</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_rescan">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>140</y>
+         <width>180</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>23</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Rescan blockhain files</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_zapwallettxes1">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>190</y>
+         <width>180</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>23</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Recover transactions 1</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_zapwallettxes2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>240</y>
+         <width>180</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>23</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Recover transactions 2</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_upgradewallet">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>290</y>
+         <width>180</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>23</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Upgrade wallet format</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_helptext">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>711</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_salvage">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>80</y>
+         <width>511</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_rescan">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>129</y>
+         <width>511</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-rescan: Rescan the block chain for missing wallet transactions.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_zap1">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>179</y>
+         <width>511</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_zap2">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>229</y>
+         <width>511</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_upgrade">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>279</y>
+         <width>511</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself !)</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_header">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>711</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Wallet repair options.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btn_reindex">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>340</y>
+         <width>181</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rebuild index</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_repair_reindex">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>330</y>
+         <width>511</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>-reindex: Rebuild block chain index from current blk000??.dat files.</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </item>
   </layout>
