@@ -3626,7 +3626,6 @@ const CBitcoinAddress ExodusAddress()
 int CMPTransaction::interpretPacket(CMPOffer *obj_o, CMPMetaDEx *mdex_o)
 {
 int rc = PKT_ERROR;
-int step_rc;
 
   if (0>step1()) return -98765;
 
@@ -3638,16 +3637,24 @@ int step_rc;
   switch(type)
   {
     case MSC_TYPE_SIMPLE_SEND:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+    {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
 
       rc = logicMath_SimpleSend();
       break;
+    }
 
     case MSC_TYPE_SEND_TO_OWNERS:
     {
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
 
       boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
       FILE *fp = fopen(pathOwners.string().c_str(), "a");
@@ -3664,34 +3671,81 @@ int step_rc;
     }
 
     case MSC_TYPE_TRADE_OFFER:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+    {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
+
+      memcpy(&amount_desired, &pkt[16], 8);
+      memcpy(&blocktimelimit, &pkt[24], 1);
+      memcpy(&min_fee, &pkt[25], 8);
+      memcpy(&subaction, &pkt[33], 1);
+      swapByteOrder64(amount_desired);
+      swapByteOrder64(min_fee);
 
       rc = logicMath_TradeOffer(obj_o);
       break;
+    }
 
     case MSC_TYPE_METADEX:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+    {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
+
+      memcpy(&desired_property, &pkt[16], 4);
+      swapByteOrder32(desired_property);
+      memcpy(&desired_value, &pkt[20], 8);
+      swapByteOrder64(desired_value);
+      memcpy(&action, &pkt[28], 1);
 
       rc = logicMath_MetaDEx(mdex_o);
       break;
+    }
 
     case MSC_TYPE_ACCEPT_OFFER_BTC:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+    {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
 
       rc = logicMath_AcceptOffer_BTC();
       break;
+    }
 
     case MSC_TYPE_CREATE_PROPERTY_FIXED:
     {
-      const char *p = step2_SmartProperty(step_rc);
-      if (0>step_rc) return step_rc;
+      const char* p = 11 + (char*) &pkt;
+      std::vector<std::string> spstr;
+      memcpy(&ecosystem, &pkt[4], 1);
+      memcpy(&prop_type, &pkt[5], 2);
+      swapByteOrder16(prop_type);
+      memcpy(&prev_prop_id, &pkt[7], 4);
+      swapByteOrder32(prev_prop_id);
+      for (int i = 0; i < 5; i++) {
+          spstr.push_back(std::string(p));
+          p += spstr.back().size() + 1;
+      }
+      int i = 0;
+      memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
+      memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
+      memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+      memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
+      memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
+      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP - 800);
       if (!p) return (PKT_ERROR_SP -11);
 
-      step_rc = step3_sp_fixed(p);
-      if (0>step_rc) return step_rc;
+      memcpy(&nValue, p, 8);
+      swapByteOrder64(nValue);
+      p += 8;
+      nNewValue = nValue;
+      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP -900);
 
       rc = logicMath_CreatePropertyFixed();
       break;
@@ -3699,12 +3753,39 @@ int step_rc;
 
     case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
     {
-      const char *p = step2_SmartProperty(step_rc);
-      if (0>step_rc) return step_rc;
+      const char* p = 11 + (char*) &pkt;
+      std::vector<std::string> spstr;
+      memcpy(&ecosystem, &pkt[4], 1);
+      memcpy(&prop_type, &pkt[5], 2);
+      swapByteOrder16(prop_type);
+      memcpy(&prev_prop_id, &pkt[7], 4);
+      swapByteOrder32(prev_prop_id);
+      for (int i = 0; i < 5; i++) {
+          spstr.push_back(std::string(p));
+          p += spstr.back().size() + 1;
+      }
+      int i = 0;
+      memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
+      memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
+      memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+      memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
+      memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
+      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP - 800);
       if (!p) return (PKT_ERROR_SP -12);
 
-      step_rc = step3_sp_variable(p);
-      if (0>step_rc) return step_rc;
+      memcpy(&property, p, 4);
+      swapByteOrder32(property);
+      p += 4;
+      memcpy(&nValue, p, 8);
+      swapByteOrder64(nValue);
+      p += 8;
+      nNewValue = nValue;
+      memcpy(&deadline, p, 8);
+      swapByteOrder64(deadline);
+      p += 8;
+      memcpy(&early_bird, p++, 1);
+      memcpy(&percentage, p++, 1);
+      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP -765);
 
       rc = logicMath_CreatePropertyVariable();
       break;
@@ -3712,14 +3793,33 @@ int step_rc;
 
     case MSC_TYPE_CLOSE_CROWDSALE:
     {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+
       rc = logicMath_CloseCrowdsale();
       break;
     }
 
     case MSC_TYPE_CREATE_PROPERTY_MANUAL:
     {
-      const char *p = step2_SmartProperty(step_rc);
-      if (0>step_rc) return step_rc;
+      const char* p = 11 + (char*) &pkt;
+      std::vector<std::string> spstr;
+      memcpy(&ecosystem, &pkt[4], 1);
+      memcpy(&prop_type, &pkt[5], 2);
+      swapByteOrder16(prop_type);
+      memcpy(&prev_prop_id, &pkt[7], 4);
+      swapByteOrder32(prev_prop_id);
+      for (int i = 0; i < 5; i++) {
+          spstr.push_back(std::string(p));
+          p += spstr.back().size() + 1;
+      }
+      int i = 0;
+      memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
+      memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
+      memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
+      memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
+      memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
+      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP - 800);
       if (!p) return (PKT_ERROR_SP -11);
 
       rc = logicMath_CreatePropertyMananged();
@@ -3727,30 +3827,47 @@ int step_rc;
     }
 
     case MSC_TYPE_GRANT_PROPERTY_TOKENS:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+    {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
 
       rc = logicMath_GrantTokens();
       break;
+    }
 
     case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
+    {
+      memcpy(&property, &pkt[4], 4);
+      swapByteOrder32(property);
+      memcpy(&nValue, &pkt[8], 8);
+      swapByteOrder64(nValue);
+      nNewValue = nValue;
 
       rc = logicMath_RevokeTokens();
       break;
+    }
 
     case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
-      // parse the property from the packet
+    {
       memcpy(&property, &pkt[4], 4);
       swapByteOrder32(property);
 
       rc = logicMath_ChangeIssuer();
       break;
+    }
 
     case OMNICORE_MESSAGE_TYPE_ALERT:
+    {
+      const char* p = 4 + (char*) &pkt;
+      std::string spstr(p);
+      memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
+
       rc = logicMath_Alert();
       break;
+    }
 
     case MSC_TYPE_SAVINGS_MARK:
       rc = logicMath_SavingsMark();

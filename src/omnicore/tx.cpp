@@ -366,8 +366,6 @@ int CMPTransaction::logicMath_TradeOffer(CMPOffer *obj_o)
     // ------------------------------------------
 
 int rc = PKT_ERROR_TRADEOFFER;
-uint64_t amount_desired, min_fee;
-unsigned char blocktimelimit, subaction = 0;
 static const char * const subaction_name[] = { "empty", "new", "update", "cancel" };
 
       if ((OMNI_PROPERTY_TMSC != property) && (OMNI_PROPERTY_MSC != property))
@@ -378,14 +376,6 @@ static const char * const subaction_name[] = { "empty", "new", "update", "cancel
 
       // block height checks, for instance DEX is only available on MSC starting with block 290630
       if (!isTransactionTypeAllowed(block, property, type, version)) return -88888;
-
-      memcpy(&amount_desired, &pkt[16], 8);
-      memcpy(&blocktimelimit, &pkt[24], 1);
-      memcpy(&min_fee, &pkt[25], 8);
-      memcpy(&subaction, &pkt[33], 1);
-
-      swapByteOrder64(amount_desired);
-      swapByteOrder64(min_fee);
 
     PrintToLog("\t  amount desired: %lu.%08lu\n", amount_desired / COIN, amount_desired % COIN);
     PrintToLog("\tblock time limit: %u\n", blocktimelimit);
@@ -498,19 +488,9 @@ int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx *mdex_o)
     // ------------------------------------------
 
     int rc = PKT_ERROR_METADEX -100;
-    unsigned char action = 0;
-
-    memcpy(&desired_property, &pkt[16], 4);
-    swapByteOrder32(desired_property);
-
-    memcpy(&desired_value, &pkt[20], 8);
-    swapByteOrder64(desired_value);
 
     PrintToLog("\tdesired property: %u (%s)\n", desired_property, strMPProperty(desired_property));
     PrintToLog("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
-
-    memcpy(&action, &pkt[28], 1);
-
     PrintToLog("\t          action: %u\n", action);
 
     if (mdex_o)
@@ -728,10 +708,6 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     if (it == my_crowds.end()) {
         return (PKT_ERROR_SP -605);
     }
-
-    // retrieve the property id from the incoming packet
-    memcpy(&property, &pkt[4], 4);
-    swapByteOrder32(property);
 
     if (msc_debug_sp) PrintToLog("%s() trying to ERASE CROWDSALE for propid= %u=%X\n", __FUNCTION__, property, property);
 
@@ -982,10 +958,6 @@ int CMPTransaction::logicMath_Alert()
         return PKT_ERROR;
     }
 
-    const char *p = 4 + (char *)&pkt;
-    std::vector<std::string> spstr;
-    char alertString[SP_STRING_FIELD_LEN];
-
     // is sender authorized?
     bool authorized = false;
     if (
@@ -1007,9 +979,6 @@ int CMPTransaction::logicMath_Alert()
         return (PKT_ERROR -912);
     }
     // authorized, decode and make sure there are 4 tokens, then replace global_alert_message
-    spstr.push_back(std::string(p));
-    memcpy(alertString, spstr[0].c_str(), std::min(spstr[0].length(), sizeof(alertString)-1));
-
     std::vector<std::string> vstr;
     boost::split(vstr, alertString, boost::is_any_of(":"), token_compress_on);
     PrintToLog("\t      alert auth: true\n");
