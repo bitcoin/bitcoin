@@ -32,6 +32,7 @@ public:
     ~RPCConsole();
 
     void setClientModel(ClientModel *model);
+    void restart(int reason);
 
     enum MessageClass {
         MC_ERROR,
@@ -59,6 +60,15 @@ private slots:
 
 public slots:
     void clear();
+    
+    /** Wallet repair options */
+    void wallet_salvage();
+    void wallet_rescan();
+    void wallet_zaptxes1();
+    void wallet_zaptxes2();
+    void wallet_upgrade();
+    void wallet_reindex();
+    
     void reject();
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
@@ -79,6 +89,8 @@ public slots:
     void showNetwork();
     /** Switch to peers tab and show */
     void showPeers();
+    /** Switch to wallet-repair tab and show */
+    void showRepair();
     /** Open external (default) editor with dash.conf */
     void showConfEditor();	
     /** Handle selection of peer in peers list */
