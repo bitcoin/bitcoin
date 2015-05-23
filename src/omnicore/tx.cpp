@@ -421,23 +421,20 @@ bool CMPTransaction::interpret_TransactionType()
     if (pkt_size < 4) {
         return false;
     }
-
     uint16_t txVersion = 0;
     uint16_t txType = 0;
-
     memcpy(&txVersion, &pkt[0], 2);
     swapByteOrder16(txVersion);
-
     memcpy(&txType, &pkt[2], 2);
     swapByteOrder16(txType);
-
-    PrintToLog("\t------------------------------\n");
-    PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(multi));
-    PrintToLog("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
-
-    // ------------------------------------------
     version = txVersion;
     type = txType;
+
+    if (msc_debug_packets) {
+        PrintToLog("\t------------------------------\n");
+        PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(multi));
+        PrintToLog("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
+    }
 
     return true;
 }
@@ -448,15 +445,16 @@ bool CMPTransaction::interpret_SimpleSend()
     if (pkt_size < 16) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    }
 
     return true;
 }
@@ -467,15 +465,16 @@ bool CMPTransaction::interpret_SendToOwners()
     if (pkt_size < 16) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    }
 
     return true;
 }
@@ -486,13 +485,11 @@ bool CMPTransaction::interpret_TradeOffer()
     if (pkt_size < 34) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
-
     memcpy(&amount_desired, &pkt[16], 8);
     memcpy(&blocktimelimit, &pkt[24], 1);
     memcpy(&min_fee, &pkt[25], 8);
@@ -500,12 +497,14 @@ bool CMPTransaction::interpret_TradeOffer()
     swapByteOrder64(amount_desired);
     swapByteOrder64(min_fee);
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
-    PrintToLog("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
-    PrintToLog("\tblock time limit: %d\n", blocktimelimit);
-    PrintToLog("\t         min fee: %s\n", FormatDivisibleMP(min_fee));
-    PrintToLog("\t      sub-action: %d\n", subaction);
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+        PrintToLog("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
+        PrintToLog("\tblock time limit: %d\n", blocktimelimit);
+        PrintToLog("\t         min fee: %s\n", FormatDivisibleMP(min_fee));
+        PrintToLog("\t      sub-action: %d\n", subaction);
+    }
 
     return true;
 }
@@ -516,24 +515,24 @@ bool CMPTransaction::interpret_MetaDEx()
     if (pkt_size < 29) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
-
     memcpy(&desired_property, &pkt[16], 4);
     swapByteOrder32(desired_property);
     memcpy(&desired_value, &pkt[20], 8);
     swapByteOrder64(desired_value);
     memcpy(&action, &pkt[28], 1);
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
-    PrintToLog("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
-    PrintToLog("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
-    PrintToLog("\t          action: %d\n", action);
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+        PrintToLog("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
+        PrintToLog("\t   desired value: %s\n", FormatMP(desired_property, desired_value));
+        PrintToLog("\t          action: %d\n", action);
+    }
 
     return true;
 }
@@ -544,15 +543,16 @@ bool CMPTransaction::interpret_AcceptOfferBTC()
     if (pkt_size < 16) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    }
 
     return true;
 }
@@ -563,7 +563,6 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
     if (pkt_size < 25) {
         return false;
     }
-
     const char* p = 11 + (char*) &pkt;
     std::vector<std::string> spstr;
     memcpy(&ecosystem, &pkt[4], 1);
@@ -581,21 +580,22 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
     memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
     memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
     memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
-
     memcpy(&nValue, p, 8);
     swapByteOrder64(nValue);
     p += 8;
     nNewValue = nValue;
 
-    PrintToLog("\t       ecosystem: %d\n", ecosystem);
-    PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
-    PrintToLog("\tprev property id: %d\n", prev_prop_id);
-    PrintToLog("\t        category: %s\n", category);
-    PrintToLog("\t     subcategory: %s\n", subcategory);
-    PrintToLog("\t            name: %s\n", name);
-    PrintToLog("\t             url: %s\n", url);
-    PrintToLog("\t            data: %s\n", data);
-    PrintToLog("\t           value: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+    if (msc_debug_packets) {
+        PrintToLog("\t       ecosystem: %d\n", ecosystem);
+        PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+        PrintToLog("\tprev property id: %d\n", prev_prop_id);
+        PrintToLog("\t        category: %s\n", category);
+        PrintToLog("\t     subcategory: %s\n", subcategory);
+        PrintToLog("\t            name: %s\n", name);
+        PrintToLog("\t             url: %s\n", url);
+        PrintToLog("\t            data: %s\n", data);
+        PrintToLog("\t           value: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+    }
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -610,7 +610,6 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
     if (pkt_size < 39) {
         return false;
     }
-
     const char* p = 11 + (char*) &pkt;
     std::vector<std::string> spstr;
     memcpy(&ecosystem, &pkt[4], 1);
@@ -628,7 +627,6 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
     memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
     memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
     memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
-
     memcpy(&property, p, 4);
     swapByteOrder32(property);
     p += 4;
@@ -642,19 +640,21 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
     memcpy(&early_bird, p++, 1);
     memcpy(&percentage, p++, 1);
 
-    PrintToLog("\t       ecosystem: %d\n", ecosystem);
-    PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
-    PrintToLog("\tprev property id: %d\n", prev_prop_id);
-    PrintToLog("\t        category: %s\n", category);
-    PrintToLog("\t     subcategory: %s\n", subcategory);
-    PrintToLog("\t            name: %s\n", name);
-    PrintToLog("\t             url: %s\n", url);
-    PrintToLog("\t            data: %s\n", data);
-    PrintToLog("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t tokens per unit: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
-    PrintToLog("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
-    PrintToLog("\tearly bird bonus: %d\n", early_bird);
-    PrintToLog("\t    issuer bonus: %d\n", percentage);
+    if (msc_debug_packets) {
+        PrintToLog("\t       ecosystem: %d\n", ecosystem);
+        PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+        PrintToLog("\tprev property id: %d\n", prev_prop_id);
+        PrintToLog("\t        category: %s\n", category);
+        PrintToLog("\t     subcategory: %s\n", subcategory);
+        PrintToLog("\t            name: %s\n", name);
+        PrintToLog("\t             url: %s\n", url);
+        PrintToLog("\t            data: %s\n", data);
+        PrintToLog("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t tokens per unit: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+        PrintToLog("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
+        PrintToLog("\tearly bird bonus: %d\n", early_bird);
+        PrintToLog("\t    issuer bonus: %d\n", percentage);
+    }
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -669,11 +669,12 @@ bool CMPTransaction::interpret_CloseCrowdsale()
     if (pkt_size < 8) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    }
 
     return true;
 }
@@ -684,7 +685,6 @@ bool CMPTransaction::interpret_CreatePropertyMananged()
     if (pkt_size < 17) {
         return false;
     }
-
     const char* p = 11 + (char*) &pkt;
     std::vector<std::string> spstr;
     memcpy(&ecosystem, &pkt[4], 1);
@@ -703,14 +703,16 @@ bool CMPTransaction::interpret_CreatePropertyMananged()
     memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
     memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
 
-    PrintToLog("\t       ecosystem: %d\n", ecosystem);
-    PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
-    PrintToLog("\tprev property id: %d\n", prev_prop_id);
-    PrintToLog("\t        category: %s\n", category);
-    PrintToLog("\t     subcategory: %s\n", subcategory);
-    PrintToLog("\t            name: %s\n", name);
-    PrintToLog("\t             url: %s\n", url);
-    PrintToLog("\t            data: %s\n", data);
+    if (msc_debug_packets) {
+        PrintToLog("\t       ecosystem: %d\n", ecosystem);
+        PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+        PrintToLog("\tprev property id: %d\n", prev_prop_id);
+        PrintToLog("\t        category: %s\n", category);
+        PrintToLog("\t     subcategory: %s\n", subcategory);
+        PrintToLog("\t            name: %s\n", name);
+        PrintToLog("\t             url: %s\n", url);
+        PrintToLog("\t            data: %s\n", data);
+    }
 
     if (isOverrun(p, __LINE__)) {
         return false;
@@ -725,15 +727,16 @@ bool CMPTransaction::interpret_GrantTokens()
     if (pkt_size < 16) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    }
 
     return true;
 }
@@ -744,15 +747,16 @@ bool CMPTransaction::interpret_RevokeTokens()
     if (pkt_size < 16) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
     memcpy(&nValue, &pkt[8], 8);
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
-    PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    }
 
     return true;
 }
@@ -763,11 +767,12 @@ bool CMPTransaction::interpret_ChangeIssuer()
     if (pkt_size < 8) {
         return false;
     }
-
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
 
-    PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    if (msc_debug_packets) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+    }
 
     return true;
 }
@@ -778,12 +783,13 @@ bool CMPTransaction::interpret_Alert()
     if (pkt_size < 5) {
         return false;
     }
-
     const char* p = 4 + (char*) &pkt;
     std::string spstr(p);
     memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
 
-    PrintToLog("\t           alert: %s\n", alertString);
+    if (msc_debug_packets) {
+        PrintToLog("\t           alert: %s\n", alertString);
+    }
 
     if (isOverrun(p, __LINE__)) {
         return false;

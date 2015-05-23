@@ -46,6 +46,7 @@ extern bool msc_debug_pending;
 extern bool msc_debug_metadex1;
 extern bool msc_debug_metadex2;
 extern bool msc_debug_metadex3;
+extern bool msc_debug_packets;
 
 /* When we switch to C++11, this can be switched to variadic templates instead
  * of this macro-based construction (see tinyformat.h).
