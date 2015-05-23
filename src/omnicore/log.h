@@ -12,11 +12,13 @@ int LogFilePrint(const std::string& str);
 /** Prints to the console. */
 int ConsolePrint(const std::string& str);
 
+/** Determine whether to override compiled debug levels. */
+void InitDebugLogLevels();
+
 /** Scrolls log file, if it's getting too big. */
 void ShrinkDebugLog();
 
 // Log files
-extern const std::string LOG_FILENAME;
 extern const std::string INFO_FILENAME;
 extern const std::string OWNERS_FILENAME;
 
@@ -49,20 +51,13 @@ extern bool msc_debug_metadex3;
  * of this macro-based construction (see tinyformat.h).
  */
 #define MAKE_OMNI_CORE_ERROR_AND_LOG_FUNC(n)                                    \
-    /** Log, if -debug=category switch is given OR category is NULL. */         \
     template<TINYFORMAT_ARGTYPES(n)>                                            \
-    static inline int mp_category_log(const char* category, const char* format, TINYFORMAT_VARARGS(n)) \
-    {                                                                           \
-        if (!LogAcceptCategory(category)) return 0;                             \
-        return LogFilePrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));       \
-    }                                                                           \
-    template<TINYFORMAT_ARGTYPES(n)>                                            \
-    static inline int file_log(const char* format, TINYFORMAT_VARARGS(n))       \
+    static inline int PrintToLog(const char* format, TINYFORMAT_VARARGS(n))     \
     {                                                                           \
         return LogFilePrint(tfm::format(format, TINYFORMAT_PASSARGS(n)));       \
     }                                                                           \
     template<TINYFORMAT_ARGTYPES(n)>                                            \
-    static inline int file_log(TINYFORMAT_VARARGS(n))                           \
+    static inline int PrintToLog(TINYFORMAT_VARARGS(n))                         \
     {                                                                           \
         return LogFilePrint(tfm::format("%s", TINYFORMAT_PASSARGS(n)));         \
     }                                                                           \

@@ -17,11 +17,11 @@
 leveldb::Status CDBBase::Open(const boost::filesystem::path& path, bool fWipe)
 {
     if (fWipe) {
-        if (msc_debug_persistence) file_log("Wiping LevelDB in %s\n", path.string());
+        if (msc_debug_persistence) PrintToLog("Wiping LevelDB in %s\n", path.string());
         leveldb::DestroyDB(path.string(), options);
     }
     TryCreateDirectory(path);
-    if (msc_debug_persistence) file_log("Opening LevelDB in %s\n", path.string());
+    if (msc_debug_persistence) PrintToLog("Opening LevelDB in %s\n", path.string());
 
     return leveldb::DB::Open(options, path.string(), &pdb);
 }
@@ -49,7 +49,7 @@ void CDBBase::Clear()
 
     int64_t nTime = GetTimeMicros() - nTimeStart;
     if (msc_debug_persistence)
-        file_log("Removed %d entries: %s [%.3f ms/entry, %.3f ms total]\n",
+        PrintToLog("Removed %d entries: %s [%.3f ms/entry, %.3f ms total]\n",
             n, status.ToString(), (n > 0 ? (0.001 * nTime / n) : 0), 0.001 * nTime);
 }
 

@@ -12,9 +12,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string>
+#include <vector>
 
-// Log files
-const std::string LOG_FILENAME    = "mastercore.log";
+// Default log files
+const std::string LOG_FILENAME    = "omnicore.log";
 const std::string INFO_FILENAME   = "mastercore_crowdsales.log";
 const std::string OWNERS_FILENAME = "mastercore_owners.log";
 
@@ -69,6 +70,27 @@ static boost::mutex* mutexDebugLog = NULL;
 extern volatile bool fReopenOmniCoreLog;
 
 /**
+ * Returns path for debug log file.
+ *
+ * The log file can be specified via startup option "--omnilogfile=/path/to/omnicore.log",
+ * and if none is provided, then the client's datadir is used as default location.
+ */
+static boost::filesystem::path GetLogPath()
+{
+    boost::filesystem::path pathLogFile;
+    std::string strLogPath = GetArg("-omnilogfile", "");
+
+    if (!strLogPath.empty()) {
+        pathLogFile = boost::filesystem::path(strLogPath);
+        TryCreateDirectory(pathLogFile.parent_path());
+    } else {
+        pathLogFile = GetDataDir() / LOG_FILENAME;
+    }
+
+    return pathLogFile;
+}
+
+/**
  * Opens debug log file.
  */
 static void DebugLogInit()
@@ -76,9 +98,14 @@ static void DebugLogInit()
     assert(fileout == NULL);
     assert(mutexDebugLog == NULL);
 
-    boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME;
+    boost::filesystem::path pathDebug = GetLogPath();
     fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // Unbuffered
+
+    if (fileout) {
+        setbuf(fileout, NULL); // Unbuffered
+    } else {
+        PrintToConsole("Failed to open debug log file: %s\n", pathDebug.string());
+    }
 
     mutexDebugLog = new boost::mutex();
 }
@@ -122,7 +149,7 @@ int LogFilePrint(const std::string& str)
         // Reopen the log file, if requested
         if (fReopenOmniCoreLog) {
             fReopenOmniCoreLog = false;
-            boost::filesystem::path pathDebug = GetDataDir() / LOG_FILENAME;
+            boost::filesystem::path pathDebug = GetLogPath();
             if (freopen(pathDebug.string().c_str(), "a", fileout) != NULL) {
                 setbuf(fileout, NULL); // Unbuffered
             }
@@ -173,11 +200,81 @@ int ConsolePrint(const std::string& str)
 }
 
 /**
+ * Determine whether to override compiled debug levels via enumerating startup option --omnidebug.
+ *
+ * Example usage (granular categories)    : --omnidebug=parser --omnidebug=metadex1 --omnidebug=ui
+ * Example usage (enable all categories)  : --omnidebug=all
+ * Example usage (disable all debugging)  : --omnidebug=none
+ * Example usage (disable all except XYZ) : --omnidebug=none --omnidebug=parser --omnidebug=sto
+ */
+void InitDebugLogLevels()
+{
+    if (!mapArgs.count("-omnidebug")) {
+        return;
+    }
+
+    const std::vector<std::string>& debugLevels = mapMultiArgs["-omnidebug"];
+
+    for (std::vector<std::string>::const_iterator it = debugLevels.begin(); it != debugLevels.end(); ++it) {
+        if (*it == "parser_data") msc_debug_parser_data = true;
+        if (*it == "parser") msc_debug_parser = true;
+        if (*it == "verbose") msc_debug_verbose = true;
+        if (*it == "verbose2") msc_debug_verbose2 = true;
+        if (*it == "verbose3") msc_debug_verbose3 = true;
+        if (*it == "vin") msc_debug_vin = true;
+        if (*it == "script") msc_debug_script = true;
+        if (*it == "dex") msc_debug_dex = true;
+        if (*it == "send") msc_debug_send = true;
+        if (*it == "tokens") msc_debug_tokens = true;
+        if (*it == "spec") msc_debug_spec = true;
+        if (*it == "exo") msc_debug_exo = true;
+        if (*it == "tally") msc_debug_tally = true;
+        if (*it == "sp") msc_debug_sp = true;
+        if (*it == "sto") msc_debug_sto = true;
+        if (*it == "txdb") msc_debug_txdb = true;
+        if (*it == "tradedb") msc_debug_tradedb = true;
+        if (*it == "persistence") msc_debug_persistence = true;
+        if (*it == "ui") msc_debug_ui = true;
+        if (*it == "pending") msc_debug_pending = true;
+        if (*it == "metadex1") msc_debug_metadex1 = true;
+        if (*it == "metadex2") msc_debug_metadex2 = true;
+        if (*it == "metadex3") msc_debug_metadex3 = true;
+        if (*it == "none" || *it == "all") {
+            bool allDebugState = false;
+            if (*it == "all") allDebugState = true;
+            msc_debug_parser_data = allDebugState;
+            msc_debug_parser = allDebugState;
+            msc_debug_verbose = allDebugState;
+            msc_debug_verbose2 = allDebugState;
+            msc_debug_verbose3 = allDebugState;
+            msc_debug_vin = allDebugState;
+            msc_debug_script = allDebugState;
+            msc_debug_dex = allDebugState;
+            msc_debug_send = allDebugState;
+            msc_debug_tokens = allDebugState;
+            msc_debug_spec = allDebugState;
+            msc_debug_exo = allDebugState;
+            msc_debug_tally = allDebugState;
+            msc_debug_sp = allDebugState;
+            msc_debug_sto = allDebugState;
+            msc_debug_txdb = allDebugState;
+            msc_debug_tradedb = allDebugState;
+            msc_debug_persistence = allDebugState;
+            msc_debug_ui = allDebugState;
+            msc_debug_pending = allDebugState;
+            msc_debug_metadex1 = allDebugState;
+            msc_debug_metadex2 = allDebugState;
+            msc_debug_metadex3 = allDebugState;
+        }
+    }
+}
+
+/**
  * Scrolls debug log, if it's getting too big.
  */
 void ShrinkDebugLog()
 {
-    boost::filesystem::path pathLog = GetDataDir() / LOG_FILENAME;
+    boost::filesystem::path pathLog = GetLogPath();
     FILE* file = fopen(pathLog.string().c_str(), "r");
 
     if (file && boost::filesystem::file_size(pathLog) > LOG_SHRINKSIZE) {

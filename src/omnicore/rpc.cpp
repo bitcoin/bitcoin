@@ -154,7 +154,7 @@ int extra2 = 0, extra3 = 0;
   if (1 < params.size()) extra2 = atoi(params[1].get_str());
   if (2 < params.size()) extra3 = atoi(params[2].get_str());
 
-  printf("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
+  PrintToConsole("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
 
   bool bDivisible = isPropertyDivisible(extra2);
 
@@ -171,11 +171,11 @@ int extra2 = 0, extra3 = 0;
           // my_it->first = key
           // my_it->second = value
 
-          printf("%34s => ", (my_it->first).c_str());
+          PrintToConsole("%34s => ", my_it->first);
           total += (my_it->second).print(extra2, bDivisible);
         }
 
-        printf("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total).c_str());
+        PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
       }
       break;
 
@@ -198,15 +198,15 @@ int extra2 = 0, extra3 = 0;
           // my_it->first = key
           // my_it->second = value
 
-          printf("%34s => ", (my_it->first).c_str());
+          PrintToConsole("%34s => ", my_it->first);
           (my_it->second).print(extra2);
 
           (my_it->second).init();
           while (0 != (id = (my_it->second).next()))
           {
-            printf("Id: %u=0x%X ", id, id);
+            PrintToConsole("Id: %u=0x%X ", id, id);
           }
-          printf("\n");
+          PrintToConsole("\n");
         }
       break;
 
@@ -218,7 +218,7 @@ int extra2 = 0, extra3 = 0;
       break;
 
     case 5:
-      printf("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES":"NO");
+      PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES":"NO");
       break;
 
     case 6:
@@ -353,7 +353,7 @@ Value getallbalancesforid_MP(const Array& params, bool fHelp)
     {
         unsigned int id;
         bool includeAddress=false;
-        string address = (my_it->first).c_str();
+        string address = my_it->first;
         (my_it->second).init();
         while (0 != (id = (my_it->second).next()))
         {
@@ -625,7 +625,7 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
         database = sp.historicalData;
     }
 
-    file_log("SIZE OF DB %lu\n", sp.historicalData.size() );
+    PrintToLog("SIZE OF DB %lu\n", sp.historicalData.size() );
     //bool closedEarly = false; //this needs to wait for dead crowdsale persistence
     //int64_t endedTime = 0; //this needs to wait for dead crowdsale persistence
 
@@ -1804,7 +1804,7 @@ Value getinfo_MP(const Array& params, bool fHelp)
             alertResponse.push_back(Pair("alerttype", alertTypeStr));
             alertResponse.push_back(Pair("expiryvalue", FormatIndivisibleMP(expiryValue)));
             if (alertType == 4) { alertResponse.push_back(Pair("typecheck",  FormatIndivisibleMP(typeCheck))); alertResponse.push_back(Pair("vercheck",  FormatIndivisibleMP(verCheck))); }
-            alertResponse.push_back(Pair("alertmessage", alertMessage.c_str()));
+            alertResponse.push_back(Pair("alertmessage", alertMessage));
         }
     }
     infoResponse.push_back(Pair("alert", alertResponse));
