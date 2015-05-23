@@ -3627,7 +3627,7 @@ int CMPTransaction::interpretPacket(CMPOffer *obj_o, CMPMetaDEx *mdex_o)
 {
 int rc = PKT_ERROR;
 
-  if (0>step1()) return -98765;
+  if (!interpret_TransactionType()) return -98765;
 
   if ((obj_o) && (MSC_TYPE_TRADE_OFFER != type)) return -777; // can't fill in the Offer object !
   if ((mdex_o) && (MSC_TYPE_METADEX != type)) return -778; // can't fill in the MetaDEx object !
@@ -3638,11 +3638,9 @@ int rc = PKT_ERROR;
   {
     case MSC_TYPE_SIMPLE_SEND:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
+      if (!interpret_SimpleSend()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_SimpleSend();
       break;
@@ -3650,11 +3648,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_SEND_TO_OWNERS:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
+      if (!interpret_SendToOwners()) {
+        return PKT_ERROR;
+      }
 
       boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
       FILE *fp = fopen(pathOwners.string().c_str(), "a");
@@ -3672,18 +3668,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_TRADE_OFFER:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
-
-      memcpy(&amount_desired, &pkt[16], 8);
-      memcpy(&blocktimelimit, &pkt[24], 1);
-      memcpy(&min_fee, &pkt[25], 8);
-      memcpy(&subaction, &pkt[33], 1);
-      swapByteOrder64(amount_desired);
-      swapByteOrder64(min_fee);
+      if (!interpret_TradeOffer()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_TradeOffer(obj_o);
       break;
@@ -3691,17 +3678,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_METADEX:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
-
-      memcpy(&desired_property, &pkt[16], 4);
-      swapByteOrder32(desired_property);
-      memcpy(&desired_value, &pkt[20], 8);
-      swapByteOrder64(desired_value);
-      memcpy(&action, &pkt[28], 1);
+      if (!interpret_MetaDEx()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_MetaDEx(mdex_o);
       break;
@@ -3709,11 +3688,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_ACCEPT_OFFER_BTC:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
+      if (!interpret_AcceptOfferBTC()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_AcceptOffer_BTC();
       break;
@@ -3721,31 +3698,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_CREATE_PROPERTY_FIXED:
     {
-      const char* p = 11 + (char*) &pkt;
-      std::vector<std::string> spstr;
-      memcpy(&ecosystem, &pkt[4], 1);
-      memcpy(&prop_type, &pkt[5], 2);
-      swapByteOrder16(prop_type);
-      memcpy(&prev_prop_id, &pkt[7], 4);
-      swapByteOrder32(prev_prop_id);
-      for (int i = 0; i < 5; i++) {
-          spstr.push_back(std::string(p));
-          p += spstr.back().size() + 1;
+      if (!interpret_CreatePropertyFixed()) {
+        return PKT_ERROR;
       }
-      int i = 0;
-      memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
-      memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
-      memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
-      memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
-      memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
-      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP - 800);
-      if (!p) return (PKT_ERROR_SP -11);
-
-      memcpy(&nValue, p, 8);
-      swapByteOrder64(nValue);
-      p += 8;
-      nNewValue = nValue;
-      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP -900);
 
       rc = logicMath_CreatePropertyFixed();
       break;
@@ -3753,39 +3708,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
     {
-      const char* p = 11 + (char*) &pkt;
-      std::vector<std::string> spstr;
-      memcpy(&ecosystem, &pkt[4], 1);
-      memcpy(&prop_type, &pkt[5], 2);
-      swapByteOrder16(prop_type);
-      memcpy(&prev_prop_id, &pkt[7], 4);
-      swapByteOrder32(prev_prop_id);
-      for (int i = 0; i < 5; i++) {
-          spstr.push_back(std::string(p));
-          p += spstr.back().size() + 1;
+      if (!interpret_CreatePropertyVariable()) {
+        return PKT_ERROR;
       }
-      int i = 0;
-      memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
-      memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
-      memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
-      memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
-      memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
-      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP - 800);
-      if (!p) return (PKT_ERROR_SP -12);
-
-      memcpy(&property, p, 4);
-      swapByteOrder32(property);
-      p += 4;
-      memcpy(&nValue, p, 8);
-      swapByteOrder64(nValue);
-      p += 8;
-      nNewValue = nValue;
-      memcpy(&deadline, p, 8);
-      swapByteOrder64(deadline);
-      p += 8;
-      memcpy(&early_bird, p++, 1);
-      memcpy(&percentage, p++, 1);
-      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP -765);
 
       rc = logicMath_CreatePropertyVariable();
       break;
@@ -3793,8 +3718,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_CLOSE_CROWDSALE:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
+      if (!interpret_CloseCrowdsale()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_CloseCrowdsale();
       break;
@@ -3802,25 +3728,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_CREATE_PROPERTY_MANUAL:
     {
-      const char* p = 11 + (char*) &pkt;
-      std::vector<std::string> spstr;
-      memcpy(&ecosystem, &pkt[4], 1);
-      memcpy(&prop_type, &pkt[5], 2);
-      swapByteOrder16(prop_type);
-      memcpy(&prev_prop_id, &pkt[7], 4);
-      swapByteOrder32(prev_prop_id);
-      for (int i = 0; i < 5; i++) {
-          spstr.push_back(std::string(p));
-          p += spstr.back().size() + 1;
+      if (!interpret_CreatePropertyMananged()) {
+        return PKT_ERROR;
       }
-      int i = 0;
-      memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(category)-1)); i++;
-      memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(subcategory)-1)); i++;
-      memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(name)-1)); i++;
-      memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
-      memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
-      if (isOverrun(p, __LINE__)) return (PKT_ERROR_SP - 800);
-      if (!p) return (PKT_ERROR_SP -11);
 
       rc = logicMath_CreatePropertyMananged();
       break;
@@ -3828,11 +3738,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_GRANT_PROPERTY_TOKENS:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
+      if (!interpret_GrantTokens()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_GrantTokens();
       break;
@@ -3840,11 +3748,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-      memcpy(&nValue, &pkt[8], 8);
-      swapByteOrder64(nValue);
-      nNewValue = nValue;
+      if (!interpret_RevokeTokens()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_RevokeTokens();
       break;
@@ -3852,8 +3758,9 @@ int rc = PKT_ERROR;
 
     case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
     {
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
+      if (!interpret_ChangeIssuer()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_ChangeIssuer();
       break;
@@ -3861,9 +3768,9 @@ int rc = PKT_ERROR;
 
     case OMNICORE_MESSAGE_TYPE_ALERT:
     {
-      const char* p = 4 + (char*) &pkt;
-      std::string spstr(p);
-      memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
+      if (!interpret_Alert()) {
+        return PKT_ERROR;
+      }
 
       rc = logicMath_Alert();
       break;
