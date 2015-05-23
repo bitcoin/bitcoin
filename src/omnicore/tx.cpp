@@ -620,6 +620,18 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
         return (PKT_ERROR_SP -505);
     }
     // ------------------------------------------
+    if (MSC_PROPERTY_TYPE_INDIVISIBLE == prop_type) {
+        PrintToLog("\t           value: %lu\n", nValue);
+        if (0 == nValue) return (PKT_ERROR_SP -101);
+    } else
+        if (MSC_PROPERTY_TYPE_DIVISIBLE == prop_type) {
+        PrintToLog("\t           value: %s\n", FormatDivisibleMP(nValue));
+        if (0 == nValue) return (PKT_ERROR_SP -102);
+    }
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -802); // out of range
+    }
+    // ------------------------------------------
 
     int rc = -1;
 
