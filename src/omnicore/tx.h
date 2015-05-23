@@ -32,49 +32,55 @@ using mastercore::c_strMasterProtocolTXType;
 class CMPTransaction
 {
 private:
-  string sender;
-  string receiver;
   uint256 txid;
   int block;
+  int64_t blockTime;  // internally nTime is still an "unsigned int"
   unsigned int tx_idx;  // tx # within the block, 0-based
+  uint64_t tx_fee_paid;
+
   int pkt_size;
   unsigned char pkt[1 + MAX_PACKETS * PACKET_SIZE];
-  uint64_t nValue;
   int multi;  // Class A = 0, Class B = 1, Class C = 2
-  uint64_t tx_fee_paid;
-  unsigned int type;
-  unsigned int property;
-  unsigned short version; // = MP_TX_PKT_V0;
-  uint64_t nNewValue;
-  int64_t blockTime;  // internally nTime is still an "unsigned int"
 
-  // SP additions, perhaps a new class or a union is needed
+  std::string sender;
+  std::string receiver;
+
+  unsigned int type;
+  unsigned short version; // = MP_TX_PKT_V0;
+
+  // SimpleSend, SendToOwners, TradeOffer, MetaDEx, AcceptOfferBTC,
+  // CreatePropertyFixed, CreatePropertyVariable, GrantTokens, RevokeTokens
+  uint64_t nValue;
+  uint64_t nNewValue;
+
+  // SimpleSend, SendToOwners, TradeOffer, MetaDEx, AcceptOfferBTC,
+  // CreatePropertyFixed, CreatePropertyVariable, CloseCrowdsale,
+  // CreatePropertyMananged, GrantTokens, RevokeTokens, ChangeIssuer
+  unsigned int property;
+
+  // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged
   unsigned char ecosystem;
   unsigned short prop_type;
   unsigned int prev_prop_id;
-
   char category[SP_STRING_FIELD_LEN];
   char subcategory[SP_STRING_FIELD_LEN];
   char name[SP_STRING_FIELD_LEN];
   char url[SP_STRING_FIELD_LEN];
   char data[SP_STRING_FIELD_LEN];
-
   uint64_t deadline;
   unsigned char early_bird;
   unsigned char percentage;
 
-  // METADEX additions
+  // MetaDEx
   unsigned int desired_property;
   uint64_t desired_value;
+  unsigned char action;
 
   // TradeOffer
   uint64_t amount_desired;
   unsigned char blocktimelimit;
   uint64_t min_fee;
   unsigned char subaction;
-
-  // MetaDEx
-  unsigned char action;
 
   // Alert
   char alertString[SP_STRING_FIELD_LEN];
@@ -96,12 +102,12 @@ public:
   {
     INVALID = 0,
 
+    // DEx
     NEW = 1,
-
     UPDATE = 2,
-
     CANCEL = 3,
 
+    // MetaDEx
     ADD                 = 1,
     CANCEL_AT_PRICE     = 2,
     CANCEL_ALL_FOR_PAIR = 3,
@@ -129,31 +135,48 @@ public:
 
   void SetNull()
   {
-    property = 0;
-    type = 0;
     txid = 0;
-    tx_idx = 0;  // tx # within the block, 0-based
+    block = 0;
+    blockTime = 0;
+    tx_idx = 0;
+    tx_fee_paid = 0;
+
+    pkt_size = 0;
+    memset(&pkt, 0, sizeof(pkt));
+    multi = 0;
+
+    sender.clear();
+    receiver.clear();
+
+    type = 0;
+    version = 0;
+
     nValue = 0;
     nNewValue = 0;
-    tx_fee_paid = 0;
-    block = -1;
-    pkt_size = 0;
-    sender.erase();
-    receiver.erase();
 
-    blockTime = 0;
+    property = 0;
 
     ecosystem = 0;
     prop_type = 0;
     prev_prop_id = 0;
-
-    memset(&pkt, 0, sizeof(pkt));
-
     memset(&category, 0, sizeof(category));
     memset(&subcategory, 0, sizeof(subcategory));
     memset(&name, 0, sizeof(name));
     memset(&url, 0, sizeof(url));
     memset(&data, 0, sizeof(data));
+    deadline = 0;
+    early_bird = 0;
+    percentage = 0;
+
+    desired_property = 0;
+    desired_value = 0;
+    action = 0;
+
+    amount_desired = 0;
+    blocktimelimit = 0;
+    min_fee = 0;
+    subaction = 0;
+    memset(&alertString, 0, sizeof(alertString));
   }
 
   CMPTransaction()
