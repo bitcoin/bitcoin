@@ -398,10 +398,6 @@ int mastercore::MetaDEx_ADD(const std::string& sender_addr, uint32_t prop, int64
 {
     int rc = METADEX_ERROR -1;
 
-    // Ensure that one side of the trade is MSC/TMSC (phase 1 check)
-    if ((prop != OMNI_PROPERTY_MSC) && (property_desired != OMNI_PROPERTY_MSC) &&
-        (prop != OMNI_PROPERTY_TMSC) && (property_desired != OMNI_PROPERTY_TMSC)) return METADEX_ERROR -800;
-
     // Create a MetaDEx object from paremeters
     CMPMetaDEx new_mdex(sender_addr, block, prop, amount, property_desired, amount_desired, txid, idx, CMPTransaction::ADD);
     if (msc_debug_metadex1) PrintToLog("%s(); buyer obj: %s\n", __FUNCTION__, new_mdex.ToString());

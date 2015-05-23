@@ -949,6 +949,10 @@ int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx *mdex_o)
         if (0 >= static_cast<int64_t>(nNewValue)) return (PKT_ERROR_METADEX -11);
         if (0 >= static_cast<int64_t>(desired_value)) return (PKT_ERROR_METADEX -12);
 
+        // ensure that one side of the trade is MSC/TMSC (phase 1 check)
+        if ((property != OMNI_PROPERTY_MSC) && (desired_property != OMNI_PROPERTY_MSC) &&
+            (property != OMNI_PROPERTY_TMSC) && (desired_property != OMNI_PROPERTY_TMSC)) return (PKT_ERROR_METADEX -800);
+
         // ensure sufficient balance is available to offer
         if (getMPbalance(sender, property, BALANCE) < static_cast<int64_t>(nNewValue)) return (PKT_ERROR_METADEX -567);
 
