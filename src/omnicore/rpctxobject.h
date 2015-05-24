@@ -1,5 +1,5 @@
-#ifndef OMNICORE_RPCTXOBJECT
-#define OMNICORE_RPCTXOBJECT
+#ifndef OMNICORE_RPCTXOBJECT_H
+#define OMNICORE_RPCTXOBJECT_H
 
 #include "json/json_spirit_value.h"
 #include "omnicore/tx.h"
@@ -29,4 +29,4 @@ void populateRPCExtendedTypeMetaDEx(const uint256& txid, unsigned char action, u
 int populateRPCDExPurchases(const CTransaction& wtx, json_spirit::Array *purchases, std::string filterAddress);
 bool showRefForTx(uint32_t txType);
 
-#endif // OMNICORE_RPCTXOBJECT
+#endif // OMNICORE_RPCTXOBJECT_H
