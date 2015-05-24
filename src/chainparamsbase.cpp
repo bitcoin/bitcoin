@@ -16,7 +16,7 @@ const std::string CBaseChainParams::MAX_NETWORK_TYPES = "unknown_chain";
 
 std::string GetParamsHelpMessages()
 {
-    std::string strUsage = "";
+    std::string strUsage = HelpMessageOpt("-chain=<chain>", _("Use the chain <chain> (default: main). Allowed values: main, testnet, regtest"));
     strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
     strUsage += HelpMessageOpt("-regtest", _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + " " +
         _("This is intended for regression testing tools and app development.") + " " +
@@ -108,7 +108,7 @@ std::string ChainNameFromCommandLine()
         return CBaseChainParams::REGTEST;
     if (fTestNet)
         return CBaseChainParams::TESTNET;
-    return CBaseChainParams::MAIN;
+    return GetArg("-chain", CBaseChainParams::MAIN);
 }
 
 void SelectBaseParamsFromCommandLine()
