@@ -518,79 +518,8 @@ void TradeHistoryDialog::showDetails()
         CMPPending *p_pending = &(it->second);
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
     } else {
-        int pop = populateRPCTransactionObject(txid, txobj, "");
-        if (0<=pop) {
-            Object tradeobj;
-            CMPMetaDEx temp_metadexoffer;
-            string senderAddress;
-            unsigned int propertyId = 0;
-            CTransaction wtx;
-            uint256 blockHash = 0;
-            if (!GetTransaction(txid, wtx, blockHash, true)) { return; }
-            CMPTransaction mp_obj;
-            int parseRC = parseTransaction(true, wtx, 0, 0, &mp_obj);
-            if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
-                if (0<=mp_obj.step1()) {
-                    senderAddress = mp_obj.getSender();
-                    if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
-                }
-            }
-            int64_t amountForSale = mp_obj.getAmount();
-
-            // obtain action byte
-            int actionByte = 0;
-            if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
-
-            // obtain an array of matched trades (action 1) or array of cancelled trades (action 2/3/4)
-            Array tradeArray, cancelArray;
-            int64_t totalBought = 0, totalSold = 0;
-            if (actionByte == 1) {
-                t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
-            } else {
-                int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
-                if (numberOfCancels > 0) {
-                    for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
-                        Object cancelTx;
-                        string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + static_cast<ostringstream*>( &(ostringstream() << refNumber) )->str() );
-                        if (!strValue.empty()) {
-                            std::vector<std::string> vstr;
-                            boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
-                            if (3 <= vstr.size()) {
-                                uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
-                                cancelTx.push_back(Pair("txid", vstr[0]));
-                                cancelTx.push_back(Pair("propertyid", propId));
-                                cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, boost::lexical_cast<uint64_t>(vstr[2]))));
-                                cancelArray.push_back(cancelTx);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // obtain the status of the trade
-            bool orderOpen = MetaDEx_isOpen(txid, propertyId);
-            bool partialFilled = false, filled = false;
-            string statusText = "unknown";
-            if (totalSold>0) partialFilled = true;
-            if (totalSold>=amountForSale) filled = true;
-            if (orderOpen) {
-                if (!partialFilled) { statusText = "open"; } else { statusText = "open part filled"; }
-            } else {
-                if (!partialFilled) { statusText = "cancelled"; } else { statusText = "cancelled part filled"; }
-                if (filled) statusText = "filled";
-            }
-            if (actionByte == 1) { txobj.push_back(Pair("status", statusText)); } else { txobj.push_back(Pair("status", "N/A")); }
-
-            // add the appropriate array based on action byte
-            if(actionByte == 1) {
-                txobj.push_back(Pair("matches", tradeArray));
-                if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
-            } else {
-                txobj.push_back(Pair("cancelledtransactions", cancelArray));
-            }
-
-            strTXText = write_string(Value(txobj), true);
-        }
+        int pop = populateRPCTransactionObject(txid, txobj, "", true);
+        if (0<=pop) strTXText = write_string(Value(txobj), true);
     }
 
     if (!strTXText.empty()) {

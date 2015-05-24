@@ -9,6 +9,8 @@
 #include "omnicore/rpc.h"
 #include "omnicore/rpctxobject.h"
 
+#include "omnicore_qtutils.h"
+
 #include "uint256.h"
 
 #include "json/json_spirit_value.h"
@@ -26,6 +28,7 @@
 
 using std::string;
 using namespace json_spirit;
+using namespace mastercore;
 
 LookupTXDialog::LookupTXDialog(QWidget *parent) :
     QDialog(parent),
@@ -57,70 +60,15 @@ void LookupTXDialog::searchTX()
     uint256 hash;
     hash.SetHex(searchText);
     Object txobj;
+    std::string strTXText;
     // make a request to new RPC populator function to populate a transaction object
-    int populateResult = populateRPCTransactionObject(hash, txobj, "");
-    if (0<=populateResult)
-    {
-        std::string strTXText = write_string(Value(txobj), false) + "\n";
-        // clean up
-        string from = ",";
-        string to = ",\n    ";
-        size_t start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = ":";
-        to = "   :   ";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "{";
-        to = "{\n    ";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-        from = "}";
-        to = "\n}";
-        start_pos = 0;
-        while((start_pos = strTXText.find(from, start_pos)) != std::string::npos)
-        {
-            strTXText.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-        }
-
-        QString txText = QString::fromStdString(strTXText);
-        QDialog *txDlg = new QDialog;
-        QLayout *dlgLayout = new QVBoxLayout;
-        dlgLayout->setSpacing(12);
-        dlgLayout->setMargin(12);
-        QTextEdit *dlgTextEdit = new QTextEdit;
-        dlgTextEdit->setText(txText);
-        dlgTextEdit->setStatusTip("Transaction Information");
-        dlgLayout->addWidget(dlgTextEdit);
-        txDlg->setWindowTitle("Transaction Information");
-        QPushButton *closeButton = new QPushButton(tr("&Close"));
-        closeButton->setDefault(true);
-        QDialogButtonBox *buttonBox = new QDialogButtonBox;
-        buttonBox->addButton(closeButton, QDialogButtonBox::AcceptRole);
-        dlgLayout->addWidget(buttonBox);
-        txDlg->setLayout(dlgLayout);
-        txDlg->resize(700, 360);
-        connect(buttonBox, SIGNAL(accepted()), txDlg, SLOT(accept()));
-        txDlg->setAttribute(Qt::WA_DeleteOnClose); //delete once it's closed
-        if (txDlg->exec() == QDialog::Accepted) { } else { } //do nothing but close
-    }
-    else
-    {
+    int populateResult = populateRPCTransactionObject(hash, txobj, "", true);
+    if (0<=populateResult) {
+        strTXText = write_string(Value(txobj), true);
+        if (!strTXText.empty()) PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
+    } else {
         // show error message
-        string strText = "The transaction hash entered is ";
+        std::string strText = "The transaction hash entered is ";
         switch(populateResult) {
             case MP_TX_NOT_FOUND:
                 strText += "not a valid Bitcoin or Omni transaction.  Please check the transaction hash "

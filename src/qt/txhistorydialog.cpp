@@ -540,21 +540,8 @@ void TXHistoryDialog::showDetails()
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
     } else {
         // grab details usual way
-        int pop = populateRPCTransactionObject(txid, txobj, "");
-        if (0<=pop) {
-            strTXText = write_string(Value(txobj), true);
-            // manipulate for STO if needed
-            size_t pos = strTXText.find("Send To Owners");
-            if (pos!=std::string::npos) {
-                Array receiveArray;
-                uint64_t tmpAmount = 0;
-                uint64_t tmpSTOFee = 0;
-                s_stolistdb->getRecipients(txid, "", &receiveArray, &tmpAmount, &tmpSTOFee);
-                txobj.push_back(Pair("recipients", receiveArray));
-                //rewrite string
-                strTXText = write_string(Value(txobj), true);
-            }
-        }
+        int pop = populateRPCTransactionObject(txid, txobj, "", true);
+        if (0<=pop) strTXText = write_string(Value(txobj), true);
     }
     if (!strTXText.empty()) {
         PopulateSimpleDialog(strTXText, "Transaction Information", "Transaction Information");
