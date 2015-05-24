@@ -6,6 +6,7 @@
 
 class uint256;
 class CMPTransaction;
+class CTransaction;
 
 int populateRPCTransactionObject(const uint256& txid, json_spirit::Object *txobj, std::string filterAddress = "", bool extendedDetails = false, std::string extendedDetailsFilter = "");
 
