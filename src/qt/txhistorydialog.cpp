@@ -540,7 +540,7 @@ void TXHistoryDialog::showDetails()
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
     } else {
         // grab details usual way
-        int pop = populateRPCTransactionObject(txid, &txobj, "");
+        int pop = populateRPCTransactionObject(txid, txobj, "");
         if (0<=pop) {
             strTXText = write_string(Value(txobj), true);
             // manipulate for STO if needed

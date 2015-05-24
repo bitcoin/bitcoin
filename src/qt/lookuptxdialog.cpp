@@ -58,7 +58,7 @@ void LookupTXDialog::searchTX()
     hash.SetHex(searchText);
     Object txobj;
     // make a request to new RPC populator function to populate a transaction object
-    int populateResult = populateRPCTransactionObject(hash, &txobj, "");
+    int populateResult = populateRPCTransactionObject(hash, txobj, "");
     if (0<=populateResult)
     {
         std::string strTXText = write_string(Value(txobj), false) + "\n";

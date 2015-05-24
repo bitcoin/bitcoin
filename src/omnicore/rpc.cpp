@@ -1039,7 +1039,7 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
                 if (obj.getAddr() == address) {
                     if (propertyId != 0 && propertyId != obj.getProperty() && propertyId != obj.getDesProperty()) continue;
                     Object txobj;
-                    int populateResult = populateRPCTransactionObject(obj.getHash(), &txobj, "", true);
+                    int populateResult = populateRPCTransactionObject(obj.getHash(), txobj, "", true);
                     if (0 == populateResult) {
                         vecTransactions.push_back(obj.getHash());
                     }
@@ -1054,7 +1054,7 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
     // populate
     for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
         Object txobj;
-        int populateResult = populateRPCTransactionObject(*it, &txobj, "", true);
+        int populateResult = populateRPCTransactionObject(*it, txobj, "", true);
         if (0 == populateResult) response.push_back(txobj);
     }
 
@@ -1242,7 +1242,7 @@ Value gettransaction_MP(const Array& params, bool fHelp)
     hash.SetHex(params[0].get_str());
     Object txobj;
     // make a request to new RPC populator function to populate a transaction object
-    int populateResult = populateRPCTransactionObject(hash, &txobj);
+    int populateResult = populateRPCTransactionObject(hash, txobj);
     // check the response, throw any error codes if false
     if (0>populateResult)
     {
@@ -1350,7 +1350,7 @@ Value listtransactions_MP(const Array& params, bool fHelp)
                     hash.SetHex(svstr[0]);
                     Object txobj;
                     int populateResult = -1;
-                    populateResult = populateRPCTransactionObject(hash, &txobj); // don't spam listtransactions output with STO extended details
+                    populateResult = populateRPCTransactionObject(hash, txobj); // don't spam listtransactions output with STO extended details
                     if (0 == populateResult) response.push_back(txobj);
                 }
             }
@@ -1363,9 +1363,9 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             // make a request to new RPC populator function to populate a transaction object (if it is a MP transaction)
             int populateResult = -1;
             if (addressFilter) {
-                populateResult = populateRPCTransactionObject(hash, &txobj, addressParam); // pass in an address filter
+                populateResult = populateRPCTransactionObject(hash, txobj, addressParam); // pass in an address filter
             } else {
-                populateResult = populateRPCTransactionObject(hash, &txobj); // no address filter
+                populateResult = populateRPCTransactionObject(hash, txobj); // no address filter
             }
             if (0 == populateResult) response.push_back(txobj); // add the transaction object to the response array if we get a 0 rc
             lastTXBlock = blockHeight;
@@ -1471,7 +1471,7 @@ Value getsto_MP(const Array& params, bool fHelp)
     if (params.size() == 2) filterAddress=params[1].get_str();
 
     // make a request to RPC populator function to populate a transaction object
-    int populateResult = populateRPCTransactionObject(hash, &txobj, "", true, filterAddress);
+    int populateResult = populateRPCTransactionObject(hash, txobj, "", true, filterAddress);
     // check the response, throw any error codes if false
     if (0>populateResult) {
         // TODO: consider throwing other error codes, check back with Bitcoin Core
@@ -1516,7 +1516,7 @@ Value gettrade_MP(const Array& params, bool fHelp)
     Object txobj;
 
     // make a request to RPC populator function to populate a transaction object
-    int populateResult = populateRPCTransactionObject(hash, &txobj, "", true);
+    int populateResult = populateRPCTransactionObject(hash, txobj, "", true);
     // check the response, throw any error codes if false
     if (0>populateResult) {
         // TODO: consider throwing other error codes, check back with Bitcoin Core

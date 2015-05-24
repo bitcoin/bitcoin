@@ -518,7 +518,7 @@ void TradeHistoryDialog::showDetails()
         CMPPending *p_pending = &(it->second);
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
     } else {
-        int pop = populateRPCTransactionObject(txid, &txobj, "");
+        int pop = populateRPCTransactionObject(txid, txobj, "");
         if (0<=pop) {
             Object tradeobj;
             CMPMetaDEx temp_metadexoffer;
