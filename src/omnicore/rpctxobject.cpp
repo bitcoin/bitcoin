@@ -99,7 +99,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
 
 /* Function to call respective populators based on message type
  */
-void populateRPCTypeInfo(const CMPTransaction& mp_obj, Object *txobj, uint32_t txType, bool extendedDetails, std::string extendedDetailsFilter)
+void populateRPCTypeInfo(CMPTransaction& mp_obj, Object *txobj, uint32_t txType, bool extendedDetails, std::string extendedDetailsFilter)
 {
     switch (txType) {
         case MSC_TYPE_SIMPLE_SEND:
@@ -162,7 +162,7 @@ bool showRefForTx(uint32_t txType)
     return true; // default to true, shouldn't be needed but just in case
 }
 
-void populateRPCTypeSimpleSend(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeSimpleSend(CMPTransaction& omniObj, Object *txobj)
 {
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
@@ -191,7 +191,7 @@ void populateRPCTypeSimpleSend(CMPTransaction omniObj, Object *txobj)
     }
 }
 
-void populateRPCTypeSendToOwners(CMPTransaction omniObj, Object *txobj, bool extendedDetails, std::string extendedDetailsFilter)
+void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object *txobj, bool extendedDetails, std::string extendedDetailsFilter)
 {
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
@@ -201,7 +201,7 @@ void populateRPCTypeSendToOwners(CMPTransaction omniObj, Object *txobj, bool ext
     if (extendedDetails) populateRPCExtendedTypeSendToOwners(omniObj.getHash(), extendedDetailsFilter, txobj);
 }
 
-void populateRPCTypeTradeOffer(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object *txobj)
 {
     CMPOffer temp_offer;
     if (0 != omniObj.step2_Value()) return;
@@ -236,7 +236,7 @@ void populateRPCTypeTradeOffer(CMPTransaction omniObj, Object *txobj)
     txobj->push_back(Pair("bitcoindesired", FormatDivisibleMP(temp_offer.getBTCDesiredOriginal())));
 }
 
-void populateRPCTypeMetaDEx(CMPTransaction omniObj, Object *txobj, bool extendedDetails)
+void populateRPCTypeMetaDEx(CMPTransaction& omniObj, Object *txobj, bool extendedDetails)
 {
     CMPMetaDEx metaObj;
     if (0 != omniObj.step2_Value()) return;
@@ -276,7 +276,7 @@ void populateRPCTypeMetaDEx(CMPTransaction omniObj, Object *txobj, bool extended
     if (extendedDetails) populateRPCExtendedTypeMetaDEx(omniObj.getHash(), metaObj.getAction(), omniObj.getProperty(), omniObj.getAmount(), txobj);
 }
 
-void populateRPCTypeAcceptOffer(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, Object *txobj)
 {
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
@@ -295,7 +295,7 @@ void populateRPCTypeAcceptOffer(CMPTransaction omniObj, Object *txobj)
     txobj->push_back(Pair("amount", FormatMP(propertyId, amount)));
 }
 
-void populateRPCTypeCreatePropertyFixed(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, Object *txobj)
 {
     int rc = -1;
     omniObj.step2_SmartProperty(rc);
@@ -308,7 +308,7 @@ void populateRPCTypeCreatePropertyFixed(CMPTransaction omniObj, Object *txobj)
     txobj->push_back(Pair("amount", FormatMP(propertyId, getTotalTokens(propertyId))));
 }
 
-void populateRPCTypeCreatePropertyVariable(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, Object *txobj)
 {
     int rc = -1;
     omniObj.step2_SmartProperty(rc);
@@ -321,7 +321,7 @@ void populateRPCTypeCreatePropertyVariable(CMPTransaction omniObj, Object *txobj
     txobj->push_back(Pair("amount", FormatMP(propertyId, 0))); // crowdsale token creations don't issue tokens with the create tx
 }
 
-void populateRPCTypeCreatePropertyManual(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, Object *txobj)
 {
     int rc = -1;
     omniObj.step2_SmartProperty(rc);
@@ -334,7 +334,7 @@ void populateRPCTypeCreatePropertyManual(CMPTransaction omniObj, Object *txobj)
     txobj->push_back(Pair("amount", FormatMP(propertyId, 0))); // managed token creations don't issue tokens with the create tx
 }
 
-void populateRPCTypeCloseCrowdsale(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeCloseCrowdsale(CMPTransaction& omniObj, Object *txobj)
 {
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
@@ -342,16 +342,7 @@ void populateRPCTypeCloseCrowdsale(CMPTransaction omniObj, Object *txobj)
     txobj->push_back(Pair("divisible", isPropertyDivisible(propertyId)));
 }
 
-void populateRPCTypeGrant(CMPTransaction omniObj, Object *txobj)
-{
-    if (0 != omniObj.step2_Value()) return;
-    uint32_t propertyId = omniObj.getProperty();
-    txobj->push_back(Pair("propertyid", (uint64_t)propertyId));
-    txobj->push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-    txobj->push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
-}
-
-void populateRPCTypeRevoke(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeGrant(CMPTransaction& omniObj, Object *txobj)
 {
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
@@ -360,7 +351,16 @@ void populateRPCTypeRevoke(CMPTransaction omniObj, Object *txobj)
     txobj->push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
 }
 
-void populateRPCTypeChangeIssuer(CMPTransaction omniObj, Object *txobj)
+void populateRPCTypeRevoke(CMPTransaction& omniObj, Object *txobj)
+{
+    if (0 != omniObj.step2_Value()) return;
+    uint32_t propertyId = omniObj.getProperty();
+    txobj->push_back(Pair("propertyid", (uint64_t)propertyId));
+    txobj->push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+    txobj->push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
+}
+
+void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, Object *txobj)
 {
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
