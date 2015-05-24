@@ -437,7 +437,7 @@ static Bitcoin_CRegTestParams bitcoin_regTestParams;
 static Bitcredit_CMainParams *bitcredit_pCurrentParams = &bitcredit_mainParams;
 static Bitcoin_CMainParams *bitcoin_pCurrentParams = &bitcoin_mainParams;
 
-const Bitcredit_CMainParams &Bitcredit_Params() {
+const Bitcredit_CMainParams &Credits_Params() {
     return *bitcredit_pCurrentParams;
 }
 const Bitcoin_CMainParams &Bitcoin_Params() {
@@ -485,15 +485,15 @@ bool SelectParamsFromCommandLine() {
 }
 
 bool FastForwardClaimStateFor(const int nBitcoinBlockHeight, const uint256 nBitcoinBlockHash) {
-	if(Bitcredit_Params().FastForwardClaimBitcoinBlockHeight() == 0) {
+	if(Credits_Params().FastForwardClaimBitcoinBlockHeight() == 0) {
 		return false;
 	}
-	if(nBitcoinBlockHeight < Bitcredit_Params().FastForwardClaimBitcoinBlockHeight()) {
+	if(nBitcoinBlockHeight < Credits_Params().FastForwardClaimBitcoinBlockHeight()) {
 		return true;
 	}
-	if(nBitcoinBlockHeight > Bitcredit_Params().FastForwardClaimBitcoinBlockHeight()) {
+	if(nBitcoinBlockHeight > Credits_Params().FastForwardClaimBitcoinBlockHeight()) {
 		return false;
 	}
-	assert(nBitcoinBlockHash == Bitcredit_Params().FastForwardClaimBitcoinBlockHash());
+	assert(nBitcoinBlockHash == Credits_Params().FastForwardClaimBitcoinBlockHash());
 	return true;
 }

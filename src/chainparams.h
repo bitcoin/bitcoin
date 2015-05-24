@@ -132,7 +132,7 @@ protected:
  * Return the currently selected parameters. This won't change after app startup
  * outside of the unit tests.
  */
-const Bitcredit_CMainParams &Bitcredit_Params();
+const Bitcredit_CMainParams &Credits_Params();
 const Bitcoin_CMainParams &Bitcoin_Params();
 
 /** Sets the params returned by xxx_Params() to those for the given network. */
@@ -150,14 +150,14 @@ inline bool Bitcoin_TestNet() {
 }
 inline bool Bitcredit_TestNet() {
     // Note: it's deliberate that this returns "false" for regression test mode.
-    return Bitcredit_Params().NetworkID() == CChainParams::TESTNET;
+    return Credits_Params().NetworkID() == CChainParams::TESTNET;
 }
 
 inline bool Bitcoin_RegTest() {
     return Bitcoin_Params().NetworkID() == CChainParams::REGTEST;
 }
 inline bool Bitcredit_RegTest() {
-    return Bitcredit_Params().NetworkID() == CChainParams::REGTEST;
+    return Credits_Params().NetworkID() == CChainParams::REGTEST;
 }
 bool FastForwardClaimStateFor(const int nBitcoinBlockHeight, const uint256 nBitcoinBlockHash);
 

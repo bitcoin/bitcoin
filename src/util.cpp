@@ -941,7 +941,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
     LOCK(csPathCached);
 
     int nNet = CChainParams::MAX_NETWORK_TYPES;
-    if (fNetSpecific) nNet = Bitcredit_Params().NetworkID();
+    if (fNetSpecific) nNet = Credits_Params().NetworkID();
 
     fs::path &path = pathCached[nNet];
 
@@ -960,7 +960,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific)
-        path /= Bitcredit_Params().DataDir();
+        path /= Credits_Params().DataDir();
 
     fs::create_directories(path);
 

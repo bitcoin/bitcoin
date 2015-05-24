@@ -8,7 +8,7 @@
 #include "rpcprotocol.h"
 #include "util.h"
 #include "ui_interface.h"
-#include "chainparams.h" // for Bitcredit_Params().RPCPort()
+#include "chainparams.h" // for Credits_Params().RPCPort()
 
 #include <stdint.h>
 
@@ -208,7 +208,7 @@ int CommandLineRPC(int argc, char *argv[])
         Array params = RPCConvertValues(strMethod, strParams);
 
         // Execute
-        Object reply = CallRPC(strMethod, params, Bitcredit_Params().RPCPort());
+        Object reply = CallRPC(strMethod, params, Credits_Params().RPCPort());
 
         // Parse reply
         const Value& result = find_value(reply, "result");

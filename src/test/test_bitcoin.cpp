@@ -66,7 +66,7 @@ struct TestingSetup {
         bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
 
         Bitcoin_InitBlockIndex();
-        Bitcredit_InitBlockIndex();
+        Credits_InitBlockIndex();
 
 #ifdef ENABLE_WALLET
         bool fFirstRun;

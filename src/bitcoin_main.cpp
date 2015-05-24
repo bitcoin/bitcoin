@@ -2672,12 +2672,12 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 	    	return true;
 	    }
 		//This section changes from fast forward claim update to standard claim update
-	    if(view.Claim_GetBestBlock() == Bitcredit_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetBitcreditClaimTip() == uint256(1))) {
+	    if(view.Claim_GetBestBlock() == Credits_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetBitcreditClaimTip() == uint256(1))) {
 	    	view.Claim_SetBitcreditClaimTip(expectedCurrentBitcreditBlockIndex->GetBlockHash());
 	    }
 	} else {
 		//This section changes from standard claim update to fast forward claim update
-	    if(view.Claim_GetBestBlock() == Bitcredit_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetBitcreditClaimTip() != uint256(1))) {
+	    if(view.Claim_GetBestBlock() == Credits_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetBitcreditClaimTip() != uint256(1))) {
 	    	view.Claim_SetBitcreditClaimTip(uint256(1));
 	    }
 
@@ -2696,7 +2696,7 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 	}
 
 	// verify that the view's current state corresponds to the previous block
-    uint256 hashExpected = expectedCurrentBitcreditBlockIndex->GetBlockHash() == Bitcredit_Params().GenesisBlock().GetHash() ? uint256(0) : expectedCurrentBitcreditBlockIndex->GetBlockHash();
+    uint256 hashExpected = expectedCurrentBitcreditBlockIndex->GetBlockHash() == Credits_Params().GenesisBlock().GetHash() ? uint256(0) : expectedCurrentBitcreditBlockIndex->GetBlockHash();
     if(hashExpected != view.Claim_GetBitcreditClaimTip()) {
 		return state.Abort(strprintf(_("Error moving claim tip. Expected active credits block: %s, was: %s"), hashExpected.GetHex(), view.Claim_GetBitcreditClaimTip().GetHex()));
     }
@@ -2704,7 +2704,7 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 	if (!bitcoin_chainActive.Contains(pmoveToBitcoinIndex)) {
 		return state.Abort(strprintf(_("Referenced claim block %s is not in active bitcoin block chain"), pmoveToBitcoinIndex->phashBlock->ToString()));
 	}
-	if(bitcoin_chainActive.Tip()->nHeight - pmoveToBitcoinIndex->nHeight < Bitcredit_Params().AcceptDepthLinkedBitcoinBlock()) {
+	if(bitcoin_chainActive.Tip()->nHeight - pmoveToBitcoinIndex->nHeight < Credits_Params().AcceptDepthLinkedBitcoinBlock()) {
 		return state.Abort(strprintf(_("Referenced claim block %s is not deep enough in the bitcoin blockchain"), pmoveToBitcoinIndex->phashBlock->ToString()));
 	}
 

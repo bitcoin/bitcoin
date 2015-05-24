@@ -591,12 +591,12 @@ int main(int argc, char *argv[])
     }
 
     /// 7. Determine network (and switch to network specific options)
-    // - Do not call Bitcredit_Params() before this step
+    // - Do not call Credits_Params() before this step
     // - Do this after parsing the configuration file, as the network can be switched there
     // - QSettings() will use the new application name after this, resulting in network-specific settings
     // - Needs to be done before createOptionsModel
 
-    // Check for -testnet or -regtest parameter (Bitcredit_Params() calls are only valid after this clause)
+    // Check for -testnet or -regtest parameter (Credits_Params() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
         QMessageBox::critical(0, QObject::tr("Credits"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
         return 1;
@@ -609,7 +609,7 @@ int main(int argc, char *argv[])
     if (!PaymentServer::ipcParseCommandLine(argc, argv))
         exit(0);
 #endif
-    bool isaTestNet = Bitcredit_Params().NetworkID() != CChainParams::MAIN;
+    bool isaTestNet = Credits_Params().NetworkID() != CChainParams::MAIN;
     // Allow for separate UI settings for testnets
     if (isaTestNet)
         QApplication::setApplicationName(QAPP_APP_NAME_TESTNET);

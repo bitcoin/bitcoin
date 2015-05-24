@@ -215,7 +215,7 @@ Value setgenerate(const Array& params, bool fHelp)
     }
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && Bitcredit_Params().NetworkID() == CChainParams::REGTEST)
+    if (fGenerate && Credits_Params().NetworkID() == CChainParams::REGTEST)
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;

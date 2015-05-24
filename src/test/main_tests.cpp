@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(main_tests)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-	vector<SubsidyLevel> subsidyLevels = Bitcredit_Params().getSubsidyLevels();
+	vector<SubsidyLevel> subsidyLevels = Credits_Params().getSubsidyLevels();
 
 	//Test with full deposit
     uint64_t nSum = 0;

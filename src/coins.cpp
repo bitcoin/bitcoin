@@ -103,7 +103,7 @@ bool Claim_CCoins::SpendByClaiming(const COutPoint &out, Credits_CTxInUndo &undo
 std::string Claim_CCoins::ToString() const
 {
     std::string str;
-    str += strprintf("Bitcredit_CClaimCoin(ver=%d, height=%d, coinbase=%b)\n",
+    str += strprintf("Claim_CCoins(ver=%d, height=%d, coinbase=%b)\n",
         nVersion,
         nHeight,
         fCoinBase);

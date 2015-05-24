@@ -150,19 +150,19 @@ void Bitcredit_PushGetBlocks(CNode* pnode, Credits_CBlockIndex* pindexBegin, uin
 /** Process an incoming block */
 bool Bitcredit_ProcessBlock(CValidationState &state, CNode* pfrom, Credits_CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
-bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes = 0);
+bool Credits_CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
-FILE* Bitcredit_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* Credits_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
-FILE* Bitcredit_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* Credits_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Import blocks from an external file */
 bool Bitcredit_LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 /** Initialize a new block tree database + block data on disk */
-bool Bitcredit_InitBlockIndex();
+bool Credits_InitBlockIndex();
 /** Load the block tree and coins database from disk */
-bool Bitcredit_LoadBlockIndex();
+bool Credits_LoadBlockIndex();
 /** Unload database information */
-void Bitcredit_UnloadBlockIndex();
+void Credits_UnloadBlockIndex();
 /** Print the loaded block tree */
 void Bitcredit_PrintBlockTree();
 /** Process protocol messages received from a given node */
@@ -206,7 +206,7 @@ uint256 Bitcredit_ReduceByReqDepositLevel(const uint256 nValue, const uint64_t n
 void Bitcredit_UpdateTime(Credits_CBlockHeader& block, const Credits_CBlockIndex* pindexPrev);
 
 /** Create a new block index entry for a given block hash */
-Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash);
+Credits_CBlockIndex * Credits_InsertBlockIndex(uint256 hash);
 /** Verify a signature */
 bool Bitcredit_VerifySignature(const Credits_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Get statistics from node state */
@@ -306,7 +306,7 @@ public:
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
     {
         // Open history file to append
-        CAutoFile fileout = CAutoFile(Bitcredit_OpenUndoFile(pos), SER_DISK, netParams->ClientVersion());
+        CAutoFile fileout = CAutoFile(Credits_OpenUndoFile(pos), SER_DISK, netParams->ClientVersion());
         if (!fileout)
             return error("Credits: CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
@@ -338,7 +338,7 @@ public:
     bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
     {
         // Open history file to read
-        CAutoFile filein = CAutoFile(Bitcredit_OpenUndoFile(pos, true), SER_DISK, netParams->ClientVersion());
+        CAutoFile filein = CAutoFile(Credits_OpenUndoFile(pos, true), SER_DISK, netParams->ClientVersion());
         if (!filein)
             return error("Credits: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
@@ -747,11 +747,11 @@ public:
 
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
-class Bitcredit_CVerifyDB {
+class Credits_CVerifyDB {
 public:
 
-	Bitcredit_CVerifyDB();
-    ~Bitcredit_CVerifyDB();
+	Credits_CVerifyDB();
+    ~Credits_CVerifyDB();
     bool VerifyDB(int nCheckLevel, int nCheckDepth);
 };
 
@@ -826,7 +826,7 @@ struct Credits_CBlockTemplate
 /** Used to relay blocks as header + vector<merkle branch>
  * to filtered nodes.
  */
-class Bitcredit_CMerkleBlock
+class Credits_CMerkleBlock
 {
 public:
     // Public only for unit testing
@@ -841,7 +841,7 @@ public:
     // Create from a CBlock, filtering transactions according to filter
     // Note that this will call IsRelevantAndUpdate on the filter for each transaction,
     // thus the filter will likely be modified.
-    Bitcredit_CMerkleBlock(const Credits_CBlock& block, CBloomFilter& filter);
+    Credits_CMerkleBlock(const Credits_CBlock& block, CBloomFilter& filter);
 
     IMPLEMENT_SERIALIZE
     (

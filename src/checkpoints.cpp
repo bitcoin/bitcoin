@@ -74,9 +74,9 @@ namespace Checkpoints
     };
 
     const Bitcredit_CCheckpointData &Bitcredit_Checkpoints() {
-        if (Bitcredit_Params().NetworkID() == CChainParams::TESTNET)
+        if (Credits_Params().NetworkID() == CChainParams::TESTNET)
             return bitcredit_dataTestnet;
-        else if (Bitcredit_Params().NetworkID() == CChainParams::MAIN)
+        else if (Credits_Params().NetworkID() == CChainParams::MAIN)
             return bitcredit_data;
         else
             return bitcredit_dataRegtest;

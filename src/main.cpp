@@ -797,7 +797,7 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
-    if (Bitcredit_Params().NetworkID() == CChainParams::MAIN && !Bitcredit_IsStandardTx(tx, reason))
+    if (Credits_Params().NetworkID() == CChainParams::MAIN && !Bitcredit_IsStandardTx(tx, reason))
         return state.DoS(0,
                          error("Credits: AcceptToMemoryPool : nonstandard transaction: %s", reason),
                          BITCREDIT_REJECT_NONSTANDARD, reason);
@@ -882,7 +882,7 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
         }
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (Bitcredit_Params().NetworkID() == CChainParams::MAIN && !Bitcredit_AreInputsStandard(tx, credits_view))
+        if (Credits_Params().NetworkID() == CChainParams::MAIN && !Bitcredit_AreInputsStandard(tx, credits_view))
             return error("Credits: AcceptToMemoryPool: : nonstandard transaction input");
 
         // Note: if you modify this code to accept non-standard transactions, then
@@ -1014,7 +1014,7 @@ int Credits_CMerkleTx::GetFirstDepositOutBlocksToMaturity() const
 {
     if (!IsDeposit())
         return 0;
-    return max(0, (Bitcredit_Params().DepositLockDepth()+1) - GetDepthInMainChain());
+    return max(0, (Credits_Params().DepositLockDepth()+1) - GetDepthInMainChain());
 }
 int Credits_CMerkleTx::GetSecondDepositOutBlocksToMaturity() const
 {
@@ -1047,7 +1047,7 @@ bool Bitcredit_GetTransaction(const uint256 &hash, Credits_CTransaction &txOut, 
         if (bitcredit_fTxIndex) {
             CDiskTxPos postx;
             if (bitcredit_pblocktree->ReadTxIndex(hash, postx)) {
-                CAutoFile file(Bitcredit_OpenBlockFile(postx, true), SER_DISK, CREDITS_CLIENT_VERSION);
+                CAutoFile file(Credits_OpenBlockFile(postx, true), SER_DISK, CREDITS_CLIENT_VERSION);
                 Credits_CBlockHeader header;
                 try {
                     file >> header;
@@ -1105,13 +1105,13 @@ bool Bitcredit_GetTransaction(const uint256 &hash, Credits_CTransaction &txOut, 
 bool Bitcredit_WriteBlockToDisk(Credits_CBlock& block, CDiskBlockPos& pos)
 {
     // Open history file to append
-    CAutoFile fileout = CAutoFile(Bitcredit_OpenBlockFile(pos), SER_DISK, CREDITS_CLIENT_VERSION);
+    CAutoFile fileout = CAutoFile(Credits_OpenBlockFile(pos), SER_DISK, CREDITS_CLIENT_VERSION);
     if (!fileout)
         return error("Credits: WriteBlockToDisk : OpenBlockFile failed");
 
     // Write index header
     unsigned int nSize = fileout.GetSerializeSize(block);
-    fileout << FLATDATA(Bitcredit_Params().MessageStart()) << nSize;
+    fileout << FLATDATA(Credits_Params().MessageStart()) << nSize;
 
     // Write block
     long fileOutPos = ftell(fileout);
@@ -1133,7 +1133,7 @@ bool Credits_ReadBlockFromDisk(Credits_CBlock& block, const CDiskBlockPos& pos)
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein = CAutoFile(Bitcredit_OpenBlockFile(pos, true), SER_DISK, CREDITS_CLIENT_VERSION);
+    CAutoFile filein = CAutoFile(Credits_OpenBlockFile(pos, true), SER_DISK, CREDITS_CLIENT_VERSION);
     if (!filein)
         return error("Credits: ReadBlockFromDisk : OpenBlockFile failed");
 
@@ -1202,7 +1202,7 @@ void static Bitcredit_PruneOrphanBlocks()
 }
 
 uint64_t Bitcredit_GetRequiredDeposit(const uint64_t nTotalDepositBase) {
-	return nTotalDepositBase / (2 * Bitcredit_Params().DepositLockDepth());
+	return nTotalDepositBase / (2 * Credits_Params().DepositLockDepth());
 }
 
 uint256 Bitcredit_ReduceByReqDepositLevel(const uint256 nValue, const uint64_t nDepositAmount, const uint64_t nTotalDepositBase) {
@@ -1223,7 +1223,7 @@ uint64_t Bitcredit_GetMaxBlockSubsidy(const uint64_t nTotalMonetaryBase) {
 
 	//Loop will find correct position in vector of subsidyLevels by
 	//comparing the total monetary base of each level to the nTotalMonetaryBase of the previous block
-	const vector<SubsidyLevel> subsidyLevels = Bitcredit_Params().getSubsidyLevels();
+	const vector<SubsidyLevel> subsidyLevels = Credits_Params().getSubsidyLevels();
 	SubsidyLevel current = subsidyLevels.at(0);
 	for (unsigned int i = 1; i < subsidyLevels.size(); i++) {
 		const SubsidyLevel nextSubsidyLevel = subsidyLevels.at(i);
@@ -1257,7 +1257,7 @@ static const int64_t bitcredit_nInterval = bitcredit_nTargetTimespan / bitcredit
 //
 unsigned int Bitcredit_ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
-    const uint256 &bnLimit = Bitcredit_Params().ProofOfWorkLimit();
+    const uint256 &bnLimit = Credits_Params().ProofOfWorkLimit();
     // Testnet has min-difficulty blocks
     // after nTargetSpacing*2 time between blocks:
     if (Bitcredit_TestNet() && nTime > bitcredit_nTargetSpacing*2)
@@ -1279,7 +1279,7 @@ unsigned int Bitcredit_ComputeMinWork(unsigned int nBase, int64_t nTime)
 
 unsigned int Bitcredit_GetNextWorkRequired(const Credits_CBlockIndex* pindexLast, const Credits_CBlockHeader *pblock)
 {
-    unsigned int nProofOfWorkLimit = Bitcredit_Params().ProofOfWorkLimit().GetCompact();
+    unsigned int nProofOfWorkLimit = Credits_Params().ProofOfWorkLimit().GetCompact();
 
     // Genesis block
     if (pindexLast == NULL)
@@ -1329,8 +1329,8 @@ unsigned int Bitcredit_GetNextWorkRequired(const Credits_CBlockIndex* pindexLast
     bnNew *= nActualTimespan;
     bnNew /= bitcredit_nTargetTimespan;
 
-    if (bnNew > Bitcredit_Params().ProofOfWorkLimit())
-        bnNew = Bitcredit_Params().ProofOfWorkLimit();
+    if (bnNew > Credits_Params().ProofOfWorkLimit())
+        bnNew = Credits_Params().ProofOfWorkLimit();
 
     /// debug print
     LogPrintf("Credits: GetNextWorkRequired RETARGET\n");
@@ -1349,7 +1349,7 @@ bool Bitcredit_CheckProofOfWork(uint256 hash, unsigned int nBits, uint64_t nTota
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Bitcredit_Params().ProofOfWorkLimit())
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Credits_Params().ProofOfWorkLimit())
         return error("Credits: CheckProofOfWork() : nBits below minimum work");
 
     //Adjust the target depending on how much miner has added as deposit
@@ -1685,9 +1685,9 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
 
 				if(coins.IsDeposit()) {
 					if(prevout.n == 0) {
-						if (bitcredit_nSpendHeight - coins.nHeight < Bitcredit_Params().DepositLockDepth())
+						if (bitcredit_nSpendHeight - coins.nHeight < Credits_Params().DepositLockDepth())
 							return state.Invalid(
-								error("Credits: CheckInputs() : tried to spend deposit at depth %d, depth %d is required", bitcredit_nSpendHeight - coins.nHeight, Bitcredit_Params().DepositLockDepth()),
+								error("Credits: CheckInputs() : tried to spend deposit at depth %d, depth %d is required", bitcredit_nSpendHeight - coins.nHeight, Credits_Params().DepositLockDepth()),
 								BITCREDIT_REJECT_INVALID, "bad-txns-premature-spend-of-deposit");
 					} else {
 						if (bitcredit_nSpendHeight - coins.nHeight < BITCREDIT_COINBASE_MATURITY)
@@ -1944,7 +1944,7 @@ void static Bitcredit_FlushBlockFile(bool fFinalize = false)
 
     CDiskBlockPos posOld(credits_mainState.nLastBlockFile, 0);
 
-    FILE *fileOld = Bitcredit_OpenBlockFile(posOld);
+    FILE *fileOld = Credits_OpenBlockFile(posOld);
     if (fileOld) {
         if (fFinalize)
             TruncateFile(fileOld, credits_mainState.infoLastBlockFile.nSize);
@@ -1952,7 +1952,7 @@ void static Bitcredit_FlushBlockFile(bool fFinalize = false)
         fclose(fileOld);
     }
 
-    fileOld = Bitcredit_OpenUndoFile(posOld);
+    fileOld = Credits_OpenUndoFile(posOld);
     if (fileOld) {
         if (fFinalize)
             TruncateFile(fileOld, credits_mainState.infoLastBlockFile.nUndoSize);
@@ -2016,7 +2016,7 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
-    if (block.GetHash() == Bitcredit_Params().HashGenesisBlock()) {
+    if (block.GetHash() == Credits_Params().HashGenesisBlock()) {
         credits_view.Credits_SetBestBlock(pindex->GetBlockHash());
         return true;
     }
@@ -2081,7 +2081,7 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
     //It's sigvectorsize + sigarraysize + txvectorsize
     unsigned int sigSerSize = 0;
     for (unsigned int i = 0; i < block.vsig.size(); i++) {
-    	sigSerSize += block.vsig[i].GetSerializeSize(SER_DISK, Bitcredit_Params().ClientVersion());
+    	sigSerSize += block.vsig[i].GetSerializeSize(SER_DISK, Credits_Params().ClientVersion());
     }
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vsig.size()) + sigSerSize + GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
@@ -2267,7 +2267,7 @@ bool static Bitcredit_WriteChainState(CValidationState &state) {
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-        if (!Bitcredit_CheckDiskSpace(100 * 2 * 2 * credits_pcoinsTip->GetCacheSize()))
+        if (!Credits_CheckDiskSpace(100 * 2 * 2 * credits_pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
         Bitcredit_FlushBlockFile();
         bitcredit_pblocktree->Sync();
@@ -2707,8 +2707,8 @@ bool Bitcredit_FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigne
         unsigned int nOldChunks = (pos.nPos + BITCREDIT_BLOCKFILE_CHUNK_SIZE - 1) / BITCREDIT_BLOCKFILE_CHUNK_SIZE;
         unsigned int nNewChunks = (credits_mainState.infoLastBlockFile.nSize + BITCREDIT_BLOCKFILE_CHUNK_SIZE - 1) / BITCREDIT_BLOCKFILE_CHUNK_SIZE;
         if (nNewChunks > nOldChunks) {
-            if (Bitcredit_CheckDiskSpace(nNewChunks * BITCREDIT_BLOCKFILE_CHUNK_SIZE - pos.nPos)) {
-                FILE *file = Bitcredit_OpenBlockFile(pos);
+            if (Credits_CheckDiskSpace(nNewChunks * BITCREDIT_BLOCKFILE_CHUNK_SIZE - pos.nPos)) {
+                FILE *file = Credits_OpenBlockFile(pos);
                 if (file) {
                     LogPrintf("Credits: Pre-allocating up to position 0x%x in blk%05u.dat\n", nNewChunks * BITCREDIT_BLOCKFILE_CHUNK_SIZE, pos.nFile);
                     AllocateFileRange(file, pos.nPos, nNewChunks * BITCREDIT_BLOCKFILE_CHUNK_SIZE - pos.nPos);
@@ -2753,8 +2753,8 @@ bool Bitcredit_FindUndoPos(MainState& mainState, CValidationState &state, int nF
     unsigned int nOldChunks = (pos.nPos + BITCREDIT_UNDOFILE_CHUNK_SIZE - 1) / BITCREDIT_UNDOFILE_CHUNK_SIZE;
     unsigned int nNewChunks = (nNewSize + BITCREDIT_UNDOFILE_CHUNK_SIZE - 1) / BITCREDIT_UNDOFILE_CHUNK_SIZE;
     if (nNewChunks > nOldChunks) {
-        if (Bitcredit_CheckDiskSpace(nNewChunks * BITCREDIT_UNDOFILE_CHUNK_SIZE - pos.nPos)) {
-            FILE *file = Bitcredit_OpenUndoFile(pos);
+        if (Credits_CheckDiskSpace(nNewChunks * BITCREDIT_UNDOFILE_CHUNK_SIZE - pos.nPos)) {
+            FILE *file = Credits_OpenUndoFile(pos);
             if (file) {
                 LogPrintf("Credits: Pre-allocating up to position 0x%x in rev%05u.dat\n", nNewChunks * BITCREDIT_UNDOFILE_CHUNK_SIZE, pos.nFile);
                 AllocateFileRange(file, pos.nPos, nNewChunks * BITCREDIT_UNDOFILE_CHUNK_SIZE - pos.nPos);
@@ -2817,8 +2817,8 @@ bool Bitcredit_CheckBlockHeader(const Credits_CBlockHeader& block, CValidationSt
 		}
 
 		//Link depth not checked for genesis block. This is to prevent test setup from failing
-		if(block.GetHash() != Bitcredit_Params().GenesisBlock().GetHash()) {
-			if(bitcoin_chainActive.Height() - pindex->nHeight < Bitcredit_Params().AcceptDepthLinkedBitcoinBlock()) {
+		if(block.GetHash() != Credits_Params().GenesisBlock().GetHash()) {
+			if(bitcoin_chainActive.Height() - pindex->nHeight < Credits_Params().AcceptDepthLinkedBitcoinBlock()) {
 				return state.DoS(100, error(strprintf("Credits: CheckBlockHeader() : referenced bitcoin block is not deep enough in active chain: %s", block.hashLinkedBitcoinBlock.GetHex())),
 						BITCREDIT_REJECT_INVALID_BITCOIN_BLOCK_LINK, "bitcoin-link-not-deep-enough");
 			}
@@ -2976,13 +2976,13 @@ bool Bitcredit_AcceptBitcoinBlockLinkage(Credits_CBlockHeader& block, CValidatio
     		return state.Invalid(error("Credits: AcceptBitcoinBlockLinkage() : Referenced bitcoin block is not the same as block in active chain. Active chain has probably changed. Hashes are\n%s\n%s", activeBlockAtHeight->phashBlock->GetHex(), pLinkedBitcoinIndex->phashBlock->GetHex()), 0, "invalidlink");
     	}
     	const int nDepth = bitcoin_chainActive.Tip()->nHeight - nLinkedBitcoinHeight;
-    	if(nDepth < Bitcredit_Params().AcceptDepthLinkedBitcoinBlock()) {
-    		return state.Invalid(error("Credits: AcceptBitcoinBlockLinkage() : Linked bitcoin block %s is not deep enough in the bitcoin blockchain! Depth must be at least %d and is %d", hashLinkedBitcoinBlock.GetHex(), Bitcredit_Params().AcceptDepthLinkedBitcoinBlock(), nDepth), 0, "invalidlink");
+    	if(nDepth < Credits_Params().AcceptDepthLinkedBitcoinBlock()) {
+    		return state.Invalid(error("Credits: AcceptBitcoinBlockLinkage() : Linked bitcoin block %s is not deep enough in the bitcoin blockchain! Depth must be at least %d and is %d", hashLinkedBitcoinBlock.GetHex(), Credits_Params().AcceptDepthLinkedBitcoinBlock(), nDepth), 0, "invalidlink");
     	}
     }
 
 	//Check that this referenced bitcoin block isn't lower in the chain than the previous referenced bitcoin block (genesis block does not have any previous block)
-    if(block.GetHash() != Bitcredit_Params().GenesisBlock().GetHash()) {
+    if(block.GetHash() != Credits_Params().GenesisBlock().GetHash()) {
 		unsigned int nPrevLinkedBitcoinHeight;
 		{
 			const map<uint256, Credits_CBlockIndex*>::iterator mi = credits_mapBlockIndex.find(block.hashPrevBlock);
@@ -3029,7 +3029,7 @@ bool Bitcredit_AcceptBlockHeader(Credits_CBlockHeader& block, CValidationState& 
     // Get prev block index
     Credits_CBlockIndex* pindexPrev = NULL;
     int nHeight = 0;
-    if (hash != Bitcredit_Params().HashGenesisBlock()) {
+    if (hash != Credits_Params().HashGenesisBlock()) {
         map<uint256, Credits_CBlockIndex*>::iterator mi = credits_mapBlockIndex.find(block.hashPrevBlock);
         if (mi == credits_mapBlockIndex.end())
             return state.DoS(10, error("Credits: AcceptBlock() : prev block not found"), 0, "bad-prevblk");
@@ -3244,7 +3244,7 @@ bool Bitcredit_ProcessBlock(CValidationState &state, CNode* pfrom, Credits_CBloc
 
 
 
-Bitcredit_CMerkleBlock::Bitcredit_CMerkleBlock(const Credits_CBlock& block, CBloomFilter& filter)
+Credits_CMerkleBlock::Credits_CMerkleBlock(const Credits_CBlock& block, CBloomFilter& filter)
 {
     header = block.GetBlockHeader();
 
@@ -3284,7 +3284,7 @@ Bitcredit_CMerkleBlock::Bitcredit_CMerkleBlock(const Credits_CBlock& block, CBlo
 
 
 
-bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes)
+bool Credits_CheckDiskSpace(uint64_t nAdditionalBytes)
 {
     uint64_t nFreeBytesAvailable = filesystem::space(GetDataDir()).available;
 
@@ -3295,15 +3295,15 @@ bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes)
     return true;
 }
 
-FILE* Bitcredit_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
+FILE* Credits_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "credits_blocks", "blk", fReadOnly);
 }
 
-FILE* Bitcredit_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
+FILE* Credits_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
     return OpenDiskFile(pos, "credits_blocks", "rev", fReadOnly);
 }
 
-Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash)
+Credits_CBlockIndex * Credits_InsertBlockIndex(uint256 hash)
 {
     if (hash == 0)
         return NULL;
@@ -3323,7 +3323,7 @@ Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash)
     return pindexNew;
 }
 
-bool static Bitcredit_LoadBlockIndexDB()
+bool static Credits_LoadBlockIndexDB()
 {
     if (!bitcredit_pblocktree->LoadBlockIndexGuts())
         return false;
@@ -3369,7 +3369,7 @@ bool static Bitcredit_LoadBlockIndexDB()
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++)
     {
         CDiskBlockPos pos(*it, 0);
-        if (!CAutoFile(Bitcredit_OpenBlockFile(pos, true), SER_DISK, Bitcredit_Params().ClientVersion())) {
+        if (!CAutoFile(Credits_OpenBlockFile(pos, true), SER_DISK, Credits_Params().ClientVersion())) {
             return false;
         }
     }
@@ -3396,17 +3396,17 @@ bool static Bitcredit_LoadBlockIndexDB()
     return true;
 }
 
-Bitcredit_CVerifyDB::Bitcredit_CVerifyDB()
+Credits_CVerifyDB::Credits_CVerifyDB()
 {
     uiInterface.ShowProgress(_("Credits: Verifying blocks..."), 0);
 }
 
-Bitcredit_CVerifyDB::~Bitcredit_CVerifyDB()
+Credits_CVerifyDB::~Credits_CVerifyDB()
 {
     uiInterface.ShowProgress("", 100);
 }
 
-bool Bitcredit_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
+bool Credits_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 {
     LOCK(credits_mainState.cs_main);
     if (credits_chainActive.Tip() == NULL || credits_chainActive.Tip()->pprev == NULL)
@@ -3486,7 +3486,7 @@ bool Bitcredit_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
     return true;
 }
 
-void Bitcredit_UnloadBlockIndex()
+void Credits_UnloadBlockIndex()
 {
     credits_mapBlockIndex.clear();
     bitcredit_setBlockIndexValid.clear();
@@ -3494,16 +3494,16 @@ void Bitcredit_UnloadBlockIndex()
     bitcredit_pindexBestInvalid = NULL;
 }
 
-bool Bitcredit_LoadBlockIndex()
+bool Credits_LoadBlockIndex()
 {
     // Load block index from databases
-    if (!credits_mainState.fReindex && !Bitcredit_LoadBlockIndexDB())
+    if (!credits_mainState.fReindex && !Credits_LoadBlockIndexDB())
         return false;
     return true;
 }
 
 
-bool Bitcredit_InitBlockIndex() {
+bool Credits_InitBlockIndex() {
     LOCK(credits_mainState.cs_main);
     // Check whether we're already initialized
     if (credits_chainActive.Genesis() != NULL)
@@ -3517,7 +3517,7 @@ bool Bitcredit_InitBlockIndex() {
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
     if (!credits_mainState.fReindex) {
         try {
-            Credits_CBlock &block = const_cast<Credits_CBlock&>(Bitcredit_Params().GenesisBlock());
+            Credits_CBlock &block = const_cast<Credits_CBlock&>(Credits_Params().GenesisBlock());
             // Start new block file
             unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CREDITS_CLIENT_VERSION);
             CDiskBlockPos blockPos;
@@ -3635,10 +3635,10 @@ bool Bitcredit_LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             try {
                 // locate a header
                 unsigned char buf[MESSAGE_START_SIZE];
-                blkdat.FindByte(Bitcredit_Params().MessageStart()[0]);
+                blkdat.FindByte(Credits_Params().MessageStart()[0]);
                 nRewind = blkdat.GetPos()+1;
                 blkdat >> FLATDATA(buf);
-                if (memcmp(buf, Bitcredit_Params().MessageStart(), MESSAGE_START_SIZE))
+                if (memcmp(buf, Credits_Params().MessageStart(), MESSAGE_START_SIZE))
                     continue;
                 // read size
                 blkdat >> nSize;
@@ -3830,7 +3830,7 @@ void static Bitcredit_ProcessGetData(CNode* pfrom)
                         LOCK(pfrom->cs_filter);
                         if (pfrom->pfilter)
                         {
-                        	Bitcredit_CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+                        	Credits_CMerkleBlock merkleBlock(block, *pfrom->pfilter);
                             pfrom->PushMessage("merkleblock", merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip

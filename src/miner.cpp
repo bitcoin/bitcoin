@@ -482,7 +482,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
             LogPrintf("\n\nERROR! Referenced bitcoin block is not the same as block in active chain. Active chain has probably changed. Hashes are\n%s\n%s \n\n", activeBlockAtHeight->phashBlock->GetHex(), pprevLinkedBlock->phashBlock->GetHex());
             return NULL;
         }
-        int acceptDepth = Bitcredit_Params().AcceptDepthLinkedBitcoinBlock();
+        int acceptDepth = Credits_Params().AcceptDepthLinkedBitcoinBlock();
         int nAcceptHeight = bitcoin_chainActive.Tip()->nHeight - (acceptDepth + (acceptDepth / 10)+ 24*6);
         if(nAcceptHeight < 0) {
     	    nAcceptHeight = 0;
@@ -1213,7 +1213,7 @@ void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWall
     		continue;
     	}
 
-        if (Bitcredit_Params().NetworkID() != CChainParams::REGTEST) {
+        if (Credits_Params().NetworkID() != CChainParams::REGTEST) {
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
             while (netParams->vNodes.empty()) {
@@ -1299,7 +1299,7 @@ void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWall
 
                     // In regression test mode, stop mining after a block is found. This
                     // allows developers to controllably generate a block on demand.
-                    if (Bitcredit_Params().NetworkID() == CChainParams::REGTEST)
+                    if (Credits_Params().NetworkID() == CChainParams::REGTEST)
                         throw boost::thread_interrupted();
 
                     break;
@@ -1337,7 +1337,7 @@ void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWall
 
             // Check for stop or if block needs to be rebuilt
             boost::this_thread::interruption_point();
-            if (netParams->vNodes.empty() && Bitcredit_Params().NetworkID() != CChainParams::REGTEST)
+            if (netParams->vNodes.empty() && Credits_Params().NetworkID() != CChainParams::REGTEST)
                 break;
             if (nBlockNonce >= 0xffff0000)
                 break;
@@ -1370,7 +1370,7 @@ void GenerateBitcredits(bool fGenerate, Credits_CWallet* pwallet, Credits_CWalle
     static boost::thread_group* minerThreads = NULL;
 
     if (nThreads < 0) {
-        if (Bitcredit_Params().NetworkID() == CChainParams::REGTEST)
+        if (Credits_Params().NetworkID() == CChainParams::REGTEST)
             nThreads = 1;
         else
             nThreads = boost::thread::hardware_concurrency();

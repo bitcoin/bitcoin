@@ -373,8 +373,8 @@ bool Credits_CBlockTreeDB::LoadBlockIndexGuts()
                 ssValue >> diskindex;
 
                 // Construct block index object
-                Credits_CBlockIndex* pindexNew = Bitcredit_InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = Bitcredit_InsertBlockIndex(diskindex.hashPrev);
+                Credits_CBlockIndex* pindexNew = Credits_InsertBlockIndex(diskindex.GetBlockHash());
+                pindexNew->pprev          = Credits_InsertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
                 pindexNew->nDataPos       = diskindex.nDataPos;

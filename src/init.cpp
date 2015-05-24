@@ -466,7 +466,7 @@ void Bitcredit_ThreadImport()
         int nFile = 0;
         while (true) {
         	CDiskBlockPos pos(nFile, 0);
-            FILE *file = Bitcredit_OpenBlockFile(pos, true);
+            FILE *file = Credits_OpenBlockFile(pos, true);
             if (!file)
                 break;
             LogPrintf("Credits: Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
@@ -477,7 +477,7 @@ void Bitcredit_ThreadImport()
         credits_mainState.fReindex = false;
         LogPrintf("Credits: Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        Bitcredit_InitBlockIndex();
+        Credits_InitBlockIndex();
     }
 
     // hardcoded $DATADIR/bitcredit_bootstrap.dat
@@ -782,7 +782,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
         nStart = GetTimeMillis();
         do {
             try {
-                Bitcredit_UnloadBlockIndex();
+                Credits_UnloadBlockIndex();
                 delete credits_pcoinsTip;
                 delete bitcredit_pcoinsdbview;
                 delete bitcredit_pblocktree;
@@ -794,7 +794,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 if (credits_mainState.fReindex)
                     bitcredit_pblocktree->WriteReindexing(true);
 
-                if (!Bitcredit_LoadBlockIndex()) {
+                if (!Credits_LoadBlockIndex()) {
                     strLoadError = _("Credits: Error loading block database");
                     break;
                 }
@@ -804,11 +804,11 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 if (!credits_mapBlockIndex.empty() && credits_chainActive.Genesis() == NULL)
                     return InitError(_("Credits: Incorrect or no genesis block found. Wrong datadir for network?"));
 
-                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Bitcredit_Params().GenesisBlock().GetHash())
+                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Credits_Params().GenesisBlock().GetHash())
                     return InitError(_("Credits: Genesis block not correct. Unable to start."));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!Bitcredit_InitBlockIndex()) {
+                if (!Credits_InitBlockIndex()) {
                     strLoadError = _("Credits: Error initializing block database");
                     break;
                 }
@@ -820,7 +820,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 }
 
                 uiInterface.InitMessage(_("Credits: Verifying blocks..."));
-                if (!Bitcredit_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
+                if (!Credits_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
                               GetArg("-checkblocks", 288))) {
                     strLoadError = _("Credits: Corrupted block database detected");
                     break;
@@ -1835,7 +1835,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     // ********************************************************* Step 11: start node
     if (!Bitcoin_CheckDiskSpace())
         return false;
-    if (!Bitcredit_CheckDiskSpace())
+    if (!Credits_CheckDiskSpace())
         return false;
 
     if (!strErrors.str().empty())

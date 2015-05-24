@@ -516,7 +516,7 @@ Value verifychain(const Array& params, bool fHelp)
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
 
-    return Bitcredit_CVerifyDB().VerifyDB(nCheckLevel, nCheckDepth);
+    return Credits_CVerifyDB().VerifyDB(nCheckLevel, nCheckDepth);
 }
 
 Value bitcredit_getblockchaininfo(const Array& params, bool fHelp)
@@ -543,7 +543,7 @@ Value bitcredit_getblockchaininfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    std::string chain = Bitcredit_Params().DataDir();
+    std::string chain = Credits_Params().DataDir();
     if(chain.empty())
         chain = "main";
     obj.push_back(Pair("chain",         chain));
