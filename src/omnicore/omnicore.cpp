@@ -3696,28 +3696,34 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 
 int CMPTransaction::logicMath_SimpleSend()
 {
-    if (MAX_INT_8_BYTES < nValue) {
-        return (PKT_ERROR -801);  // out of range
-    }
-    // ------------------------------------------
-
-    int rc = PKT_ERROR_SEND -1000;
+    LOCK(cs_tally);
 
     if (!isTransactionTypeAllowed(block, property, type, version)) {
-        return PKT_ERROR_SEND -22;
+        return (PKT_ERROR_SEND -22);
     }
+
+    if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (!_my_sps->hasSP(property)) {
+        return (PKT_ERROR_SEND -24);
+    }
+
+    if (getMPbalance(sender, property, BALANCE) < (int64_t)nValue) {
+        return (PKT_ERROR_SEND -25);
+    }
+
+    // ------------------------------------------
 
     // Special case: if can't find the receiver -- assume send to self!
     if (receiver.empty()) {
         receiver = sender;
     }
 
-    // Cancel send, if the sender has sufficient funds
-    if (!update_tally_map(sender, property, -nValue, BALANCE)) {
-        return PKT_ERROR -111;
-    }
-
-    update_tally_map(receiver, property, nValue, BALANCE);
+    // Move the tokens
+    assert(update_tally_map(sender, property, -nValue, BALANCE));
+    assert(update_tally_map(receiver, property, nValue, BALANCE));
 
     // Is there an active crowdsale running from this recepient?
     {
@@ -3776,9 +3782,7 @@ int CMPTransaction::logicMath_SimpleSend()
         }
     }
 
-    rc = 0;
-
-    return rc;
+    return 0;
 }
 
 int CMPTransaction::logicMath_SendToOwners(FILE *fhandle)
