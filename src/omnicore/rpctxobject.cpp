@@ -72,6 +72,9 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     // check if we're filtering from listtransactions_MP, and if so whether we have a non-match we want to skip
     if (!filterAddress.empty() && mp_obj.getSender() != filterAddress && mp_obj.getReceiver() != filterAddress) return -1;
 
+    // obtain validity
+    bool valid = getValidMPTX(txid);
+
     // populate some initial info for the transaction
     bool bMine = false;
     if (IsMyAddress(mp_obj.getSender()) || IsMyAddress(mp_obj.getReceiver())) bMine = true;
@@ -82,13 +85,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     txobj->push_back(Pair("confirmations", confirmations));
     txobj->push_back(Pair("fee", FormatDivisibleMP(mp_obj.getFeePaid())));
     txobj->push_back(Pair("blocktime", blockTime));
+    txobj->push_back(Pair("valid", valid));
     txobj->push_back(Pair("version", (int64_t)mp_obj.getVersion()));
     txobj->push_back(Pair("type_int", (int64_t)mp_obj.getType()));
     txobj->push_back(Pair("type", mp_obj.getTypeString()));
-
-    // populate validity
-    bool valid = getValidMPTX(txid);
-    txobj->push_back(Pair("valid", valid));
 
     // populate type specific info & extended details if requested
     populateRPCTypeInfo(mp_obj, txobj, mp_obj.getType(), extendedDetails, extendedDetailsFilter);
