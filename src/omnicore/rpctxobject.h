@@ -2,9 +2,10 @@
 #define OMNICORE_RPCTXOBJECT_H
 
 #include "json/json_spirit_value.h"
-#include "omnicore/tx.h"
 #include <string>
+
 class uint256;
+class CMPTransaction;
 
 int populateRPCTransactionObject(const uint256& txid, json_spirit::Object *txobj, std::string filterAddress = "", bool extendedDetails = false, std::string extendedDetailsFilter = "");
 
