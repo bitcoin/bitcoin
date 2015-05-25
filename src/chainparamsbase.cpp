@@ -104,7 +104,7 @@ std::string ChainNameFromCommandLine()
     bool fTestNet = GetBoolArg("-testnet", false);
 
     if (fTestNet && fRegTest)
-        return CBaseChainParams::MAX_NETWORK_TYPES;
+        throw std::runtime_error(_("Invalid combination of -regtest and -testnet."));
     if (fRegTest)
         return CBaseChainParams::REGTEST;
     if (fTestNet)
@@ -112,14 +112,9 @@ std::string ChainNameFromCommandLine()
     return CBaseChainParams::MAIN;
 }
 
-bool SelectBaseParamsFromCommandLine()
+void SelectBaseParamsFromCommandLine()
 {
-    std::string chain = ChainNameFromCommandLine();
-    if (chain == CBaseChainParams::MAX_NETWORK_TYPES)
-        return false;
-
-    SelectBaseParams(chain);
-    return true;
+    SelectBaseParams(ChainNameFromCommandLine());
 }
 
 bool AreBaseParamsConfigured()

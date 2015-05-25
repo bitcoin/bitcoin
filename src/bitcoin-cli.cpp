@@ -85,8 +85,10 @@ static bool AppInitRPC(int argc, char* argv[])
         return false;
     }
     // Check for -testnet or -regtest parameter (BaseParams() calls are only valid after this clause)
-    if (!SelectBaseParamsFromCommandLine()) {
-        fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+    try {
+        SelectBaseParamsFromCommandLine();
+    } catch(std::exception &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
         return false;
     }
     return true;

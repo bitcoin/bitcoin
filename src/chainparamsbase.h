@@ -56,9 +56,9 @@ void SelectBaseParams(std::string chain);
 
 /**
  * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Raises a std::runtime_error if an invalid combination is given or if the chain is not supported.
  */
-bool SelectBaseParamsFromCommandLine();
+void SelectBaseParamsFromCommandLine();
 
 /**
  * Return true if SelectBaseParamsFromCommandLine() has been called to select a chain.

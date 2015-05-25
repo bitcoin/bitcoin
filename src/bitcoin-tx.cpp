@@ -34,8 +34,10 @@ static bool AppInitRawTx(int argc, char* argv[])
     ParseParameters(argc, argv);
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    if (!SelectParamsFromCommandLine()) {
-        fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+    try {
+        SelectParamsFromCommandLine();
+    } catch(std::exception &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
         return false;
     }
 

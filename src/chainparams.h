@@ -117,9 +117,9 @@ CChainParams& Params(std::string chain);
 void SelectParams(std::string chain);
 
 /**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
+ * Raises a std::runtime_error if an invalid combination is given or if the chain is not supported.
  */
-bool SelectParamsFromCommandLine();
+void SelectParamsFromCommandLine();
 
 #endif // BITCOIN_CHAINPARAMS_H
