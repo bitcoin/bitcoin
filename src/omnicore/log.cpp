@@ -17,7 +17,6 @@
 // Default log files
 const std::string LOG_FILENAME    = "omnicore.log";
 const std::string INFO_FILENAME   = "mastercore_crowdsales.log";
-const std::string OWNERS_FILENAME = "mastercore_owners.log";
 
 // Options
 static const long LOG_BUFFERSIZE  =  8000000; //  8 MB
@@ -48,6 +47,8 @@ bool msc_debug_metadex1           = 0;
 bool msc_debug_metadex2           = 0;
 //! Print orderbook before and after each trade
 bool msc_debug_metadex3           = 0;
+//! Print transaction fields, when interpreting packets
+bool msc_debug_packets            = 1;
 
 /**
  * LogPrintf() has been broken a couple of times now
@@ -239,6 +240,7 @@ void InitDebugLogLevels()
         if (*it == "metadex1") msc_debug_metadex1 = true;
         if (*it == "metadex2") msc_debug_metadex2 = true;
         if (*it == "metadex3") msc_debug_metadex3 = true;
+        if (*it == "packets") msc_debug_packets = true;
         if (*it == "none" || *it == "all") {
             bool allDebugState = false;
             if (*it == "all") allDebugState = true;
@@ -265,6 +267,7 @@ void InitDebugLogLevels()
             msc_debug_metadex1 = allDebugState;
             msc_debug_metadex2 = allDebugState;
             msc_debug_metadex3 = allDebugState;
+            msc_debug_packets =  allDebugState;
         }
     }
 }

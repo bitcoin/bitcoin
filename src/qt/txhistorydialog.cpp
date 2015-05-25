@@ -294,7 +294,7 @@ int TXHistoryDialog::PopulateHistoryMap()
             bool valid = false;
             string MPTxType;
             CMPTransaction mp_obj;
-            int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
             string displayAmount;
             string displayToken;
             string displayValid;
@@ -539,7 +539,6 @@ void TXHistoryDialog::showDetails()
         CMPPending *p_pending = &(it->second);
         strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
     } else {
-        // grab details usual way
         int pop = populateRPCTransactionObject(txid, txobj, "", true);
         if (0<=pop) strTXText = write_string(Value(txobj), true);
     }

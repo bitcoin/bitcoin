@@ -47,7 +47,7 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     // attempt to parse the transaction
     CMPTransaction mp_obj;
     mp_obj.SetNull();
-    int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+    int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
     if (parseRC < 0) return MP_INVALID_TX_IN_DB_FOUND;
 
     // DEx BTC payment needs special handling since it's not actually an Omni message - handle & return

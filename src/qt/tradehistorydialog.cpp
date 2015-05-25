@@ -323,7 +323,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool valid = false;
 
         // parse the transaction
-        int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+        int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
         if (0 != parseRC) continue;
         if (0<=mp_obj.step1()) {
             int tmpblock=0;
@@ -500,7 +500,7 @@ void TradeHistoryDialog::contextualMenu(const QPoint &point)
 
 void TradeHistoryDialog::copyTxID()
 {
-    GUIUtil::setClipboard(ui->tradeHistoryTable->item(ui->tradeHistoryTable->currentRow(),6)->text());
+    GUIUtil::setClipboard(ui->tradeHistoryTable->item(ui->tradeHistoryTable->currentRow(),0)->text());
 }
 
 /* Opens a dialog containing the details of the selected trade and any associated matches

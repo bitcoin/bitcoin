@@ -15,6 +15,7 @@ OMNICORE_H = \
   omnicore/rpctxobject.h \
   omnicore/script.h \
   omnicore/sp.h \
+  omnicore/sto.h \
   omnicore/tx.h \
   omnicore/utils.h \
   omnicore/version.h
@@ -35,6 +36,7 @@ OMNICORE_CPP = \
   omnicore/rpctxobject.cpp \
   omnicore/script.cpp \
   omnicore/sp.cpp \
+  omnicore/sto.cpp \
   omnicore/tx.cpp \
   omnicore/utils.cpp \
   omnicore/version.cpp
