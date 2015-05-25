@@ -191,7 +191,7 @@ public:
      * Logic and "effects"
      */
     int logicMath_SimpleSend();
-    int logicMath_SendToOwners(FILE* fp = NULL);
+    int logicMath_SendToOwners();
     int logicMath_TradeOffer(CMPOffer*);
     int logicMath_MetaDEx(CMPMetaDEx*);
     int logicMath_AcceptOffer_BTC();

@@ -17,7 +17,6 @@
 // Default log files
 const std::string LOG_FILENAME    = "omnicore.log";
 const std::string INFO_FILENAME   = "mastercore_crowdsales.log";
-const std::string OWNERS_FILENAME = "mastercore_owners.log";
 
 // Options
 static const long LOG_BUFFERSIZE  =  8000000; //  8 MB

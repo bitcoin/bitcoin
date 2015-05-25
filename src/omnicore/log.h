@@ -20,7 +20,6 @@ void ShrinkDebugLog();
 
 // Log files
 extern const std::string INFO_FILENAME;
-extern const std::string OWNERS_FILENAME;
 
 // Debug flags
 extern bool msc_debug_parser_data;

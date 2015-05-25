@@ -3640,19 +3640,7 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
             return logicMath_SimpleSend();
 
         case MSC_TYPE_SEND_TO_OWNERS:
-        {
-            // TODO: remove file stuff
-            boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
-            FILE *fp = fopen(pathOwners.string().c_str(), "a");
-            if (fp) {
-                printInfo(fp);
-            } else {
-                PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
-            }
-            int rc = logicMath_SendToOwners(fp);
-            if (fp) fclose(fp);
-            return rc;
-        }
+            return logicMath_SendToOwners();
 
         case MSC_TYPE_TRADE_OFFER:
             return logicMath_TradeOffer(obj_o);
@@ -3782,7 +3770,7 @@ int CMPTransaction::logicMath_SimpleSend()
     return 0;
 }
 
-int CMPTransaction::logicMath_SendToOwners(FILE *fhandle)
+int CMPTransaction::logicMath_SendToOwners()
 {
     if (MAX_INT_8_BYTES < nValue) {
         return (PKT_ERROR -801);  // out of range
@@ -3899,9 +3887,6 @@ int CMPTransaction::logicMath_SendToOwners(FILE *fhandle)
           if (msc_debug_sto)
             PrintToLog("%14lu = %s, temp= %38s, should_get= %19lu, will_really_get= %14lu, sent_so_far= %14lu\n",
             owns, address, temp.str(), should_receive, will_really_receive, sent_so_far);
-
-          // record the detailed info as needed
-          if (fhandle) fprintf(fhandle, "%s = %s\n", address.c_str(), FormatMP(property, will_really_receive).c_str());
         }
       } // owners loop
 
