@@ -10,7 +10,7 @@
 #include "util.h"
 
 const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
+const std::string CBaseChainParams::TESTNET = "testnet3";
 const std::string CBaseChainParams::REGTEST = "regtest";
 const std::string CBaseChainParams::MAX_NETWORK_TYPES = "unknown_chain";
 
@@ -45,7 +45,7 @@ public:
     CBaseTestNetParams()
     {
         nRPCPort = 18332;
-        strDataDir = "testnet3";
+        strDataDir = CBaseChainParams::TESTNET;
     }
 };
 
