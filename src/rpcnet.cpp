@@ -474,39 +474,51 @@ Value setban(const Array& params, bool fHelp)
     if (fHelp || params.size() < 2 ||
         (strCommand != "add" && strCommand != "remove"))
         throw runtime_error(
-                            "setban \"node\" \"add|remove\" (bantime)\n"
-                            "\nAttempts add or remove a IP from the banned list.\n"
+                            "setban \"ip(/netmask)\" \"add|remove\" (bantime)\n"
+                            "\nAttempts add or remove a IP/Subnet from the banned list.\n"
                             "\nArguments:\n"
-                            "1. \"ip\"       (string, required) The IP (see getpeerinfo for nodes ip)\n"
-                            "2. \"command\"  (string, required) 'add' to add a IP to the list, 'remove' to remove a IP from the list\n"
-                            "1. \"bantime\"  (numeric, optional) time in seconds how long the ip is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)\n"
+                            "1. \"ip(/netmask)\" (string, required) The IP/Subnet (see getpeerinfo for nodes ip) with a optional netmask (default is /32 = single ip)\n"
+                            "2. \"command\"      (string, required) 'add' to add a IP/Subnet to the list, 'remove' to remove a IP/Subnet from the list\n"
+                            "1. \"bantime\"      (numeric, optional) time in seconds how long the ip is banned (0 or empty means using the default time of 24h which can also be overwritten by the -bantime startup argument)\n"
                             "\nExamples:\n"
                             + HelpExampleCli("setban", "\"192.168.0.6\" \"add\" 86400")
+                            + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
                             + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\" 86400")
                             );
 
-    CNetAddr netAddr(params[0].get_str());
-    if (!netAddr.IsValid())
-        throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Invalid IP Address");
+    CSubNet subNet;
+    CNetAddr netAddr;
+    bool isSubnet = false;
+
+    if (params[0].get_str().find("/") != string::npos)
+        isSubnet = true;
+
+    if (!isSubnet)
+        netAddr = CNetAddr(params[0].get_str());
+    else
+        subNet = CSubNet(params[0].get_str());
+
+    if (! (isSubnet ? subNet.IsValid() : netAddr.IsValid()) )
+        throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Invalid IP/Subnet");
 
     if (strCommand == "add")
     {
-        if (CNode::IsBanned(netAddr))
-            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP already banned");
+        if (isSubnet ? CNode::IsBanned(subNet) : CNode::IsBanned(netAddr))
+            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
 
         int64_t banTime = 0; //use standard bantime if not specified
         if (params.size() == 3 && !params[2].is_null())
             banTime = params[2].get_int64();
 
-        CNode::Ban(netAddr, banTime);
+        isSubnet ? CNode::Ban(subNet, banTime) : CNode::Ban(netAddr, banTime);
 
         //disconnect possible nodes
-        while(CNode *bannedNode = FindNode(netAddr))
+        while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
             bannedNode->CloseSocketDisconnect();
     }
     else if(strCommand == "remove")
     {
-        if (!CNode::Unban(netAddr))
+        if (!( isSubnet ? CNode::Unban(subNet) : CNode::Unban(netAddr) ))
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Unban failed");
     }
 
@@ -518,17 +530,17 @@ Value listbanned(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
                             "listbanned\n"
-                            "\nList all banned IPs.\n"
+                            "\nList all banned IPs/Subnets.\n"
                             "\nExamples:\n"
                             + HelpExampleCli("listbanned", "")
                             + HelpExampleRpc("listbanned", "")
                             );
 
-    std::map<CNetAddr, int64_t> banMap;
+    std::map<CSubNet, int64_t> banMap;
     CNode::GetBanned(banMap);
 
     Array bannedAddresses;
-    for (std::map<CNetAddr, int64_t>::iterator it = banMap.begin(); it != banMap.end(); it++)
+    for (std::map<CSubNet, int64_t>::iterator it = banMap.begin(); it != banMap.end(); it++)
     {
         Object rec;
         rec.push_back(Pair("address", (*it).first.ToString()));
