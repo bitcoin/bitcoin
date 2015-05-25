@@ -46,9 +46,6 @@ int const MAX_STATE_HISTORY = 50;
 
 #define SP_STRING_FIELD_LEN 256
 
-// in Mastercoin Satoshis (Willetts)
-#define TRANSFER_FEE_PER_OWNER  (1)
-
 // some boost formats
 #define FORMAT_BOOST_TXINDEXKEY "index-tx-%s"
 #define FORMAT_BOOST_SPKEY      "sp-%d"
