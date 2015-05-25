@@ -887,12 +887,17 @@ Value getorderbook_MP(const Array& params, bool fHelp)
   return response;
 }
 
+// DISCUSS: assume purpose of this call is to allow requesting trades since last polled
+//          is this necessary or wanted?
+//          Additionally use of a blocktime is not advisable since blocktimes are non-sequential
+// SUGGEST: this call is removed completely, and if the functionality is required we simply append an optional
+//          block height parameter to getorderbook_MP since this call does same thing
 Value gettradessince_MP(const Array& params, bool fHelp)
 {
    if (fHelp)
         throw runtime_error(
             "gettradessince_MP\n"
-            "\nAllows user to request last known orders from order book\n"
+            "\nRequest last known orders from order book\n"
             
             "\nArguments:\n"
             "1. timestamp               (int, optional, default=[" + strprintf("%s",GetLatestBlockTime() - 1209600) + "]) starting from the timestamp, orders to show"
