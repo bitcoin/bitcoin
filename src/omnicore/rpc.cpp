@@ -960,7 +960,7 @@ Value gettradessince_MP(const Array& params, bool fHelp)
  * (eg getallbalancesforaddress_MP) then look at addition of new gettradehistoryforpair_OMNI
  * call.
  */
-Value gettradehistory_MP(const Array& params, bool fHelp)
+Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
