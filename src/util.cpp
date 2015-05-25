@@ -1524,6 +1524,13 @@ void RenamePath(boost::filesystem::path workingDir, std::string oldName, std::st
 		boost::filesystem::rename(oldPath.c_str(), newPath.c_str());
 	}
 }
+void CopyPath(boost::filesystem::path workingDir, std::string oldName, std::string newName) {
+	boost::filesystem::path oldPath = workingDir / oldName;
+	boost::filesystem::path newPath = workingDir / newName;
+	if(boost::filesystem::exists(oldPath) && !boost::filesystem::exists(newPath)) {
+		boost::filesystem::copy(oldPath.c_str(), newPath.c_str());
+	}
+}
 
 void RenameBitcreditConfFile() {
 	boost::filesystem::path rootWorkingDirPath = GetDataDir(false);
@@ -1532,7 +1539,8 @@ void RenameBitcreditConfFile() {
 
 void RenameBitcreditFiles() {
 	boost::filesystem::path workingDirPath = GetDataDir(true);
-	RenamePath(workingDirPath, "credits_wallet.dat", "credits_wallet.dat");
+	CopyPath(workingDirPath, "bitcredit_wallet.dat", "bitcredit_wallet.dat.backup");
+	RenamePath(workingDirPath, "bitcredit_wallet.dat", "credits_wallet.dat");
 	RenamePath(workingDirPath, "bitcredit_peers.dat", "credits_peers.dat");
 	RenamePath(workingDirPath, "bitcredit_db.log", "credits_db.log");
 	RenamePath(workingDirPath, "bitcredit_database", "credits_database");
