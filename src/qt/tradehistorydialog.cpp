@@ -499,7 +499,7 @@ void TradeHistoryDialog::contextualMenu(const QPoint &point)
 
 void TradeHistoryDialog::copyTxID()
 {
-    GUIUtil::setClipboard(ui->tradeHistoryTable->item(ui->tradeHistoryTable->currentRow(),6)->text());
+    GUIUtil::setClipboard(ui->tradeHistoryTable->item(ui->tradeHistoryTable->currentRow(),0)->text());
 }
 
 /* Opens a dialog containing the details of the selected trade and any associated matches
