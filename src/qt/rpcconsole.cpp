@@ -221,7 +221,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
     
-    // Wallet Repair
+    // Wallet Repair Buttons
     connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(wallet_salvage()));
     connect(ui->btn_rescan, SIGNAL(clicked()), this, SLOT(wallet_rescan()));
     connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(wallet_zaptxes1()));
@@ -344,59 +344,52 @@ static QString categoryClass(int category)
     }
 }
 
+/** Restart wallet with "-salvagewallet" */
 void RPCConsole::wallet_salvage()
 {
-    restart(1);
+    build_parameter_list(QString("-salvagewallet"));
 }
 
+/** Restart wallet with "-rescan" */
 void RPCConsole::wallet_rescan()
 {
-    restart(2);
+    build_parameter_list(QString("-rescan"));
 }
 
+/** Restart wallet with "-zapwallettxes=1" */
 void RPCConsole::wallet_zaptxes1()
 {
-    restart(3);
+    build_parameter_list(QString("-zapwallettxes=1"));
 }
 
+/** Restart wallet with "-zapwallettxes=2" */
 void RPCConsole::wallet_zaptxes2()
 {
-    restart(4);
+    build_parameter_list(QString("-zapwallettxes=2"));
 }
 
+/** Restart wallet with "-upgradewallet" */
 void RPCConsole::wallet_upgrade()
 {
-    restart(5);
+    build_parameter_list(QString("-upgradewallet"));
 }
 
+/** Restart wallet with "-reindex" */
 void RPCConsole::wallet_reindex()
 {
-    restart(6);
+    build_parameter_list(QString("-reindex"));
 }
 
-void RPCConsole::restart(int reason)
+/** Build command-line parameter list for restart */
+void RPCConsole::build_parameter_list(QString arg)
 {
-    switch(reason)
-    {
-        case 1: // -salvagewallet
-            printf("-salvagewallet\n");
-            break;
-        case 2: // -rescan
-            printf("-rescan\n");
-            break;
-        case 3: // -zapwallettxes=1
-            printf("-zapwallettxes=1\n");
-            break;
-        case 4: // -zapwallettxes=2
-            printf("-zapwallettxes=2\n");
-            break;
-        case 5: // -upgradewallet
-            printf("-upgradewallet\n");
-            break;
-        case 6: // -reindex
-            printf("-reindex\n");
-            break;
-    }
+    // Get command-line arguments and remove the application name
+    QStringList args = QApplication::arguments();
+    args.removeFirst();
+    // Append repair parameter to command line. We don't care whether it might already be there
+    args.append(arg);
+    // Send command-line arguments to BitcoinGUI::handleRestart()
+    emit handleRestart(args);
 }
 
 void RPCConsole::clear()
