@@ -848,56 +848,45 @@ int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
 
 Value getorderbook_MP(const Array& params, bool fHelp)
 {
-   if (fHelp || params.size() < 1)
+   if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
             "getorderbook_MP property_id1 ( property_id2 )\n"
-            "\nAllows user to request active order information from the order book\n"
-            
+            "\nRequest active trade information from the MetaDEx\n"
+
             "\nArguments:\n"
-            "1. property_id1            (int, required) amount owned to up on sale\n"
-            "2. property_id2         (int, optional) property owned to put up on sale\n"
+            "1. propertyid           (int, required) filter orders on propertyid for sale\n"
+            "2. propertyid           (int, optional) filter orders on propertyid desired\n"
         );
 
-  unsigned int propertyIdSaleFilter = 0, propertyIdWantFilter = 0;
+  uint32_t propertyIdForSale = 0, propertyIdDesired = 0;
+  bool filterDesired = (params.size() == 2) ? true : false;
 
-  bool filter_by_desired = (params.size() == 2) ? true : false;
-
-  propertyIdSaleFilter = check_prop_valid( params[0].get_int64() , "Invalid property identifier (Sale)", "Property identifier does not exist (Sale)"); 
-
-  if ( filter_by_desired ) {
-    propertyIdWantFilter = check_prop_valid( params[1].get_int64() , "Invalid property identifier (Want)", "Property identifier does not exist (Want)"); 
+  propertyIdForSale = check_prop_valid(params[0].get_int64(), "Invalid property identifier (for sale)", "Property identifier does not exist (for sale)");
+  if (filterDesired) {
+    propertyIdDesired = check_prop_valid(params[1].get_int64(), "Invalid property identifier (desired)", "Property identifier does not exist (desired)");
   }
 
-  //for each address
-  //get property pair and total order amount at a price
-  std::vector<CMPMetaDEx> vMetaDexObjects;
-
-  for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
-  {
-    md_PricesMap & prices = my_it->second;
-    for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it)
-    {
-      md_Set & indexes = (it->second);
-      for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it)
-      {
-        CMPMetaDEx obj = *it;
-
-        //this filter, the first part is filtering by two currencies, the second part is filtering by the first only
-        bool filter = ( filter_by_desired && ( obj.getProperty() == propertyIdSaleFilter ) && ( obj.getDesProperty() == propertyIdWantFilter ) ) || ( !filter_by_desired && ( obj.getProperty() == propertyIdSaleFilter ) );
-
-        if ( filter  ) {
-            vMetaDexObjects.push_back(obj);
-        }
+  std::vector<CMPMetaDEx> vecMetaDexObjects;
+  for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+      md_PricesMap & prices = my_it->second;
+      for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+          md_Set & indexes = (it->second);
+          for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+              CMPMetaDEx obj = *it;
+              if (obj.getProperty() == propertyIdForSale) {
+                  if (!filterDesired || (obj.getProperty() == propertyIdForSale && obj.getDesProperty() == propertyIdDesired)) {
+                      vecMetaDexObjects.push_back(obj);
+                  }
+              }
+          }
       }
-    }
   }
-  
+
   Array response;
-  MetaDexObjectsToJSON(vMetaDexObjects, response);
-  
+  MetaDexObjectsToJSON(vecMetaDexObjects, response);
   return response;
 }
- 
+
 Value gettradessince_MP(const Array& params, bool fHelp)
 {
    if (fHelp)
