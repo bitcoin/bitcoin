@@ -32,7 +32,6 @@ public:
     ~RPCConsole();
 
     void setClientModel(ClientModel *model);
-    void restart(int reason);
 
     enum MessageClass {
         MC_ERROR,
@@ -104,11 +103,15 @@ signals:
     // For RPC command executor
     void stopExecutor();
     void cmdRequest(const QString &command);
+    /** Get restart command-line parameters and handle restart */
+    void handleRestart(QStringList args);
 
 private:
     static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(int mins);
+    /** Build parameter list for restart */
+    void build_parameter_list(QString arg);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
 
