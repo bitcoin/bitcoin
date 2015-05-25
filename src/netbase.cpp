@@ -1257,10 +1257,18 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
             {
                 if(n >= 0 && n <= (128 - noffset)) // Only valid if in range of bits of address
                 {
-                    n += noffset;
-                    // Clear bits [n..127]
-                    for (; n < 128; ++n)
-                        netmask[n>>3] &= ~(1<<(n&7));
+                    uint8_t shift = (network.IsIPv4() ? 32 : 128)-n;
+                    for (int i = 0; i < (network.IsIPv4() ? 4 : 16); i++)
+                    {
+                        if(shift >= 8)
+                            netmask[15-i] = netmask[15-i] << 8;
+                        else
+                        {
+                            netmask[15-i] = netmask[15-i] << shift;
+                            break;
+                        }
+                        shift-=8;
+                    }
                 }
                 else
                 {
@@ -1296,8 +1304,13 @@ bool CSubNet::Match(const CNetAddr &addr) const
     if (!valid || !addr.IsValid())
         return false;
     for(int x=0; x<16; ++x)
-        if ((addr.GetByte(x) & netmask[15-x]) != network.GetByte(x))
+    {
+        uint8_t lower = (network.GetByte(x) & netmask[15-x]);
+        uint8_t upper = (lower | (~netmask[15-x]));
+
+        if (!(addr.GetByte(x) >= lower && addr.GetByte(x) <= upper))
             return false;
+    }
     return true;
 }
 
