@@ -339,7 +339,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
     strUsage += "  -bitcoin_paytxfee=<amt>       " + _("Same as above, for bitcoin") + "\n";
-    strUsage += "  -bitcredit_rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
+    strUsage += "  -credits_rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -bitcoin_rescan                " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
     strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
@@ -348,7 +348,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -credits_wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
     strUsage += "  -bitcoin_wallet=<file>         " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
-    strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -bitcredit_rescan)") + "\n";
+    strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -credits_rescan)") + "\n";
 #endif
 
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
@@ -1037,14 +1037,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
     if (GetBoolArg("-salvagewallet", false)) {
         // Rewrite just private keys: rescan to find transactions
-        if (SoftSetBoolArg("-bitcredit_rescan", true))
-            LogPrintf("AppInit2 : parameter interaction: -salvagewallet=1 -> setting -bitcredit_rescan=1\n");
+        if (SoftSetBoolArg("-credits_rescan", true))
+            LogPrintf("AppInit2 : parameter interaction: -salvagewallet=1 -> setting -credits_rescan=1\n");
     }
 
     // -zapwallettx implies a rescan
     if (GetBoolArg("-zapwallettxes", false)) {
-        if (SoftSetBoolArg("-bitcredit_rescan", true))
-            LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -bitcredit_rescan=1\n");
+        if (SoftSetBoolArg("-credits_rescan", true))
+            LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -credits_rescan=1\n");
     }
 
     // Make sure enough file descriptors are available
@@ -1687,7 +1687,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 //        Bitcredit_RegisterWallet(deposit_pwalletMain);
 //
 //        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)credits_chainActive.Tip();
-//        if (GetBoolArg("-bitcredit_rescan", false))
+//        if (GetBoolArg("-credits_rescan", false))
 //            pindexRescan = credits_chainActive.Genesis();
 //        else
 //        {
@@ -1797,7 +1797,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
         Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)credits_chainActive.Tip();
-        if (GetBoolArg("-bitcredit_rescan", false))
+        if (GetBoolArg("-credits_rescan", false))
             pindexRescan = credits_chainActive.Genesis();
         else
         {

@@ -3609,7 +3609,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Credits Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+5"/>
-        <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
+        <source>Clear list of wallet transactions (diagnostic tool; implies -credits_rescan)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

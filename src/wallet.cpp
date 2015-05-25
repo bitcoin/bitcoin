@@ -880,7 +880,7 @@ int Credits_CWallet::ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wa
         while (pindex && nTimeFirstKey && (pindex->nTime < (nTimeFirstKey - 7200)))
             pindex = credits_chainActive.Next(pindex);
 
-        ShowProgress(_("Rescanning credits wallet..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -bitcredit_rescan on startup
+        ShowProgress(_("Rescanning credits wallet..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -credits_rescan on startup
         double dProgressStart = Checkpoints::Credits_GuessVerificationProgress(pindex, false);
         double dProgressTip = Checkpoints::Credits_GuessVerificationProgress((Credits_CBlockIndex*)credits_chainActive.Tip(), false);
         while (pindex)
