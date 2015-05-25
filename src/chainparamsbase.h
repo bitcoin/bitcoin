@@ -32,6 +32,10 @@ protected:
 };
 
 /**
+ * Returns a string with the help messages for the chainparams options. 
+ */
+std::string GetParamsHelpMessages();
+/**
  * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
  * Returns CBaseChainParams::MAIN by default.
  * Returns CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given.

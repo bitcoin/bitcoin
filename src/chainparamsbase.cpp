@@ -15,6 +15,16 @@ const std::string CBaseChainParams::TESTNET = "test";
 const std::string CBaseChainParams::REGTEST = "regtest";
 const std::string CBaseChainParams::MAX_NETWORK_TYPES = "unknown_chain";
 
+std::string GetParamsHelpMessages()
+{
+    std::string strUsage = "";
+    strUsage += HelpMessageOpt("-testnet", _("Use the test chain"));
+    strUsage += HelpMessageOpt("-regtest", _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + " " +
+        _("This is intended for regression testing tools and app development.") + " " +
+        _("In this mode -genproclimit controls how many blocks are generated immediately."));
+    return strUsage;
+}
+
 /**
  * Main network
  */
