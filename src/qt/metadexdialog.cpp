@@ -607,7 +607,7 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdSell, amountSell, propertyIdDes, amountDes, 1);
+    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdSell, amountSell, propertyIdDes, amountDes);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;

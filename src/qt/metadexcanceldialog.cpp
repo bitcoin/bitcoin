@@ -327,8 +327,21 @@ void MetaDExCancelDialog::SendCancelTransaction()
         return;
     }
 
+    // TODO: restructure and seperate
     // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+    std::vector<unsigned char> payload;
+    if (action == 2) { // CANCEL_AT_PRICE
+        payload = CreatePayload_MetaDExCancelPrice(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
+    }
+    if (action == 3) { // CANCEL_ALL_FOR_PAIR
+        payload = CreatePayload_MetaDExCancelPair(propertyIdForSale, propertyIdDesired);
+    }
+    if (action == 4) { // CANCEL_ALL_FOR_PAIR
+        uint8_t ecosystem = 0;
+        if (isMainEcosystemProperty(propertyIdForSale) && isMainEcosystemProperty(propertyIdDesired)) ecosystem = OMNI_PROPERTY_MSC;
+        if (isTestEcosystemProperty(propertyIdForSale) && isTestEcosystemProperty(propertyIdDesired)) ecosystem = OMNI_PROPERTY_TMSC;
+        payload = CreatePayload_MetaDExCancelEcosystem(ecosystem);
+    }
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid = 0;

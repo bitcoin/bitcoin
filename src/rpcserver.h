@@ -240,7 +240,6 @@ extern json_spirit::Value getgrants_MP(const json_spirit::Array& params, bool fH
 extern json_spirit::Value getallbalancesforaddress_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getactivedexsells_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettransaction_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettrade_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getorderbook_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettradessince_MP(const json_spirit::Array& params, bool fHelp);
@@ -263,8 +262,12 @@ extern json_spirit::Value sendsto_OMNI(const json_spirit::Array& params, bool fH
 extern json_spirit::Value sendgrant_OMNI(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendrevoke_OMNI(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendclosecrowdsale_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendtrade_OMNI(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendchangeissuer_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp); // depreciated
+extern json_spirit::Value sendtrade_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendcanceltradesbyprice_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendcanceltradesbypair_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendcancelalltrades_OMNI(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,
