@@ -5,6 +5,7 @@
 
 #include "chainparams.h"
 
+#include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -30,7 +31,7 @@ using namespace std;
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -136,7 +137,7 @@ static CMainParams mainParams;
 class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        strNetworkID = CBaseChainParams::TESTNET;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
@@ -196,7 +197,7 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
-        strNetworkID = "regtest";
+        strNetworkID = CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -243,31 +244,29 @@ const CChainParams &Params() {
     return *pCurrentParams;
 }
 
-CChainParams &Params(CBaseChainParams::Network network) {
-    switch (network) {
-        case CBaseChainParams::MAIN:
+CChainParams& Params(std::string chain)
+{
+    if (chain == CBaseChainParams::MAIN)
             return mainParams;
-        case CBaseChainParams::TESTNET:
+    else if (chain == CBaseChainParams::TESTNET)
             return testNetParams;
-        case CBaseChainParams::REGTEST:
+    else if (chain == CBaseChainParams::REGTEST)
             return regTestParams;
-        default:
-            assert(false && "Unimplemented network");
-            return mainParams;
-    }
+    throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
 }
 
-void SelectParams(CBaseChainParams::Network network) {
-    SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+void SelectParams(std::string chain)
+{
+    SelectBaseParams(chain);
+    pCurrentParams = &Params(chain);
 }
 
 bool SelectParamsFromCommandLine()
 {
-    CBaseChainParams::Network network = NetworkIdFromCommandLine();
-    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
+    std::string chain = ChainNameFromCommandLine();
+    if (chain == CBaseChainParams::MAX_NETWORK_TYPES)
         return false;
 
-    SelectParams(network);
+    SelectParams(chain);
     return true;
 }

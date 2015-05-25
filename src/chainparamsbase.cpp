@@ -5,9 +5,15 @@
 
 #include "chainparamsbase.h"
 
+#include "tinyformat.h"
 #include "util.h"
 
 #include <assert.h>
+
+const std::string CBaseChainParams::MAIN = "main";
+const std::string CBaseChainParams::TESTNET = "test";
+const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::MAX_NETWORK_TYPES = "unknown_chain";
 
 /**
  * Main network
@@ -44,7 +50,7 @@ class CBaseRegTestParams : public CBaseTestNetParams
 public:
     CBaseRegTestParams()
     {
-        strDataDir = "regtest";
+        strDataDir = CBaseChainParams::REGTEST;
     }
 };
 static CBaseRegTestParams regTestParams;
@@ -70,25 +76,19 @@ const CBaseChainParams& BaseParams()
     return *pCurrentBaseParams;
 }
 
-void SelectBaseParams(CBaseChainParams::Network network)
+void SelectBaseParams(std::string chain)
 {
-    switch (network) {
-    case CBaseChainParams::MAIN:
+    if (chain == CBaseChainParams::MAIN)
         pCurrentBaseParams = &mainParams;
-        break;
-    case CBaseChainParams::TESTNET:
+    else if (chain == CBaseChainParams::TESTNET)
         pCurrentBaseParams = &testNetParams;
-        break;
-    case CBaseChainParams::REGTEST:
+    else if (chain == CBaseChainParams::REGTEST)
         pCurrentBaseParams = &regTestParams;
-        break;
-    default:
-        assert(false && "Unimplemented network");
-        return;
-    }
+    else
+        throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
 }
 
-CBaseChainParams::Network NetworkIdFromCommandLine()
+std::string ChainNameFromCommandLine()
 {
     bool fRegTest = GetBoolArg("-regtest", false);
     bool fTestNet = GetBoolArg("-testnet", false);
@@ -104,11 +104,11 @@ CBaseChainParams::Network NetworkIdFromCommandLine()
 
 bool SelectBaseParamsFromCommandLine()
 {
-    CBaseChainParams::Network network = NetworkIdFromCommandLine();
-    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
+    std::string chain = ChainNameFromCommandLine();
+    if (chain == CBaseChainParams::MAX_NETWORK_TYPES)
         return false;
 
-    SelectBaseParams(network);
+    SelectBaseParams(chain);
     return true;
 }
 
