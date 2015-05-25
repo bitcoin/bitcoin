@@ -478,6 +478,12 @@ void Bitcredit_ThreadImport()
         LogPrintf("Credits: Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         Credits_InitBlockIndex();
+
+        // Remove chainstatecla directory, might linger from older versions of the working directory
+        boost::filesystem::path oldClaimChainstate = GetDataDir() / "bitcoin_chainstatecla";
+        if (boost::filesystem::exists(oldClaimChainstate)) {
+        	boost::filesystem::remove_all(oldClaimChainstate);
+        }
     }
 
     // hardcoded $DATADIR/bitcredit_bootstrap.dat
@@ -906,6 +912,13 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!Bitcoin_InitBlockIndex()) {
                     strLoadError = _("Bitcoin: Error initializing block database");
+                    break;
+                }
+
+                // If the directory bitcoin_chainstatecla exists, it means we are going from an older (incompatible) version of the working directory
+                boost::filesystem::path oldClaimChainstate = GetDataDir() / "bitcoin_chainstatecla";
+                if (boost::filesystem::exists(oldClaimChainstate)) {
+                    strLoadError = _("Credits: You need to rebuild the database using -reindex when upgrading to this version of the client.");
                     break;
                 }
 
