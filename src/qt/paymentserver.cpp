@@ -241,14 +241,10 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             PaymentRequestPlus request;
             if (readPaymentRequestFromFile(arg, request))
             {
-                if (request.getDetails().network() == "main")
-                {
-                    SelectParams(CBaseChainParams::MAIN);
-                }
-                else if (request.getDetails().network() == "test")
-                {
-                    SelectParams(CBaseChainParams::TESTNET);
-                }
+                // TODO find out why this excludes regtest
+                std::string chainStr = request.getDetails().network();
+                if (chainStr == CBaseChainParams::MAIN || chainStr == CBaseChainParams::TESTNET)
+                    SelectParams(chainStr);
             }
         }
         else
