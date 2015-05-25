@@ -50,7 +50,7 @@ class CBaseRegTestParams : public CBaseTestNetParams
 public:
     CBaseRegTestParams()
     {
-        strDataDir = "regtest";
+        strDataDir = CBaseChainParams::REGTEST;
     }
 };
 static CBaseRegTestParams regTestParams;
