@@ -263,13 +263,3 @@ void SelectParams(const std::string& network)
     SelectBaseParams(network);
     cGlobalChainParams.Set(CChainParams::Factory(network));
 }
-
-bool SelectParamsFromCommandLine()
-{
-    std::string network = ChainNameFromCommandLine();
-    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
-        return false;
-
-    SelectParams(network);
-    return true;
-}

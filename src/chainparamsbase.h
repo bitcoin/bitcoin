@@ -39,6 +39,12 @@ protected:
 };
 
 /**
+ * Append the help messages for the chainparams options to the
+ * parameter string.
+ */
+void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
+
+/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
@@ -52,12 +58,6 @@ void SelectBaseParams(const std::string& chain);
  * @return CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given. CBaseChainParams::MAIN by default.
  */
 std::string ChainNameFromCommandLine();
-
-/**
- * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
- */
-bool SelectBaseParamsFromCommandLine();
 
 /**
  * Return true if SelectBaseParamsFromCommandLine() has been called to select
