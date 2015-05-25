@@ -87,6 +87,7 @@ using leveldb::Status;
 using std::make_pair;
 using std::map;
 using std::ofstream;
+using std::pair;
 using std::string;
 using std::vector;
 
@@ -396,6 +397,11 @@ bool mastercore::isMainEcosystemProperty(unsigned int property)
   if ((OMNI_PROPERTY_BTC != property) && !isTestEcosystemProperty(property)) return true;
 
   return false;
+}
+
+void mastercore::setOmniCoreAlert(const std::string& alertMessage)
+{
+    global_alert_message = alertMessage;
 }
 
 std::string mastercore::getMasterCoreAlertString()
@@ -893,7 +899,7 @@ static bool isAllowedOutputType(int whichType, int nBlock)
 // RETURNS: 0 if parsed a MP TX
 // RETURNS: < 0 if a non-MP-TX or invalid
 // RETURNS: >0 if 1 or more payments have been made
-int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigned int idx, CMPTransaction *mp_tx, unsigned int nTime)
+static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime)
 {
   string strSender;
   vector<string>script_data;
@@ -901,7 +907,6 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   vector<int64_t>value_data;
   vector<string>multisig_script_data;
   vector<string>op_return_script_data;
-  CScript op_return_script;
   int64_t ExodusValues[MAX_BTC_OUTPUTS] = { 0 };
   int64_t TestNetMoneyValues[MAX_BTC_OUTPUTS] = { 0 };  // new way to get funded on TestNet, send TBTC to moneyman address
   string strReference;
@@ -915,7 +920,7 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
   uint64_t outAll = 0;
   uint64_t txFee = 0;
   int omniClass = 0;
-  mp_tx->Set(wtx.GetHash(), nBlock, idx, nTime);
+  mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
 
 
   // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
@@ -1265,8 +1270,17 @@ int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigne
 
   // ### SET MP TX INFO ###
   if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
-  mp_tx->Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+  mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+
   return 0;
+}
+
+/**
+ * Provides access to parseTransaction in read-only mode.
+ */
+int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction& mptx, unsigned int nTime)
+{
+    return parseTransaction(true, tx, nBlock, idx, mptx, nTime);
 }
 
 /**
@@ -2317,7 +2331,7 @@ int interp_ret = -555555, pop_ret;
 
   if (nBlock < nWaterlineBlock) return -1;  // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
 
-  pop_ret = parseTransaction(false, tx, nBlock, idx, &mp_obj, pBlockIndex->GetBlockTime() );
+  pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime() );
   if (0 == pop_ret)
   {
   // true MP transaction, validity (such as insufficient funds, or offer not found) is determined elsewhere
@@ -2598,7 +2612,7 @@ int CMPTxList::setLastAlert(int blockHeight)
         else // note reparsing here is unavoidable because we've only loaded a txid and have no other alert info stored
         {
             CMPTransaction mp_obj;
-            int parseRC = parseTransaction(true, wtx, blockHeight, 0, &mp_obj);
+            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
             string new_global_alert_message;
             if (0 <= parseRC)
             {
@@ -3607,309 +3621,94 @@ const CBitcoinAddress ExodusAddress()
  // optional: provide the pointer to the CMPOffer object, it will get filled in
  // verify that it does via if (MSC_TYPE_TRADE_OFFER == mp_obj.getType())
  //
-int CMPTransaction::interpretPacket(CMPOffer *obj_o, CMPMetaDEx *mdex_o)
+int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 {
-int rc = PKT_ERROR;
-int step_rc;
-std::string new_global_alert_message;
-
-  if (0>step1()) return -98765;
-
-  if ((obj_o) && (MSC_TYPE_TRADE_OFFER != type)) return -777; // can't fill in the Offer object !
-  if ((mdex_o) && (MSC_TYPE_METADEX != type)) return -778; // can't fill in the MetaDEx object !
-
-  // further processing for complex types
-  // TODO: version may play a role here !
-  switch(type)
-  {
-    case MSC_TYPE_SIMPLE_SEND:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_SimpleSend();
-      break;
-
-    case MSC_TYPE_TRADE_OFFER:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_TradeOffer(obj_o);
-      break;
-
-    case MSC_TYPE_ACCEPT_OFFER_BTC:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_AcceptOffer_BTC();
-      break;
-
-    case MSC_TYPE_CREATE_PROPERTY_FIXED:
-    {
-      const char *p = step2_SmartProperty(step_rc);
-      if (0>step_rc) return step_rc;
-      if (!p) return (PKT_ERROR_SP -11);
-
-      step_rc = step3_sp_fixed(p);
-      if (0>step_rc) return step_rc;
-
-      if (0 == step_rc)
-      {
-        CMPSPInfo::Entry newSP;
-        newSP.issuer = sender;
-        newSP.txid = txid;
-        newSP.prop_type = prop_type;
-        newSP.num_tokens = nValue;
-        newSP.category.assign(category);
-        newSP.subcategory.assign(subcategory);
-        newSP.name.assign(name);
-        newSP.url.assign(url);
-        newSP.data.assign(data);
-        newSP.fixed = true;
-        newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
-
-        const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        update_tally_map(sender, id, nValue, BALANCE);
-      }
-      rc = 0;
-      break;
+    if (!interpret_Transaction()) {
+        return -98765;
     }
 
-    case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
-    {
-      const char *p = step2_SmartProperty(step_rc);
-      if (0>step_rc) return step_rc;
-      if (!p) return (PKT_ERROR_SP -12);
-
-      step_rc = step3_sp_variable(p);
-      if (0>step_rc) return step_rc;
-
-      // check if one exists for this address already !
-      if (NULL != getCrowd(sender)) return (PKT_ERROR_SP -20);
-
-      // must check that the desired property exists in our universe
-      if (false == _my_sps->hasSP(property)) return (PKT_ERROR_SP -30);
-
-      if (0 == step_rc)
-      {
-        CMPSPInfo::Entry newSP;
-        newSP.issuer = sender;
-        newSP.txid = txid;
-        newSP.prop_type = prop_type;
-        newSP.num_tokens = nValue;
-        newSP.category.assign(category);
-        newSP.subcategory.assign(subcategory);
-        newSP.name.assign(name);
-        newSP.url.assign(url);
-        newSP.data.assign(data);
-        newSP.fixed = false;
-        newSP.property_desired = property;
-        newSP.deadline = deadline;
-        newSP.early_bird = early_bird;
-        newSP.percentage = percentage;
-        newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
-
-        const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        my_crowds.insert(std::make_pair(sender, CMPCrowd(id, nValue, property, deadline, early_bird, percentage, 0, 0)));
-        PrintToLog("CREATED CROWDSALE id: %u value: %lu property: %u\n", id, nValue, property);  
-      }
-      rc = 0;
-      break;
+    if (obj_o && MSC_TYPE_TRADE_OFFER != type) {
+        return -777; // can't fill in the Offer object !
     }
 
-    case MSC_TYPE_CLOSE_CROWDSALE:
-    {
-    CrowdMap::iterator it = my_crowds.find(sender);
-
-      if (it != my_crowds.end())
-      {
-        // retrieve the property id from the incoming packet
-        memcpy(&property, &pkt[4], 4);
-        swapByteOrder32(property);
-
-        if (msc_debug_sp) PrintToLog("%s() trying to ERASE CROWDSALE for propid= %u=%X\n", __FUNCTION__, property, property);
-
-        // ensure we are closing the crowdsale which we opened by checking the property
-        if ((it->second).getPropertyId() != property)
-        {
-          rc = (PKT_ERROR_SP -606);
-          break;
-        }
-
-        dumpCrowdsaleInfo(it->first, it->second);
-
-        // Begin calculate Fractional 
-
-        CMPCrowd &crowd = it->second;
-        
-        CMPSPInfo::Entry sp;
-        _my_sps->getSP(crowd.getPropertyId(), sp);
-
-        //file_log("\nValues going into calculateFractional(): hexid %s earlyBird %d deadline %lu numProps %lu issuerPerc %d, issuerCreated %ld \n", sp.txid.GetHex().c_str(), sp.early_bird, sp.deadline, sp.num_tokens, sp.percentage, crowd.getIssuerCreated());
-
-        double missedTokens = calculateFractional(sp.prop_type,
-                            sp.early_bird,
-                            sp.deadline,
-                            sp.num_tokens,
-                            sp.percentage,
-                            crowd.getDatabase(),
-                            crowd.getIssuerCreated());
-
-        //file_log("\nValues coming out of calculateFractional(): Total tokens, Tokens created, Tokens for issuer, amountMissed: issuer %s %ld %ld %ld %f\n",sp.issuer.c_str(), crowd.getUserCreated() + crowd.getIssuerCreated(), crowd.getUserCreated(), crowd.getIssuerCreated(), missedTokens);
-        sp.historicalData = crowd.getDatabase();
-        sp.update_block = chainActive[block]->GetBlockHash();
-        sp.close_early = 1;
-        sp.timeclosed = blockTime;
-        sp.txid_close = txid;
-        sp.missedTokens = (int64_t) missedTokens;
-        _my_sps->updateSP(crowd.getPropertyId() , sp);
-        
-        update_tally_map(sp.issuer, crowd.getPropertyId(), missedTokens, BALANCE);
-        //End
-
-        my_crowds.erase(it);
-
-        rc = 0;
-      }
-      break;
+    if (mdex_o && MSC_TYPE_METADEX != type) {
+        return -778; // can't fill in the MetaDEx object !
     }
 
-    case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-    {
-      const char *p = step2_SmartProperty(step_rc);
-      if (0>step_rc) return step_rc;
-      if (!p) return (PKT_ERROR_SP -11);
+    switch (type) {
+        case MSC_TYPE_SIMPLE_SEND:
+            return logicMath_SimpleSend();
 
-      if (0 == step_rc)
-      {
-        CMPSPInfo::Entry newSP;
-        newSP.issuer = sender;
-        newSP.txid = txid;
-        newSP.prop_type = prop_type;
-        newSP.category.assign(category);
-        newSP.subcategory.assign(subcategory);
-        newSP.name.assign(name);
-        newSP.url.assign(url);
-        newSP.data.assign(data);
-        newSP.fixed = false;
-        newSP.manual = true;
+        case MSC_TYPE_SEND_TO_OWNERS:
+            return logicMath_SendToOwners();
 
-        const unsigned int id = _my_sps->putSP(ecosystem, newSP);
-        PrintToLog("CREATED MANUAL PROPERTY id: %u admin: %s \n", id, sender);
-      }
-      rc = 0;
-      break;
+        case MSC_TYPE_TRADE_OFFER:
+            return logicMath_TradeOffer(obj_o);
+
+        case MSC_TYPE_METADEX:
+            return logicMath_MetaDEx(mdex_o);
+
+        case MSC_TYPE_ACCEPT_OFFER_BTC:
+            return logicMath_AcceptOffer_BTC();
+
+        case MSC_TYPE_CREATE_PROPERTY_FIXED:
+            return logicMath_CreatePropertyFixed();
+
+        case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
+            return logicMath_CreatePropertyVariable();
+
+        case MSC_TYPE_CLOSE_CROWDSALE:
+            return logicMath_CloseCrowdsale();
+
+        case MSC_TYPE_CREATE_PROPERTY_MANUAL:
+            return logicMath_CreatePropertyMananged();
+
+        case MSC_TYPE_GRANT_PROPERTY_TOKENS:
+            return logicMath_GrantTokens();
+
+        case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
+            return logicMath_RevokeTokens();
+
+        case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
+            return logicMath_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_ALERT:
+            return logicMath_Alert();
     }
 
-    case MSC_TYPE_GRANT_PROPERTY_TOKENS:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_GrantTokens();
-      break;
-
-    case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_RevokeTokens();
-      break;
-
-    case MSC_TYPE_SEND_TO_OWNERS:
-    if (disable_Divs) break;
-    else
-    {
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      boost::filesystem::path pathOwners = GetDataDir() / OWNERS_FILENAME;
-      FILE *fp = fopen(pathOwners.string().c_str(), "a");
-
-      if (fp)
-      {
-        printInfo(fp);
-      }
-      else
-      {
-        PrintToLog("\nPROBLEM writing %s, errno= %d\n", OWNERS_FILENAME, errno);
-      }
-
-      rc = logicMath_SendToOwners(fp);
-
-      if (fp) fclose(fp);
-    }
-    break;
-
-    case MSC_TYPE_METADEX:
-#ifdef  MY_HACK
-//      if (304500 > block) return -31337;
-//      if (305100 > block) return -31337;
-
-//      if (304930 > block) return -31337;
-//      if (307057 > block) return -31337;
-
-//      if (307234 > block) return -31337;
-//      if (307607 > block) return -31337;
-
-      if (307057 > block) return -31337;
-#endif
-      step_rc = step2_Value();
-      if (0>step_rc) return step_rc;
-
-      rc = logicMath_MetaDEx(mdex_o);
-      break;
-
-    case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
-      // parse the property from the packet
-      memcpy(&property, &pkt[4], 4);
-      swapByteOrder32(property);
-
-      rc = logicMath_ChangeIssuer();
-      break;
-
-    case MSC_TYPE_SAVINGS_MARK:
-      rc = logicMath_SavingsMark();
-      break;
-
-    case MSC_TYPE_SAVINGS_COMPROMISED:
-      rc = logicMath_SavingsCompromised();
-      break;
-
-    case OMNICORE_MESSAGE_TYPE_ALERT:
-      // check the packet version is also FF
-      if ((int)version == 65535)
-      {
-          rc = step2_Alert(&new_global_alert_message);
-          if (rc == 0) global_alert_message = new_global_alert_message;
-          // end of block handler will expire any old alerts
-      }
-      break;
-
-    default:
-      return (PKT_ERROR -100);
-  }
-
-  return rc;
+    return (PKT_ERROR -100);
 }
 
 int CMPTransaction::logicMath_SimpleSend()
 {
-    int rc = PKT_ERROR_SEND -1000;
+    LOCK(cs_tally);
 
     if (!isTransactionTypeAllowed(block, property, type, version)) {
-        return PKT_ERROR_SEND -22;
+        return (PKT_ERROR_SEND -22);
     }
+
+    if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (!_my_sps->hasSP(property)) {
+        return (PKT_ERROR_SEND -24);
+    }
+
+    if (getMPbalance(sender, property, BALANCE) < (int64_t)nValue) {
+        return (PKT_ERROR_SEND -25);
+    }
+
+    // ------------------------------------------
 
     // Special case: if can't find the receiver -- assume send to self!
     if (receiver.empty()) {
         receiver = sender;
     }
 
-    // Cancel send, if the sender has sufficient funds
-    if (!update_tally_map(sender, property, -nValue, BALANCE)) {
-        return PKT_ERROR -111;
-    }
-
-    update_tally_map(receiver, property, nValue, BALANCE);
+    // Move the tokens
+    assert(update_tally_map(sender, property, -nValue, BALANCE));
+    assert(update_tally_map(receiver, property, nValue, BALANCE));
 
     // Is there an active crowdsale running from this recepient?
     {
@@ -3968,14 +3767,17 @@ int CMPTransaction::logicMath_SimpleSend()
         }
     }
 
-    rc = 0;
-
-    return rc;
+    return 0;
 }
 
-int CMPTransaction::logicMath_SendToOwners(FILE *fhandle)
+int CMPTransaction::logicMath_SendToOwners()
 {
-int rc = PKT_ERROR_STO -1000;
+    if (MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR -801);  // out of range
+    }
+    // ------------------------------------------
+
+    int rc = PKT_ERROR_STO -1000;
 
       if (!isTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_STO -888);
 
@@ -4085,9 +3887,6 @@ int rc = PKT_ERROR_STO -1000;
           if (msc_debug_sto)
             PrintToLog("%14lu = %s, temp= %38s, should_get= %19lu, will_really_get= %14lu, sent_so_far= %14lu\n",
             owns, address, temp.str(), should_receive, will_really_receive, sent_so_far);
-
-          // record the detailed info as needed
-          if (fhandle) fprintf(fhandle, "%s = %s\n", address.c_str(), FormatMP(property, will_really_receive).c_str());
         }
       } // owners loop
 
