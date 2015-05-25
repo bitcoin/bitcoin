@@ -334,7 +334,18 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state);
  */
 bool IsStandardTx(const CTransaction& tx, std::string& reason);
 
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
+/**
+ * Check if transaction is final and can be included in a block with the
+ * specified height and time. Consensus critical.
+ */
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
+
+/**
+ * Check if transaction will be final in the next block to be created.
+ *
+ * Calls IsFinalTx() with current block height and appropriate block time.
+ */
+bool CheckFinalTx(const CTransaction &tx);
 
 /** 
  * Closure representing one script verification
