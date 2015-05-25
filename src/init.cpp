@@ -146,8 +146,7 @@ static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 /** Preparing steps before restarting the wallet */
 void Prepare_Restart()
 {
-    printf("Prepare_Restart called! ---------------------------\n");
-        LogPrintf("%s: In progress...\n", __func__);
+    LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)

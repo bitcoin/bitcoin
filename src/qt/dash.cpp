@@ -13,6 +13,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
+#include "net.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
 #include "splashscreen.h"
@@ -280,25 +281,22 @@ void BitcoinCore::initialize()
     }
 }
 
-void BitcoinCore::restart(QStringList args) // ToDo
-{
-    printf("restart in dash.cpp -------------------------------------------\n");
-    for (int i = 0; i < args.size(); ++i){
-        printf("%s\n", args.at(i).toStdString().c_str());
-    }
-
+void BitcoinCore::restart(QStringList args)
+{   
     try
     {
         qDebug() << __func__ << ": Running Restart in thread";
         threadGroup.interrupt_all();
         threadGroup.join_all();
-        // Shutdown();
         Prepare_Restart();
         qDebug() << __func__ << ": Shutdown finished";
         emit shutdownResult(1);
-        boost::this_thread::sleep( boost::posix_time::seconds(1) );
+        CExplicitNetCleanup::callCleanup();
+
+        boost::this_thread::sleep( boost::posix_time::seconds(1));
         QProcess::startDetached(QApplication::applicationFilePath(), args);
-        QCoreApplication::quit();        
+        qDebug() << __func__ << ": Restart initiated...";
+        QCoreApplication::quit();
     } catch (std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
@@ -308,7 +306,6 @@ void BitcoinCore::restart(QStringList args) // ToDo
 
 void BitcoinCore::shutdown()
 {
-    printf("shutdown in dash.cpp -------------------------------------------\n");
     try
     {
         qDebug() << __func__ << ": Running Shutdown in thread";
