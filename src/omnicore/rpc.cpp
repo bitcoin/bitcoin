@@ -947,30 +947,6 @@ Value gettradessince_MP(const Array& params, bool fHelp)
   return response;
 }
 
-Value getopenorders_MP(const Array& params, bool fHelp)
-{
-   if (fHelp)
-        throw runtime_error(
-            "getorderbook_MP\n"
-            "\nAllows user to request active order information from the order book\n"
-            
-            "\nArguments:\n"
-            "1. property_id1            (int, required) amount owned to up on sale\n"
-            "2. property_id2         (int, optional) property owned to put up on sale\n"
-            
-            "\nResult:\n"
-            "[                (array of string)\n"
-            "  \"hash\"         (string) Transaction id\n"            
-            "  ,...\n"
-            "]\n"
-
-            "\nbExamples\n"
-            //+ HelpExampleCli("trade_MP", "50", "3", "500", "5" )
-            //+ HelpExampleRpc("trade_MP", "50", "3", "500", "5" )
-        );
-  return "\nNot Implemented";
-}
-
 /* TODO: point for discussion - "trade history" is ambiguous; providing trade history for a
  * pair is likely to be more useful than trade history for an address.  Regardless the existing
  * function did neither (only showing open trades, not trade history) so has been rewritten.
