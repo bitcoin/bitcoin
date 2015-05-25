@@ -128,7 +128,7 @@ public:
     void SetNull()
     {
         txid = 0;
-        block = 0;
+        block = -1;
         blockTime = 0;
         tx_idx = 0;
         tx_fee_paid = 0;
