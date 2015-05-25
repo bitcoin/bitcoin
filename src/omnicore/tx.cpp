@@ -8,10 +8,12 @@
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/sto.h"
 
 #include "alert.h"
 #include "amount.h"
 #include "main.h"
+#include "sync.h"
 #include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
@@ -804,6 +806,88 @@ void CMPTransaction::printInfo(FILE *fp)
   fprintf(fp, "BLOCK: %d txid: %s, Block Time: %s\n", block, txid.GetHex().c_str(), DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime).c_str());
   fprintf(fp, "sender: %s\n", sender.c_str());
 }
+
+int CMPTransaction::logicMath_SendToOwners()
+{
+    LOCK(cs_tally);
+
+    if (!isTransactionTypeAllowed(block, property, type, version)) {
+        return (PKT_ERROR_STO -22);
+    }
+
+    if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
+        return (PKT_ERROR_STO -23);
+    }
+
+    if (!_my_sps->hasSP(property)) {
+        return (PKT_ERROR_STO -24);
+    }
+
+    if (getMPbalance(sender, property, BALANCE) < (int64_t)nValue) {
+        return (PKT_ERROR_STO -25);
+    }
+
+    // ------------------------------------------
+
+    OwnerAddrType receiversSet = STO_GetReceivers(sender, property, nValue);
+    uint64_t numberOfReceivers = receiversSet.size();
+
+    // make sure we found some owners
+    if (numberOfReceivers <= 0) {
+        return (PKT_ERROR_STO -26);
+    }
+
+    // determine which property the fee will be paid in
+    uint32_t feeProperty = isTestEcosystemProperty(property) ? OMNI_PROPERTY_TMSC : OMNI_PROPERTY_MSC;
+
+    int64_t transferFee = TRANSFER_FEE_PER_OWNER * numberOfReceivers;
+    PrintToLog("\t    Transfer fee: %s %s\n", FormatDivisibleMP(transferFee), strMPProperty(feeProperty));
+
+    // enough coins to pay the fee?
+    if (feeProperty != property) {
+        if (getMPbalance(sender, feeProperty, BALANCE) < transferFee) {
+            return (PKT_ERROR_STO -27);
+        }
+    } else {
+        // special case check, only if distributing MSC or TMSC -- the property the fee will be paid in
+        if (getMPbalance(sender, feeProperty, BALANCE) < ((int64_t)nValue + transferFee)) {
+            return (PKT_ERROR_STO -28);
+        }
+    }
+
+    // ------------------------------------------
+
+    // burn MSC or TMSC here: take the transfer fee away from the sender
+    assert(update_tally_map(sender, feeProperty, -transferFee, BALANCE));
+
+    // split up what was taken and distribute between all holders
+    int64_t sent_so_far = 0;
+    for (OwnerAddrType::reverse_iterator it = receiversSet.rbegin(); it != receiversSet.rend(); ++it) {
+        const std::string& address = it->second;
+
+        int64_t will_really_receive = it->first;
+        sent_so_far += will_really_receive;
+
+        // real execution of the loop
+        assert(update_tally_map(sender, property, -will_really_receive, BALANCE));
+        assert(update_tally_map(address, property, will_really_receive, BALANCE));
+
+        // add to stodb
+        s_stolistdb->recordSTOReceive(address, txid, block, property, will_really_receive);
+
+        if (sent_so_far != (int64_t)nValue) {
+            PrintToLog("sent_so_far= %14d, nValue= %14d, n_owners= %d\n", sent_so_far, nValue, numberOfReceivers);
+        } else {
+            PrintToLog("SendToOwners: DONE HERE\n");
+        }
+    }
+
+    // sent_so_far must equal nValue here
+    assert(sent_so_far == (int64_t)nValue);
+
+    return 0;
+}
+
 
 int CMPTransaction::logicMath_TradeOffer(CMPOffer *obj_o)
 {
