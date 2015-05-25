@@ -179,11 +179,43 @@ BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
 
 BOOST_AUTO_TEST_CASE(rpc_ban)
 {
-    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.1 add")));
-    BOOST_CHECK_THROW(CallRPC(string("setban 127.0.0.1:8334")), runtime_error); //portnumber for setban not allowed
-    BOOST_CHECK_NO_THROW(CallRPC(string("listbanned")));
-    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.1 remove")));
     BOOST_CHECK_NO_THROW(CallRPC(string("clearbanned")));
+    
+    Value r;
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 127.0.0.0 add")));
+    BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.0.0:8334")), runtime_error); //portnumber for setban not allowed
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    Array ar = r.get_array();
+    Object o1 = ar[0].get_obj();
+    Value adr = find_value(o1, "address");
+    BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/255.255.255.255");
+    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.0 remove")));;
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    BOOST_CHECK_EQUAL(ar.size(), 0);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 127.0.0.0/24 add")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/255.255.255.0");
+
+    // must throw an exception because 127.0.0.1 is in already banned suubnet range
+    BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.0.1 add")), runtime_error);
+
+    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.0/24 remove")));;
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    BOOST_CHECK_EQUAL(ar.size(), 0);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 127.0.0.0/255.255.0.0 add")));
+    BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.1.1 add")), runtime_error);
+
+    BOOST_CHECK_NO_THROW(CallRPC(string("clearbanned")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    BOOST_CHECK_EQUAL(ar.size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
