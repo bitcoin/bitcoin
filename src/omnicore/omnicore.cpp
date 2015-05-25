@@ -899,7 +899,7 @@ static bool isAllowedOutputType(int whichType, int nBlock)
 // RETURNS: 0 if parsed a MP TX
 // RETURNS: < 0 if a non-MP-TX or invalid
 // RETURNS: >0 if 1 or more payments have been made
-static int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, unsigned int idx, CMPTransaction *mp_tx, unsigned int nTime)
+static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime)
 {
   string strSender;
   vector<string>script_data;
@@ -920,9 +920,7 @@ static int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, 
   uint64_t outAll = 0;
   uint64_t txFee = 0;
   int omniClass = 0;
-  if (NULL != mp_tx) {
-      mp_tx->Set(wtx.GetHash(), nBlock, idx, nTime);
-  }
+  mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
 
 
   // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
@@ -1272,18 +1270,17 @@ static int parseTransaction(bool bRPConly, const CTransaction &wtx, int nBlock, 
 
   // ### SET MP TX INFO ###
   if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
-  if (NULL != mp_tx) {
-    mp_tx->Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
-  }
+  mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+
   return 0;
 }
 
 /**
  * Provides access to parseTransaction in read-only mode.
  */
-int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction* pmptx, unsigned int nTime)
+int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction& mptx, unsigned int nTime)
 {
-    return parseTransaction(true, tx, nBlock, idx, pmptx, nTime);
+    return parseTransaction(true, tx, nBlock, idx, mptx, nTime);
 }
 
 /**
@@ -2334,7 +2331,7 @@ int interp_ret = -555555, pop_ret;
 
   if (nBlock < nWaterlineBlock) return -1;  // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
 
-  pop_ret = parseTransaction(false, tx, nBlock, idx, &mp_obj, pBlockIndex->GetBlockTime() );
+  pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime() );
   if (0 == pop_ret)
   {
   // true MP transaction, validity (such as insufficient funds, or offer not found) is determined elsewhere
@@ -2615,7 +2612,7 @@ int CMPTxList::setLastAlert(int blockHeight)
         else // note reparsing here is unavoidable because we've only loaded a txid and have no other alert info stored
         {
             CMPTransaction mp_obj;
-            int parseRC = ParseTransaction(wtx, blockHeight, 0, &mp_obj);
+            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
             string new_global_alert_message;
             if (0 <= parseRC)
             {
