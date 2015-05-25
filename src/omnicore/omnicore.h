@@ -278,17 +278,21 @@ public:
     return (money + so_r + a_r);
   }
 
-  int64_t getMoney(unsigned int which_property, TallyType ttype)
+  int64_t getMoney(unsigned int which_property, TallyType ttype) const
   {
-  int64_t ret64 = 0;
-
     if (TALLY_TYPE_COUNT <= ttype) return 0;
 
+    int64_t money = 0;
+
     LOCK(cs_tally);
+    TokenMap::const_iterator it = mp_token.find(which_property);
 
-    if (propertyExists(which_property)) ret64 = mp_token[which_property].balance[ttype];
+    if (it != mp_token.end()) {
+        const BalanceRecord& record = it->second;
+        money = record.balance[ttype];
+    }
 
-    return ret64;
+    return money;
   }
 };
 
