@@ -288,6 +288,7 @@ std::string HelpMessage(HelpMessageMode hmm)
 
     strUsage += "  -reindex               " + _("Rebuild block chain index from current blk000??.dat files") + " " + _("on startup") + "\n";
     strUsage += "  -txindex               " + _("Maintain a full transaction index (default: 0)") + "\n";
+    strUsage += "  -bitcoin_trimblockfiles               " + _("Trims bitcoin block files that already have been parsed (default: 1)") + "\n";
 
     strUsage += "\n" + _("Connection options:") + "\n";
     strUsage += "  -addnode=<ip>          " + _("Add a node to connect to and attempt to keep the connection open") + "\n";
@@ -886,13 +887,25 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
         do {
             try {
                 Bitcoin_UnloadBlockIndex();
+
+                {
+					//Before wiping databases for reindex, check that we're not in a trimmed state.
+					//Reindex is not possible then all that can be done is downloading the blockchain from scratch
+					Bitcoin_CBlockTreeDB * trimCheck = new Bitcoin_CBlockTreeDB(nBlockTreeDBCache, false, false);
+					trimCheck->ReadTrimToTime(bitcoin_mainState.nTrimToTime);
+					if(bitcoin_mainState.fReindex && GetBoolArg("-bitcoin_trimblockfiles", true) && bitcoin_mainState.nTrimToTime != 0) {
+						strLoadError = _("Bitcoin: A reindex can not be started when trimming of bitcoin block files is enabled. Exiting.");
+						delete trimCheck; trimCheck = NULL;
+						return false;
+					}
+					delete trimCheck; trimCheck = NULL;
+                }
+
                 delete bitcoin_pcoinsTip;
                 delete bitcoin_pcoinsdbview;
-
                 delete bitcoin_pblocktree;
 
                 bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(nBlockTreeDBCache, false, bitcoin_mainState.fReindex);
-
                 bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(nCoinDBCache, false, bitcoin_mainState.fReindex);
                 bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
 
@@ -917,7 +930,7 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
 
                 // If the directory bitcoin_chainstatecla exists, it means we are going from an older (incompatible) version of the working directory
                 boost::filesystem::path oldClaimChainstate = GetDataDir() / "bitcoin_chainstatecla";
-                if (boost::filesystem::exists(oldClaimChainstate)) {
+                if (boost::filesystem::exists(oldClaimChainstate) && !bitcoin_mainState.fReindex) {
                     strLoadError = _("Credits: You need to rebuild the database using -reindex when upgrading to this version of the client.");
                     break;
                 }
@@ -925,6 +938,13 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 // Check for changed -txindex state
                 if (bitcoin_fTxIndex != GetBoolArg("-txindex", false)) {
                     strLoadError = _("Bitcoin: You need to rebuild the database using -reindex to change -txindex");
+                    break;
+                }
+
+                // Check for changed -bitcoin_trimblockfiles state (from enabled to disabled can not be done)
+                const bool trimBlockFiles = GetBoolArg("-bitcoin_trimblockfiles", true);
+                if (bitcoin_fTrimBlockFiles != trimBlockFiles && !trimBlockFiles) {
+                    strLoadError = _("Bitcoin: You need to rebuild the database using -reindex to change -bitcoin_trimblockfiles to disabled");
                     break;
                 }
 
@@ -1456,11 +1476,16 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             {
                 Bitcoin_CBlockIndex* pindex = (*mi).second;
                 Bitcoin_CBlock block;
-                Bitcoin_ReadBlockFromDisk(block, pindex);
-                block.BuildMerkleTree();
-                block.print();
-                LogPrintf("\n");
-                nFound++;
+                if(Bitcoin_ReadBlockFromDisk(block, pindex)) {
+					block.BuildMerkleTree();
+					block.print();
+					LogPrintf("\n");
+					nFound++;
+                } else {
+                	if(bitcoin_fTrimBlockFiles) {
+                		LogPrintf("Read attempt for missing block file, probably due to trimmed block files: %s\n", strMatch);
+                	}
+                }
             }
         }
         if (nFound == 0)

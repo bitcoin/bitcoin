@@ -299,6 +299,7 @@ public:
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
     void SetBackend(Bitcoin_CCoinsView &viewIn);
+    Bitcoin_CCoinsView *GetBackend();
     bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
     bool GetStats(Bitcoin_CCoinsStats &stats);
 };

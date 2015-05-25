@@ -66,6 +66,7 @@ bool Bitcoin_CCoinsViewBacked::HaveCoins(const uint256 &txid) { return base->Hav
 uint256 Bitcoin_CCoinsViewBacked::GetBestBlock() { return base->GetBestBlock(); }
 bool Bitcoin_CCoinsViewBacked::SetBestBlock(const uint256 &hashBlock) { return base->SetBestBlock(hashBlock); }
 void Bitcoin_CCoinsViewBacked::SetBackend(Bitcoin_CCoinsView &viewIn) { base = &viewIn; }
+Bitcoin_CCoinsView *Bitcoin_CCoinsViewBacked::GetBackend() { return base;}
 bool Bitcoin_CCoinsViewBacked::BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
 bool Bitcoin_CCoinsViewBacked::GetStats(Bitcoin_CCoinsStats &stats) { return base->GetStats(stats); }
 

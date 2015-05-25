@@ -99,6 +99,7 @@ extern int64_t bitcoin_nTimeBestReceived;
 extern bool bitcoin_fBenchmark;
 extern int bitcoin_nScriptCheckThreads;
 extern bool bitcoin_fTxIndex;
+extern bool bitcoin_fTrimBlockFiles;
 extern unsigned int bitcoin_nCoinCacheSize;
 
 // Minimum disk space required - used in CheckDiskSpace()
@@ -168,6 +169,8 @@ std::string Bitcoin_GetWarnings(std::string strFor);
 bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
 bool Bitcoin_ActivateBestChain(CValidationState &state);
+/** Trim all old block files + undo files up to this block */
+bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo);
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
 bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Credits_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 int64_t Bitcoin_GetBlockValue(int nHeight, int64_t nFees);
@@ -484,6 +487,7 @@ public:
 
 
 
+/** THESE THREE FUNCTIONS MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
 /** Functions for disk access for blocks */
 bool Bitcoin_WriteBlockToDisk(Bitcoin_CBlock& block, CDiskBlockPos& pos);
 bool Bitcoin_ReadBlockFromDisk(Bitcoin_CBlock& block, const CDiskBlockPos& pos);
@@ -496,11 +500,13 @@ bool Bitcoin_ReadBlockFromDisk(Bitcoin_CBlock& block, const Bitcoin_CBlockIndex*
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
+/** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
 bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, Credits_CCoinsViewCache& claim_coins, bool updateUndo, bool* pfClean = NULL);
 bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Credits_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
+/** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
 bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
 bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, Credits_CCoinsViewCache& claim_coins, bool updateUndo, bool fJustCheck);
 bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Credits_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
