@@ -1,6 +1,73 @@
 (note: this is a temporary file, to be added-to by anybody, and moved to
 release-notes at release time)
 
+Notable changes
+===============
+
+Block file pruning
+----------------------
+
+This release supports running a fully validating node without maintaining a copy 
+of the raw block and undo data on disk. To recap, there are four types of data 
+related to the blockchain in the bitcoin system: the raw blocks as received over 
+the network (blk???.dat), the undo data (rev???.dat), the block index and the 
+UTXO set (both LevelDB databases). The databases are built from the raw data.
+
+Block pruning allows Bitcoin Core to delete the raw block and undo data once 
+it's been validated and used to build the databases. At that point, the raw data 
+is used only to relay blocks to other nodes, to handle reorganizations, to look 
+up old transactions (if -txindex is enabled or via the RPC/REST interfaces), or 
+for rescanning the wallet. The block index continues to hold the metadata about 
+all blocks in the blockchain.
+
+The user specifies how much space to allot for block & undo files. The minimum 
+allowed is 550MB. Note that this is in addition to whatever is required for the 
+block index and UTXO databases. The minimum was chosen so that Bitcoin Core will 
+be able to maintain at least 288 blocks on disk (two days worth of blocks at 10 
+minutes per block). In rare instances it is possible that the amount of space 
+used will exceed the pruning target in order to keep the required last 288 
+blocks on disk.
+
+Block pruning works during initial sync in the same way as during steady state, 
+by deleting block files "as you go" whenever disk space is allocated. Thus, if 
+the user specifies 550MB, once that level is reached the program will begin 
+deleting the oldest block and undo files, while continuing to download the 
+blockchain.
+
+For now, block pruning disables block relay.  In the future, nodes with block 
+pruning will at a minimum relay "new" blocks, meaning blocks that extend their 
+active chain. 
+
+Block pruning is currently incompatible with running a wallet due to the fact 
+that block data is used for rescanning the wallet and importing keys or 
+addresses (which require a rescan.) However, running the wallet with block 
+pruning will be supported in the near future, subject to those limitations.
+
+Block pruning is also incompatible with -txindex and will automatically disable 
+it.
+
+Once you have pruned blocks, going back to unpruned state requires 
+re-downloading the entire blockchain. To do this, re-start the node with 
+-reindex. Note also that any problem that would cause a user to reindex (e.g., 
+disk corruption) will cause a pruned node to redownload the entire blockchain. 
+Finally, note that when a pruned node reindexes, it will delete any blk???.dat 
+and rev???.dat files in the data directory prior to restarting the download.
+
+To enable block pruning on the command line:
+
+- `-prune=N`: where N is the number of MB to allot for raw block & undo data.
+
+Modified RPC calls:
+
+- `getblockchaininfo` now includes whether we are in pruned mode or not.
+- `getblock` will check if the block's data has been pruned and if so, return an 
+error.
+- `getrawtransaction` will no longer be able to locate a transaction that has a 
+UTXO but where its block file has been pruned. 
+
+Pruning is disabled by default.
+
+
 0.11.0 Change log
 =================
 
