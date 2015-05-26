@@ -1215,10 +1215,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Sadece izlenen adreslerdeki güncel toplam bakiye</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>eşleşme dışı</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -3101,6 +3097,10 @@
         <translation>Adres sayısı azaldıysa DNS sorgulamasıyla eş adresleri ara (varsayılan: 1 -connect kullanılmadıysa)</translation>
     </message>
     <message>
+        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
+        <translation>Her vekil bağlantısı için kimlik verilerini rastgele yap. Bu, Tor akış izolasyonunu etkinleştirir (varsayılan: %u)</translation>
+    </message>
+    <message>
         <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
         <translation>Ücretsiz ya da düşük ücretli muamelelerin geçişi için yüksek öncelik iste (varsayılan: %u)</translation>
     </message>
@@ -3275,6 +3275,10 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Her &lt;n&gt; şebeke mesajından rastgele birini bulanıklaştır</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Başlangıçta blok zinciri indeksini güncel blk000??.dat dosyalarından tekrar inşa et</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

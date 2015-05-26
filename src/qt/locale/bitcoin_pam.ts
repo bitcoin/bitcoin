@@ -593,11 +593,7 @@
         <source>Your current total balance</source>
         <translation>Ing kekang kasalungsungan kabuuang balanse</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>ali ya maka-sync</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     </context>

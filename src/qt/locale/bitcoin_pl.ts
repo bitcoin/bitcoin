@@ -1097,10 +1097,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Łączna kwota na podglądanych adresach</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nie zsynchronizowany</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

@@ -63,7 +63,7 @@
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Endereços para receber</translation>
+        <translation>Endereços de recebimento</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -224,7 +224,7 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>&amp;Assinar Mensagem...</translation>
+        <translation>&amp;Assinar mensagem...</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -284,11 +284,11 @@
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>Enviando endereço&amp;s...</translation>
+        <translation>Endereço&amp;s de envio...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Receber endereços...</translation>
+        <translation>Endereços de &amp;Recebimento...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -380,7 +380,7 @@
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation>&amp;Ajuda</translation>
+        <translation>A&amp;juda</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -1211,10 +1211,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Balanço total em endereços monitorados</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>fora de sincronia</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1392,7 +1388,7 @@
     </message>
     <message>
         <source>Debug window</source>
-        <translation>Janela de debug</translation>
+        <translation>Janela de depuração</translation>
     </message>
     <message>
         <source>General</source>
@@ -2125,7 +2121,7 @@
     </message>
     <message>
         <source>&amp;Sign Message</source>
-        <translation>&amp;Assinar Mensagem</translation>
+        <translation>&amp;Assinar mensagem</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2165,7 +2161,7 @@
     </message>
     <message>
         <source>Sign &amp;Message</source>
-        <translation>Assinar &amp;Mensagem</translation>
+        <translation>Assinar &amp;mensagem</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
@@ -2177,7 +2173,7 @@
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Verificar Mensagem</translation>
+        <translation>&amp;Verificar mensagem</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2189,7 +2185,7 @@
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Verificar &amp;Mensagem</translation>
+        <translation>Verificar &amp;mensagem</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -2197,7 +2193,7 @@
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation>Clique em "Assinar Mensagem" para gerar a assinatura</translation>
+        <translation>Clique em "Assinar mensagem" para gerar a assinatura</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2850,7 +2846,7 @@
     </message>
     <message>
         <source>Debugging/Testing options:</source>
-        <translation>Opções de Debug/Teste:</translation>
+        <translation>Opções de depuração/teste:</translation>
     </message>
     <message>
         <source>Do not load the wallet and disable wallet RPC calls</source>
@@ -2890,7 +2886,7 @@
     </message>
     <message>
         <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>Se &lt;category&gt; não for informada, logar toda informação de debug.</translation>
+        <translation>Se &lt;category&gt; não for informada, registrar toda informação de depuração.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3118,7 +3114,7 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Exibir todas opções de debug (uso: --help -help-debug)</translation>
+        <translation>Exibir todas opções de depuração (uso: --help -help-debug)</translation>
     </message>
     <message>
         <source>Show splash screen on startup (default: 1)</source>
@@ -3246,7 +3242,7 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>Incluir endereço IP na saída de debug (padrão: %u)</translation>
+        <translation>Incluir endereço IP na saída de depuração (padrão: %u)</translation>
     </message>
     <message>
         <source>Invalid -proxy address: '%s'</source>

@@ -929,11 +929,7 @@
         <source>Your current total balance</source>
         <translation>Vaše trenutno skupno stanje</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>iz sinhronizacije</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

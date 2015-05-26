@@ -1215,10 +1215,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>观察地址(watch-only address)中的当前总余额 </translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>数据同步中</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -2018,6 +2014,10 @@
         <source>Payment request expired.</source>
         <translation>支付请求已过期。</translation>
     </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>预计 %n 个数据块后被确认。</numerusform></translation>
+    </message>
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>只支付最小费用 %1</translation>
@@ -2206,6 +2206,10 @@
     <message>
         <source>&amp;Verify Message</source>
         <translation>验证消息(&amp;V)</translation>
+    </message>
+    <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>请在下面输入接收者地址、消息（确保换行符、空格符、制表符等完全相同）和签名以验证消息。请仔细核对签名信息，以提防中间人攻击。请注意，这只是证明接收方签名的地址，它不能证明任何交易！</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2811,6 +2815,10 @@
         <translation>绑定指定的IP地址开始监听。IPv6地址请使用[host]:port 格式</translation>
     </message>
     <message>
+        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
+        <translation>自由交易不断的速率限制为&lt;n&gt;*1000 字节每分钟(默认值: %u)</translation>
+    </message>
+    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>删除钱包的所有交易记录，且只有用 -rescan参数启动客户端才能重新取回交易记录 </translation>
     </message>
@@ -3265,6 +3273,10 @@ rpcpassword=%s
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>随机每1个模拟测试&lt;n&gt;网络信息</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>启动时重新为当前的 blk000??.dat 文件建立索引</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

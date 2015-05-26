@@ -1215,10 +1215,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>監視限定アドレス内の現在の全残高</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>同期していない</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -3284,6 +3280,10 @@ rpcpassword=%s
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>&lt;n&gt;個のネットワークメッセージごとにひとつをランダムに改変する</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>起動時に現在の blk000??.dat ファイルからブロック チェーンのインデックスを再構築</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

@@ -601,11 +601,7 @@
         <source>Mined balance that has not yet matured</source>
         <translation>Fossum pendendum quod nondum maturum est</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>non synchronizato</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

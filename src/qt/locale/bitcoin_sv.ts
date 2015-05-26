@@ -1212,10 +1212,6 @@ Var vänlig och försök igen.</translation>
         <source>Current total balance in watch-only addresses</source>
         <translation>Nuvarande total balans i granska-bara adresser</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>osynkroniserad</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -3268,6 +3264,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Slupmässigt brus 1 gång varje &lt;n&gt; nätverksmeddelande</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Återskapa blockkedjans index från nuvarande blk000??.dat filer under uppstarten</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

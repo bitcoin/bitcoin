@@ -1215,10 +1215,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nåværende totale balanse i kun observerbare adresser</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>ute av synk</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -3283,6 +3279,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Slumpvis bland 1 av hver &lt;n&gt; nettverksmeldinger</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Gjenopprett blokkjedeindeks fra gjeldende blk000??.dat filer ved oppstart</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

@@ -149,11 +149,7 @@
     </context>
 <context>
     <name>OverviewPage</name>
-    <message>
-        <source>out of sync</source>
-        <translation>синхрондоштурулган эмес</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     </context>

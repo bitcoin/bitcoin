@@ -869,11 +869,7 @@
         <source>Your current total balance</source>
         <translation>O teu balance actual total</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>non sincronizado</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
