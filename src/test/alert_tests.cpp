@@ -12,7 +12,6 @@
 #include "clientversion.h"
 #include "data/alertTests.raw.h"
 
-#include "chainparams.h"
 #include "main.h"
 #include "serialize.h"
 #include "streams.h"
