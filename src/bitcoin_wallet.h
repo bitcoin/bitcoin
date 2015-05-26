@@ -155,7 +155,7 @@ private:
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
 
 public:
-    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
+    bool SelectCoins(int64_t nTargetValue, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
     /// Main wallet lock.
     /// This lock protects all the fields added by CWallet
     ///   except for:
@@ -215,9 +215,9 @@ public:
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum Bitcoin_WalletFeature wf) { AssertLockHeld(cs_wallet); return nWalletMaxVersion >= wf; }
 
-    int GetBestBlockClaimDepth(Bitcoin_CClaimCoinsViewCache* claim_view) const;
+    int GetBestBlockClaimDepth(Credits_CCoinsViewCache* credits_view) const;
 
-    void AvailableCoins(std::vector<Bitcoin_COutput>& vCoins, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const;
+    void AvailableCoins(std::vector<Bitcoin_COutput>& vCoins, Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const;
     bool SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, int nConfTheirs, std::vector<Bitcoin_COutput> vCoins, std::set<std::pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet) const;
 
     bool IsSpent(const uint256& hash, unsigned int n, unsigned int claimBestBlockDepth) const;
@@ -284,9 +284,9 @@ public:
     int ScanForWalletTransactions(Bitcoin_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
-    int64_t GetBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    int64_t GetUnconfirmedBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    int64_t GetImmatureBalance(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetBalance(Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetUnconfirmedBalance(Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    int64_t GetImmatureBalance(Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
     bool CreateTransaction(const std::vector<std::pair<CScript, int64_t> >& vecSend,
                            Bitcoin_CWalletTx& wtxNew, Bitcoin_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CreateTransaction(CScript scriptPubKey, int64_t nValue,
@@ -305,13 +305,13 @@ public:
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
     std::set< std::set<CTxDestination> > GetAddressGroupings();
-    std::map<CTxDestination, int64_t> GetAddressBalances(Bitcoin_CClaimCoinsViewCache* claim_view);
+    std::map<CTxDestination, int64_t> GetAddressBalances(Credits_CCoinsViewCache* credits_view);
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
     bool IsMine(const Bitcoin_CTxIn& txin) const;
-    int64_t GetDebit(const Bitcoin_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
-    int64_t GetDebit(const Credits_CTxIn& txin, Bitcoin_CClaimCoinsViewCache *claim_view) const;
+    int64_t GetDebit(const Bitcoin_CTxIn& txin, Credits_CCoinsViewCache* credits_view) const;
+    int64_t GetDebit(const Credits_CTxIn& txin, Credits_CCoinsViewCache* credits_view) const;
     bool IsMine(const CTxOut& txout) const
     {
         return ::IsMine(*this, txout.scriptPubKey);
@@ -342,7 +342,7 @@ public:
     {
         return (GetDebit(tx, NULL) > 0);
     }
-    int64_t GetDebit(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache *claim_view) const
+    int64_t GetDebit(const Bitcoin_CTransaction& tx, Credits_CCoinsViewCache* claim_view) const
     {
         int64_t nDebit = 0;
         BOOST_FOREACH(const Bitcoin_CTxIn& txin, tx.vin)
@@ -352,7 +352,7 @@ public:
         }
         return nDebit;
     }
-    int64_t GetDebit(const Credits_CTransaction& tx, Bitcoin_CClaimCoinsViewCache *claim_view) const
+    int64_t GetDebit(const Credits_CTransaction& tx, Credits_CCoinsViewCache* claim_view) const
     {
         int64_t nDebit = 0;
         BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
@@ -363,7 +363,7 @@ public:
         return nDebit;
     }
 
-    int64_t GetCredit(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+    int64_t GetCredit(const Bitcoin_CTransaction& tx, Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
     {
     	const uint256 &hashTx = tx.GetHash();
         int64_t nCredit = 0;
@@ -376,8 +376,8 @@ public:
     			}
             }
     	} else {
-    		if(claim_view->HaveCoins(hashTx)) {
-    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+    		if(claim_view->Claim_HaveCoins(hashTx)) {
+    			const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
@@ -398,7 +398,7 @@ public:
     	}
         return nCredit;
     }
-    int64_t GetChange(const Bitcoin_CTransaction& tx, Bitcoin_CClaimCoinsViewCache* claim_view) const
+    int64_t GetChange(const Bitcoin_CTransaction& tx, Credits_CCoinsViewCache* claim_view) const
     {
     	const uint256 &hashTx = tx.GetHash();
         int64_t nChange = 0;
@@ -410,8 +410,8 @@ public:
                 assert_with_stacktrace(Credits_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
             }
     	} else {
-    		if(claim_view->HaveCoins(hashTx)) {
-    			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+    		if(claim_view->Claim_HaveCoins(hashTx)) {
+    			const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(claimCoins.HasClaimable(i)) {
@@ -686,7 +686,7 @@ public:
         MarkDirty();
     }
 
-    int64_t Claim_GetDebit(Bitcoin_CClaimCoinsViewCache* claim_view) const
+    int64_t Claim_GetDebit(Credits_CCoinsViewCache* claim_view) const
     {
         if (vin.empty())
             return 0;
@@ -708,7 +708,7 @@ public:
         return bitcoin_nDebitCached;
     }
 
-    int64_t Claim_GetCredit(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    int64_t Claim_GetCredit(Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
         if (IsCoinBase() && GetBlocksToMaturity() > 0)
@@ -735,7 +735,7 @@ public:
         return bitcoin_nCreditCached;
     }
 
-    int64_t Claim_GetImmatureCredit(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    int64_t Claim_GetImmatureCredit(Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
         {
@@ -762,7 +762,7 @@ public:
         return 0;
     }
 
-    int64_t Claim_GetAvailableCredit(Bitcoin_CClaimCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
+    int64_t Claim_GetAvailableCredit(Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fUseCache=true) const
     {
         if (pwallet == 0)
             return 0;
@@ -776,9 +776,9 @@ public:
 
         int64_t nCredit = 0;
         const uint256 &hashTx = GetHash();
-		if(claim_view->HaveCoins(hashTx)) {
+		if(claim_view->Claim_HaveCoins(hashTx)) {
 			const int nClaimBestBlockDepth = pwallet->GetBestBlockClaimDepth(claim_view);
-			const Bitcoin_CClaimCoins & claimCoins = claim_view->GetCoins(hashTx);
+			const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
 			for(unsigned int i = 0; i < vout.size(); i++) {
 				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
@@ -833,7 +833,7 @@ public:
     }
 
 
-    int64_t Claim_GetChange(Bitcoin_CClaimCoinsViewCache* claim_view) const
+    int64_t Claim_GetChange(Credits_CCoinsViewCache* claim_view) const
     {
         if (claim_fChangeCached)
             return claim_nChangeCached;
@@ -850,12 +850,12 @@ public:
         return bitcoin_nChangeCached;
     }
 
-    void Claim_GetAmounts(Bitcoin_CClaimCoinsViewCache* claim_view, std::list<std::pair<CTxDestination, int64_t> >& listReceived,
+    void Claim_GetAmounts(Credits_CCoinsViewCache* credits_view, std::list<std::pair<CTxDestination, int64_t> >& listReceived,
                     std::list<std::pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount) const;
     void Bitcoin_GetAmounts(std::list<std::pair<CTxDestination, int64_t> >& listReceived,
                     std::list<std::pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount) const;
 
-    void Claim_GetAccountAmounts(Bitcoin_CClaimCoinsViewCache* claim_view, const std::string& strAccount, int64_t& nReceived,
+    void Claim_GetAccountAmounts(Credits_CCoinsViewCache* credits_view, const std::string& strAccount, int64_t& nReceived,
                            int64_t& nSent, int64_t& nFee) const;
     void Bitcoin_GetAccountAmounts(const std::string& strAccount, int64_t& nReceived,
                            int64_t& nSent, int64_t& nFee) const;

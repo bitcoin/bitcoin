@@ -150,19 +150,19 @@ void Bitcredit_PushGetBlocks(CNode* pnode, Credits_CBlockIndex* pindexBegin, uin
 /** Process an incoming block */
 bool Bitcredit_ProcessBlock(CValidationState &state, CNode* pfrom, Credits_CBlock* pblock, CDiskBlockPos *dbp = NULL);
 /** Check whether enough disk space is available for an incoming block */
-bool Bitcredit_CheckDiskSpace(uint64_t nAdditionalBytes = 0);
+bool Credits_CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 /** Open a block file (blk?????.dat) */
-FILE* Bitcredit_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* Credits_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
-FILE* Bitcredit_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
+FILE* Credits_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Import blocks from an external file */
 bool Bitcredit_LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 /** Initialize a new block tree database + block data on disk */
-bool Bitcredit_InitBlockIndex();
+bool Credits_InitBlockIndex();
 /** Load the block tree and coins database from disk */
-bool Bitcredit_LoadBlockIndex();
+bool Credits_LoadBlockIndex();
 /** Unload database information */
-void Bitcredit_UnloadBlockIndex();
+void Credits_UnloadBlockIndex();
 /** Print the loaded block tree */
 void Bitcredit_PrintBlockTree();
 /** Process protocol messages received from a given node */
@@ -206,9 +206,9 @@ uint256 Bitcredit_ReduceByReqDepositLevel(const uint256 nValue, const uint64_t n
 void Bitcredit_UpdateTime(Credits_CBlockHeader& block, const Credits_CBlockIndex* pindexPrev);
 
 /** Create a new block index entry for a given block hash */
-Credits_CBlockIndex * Bitcredit_InsertBlockIndex(uint256 hash);
+Credits_CBlockIndex * Credits_InsertBlockIndex(uint256 hash);
 /** Verify a signature */
-bool Bitcredit_VerifySignature(const Bitcredit_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+bool Bitcredit_VerifySignature(const Credits_CCoins& txFrom, const Credits_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Get statistics from node state */
 bool Bitcredit_GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
@@ -245,7 +245,7 @@ int64_t Credits_GetMinFee(const Credits_CTransaction& tx, unsigned int nBytes, b
     @param[in] mapInputs    Map of previous transactions that have outputs we're spending
     @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Credits_CCoinsViewCache& credits_view, Bitcoin_CClaimCoinsViewCache& claim_view);
+bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Credits_CCoinsViewCache& credits_view);
 
 /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
     @return number of sigops this transaction's outputs will produce when spent
@@ -259,7 +259,7 @@ unsigned int Bitcredit_GetLegacySigOpCount(const Credits_CTransaction& tx);
     @return maximum number of sigops required to validate this transaction's inputs
     @see Credits_CTransaction::FetchInputs
  */
-unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Credits_CCoinsViewCache& bitcredit_inputs, Bitcoin_CClaimCoinsViewCache& claim_inputs);
+unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Credits_CCoinsViewCache& bitcredit_inputs);
 
 
 inline bool Credits_AllowFree(double dPriority)
@@ -269,19 +269,19 @@ inline bool Credits_AllowFree(double dPriority)
     return dPriority > COIN * 144 / 250;
 }
 
-bool Bitcredit_FindBestBlockAndCheckClaims(Bitcoin_CClaimCoinsViewCache &claim_view, const int64_t nClaimedCoins);
+bool Bitcredit_FindBestBlockAndCheckClaims(Credits_CCoinsViewCache &credits_view, const int64_t nClaimedCoins);
 //Check that the claiming attempts being done are within the limits (90% of total monetary base and max 15 000 000  coins). Max bitcoin block height (600 000) tested in Bitcredit_CheckBlockHeader
-bool Bitcredit_CheckClaimsAreInBounds(Bitcoin_CClaimCoinsViewCache &bitcoin_inputs, const int64_t nTryClaimedCoins, const int nBitcoinBlockHeight);
+bool Bitcredit_CheckClaimsAreInBounds(Credits_CCoinsViewCache &credits_inputs, const int64_t nTryClaimedCoins, const int nBitcoinBlockHeight);
 
 // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
 // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
 // instead of being performed inline.
-bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
+bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
                  unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS,
                  std::vector<Bitcredit_CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
-void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Bitcoin_CClaimCoinsViewCache &claim_inputs, Credits_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
+void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Credits_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
 
 // Context-independent validity checks
 bool Bitcredit_CheckTransaction(const Credits_CTransaction& tx, CValidationState& state);
@@ -306,7 +306,7 @@ public:
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
     {
         // Open history file to append
-        CAutoFile fileout = CAutoFile(Bitcredit_OpenUndoFile(pos), SER_DISK, netParams->ClientVersion());
+        CAutoFile fileout = CAutoFile(Credits_OpenUndoFile(pos), SER_DISK, netParams->ClientVersion());
         if (!fileout)
             return error("Credits: CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
@@ -338,7 +338,7 @@ public:
     bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
     {
         // Open history file to read
-        CAutoFile filein = CAutoFile(Bitcredit_OpenUndoFile(pos, true), SER_DISK, netParams->ClientVersion());
+        CAutoFile filein = CAutoFile(Credits_OpenUndoFile(pos, true), SER_DISK, netParams->ClientVersion());
         if (!filein)
             return error("Credits: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
@@ -377,10 +377,10 @@ private:
 
 public:
     Bitcredit_CScriptCheck() {}
-    Bitcredit_CScriptCheck(const Bitcredit_CCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+    Bitcredit_CScriptCheck(const Credits_CCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
         scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
-    Bitcredit_CScriptCheck(const Bitcoin_CClaimCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+    Bitcredit_CScriptCheck(const Claim_CCoins& txFromIn, const Credits_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
         scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
 
@@ -471,14 +471,14 @@ bool Credits_ReadBlockFromDisk(Credits_CBlock& block, const Credits_CBlockIndex*
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 /** Calculates resurrection of deposit base. Should be used just before coins are updated */
 void UpdateResurrectedDepositBase(const Credits_CBlockIndex* pBlockToTrim, const Credits_CTransaction &tx, int64_t &nResurrectedDepositBase, Credits_CCoinsViewCache& credits_view);
 /** Calculates trimming of deposit base. Should be used just after coins are updated */
 void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_CBlock &trimBlock, int64_t &nTrimmedDepositBase, Credits_CCoinsViewCache& credits_view);
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CClaimCoinsViewCache& claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcredit_AddToBlockIndex(Credits_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
@@ -747,11 +747,11 @@ public:
 
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
-class Bitcredit_CVerifyDB {
+class Credits_CVerifyDB {
 public:
 
-	Bitcredit_CVerifyDB();
-    ~Bitcredit_CVerifyDB();
+	Credits_CVerifyDB();
+    ~Credits_CVerifyDB();
     bool VerifyDB(int nCheckLevel, int nCheckDepth);
 };
 
@@ -805,8 +805,8 @@ extern Bitcredit_CChain credits_chainActive;
 /** The currently best known chain of headers (some of which may be invalid). */
 extern Bitcredit_CChain bitcredit_chainMostWork;
 
-/** Global variable that points to the active Bitcredit_CCoinsView (protected by cs_main) */
-extern Credits_CCoinsViewCache *bitcredit_pcoinsTip;
+/** Global variable that points to the active Credits_CCoinsView (protected by cs_main) */
+extern Credits_CCoinsViewCache *credits_pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern Credits_CBlockTreeDB *bitcredit_pblocktree;
@@ -826,7 +826,7 @@ struct Credits_CBlockTemplate
 /** Used to relay blocks as header + vector<merkle branch>
  * to filtered nodes.
  */
-class Bitcredit_CMerkleBlock
+class Credits_CMerkleBlock
 {
 public:
     // Public only for unit testing
@@ -841,7 +841,7 @@ public:
     // Create from a CBlock, filtering transactions according to filter
     // Note that this will call IsRelevantAndUpdate on the filter for each transaction,
     // thus the filter will likely be modified.
-    Bitcredit_CMerkleBlock(const Credits_CBlock& block, CBloomFilter& filter);
+    Credits_CMerkleBlock(const Credits_CBlock& block, CBloomFilter& filter);
 
     IMPLEMENT_SERIALIZE
     (

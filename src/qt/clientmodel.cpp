@@ -102,7 +102,7 @@ QDateTime ClientModel::getLastBlockDate() const
         return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
     } else {
         if(isForBitcredit) {
-            return QDateTime::fromTime_t(Bitcredit_Params().GenesisBlock().nTime); // Genesis block's time of current network
+            return QDateTime::fromTime_t(Credits_Params().GenesisBlock().nTime); // Genesis block's time of current network
         } else {
             return QDateTime::fromTime_t(Bitcoin_Params().GenesisBlock().nTime); // Genesis block's time of current network
         }

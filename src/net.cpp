@@ -48,7 +48,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* semOutb
 class CBitcreditNetParams : public CNetParams {
 public:
 	const CChainParams& Params() {
-		return Bitcredit_Params();
+		return Credits_Params();
 	}
 	const std::string LogPrefix() {
 		return "Credits:";
@@ -744,7 +744,7 @@ void SocketSendData(CNode *pnode)
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
-            if(pnode->netParams->MessageStart() == Bitcredit_Params().MessageStart()) {
+            if(pnode->netParams->MessageStart() == Credits_Params().MessageStart()) {
 				pnode->bitcredit_RecordBytesSent(nBytes);
             } else {
 				pnode->bitcoin_RecordBytesSent(nBytes);
@@ -1011,7 +1011,7 @@ void SocketHandler(CNetParams * netParams)
                                 pnode->CloseSocketDisconnect();
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
-                            if(pnode->netParams->MessageStart() == Bitcredit_Params().MessageStart()) {
+                            if(pnode->netParams->MessageStart() == Credits_Params().MessageStart()) {
 								pnode->bitcredit_RecordBytesRecv(nBytes);
                             } else {
 								pnode->bitcoin_RecordBytesRecv(nBytes);

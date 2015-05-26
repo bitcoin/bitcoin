@@ -50,7 +50,7 @@ bool CMessageHeader::IsBitcoinMessage() const {
 }
 
 bool CMessageHeader::IsBitcreditMessage() const {
-	return memcmp(pchMessageStart, Bitcredit_Params().MessageStart(), MESSAGE_START_SIZE) == 0;
+	return memcmp(pchMessageStart, Credits_Params().MessageStart(), MESSAGE_START_SIZE) == 0;
 }
 
 bool CMessageHeader::IsValid() const

@@ -12,7 +12,6 @@
 #include "net.h"
 #include "script.h"
 #include "txdb.h"
-#include "bitcoin_claimtxdb.h"
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
@@ -196,7 +195,7 @@ bool VerifyDepositSignatures (std::string prefix, Credits_CBlock *pblock) {
 			if(txDepositIn.prevout == coinbaseOutPoint) {
 		        scriptPubKey = &pblock->vtx[0].vout[0].scriptPubKey;
 			} else {
-				const Bitcredit_CCoins &coinsSpent = bitcredit_pcoinsTip->GetCoins(txDepositIn.prevout.hash);
+				const Credits_CCoins &coinsSpent = credits_pcoinsTip->Credits_GetCoins(txDepositIn.prevout.hash);
 				assert(coinsSpent.IsAvailable(txDepositIn.prevout.n));
 				scriptPubKey = &coinsSpent.vout[txDepositIn.prevout.n].scriptPubKey;
 			}
@@ -483,7 +482,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
             LogPrintf("\n\nERROR! Referenced bitcoin block is not the same as block in active chain. Active chain has probably changed. Hashes are\n%s\n%s \n\n", activeBlockAtHeight->phashBlock->GetHex(), pprevLinkedBlock->phashBlock->GetHex());
             return NULL;
         }
-        int acceptDepth = Bitcredit_Params().AcceptDepthLinkedBitcoinBlock();
+        int acceptDepth = Credits_Params().AcceptDepthLinkedBitcoinBlock();
         int nAcceptHeight = bitcoin_chainActive.Tip()->nHeight - (acceptDepth + (acceptDepth / 10)+ 24*6);
         if(nAcceptHeight < 0) {
     	    nAcceptHeight = 0;
@@ -493,480 +492,473 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
         }
         const Bitcoin_CBlockIndex * hashLinkedBitcoinBlockIndex = bitcoin_chainActive[nAcceptHeight];
 
-        Credits_CCoinsViewCache credits_view(*bitcredit_pcoinsTip, true);
+		//This is a throw away chainstate db + undo vector
+        Credits_CCoinsViewCache credits_view(*credits_pcoinsTip, true);
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 
-        const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
-        {
-			//This is a throw away chainstate db + undo vector
-        	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
-			Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId(), Bitcoin_GetCoinDBCacheSize(), false, true, false, true);
-			Bitcoin_CClaimCoinsViewCache claim_viewtmp(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
+		//Pre-setup hashLinkedBitcoinBlock to be able to use it with indexDummy
+		pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
+		Credits_CBlockIndex indexDummy(*pblock);
+		indexDummy.pprev = pindexPrev;
+		indexDummy.nHeight = pindexPrev->nHeight + 1;
 
-			//Pre-setup hashLinkedBitcoinBlock to be able to use it with indexDummy
-			pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
-	        Credits_CBlockIndex indexDummy(*pblock);
-	        indexDummy.pprev = pindexPrev;
-	        indexDummy.nHeight = pindexPrev->nHeight + 1;
+		CValidationState state;
+		if(!Bitcoin_AlignClaimTip(pindexPrev, &indexDummy, credits_view, state, false, vBlockUndoClaims)) {
+			LogPrintf("\n\nERROR: Miner: Bitcoin_AlignClaimTip: Failed to move claim tip to %s\n", hashLinkedBitcoinBlockIndex->GetBlockHash().GetHex());
+			return NULL;
+		}
 
-			CValidationState state;
-			if(!Bitcoin_AlignClaimTip(pindexPrev, &indexDummy, claim_viewtmp, state, false, vBlockUndoClaims)) {
-				LogPrintf("\n\nERROR: Miner: Bitcoin_AlignClaimTip: Failed to move claim tip to %s\n", hashLinkedBitcoinBlockIndex->GetBlockHash().GetHex());
-				return NULL;
-			}
+		// Priority order to process transactions
+		list<COrphan> vOrphan; // list memory doesn't move
+		map<uint256, vector<COrphan*> > mapDependers;
+		bool fPrintPriority = GetBoolArg("-printpriority", false);
 
-			// Priority order to process transactions
-			list<COrphan> vOrphan; // list memory doesn't move
-			map<uint256, vector<COrphan*> > mapDependers;
-			bool fPrintPriority = GetBoolArg("-printpriority", false);
+		// This vector will be sorted into a priority queue:
+		vector<TxPriority> vecPriority;
+		vecPriority.reserve(credits_mempool.mapTx.size());
+		for (map<uint256, Bitcredit_CTxMemPoolEntry>::iterator mi = credits_mempool.mapTx.begin();
+			 mi != credits_mempool.mapTx.end(); ++mi)
+		{
+			const Credits_CTransaction& tx = mi->second.GetTx();
+			if (tx.IsCoinBase() || tx.IsDeposit() || !Credits_IsFinalTx(tx, pindexPrev->nHeight + 1))
+				continue;
 
-			// This vector will be sorted into a priority queue:
-			vector<TxPriority> vecPriority;
-			vecPriority.reserve(credits_mempool.mapTx.size());
-			for (map<uint256, Bitcredit_CTxMemPoolEntry>::iterator mi = credits_mempool.mapTx.begin();
-				 mi != credits_mempool.mapTx.end(); ++mi)
-			{
-				const Credits_CTransaction& tx = mi->second.GetTx();
-				if (tx.IsCoinBase() || tx.IsDeposit() || !Credits_IsFinalTx(tx, pindexPrev->nHeight + 1))
-					continue;
-
-				if(tx.IsStandard()) {
-					COrphan* porphan = NULL;
-					double dPriority = 0;
-					int64_t nTotalIn = 0;
-					bool fMissingInputs = false;
-					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
+			if(tx.IsStandard()) {
+				COrphan* porphan = NULL;
+				double dPriority = 0;
+				int64_t nTotalIn = 0;
+				bool fMissingInputs = false;
+				BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
+				{
+					// Read prev transaction
+					if (!credits_view.Credits_HaveCoins(txin.prevout.hash))
 					{
-						// Read prev transaction
-						if (!credits_view.HaveCoins(txin.prevout.hash))
+						// This should never happen; all transactions in the memory
+						// pool should connect to either transactions in the chain
+						// or other transactions in the memory pool.
+						if (!credits_mempool.mapTx.count(txin.prevout.hash))
 						{
-							// This should never happen; all transactions in the memory
-							// pool should connect to either transactions in the chain
-							// or other transactions in the memory pool.
-							if (!credits_mempool.mapTx.count(txin.prevout.hash))
-							{
-								LogPrintf("ERROR: mempool transaction missing input\n");
-								if (fDebug) assert("mempool transaction missing input" == 0);
-								fMissingInputs = true;
-								if (porphan)
-									vOrphan.pop_back();
-								break;
-							}
-
-							// Has to wait for dependencies
-							if (!porphan)
-							{
-								// Use list for automatic deletion
-								vOrphan.push_back(COrphan(&tx));
-								porphan = &vOrphan.back();
-							}
-							mapDependers[txin.prevout.hash].push_back(porphan);
-							porphan->setDependsOn.insert(txin.prevout.hash);
-							nTotalIn += credits_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
-							continue;
-						}
-						const Bitcredit_CCoins &coins = credits_view.GetCoins(txin.prevout.hash);
-
-						int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
-						nTotalIn += nValueIn;
-
-						const int nConf = pindexPrev->nHeight - coins.nHeight + 1;
-						dPriority += (double)nValueIn * nConf;
-					}
-					if (fMissingInputs) continue;
-
-					// Priority is sum(valuein * age) / modified_txsize
-					unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
-					dPriority = tx.ComputePriority(dPriority, nTxSize);
-
-					// This is a more accurate fee-per-kilobyte than is used by the client code, because the
-					// client code rounds up the size to the nearest 1K. That's good, because it gives an
-					// incentive to create smaller transactions.
-					double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
-
-					if (porphan)
-					{
-						porphan->dPriority = dPriority;
-						porphan->dFeePerKb = dFeePerKb;
-					}
-					else
-						vecPriority.push_back(TxPriority(dPriority, dFeePerKb, &mi->second.GetTx()));
-				} else if(tx.IsClaim()) {
-					//COrphan* porphan = NULL;
-					double dPriority = 0;
-					int64_t nTotalIn = 0;
-					bool fMissingInputs = false;
-					BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
-					{
-						// Read prev transaction
-						if (!claim_viewtmp.HaveCoins(txin.prevout.hash))
-						{
-							// This should never happen; all transactions in the memory
-							// pool should connect to either transactions in the chain
-							// or other transactions in the memory pool.
-	//						if (!bitcoin_mempool.mapTx.count(txin.prevout.hash))
-	//						{
-								LogPrintf("ERROR: transaction missing input\n");
-								if (fDebug) assert("transaction missing input" == 0);
-								fMissingInputs = true;
-	//							if (porphan)
-	//								vOrphan.pop_back();
-								break;
-	//						}
-	//
-	//						// Has to wait for dependencies
-	//						if (!porphan)
-	//						{
-	//							// Use list for automatic deletion
-	//							vOrphan.push_back(COrphan(&tx));
-	//							porphan = &vOrphan.back();
-	//						}
-	//						mapDependers[txin.prevout.hash].push_back(porphan);
-	//						porphan->setDependsOn.insert(txin.prevout.hash);
-	//						nTotalIn += bitcoin_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
-	//						continue;
+							LogPrintf("ERROR: mempool transaction missing input\n");
+							if (fDebug) assert("mempool transaction missing input" == 0);
+							fMissingInputs = true;
+							if (porphan)
+								vOrphan.pop_back();
+							break;
 						}
 
-						const Bitcoin_CClaimCoins &coins = claim_viewtmp.GetCoins(txin.prevout.hash);
+						// Has to wait for dependencies
+						if (!porphan)
+						{
+							// Use list for automatic deletion
+							vOrphan.push_back(COrphan(&tx));
+							porphan = &vOrphan.back();
+						}
+						mapDependers[txin.prevout.hash].push_back(porphan);
+						porphan->setDependsOn.insert(txin.prevout.hash);
+						nTotalIn += credits_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+						continue;
+					}
+					const Credits_CCoins &coins = credits_view.Credits_GetCoins(txin.prevout.hash);
 
-						if(!coins.HasClaimable(txin.prevout.n)) {
+					int64_t nValueIn = coins.vout[txin.prevout.n].nValue;
+					nTotalIn += nValueIn;
+
+					const int nConf = pindexPrev->nHeight - coins.nHeight + 1;
+					dPriority += (double)nValueIn * nConf;
+				}
+				if (fMissingInputs) continue;
+
+				// Priority is sum(valuein * age) / modified_txsize
+				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
+				dPriority = tx.ComputePriority(dPriority, nTxSize);
+
+				// This is a more accurate fee-per-kilobyte than is used by the client code, because the
+				// client code rounds up the size to the nearest 1K. That's good, because it gives an
+				// incentive to create smaller transactions.
+				double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
+
+				if (porphan)
+				{
+					porphan->dPriority = dPriority;
+					porphan->dFeePerKb = dFeePerKb;
+				}
+				else
+					vecPriority.push_back(TxPriority(dPriority, dFeePerKb, &mi->second.GetTx()));
+			} else if(tx.IsClaim()) {
+				//COrphan* porphan = NULL;
+				double dPriority = 0;
+				int64_t nTotalIn = 0;
+				bool fMissingInputs = false;
+				BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
+				{
+					// Read prev transaction
+					if (!credits_view.Claim_HaveCoins(txin.prevout.hash))
+					{
+						// This should never happen; all transactions in the memory
+						// pool should connect to either transactions in the chain
+						// or other transactions in the memory pool.
+//						if (!bitcoin_mempool.mapTx.count(txin.prevout.hash))
+//						{
 							LogPrintf("ERROR: transaction missing input\n");
 							if (fDebug) assert("transaction missing input" == 0);
 							fMissingInputs = true;
-	//							if (porphan)
-	//								vOrphan.pop_back();
+//							if (porphan)
+//								vOrphan.pop_back();
 							break;
-						}
-
-						int64_t nValueIn = coins.vout[txin.prevout.n].nValueClaimable;
-						nTotalIn += nValueIn;
-
-						int nConf = nPrevLinkedHeight - coins.nHeight + 1;
-						dPriority += (double)nValueIn * nConf;
+//						}
+//
+//						// Has to wait for dependencies
+//						if (!porphan)
+//						{
+//							// Use list for automatic deletion
+//							vOrphan.push_back(COrphan(&tx));
+//							porphan = &vOrphan.back();
+//						}
+//						mapDependers[txin.prevout.hash].push_back(porphan);
+//						porphan->setDependsOn.insert(txin.prevout.hash);
+//						nTotalIn += bitcoin_mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+//						continue;
 					}
-					if (fMissingInputs) continue;
 
-					// Priority is sum(valuein * age) / modified_txsize
-					unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
-					dPriority = tx.ComputePriority(dPriority, nTxSize);
+					const Claim_CCoins &coins = credits_view.Claim_GetCoins(txin.prevout.hash);
 
-					// This is a more accurate fee-per-kilobyte than is used by the client code, because the
-					// client code rounds up the size to the nearest 1K. That's good, because it gives an
-					// incentive to create smaller transactions.
-					double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
+					if(!coins.HasClaimable(txin.prevout.n)) {
+						LogPrintf("ERROR: transaction missing input\n");
+						if (fDebug) assert("transaction missing input" == 0);
+						fMissingInputs = true;
+//							if (porphan)
+//								vOrphan.pop_back();
+						break;
+					}
 
-	//				if (porphan)
-	//				{
-	//					porphan->dPriority = dPriority;
-	//					porphan->dFeePerKb = dFeePerKb;
-	//				}
-	//				else
-						vecPriority.push_back(TxPriority(dPriority, dFeePerKb, &mi->second.GetTx()));
+					int64_t nValueIn = coins.vout[txin.prevout.n].nValueClaimable;
+					nTotalIn += nValueIn;
+
+					int nConf = nPrevLinkedHeight - coins.nHeight + 1;
+					dPriority += (double)nValueIn * nConf;
 				}
-			}
+				if (fMissingInputs) continue;
 
-			//Setup the block used for updating the deposit base due to long enough block chain
-			Credits_CBlockIndex* pBlockToTrim = NULL;
-			Credits_CBlock trimBlock;
-			unsigned int currentHeight = pindexPrev->nHeight + 1 ;
-			if(currentHeight > BITCREDIT_DEPOSIT_CUTOFF_DEPTH) {
-				//Find trim block in active chain
-				pBlockToTrim = credits_chainActive[currentHeight - BITCREDIT_DEPOSIT_CUTOFF_DEPTH - 1];
-				// Read block from disk.
-				if (!Credits_ReadBlockFromDisk(trimBlock, pBlockToTrim)) {
-					LogPrintf("Failed to read trim block");
-					return NULL;
-				}
-			}
-			//These two updates the deposit base
-			int64_t nResurrectedDepositBase = 0;
-			int64_t nTrimmedDepositBase = 0;
-
-			// Collect transactions into block
-			uint64_t nBlockSize = 1000;
-			uint64_t nBlockTx = 0;
-			int nBlockSigOps = 100;
-			bool fSortedByFee = (nBlockPrioritySize <= 0);
-
-			TxPriorityCompare comparer(fSortedByFee);
-			std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-
-			int64_t nClaimedCoinsForBlock = 0;
-			while (!vecPriority.empty())
-			{
-				// Take highest priority transaction off the priority queue:
-				double dPriority = vecPriority.front().get<0>();
-				double dFeePerKb = vecPriority.front().get<1>();
-				const Credits_CTransaction& tx = *(vecPriority.front().get<2>());
-
-				std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
-				vecPriority.pop_back();
-
-				// Size limits
+				// Priority is sum(valuein * age) / modified_txsize
 				unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
-				if (nBlockSize + nTxSize >= nBlockMaxSize)
-					continue;
+				dPriority = tx.ComputePriority(dPriority, nTxSize);
 
-				// Legacy limits on sigOps:
-				unsigned int nTxSigOps = Bitcredit_GetLegacySigOpCount(tx);
-				if (nBlockSigOps + nTxSigOps >= BITCREDIT_MAX_BLOCK_SIGOPS)
-					continue;
+				// This is a more accurate fee-per-kilobyte than is used by the client code, because the
+				// client code rounds up the size to the nearest 1K. That's good, because it gives an
+				// incentive to create smaller transactions.
+				double dFeePerKb =  double(nTotalIn-tx.GetValueOut()) / (double(nTxSize)/1000.0);
 
-				// Skip free transactions if we're past the minimum block size:
-				if (fSortedByFee && (dFeePerKb < Credits_CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
-					continue;
-
-				// Prioritize by fee once past the priority size or we run out of high-priority
-				// transactions:
-				if (!fSortedByFee &&
-					((nBlockSize + nTxSize >= nBlockPrioritySize) || !Credits_AllowFree(dPriority)))
-				{
-					fSortedByFee = true;
-					comparer = TxPriorityCompare(fSortedByFee);
-					std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-				}
-
-				int64_t nTxFees = 0;
-				if(tx.IsStandard()) {
-					if (!credits_view.HaveInputs(tx))
-						continue;
-
-					nTxFees = credits_view.GetValueIn(tx)-tx.GetValueOut();
-				} else if(tx.IsClaim()) {
-					if (!claim_viewtmp.HaveInputs(tx))
-						continue;
-
-					nTxFees = claim_viewtmp.GetValueIn(tx)-tx.GetValueOut();
-				}
-
-				nTxSigOps += Bitcredit_GetP2SHSigOpCount(tx, credits_view, claim_viewtmp);
-				if (nBlockSigOps + nTxSigOps >= BITCREDIT_MAX_BLOCK_SIGOPS)
-					continue;
-
-				int64_t nClaimedCoins = 0;
-				// Note that flags: we don't want to set mempool/IsStandard()
-				// policy here, but we still have to ensure that the block we
-				// create only contains transactions that are valid in new blocks.
-				CValidationState state;
-				if (!Credits_CheckInputs(tx, state, credits_view, claim_viewtmp, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
-					continue;
-
-				if(!Bitcredit_CheckClaimsAreInBounds(claim_viewtmp, nClaimedCoinsForBlock + nClaimedCoins, nAcceptHeight)) {
-					continue;
-				}
-				nClaimedCoinsForBlock += nClaimedCoins;
-
-				UpdateResurrectedDepositBase(pBlockToTrim, tx, nResurrectedDepositBase, credits_view);
-
-				Credits_CTxUndo txundoUnused;
-				uint256 hash = tx.GetHash();
-				Bitcredit_UpdateCoins(tx, state, credits_view, claim_viewtmp, txundoUnused, pindexPrev->nHeight+1, hash);
-
-				// Added
-				pblock->vtx.push_back(tx);
-				pblocktemplate->vTxFees.push_back(nTxFees);
-				pblocktemplate->vTxSigOps.push_back(nTxSigOps);
-				nBlockSize += nTxSize;
-				++nBlockTx;
-				nBlockSigOps += nTxSigOps;
-				nFees += nTxFees;
-
-				if (fPrintPriority)
-				{
-					LogPrintf("priority %.1f feeperkb %.1f txid %s\n",
-						   dPriority, dFeePerKb, tx.GetHash().ToString());
-				}
-
-				// Add transactions that depend on this one to the priority queue
-				if (mapDependers.count(hash))
-				{
-					BOOST_FOREACH(COrphan* porphan, mapDependers[hash])
-					{
-						if (!porphan->setDependsOn.empty())
-						{
-							porphan->setDependsOn.erase(hash);
-							if (porphan->setDependsOn.empty())
-							{
-								vecPriority.push_back(TxPriority(porphan->dPriority, porphan->dFeePerKb, porphan->ptx));
-								std::push_heap(vecPriority.begin(), vecPriority.end(), comparer);
-							}
-						}
-					}
-				}
+//				if (porphan)
+//				{
+//					porphan->dPriority = dPriority;
+//					porphan->dFeePerKb = dFeePerKb;
+//				}
+//				else
+					vecPriority.push_back(TxPriority(dPriority, dFeePerKb, &mi->second.GetTx()));
 			}
+		}
 
-			UpdateTrimmedDepositBase(pBlockToTrim, trimBlock, nTrimmedDepositBase, credits_view);
-
-			//These values do not include coinbase and deposit tx. Should they?
-			bitcredit_nLastBlockTx = nBlockTx;
-			bitcredit_nLastBlockSize = nBlockSize;
-			LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
-
-			const uint64_t maxBlockSubsidyIncFee = Bitcredit_GetMaxBlockSubsidy(pindexPrev->nTotalMonetaryBase) + nFees;
-			pblock->vtx[0].vout[0].nValue = maxBlockSubsidyIncFee;
-
-			const uint64_t requiredDepositLevel = Bitcredit_GetRequiredDeposit(pindexPrev->nTotalDepositBase);
-
-			if(!coinbaseDepositDisabled) {
-				uint256 tmpCoinbaseHash(0);
-				// Create deposit tx
-				const int64_t nSubsidy = pblock->vtx[0].vout[0].nValue;
-				Credits_CTransaction txDeposit(TX_TYPE_DEPOSIT);
-				txDeposit.vout.resize(1);
-				txDeposit.vout[0].scriptPubKey = scriptPubKeyDeposit;
-				txDeposit.vout[0].nValue = nSubsidy;
-				txDeposit.vin.resize(1);
-				txDeposit.vin[0] = Credits_CTxIn(COutPoint(tmpCoinbaseHash, 0));
-				txDeposit.signingKeyId = pubKeySigningDeposit.GetID();
-				// Add our deposit tx as second transaction
-				pblock->vtx.insert(pblock->vtx.begin() + 1, txDeposit);
-				pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.begin()+1, 0); // Deposits can not have tx fees
-				pblocktemplate->vTxSigOps.insert(pblocktemplate->vTxSigOps.begin()+1, -1); // updated at end
-				if(!RecalculateCoinbaseDeposit(pblock, tmpCoinbaseHash, keystore, pdepositWallet, coinbaseDepositDisabled)) {
-		            LogPrintf("\n\nERROR! Coinbase deposit could not be recalcualted\n\n");
-					return NULL;
-				}
-				if(!VerifyDepositSignatures("CreateNewBlock", pblock)) {
-		            LogPrintf("\n\nERROR! Deposit signatures could not be verified.\n\n");
-					return NULL;
-				}
-			}
-
-			//If the required deposit level is larger than the subsidy, already generated coins needs to be thrown into the mix
-			if(coinbaseDepositDisabled || requiredDepositLevel > maxBlockSubsidyIncFee) {
-				const uint64_t nRequiredExtraDeposit = requiredDepositLevel - (coinbaseDepositDisabled ? 0 : maxBlockSubsidyIncFee);
-
-				{
-					LOCK(credits_mainState.cs_main);
-
-					//Create a set of deposit txs to choose from
-					vector<const Credits_CWalletTx*> vDepositWalletTxs;
-					pdepositWallet->GetAllWalletTxs(vDepositWalletTxs);
-					LogPrintf("Wallet contains %d transactions\n", vDepositWalletTxs.size());
-
-					vector<Credits_CTransaction> vDepositTxs;
-					BOOST_FOREACH(const Credits_CWalletTx* walletTx, vDepositWalletTxs)
-					{
-						const Credits_CWalletTx &tx = *walletTx;
-
-						//Do some basic sanity checks. Failure should probably
-						//occur here, as it does, since deposit wallet should never contain faulty deposits
-						assert(Credits_IsFinalTx(tx));
-						assert(tx.IsValidDeposit());
-						for (unsigned int i = 0; i < tx.vout.size(); i++) {
-							assert(tx.vout[i].nValue > 0);
-						}
-
-						//Do input verifications here. If validation fails the deposit is skipped instead of failure occurring
-						//The reason is that a deposit wallet could be distributed between several different nodes and
-						//another node may use the deposit in a block. The deposit is not removed form here since the block
-						//may be disconnected through a chain rollback
-						int64_t nClaimedCoins = 0;
-						CValidationState state;
-						if (!Credits_CheckInputs(tx, state, credits_view, claim_viewtmp, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
-							continue;
-
-						vDepositTxs.push_back(tx);
-					}
-					LogPrintf("Found %d deposit transactions available for mining\n", vDepositTxs.size());
-
-					// Choose deposit transactions to use
-					set<const Credits_CTransaction*>  setExtraDepositTxs;
-					if (!SelectDepositTxs(nRequiredExtraDeposit, vDepositTxs, setExtraDepositTxs))
-					{
-						if(coinbaseDepositDisabled) {
-							SelectLargestDepositTxs(nRequiredExtraDeposit, vDepositTxs, setExtraDepositTxs, 10);
-
-							if(setExtraDepositTxs.size() == 0) {
-								LogPrintf("\n\nERROR! No deposits could be found for mining. \n\n");
-								return NULL;
-							}
-						}
-					}
-
-					if(setExtraDepositTxs.size() >= 10) {
-						LogPrintf("\n\nERROR! Too many extra deposits in mining \n\n");
-						return NULL;
-					}
-
-					BOOST_FOREACH(const Credits_CTransaction* tx, setExtraDepositTxs)
-					{
-						//Insert all new deposit transaction at position after coinbase
-						if(pblock->vtx.size() == 1) {
-							pblock->vtx.push_back(*tx);
-							pblocktemplate->vTxFees.push_back(0); // Deposits can not have tx fees
-							pblocktemplate->vTxSigOps.push_back(-1); // updated at end
-						} else {
-							const unsigned int insertAt = 1;
-							pblock->vtx.insert(pblock->vtx.begin() + insertAt, *tx);
-							pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.begin()+insertAt, 0); // Deposits can not have tx fees
-							pblocktemplate->vTxSigOps.insert(pblocktemplate->vTxSigOps.begin()+insertAt, -1); // updated at end
-						}
-					}
-				}
-			}
-
-			const uint64_t nDepositAmount = pblock->GetDepositAmount();
-			if(nDepositAmount == 0) {
-				LogPrintf("\n\nERROR! No deposit has been provided for block. No mining can be done. \n\n");
+		//Setup the block used for updating the deposit base due to long enough block chain
+		Credits_CBlockIndex* pBlockToTrim = NULL;
+		Credits_CBlock trimBlock;
+		unsigned int currentHeight = pindexPrev->nHeight + 1 ;
+		if(currentHeight > BITCREDIT_DEPOSIT_CUTOFF_DEPTH) {
+			//Find trim block in active chain
+			pBlockToTrim = credits_chainActive[currentHeight - BITCREDIT_DEPOSIT_CUTOFF_DEPTH - 1];
+			// Read block from disk.
+			if (!Credits_ReadBlockFromDisk(trimBlock, pBlockToTrim)) {
+				LogPrintf("Failed to read trim block");
 				return NULL;
-			} else if(nDepositAmount < requiredDepositLevel){
-				//This logic determines whether the subsidy needs to be lowered.
-				//When half the monetary base has been mined, a lowered reward is enforced if not enough deposits have been provided.
-				//This is in addition to the higher difficulty that will be enforced on too small deposits as well.
-				const int64_t nAllowedBlockSubsidy = Bitcredit_GetAllowedBlockSubsidy(pindexPrev->nTotalMonetaryBase, nDepositAmount, pindexPrev->nTotalDepositBase);
-				if(nAllowedBlockSubsidy < Bitcredit_GetMaxBlockSubsidy(pindexPrev->nTotalMonetaryBase)) {
-					if(coinbaseDepositDisabled) {
-						//Lower the subsidy since deposit is not high enough
-						pblock->vtx[0].vout[0].nValue = nAllowedBlockSubsidy + nFees;
-					} else {
-						LogPrintf("\n\nERROR! Deposit amount sum must be at least the required level when coinbase as deposit is enabled. Deposit amount is: %d, Required: %d.\n\n", nDepositAmount, requiredDepositLevel);
-						return NULL;
-					}
-				}
-			} else if(nDepositAmount > requiredDepositLevel){
-				//If we have enough for deposit, add rest as change
-				if(!coinbaseDepositDisabled) {
-					const uint256 coinbaseHash = pblock->vtx[0].GetHash();
+			}
+		}
+		//These two updates the deposit base
+		int64_t nResurrectedDepositBase = 0;
+		int64_t nTrimmedDepositBase = 0;
 
-					for (unsigned int i = 1; i < pblock->vtx.size(); i++) {
-						Credits_CTransaction& txDeposit = pblock->vtx[i];
+		// Collect transactions into block
+		uint64_t nBlockSize = 1000;
+		uint64_t nBlockTx = 0;
+		int nBlockSigOps = 100;
+		bool fSortedByFee = (nBlockPrioritySize <= 0);
 
-						if(!txDeposit.IsDeposit()) {
-							break;
-						}
+		TxPriorityCompare comparer(fSortedByFee);
+		std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 
-						if(txDeposit.vin[0].prevout.hash == coinbaseHash) {
-							const int64_t nCoinbaseDepositToChange = nDepositAmount - requiredDepositLevel;
-							const int64_t nCoinbaseDeposit = txDeposit.vout[0].nValue;
+		int64_t nClaimedCoinsForBlock = 0;
+		while (!vecPriority.empty())
+		{
+			// Take highest priority transaction off the priority queue:
+			double dPriority = vecPriority.front().get<0>();
+			double dFeePerKb = vecPriority.front().get<1>();
+			const Credits_CTransaction& tx = *(vecPriority.front().get<2>());
 
-							if(nCoinbaseDepositToChange < nCoinbaseDeposit) {
-								txDeposit.vout.resize(2);
-								txDeposit.vout[0].scriptPubKey = scriptPubKeyDeposit;
-								txDeposit.vout[0].nValue = nCoinbaseDeposit - nCoinbaseDepositToChange;
-								txDeposit.vout[1].scriptPubKey = scriptPubKeyDepositChange;
-								txDeposit.vout[1].nValue = nCoinbaseDepositToChange;
-							}
+			std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
+			vecPriority.pop_back();
 
-							break;
-						}
-					}
+			// Size limits
+			unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, CREDITS_PROTOCOL_VERSION);
+			if (nBlockSize + nTxSize >= nBlockMaxSize)
+				continue;
 
-				}
+			// Legacy limits on sigOps:
+			unsigned int nTxSigOps = Bitcredit_GetLegacySigOpCount(tx);
+			if (nBlockSigOps + nTxSigOps >= BITCREDIT_MAX_BLOCK_SIGOPS)
+				continue;
+
+			// Skip free transactions if we're past the minimum block size:
+			if (fSortedByFee && (dFeePerKb < Credits_CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
+				continue;
+
+			// Prioritize by fee once past the priority size or we run out of high-priority
+			// transactions:
+			if (!fSortedByFee &&
+				((nBlockSize + nTxSize >= nBlockPrioritySize) || !Credits_AllowFree(dPriority)))
+			{
+				fSortedByFee = true;
+				comparer = TxPriorityCompare(fSortedByFee);
+				std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 			}
 
-			// Fill in header
-			pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-			Bitcredit_UpdateTime(*pblock, pindexPrev);
-			pblock->nBits          = Bitcredit_GetNextWorkRequired(pindexPrev, pblock);
-			pblock->nNonce         = 0;
+			int64_t nTxFees = 0;
+			if(tx.IsStandard()) {
+				if (!credits_view.Credits_HaveInputs(tx))
+					continue;
 
-			const int64_t nMonetaryBaseChange = (pblock->vtx[0].vout[0].nValue - nFees) + nClaimedCoinsForBlock;
-			pblock->nTotalMonetaryBase = pindexPrev->nTotalMonetaryBase + nMonetaryBaseChange;
-			pblock->nTotalDepositBase = pindexPrev->nTotalDepositBase + nMonetaryBaseChange - nTrimmedDepositBase + nResurrectedDepositBase;
-			pblock->nDepositAmount = pblock->GetDepositAmount();
-			pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
-        }
-    	TryRemoveDirectory(tmpClaimDirPath);
+				nTxFees = credits_view.Credits_GetValueIn(tx)-tx.GetValueOut();
+			} else if(tx.IsClaim()) {
+				if (!credits_view.Claim_HaveInputs(tx))
+					continue;
+
+				nTxFees = credits_view.Claim_GetValueIn(tx)-tx.GetValueOut();
+			}
+
+			nTxSigOps += Bitcredit_GetP2SHSigOpCount(tx, credits_view);
+			if (nBlockSigOps + nTxSigOps >= BITCREDIT_MAX_BLOCK_SIGOPS)
+				continue;
+
+			int64_t nClaimedCoins = 0;
+			// Note that flags: we don't want to set mempool/IsStandard()
+			// policy here, but we still have to ensure that the block we
+			// create only contains transactions that are valid in new blocks.
+			CValidationState state;
+			if (!Credits_CheckInputs(tx, state, credits_view, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+				continue;
+
+			if(!Bitcredit_CheckClaimsAreInBounds(credits_view, nClaimedCoinsForBlock + nClaimedCoins, nAcceptHeight)) {
+				continue;
+			}
+			nClaimedCoinsForBlock += nClaimedCoins;
+
+			UpdateResurrectedDepositBase(pBlockToTrim, tx, nResurrectedDepositBase, credits_view);
+
+			Credits_CTxUndo txundoUnused;
+			uint256 hash = tx.GetHash();
+			Bitcredit_UpdateCoins(tx, state, credits_view, txundoUnused, pindexPrev->nHeight+1, hash);
+
+			// Added
+			pblock->vtx.push_back(tx);
+			pblocktemplate->vTxFees.push_back(nTxFees);
+			pblocktemplate->vTxSigOps.push_back(nTxSigOps);
+			nBlockSize += nTxSize;
+			++nBlockTx;
+			nBlockSigOps += nTxSigOps;
+			nFees += nTxFees;
+
+			if (fPrintPriority)
+			{
+				LogPrintf("priority %.1f feeperkb %.1f txid %s\n",
+					   dPriority, dFeePerKb, tx.GetHash().ToString());
+			}
+
+			// Add transactions that depend on this one to the priority queue
+			if (mapDependers.count(hash))
+			{
+				BOOST_FOREACH(COrphan* porphan, mapDependers[hash])
+				{
+					if (!porphan->setDependsOn.empty())
+					{
+						porphan->setDependsOn.erase(hash);
+						if (porphan->setDependsOn.empty())
+						{
+							vecPriority.push_back(TxPriority(porphan->dPriority, porphan->dFeePerKb, porphan->ptx));
+							std::push_heap(vecPriority.begin(), vecPriority.end(), comparer);
+						}
+					}
+				}
+			}
+		}
+
+		UpdateTrimmedDepositBase(pBlockToTrim, trimBlock, nTrimmedDepositBase, credits_view);
+
+		//These values do not include coinbase and deposit tx. Should they?
+		bitcredit_nLastBlockTx = nBlockTx;
+		bitcredit_nLastBlockSize = nBlockSize;
+		LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
+
+		const uint64_t maxBlockSubsidyIncFee = Bitcredit_GetMaxBlockSubsidy(pindexPrev->nTotalMonetaryBase) + nFees;
+		pblock->vtx[0].vout[0].nValue = maxBlockSubsidyIncFee;
+
+		const uint64_t requiredDepositLevel = Bitcredit_GetRequiredDeposit(pindexPrev->nTotalDepositBase);
+
+		if(!coinbaseDepositDisabled) {
+			uint256 tmpCoinbaseHash(0);
+			// Create deposit tx
+			const int64_t nSubsidy = pblock->vtx[0].vout[0].nValue;
+			Credits_CTransaction txDeposit(TX_TYPE_DEPOSIT);
+			txDeposit.vout.resize(1);
+			txDeposit.vout[0].scriptPubKey = scriptPubKeyDeposit;
+			txDeposit.vout[0].nValue = nSubsidy;
+			txDeposit.vin.resize(1);
+			txDeposit.vin[0] = Credits_CTxIn(COutPoint(tmpCoinbaseHash, 0));
+			txDeposit.signingKeyId = pubKeySigningDeposit.GetID();
+			// Add our deposit tx as second transaction
+			pblock->vtx.insert(pblock->vtx.begin() + 1, txDeposit);
+			pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.begin()+1, 0); // Deposits can not have tx fees
+			pblocktemplate->vTxSigOps.insert(pblocktemplate->vTxSigOps.begin()+1, -1); // updated at end
+			if(!RecalculateCoinbaseDeposit(pblock, tmpCoinbaseHash, keystore, pdepositWallet, coinbaseDepositDisabled)) {
+				LogPrintf("\n\nERROR! Coinbase deposit could not be recalcualted\n\n");
+				return NULL;
+			}
+			if(!VerifyDepositSignatures("CreateNewBlock", pblock)) {
+				LogPrintf("\n\nERROR! Deposit signatures could not be verified.\n\n");
+				return NULL;
+			}
+		}
+
+		//If the required deposit level is larger than the subsidy, already generated coins needs to be thrown into the mix
+		if(coinbaseDepositDisabled || requiredDepositLevel > maxBlockSubsidyIncFee) {
+			const uint64_t nRequiredExtraDeposit = requiredDepositLevel - (coinbaseDepositDisabled ? 0 : maxBlockSubsidyIncFee);
+
+			{
+				LOCK(credits_mainState.cs_main);
+
+				//Create a set of deposit txs to choose from
+				vector<const Credits_CWalletTx*> vDepositWalletTxs;
+				pdepositWallet->GetAllWalletTxs(vDepositWalletTxs);
+				LogPrintf("Wallet contains %d transactions\n", vDepositWalletTxs.size());
+
+				vector<Credits_CTransaction> vDepositTxs;
+				BOOST_FOREACH(const Credits_CWalletTx* walletTx, vDepositWalletTxs)
+				{
+					const Credits_CWalletTx &tx = *walletTx;
+
+					//Do some basic sanity checks. Failure should probably
+					//occur here, as it does, since deposit wallet should never contain faulty deposits
+					assert(Credits_IsFinalTx(tx));
+					assert(tx.IsValidDeposit());
+					for (unsigned int i = 0; i < tx.vout.size(); i++) {
+						assert(tx.vout[i].nValue > 0);
+					}
+
+					//Do input verifications here. If validation fails the deposit is skipped instead of failure occurring
+					//The reason is that a deposit wallet could be distributed between several different nodes and
+					//another node may use the deposit in a block. The deposit is not removed form here since the block
+					//may be disconnected through a chain rollback
+					int64_t nClaimedCoins = 0;
+					CValidationState state;
+					if (!Credits_CheckInputs(tx, state, credits_view, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS))
+						continue;
+
+					vDepositTxs.push_back(tx);
+				}
+				LogPrintf("Found %d deposit transactions available for mining\n", vDepositTxs.size());
+
+				// Choose deposit transactions to use
+				set<const Credits_CTransaction*>  setExtraDepositTxs;
+				if (!SelectDepositTxs(nRequiredExtraDeposit, vDepositTxs, setExtraDepositTxs))
+				{
+					if(coinbaseDepositDisabled) {
+						SelectLargestDepositTxs(nRequiredExtraDeposit, vDepositTxs, setExtraDepositTxs, 10);
+
+						if(setExtraDepositTxs.size() == 0) {
+							LogPrintf("\n\nERROR! No deposits could be found for mining. \n\n");
+							return NULL;
+						}
+					}
+				}
+
+				if(setExtraDepositTxs.size() >= 10) {
+					LogPrintf("\n\nERROR! Too many extra deposits in mining \n\n");
+					return NULL;
+				}
+
+				BOOST_FOREACH(const Credits_CTransaction* tx, setExtraDepositTxs)
+				{
+					//Insert all new deposit transaction at position after coinbase
+					if(pblock->vtx.size() == 1) {
+						pblock->vtx.push_back(*tx);
+						pblocktemplate->vTxFees.push_back(0); // Deposits can not have tx fees
+						pblocktemplate->vTxSigOps.push_back(-1); // updated at end
+					} else {
+						const unsigned int insertAt = 1;
+						pblock->vtx.insert(pblock->vtx.begin() + insertAt, *tx);
+						pblocktemplate->vTxFees.insert(pblocktemplate->vTxFees.begin()+insertAt, 0); // Deposits can not have tx fees
+						pblocktemplate->vTxSigOps.insert(pblocktemplate->vTxSigOps.begin()+insertAt, -1); // updated at end
+					}
+				}
+			}
+		}
+
+		const uint64_t nDepositAmount = pblock->GetDepositAmount();
+		if(nDepositAmount == 0) {
+			LogPrintf("\n\nERROR! No deposit has been provided for block. No mining can be done. \n\n");
+			return NULL;
+		} else if(nDepositAmount < requiredDepositLevel){
+			//This logic determines whether the subsidy needs to be lowered.
+			//When half the monetary base has been mined, a lowered reward is enforced if not enough deposits have been provided.
+			//This is in addition to the higher difficulty that will be enforced on too small deposits as well.
+			const int64_t nAllowedBlockSubsidy = Bitcredit_GetAllowedBlockSubsidy(pindexPrev->nTotalMonetaryBase, nDepositAmount, pindexPrev->nTotalDepositBase);
+			if(nAllowedBlockSubsidy < Bitcredit_GetMaxBlockSubsidy(pindexPrev->nTotalMonetaryBase)) {
+				if(coinbaseDepositDisabled) {
+					//Lower the subsidy since deposit is not high enough
+					pblock->vtx[0].vout[0].nValue = nAllowedBlockSubsidy + nFees;
+				} else {
+					LogPrintf("\n\nERROR! Deposit amount sum must be at least the required level when coinbase as deposit is enabled. Deposit amount is: %d, Required: %d.\n\n", nDepositAmount, requiredDepositLevel);
+					return NULL;
+				}
+			}
+		} else if(nDepositAmount > requiredDepositLevel){
+			//If we have enough for deposit, add rest as change
+			if(!coinbaseDepositDisabled) {
+				const uint256 coinbaseHash = pblock->vtx[0].GetHash();
+
+				for (unsigned int i = 1; i < pblock->vtx.size(); i++) {
+					Credits_CTransaction& txDeposit = pblock->vtx[i];
+
+					if(!txDeposit.IsDeposit()) {
+						break;
+					}
+
+					if(txDeposit.vin[0].prevout.hash == coinbaseHash) {
+						const int64_t nCoinbaseDepositToChange = nDepositAmount - requiredDepositLevel;
+						const int64_t nCoinbaseDeposit = txDeposit.vout[0].nValue;
+
+						if(nCoinbaseDepositToChange < nCoinbaseDeposit) {
+							txDeposit.vout.resize(2);
+							txDeposit.vout[0].scriptPubKey = scriptPubKeyDeposit;
+							txDeposit.vout[0].nValue = nCoinbaseDeposit - nCoinbaseDepositToChange;
+							txDeposit.vout[1].scriptPubKey = scriptPubKeyDepositChange;
+							txDeposit.vout[1].nValue = nCoinbaseDepositToChange;
+						}
+
+						break;
+					}
+				}
+
+			}
+		}
+
+		// Fill in header
+		pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
+		Bitcredit_UpdateTime(*pblock, pindexPrev);
+		pblock->nBits          = Bitcredit_GetNextWorkRequired(pindexPrev, pblock);
+		pblock->nNonce         = 0;
+
+		const int64_t nMonetaryBaseChange = (pblock->vtx[0].vout[0].nValue - nFees) + nClaimedCoinsForBlock;
+		pblock->nTotalMonetaryBase = pindexPrev->nTotalMonetaryBase + nMonetaryBaseChange;
+		pblock->nTotalDepositBase = pindexPrev->nTotalDepositBase + nMonetaryBaseChange - nTrimmedDepositBase + nResurrectedDepositBase;
+		pblock->nDepositAmount = pblock->GetDepositAmount();
+		pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
         }
 
         const uint256 oldCoinbaseHash = pblock->vtx[0].GetHash();
@@ -996,22 +988,15 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
         indexDummy.pprev = pindexPrev;
         indexDummy.nHeight = pindexPrev->nHeight + 1;
 
-        Credits_CCoinsViewCache credits_viewNew(*bitcredit_pcoinsTip, true);
+		//This is a throw away chainstate db + undo vector
+        Credits_CCoinsViewCache credits_viewNew(*credits_pcoinsTip, true);
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 
-        const boost::filesystem::path tmpClaimDirPath = GetDataDir() / ".tmp" / Bitcoin_GetNewClaimTmpDbId();
-        {
-			//This is a throw away chainstate db + undo vector
-        	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
-			Bitcoin_CClaimCoinsViewDB bitcoin_pclaimcoinsdbviewtmp(tmpClaimDirPath, Bitcoin_GetCoinDBCacheSize(), false, true, false, true);
-			Bitcoin_CClaimCoinsViewCache claim_viewNew(*bitcoin_pclaimCoinsTip, bitcoin_pclaimcoinsdbviewtmp, bitcoin_nClaimCoinCacheFlushSize, true);
-
-			CValidationState state;
-			if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, credits_viewNew, claim_viewNew, false, vBlockUndoClaims, true)) {
-				LogPrintf("\n\nERROR! CreateNewBlock() : ConnectBlock failed when validating new block template. No mining can be done. Miner exiting. \n\n");
-				return NULL;
-			}
-        }
-    	TryRemoveDirectory(tmpClaimDirPath);
+		CValidationState state;
+		if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, credits_viewNew, false, vBlockUndoClaims, true)) {
+			LogPrintf("\n\nERROR! CreateNewBlock() : ConnectBlock failed when validating new block template. No mining can be done. Miner exiting. \n\n");
+			return NULL;
+		}
     }
 
     return pblocktemplate.release();
@@ -1228,7 +1213,7 @@ void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWall
     		continue;
     	}
 
-        if (Bitcredit_Params().NetworkID() != CChainParams::REGTEST) {
+        if (Credits_Params().NetworkID() != CChainParams::REGTEST) {
             // Busy-wait for the network to come online so we don't waste time mining
             // on an obsolete chain. In regtest mode we expect to fly solo.
             while (netParams->vNodes.empty()) {
@@ -1314,7 +1299,7 @@ void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWall
 
                     // In regression test mode, stop mining after a block is found. This
                     // allows developers to controllably generate a block on demand.
-                    if (Bitcredit_Params().NetworkID() == CChainParams::REGTEST)
+                    if (Credits_Params().NetworkID() == CChainParams::REGTEST)
                         throw boost::thread_interrupted();
 
                     break;
@@ -1352,7 +1337,7 @@ void static BitcoinMiner(Credits_CWallet *pwallet, Credits_CWallet* pdepositWall
 
             // Check for stop or if block needs to be rebuilt
             boost::this_thread::interruption_point();
-            if (netParams->vNodes.empty() && Bitcredit_Params().NetworkID() != CChainParams::REGTEST)
+            if (netParams->vNodes.empty() && Credits_Params().NetworkID() != CChainParams::REGTEST)
                 break;
             if (nBlockNonce >= 0xffff0000)
                 break;
@@ -1385,7 +1370,7 @@ void GenerateBitcredits(bool fGenerate, Credits_CWallet* pwallet, Credits_CWalle
     static boost::thread_group* minerThreads = NULL;
 
     if (nThreads < 0) {
-        if (Bitcredit_Params().NetworkID() == CChainParams::REGTEST)
+        if (Credits_Params().NetworkID() == CChainParams::REGTEST)
             nThreads = 1;
         else
             nThreads = boost::thread::hardware_concurrency();

@@ -11,8 +11,6 @@
 #include "core.h"
 #include "sync.h"
 
-#include "bitcoin_claimcoins.h"
-
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int BITCREDIT_MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
@@ -72,7 +70,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(Credits_CCoinsViewCache *pcoins, Bitcoin_CClaimCoinsViewCache *pclaimcoins) const;
+    void check(Credits_CCoinsViewCache *pcoins) const;
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const Bitcredit_CTxMemPoolEntry &entry);
@@ -80,7 +78,7 @@ public:
     void removeConflicts(const Credits_CTransaction &tx, std::list<Credits_CTransaction>& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, Bitcredit_CCoins &coins);
+    void pruneSpent(const uint256& hash, Credits_CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
@@ -101,14 +99,14 @@ public:
 
 /** CCoinsView that brings transactions from a memorypool into view.
     It does not check for spendings by memory pool transactions. */
-class Bitcredit_CCoinsViewMemPool : public Bitcredit_CCoinsViewBacked
+class Credits_CCoinsViewMemPool : public Credits_CCoinsViewBacked
 {
 protected:
     Bitcredit_CTxMemPool &mempool;
 
 public:
-    Bitcredit_CCoinsViewMemPool(Bitcredit_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, Bitcredit_CCoins &coins);
+    Credits_CCoinsViewMemPool(Credits_CCoinsView &baseIn, Bitcredit_CTxMemPool &mempoolIn);
+    bool GetCoins(const uint256 &txid, Credits_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
 };
 

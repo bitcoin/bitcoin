@@ -216,7 +216,7 @@ public:
     void SyncTransaction(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Credits_CTransaction& tx, const Credits_CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const Bitcoin_CWallet *bitcoin_wallet, const uint256 &hash, const Credits_CTransaction& tx, const Credits_CBlock* pblock, bool fUpdate);
     void EraseFromWallet(Credits_CWallet *credits_wallet, const uint256 &hash);
-    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, Credits_CBlockIndex* pindexStart, bool fUpdate = false);
+    int ScanForWalletTransactions(const Bitcoin_CWallet *bitcoin_wallet, Credits_CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions();
     int64_t GetBalance(map<uint256, set<int> >& mapFilterTxInPoints) const;
@@ -229,8 +229,8 @@ public:
     bool CreateTransaction(Credits_CWallet *deposit_wallet, CScript scriptPubKey, int64_t nValue,
                            Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CreateDepositTransaction(Credits_CWallet *deposit_wallet, const std::pair<CScript, int64_t>& vecSend,
-                           Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, const int64_t & nTotalIn, std::string& strFailReason, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view, Bitcoin_CClaimCoinsViewCache &claim_view);
-    bool CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CClaimCoinsViewCache *claim_view, const std::vector<std::pair<CScript, int64_t> >& vecSend,
+                           Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, const int64_t & nTotalIn, std::string& strFailReason, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view);
+    bool CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Credits_CCoinsViewCache *credits_view, const std::vector<std::pair<CScript, int64_t> >& vecSend,
                            Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CommitTransaction(Bitcoin_CWallet *bitcoin_wallet, Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, std::vector<Credits_CReserveKey *> &keyRecipients);
     bool CommitDepositTransaction(Credits_CWallet *credits_wallet, Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, std::vector<Credits_CReserveKey *> &keyRecipients);

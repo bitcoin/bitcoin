@@ -18,7 +18,6 @@
 #include "rpcserver.h"
 #include "txdb.h"
 #include "bitcoin_txdb.h"
-#include "bitcoin_claimtxdb.h"
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
@@ -119,9 +118,8 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
-static Bitcredit_CCoinsViewDB *bitcredit_pcoinsdbview;
+static Credits_CCoinsViewDB *bitcredit_pcoinsdbview;
 static Bitcoin_CCoinsViewDB *bitcoin_pcoinsdbview;
-static Bitcoin_CClaimCoinsViewDB *bitcoin_pclaimcoinsdbview;
 
 void Shutdown()
 {
@@ -171,9 +169,10 @@ void Shutdown()
 #endif
         if (bitcredit_pblocktree)
             bitcredit_pblocktree->Flush();
-        if (bitcredit_pcoinsTip)
-            bitcredit_pcoinsTip->Flush();
-        delete bitcredit_pcoinsTip; bitcredit_pcoinsTip = NULL;
+        if (credits_pcoinsTip) {
+            credits_pcoinsTip->All_Flush();
+        }
+        delete credits_pcoinsTip; credits_pcoinsTip = NULL;
         delete bitcredit_pcoinsdbview; bitcredit_pcoinsdbview = NULL;
         delete bitcredit_pblocktree; bitcredit_pblocktree = NULL;
     }
@@ -217,11 +216,6 @@ void Shutdown()
             bitcoin_pcoinsTip->Flush();
         delete bitcoin_pcoinsTip; bitcoin_pcoinsTip = NULL;
         delete bitcoin_pcoinsdbview; bitcoin_pcoinsdbview = NULL;
-
-        if (bitcoin_pclaimCoinsTip)
-        	bitcoin_pclaimCoinsTip->Flush();
-        delete bitcoin_pclaimCoinsTip; bitcoin_pclaimCoinsTip = NULL;
-        delete bitcoin_pclaimcoinsdbview; bitcoin_pclaimcoinsdbview = NULL;
     }
 
     boost::filesystem::remove(GetPidFile());
@@ -302,7 +296,6 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n";
     strUsage += "  -bind=<addr>           " + _("Bind to given address and always listen on it. Use [host]:port notation for IPv6") + "\n";
     strUsage += "  -bitcoin_bind=<addr>         " + _("Same as above, for bitcoin") + "\n";
-    strUsage += "  -claimtmpdbthreshold=<ip>          " + _("Set the number of bitcoin blocks a claim tip movement should be done without a temporary db. -1 means no tmpdb, memory only. Default -1.") + "\n";
     strUsage += "  -connect=<ip>          " + _("Connect only to the specified node(s)") + "\n";
     strUsage += "  -bitcoin_connect=<ip>          " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -discover              " + _("Discover own IP address (default: 1 when listening and no -externalip)") + "\n";
@@ -346,7 +339,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -disablewallet         " + _("Do not load the wallet and disable wallet RPC calls") + "\n";
     strUsage += "  -paytxfee=<amt>        " + _("Fee per kB to add to transactions you send") + "\n";
     strUsage += "  -bitcoin_paytxfee=<amt>       " + _("Same as above, for bitcoin") + "\n";
-    strUsage += "  -bitcredit_rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
+    strUsage += "  -credits_rescan                " + _("Rescan the block chain for missing wallet transactions") + " " + _("on startup") + "\n";
     strUsage += "  -bitcoin_rescan                " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -salvagewallet         " + _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup") + "\n";
     strUsage += "  -spendzeroconfchange   " + _("Spend unconfirmed change when sending transactions (default: 1)") + "\n";
@@ -355,7 +348,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -credits_wallet=<file>         " + _("Specify wallet file (within data directory)") + " " + _("(default: wallet.dat)") + "\n";
     strUsage += "  -bitcoin_wallet=<file>         " + _("Same as above, for bitcoin") + "\n";
     strUsage += "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n";
-    strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -bitcredit_rescan)") + "\n";
+    strUsage += "  -zapwallettxes         " + _("Clear list of wallet transactions (diagnostic tool; implies -credits_rescan)") + "\n";
 #endif
 
     strUsage += "\n" + _("Debugging/Testing options:") + "\n";
@@ -473,7 +466,7 @@ void Bitcredit_ThreadImport()
         int nFile = 0;
         while (true) {
         	CDiskBlockPos pos(nFile, 0);
-            FILE *file = Bitcredit_OpenBlockFile(pos, true);
+            FILE *file = Credits_OpenBlockFile(pos, true);
             if (!file)
                 break;
             LogPrintf("Credits: Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
@@ -484,7 +477,13 @@ void Bitcredit_ThreadImport()
         credits_mainState.fReindex = false;
         LogPrintf("Credits: Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        Bitcredit_InitBlockIndex();
+        Credits_InitBlockIndex();
+
+        // Remove chainstatecla directory, might linger from older versions of the working directory
+        boost::filesystem::path oldClaimChainstate = GetDataDir() / "bitcoin_chainstatecla";
+        if (boost::filesystem::exists(oldClaimChainstate)) {
+        	boost::filesystem::remove_all(oldClaimChainstate);
+        }
     }
 
     // hardcoded $DATADIR/bitcredit_bootstrap.dat
@@ -789,19 +788,19 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
         nStart = GetTimeMillis();
         do {
             try {
-                Bitcredit_UnloadBlockIndex();
-                delete bitcredit_pcoinsTip;
+                Credits_UnloadBlockIndex();
+                delete credits_pcoinsTip;
                 delete bitcredit_pcoinsdbview;
                 delete bitcredit_pblocktree;
 
                 bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, credits_mainState.fReindex);
-                bitcredit_pcoinsdbview = new Bitcredit_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
-                bitcredit_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
+                bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
+                credits_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
                 if (credits_mainState.fReindex)
                     bitcredit_pblocktree->WriteReindexing(true);
 
-                if (!Bitcredit_LoadBlockIndex()) {
+                if (!Credits_LoadBlockIndex()) {
                     strLoadError = _("Credits: Error loading block database");
                     break;
                 }
@@ -811,11 +810,11 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 if (!credits_mapBlockIndex.empty() && credits_chainActive.Genesis() == NULL)
                     return InitError(_("Credits: Incorrect or no genesis block found. Wrong datadir for network?"));
 
-                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Bitcredit_Params().GenesisBlock().GetHash())
+                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Credits_Params().GenesisBlock().GetHash())
                     return InitError(_("Credits: Genesis block not correct. Unable to start."));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!Bitcredit_InitBlockIndex()) {
+                if (!Credits_InitBlockIndex()) {
                     strLoadError = _("Credits: Error initializing block database");
                     break;
                 }
@@ -827,7 +826,7 @@ bool Bitcredit_InitDbAndCache(int64_t& nStart) {
                 }
 
                 uiInterface.InitMessage(_("Credits: Verifying blocks..."));
-                if (!Bitcredit_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
+                if (!Credits_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
                               GetArg("-checkblocks", 288))) {
                     strLoadError = _("Credits: Corrupted block database detected");
                     break;
@@ -875,8 +874,6 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
     const size_t nCoinDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
     nTotalCache -= nCoinDBCache;
     bitcoin_nCoinCacheSize = nTotalCache / 300; // coins in memory require around 300 bytes
-    //TODO - This size may not be ideal. Since this cache has been added extra it will heighten the total memory usage.
-    const size_t nClaimCoinDBCache = nCoinDBCache;
 
     bool fLoaded = false;
     while (!fLoaded) {
@@ -892,18 +889,12 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 delete bitcoin_pcoinsTip;
                 delete bitcoin_pcoinsdbview;
 
-                delete bitcoin_pclaimCoinsTip;
-                delete bitcoin_pclaimcoinsdbview;
-
                 delete bitcoin_pblocktree;
 
                 bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(nBlockTreeDBCache, false, bitcoin_mainState.fReindex);
 
                 bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(nCoinDBCache, false, bitcoin_mainState.fReindex);
                 bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
-
-                bitcoin_pclaimcoinsdbview = new Bitcoin_CClaimCoinsViewDB(GetDataDir() / "bitcoin_chainstatecla", nClaimCoinDBCache, false, false, false, bitcoin_mainState.fReindex);
-                bitcoin_pclaimCoinsTip = new Bitcoin_CClaimCoinsViewCache(*bitcoin_pclaimcoinsdbview, bitcoin_nClaimCoinCacheFlushSize);
 
                 if (bitcoin_mainState.fReindex)
                     bitcoin_pblocktree->WriteReindexing(true);
@@ -921,6 +912,13 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!Bitcoin_InitBlockIndex()) {
                     strLoadError = _("Bitcoin: Error initializing block database");
+                    break;
+                }
+
+                // If the directory bitcoin_chainstatecla exists, it means we are going from an older (incompatible) version of the working directory
+                boost::filesystem::path oldClaimChainstate = GetDataDir() / "bitcoin_chainstatecla";
+                if (boost::filesystem::exists(oldClaimChainstate)) {
+                    strLoadError = _("Credits: You need to rebuild the database using -reindex when upgrading to this version of the client.");
                     break;
                 }
 
@@ -1039,14 +1037,14 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 
     if (GetBoolArg("-salvagewallet", false)) {
         // Rewrite just private keys: rescan to find transactions
-        if (SoftSetBoolArg("-bitcredit_rescan", true))
-            LogPrintf("AppInit2 : parameter interaction: -salvagewallet=1 -> setting -bitcredit_rescan=1\n");
+        if (SoftSetBoolArg("-credits_rescan", true))
+            LogPrintf("AppInit2 : parameter interaction: -salvagewallet=1 -> setting -credits_rescan=1\n");
     }
 
     // -zapwallettx implies a rescan
     if (GetBoolArg("-zapwallettxes", false)) {
-        if (SoftSetBoolArg("-bitcredit_rescan", true))
-            LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -bitcredit_rescan=1\n");
+        if (SoftSetBoolArg("-credits_rescan", true))
+            LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -credits_rescan=1\n");
     }
 
     // Make sure enough file descriptors are available
@@ -1202,10 +1200,6 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Credits Core is probably already running."), strDataDir));
-
-    const boost::filesystem::path tmpDirPath = GetDataDir() / ".tmp";
-	TryRemoveDirectory(tmpDirPath);
-	TryCreateDirectory(tmpDirPath);
 
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
@@ -1693,7 +1687,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
 //        Bitcredit_RegisterWallet(deposit_pwalletMain);
 //
 //        Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)credits_chainActive.Tip();
-//        if (GetBoolArg("-bitcredit_rescan", false))
+//        if (GetBoolArg("-credits_rescan", false))
 //            pindexRescan = credits_chainActive.Genesis();
 //        else
 //        {
@@ -1803,7 +1797,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         Bitcredit_RegisterWallet(bitcredit_pwalletMain);
 
         Credits_CBlockIndex *pindexRescan = (Credits_CBlockIndex *)credits_chainActive.Tip();
-        if (GetBoolArg("-bitcredit_rescan", false))
+        if (GetBoolArg("-credits_rescan", false))
             pindexRescan = credits_chainActive.Genesis();
         else
         {
@@ -1819,7 +1813,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
             uiInterface.InitMessage(_("Rescanning credits wallet..."));
             LogPrintf("Credits: Rescanning last %i blocks (from block %i)...\n", credits_chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
             nStart = GetTimeMillis();
-            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, bitcoin_pclaimCoinsTip, pindexRescan, true);
+            bitcredit_pwalletMain->ScanForWalletTransactions(bitcoin_pwalletMain, pindexRescan, true);
             LogPrintf("credits rescan      %15dms\n", GetTimeMillis() - nStart);
             bitcredit_pwalletMain->SetBestChain(credits_chainActive.GetLocator());
             bitcredit_bitdb.nWalletDBUpdated++;
@@ -1854,7 +1848,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     // ********************************************************* Step 11: start node
     if (!Bitcoin_CheckDiskSpace())
         return false;
-    if (!Bitcredit_CheckDiskSpace())
+    if (!Credits_CheckDiskSpace())
         return false;
 
     if (!strErrors.str().empty())

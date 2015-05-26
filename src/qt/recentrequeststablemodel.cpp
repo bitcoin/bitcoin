@@ -144,7 +144,7 @@ void Bitcredit_RecentRequestsTableModel::addNewRequest(const Bitcredit_SendCoins
     newEntry.date = QDateTime::currentDateTime();
     newEntry.recipient = recipient;
 
-    CDataStream ss(SER_DISK, Bitcredit_Params().ClientVersion());
+    CDataStream ss(SER_DISK, Credits_Params().ClientVersion());
     ss << newEntry;
 
     if (!walletModel->saveReceiveRequest(recipient.address.toStdString(), newEntry.id, ss.str()))
@@ -157,7 +157,7 @@ void Bitcredit_RecentRequestsTableModel::addNewRequest(const Bitcredit_SendCoins
 void Bitcredit_RecentRequestsTableModel::addNewRequest(const std::string &recipient)
 {
     std::vector<char> data(recipient.begin(), recipient.end());
-    CDataStream ss(data, SER_DISK, Bitcredit_Params().ClientVersion());
+    CDataStream ss(data, SER_DISK, Credits_Params().ClientVersion());
 
     Credits_RecentRequestEntry entry;
     ss >> entry;

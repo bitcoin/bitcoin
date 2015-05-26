@@ -629,7 +629,7 @@ Credits_DBErrors Credits_CWalletDB::LoadWallet(Credits_CWallet* pwallet, uint64_
                     fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
                     if (strType == "tx")
                         // Rescan if there is a bad transaction record:
-                        SoftSetBoolArg("-bitcredit_rescan", true);
+                        SoftSetBoolArg("-credits_rescan", true);
                 }
             }
             if (!strErr.empty())
@@ -807,7 +807,7 @@ bool Credits_CWalletDB::Recover(Credits_CDBEnv& dbenv, std::string filename, boo
     // Call Salvage with fAggressive=true to
     // get as much data as possible.
     // Rewrite salvaged data to wallet.dat
-    // Set -bitcredit_rescan so any missing transactions will be
+    // Set -credits_rescan so any missing transactions will be
     // found.
     int64_t now = GetTime();
     std::string newFilename = strprintf("credits_wallet.%d.bak", now);

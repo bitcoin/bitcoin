@@ -474,9 +474,9 @@ void Bitcoin_CoinControlDialog::updateLabels(Bitcoin_WalletModel *model, Bitcred
     unsigned int nQuantity      = 0;
     int nQuantityUncompressed   = 0;
 
-    Bitcoin_CClaimCoinsViewCache *claim_view = NULL;
+    Credits_CCoinsViewCache *claim_view = NULL;
     if(bitcredit_model != NULL) {
-    	claim_view = bitcoin_pclaimCoinsTip;
+    	claim_view = credits_pcoinsTip;
     }
 
     vector<COutPoint> vCoinControl;
@@ -670,10 +670,10 @@ void Bitcoin_CoinControlDialog::updateView()
 
     int nDisplayUnit = bitcoin_model->getOptionsModel()->getDisplayUnit();
 
-    Bitcoin_CClaimCoinsViewCache *claim_view = NULL;
+    Credits_CCoinsViewCache *claim_view = NULL;
     map<uint256, set<int> > mapClaimTxInPoints;
     if(bitcredit_model != NULL) {
-    	claim_view = bitcoin_pclaimCoinsTip;
+    	claim_view = credits_pcoinsTip;
     	bitcredit_model->wallet->ClaimTxInPoints(mapClaimTxInPoints);
     }
 

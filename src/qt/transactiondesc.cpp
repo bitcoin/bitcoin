@@ -248,7 +248,7 @@ QString Credits_TransactionDesc::toHTML(Credits_CWallet *keyholder_wallet, Credi
         strHTML += "<br>" + tr("Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     } else if (wtx.IsDeposit()) {
     	if(rec->type == Credits_TransactionRecord::Deposit) {
-			quint32 numBlocksToMaturity = Bitcredit_Params().DepositLockDepth();
+			quint32 numBlocksToMaturity = Credits_Params().DepositLockDepth();
 			strHTML += "<br>" + tr("Coins in deposit will be locked for %1 blocks before they can be spent. When you added these coins as a deposit, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to \"not accepted\" and your deposit will be returned to you. This may occasionally happen if another node generates a block within a few seconds of yours.").arg(QString::number(numBlocksToMaturity)) + "<br>";
     	} else {
 			quint32 numBlocksToMaturity = BITCREDIT_COINBASE_MATURITY +  1;
@@ -279,8 +279,8 @@ QString Credits_TransactionDesc::toHTML(Credits_CWallet *keyholder_wallet, Credi
         {
         	COutPoint prevout = txin.prevout;
 
-            Bitcredit_CCoins prev;
-            if(bitcredit_pcoinsTip->GetCoins(prevout.hash, prev))
+            Credits_CCoins prev;
+            if(credits_pcoinsTip->Credits_GetCoins(prevout.hash, prev))
             {
                 if (prevout.n < prev.vout.size())
                 {
