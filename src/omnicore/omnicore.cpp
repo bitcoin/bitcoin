@@ -3342,7 +3342,7 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
   if (count) { return true; } else { return false; }
 }
 
-bool CompareTradePair(const pair<int64_t, Object>& firstJSONObj, const pair<int64_t, Object>& secondJSONObj)
+bool CompareTradePair(const std::pair<int64_t, Object>& firstJSONObj, const std::pair<int64_t, Object>& secondJSONObj)
 {
     return firstJSONObj.first > secondJSONObj.first;
 }
@@ -3415,7 +3415,7 @@ void CMPTradeList::getTradesForMarket(uint32_t market, Array& responseArray)
       vecResponse.push_back(make_pair(blockNum, trade));
   }
   // sort the response most recent first before adding to the array
-  std::stable_sort(vecResponse.begin(), vecResponse.end(), CompareTradePair);
+  std::sort(vecResponse.begin(), vecResponse.end(), CompareTradePair);
   for (std::vector<std::pair<int64_t,Object> >::iterator it = vecResponse.begin(); it != vecResponse.end(); ++it) {
       responseArray.push_back(it->second);
   }
