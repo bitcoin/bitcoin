@@ -396,7 +396,7 @@ Value masternode(const Array& params, bool fHelp)
 
         for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
-            obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       masternodePayments.GetRequiredPaymentsString(nHeight).c_str()));
+            obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       GetRequiredPaymentsString(nHeight).c_str()));
         }
 
         return obj;

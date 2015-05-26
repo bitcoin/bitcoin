@@ -21,7 +21,7 @@ map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
 {
     //check if it's a budget block
-    if(budget.IsBudgetBlock(nBlockHeight)){
+    if(budget.IsBudgetPaymentBlock(nBlockHeight)){
         if(budget.IsTransactionValid(txNew, nBlockHeight)){
             return true;
         }
@@ -34,6 +34,15 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
     }
 
     return false;
+}
+
+std::string GetRequiredPaymentsString(int64_t nBlockHeight)
+{
+    if(budget.IsBudgetPaymentBlock(nBlockHeight)){
+        return budget.GetRequiredPaymentsString(nBlockHeight);
+    } else {
+        return masternodePayments.GetRequiredPaymentsString(nBlockHeight);
+    }
 }
 
 void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -54,7 +63,6 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
-
         LOCK(cs_masternodepayments);
 
         //this is required in litemode
@@ -130,7 +138,7 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
     uint256 blockHash = 0;
-    if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-576)) {
+    if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
         return false;
     }
 
@@ -203,16 +211,14 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
     {
-        if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED){
-            CTxDestination address1;
-            ExtractDestination(payee.scriptPubKey, address1);
-            CBitcoinAddress address2(address1);
+        CTxDestination address1;
+        ExtractDestination(payee.scriptPubKey, address1);
+        CBitcoinAddress address2(address1);
 
-            if(ret != "Unknown"){
-                ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
-            } else {
-                ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
-            }
+        if(ret != "Unknown"){
+            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
+        } else {
+            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
         }
     }
 
@@ -272,7 +278,7 @@ bool CMasternodePaymentWinner::IsValid()
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
-    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight, MIN_MNPAYMENTS_PROTO_VERSION);
+    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, MIN_MNPAYMENTS_PROTO_VERSION);
 
     if(n == -1)
     {
@@ -293,13 +299,12 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
     LOCK(cs_masternodepayments);
 
-
     if(!fMasterNode) return false;
 
     //reference node - hybrid mode
 
     if(!IsReferenceNode(activeMasternode.vin)){
-        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight, MIN_MNPAYMENTS_PROTO_VERSION);
+        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNPAYMENTS_PROTO_VERSION);
 
         if(n == -1)
         {
@@ -330,10 +335,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         newWinner.AddPayee(payee, masternodePayment);
 
     } else {
-        
         CScript payeeSource;
         uint256 hash;
-        if(!GetBlockHash(hash, nBlockHeight-10)) return false;
+        if(!GetBlockHash(hash, nBlockHeight-100)) return false;
         unsigned int nHash;
         memcpy(&nHash, &hash, 2);
 
@@ -353,7 +357,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
             } else {
                 payee = GetScriptForDestination(pmn->pubkey.GetID());
             }
-
+            
             payeeSource = GetScriptForDestination(pmn->pubkey.GetID());
             newWinner.AddPayee(payee, masternodePayment);
             

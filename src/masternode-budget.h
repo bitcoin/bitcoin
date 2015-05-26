@@ -34,13 +34,13 @@ extern std::map<uint256, CBudgetVote> mapMasternodeBudgetVotes;
 extern std::map<uint256, CFinalizedBudgetBroadcast> mapFinalizedBudgets;
 extern std::map<uint256, CFinalizedBudgetVote> mapFinalizedBudgetVotes;
 
-//Amount of blocks in a months period of time (using 2.6 minutes per)
-#define PAYMENT_CYCLE_BLOCKS 16615 //(60*24*30)/2.6
-
 extern CBudgetManager budget;
 
 void DumpBudgets();
 void GetMasternodeBudgetEscrow(CScript& payee);
+
+//Amount of blocks in a months period of time (using 2.6 minutes per)
+int GetBudgetPaymentCycleBlocks();
 
 /** Save Budget Manager (budget.dat)
  */
@@ -93,20 +93,21 @@ public:
     CBudgetProposal *Find(const std::string &strProposalName);
     CFinalizedBudget *Find(uint256 nHash);
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
+
     
     void CleanUp();
 
     int64_t GetTotalBudget();
     std::vector<CBudgetProposal*> GetBudget();
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
-    bool IsBudgetPaymentBlock(int nHeight);
+    bool IsBudgetPaymentBlock(int nBlockHeight);
     void AddProposal(CBudgetProposal& prop);
     void UpdateProposal(CBudgetVote& vote);
     void AddFinalizedBudget(CFinalizedBudget& prop);
     void UpdateFinalizedBudget(CFinalizedBudgetVote& vote);
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool IsBudgetBlock(int nBlockHeight);
+    std::string GetRequiredPaymentsString(int64_t nBlockHeight);
 
     void Clear(){
         printf("Not implemented\n");
@@ -169,6 +170,13 @@ public:
     std::string GetSubmittedBy() {return vin.prevout.ToStringShort();}
     int GetVoteCount() {return (int)mapVotes.size();}
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
+    uint256 GetProposalByBlock(int64_t nBlockHeight)
+    {
+        int i = nBlockHeight - GetBlockStart();
+        if(i < 0) return 0;
+        if(i > (int)vecProposals.size()-1) return 0;
+        return vecProposals[i];
+    }
 
     uint256 GetHash(){
         /* 
