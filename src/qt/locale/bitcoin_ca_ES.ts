@@ -1137,10 +1137,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Balanç total actual en adreces de només lectura</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>Fora de sincronia</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

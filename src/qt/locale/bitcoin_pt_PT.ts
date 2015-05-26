@@ -1138,10 +1138,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Saldo disponivél em enderços modo-verificação</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>fora de sincronia</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

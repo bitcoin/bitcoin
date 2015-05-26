@@ -1025,11 +1025,7 @@
         <source>Your current balance in watch-only addresses</source>
         <translation>모니터링 지갑의 현재 잔액</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>동기화 필요</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

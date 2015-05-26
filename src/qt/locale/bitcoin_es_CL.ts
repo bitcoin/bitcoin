@@ -582,11 +582,7 @@
         <source>Total:</source>
         <translation>Total:</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>desincronizado</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

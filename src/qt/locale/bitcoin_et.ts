@@ -755,11 +755,7 @@
         <source>Recent transactions</source>
         <translation>Hiljutised tehingud</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>sünkimata</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

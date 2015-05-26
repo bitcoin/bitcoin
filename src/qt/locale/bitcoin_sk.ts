@@ -1081,11 +1081,7 @@
         <source>Recent transactions</source>
         <translation>Nedávne transakcie</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nesynchronizované</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

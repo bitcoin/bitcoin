@@ -757,11 +757,7 @@
         <source>Your current total balance</source>
         <translation>تراز کل فعلی شما</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>ناهمگام</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
