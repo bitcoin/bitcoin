@@ -1208,10 +1208,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <source>Current total balance in watch-only addresses</source>
         <translation>Saldo corrente totale negli indirizzi di sola lettura</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>non sincronizzato</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

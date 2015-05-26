@@ -981,11 +981,7 @@
         <source>Your current total balance</source>
         <translation>თქვენი სრული მიმდინარე ბალანსი</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>არ არის სინქრონიზებული</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

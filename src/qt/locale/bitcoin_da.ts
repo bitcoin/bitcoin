@@ -1211,10 +1211,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nuværende totalsaldo på kigge-adresser</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>ikke synkroniseret</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -2922,7 +2918,7 @@
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Ønsker du at genbygge blokdatabasen nu?</translation>
+        <translation>Ønsker du at genopbygge blokdatabasen nu?</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3162,7 +3158,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
-        <translation>Du er nødt til at genbygge databasen ved hjælp af -reindex for at gå tilbage til ikke-beskåret tilstand. Dette vil downloade hele blokkæden igen</translation>
+        <translation>Du er nødt til at genopbygge databasen ved hjælp af -reindex for at gå tilbage til ikke-beskåret tilstand. Dette vil downloade hele blokkæden igen</translation>
     </message>
     <message>
         <source>(default: %u)</source>
@@ -3279,6 +3275,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Slør tilfældigt 1 ud af hver &lt;n&gt; netværksbeskeder</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Genopbyg blokkædeindeks fra nuværende blk000??.dat-filer ved opstart</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

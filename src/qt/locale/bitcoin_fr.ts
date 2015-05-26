@@ -1207,10 +1207,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Solde total actuel dans des adresses juste-regarder</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>désynchronisé</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -3271,6 +3267,10 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Tester aléatoirement 1 message du réseau sur &lt;n&gt;</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Reconstruire au démarrage l'index de la chaîne de blocs à partir des fichiers blk000??.dat actuels</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

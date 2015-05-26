@@ -949,11 +949,7 @@
         <source>Your current total balance</source>
         <translation>via aktuala totala saldo</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nesinkronigita</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

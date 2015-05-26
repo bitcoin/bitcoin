@@ -1073,10 +1073,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>המאזן הכולל הנוכחי בכתובות לצפייה בלבד</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>לא בסנכרון</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

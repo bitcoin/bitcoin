@@ -1001,11 +1001,7 @@
         <source>Recent transactions</source>
         <translation>A legutóbbi tranzakciók</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>Nincs szinkronban.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

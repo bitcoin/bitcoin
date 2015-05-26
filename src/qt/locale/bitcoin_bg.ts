@@ -1009,11 +1009,7 @@
         <source>Recent transactions</source>
         <translation>Скорошни транзакции</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>несинхронизиран</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

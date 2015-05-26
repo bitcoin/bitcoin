@@ -440,7 +440,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 позаду</translation>
+        <translation>%1 тому</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -1123,7 +1123,7 @@
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation>Недавні транзакції</translation>
+        <translation>Останні транзакції</translation>
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
@@ -1136,10 +1136,6 @@
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Поточний сукупний баланс в адресах для спостереження</translation>
-    </message>
-    <message>
-        <source>out of sync</source>
-        <translation>не синхронізовано</translation>
     </message>
 </context>
 <context>

@@ -1207,10 +1207,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Huidige balans in alleen-bekijkbare adressen.</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>niet gesynchroniseerd</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

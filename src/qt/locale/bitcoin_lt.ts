@@ -737,11 +737,7 @@
         <source>Your current total balance</source>
         <translation>Jūsų balansas</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nesinchronizuota</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
