@@ -58,6 +58,7 @@ CWallet* pwalletMain = NULL;
 int nWalletBackups = 10;
 #endif
 bool fFeeEstimatesInitialized = false;
+bool wallet_restart = false;  // true: restarted false: shutdown
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -146,6 +147,7 @@ static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 /** Preparing steps before restarting the wallet */
 void Prepare_Restart()
 {
+    wallet_restart = true; // we're restarting the wallet, so skip shutdown later in the process
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
@@ -206,62 +208,64 @@ void Prepare_Restart()
 
 void Shutdown()
 {
-    LogPrintf("%s: In progress...\n", __func__);
-    static CCriticalSection cs_Shutdown;
-    TRY_LOCK(cs_Shutdown, lockShutdown);
-    if (!lockShutdown)
-        return;
+    if(!wallet_restart){ // most of shutdown is already done when we're restarting the wallet
+        LogPrintf("%s: In progress...\n", __func__);
+        static CCriticalSection cs_Shutdown;
+        TRY_LOCK(cs_Shutdown, lockShutdown);
+        if (!lockShutdown)
+            return;
 
-    /// Note: Shutdown() must be able to handle cases in which AppInit2() failed part of the way,
-    /// for example if the data directory was found to be locked.
-    /// Be sure that anything that writes files or flushes caches only does this if the respective
-    /// module was initialized.
-    RenameThread("dash-shutoff");
-    mempool.AddTransactionsUpdated(1);
-    StopRPCThreads();
+        /// Note: Shutdown() must be able to handle cases in which AppInit2() failed part of the way,
+        /// for example if the data directory was found to be locked.
+        /// Be sure that anything that writes files or flushes caches only does this if the respective
+        /// module was initialized.
+        RenameThread("dash-shutoff");
+        mempool.AddTransactionsUpdated(1);
+        StopRPCThreads();
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        bitdb.Flush(false);
-    GenerateBitcoins(false, NULL, 0);
+        if (pwalletMain)
+            bitdb.Flush(false);
+        GenerateBitcoins(false, NULL, 0);
 #endif
-    StopNode();
-    DumpMasternodes();
-    DumpBudgets();
-    UnregisterNodeSignals(GetNodeSignals());
+        StopNode();
+        DumpMasternodes();
+        DumpBudgets();
+        UnregisterNodeSignals(GetNodeSignals());
 
-    if (fFeeEstimatesInitialized)
-    {
-        boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-        CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
-        if (!est_fileout.IsNull())
-            mempool.WriteFeeEstimates(est_fileout);
-        else
-            LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
-        fFeeEstimatesInitialized = false;
-    }
-
-    {
-        LOCK(cs_main);
-        if (pcoinsTip != NULL) {
-            FlushStateToDisk();
+        if (fFeeEstimatesInitialized)
+        {
+            boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
+            CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
+            if (!est_fileout.IsNull())
+                mempool.WriteFeeEstimates(est_fileout);
+            else
+                LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
+            fFeeEstimatesInitialized = false;
         }
-        delete pcoinsTip;
-        pcoinsTip = NULL;
-        delete pcoinscatcher;
-        pcoinscatcher = NULL;
-        delete pcoinsdbview;
-        pcoinsdbview = NULL;
-        delete pblocktree;
-        pblocktree = NULL;
-    }
+
+        {
+            LOCK(cs_main);
+            if (pcoinsTip != NULL) {
+                FlushStateToDisk();
+            }
+            delete pcoinsTip;
+            pcoinsTip = NULL;
+            delete pcoinscatcher;
+            pcoinscatcher = NULL;
+            delete pcoinsdbview;
+            pcoinsdbview = NULL;
+            delete pblocktree;
+            pblocktree = NULL;
+        }
 #ifdef ENABLE_WALLET
-    if (pwalletMain)
-        bitdb.Flush(true);
+        if (pwalletMain)
+            bitdb.Flush(true);
 #endif
 #ifndef WIN32
-    boost::filesystem::remove(GetPidFile());
+        boost::filesystem::remove(GetPidFile());
 #endif
-    UnregisterAllValidationInterfaces();
+        UnregisterAllValidationInterfaces();
+    } // skipped during a restart because it's already done
 #ifdef ENABLE_WALLET
     delete pwalletMain;
     pwalletMain = NULL;
