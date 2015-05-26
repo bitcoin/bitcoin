@@ -3342,11 +3342,17 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
   if (count) { return true; } else { return false; }
 }
 
+bool CompareTradePair(const pair<int64_t, Object>& firstJSONObj, const pair<int64_t, Object>& secondJSONObj)
+{
+    return firstJSONObj.first > secondJSONObj.first;
+}
+
 // obtains a vector of txids for trades using the supplied pair of property IDs
 void CMPTradeList::getTradesForMarket(uint32_t market, Array& responseArray)
 {
   if (!pdb) return;
   leveldb::Iterator* it = NewIterator();
+  std::vector<std::pair<int64_t,Object> > vecResponse;
   for(it->SeekToFirst(); it->Valid(); it->Next()) {
       std::string strKey = it->key().ToString();
       std::string strValue = it->value().ToString();
@@ -3406,7 +3412,12 @@ void CMPTradeList::getTradesForMarket(uint32_t market, Array& responseArray)
       } else {
           trade.push_back(Pair("amountsold", FormatIndivisibleMP(amountSold))); // always sPT
       }
-      responseArray.push_back(trade);
+      vecResponse.push_back(make_pair(blockNum, trade));
+  }
+  // sort the response most recent first before adding to the array
+  std::stable_sort(vecResponse.begin(), vecResponse.end(), CompareTradePair);
+  for (std::vector<std::pair<int64_t,Object> >::iterator it = vecResponse.begin(); it != vecResponse.end(); ++it) {
+      responseArray.push_back(it->second);
   }
   delete it;
 }
