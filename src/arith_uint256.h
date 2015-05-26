@@ -6,6 +6,7 @@
 #ifndef BITCOIN_ARITH_UINT256_H
 #define BITCOIN_ARITH_UINT256_H
 
+#include <algorithm>
 #include <assert.h>
 #include <cstring>
 #include <stdexcept>
@@ -24,6 +25,9 @@ public:
 template<unsigned int BITS>
 class base_uint
 {
+    template <unsigned int B>
+    friend class base_uint;
+
 protected:
     enum { WIDTH=BITS/32 };
     uint32_t pn[WIDTH];
@@ -39,6 +43,15 @@ public:
     {
         for (int i = 0; i < WIDTH; i++)
             pn[i] = b.pn[i];
+    }
+
+    template<unsigned int B>
+    static base_uint from_other_size(const base_uint<B>& b)
+    {
+        base_uint ret;
+        for (int i = 0; i < std::min((int)WIDTH, (int)b.WIDTH); i++)
+            ret.pn[i] = b.pn[i];
+        return ret;
     }
 
     base_uint& operator=(const base_uint& b)
@@ -282,6 +295,12 @@ public:
 
     friend uint256 ArithToUint256(const arith_uint256 &);
     friend arith_uint256 UintToArith256(const uint256 &);
+};
+
+class arith_uint512 : public base_uint<512> {
+public:
+    arith_uint512() {}
+    arith_uint512(const base_uint<512>& b) : base_uint<512>(b) {}
 };
 
 uint256 ArithToUint256(const arith_uint256 &);

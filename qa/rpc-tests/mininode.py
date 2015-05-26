@@ -110,6 +110,20 @@ def uint256_from_compact(c):
     return v
 
 
+def compact_from_uint256(v):
+    nbytes = (v.bit_length() + 7) / 8;
+    c = 0
+    if nbytes <= 3:
+        c = (v & 0xFFFFFFFF) << (8 * (3 - nbytes))
+    else:
+        c = v >> 8 * (nbytes - 3)
+    if c & 0x00800000:
+        c >>= 8
+        nbytes += 1
+    c |= nbytes << 24
+    return c
+
+
 def deser_vector(f, c):
     nit = struct.unpack("<B", f.read(1))[0]
     if nit == 253:
