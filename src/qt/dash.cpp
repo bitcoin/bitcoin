@@ -292,8 +292,6 @@ void BitcoinCore::restart(QStringList args)
         qDebug() << __func__ << ": Shutdown finished";
         emit shutdownResult(1);
         CExplicitNetCleanup::callCleanup();
-
-        boost::this_thread::sleep( boost::posix_time::seconds(1));
         QProcess::startDetached(QApplication::applicationFilePath(), args);
         qDebug() << __func__ << ": Restart initiated...";
         QCoreApplication::quit();
