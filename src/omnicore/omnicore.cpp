@@ -3343,7 +3343,7 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
 }
 
 // obtains a vector of txids for trades using the supplied pair of property IDs
-void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, std::vector<uint256>* vecTransactions)
+void CMPTradeList::getTradesForMarket(uint32_t market, Array& responseArray)
 {
   if (!pdb) return;
   leveldb::Iterator* it = NewIterator();
@@ -3352,7 +3352,11 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       std::string strValue = it->value().ToString();
       std::vector<std::string> vecKeys;
       std::vector<std::string> vecValues;
-      uint256 txid = 0;
+      uint256 buyerTxid = 0, sellerTxid = 0;
+      int64_t amountPaid = 0, amountSold = 0;
+      std::string buyerAddress, sellerAddress;
+      bool marketDivisible = isPropertyDivisible(market);
+      rational_t unitPrice(int128_t(0));
       boost::split(vecKeys, strKey, boost::is_any_of("+"), token_compress_on);
       if (vecKeys.size() != 2) {
           PrintToLog("TRADEDB error - unexpected number of tokens in key (%s)\n", strKey);
@@ -3365,13 +3369,44 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       }
       uint32_t tradePropertyIdSideA = boost::lexical_cast<uint32_t>(vecValues[2]);
       uint32_t tradePropertyIdSideB = boost::lexical_cast<uint32_t>(vecValues[3]);
-      if ((tradePropertyIdSideA == propertyIdSideA && tradePropertyIdSideB == propertyIdSideB) ||
-          (tradePropertyIdSideA == propertyIdSideB && tradePropertyIdSideB == propertyIdSideA)) {
-          txid.SetHex(vecKeys[0]);
-          if (std::find(vecTransactions->begin(), vecTransactions->end(), txid) == vecTransactions->end()) vecTransactions->push_back(txid);
-          txid.SetHex(vecKeys[1]);
-          if (std::find(vecTransactions->begin(), vecTransactions->end(), txid) == vecTransactions->end()) vecTransactions->push_back(txid);
+      if (tradePropertyIdSideA != market && tradePropertyIdSideB != market) continue;
+
+      if (tradePropertyIdSideA == market) {
+          sellerTxid.SetHex(vecKeys[1]);
+          sellerAddress = vecValues[1];
+          amountSold = boost::lexical_cast<int64_t>(vecValues[4]);
+          buyerTxid.SetHex(vecKeys[0]);
+          buyerAddress = vecValues[0];
+          amountPaid = boost::lexical_cast<int64_t>(vecValues[5]);
+      } else if (tradePropertyIdSideB == market) {
+          sellerTxid.SetHex(vecKeys[0]);
+          sellerAddress = vecValues[0];
+          amountSold = boost::lexical_cast<int64_t>(vecValues[5]);
+          buyerTxid.SetHex(vecKeys[1]);
+          buyerAddress = vecValues[1];
+          amountPaid = boost::lexical_cast<int64_t>(vecValues[4]);
       }
+
+      unitPrice = rational_t(amountPaid, amountSold);
+      if (!marketDivisible) unitPrice = unitPrice / COIN;
+      std::string unitPriceStr = xToString(unitPrice);
+
+      int64_t blockNum = boost::lexical_cast<int64_t>(vecValues[6]);
+
+      Object trade;
+      trade.push_back(Pair("block", blockNum));
+      trade.push_back(Pair("unitprice", unitPriceStr));
+      trade.push_back(Pair("buyertxid", buyerTxid.GetHex()));
+      trade.push_back(Pair("buyeraddress", buyerAddress));
+      trade.push_back(Pair("amountpaid", FormatDivisibleMP(amountPaid))); // always MSC/TMSC
+      trade.push_back(Pair("sellertxid", sellerTxid.GetHex()));
+      trade.push_back(Pair("selleraddress", sellerAddress));
+      if (marketDivisible) {
+          trade.push_back(Pair("amountsold", FormatDivisibleMP(amountSold))); // always SPT
+      } else {
+          trade.push_back(Pair("amountsold", FormatIndivisibleMP(amountSold))); // always sPT
+      }
+      responseArray.push_back(trade);
   }
   delete it;
 }

@@ -109,8 +109,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gettradessince_MP", 0 },
     { "gettradessince_MP", 1 },
     { "gettradessince_MP", 2 },
-    { "gettradehistory_MP", 1 },
-    { "gettradehistory_MP", 2 },
+    { "gettradehistoryforaddress_OMNI", 1 },
+    { "gettradehistoryforaddress_OMNI", 2 },
+    { "gettradehistoryformarket_OMNI", 0 },
+    { "gettradehistoryformarket_OMNI", 1 },
     // omni_rpctx
     { "send_OMNI", 2 },
     { "sendsto_OMNI", 1 },

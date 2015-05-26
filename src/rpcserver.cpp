@@ -367,7 +367,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer",   "getorderbook_MP",                 &getorderbook_MP,                 false,  false,  true },
     { "omni layer",   "gettradessince_MP",               &gettradessince_MP,               false,  false,  true },
     { "omni layer",   "gettradehistoryforaddress_OMNI",  &gettradehistoryforaddress_OMNI,  false,  false,  true },
-    { "omni layer",   "gettradehistoryforpair_OMNI",     &gettradehistoryforpair_OMNI,     false,  false,  true },
+    { "omni layer",   "gettradehistoryformarket_OMNI",   &gettradehistoryformarket_OMNI,   false,  false,  true },
     { "omni layer",   "gettrade_MP",                     &gettrade_MP,                     false,  false,  true },
     { "hidden",       "trade_MP",                        &trade_MP,                        false,  false,  true }, // depreciated
     { "omni layer",   "sendtrade_OMNI",                  &sendtrade_OMNI,                  false,  false,  true },
