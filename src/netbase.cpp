@@ -1222,7 +1222,7 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
                     n += astartofs*8;
                     // Clear bits [n..127]
                     for (; n < 128; ++n)
-                        netmask[n>>3] &= ~(1<<(n&7));
+                        netmask[n>>3] &= ~(1<<(7-(n&7)));
                 }
                 else
                 {
@@ -1249,6 +1249,10 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
     {
         valid = false;
     }
+
+    // Normalize network according to netmask
+    for(int x=0; x<16; ++x)
+        network.ip[x] &= netmask[x];
 }
 
 bool CSubNet::Match(const CNetAddr &addr) const
