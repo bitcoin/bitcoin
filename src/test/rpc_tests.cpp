@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK_EQUAL(write_string(ValueFromAmount(50000000LL), false), "0.50000000");
     BOOST_CHECK_EQUAL(write_string(ValueFromAmount(89898989LL), false), "0.89898989");
     BOOST_CHECK_EQUAL(write_string(ValueFromAmount(100000000LL), false), "1.00000000");
-    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(2099999999999990LL), false), "20999999.99999990");
-    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(2099999999999999LL), false), "20999999.99999999");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(2099999997600000LL), false), "20999999.97600000");
+    BOOST_CHECK_EQUAL(write_string(ValueFromAmount(2099999997680000LL), false), "20999999.97680000");
 }
 
 static Value ValueFromString(const std::string &str)
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.50000000")), 50000000LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.89898989")), 89898989LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("1.00000000")), 100000000LL);
-    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.9999999")), 2099999999999990LL);
-    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.99999999")), 2099999999999999LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.976")), 2099999997600000LL);
+    BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.9768")), 2099999997680000LL);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
