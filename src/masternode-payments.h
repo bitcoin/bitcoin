@@ -27,6 +27,7 @@ static const int MIN_MNPAYMENTS_PROTO_VERSION = 70066;
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool IsReferenceNode(CTxIn& vin);
 bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight);
+std::string GetRequiredPaymentsString(int64_t nBlockHeight);
 
 class CMasternodePayee : public CTxOut
 {
@@ -37,11 +38,11 @@ public:
         scriptPubKey = CScript();
         nValue = 0;
         nVotes = 0;
-    }
+    } 
 
-    CMasternodePayee(CAmount nValue, CScript payee) {
+    CMasternodePayee(CAmount nValueIn, CScript payee) {
         scriptPubKey = payee;
-        nValue = nValue;
+        nValue = nValueIn;
         nVotes = 0;
     }
 };

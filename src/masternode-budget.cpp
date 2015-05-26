@@ -19,6 +19,13 @@ std::map<uint256, CBudgetVote> mapMasternodeBudgetVotes;
 std::map<uint256, CFinalizedBudgetBroadcast> mapFinalizedBudgets;
 std::map<uint256, CFinalizedBudgetVote> mapFinalizedBudgetVotes;
 
+int GetBudgetPaymentCycleBlocks(){
+    if(Params().NetworkID() == CBaseChainParams::MAIN) return 16616; //(60*24*30)/2.6
+
+    //for testing purposes
+    return 50;
+}
+
 //
 // CBudgetDB
 //
@@ -245,9 +252,9 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(CTxIn vinIn, std::string strP
 
     nBlockStart = nBlockStartIn;
 
-    int nCycleStart = (nBlockStart-(nBlockStart % PAYMENT_CYCLE_BLOCKS));
+    int nCycleStart = (nBlockStart-(nBlockStart % GetBudgetPaymentCycleBlocks()));
     //calculate the end of the cycle for this vote, add half a cycle (vote will be deleted after that block)
-    nBlockEnd = nCycleStart + (PAYMENT_CYCLE_BLOCKS*nPaymentCount) + PAYMENT_CYCLE_BLOCKS/2;
+    nBlockEnd = nCycleStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount) + GetBudgetPaymentCycleBlocks()/2;
 
     address = addressIn;
     nAmount = nAmountIn;
@@ -288,7 +295,7 @@ bool CBudgetProposal::IsValid()
     if(pindexPrev->nHeight - nBlockStart < 0) return false;
     if(pindexPrev->nHeight > nBlockEnd) return false;
 
-    if(nBlockEnd - PAYMENT_CYCLE_BLOCKS <= nBlockStart) return false;
+    if(nBlockEnd - GetBudgetPaymentCycleBlocks() <= nBlockStart) return false;
 
     return true;
 }
@@ -528,8 +535,7 @@ void CBudgetManager::UpdateProposal(CBudgetVote& vote)
 {
     LOCK(cs);
     if(!mapProposals.count(vote.nProposalHash)){
-        //LogPrintf("Unknown proposal %d\n", vote.nProposalHash);
-        //should prob ask for it
+        LogPrintf("ERROR : Unknown proposal %d\n", vote.nProposalHash.ToString().c_str());
     	return;
     }
 
@@ -613,7 +619,7 @@ int CBudgetProposal::GetBlockStartCycle()
 {
     //end block is half way through the next cycle (so the proposal will be removed much after the payment is sent)
 
-    return (nBlockStart-(nBlockStart % PAYMENT_CYCLE_BLOCKS));
+    return (nBlockStart-(nBlockStart % GetBudgetPaymentCycleBlocks()));
 }
 
 int CBudgetProposal::GetBlockCurrentCycle()
@@ -623,35 +629,24 @@ int CBudgetProposal::GetBlockCurrentCycle()
 
     if(pindexPrev->nHeight >= GetBlockEndCycle()) return -1;
 
-    return (pindexPrev->nHeight-(pindexPrev->nHeight % PAYMENT_CYCLE_BLOCKS));
+    return (pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks()));
 }
 
 int CBudgetProposal::GetBlockEndCycle()
 {
     //end block is half way through the next cycle (so the proposal will be removed much after the payment is sent)
 
-    return nBlockEnd-(PAYMENT_CYCLE_BLOCKS/2);
+    return nBlockEnd-(GetBudgetPaymentCycleBlocks()/2);
 }
 
 int CBudgetProposal::GetPaymentCountTotal()
 {
-    return (GetBlockEndCycle()-GetBlockStartCycle())/PAYMENT_CYCLE_BLOCKS;
+    return (GetBlockEndCycle()-GetBlockStartCycle())/GetBudgetPaymentCycleBlocks();
 }
 
 int CBudgetProposal::GetPaymentCountLeft()
 {
-    return (GetBlockEndCycle()-GetBlockCurrentCycle())/PAYMENT_CYCLE_BLOCKS;
-}
-
-bool CBudgetManager::IsBudgetPaymentBlock(int nHeight)
-{
-    if(nHeight > 158000+((576*30)*15)) return (nHeight % 7) == 0  ; // 417200 - 57.5% - 2016-02-08 -- 12.5% of blocks
-    if(nHeight > 158000+((576*30)*13)) return (nHeight % 10) == 0 ; // 382640 - 55.0% - 2015-12-07  -- 10.0% of blocks
-    if(nHeight > 158000+((576*30)*11)) return (nHeight % 13) == 0 ; // 348080 - 52.5% - 2015-10-05 -- 7.5 of blocks
-    if(nHeight > 158000+((576*30)* 9)) return (nHeight % 20) == 0 ; // 313520 - 50.0% - 2015-08-03 -- 5.0% of blocks
-    if(nHeight > 158000+((576*30)* 7)) return (nHeight % 40) == 0 ; // 278960 - 47.5% - 2015-06-01 -- 2.5% of blocks
-
-    return false;
+    return (GetBlockEndCycle()-GetBlockCurrentCycle())/GetBudgetPaymentCycleBlocks();
 }
 
 int64_t CBudgetManager::GetTotalBudget()
@@ -831,10 +826,11 @@ CFinalizedBudget *CBudgetManager::Find(uint256 nHash)
 
 bool CBudgetManager::PropExists(uint256 nHash)
 {
-    return mapProposals.count(nHash);
+    if(mapProposals.count(nHash)) return true;
+    return false;
 }
 
-bool CBudgetManager::IsBudgetBlock(int nBlockHeight){    
+bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight){    
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {   
@@ -966,8 +962,7 @@ bool CFinalizedBudgetBroadcast::SignatureValid()
 bool CFinalizedBudget::IsValid()
 {
     //must be the correct block for payment to happen (once a month)
-    if(nBlockStart % PAYMENT_CYCLE_BLOCKS != 0) return false;
-
+    if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) return false;
     if(GetBlockEnd() - nBlockStart > 100) return false;
 
     //make sure all prop names exist
@@ -1073,7 +1068,8 @@ void CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote)
     LOCK(cs);
 
     if(!mapFinalizedBudgets.count(vote.nBudgetHash)){
-        //LogPrintf("Unknown proposal %d\n", vote.nBudgetHash);
+        LogPrintf("ERROR: Unknown Finalized Proposal %s\n", vote.nBudgetHash.ToString().c_str());
+        //should ask for it
         return;
     }
 
@@ -1152,4 +1148,28 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string s
     nBlockStart = nBlockStartIn;
     BOOST_FOREACH(uint256 hash, vecProposalsIn) vecProposals.push_back(hash);
     mapVotes.clear();
+}
+
+std::string CBudgetManager::GetRequiredPaymentsString(int64_t nBlockHeight)
+{
+    std::string ret = "unknown-budget";
+
+    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
+    while(it != mapFinalizedBudgets.end())
+    {   
+        CFinalizedBudget* prop = &((*it).second);
+        if(nBlockHeight >= prop->GetBlockStart() && nBlockHeight <= prop->GetBlockEnd()){
+            uint256 nPropHash = prop->GetProposalByBlock(nBlockHeight);
+            if(ret == "unknown-budget"){
+                ret = nPropHash.ToString().c_str();
+            } else {
+                ret += ",";
+                ret += nPropHash.ToString().c_str();
+            }
+        }
+
+        it++;
+    }
+
+    return ret;
 }

@@ -3243,7 +3243,6 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
                 LogPrintf("%s : Update Masternode Last Paid Time - %d\n", __func__, chainActive.Tip()->nHeight);
             }
 
-
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();

@@ -63,7 +63,7 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Invalid payment count, must be more than zero.";
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - PAYMENT_CYCLE_BLOCKS*(nPaymentCount+1);
+        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()*(nPaymentCount+1);
 
         int nBlockStart = params[4].get_int();
         if(nBlockStart < nBlockMin)
@@ -159,7 +159,7 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Invalid payment count, must be more than zero.";
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - PAYMENT_CYCLE_BLOCKS*(nPaymentCount+1);
+        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()*(nPaymentCount+1);
 
         int nBlockStart = params[4].get_int();
         if(nBlockStart < nBlockMin)
@@ -195,6 +195,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         mapMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
         prop.Relay();
+        budget.AddProposal(prop);
 
         CBudgetVote vote(activeMasternode.vin, prop.GetHash(), nVote);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
@@ -203,6 +204,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         mapMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
+        budget.UpdateProposal(vote);
 
     }
 
@@ -317,7 +319,6 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 "  show        - Show existing finalized budgets\n"
                 );
 
-
     if(strCommand == "suggest")
     {
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
@@ -328,22 +329,21 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return "Must be synced to suggest";
 
         if (params.size() < 3)
-            throw runtime_error("Correct usage of vote-many is 'mnfinalbudget suggest BUDGET_NAME PROPNAME [PROP2 PROP3 PROP4]'");
+            throw runtime_error("Correct usage of suggest is 'mnfinalbudget suggest BUDGET_NAME PROPNAME [PROP2 PROP3 PROP4]'");
 
         std::string strBudgetName = params[1].get_str();
         if(strBudgetName.size() > 20)
             return "Invalid budget name, limit of 20 characters.";
 
-        int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % PAYMENT_CYCLE_BLOCKS)+PAYMENT_CYCLE_BLOCKS;
+        int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
 
         std::vector<uint256> vecProps;
-        for(int i = 3; i < (int)params.size(); i++)
+        for(int i = 2; i < (int)params.size(); i++)
         {
-            std::string strHash = params[1].get_str();
+            std::string strHash = params[i].get_str();
             uint256 hash(strHash);
 
             vecProps.push_back(hash);
-            printf("%s\n", hash.ToString().c_str());
         }
 
         CPubKey pubKeyMasternode;
@@ -364,6 +364,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         mapFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
         prop.Relay();
+        budget.AddFinalizedBudget(prop);
 
         CFinalizedBudgetVote vote(activeMasternode.vin, prop.GetHash());
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
@@ -372,6 +373,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
+        budget.UpdateFinalizedBudget(vote);
 
         return "success";
 
@@ -426,6 +428,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
             mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
+            budget.UpdateFinalizedBudget(vote);
 
             success++;
         }
@@ -458,6 +461,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
+        budget.UpdateFinalizedBudget(vote);
 
         return "success";
     }
