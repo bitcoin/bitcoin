@@ -3342,6 +3342,40 @@ bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId
   if (count) { return true; } else { return false; }
 }
 
+// obtains a vector of txids for trades using the supplied pair of property IDs
+void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, std::vector<uint256>* vecTransactions)
+{
+  if (!pdb) return;
+  leveldb::Iterator* it = NewIterator();
+  for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      std::string strKey = it->key().ToString();
+      std::string strValue = it->value().ToString();
+      std::vector<std::string> vecKeys;
+      std::vector<std::string> vecValues;
+      uint256 txid = 0;
+      boost::split(vecKeys, strKey, boost::is_any_of("+"), token_compress_on);
+      if (vecKeys.size() != 2) {
+          PrintToLog("TRADEDB error - unexpected number of tokens in key (%s)\n", strKey);
+          continue;
+      }
+      boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);
+      if (vecValues.size() != 7) {
+          PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
+          continue;
+      }
+      uint32_t tradePropertyIdSideA = boost::lexical_cast<uint32_t>(vecValues[2]);
+      uint32_t tradePropertyIdSideB = boost::lexical_cast<uint32_t>(vecValues[3]);
+      if ((tradePropertyIdSideA == propertyIdSideA && tradePropertyIdSideB == propertyIdSideB) ||
+          (tradePropertyIdSideA == propertyIdSideB && tradePropertyIdSideB == propertyIdSideA)) {
+          txid.SetHex(vecKeys[0]);
+          if (std::find(vecTransactions->begin(), vecTransactions->end(), txid) == vecTransactions->end()) vecTransactions->push_back(txid);
+          txid.SetHex(vecKeys[1]);
+          if (std::find(vecTransactions->begin(), vecTransactions->end(), txid) == vecTransactions->end()) vecTransactions->push_back(txid);
+      }
+  }
+  delete it;
+}
+
 // obtains a vector of txids where the supplied address participated in a trade (needed for gettradehistory_MP)
 // optional property ID parameter will filter on propertyId transacted if supplied
 void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>* vecTransactions, uint32_t propertyIdForSale)

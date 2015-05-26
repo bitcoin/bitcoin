@@ -1008,11 +1008,7 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
                 CMPMetaDEx obj = *it;
                 if (obj.getAddr() == address) {
                     if (propertyId != 0 && propertyId != obj.getProperty() && propertyId != obj.getDesProperty()) continue;
-                    Object txobj;
-                    int populateResult = populateRPCTransactionObject(obj.getHash(), txobj, "", true);
-                    if (0 == populateResult) {
-                        vecTransactions.push_back(obj.getHash());
-                    }
+                    vecTransactions.push_back(obj.getHash());
                 }
             }
         }
@@ -1020,6 +1016,78 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
 
     // stage 2
     t_tradelistdb->getTradesForAddress(address, &vecTransactions, propertyId);
+
+    // populate
+    for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
+        Object txobj;
+        int populateResult = populateRPCTransactionObject(*it, txobj, "", true);
+        if (0 == populateResult) response.push_back(txobj);
+    }
+
+    // TODO: sort response array on confirmations attribute and crop response to (count) most recent transactions
+    return response;
+}
+
+Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "gettradehistory_MP\n"
+            "\nAllows user to retrieve MetaDEx trade history for the supplied pair\n"
+            "\nArguments:\n"
+            "1. propertyid           (int, required) propertyid transacted\n"
+            "2. propertyid           (int, required) propertyid transacted\n"
+            "3. count                (int, optional) number of trades to retrieve (default: 10)\n"
+        );
+
+    Array response;
+
+    uint32_t propertyIdSideA = 0, propertyIdSideB;
+    int64_t tmpPropertyIdSideA = params[0].get_int64();
+    int64_t tmpPropertyIdSideB = params[1].get_int64();
+
+    if (tmpPropertyIdSideA < 1 || tmpPropertyIdSideA > 4294967295 || tmpPropertyIdSideB < 1 || tmpPropertyIdSideB > 4294967295)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
+    propertyIdSideA = boost::lexical_cast<uint32_t>(tmpPropertyIdSideA);
+    propertyIdSideB = boost::lexical_cast<uint32_t>(tmpPropertyIdSideB);
+
+    if (!_my_sps->hasSP(propertyIdSideA) || !_my_sps->hasSP(propertyIdSideB))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+
+    if ((propertyIdSideA != 1 && propertyIdSideA != 2 && propertyIdSideB != 1 && propertyIdSideB != 2) || propertyIdSideA == propertyIdSideB)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid trade pair");
+
+    int64_t count = 10;
+    if (params.size() > 2) {
+        count = params[2].get_int64();
+        if (count < 1) // TODO: do we need a maximum here?
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid value for count parameter");
+    }
+
+    // to provide a proper trade history for a pair we must utilize a two part methodology:
+    // 1) check the metadex maps for open trades
+    // 2) check the trades database for closed trades
+
+    // vector vecTransactions will hold the txids from both stage 1 and stage 2 to avoid duplicates
+    std::vector<uint256> vecTransactions;
+
+    // stage 1
+    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        md_PricesMap & prices = my_it->second;
+        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+            md_Set & indexes = (it->second);
+            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                CMPMetaDEx obj = *it;
+                if ((propertyIdSideA == obj.getProperty() && propertyIdSideB == obj.getDesProperty()) ||
+                    (propertyIdSideB == obj.getProperty() && propertyIdSideA == obj.getDesProperty())) {
+                    vecTransactions.push_back(obj.getHash());
+                }
+            }
+        }
+    }
+
+    // stage 2
+    t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, &vecTransactions);
 
     // populate
     for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
