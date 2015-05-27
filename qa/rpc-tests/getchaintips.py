@@ -7,8 +7,8 @@
 # on chains of different lengths, and join the network together again.
 # This gives us two tips, verify that it works.
 
-from test_framework import BitcoinTestFramework
-from util import assert_equal
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 class GetChainTipsTest (BitcoinTestFramework):
 

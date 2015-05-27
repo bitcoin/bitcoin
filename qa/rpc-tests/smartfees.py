@@ -7,9 +7,8 @@
 # Test fee estimation code
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many many transactions without needing to spend

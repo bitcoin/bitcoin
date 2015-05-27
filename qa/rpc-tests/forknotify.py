@@ -7,9 +7,8 @@
 # Test -alertnotify 
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 import os
 import shutil
 

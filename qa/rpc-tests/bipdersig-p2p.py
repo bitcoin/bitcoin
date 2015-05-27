@@ -4,14 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from test_framework import ComparisonTestFramework
-from util import *
-from mininode import CTransaction, NetworkThread
-from blocktools import create_coinbase, create_block
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import *
+from test_framework.mininode import CTransaction, NetworkThread
+from test_framework.blocktools import create_coinbase, create_block
+from test_framework.comptool import TestInstance, TestManager
+from test_framework.script import CScript
 from binascii import hexlify, unhexlify
 import cStringIO
-from comptool import TestInstance, TestManager
-from script import CScript
 import time
 
 # A canonical signature consists of: 
