@@ -19,7 +19,7 @@
 using namespace std;
 using namespace json_spirit;
 
-static const int MAX_GETUTXOS_OUTPOINTS = 100; //allow a max of 100 outpoints to be queried at once
+static const int MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 
 enum RetFormat {
     RF_UNDEF,
@@ -342,15 +342,50 @@ static bool rest_getutxos(AcceptedConnection* conn,
     vector<string> params;
     enum RetFormat rf = ParseDataFormat(params, strURIPart);
 
+    vector<string> uriParts;
+    if (params.size() > 0 && params[0].length() > 1)
+    {
+        std::string strUriParams = params[0].substr(1);
+        boost::split(uriParts, strUriParams, boost::is_any_of("/"));
+    }
+
     // throw exception in case of a empty request
-    if (strRequest.length() == 0)
+    if (strRequest.length() == 0 && uriParts.size() == 0)
         throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
 
+    bool fInputParsed = false;
     bool fCheckMemPool = false;
     vector<COutPoint> vOutPoints;
 
     // parse/deserialize input
     // input-format = output-format, rest/getutxos/bin requires binary input, gives binary output, ...
+
+    if (uriParts.size() > 0)
+    {
+
+        //inputs is sent over URI scheme (/rest/getutxos/checkmempool/txid1-n/txid2-n/...)
+        if (uriParts.size() > 0 && uriParts[0] == "checkmempool")
+            fCheckMemPool = true;
+
+        for (size_t i = (fCheckMemPool) ? 1 : 0; i < uriParts.size(); i++)
+        {
+            uint256 txid;
+            int32_t nOutput;
+            std::string strTxid = uriParts[i].substr(0, uriParts[i].find("-"));
+            std::string strOutput = uriParts[i].substr(uriParts[i].find("-")+1);
+
+            if (!ParseInt32(strOutput, &nOutput) || !IsHex(strTxid))
+                throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
+
+            txid.SetHex(strTxid);
+            vOutPoints.push_back(COutPoint(txid, (uint32_t)nOutput));
+        }
+
+        if (vOutPoints.size() > 0)
+            fInputParsed = true;
+        else
+            throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
+    }
 
     string strRequestMutable = strRequest; //convert const string to string for allowing hex to bin converting
 
@@ -363,11 +398,17 @@ static bool rest_getutxos(AcceptedConnection* conn,
 
     case RF_BINARY: {
         try {
-            //deserialize
-            CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
-            oss << strRequestMutable;
-            oss >> fCheckMemPool;
-            oss >> vOutPoints;
+            //deserialize only if user sent a request
+            if (strRequestMutable.size() > 0)
+            {
+                if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
+                    throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Combination of URI scheme inputs and raw post data is not allowed");
+
+                CDataStream oss(SER_NETWORK, PROTOCOL_VERSION);
+                oss << strRequestMutable;
+                oss >> fCheckMemPool;
+                oss >> vOutPoints;
+            }
         } catch (const std::ios_base::failure& e) {
             // abort in case of unreadable binary data
             throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
@@ -376,33 +417,8 @@ static bool rest_getutxos(AcceptedConnection* conn,
     }
 
     case RF_JSON: {
-        try {
-            // parse json request
-            Value valRequest;
-            if (!read_string(strRequest, valRequest))
-                throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
-
-            Object jsonObject = valRequest.get_obj();
-            const Value& checkMempoolValue = find_value(jsonObject, "checkmempool");
-
-            if (!checkMempoolValue.is_null()) {
-                fCheckMemPool = checkMempoolValue.get_bool();
-            }
-            const Value& outpointsValue = find_value(jsonObject, "outpoints");
-            if (!outpointsValue.is_null()) {
-                Array outPoints = outpointsValue.get_array();
-                BOOST_FOREACH (const Value& outPoint, outPoints) {
-                    Object outpointObject = outPoint.get_obj();
-                    uint256 txid = ParseHashO(outpointObject, "txid");
-                    Value nValue = find_value(outpointObject, "n");
-                    int nOutput = nValue.get_int();
-                    vOutPoints.push_back(COutPoint(txid, nOutput));
-                }
-            }
-        } catch (...) {
-            // return HTTP 500 if there was a json parsing error
-            throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Parse error");
-        }
+        if (!fInputParsed)
+            throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, "Error: empty request");
         break;
     }
     default: {
