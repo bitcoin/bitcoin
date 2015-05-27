@@ -362,6 +362,9 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment()
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
+        //it's in the list -- so let's skip it
+        if(masternodePayments.IsScheduled(mn)) continue;
+
         if(pOldestMasternode == NULL || pOldestMasternode->SecondsSincePayment() < mn.SecondsSincePayment()){
             pOldestMasternode = &mn;
         }

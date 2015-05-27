@@ -424,13 +424,9 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CFinalizedBudgetBroadcast prop;
         vRecv >> prop;
 
-        printf("34\n");
-
         if(mapSeenFinalizedBudgets.count(prop.GetHash())){
             return;
         }
-
-        printf("36\n");
 
         if(!prop.SignatureValid()){
             LogPrintf("fbs - signature invalid\n");
@@ -438,14 +434,10 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        printf("37\n");
-
         if(!prop.IsValid()) {
             printf("fbs - invalid prop\n");
             return;
         }
-
-        printf("38\n");
 
         CMasternode* pmn = mnodeman.Find(prop.vin);
         if(pmn == NULL) {
@@ -455,8 +447,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
-            printf("42\n");
-
             CFinalizedBudget p(prop);
             budget.AddFinalizedBudget(p);
             prop.Relay();
