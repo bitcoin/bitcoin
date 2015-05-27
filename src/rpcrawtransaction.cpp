@@ -4,13 +4,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
-#include "primitives/transaction.h"
+#include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
 #include "keystore.h"
 #include "main.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "primitives/transaction.h"
 #include "rpcserver.h"
 #include "script/script.h"
 #include "script/script_error.h"
