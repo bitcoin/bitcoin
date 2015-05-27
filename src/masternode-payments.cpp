@@ -65,7 +65,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
         LOCK(cs_masternodepayments);
 
-        //this is required in litemode
+        //this is required in litemodef
         CMasternodePaymentWinner winner;
         vRecv >> winner;
 
@@ -98,8 +98,8 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(fDebug) LogPrintf("mnw - winning vote - Addr %s Height %d bestHeight %d\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
 
-        mapMasternodePayeeVotes.insert(make_pair(winner.GetHash(), winner));
         if(masternodePayments.AddWinningMasternode(winner)){
+            printf("relay %s  - %s \n", winner.GetHash().ToString().c_str(), winner.ToString().c_str());
             winner.Relay();
         }
     }
@@ -131,6 +131,26 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 {
     if(!mapMasternodeBlocks.count(nBlockHeight)){
         return mapMasternodeBlocks[nBlockHeight].GetPayee(payee);
+    }
+
+    return false;
+}
+
+bool CMasternodePayments::IsScheduled(CMasternode& mn)
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return false;
+
+    CScript mnpayee;
+    mnpayee = GetScriptForDestination(mn.pubkey.GetID());
+
+    CScript payee;
+    for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+10; h++){
+        if(mapMasternodeBlocks.count(h)){
+            mapMasternodeBlocks[h].GetPayee(payee);
+            if(payee != CScript() && mnpayee == payee) return true;
+            if(mn.donationAddress != CScript() && mn.donationAddress == payee) return true;
+        }
     }
 
     return false;
@@ -330,11 +350,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     CMasternodePaymentWinner newWinner(activeMasternode.vin);
 
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
-        //is budget payment block
-        CScript payee;
-        GetMasternodeBudgetEscrow(payee);
-        newWinner.AddPayee(payee, masternodePayment);
-
+        //is budget payment block -- handled by the budgeting software
     } else {
         CScript payeeSource;
         uint256 hash;

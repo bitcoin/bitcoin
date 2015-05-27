@@ -3232,7 +3232,6 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     if(!fLiteMode){
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
-
             CScript payee;
             CTxIn vin;
             if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight, payee)){

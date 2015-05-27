@@ -9,6 +9,7 @@
 #include "key.h"
 #include "main.h"
 #include "masternode.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -144,7 +145,17 @@ public:
         READWRITE(nBlockHeight);
         READWRITE(payee);
         READWRITE(vchSig);
-     }
+    }
+
+    std::string ToString()
+    {
+        std::string ret = "";
+        ret += vinMasternode.ToString();
+        ret += ", " + boost::lexical_cast<std::string>(nBlockHeight);
+        ret += ", " + payee.ToString();
+        ret += ", " + boost::lexical_cast<std::string>((int)vchSig.size());
+        return ret;
+    }
 };
 
 //
@@ -174,6 +185,7 @@ public:
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
+    bool IsScheduled(CMasternode& mn);
 
     void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);
