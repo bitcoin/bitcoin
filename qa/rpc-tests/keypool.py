@@ -8,7 +8,6 @@
 # Add python-bitcoinrpc to module search path:
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
 
 import json
 import shutil
@@ -16,8 +15,7 @@ import subprocess
 import tempfile
 import traceback
 
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.util import *
 
 
 def check_array_result(object_array, to_match, expected):
