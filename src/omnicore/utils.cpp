@@ -7,8 +7,6 @@
 
 #include "omnicore/utils.h"
 
-#include "omnicore/omnicore.h" // MAX_SHA256_OBFUSCATION_TIMES
-
 #include "utilstrencodings.h"
 
 // TODO: use crypto/sha256 instead of openssl

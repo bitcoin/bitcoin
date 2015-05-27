@@ -65,9 +65,8 @@ int const MAX_STATE_HISTORY = 50;
 // Maximum outputs per BTC Transaction
 #define MAX_BTC_OUTPUTS 16
 
-#define MAX_SHA256_OBFUSCATION_TIMES  255
-
 #define MIN_PAYLOAD_SIZE     8
+
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
 #define MAX_PACKETS         64
