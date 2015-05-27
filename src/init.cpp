@@ -58,7 +58,7 @@ CWallet* pwalletMain = NULL;
 int nWalletBackups = 10;
 #endif
 bool fFeeEstimatesInitialized = false;
-bool wallet_restart = false;  // true: restarted false: shutdown
+bool wallet_restart = false;  // true: restart false: shutdown
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -144,10 +144,10 @@ public:
 static CCoinsViewDB *pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 
-/** Preparing steps before restarting the wallet */
-void Prepare_Restart()
+/** Preparing steps before shutting down or restarting the wallet */
+void Prepare_Shutdown()
 {
-    wallet_restart = true; // we're restarting the wallet, so skip shutdown later in the process
+    wallet_restart = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
@@ -206,66 +206,23 @@ void Prepare_Restart()
     UnregisterAllValidationInterfaces();
 }
 
+/**
+* Shutdown is split into 2 parts:
+* Part 1: shut down everything but the main wallet instance (done in Prepare_Shutdown() )
+* Part 2: delete wallet instance
+*
+* In case of a restart Prepare_Shutdown() was already called before, but this method here gets
+* called implicitly when the parent object is deleted. In this case we have to skip the
+* Prepare_Shutdown() part because it was already executed and just delete the wallet instance.
+*/
 void Shutdown()
 {
-    if(!wallet_restart){ // most of shutdown is already done when we're restarting the wallet
-        LogPrintf("%s: In progress...\n", __func__);
-        static CCriticalSection cs_Shutdown;
-        TRY_LOCK(cs_Shutdown, lockShutdown);
-        if (!lockShutdown)
-            return;
+    // Shutdown part 1: prepare shutdown
+    if(!wallet_restart){
+        Prepare_Shutdown();
+    }
 
-        /// Note: Shutdown() must be able to handle cases in which AppInit2() failed part of the way,
-        /// for example if the data directory was found to be locked.
-        /// Be sure that anything that writes files or flushes caches only does this if the respective
-        /// module was initialized.
-        RenameThread("dash-shutoff");
-        mempool.AddTransactionsUpdated(1);
-        StopRPCThreads();
-#ifdef ENABLE_WALLET
-        if (pwalletMain)
-            bitdb.Flush(false);
-        GenerateBitcoins(false, NULL, 0);
-#endif
-        StopNode();
-        DumpMasternodes();
-        DumpBudgets();
-        UnregisterNodeSignals(GetNodeSignals());
-
-        if (fFeeEstimatesInitialized)
-        {
-            boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
-            CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
-            if (!est_fileout.IsNull())
-                mempool.WriteFeeEstimates(est_fileout);
-            else
-                LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
-            fFeeEstimatesInitialized = false;
-        }
-
-        {
-            LOCK(cs_main);
-            if (pcoinsTip != NULL) {
-                FlushStateToDisk();
-            }
-            delete pcoinsTip;
-            pcoinsTip = NULL;
-            delete pcoinscatcher;
-            pcoinscatcher = NULL;
-            delete pcoinsdbview;
-            pcoinsdbview = NULL;
-            delete pblocktree;
-            pblocktree = NULL;
-        }
-#ifdef ENABLE_WALLET
-        if (pwalletMain)
-            bitdb.Flush(true);
-#endif
-#ifndef WIN32
-        boost::filesystem::remove(GetPidFile());
-#endif
-        UnregisterAllValidationInterfaces();
-    } // skipped during a restart because it's already done
+   // Shutdown part 2: delete wallet instance
 #ifdef ENABLE_WALLET
     delete pwalletMain;
     pwalletMain = NULL;
