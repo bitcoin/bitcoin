@@ -155,11 +155,9 @@ enum FILETYPES {
 #define OMNI_PROPERTY_TMSC  2
 
 // forward declarations
-std::string FormatPriceMP(double n);
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
 std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
-uint256 send_MP(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount);
 int64_t feeCheck(const string &address);
 
 /** Returns the Exodus address. */
@@ -411,8 +409,6 @@ extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
-bool isRangeOK(const uint64_t input);
-int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc);
 
 string getLabel(const string &address);
 

@@ -255,15 +255,6 @@ inline bool UnitTest()
     return Params().NetworkIDString() == "unittest";
 }
 
-string FormatPriceMP(double n)
-{
-  string str = strprintf("%lf", n);
-  // clean up trailing zeros - good for RPC not so much for UI
-  str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-  if (str.length() > 0) { std::string::iterator it = str.end() - 1; if (*it == '.') { str.erase(it); } } //get rid of trailing dot if non decimal
-return str;
-}
-
 string FormatDivisibleShortMP(int64_t n)
 {
 int64_t n_abs = (n > 0 ? n : -n);
@@ -363,31 +354,6 @@ int64_t pending = getMPbalance(Address, property, PENDING);
   }
 
   return money;
-}
-
-bool isRangeOK(const uint64_t input)
-{
-  if (MAX_INT_8_BYTES < input) return false;
-
-  return true;
-}
-
-// returns false if we are out of range and/or overflow
-// call just before multiplying large numbers
-bool isMultiplicationOK(const uint64_t a, const uint64_t b)
-{
-  if (!a || !b) return true;
-
-  if (MAX_INT_8_BYTES < a) return false;
-  if (MAX_INT_8_BYTES < b) return false;
-
-  const uint64_t result = a*b;
-
-  if (MAX_INT_8_BYTES < result) return false;
-
-  if ((0 != a) && (result / a != b)) return false;
-
-  return true;
 }
 
 bool mastercore::isTestEcosystemProperty(unsigned int property)
