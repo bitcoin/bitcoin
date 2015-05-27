@@ -29,10 +29,10 @@ class CBudgetVote;
 #define VOTE_YES      1
 #define VOTE_NO       2
 
-extern std::map<uint256, CBudgetProposalBroadcast> mapMasternodeBudgetProposals;
-extern std::map<uint256, CBudgetVote> mapMasternodeBudgetVotes;
-extern std::map<uint256, CFinalizedBudgetBroadcast> mapFinalizedBudgets;
-extern std::map<uint256, CFinalizedBudgetVote> mapFinalizedBudgetVotes;
+extern std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
+extern std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
+extern std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
+extern std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
 
 extern CBudgetManager budget;
 
@@ -123,10 +123,10 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(mapMasternodeBudgetProposals);
-        READWRITE(mapMasternodeBudgetVotes);
-        READWRITE(mapFinalizedBudgets);
-        READWRITE(mapMasternodeBudgetVotes);
+        READWRITE(mapSeenMasternodeBudgetProposals);
+        READWRITE(mapSeenMasternodeBudgetVotes);
+        READWRITE(mapSeenFinalizedBudgets);
+        READWRITE(mapSeenFinalizedBudgetVotes);
 
         READWRITE(mapProposals);
         READWRITE(mapFinalizedBudgets);

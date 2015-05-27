@@ -14,10 +14,10 @@
 CBudgetManager budget;
 CCriticalSection cs_budget;
 
-std::map<uint256, CBudgetProposalBroadcast> mapMasternodeBudgetProposals;
-std::map<uint256, CBudgetVote> mapMasternodeBudgetVotes;
-std::map<uint256, CFinalizedBudgetBroadcast> mapFinalizedBudgets;
-std::map<uint256, CFinalizedBudgetVote> mapFinalizedBudgetVotes;
+std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
+std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
+std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
+std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
 
 int GetBudgetPaymentCycleBlocks(){
     if(Params().NetworkID() == CBaseChainParams::MAIN) return 16616; //(60*24*30)/2.6
@@ -355,7 +355,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CBudgetProposalBroadcast prop;
         vRecv >> prop;
 
-        if(mapMasternodeBudgetProposals.count(prop.GetHash())){
+        if(mapSeenMasternodeBudgetProposals.count(prop.GetHash())){
             return;
         }
 
@@ -376,7 +376,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;         
         }
 
-        mapMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
+        mapSeenMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
             CBudgetProposal p(prop);
             budget.AddProposal(p);
@@ -393,7 +393,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CBudgetVote vote;
         vRecv >> vote;
 
-        if(mapMasternodeBudgetVotes.count(vote.GetHash())){
+        if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
             return;
         }
 
@@ -409,7 +409,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;         
         }
 
-        mapMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
         	budget.UpdateProposal(vote);
         	vote.Relay();
@@ -426,7 +426,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         printf("34\n");
 
-        if(mapFinalizedBudgets.count(prop.GetHash())){
+        if(mapSeenFinalizedBudgets.count(prop.GetHash())){
             return;
         }
 
@@ -453,7 +453,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;         
         }
 
-        mapFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
+        mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
             printf("42\n");
 
@@ -474,7 +474,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CFinalizedBudgetVote vote;
         vRecv >> vote;
 
-        if(mapFinalizedBudgetVotes.count(vote.GetHash())){
+        if(mapSeenFinalizedBudgetVotes.count(vote.GetHash())){
             return;
         }
 
@@ -490,7 +490,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;         
         }
 
-        mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
             budget.UpdateFinalizedBudget(vote);
             vote.Relay();
