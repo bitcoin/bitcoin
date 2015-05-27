@@ -15,10 +15,13 @@ using json_spirit::Pair;
 using json_spirit::Value;
 using json_spirit::write_string;
 
-using namespace mastercore;
+namespace mastercore
+{
+//! Global map of pending transaction objects
+PendingMap my_pending;
 
 /**
- * Adds a transaction to the pending map using supplied parameters
+ * Adds a transaction to the pending map using supplied parameters.
  */
 void PendingAdd(const uint256& txid, const std::string& sendingAddress, const std::string& refAddress, uint16_t type, uint32_t propertyId, int64_t amount, uint32_t propertyIdDesired, int64_t amountDesired, int64_t action)
 {
@@ -69,10 +72,10 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         break;
     }
     std::string txDesc = write_string(Value(txobj), true);
-    CMPPending pending;
     if (msc_debug_pending) PrintToLog("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
                                         type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
     if (update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
+        CMPPending pending;
         pending.src = sendingAddress;
         pending.amount = amount;
         pending.prop = propertyId;
@@ -83,19 +86,30 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
 }
 
 /**
- * Deletes a transaction from the pending map and credits the amount back to the pending tally for the address
+ * Deletes a transaction from the pending map and credits the amount back to the pending tally for the address.
  *
- * NOTE: this is currently called for every bitcoin transaction prior to running through the parser
+ * NOTE: this is currently called for every bitcoin transaction prior to running through the parser.
  */
 void PendingDelete(const uint256& txid)
 {
     PendingMap::iterator it = my_pending.find(txid);
     if (it != my_pending.end()) {
-        CMPPending *p_pending = &(it->second);
-        int64_t src_amount = getMPbalance(p_pending->src, p_pending->prop, PENDING);
+        const CMPPending& pending = it->second;
+        int64_t src_amount = getMPbalance(pending.src, pending.prop, PENDING);
         if (msc_debug_pending) PrintToLog("%s(%s): amount=%d\n", __FUNCTION__, txid.GetHex(), src_amount);
-        if (src_amount) update_tally_map(p_pending->src, p_pending->prop, p_pending->amount, PENDING);
+        if (src_amount) update_tally_map(pending.src, pending.prop, pending.amount, PENDING);
         my_pending.erase(it);
     }
+}
+
+
+} // namespace mastercore
+
+/**
+ * Prints information about a pending transaction object.
+ */
+void CMPPending::print(const uint256& txid) const
+{
+    PrintToConsole("%s : %s %d %d %d %s\n", txid.GetHex(), src, prop, amount, type, desc);
 }
 

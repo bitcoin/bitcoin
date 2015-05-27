@@ -380,22 +380,6 @@ public:
     bool isMPinBlockRange(int, int, bool);
 };
 
-class CMPPending
-{
-public:
-  string src; // the FromAddress
-  unsigned int prop;
-  int64_t amount;
-  int64_t type;
-  string desc; // the description
-
-  void print(uint256 txid) const
-  {
-    PrintToConsole("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
-  }
- 
-};
-
 extern uint64_t global_metadex_market;
 //! Available balances of wallet properties in the main ecosystem
 extern std::map<uint32_t, int64_t> global_balance_money_maineco;
@@ -432,8 +416,6 @@ extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
 
-typedef std::map<uint256, CMPPending> PendingMap;
-extern PendingMap my_pending;
 string strMPProperty(unsigned int i);
 
 int GetHeight(void);

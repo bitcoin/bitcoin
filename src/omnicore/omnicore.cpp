@@ -308,8 +308,6 @@ AcceptMap mastercore::my_accepts;
 CMPSPInfo *mastercore::_my_sps;
 CrowdMap mastercore::my_crowds;
 
-PendingMap mastercore::my_pending;
-
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
 std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
@@ -2073,6 +2071,7 @@ static void clear_all_state()
     my_accepts.clear();
     my_crowds.clear();
     metadex.clear();
+    my_pending.clear();
 
     // LevelDB based storage
     _my_sps->Clear();
