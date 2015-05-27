@@ -812,7 +812,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
         if (txout.nValue < 0)
             return state.DoS(100, error("CheckTransaction(): txout.nValue negative"),
                              REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > MAX_MONEY)
+        if (txout.nValue > AMOUNT_OVERFLOW_PROTECTION_THRESHOLD)
             return state.DoS(100, error("CheckTransaction(): txout.nValue too high"),
                              REJECT_INVALID, "bad-txns-vout-toolarge");
         nValueOut += txout.nValue;
@@ -873,7 +873,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
     }
 
     if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
+        nMinFee = AMOUNT_OVERFLOW_PROTECTION_THRESHOLD;
     return nMinFee;
 }
 

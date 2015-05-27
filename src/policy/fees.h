@@ -195,10 +195,10 @@ static const double SUFFICIENT_PRITXS = .2;
 // Minimum and Maximum values for tracking fees and priorities
 static const double MIN_FEERATE = 10;
 static const double MAX_FEERATE = 1e7;
-static const double INF_FEERATE = MAX_MONEY;
+static const double INF_FEERATE = AMOUNT_OVERFLOW_PROTECTION_THRESHOLD;
 static const double MIN_PRIORITY = 10;
 static const double MAX_PRIORITY = 1e16;
-static const double INF_PRIORITY = 1e9 * MAX_MONEY;
+static const double INF_PRIORITY = 1e9 * AMOUNT_OVERFLOW_PROTECTION_THRESHOLD;
 
 // We have to lump transactions into buckets based on fee or priority, but we want to be able
 // to give accurate estimates over a large range of potential fees and priorities

@@ -799,7 +799,7 @@ bool PaymentServer::verifyAmount(const CAmount& requestAmount)
         qWarning() << QString("PaymentServer::%1: Payment request amount out of allowed range (%2, allowed 0 - %3).")
             .arg(__func__)
             .arg(requestAmount)
-            .arg(MAX_MONEY);
+            .arg(AMOUNT_OVERFLOW_PROTECTION_THRESHOLD);
     }
     return fVerified;
 }
