@@ -16,6 +16,7 @@
 
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 
 #include "main.h"
 

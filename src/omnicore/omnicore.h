@@ -420,11 +420,9 @@ string strMPProperty(unsigned int i);
 int GetHeight(void);
 uint32_t GetLatestBlockTime(void);
 CBlockIndex* GetBlockIndex(const uint256& hash);
-bool isPropertyDivisible(unsigned int propertyId);
-string getPropertyName(unsigned int propertyId);
-bool isCrowdsaleActive(unsigned int propertyId);
-bool isCrowdsalePurchase(uint256 txid, string address, int64_t *propertyId = NULL, int64_t *userTokens = NULL, int64_t *issuerTokens = NULL);
+
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
+
 std::string FormatIndivisibleMP(int64_t n);
 
 int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
@@ -432,7 +430,7 @@ int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &rece
 
 bool isTestEcosystemProperty(unsigned int property);
 bool isMainEcosystemProperty(unsigned int property);
-uint32_t GetNextPropertyId(bool maineco);
+uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
 CMPTally *getTally(const string & address);
 

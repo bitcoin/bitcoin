@@ -2,6 +2,7 @@
 
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 
 #include "uint256.h"
 

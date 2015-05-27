@@ -8,6 +8,7 @@
 #include "guiutil.h"
 
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 
 #include "amount.h"
 #include "sync.h"

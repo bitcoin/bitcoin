@@ -3,6 +3,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 #include "omnicore/tx.h"
 
 #include "chain.h"

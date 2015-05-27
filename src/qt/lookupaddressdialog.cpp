@@ -8,6 +8,7 @@
 #include "guiutil.h"
 
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 
 #include "base58.h"
 
