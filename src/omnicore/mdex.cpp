@@ -19,12 +19,14 @@
 #include <stdint.h>
 
 #include <fstream>
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
 
 using namespace mastercore;
 
+//! Global map for price and order data
 md_PropertiesMap mastercore::metadex;
 
 md_PricesMap* mastercore::get_Prices(uint32_t prop)
@@ -55,7 +57,7 @@ enum MatchReturnType
     CANCELLED,
 };
 
-const std::string getTradeReturnType(MatchReturnType ret)
+static const std::string getTradeReturnType(MatchReturnType ret)
 {
     switch (ret) {
         case NOTHING: return "NOTHING";
@@ -65,6 +67,61 @@ const std::string getTradeReturnType(MatchReturnType ret)
         case ADDED: return "ADDED";
         case CANCELLED: return "CANCELLED";
         default: return "* unknown *";
+    }
+}
+
+static bool rangeInt64(const int128_t& value)
+{
+    return (std::numeric_limits<int64_t>::min() <= value && value <= std::numeric_limits<int64_t>::max());
+}
+
+static bool rangeInt64(const rational_t& value)
+{
+    return (rangeInt64(value.numerator()) && rangeInt64(value.denominator()));
+}
+
+static int128_t xToInt128(const rational_t& value, bool fRoundUp)
+{
+    // for integer rounding up: ceil(num / denom) => 1 + (num - 1) / denom
+    int128_t result(0);
+
+    if (!fRoundUp) {
+        result = value.numerator() / value.denominator();
+    } else {
+        result = int128_t(1) + (value.numerator() - int128_t(1)) / value.denominator();
+    }
+
+    return result;
+}
+
+static int64_t xToInt64(const rational_t& value, bool fRoundUp)
+{
+    int128_t result = xToInt128(value, fRoundUp);
+
+    assert(rangeInt64(result));
+
+    return result.convert_to<int64_t>();
+}
+
+std::string xToString(const dec_float& value)
+{
+    return value.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
+}
+
+std::string xToString(const int128_t& value)
+{
+    return strprintf("%s", boost::lexical_cast<std::string>(value));
+}
+
+std::string xToString(const rational_t& value)
+{
+    if (rangeInt64(value)) {
+        int64_t num = value.numerator().convert_to<int64_t>();
+        int64_t denom = value.denominator().convert_to<int64_t>();
+        dec_float x = dec_float(num) / dec_float(denom);
+        return xToString(x);
+    } else {
+        return strprintf("%s / %s", xToString(value.numerator()), xToString(value.denominator()));
     }
 }
 
