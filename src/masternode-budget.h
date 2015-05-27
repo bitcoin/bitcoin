@@ -321,8 +321,8 @@ public:
     int GetBlockStart() {return nBlockStart;}
     int GetBlockEnd() {return nBlockEnd;}
     CScript GetPayee() {return address;}
-    int GetPaymentCountTotal();
-    int GetPaymentCountLeft();
+    int GetTotalPaymentCount();
+    int GetRemainingPaymentCount();
     int GetBlockStartCycle();
     int GetBlockCurrentCycle();
     int GetBlockEndCycle();
