@@ -42,26 +42,23 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     if (about)
     {
         setWindowTitle(tr("About Dash Core"));
-        printf("1");
 
         /// HTML-format the license message from the core
         QString licenseInfo = QString::fromStdString(LicenseInfo());
         QString licenseInfoHTML = licenseInfo;
-        printf("2");
+
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
         uri.setMinimal(true); // use non-greedy matching
         licenseInfoHTML.replace(uri, "<a href=\"\\1\">\\1</a>");
         // Replace newlines with HTML breaks
         licenseInfoHTML.replace("\n\n", "<br><br>");
-        printf("3");
 
         ui->helpMessageLabel->setTextFormat(Qt::RichText);
         ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         text = version + "\n" + licenseInfo;
         ui->helpMessageLabel->setText(version + "<br><br>" + licenseInfoHTML);
         ui->helpMessageLabel->setWordWrap(true);
-        printf("4");
     } else {
         setWindowTitle(tr("Command-line options"));
         QString header = tr("Usage:") + "\n" +

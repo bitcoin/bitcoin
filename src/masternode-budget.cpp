@@ -337,8 +337,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     LOCK(cs_budget);
 
-    printf("%s\n", strCommand.c_str());
-
     if (strCommand == "mnvs") { //Masternode vote sync
         if(pfrom->HasFulfilledRequest("mnvs")) {
             LogPrintf("mnvs - peer already asked me for the list\n");
@@ -435,7 +433,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         if(!prop.IsValid()) {
-            printf("fbs - invalid prop\n");
+            LogPrintf("fbs - invalid prop\n");
             return;
         }
 
@@ -450,8 +448,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             CFinalizedBudget p(prop);
             budget.AddFinalizedBudget(p);
             prop.Relay();
-            
-            printf("43\n");
 
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
         } else {
