@@ -1,5 +1,4 @@
-// Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2012 The Bitcoin developers
+// Copyright (c) 2014-2015 The Dash Developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -118,7 +117,7 @@ Value mnbudget(const Array& params, bool fHelp)
             if(!prop.Sign(keyMasternode, pubKeyMasternode)){
                 return "Failure to sign.";
             }
-            mapMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
+            mapSeenMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
             prop.Relay();
 
             CBudgetVote vote(pmn->vin, prop.GetHash(), nVote);
@@ -126,7 +125,7 @@ Value mnbudget(const Array& params, bool fHelp)
                 return "Failure to sign.";
             }
 
-            mapMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
 
             success++;
@@ -193,7 +192,7 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        mapMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
+        mapSeenMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
         prop.Relay();
         budget.AddProposal(prop);
 
@@ -202,7 +201,7 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        mapMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         budget.UpdateProposal(vote);
 
@@ -362,7 +361,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         if(!prop.IsValid())
             return "Invalid prop (are all the hashes correct?)";
 
-        mapFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
+        mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
         prop.Relay();
         budget.AddFinalizedBudget(prop);
 
@@ -371,7 +370,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         budget.UpdateFinalizedBudget(vote);
 
@@ -426,7 +425,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 continue;
             }
 
-            mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             budget.UpdateFinalizedBudget(vote);
 
@@ -459,7 +458,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        mapFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         budget.UpdateFinalizedBudget(vote);
 
