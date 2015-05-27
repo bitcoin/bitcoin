@@ -43,4 +43,4 @@ libbitcoin_server_a_SOURCES += \
   $(OMNICORE_CPP) \
   $(OMNICORE_H)
 
-libbitcoin_server_a-omnicore/version.$(OBJEXT): obj/build.h # build info
+omnicore/libbitcoin_server_a-version.$(OBJEXT): obj/build.h # build info
