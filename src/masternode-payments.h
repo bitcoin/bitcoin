@@ -124,7 +124,10 @@ public:
     }
 
     uint256 GetHash(){
-        return Hash(BEGIN(payee), END(payee));
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << payee;
+
+        return ss.GetHash();        
     }
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);

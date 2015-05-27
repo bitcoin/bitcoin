@@ -99,7 +99,6 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         if(fDebug) LogPrintf("mnw - winning vote - Addr %s Height %d bestHeight %d\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
 
         if(masternodePayments.AddWinningMasternode(winner)){
-            printf("relay %s  - %s \n", winner.GetHash().ToString().c_str(), winner.ToString().c_str());
             winner.Relay();
         }
     }
