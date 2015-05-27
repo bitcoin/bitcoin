@@ -230,9 +230,9 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("amount", FormatMP(propertyId, amount)));
     txobj.push_back(Pair("feerequired", FormatDivisibleMP(temp_offer.getMinFee())));
     txobj.push_back(Pair("timelimit",  temp_offer.getBlockTimeLimit()));
-    if (sell_subaction == 1) txobj.push_back(Pair("subaction", "new"));
-    if (sell_subaction == 2) txobj.push_back(Pair("subaction", "update"));
-    if (sell_subaction == 3) txobj.push_back(Pair("subaction", "cancel"));
+    if (sell_subaction == 1) txobj.push_back(Pair("action", "new"));
+    if (sell_subaction == 2) txobj.push_back(Pair("action", "update"));
+    if (sell_subaction == 3) txobj.push_back(Pair("action", "cancel"));
     txobj.push_back(Pair("bitcoindesired", FormatDivisibleMP(temp_offer.getBTCDesiredOriginal())));
 }
 
