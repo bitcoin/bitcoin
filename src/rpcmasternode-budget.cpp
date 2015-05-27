@@ -47,7 +47,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 8)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many PROPOSAL-NAME URL PAYMENT_COUNT BLOCK_START DASH_ADDRESS USD_AMOUNT YES|NO|ABSTAIN'");
+            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many PROPOSAL-NAME URL PAYMENT_COUNT BLOCK_START DASH_ADDRESS DASH_AMOUNT YES|NO|ABSTAIN'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
@@ -143,7 +143,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 8)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget vote PROPOSAL-NAME URL PAYMENT_COUNT BLOCK_START DASH_ADDRESS USD_AMOUNT YES|NO|ABSTAIN'");
+            throw runtime_error("Correct usage of vote-many is 'mnbudget vote PROPOSAL-NAME URL PAYMENT_COUNT BLOCK_START DASH_ADDRESS DASH_AMOUNT YES|NO|ABSTAIN'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
@@ -226,8 +226,8 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
             bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-            bObj.push_back(Pair("PaymentCountTotal",  (int64_t)prop->GetPaymentCountTotal()));
-            bObj.push_back(Pair("PaymentCountLeft",  (int64_t)prop->GetPaymentCountLeft()));
+            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)prop->GetTotalPaymentCount()));
+            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)prop->GetRemainingPaymentCount()));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
             bObj.push_back(Pair("Ratio",  prop->GetRatio()));
             bObj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
@@ -262,8 +262,8 @@ Value mnbudget(const Array& params, bool fHelp)
         obj.push_back(Pair("URL",  prop->GetURL().c_str()));
         obj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
         obj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-        obj.push_back(Pair("PaymentCountTotal",  (int64_t)prop->GetPaymentCountTotal()));
-        obj.push_back(Pair("PaymentCountLeft",  (int64_t)prop->GetPaymentCountLeft()));
+        obj.push_back(Pair("TotalPaymentCount",  (int64_t)prop->GetTotalPaymentCount()));
+        obj.push_back(Pair("RemainingPaymentCount",  (int64_t)prop->GetRemainingPaymentCount()));
         obj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
         obj.push_back(Pair("Ratio",  prop->GetRatio()));
         obj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
@@ -469,12 +469,9 @@ Value mnfinalbudget(const Array& params, bool fHelp)
     {
         Object resultObj;
 
-        printf("1\n");
         std::vector<CFinalizedBudget*> winningFbs = budget.GetFinalizedBudgets();
         BOOST_FOREACH(CFinalizedBudget* prop, winningFbs)
         {
-            printf("2\n");
-
             Object bObj;
             bObj.push_back(Pair("SubmittedBy",  prop->GetSubmittedBy().c_str()));
             bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));

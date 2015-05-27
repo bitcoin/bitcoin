@@ -639,12 +639,12 @@ int CBudgetProposal::GetBlockEndCycle()
     return nBlockEnd-(GetBudgetPaymentCycleBlocks()/2);
 }
 
-int CBudgetProposal::GetPaymentCountTotal()
+int CBudgetProposal::GetTotalPaymentCount()
 {
     return (GetBlockEndCycle()-GetBlockStartCycle())/GetBudgetPaymentCycleBlocks();
 }
 
-int CBudgetProposal::GetPaymentCountLeft()
+int CBudgetProposal::GetRemainingPaymentCount()
 {
     return (GetBlockEndCycle()-GetBlockCurrentCycle())/GetBudgetPaymentCycleBlocks();
 }
