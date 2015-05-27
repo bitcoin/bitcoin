@@ -262,12 +262,12 @@ static bool rest_chaininfo(AcceptedConnection* conn,
 {
     vector<string> params;
     const RetFormat rf = ParseDataFormat(params, strURIPart);
-    
+
     switch (rf) {
     case RF_JSON: {
         Array rpcParams;
         Value chainInfoObject = getblockchaininfo(rpcParams, false);
-        
+
         string strJSON = write_string(chainInfoObject, false) + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
@@ -276,7 +276,7 @@ static bool rest_chaininfo(AcceptedConnection* conn,
         throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: json)");
     }
     }
-    
+
     // not reached
     return true; // continue to process further HTTP reqs on this cxn
 }
@@ -351,9 +351,9 @@ static bool rest_getutxos(AcceptedConnection* conn,
 
     // parse/deserialize input
     // input-format = output-format, rest/getutxos/bin requires binary input, gives binary output, ...
-    
+
     string strRequestMutable = strRequest; //convert const string to string for allowing hex to bin converting
-    
+
     switch (rf) {
     case RF_HEX: {
         // convert hex to bin, continue then with bin part
