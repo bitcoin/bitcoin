@@ -302,6 +302,7 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "estimatepriority",       &estimatepriority,       true,      true,       false },
 
     /* Not shown in help */
+    { "hidden",             "clearmempool",           &clearmempool,           true,      false,      false },
     { "hidden",             "invalidateblock",        &invalidateblock,        true,      true,       false },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      true,       false },
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
