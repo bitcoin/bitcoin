@@ -21,6 +21,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
+#include "omnicore/notifications.h"
 #include "omnicore/pending.h"
 #include "omnicore/persistence.h"
 #include "omnicore/script.h"
@@ -123,8 +124,6 @@ std::map<uint32_t, int64_t> global_balance_reserved_testeco;
  * Can be set with configuration "-autocommit" or RPC "setautocommit_OMNI".
  */
 bool autoCommit = true;
-
-string global_alert_message;
 
 static uint64_t exodus_prev = 0;
 static uint64_t exodus_balance;
@@ -368,16 +367,6 @@ bool mastercore::isMainEcosystemProperty(unsigned int property)
   return false;
 }
 
-void mastercore::setOmniCoreAlert(const std::string& alertMessage)
-{
-    global_alert_message = alertMessage;
-}
-
-std::string mastercore::getMasterCoreAlertString()
-{
-    return global_alert_message;
-}
-
 std::string mastercore::getTokenLabel(unsigned int propertyId)
 {
     std::string tokenStr;
@@ -387,140 +376,6 @@ std::string mastercore::getTokenLabel(unsigned int propertyId)
         tokenStr = " SPT#" + to_string(propertyId);
     }
     return tokenStr;
-}
-
-bool mastercore::parseAlertMessage(std::string rawAlertStr, int32_t *alertType, uint64_t *expiryValue, uint32_t *typeCheck, uint32_t *verCheck, std::string *alertMessage)
-{
-    std::vector<std::string> vstr;
-    boost::split(vstr, rawAlertStr, boost::is_any_of(":"), token_compress_on);
-    if (5 == vstr.size())
-    {
-        try {
-            *alertType = boost::lexical_cast<int32_t>(vstr[0]);
-            *expiryValue = boost::lexical_cast<uint64_t>(vstr[1]);
-            *typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
-            *verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
-        } catch (const boost::bad_lexical_cast &e) {
-            PrintToLog("DEBUG ALERT - error in converting values from global alert string\n");
-            return false; //(something went wrong)
-        }
-        *alertMessage = vstr[4];
-        if ((*alertType < 1) || (*alertType > 4) || (*expiryValue == 0)) {
-            PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, values are not as expected.\n");
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-std::string mastercore::getMasterCoreAlertTextOnly()
-{
-    std::vector<std::string> vstr;
-    if(!global_alert_message.empty())
-    {
-        boost::split(vstr, global_alert_message, boost::is_any_of(":"), token_compress_on);
-        // make sure there are 5 tokens, 5th is text message
-        if (5 == vstr.size())
-        {
-            return vstr[4];
-        }
-        else
-        {
-            PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, there are not 5 tokens\n");
-            return "";
-        }
-    }
-    return "";
-}
-
-bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
-{
-    //expire any alerts that need expiring
-    int32_t alertType = 0;
-    uint64_t expiryValue = 0;
-    uint32_t typeCheck = 0;
-    uint32_t verCheck = 0;
-    string alertMessage;
-    if(!global_alert_message.empty())
-    {
-        bool parseSuccess = parseAlertMessage(global_alert_message, &alertType, &expiryValue, &typeCheck, &verCheck, &alertMessage);
-        if (parseSuccess)
-        {
-            switch (alertType)
-            {
-                 case 1: //Text based alert only expiring by block number, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
-                     if (curBlock > expiryValue)
-                     {
-                         //the alert has expired, clear the global alert string
-                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                         global_alert_message = "";
-                         return true;
-                     }
-                 break;
-                 case 2: //Text based alert only expiring by block time, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
-                     if (curTime > expiryValue)
-                     {
-                         //the alert has expired, clear the global alert string
-                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                         global_alert_message = "";
-                         return true;
-                     }
-                 break;
-                 case 3: //Text based alert only expiring by client version, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
-                     if (OMNICORE_VERSION > expiryValue)
-                     {
-                         //the alert has expired, clear the global alert string
-                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                         global_alert_message = "";
-                         return true;
-                     }
-                 break;
-                 case 4: //Update alert, show upgrade alert in UI and getalert_MP call + use isTransactionTypeAllowed to verify client support and shutdown if not present
-                     //check of the new tx type is supported at live block
-                     bool txSupported = isTransactionTypeAllowed(expiryValue+1, OMNI_PROPERTY_MSC, typeCheck, verCheck);
-
-                     //check if we are at/past the live blockheight
-                     bool txLive = (chainActive.Height()>(int64_t)expiryValue);
-
-                     //testnet allows all types of transactions, so override this here for testing
-                     //txSupported = false; //testing
-                     //txLive = true; //testing
-
-                     if ((!txSupported) && (txLive))
-                     {
-                         // we know we have transactions live we don't understand
-                         // can't be trusted to provide valid data, shutdown
-                         PrintToLog("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
-                         PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
-                         if (!GetBoolArg("-overrideforcedshutdown", false)) {
-                             std::string msgText = "Shutting down due to alert: " + getMasterCoreAlertTextOnly();
-                             AbortNode(msgText, msgText); // show same message to user as that which is logged
-                         }
-                         return false;
-                     }
-
-                     if ((!txSupported) && (!txLive))
-                     {
-                         // warn the user this version does not support the new coming TX and they will need to update
-                         // we don't actually need to take any action here, we leave the alert string in place and simply don't expire it
-                     }
-
-                     if (txSupported)
-                     {
-                         // we can simply expire this update as this version supports the new coming TX
-                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n",global_alert_message);
-                         global_alert_message = "";
-                         return true;
-                     }
-                 break;
-            }
-            return false;
-        }
-        return false;
-    }
-    else { return false; }
-    return false;
 }
 
 // get total tokens for a property
@@ -2592,7 +2447,7 @@ int CMPTxList::setLastAlert(int blockHeight)
                     {
                         if (0 == mp_obj.step2_Alert(&new_global_alert_message))
                         {
-                            global_alert_message = new_global_alert_message;
+                            setOmniCoreAlert(new_global_alert_message);
                             // check if expired
                             CBlockIndex* mpBlockIndex = chainActive[blockHeight];
                             (void) checkExpiredAlerts(blockHeight, mpBlockIndex->GetBlockTime());

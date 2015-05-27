@@ -438,7 +438,6 @@ uint32_t GetNextPropertyId(bool maineco);
 CMPTally *getTally(const string & address);
 
 int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
-bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime);
 int set_wallet_totals();
 
 char *c_strMasterProtocolTXType(int i);
@@ -448,10 +447,7 @@ bool isTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 
 bool update_tally_map(string who, unsigned int which_currency, int64_t amount, TallyType ttype);
-void setOmniCoreAlert(const std::string& alertMessage);
-std::string getMasterCoreAlertString();
-std::string getMasterCoreAlertTextOnly();
-bool parseAlertMessage(std::string rawAlertStr, int32_t *alertType, uint64_t *expiryValue, uint32_t *typeCheck, uint32_t *verCheck, std::string *alertMessage);
+
 std::string getTokenLabel(unsigned int propertyId);
 }
 

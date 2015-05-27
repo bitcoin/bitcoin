@@ -8,6 +8,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
+#include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/parse_string.h"
 #include "omnicore/rpcrequirements.h"
