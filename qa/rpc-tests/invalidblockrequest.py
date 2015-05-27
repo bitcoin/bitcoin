@@ -4,11 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from test_framework import ComparisonTestFramework
-from util import *
-from comptool import TestManager, TestInstance
-from mininode import *
-from blocktools import *
+from test_framework.test_framework import ComparisonTestFramework
+from test_framework.util import *
+from test_framework.comptool import TestManager, TestInstance
+from test_framework.mininode import *
+from test_framework.blocktools import *
 import logging
 import copy
 import time

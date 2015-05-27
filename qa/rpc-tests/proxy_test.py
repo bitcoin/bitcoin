@@ -7,9 +7,9 @@ import traceback, sys
 from binascii import hexlify
 import time, os
 
-from socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
-from test_framework import BitcoinTestFramework
-from util import *
+from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 '''
 Test plan:
 - Start bitcoind's with different proxy configurations
