@@ -94,6 +94,7 @@ build
 
 #lcov
 *.gcno
+*.gcda
 /*.info
 test_bitcoin.coverage/
 total.coverage/
@@ -107,6 +108,9 @@ qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/tests_config.py
 qa/pull-tester/cache/*
 qa/pull-tester/test.*/*
+qa/tmp
+cache/
+share/BitcoindComparisonTool.jar
 
 !src/leveldb*/Makefile
 
