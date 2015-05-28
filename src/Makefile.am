@@ -256,10 +256,6 @@ libbitcoin_common_a_SOURCES = \
   script/script_error.cpp \
   $(BITCOIN_CORE_H)
 
-# Omni Core
-include Makefile.omnicore.include
-#
-
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
@@ -426,3 +422,7 @@ endif
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
+
+# Omni Core
+include Makefile.omnicore.include
+#
