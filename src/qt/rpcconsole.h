@@ -61,12 +61,12 @@ public slots:
     void clear();
     
     /** Wallet repair options */
-    void wallet_salvage();
-    void wallet_rescan();
-    void wallet_zaptxes1();
-    void wallet_zaptxes2();
-    void wallet_upgrade();
-    void wallet_reindex();
+    void walletSalvage();
+    void walletRescan();
+    void walletZaptxes1();
+    void walletZaptxes2();
+    void walletUpgrade();
+    void walletReindex();
     
     void reject();
     void message(int category, const QString &message, bool html = false);
@@ -111,7 +111,7 @@ private:
     void startExecutor();
     void setTrafficGraphRange(int mins);
     /** Build parameter list for restart */
-    void build_parameter_list(QString arg);
+    void buildParameterlist(QString arg);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
 

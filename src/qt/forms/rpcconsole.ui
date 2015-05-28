@@ -1073,7 +1073,7 @@
         <rect>
          <x>10</x>
          <y>90</y>
-         <width>180</width>
+         <width>221</width>
          <height>23</height>
         </rect>
        </property>
@@ -1092,7 +1092,7 @@
         <rect>
          <x>10</x>
          <y>140</y>
-         <width>180</width>
+         <width>221</width>
          <height>23</height>
         </rect>
        </property>
@@ -1111,7 +1111,7 @@
         <rect>
          <x>10</x>
          <y>190</y>
-         <width>180</width>
+         <width>221</width>
          <height>23</height>
         </rect>
        </property>
@@ -1130,7 +1130,7 @@
         <rect>
          <x>10</x>
          <y>240</y>
-         <width>180</width>
+         <width>221</width>
          <height>23</height>
         </rect>
        </property>
@@ -1149,7 +1149,7 @@
         <rect>
          <x>10</x>
          <y>290</y>
-         <width>180</width>
+         <width>221</width>
          <height>23</height>
         </rect>
        </property>
@@ -1188,9 +1188,9 @@
       <widget class="QLabel" name="label_repair_salvage">
        <property name="geometry">
         <rect>
-         <x>210</x>
+         <x>250</x>
          <y>80</y>
-         <width>511</width>
+         <width>471</width>
          <height>41</height>
         </rect>
        </property>
@@ -1204,9 +1204,9 @@
       <widget class="QLabel" name="label_repair_rescan">
        <property name="geometry">
         <rect>
-         <x>210</x>
+         <x>250</x>
          <y>129</y>
-         <width>511</width>
+         <width>471</width>
          <height>41</height>
         </rect>
        </property>
@@ -1220,9 +1220,9 @@
       <widget class="QLabel" name="label_repair_zap1">
        <property name="geometry">
         <rect>
-         <x>210</x>
+         <x>250</x>
          <y>179</y>
-         <width>511</width>
+         <width>471</width>
          <height>41</height>
         </rect>
        </property>
@@ -1236,9 +1236,9 @@
       <widget class="QLabel" name="label_repair_zap2">
        <property name="geometry">
         <rect>
-         <x>210</x>
+         <x>250</x>
          <y>229</y>
-         <width>511</width>
+         <width>471</width>
          <height>41</height>
         </rect>
        </property>
@@ -1252,14 +1252,14 @@
       <widget class="QLabel" name="label_repair_upgrade">
        <property name="geometry">
         <rect>
-         <x>210</x>
+         <x>250</x>
          <y>279</y>
-         <width>511</width>
+         <width>471</width>
          <height>41</height>
         </rect>
        </property>
        <property name="text">
-        <string>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself !)</string>
+        <string>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -1293,7 +1293,7 @@
         <rect>
          <x>10</x>
          <y>340</y>
-         <width>181</width>
+         <width>221</width>
          <height>23</height>
         </rect>
        </property>
@@ -1304,9 +1304,9 @@
       <widget class="QLabel" name="label_repair_reindex">
        <property name="geometry">
         <rect>
-         <x>210</x>
+         <x>250</x>
          <y>330</y>
-         <width>511</width>
+         <width>471</width>
          <height>41</height>
         </rect>
        </property>

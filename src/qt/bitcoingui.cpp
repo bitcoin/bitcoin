@@ -357,7 +357,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     openNetworkAction->setStatusTip(tr("Show network monitor"));
     openPeersAction = new QAction(QIcon(":/icons/connect_4"), tr("&Peers list"), this);
     openPeersAction->setStatusTip(tr("Show peers info"));
-    openRepairAction = new QAction(QIcon(":/icons/options"), tr("&Repair Wallet"), this);
+    openRepairAction = new QAction(QIcon(":/icons/options"), tr("Wallet &Repair"), this);
     openRepairAction->setStatusTip(tr("Repair Wallet Options"));
     openConfEditorAction = new QAction(QIcon(":/icons/edit"), tr("Open &Configuration File"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
