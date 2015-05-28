@@ -165,8 +165,16 @@ public:
 
     int64_t SecondsSincePayment()
     {
-        return (GetAdjustedTime() - nLastPaid);
+        int64_t sec = (GetAdjustedTime() - nLastPaid);
+        if(sec < 60*60*24*30) return sec; //if it's less than 30 days, give seconds
 
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << sigTime;
+        uint256 hash =  ss.GetHash();
+
+        memcpy(&sec, &hash, 64);
+        return sec;
     }
 
     void UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);

@@ -326,6 +326,20 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
 }
 
+CMasternode *CMasternodeMan::Find(const CScript &payee)
+{
+    LOCK(cs);
+    CScript payee2;
+
+    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    {
+        payee2 = GetScriptForDestination(mn.pubkey.GetID());
+        if(payee2 == payee)
+            return &mn;
+    }
+    return NULL;
+}
+
 CMasternode *CMasternodeMan::Find(const CTxIn &vin)
 {
     LOCK(cs);
@@ -578,14 +592,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // make sure it's still unspent
         //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-
-        //if it's a broadcast or we're synced
-        if(fRequested || !IsSyncingMasternodeAssets()){
-            mnb.nLastPaid = GetAdjustedTime();
-        }
-
         if(mnb.CheckInputsAndAdd(nDoS, fRequested)) {
-
             // use this as a peer
             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
         } else {

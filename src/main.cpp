@@ -3234,11 +3234,13 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
             CScript payee;
             CTxIn vin;
-            if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight, payee)){
-                //UPDATE MASTERNODE LAST PAID TIME
-                CMasternode* pmn = mnodeman.Find(vin);
-                if(pmn != NULL) pmn->nLastPaid = GetAdjustedTime(); 
 
+            if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee)){
+                //UPDATE MASTERNODE LAST PAID TIME
+                CMasternode* pmn = mnodeman.Find(payee);
+                if(pmn != NULL) {
+                    pmn->nLastPaid = GetAdjustedTime(); 
+                }
                 LogPrintf("%s : Update Masternode Last Paid Time - %d\n", __func__, chainActive.Tip()->nHeight);
             }
 

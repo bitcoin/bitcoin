@@ -128,7 +128,7 @@ bool CMasternodePaymentWinner::Sign(CKey& keyMasternode, CPubKey& pubKeyMasterno
 
 bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 {
-    if(!mapMasternodeBlocks.count(nBlockHeight)){
+    if(mapMasternodeBlocks.count(nBlockHeight)){
         return mapMasternodeBlocks[nBlockHeight].GetPayee(payee);
     }
 
@@ -146,9 +146,11 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn)
     CScript payee;
     for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+10; h++){
         if(mapMasternodeBlocks.count(h)){
-            mapMasternodeBlocks[h].GetPayee(payee);
-            if(payee != CScript() && mnpayee == payee) return true;
-            if(mn.donationAddress != CScript() && mn.donationAddress == payee) return true;
+            if(mapMasternodeBlocks[h].GetPayee(payee)){
+                if(mnpayee == payee || mn.donationAddress == payee) {
+                    return true;
+                }
+            }
         }
     }
 
@@ -169,7 +171,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     mapMasternodePayeeVotes[winnerIn.GetHash()] = winnerIn;
 
     if(!mapMasternodeBlocks.count(winnerIn.nBlockHeight)){
-       CMasternodeBlockPayees blockPayees;
+       CMasternodeBlockPayees blockPayees(winnerIn.nBlockHeight);
        mapMasternodeBlocks[winnerIn.nBlockHeight] = blockPayees;
     }
 
@@ -236,9 +238,9 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
         CBitcoinAddress address2(address1);
 
         if(ret != "Unknown"){
-            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
+            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue) + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         } else {
-            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
+            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue) + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         }
     }
 
