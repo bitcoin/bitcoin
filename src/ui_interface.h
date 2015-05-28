@@ -95,6 +95,9 @@ public:
 
     /** New block has been accepted */
     boost::signals2::signal<void (const uint256& hash)> NotifyBlockTip;
+
+    /** New transaction has been accepted */
+    boost::signals2::signal<void (const uint256& hash)> NotifyTx;
 };
 
 extern CClientUIInterface uiInterface;

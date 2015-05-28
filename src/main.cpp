@@ -1070,6 +1070,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     SyncWithWallets(tx, NULL);
 
+    // Notify external listeners about the new tx.
+    uiInterface.NotifyTx(hash);
+
     return true;
 }
 
