@@ -85,9 +85,7 @@ CMasternode::CMasternode()
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
     nVotedTimes = 0;
-
-    //mark last paid as current for new entries
-    nLastPaid = GetAdjustedTime();
+    nLastPaid = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -138,7 +136,7 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     donationPercentage = newDonationPercentage;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = GetAdjustedTime();    
+    nLastPaid = 0;    
     nVotedTimes = 0;
 }
 
@@ -269,9 +267,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     donationPercentage = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-
-    //mark last paid as current for new entries
-    nLastPaid = GetAdjustedTime();
+    nLastPaid = 0;
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
@@ -295,7 +291,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     donationPercentage = newDonationPercentage;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = GetAdjustedTime();  
+    nLastPaid = 0;  
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& other)

@@ -105,6 +105,7 @@ public:
     void DsegUpdate(CNode* pnode);
 
     /// Find an entry
+    CMasternode* Find(const CScript &payee);
     CMasternode* Find(const CTxIn& vin);
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
