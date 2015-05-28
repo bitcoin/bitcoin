@@ -282,13 +282,13 @@ void BitcoinCore::initialize()
 }
 
 void BitcoinCore::restart(QStringList args)
-{   
+{      
     try
     {
         qDebug() << __func__ << ": Running Restart in thread";
         threadGroup.interrupt_all();
         threadGroup.join_all();
-        Prepare_Shutdown();
+        PrepareShutdown();
         qDebug() << __func__ << ": Shutdown finished";
         emit shutdownResult(1);
         CExplicitNetCleanup::callCleanup();

@@ -42,6 +42,14 @@ const QSize ICON_SIZE(24, 24);
 
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
 
+// Repair parameters
+const QString SALVAGEWALLET("-salvagewallet");
+const QString RESCAN("-rescan");
+const QString ZAPTXES1("-zapwallettxes=1");
+const QString ZAPTXES2("-zapwallettxes=2");
+const QString UPGRADEWALLET("-upgradewallet");
+const QString REINDEX("-reindex");
+
 const struct {
     const char *url;
     const char *source;
@@ -222,12 +230,12 @@ RPCConsole::RPCConsole(QWidget *parent) :
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
     
     // Wallet Repair Buttons
-    connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(wallet_salvage()));
-    connect(ui->btn_rescan, SIGNAL(clicked()), this, SLOT(wallet_rescan()));
-    connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(wallet_zaptxes1()));
-    connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(wallet_zaptxes2()));
-    connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(wallet_upgrade()));
-    connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(wallet_reindex()));
+    connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
+    connect(ui->btn_rescan, SIGNAL(clicked()), this, SLOT(walletRescan()));
+    connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(walletZaptxes1()));
+    connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(walletZaptxes2()));
+    connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(walletUpgrade()));
+    connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(walletReindex()));
 
     // set library version labels
     ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
@@ -345,49 +353,59 @@ static QString categoryClass(int category)
 }
 
 /** Restart wallet with "-salvagewallet" */
-void RPCConsole::wallet_salvage()
+void RPCConsole::walletSalvage()
 {
-    build_parameter_list(QString("-salvagewallet"));
+    buildParameterlist(SALVAGEWALLET);
 }
 
 /** Restart wallet with "-rescan" */
-void RPCConsole::wallet_rescan()
+void RPCConsole::walletRescan()
 {
-    build_parameter_list(QString("-rescan"));
+    buildParameterlist(RESCAN);
 }
 
 /** Restart wallet with "-zapwallettxes=1" */
-void RPCConsole::wallet_zaptxes1()
+void RPCConsole::walletZaptxes1()
 {
-    build_parameter_list(QString("-zapwallettxes=1"));
+    buildParameterlist(ZAPTXES1);
 }
 
 /** Restart wallet with "-zapwallettxes=2" */
-void RPCConsole::wallet_zaptxes2()
+void RPCConsole::walletZaptxes2()
 {
-    build_parameter_list(QString("-zapwallettxes=2"));
+    buildParameterlist(ZAPTXES2);
 }
 
 /** Restart wallet with "-upgradewallet" */
-void RPCConsole::wallet_upgrade()
+void RPCConsole::walletUpgrade()
 {
-    build_parameter_list(QString("-upgradewallet"));
+    buildParameterlist(UPGRADEWALLET);
 }
 
 /** Restart wallet with "-reindex" */
-void RPCConsole::wallet_reindex()
+void RPCConsole::walletReindex()
 {
-    build_parameter_list(QString("-reindex"));
+    buildParameterlist(REINDEX);
 }
 
 /** Build command-line parameter list for restart */
-void RPCConsole::build_parameter_list(QString arg)
+void RPCConsole::buildParameterlist(QString arg)
 {
     // Get command-line arguments and remove the application name
     QStringList args = QApplication::arguments();
     args.removeFirst();
+
+    // Remove existing repair-options
+    args.removeAll(SALVAGEWALLET);
+    args.removeAll(RESCAN);
+    args.removeAll(ZAPTXES1);
+    args.removeAll(ZAPTXES2);
+    args.removeAll(UPGRADEWALLET);
+    args.removeAll(REINDEX);
+   
     // Append repair parameter to command line. We don't care whether it might already be there
     args.append(arg);
+
     // Send command-line arguments to BitcoinGUI::handleRestart()
     emit handleRestart(args);
 }
