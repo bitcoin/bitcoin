@@ -403,7 +403,7 @@ void RPCConsole::buildParameterlist(QString arg)
     args.removeAll(UPGRADEWALLET);
     args.removeAll(REINDEX);
    
-    // Append repair parameter to command line. We don't care whether it might already be there
+    // Append repair parameter to command line.
     args.append(arg);
 
     // Send command-line arguments to BitcoinGUI::handleRestart()
