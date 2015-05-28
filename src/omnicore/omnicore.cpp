@@ -250,6 +250,11 @@ inline bool RegTest()
     return Params().NetworkIDString() == "regtest";
 }
 
+inline bool UnitTest()
+{
+    return Params().NetworkIDString() == "unittest";
+}
+
 string FormatPriceMP(double n)
 {
   string str = strprintf("%lf", n);
@@ -2133,7 +2138,7 @@ int mastercore_init()
   InitDebugLogLevels();
   ShrinkDebugLog();
 
-  if (isNonMainNet())
+  if (isNonMainNet() && !UnitTest())
   {
     exodus_address = exodus_testnet;
   }
