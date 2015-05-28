@@ -22,6 +22,10 @@ BOOST_AUTO_TEST_CASE(rpcrequirements_universal)
     BOOST_CHECK_NO_THROW(RequirePropertyName("TestTokens"));
     BOOST_CHECK_NO_THROW(RequireExistingProperty(1));
     BOOST_CHECK_NO_THROW(RequireExistingProperty(2));
+    BOOST_CHECK_NO_THROW(RequireSameEcosystem(0, 0));
+    BOOST_CHECK_NO_THROW(RequireSameEcosystem(1, 3));
+    BOOST_CHECK_NO_THROW(RequireSameEcosystem(3221225476, 2));
+    BOOST_CHECK_NO_THROW(RequireDifferentIds(100000, 100001));
     BOOST_CHECK_NO_THROW(RequireNoOtherDExOffer("137uFtQ5EgMsreg4FVvL3xuhjkYGToVPqs", 1));
     BOOST_CHECK_NO_THROW(RequireNoOtherDExOffer("332r9K9t581aGVyzMK8uoPQr7ieH26u6J3", 2));
     BOOST_CHECK_NO_THROW(RequireSaneReferenceAmount(0));
@@ -42,6 +46,8 @@ BOOST_AUTO_TEST_CASE(rpcrequirements_universal_failure)
     BOOST_CHECK_THROW(RequirePropertyName(""), Object);
     BOOST_CHECK_THROW(RequireExistingProperty(uint32_t(2147483647)), Object); // last main identifier that may be created
     BOOST_CHECK_THROW(RequireExistingProperty(uint32_t(4294967295)), Object); // last test identifier that may be created
+    BOOST_CHECK_THROW(RequireSameEcosystem(2147483650, 4294967295), Object);
+    BOOST_CHECK_THROW(RequireDifferentIds(4200000000, 4200000000), Object);
     BOOST_CHECK_THROW(RequireCrowdsale(uint32_t(2147483647)), Object);
     BOOST_CHECK_THROW(RequireCrowdsale(uint32_t(4294967295)), Object);
     BOOST_CHECK_THROW(RequireActiveCrowdsale(uint32_t(2147483647)), Object);

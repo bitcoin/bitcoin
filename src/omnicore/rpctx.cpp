@@ -719,8 +719,8 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
     RequireExistingProperty(propertyIdForSale);
     RequireExistingProperty(propertyIdDesired);
     RequireBalance(fromAddress, propertyIdForSale, amountForSale);
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
+    RequireDifferentIds(propertyIdForSale, propertyIdDesired);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
@@ -773,8 +773,8 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
     // perform checks
     RequireExistingProperty(propertyIdForSale);
     RequireExistingProperty(propertyIdDesired);
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
+    RequireDifferentIds(propertyIdForSale, propertyIdDesired);
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
@@ -824,8 +824,8 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
     // perform checks
     RequireExistingProperty(propertyIdForSale);
     RequireExistingProperty(propertyIdDesired);
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
+    RequireDifferentIds(propertyIdForSale, propertyIdDesired);
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
