@@ -88,12 +88,16 @@ qrc_*.cpp
 # Qt creator
 *.pro.user
 
+# NetBeans
+nbproject/
+
 # Mac specific
 .DS_Store
 build
 
 #lcov
 *.gcno
+*.gcda
 /*.info
 test_bitcoin.coverage/
 total.coverage/
@@ -107,6 +111,7 @@ qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/tests-config.sh
 qa/pull-tester/cache/*
 qa/pull-tester/test.*/*
+qa/tmp
 
 !src/leveldb*/Makefile
 

@@ -250,6 +250,11 @@ inline bool RegTest()
     return Params().NetworkIDString() == "regtest";
 }
 
+inline bool UnitTest()
+{
+    return Params().NetworkIDString() == "unittest";
+}
+
 string FormatPriceMP(double n)
 {
   string str = strprintf("%lf", n);
@@ -2133,7 +2138,7 @@ int mastercore_init()
   InitDebugLogLevels();
   ShrinkDebugLog();
 
-  if (isNonMainNet())
+  if (isNonMainNet() && !UnitTest())
   {
     exodus_address = exodus_testnet;
   }
@@ -2994,7 +2999,7 @@ unsigned int n_found = 0;
     }
   }
 
-  PrintToConsole("%s(%d, %d); n_found= %d\n", __FUNCTION__, starting_block, ending_block, n_found);
+  PrintToLog("%s(%d, %d); n_found= %d\n", __FUNCTION__, starting_block, ending_block, n_found);
 
   delete it;
 
@@ -3243,7 +3248,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
     }
   }
 
-  PrintToConsole("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToLog("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 
@@ -3385,7 +3390,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
     }
   }
 
-  PrintToConsole("%s(%d); tradedb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToLog("%s(%d); tradedb n_found= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 

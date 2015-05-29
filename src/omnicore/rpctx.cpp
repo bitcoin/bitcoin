@@ -65,7 +65,7 @@ Value send_OMNI(const Array& params, bool fHelp)
     std::string toAddress = ParseAddress(params[1]);
     uint32_t propertyId = ParsePropertyId(params[2]);
     int64_t amount = ParseAmount(params[3], isPropertyDivisible(propertyId));
-    std::string redeemAddress = (params.size() > 4) ? ParseAddress(params[4]): "";
+    std::string redeemAddress = (params.size() > 4 && !ParseText(params[4]).empty()) ? ParseAddress(params[4]): "";
     int64_t referenceAmount = (params.size() > 5) ? ParseAmount(params[5], true): 0;
 
     // perform checks
@@ -451,7 +451,7 @@ Value sendsto_OMNI(const Array& params, bool fHelp)
     std::string fromAddress = ParseAddress(params[0]);
     uint32_t propertyId = ParsePropertyId(params[1]);
     int64_t amount = ParseAmount(params[2], isPropertyDivisible(propertyId));
-    std::string redeemAddress = (params.size() > 3) ? ParseAddress(params[3]): "";
+    std::string redeemAddress = (params.size() > 3 && !ParseText(params[3]).empty()) ? ParseAddress(params[3]): "";
 
     // perform checks
     RequireBalance(fromAddress, propertyId, amount);
@@ -499,7 +499,7 @@ Value sendgrant_OMNI(const Array& params, bool fHelp)
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
-    std::string toAddress = ParseText(params[1]).size() ? ParseAddress(params[1]): "";
+    std::string toAddress = !ParseText(params[1]).empty() ? ParseAddress(params[1]): "";
     uint32_t propertyId = ParsePropertyId(params[2]);
     int64_t amount = ParseAmount(params[3], isPropertyDivisible(propertyId));
     std::string memo = (params.size() > 4) ? ParseText(params[4]): "";
@@ -719,8 +719,8 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
     RequireExistingProperty(propertyIdForSale);
     RequireExistingProperty(propertyIdDesired);
     RequireBalance(fromAddress, propertyIdForSale, amountForSale);
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
+    RequireDifferentIds(propertyIdForSale, propertyIdDesired);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
@@ -773,8 +773,8 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
     // perform checks
     RequireExistingProperty(propertyIdForSale);
     RequireExistingProperty(propertyIdDesired);
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
+    RequireDifferentIds(propertyIdForSale, propertyIdDesired);
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
@@ -824,8 +824,8 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
     // perform checks
     RequireExistingProperty(propertyIdForSale);
     RequireExistingProperty(propertyIdDesired);
-    if (isTestEcosystemProperty(propertyIdForSale) != isTestEcosystemProperty(propertyIdDesired)) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be in the same ecosystem");
-    if (propertyIdForSale == propertyIdDesired) throw JSONRPCError(RPC_INVALID_PARAMETER, "Property for sale and property desired must be different");
+    RequireSameEcosystem(propertyIdForSale, propertyIdDesired);
+    RequireDifferentIds(propertyIdForSale, propertyIdDesired);
     // TODO: check, if there are matching offers to cancel
 
     // create a payload for the transaction
@@ -870,7 +870,7 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
-    uint8_t ecosystem = ParseEcosystem(params[1]);
+    uint8_t ecosystem = (params[1].get_int() != 0) ? ParseEcosystem(params[1]): 0;
 
     // perform checks
     // TODO: check, if there are matching offers to cancel

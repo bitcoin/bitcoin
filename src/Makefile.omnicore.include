@@ -48,3 +48,11 @@ libbitcoin_server_a_SOURCES += \
   $(OMNICORE_H)
 
 omnicore/libbitcoin_server_a-version.$(OBJEXT): obj/build.h # build info
+
+CLEAN_OMNICORE = omnicore/*.gcda omnicore/*.gcno
+
+CLEANFILES += $(CLEAN_OMNICORE)
+
+if ENABLE_TESTS
+include Makefile.omnitest.include
+endif

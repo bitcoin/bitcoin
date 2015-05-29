@@ -45,6 +45,20 @@ void RequireExistingProperty(uint32_t propertyId)
     }
 }
 
+void RequireSameEcosystem(uint32_t propertyId, uint32_t otherId)
+{
+    if (mastercore::isTestEcosystemProperty(propertyId) != mastercore::isTestEcosystemProperty(otherId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Properties must be in the same ecosystem");
+    }
+}
+
+void RequireDifferentIds(uint32_t propertyId, uint32_t otherId)
+{
+    if (propertyId == otherId) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifiers must not be the same");
+    }
+}
+
 void RequireCrowdsale(uint32_t propertyId)
 {
     CMPSPInfo::Entry sp;
