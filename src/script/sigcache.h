@@ -12,13 +12,13 @@
 
 class CPubKey;
 
-class CachingSignatureChecker : public SignatureChecker
+class CachingTransactionSignatureChecker : public TransactionSignatureChecker
 {
 private:
     bool store;
 
 public:
-    CachingSignatureChecker(const CTransaction& txToIn, unsigned int nInIn, bool storeIn=true) : SignatureChecker(txToIn, nInIn), store(storeIn) {}
+    CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, bool storeIn=true) : TransactionSignatureChecker(txToIn, nInIn), store(storeIn) {}
 
     bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 };

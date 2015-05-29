@@ -1,12 +1,6 @@
 dnl libsecp25k1 helper checks
 AC_DEFUN([SECP_INT128_CHECK],[
 has_int128=$ac_cv_type___int128
-if test x"$has_int128" != x"yes" && test x"$set_field" = x"64bit"; then
-  AC_MSG_ERROR([$set_field field support explicitly requested but is not compatible with this host])
-fi
-if test x"$has_int128" != x"yes" && test x"$set_scalar" = x"64bit"; then
-  AC_MSG_ERROR([$set_scalar scalar support explicitly requested but is not compatible with this host])
-fi
 ])
 
 dnl 
@@ -18,11 +12,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
   __asm__ __volatile__("movq $0x100000000,%1; mulq %%rsi" : "+a"(a) : "S"(tmp) : "cc", "%rdx");
   ]])],[has_64bit_asm=yes],[has_64bit_asm=no])
 AC_MSG_RESULT([$has_64bit_asm])
-if test x"$set_field" == x"64bit_asm"; then
-  if test x"$has_64bit_asm" == x"no"; then
-    AC_MSG_ERROR([$set_field field support explicitly requested but no x86_64 assembly available])
-  fi
-fi
 ])
 
 dnl
@@ -43,7 +32,7 @@ else
 )])
   LIBS=
 fi
-if test x"$has_libcrypto" == x"yes" && test x"$has_openssl_ec" = x; then
+if test x"$has_libcrypto" = x"yes" && test x"$has_openssl_ec" = x; then
   AC_MSG_CHECKING(for EC functions in libcrypto)
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <openssl/ec.h>
@@ -69,11 +58,4 @@ if test x"$has_gmp" != x"yes"; then
   CPPFLAGS="$CPPFLAGS_TEMP"
   LIBS="$LIBS_TEMP"
 fi
-if test x"$set_field" = x"gmp" && test x"$has_gmp" != x"yes"; then
-    AC_MSG_ERROR([$set_field field support explicitly requested but libgmp was not found])
-fi
-if test x"$set_bignum" = x"gmp" && test x"$has_gmp" != x"yes"; then
-    AC_MSG_ERROR([$set_bignum field support explicitly requested but libgmp was not found])
-fi
 ])
-

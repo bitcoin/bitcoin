@@ -6,7 +6,10 @@
 #include "rpcclient.h"
 
 #include "base58.h"
-#include "wallet.h"
+#include "main.h"
+#include "wallet/wallet.h"
+
+#include "test/test_bitcoin.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -19,7 +22,7 @@ extern Value CallRPC(string args);
 
 extern CWallet* pwalletMain;
 
-BOOST_AUTO_TEST_SUITE(rpc_wallet_tests)
+BOOST_FIXTURE_TEST_SUITE(rpc_wallet_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {

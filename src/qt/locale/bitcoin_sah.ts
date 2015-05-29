@@ -1,10 +1,6 @@
-<TS language="sah" version="2.0">
+<TS language="sah" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Аадырыскын уларытаргар иккитэ баттаа</translation>
-    </message>
     </context>
 <context>
     <name>AddressTableModel</name>

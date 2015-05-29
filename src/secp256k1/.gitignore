@@ -1,6 +1,8 @@
 bench_inv
 bench_sign
 bench_verify
+bench_recover
+bench_internal
 tests
 *.exe
 *.so

@@ -46,6 +46,7 @@ enum
 {
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE      = 0,
     bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH      = (1U << 0), // evaluate P2SH (BIP16) subscripts
+    bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG    = (1U << 2), // enforce strict DER (BIP66) compliance
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by

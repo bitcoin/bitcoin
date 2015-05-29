@@ -4,18 +4,17 @@
 
 #include "base58.h"
 #include "clientversion.h"
-#include "primitives/block.h" // for MAX_BLOCK_SIZE
-#include "primitives/transaction.h"
-#include "core_io.h"
 #include "coins.h"
+#include "consensus/consensus.h"
+#include "core_io.h"
 #include "keystore.h"
+#include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/sign.h"
-#include "ui_interface.h" // for _(...)
 #include "univalue/univalue.h"
 #include "util.h"
-#include "utilstrencodings.h"
 #include "utilmoneystr.h"
+#include "utilstrencodings.h"
 
 #include <stdio.h>
 
@@ -26,7 +25,6 @@ using namespace std;
 
 static bool fCreateBlank;
 static map<string,UniValue> registers;
-CClientUIInterface uiInterface;
 
 static bool AppInitRawTx(int argc, char* argv[])
 {
@@ -54,38 +52,34 @@ static bool AppInitRawTx(int argc, char* argv[])
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = _("Options:") + "\n";
-        strUsage += "  -?                      " + _("This help message") + "\n";
-        strUsage += "  -create                 " + _("Create new, empty TX.") + "\n";
-        strUsage += "  -json                   " + _("Select JSON output") + "\n";
-        strUsage += "  -txid                   " + _("Output only the hex-encoded transaction id of the resultant transaction.") + "\n";
-        strUsage += "  -regtest                " + _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly.") + "\n";
-        strUsage += "  -testnet                " + _("Use the test network") + "\n";
-        strUsage += "\n";
+        strUsage = HelpMessageGroup(_("Options:"));
+        strUsage += HelpMessageOpt("-?", _("This help message"));
+        strUsage += HelpMessageOpt("-create", _("Create new, empty TX."));
+        strUsage += HelpMessageOpt("-json", _("Select JSON output"));
+        strUsage += HelpMessageOpt("-txid", _("Output only the hex-encoded transaction id of the resultant transaction."));
+        strUsage += HelpMessageOpt("-regtest", _("Enter regression test mode, which uses a special chain in which blocks can be solved instantly."));
+        strUsage += HelpMessageOpt("-testnet", _("Use the test network"));
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-
-        strUsage = _("Commands:") + "\n";
-        strUsage += "  delin=N                " + _("Delete input N from TX") + "\n";
-        strUsage += "  delout=N               " + _("Delete output N from TX") + "\n";
-        strUsage += "  in=TXID:VOUT           " + _("Add input to TX") + "\n";
-        strUsage += "  locktime=N             " + _("Set TX lock time to N") + "\n";
-        strUsage += "  nversion=N             " + _("Set TX version to N") + "\n";
-        strUsage += "  outaddr=VALUE:ADDRESS  " + _("Add address-based output to TX") + "\n";
-        strUsage += "  outscript=VALUE:SCRIPT " + _("Add raw script output to TX") + "\n";
-        strUsage += "  sign=SIGHASH-FLAGS     " + _("Add zero or more signatures to transaction") + "\n";
-        strUsage += "      This command requires JSON registers:\n";
-        strUsage += "      prevtxs=JSON object\n";
-        strUsage += "      privatekeys=JSON object\n";
-        strUsage += "      See signrawtransaction docs for format of sighash flags, JSON objects.\n";
-        strUsage += "\n";
+        strUsage = HelpMessageGroup(_("Commands:"));
+        strUsage += HelpMessageOpt("delin=N", _("Delete input N from TX"));
+        strUsage += HelpMessageOpt("delout=N", _("Delete output N from TX"));
+        strUsage += HelpMessageOpt("in=TXID:VOUT", _("Add input to TX"));
+        strUsage += HelpMessageOpt("locktime=N", _("Set TX lock time to N"));
+        strUsage += HelpMessageOpt("nversion=N", _("Set TX version to N"));
+        strUsage += HelpMessageOpt("outaddr=VALUE:ADDRESS", _("Add address-based output to TX"));
+        strUsage += HelpMessageOpt("outscript=VALUE:SCRIPT", _("Add raw script output to TX"));
+        strUsage += HelpMessageOpt("sign=SIGHASH-FLAGS", _("Add zero or more signatures to transaction") + ". " +
+            _("This command requires JSON registers:") +
+            _("prevtxs=JSON object") + ", " +
+            _("privatekeys=JSON object") + ". " +
+            _("See signrawtransaction docs for format of sighash flags, JSON objects."));
         fprintf(stdout, "%s", strUsage.c_str());
 
-        strUsage = _("Register Commands:") + "\n";
-        strUsage += "  load=NAME:FILENAME     " + _("Load JSON file FILENAME into register NAME") + "\n";
-        strUsage += "  set=NAME:JSON-STRING   " + _("Set register NAME to given JSON-STRING") + "\n";
-        strUsage += "\n";
+        strUsage = HelpMessageGroup(_("Register Commands:"));
+        strUsage += HelpMessageOpt("load=NAME:FILENAME", _("Load JSON file FILENAME into register NAME"));
+        strUsage += HelpMessageOpt("set=NAME:JSON-STRING", _("Set register NAME to given JSON-STRING"));
         fprintf(stdout, "%s", strUsage.c_str());
 
         return false;
@@ -436,7 +430,7 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
         BOOST_FOREACH(const CTransaction& txv, txVariants) {
             txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, txv.vin[i].scriptSig);
         }
-        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, SignatureChecker(mergedTx, i)))
+        if (!VerifyScript(txin.scriptSig, prevPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&mergedTx, i)))
             fComplete = false;
     }
 
@@ -448,9 +442,18 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
     tx = mergedTx;
 }
 
+class Secp256k1Init
+{
+public:
+    Secp256k1Init() { ECC_Start(); }
+    ~Secp256k1Init() { ECC_Stop(); }
+};
+
 static void MutateTx(CMutableTransaction& tx, const string& command,
                      const string& commandVal)
 {
+    boost::scoped_ptr<Secp256k1Init> ecc;
+
     if (command == "nversion")
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
@@ -468,8 +471,10 @@ static void MutateTx(CMutableTransaction& tx, const string& command,
     else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
 
-    else if (command == "sign")
+    else if (command == "sign") {
+        if (!ecc) { ecc.reset(new Secp256k1Init()); }
         MutateTxSign(tx, commandVal);
+    }
 
     else if (command == "load")
         RegisterLoad(commandVal);

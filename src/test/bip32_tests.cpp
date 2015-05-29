@@ -8,6 +8,8 @@
 #include "key.h"
 #include "uint256.h"
 #include "util.h"
+#include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
 #include <string>
 #include <vector>
@@ -107,7 +109,7 @@ void RunTest(const TestVector &test) {
     }
 }
 
-BOOST_AUTO_TEST_SUITE(bip32_tests)
+BOOST_FIXTURE_TEST_SUITE(bip32_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(bip32_test1) {
     RunTest(test1);

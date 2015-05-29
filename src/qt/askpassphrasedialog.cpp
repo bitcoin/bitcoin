@@ -8,7 +8,7 @@
 #include "guiconstants.h"
 #include "walletmodel.h"
 
-#include "allocators.h"
+#include "support/allocators/secure.h"
 
 #include <QKeyEvent>
 #include <QMessageBox>
@@ -62,7 +62,7 @@ AskPassphraseDialog::AskPassphraseDialog(Mode mode, QWidget *parent) :
             break;
         case ChangePass: // Ask old passphrase + new passphrase x2
             setWindowTitle(tr("Change passphrase"));
-            ui->warningLabel->setText(tr("Enter the old and new passphrase to the wallet."));
+            ui->warningLabel->setText(tr("Enter the old passphrase and new passphrase to the wallet."));
             break;
     }
     textChanged();

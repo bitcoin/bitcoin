@@ -1,25 +1,45 @@
-<TS language="es_CL" version="2.0">
+<TS language="es_CL" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Haz doble clic para editar una dirección o etiqueta</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Haga clic para editar la dirección o etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Crea una nueva dirección</translation>
+        <translation>Crea una nueva direCrea una nueva direccióncción</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>y nueva</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Copia la dirección seleccionada al portapapeles</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>y copiar</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>C y perder</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copia dirección</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Eliminar la dirección seleccionada de la lista</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar los datos de la pestaña actual a un archivo</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>y exportar</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -92,10 +112,6 @@
         <translation>Cambia contraseña</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Introduce la contraseña anterior y la nueva de cartera</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Confirma la codificación de cartera</translation>
     </message>
@@ -118,10 +134,6 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Billetera codificada</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin se cerrará para finalizar el proceso de encriptación. Recuerde que encriptar su billetera no protegera completatamente sus bitcoins de ser robados por malware que infecte su computador</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -211,16 +223,20 @@
         <translation>&amp;Cambiar la contraseña...</translation>
     </message>
     <message>
+        <source>Open &amp;URI...</source>
+        <translation>Abrir y url...</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core client</source>
+        <translation>cliente bitcoin core</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Cargando el index de bloques...</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Enviar monedas a una dirección bitcoin</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Modifica las opciones de configuración de bitcoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -251,6 +267,10 @@
         <translation>&amp;Envía</translation>
     </message>
     <message>
+        <source>&amp;Receive</source>
+        <translation>y recibir</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Mostrar/Ocultar</translation>
     </message>
@@ -274,21 +294,9 @@
         <source>Tabs toolbar</source>
         <translation>Barra de pestañas</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n conexión activa hacia la red Bitcoin</numerusform><numerusform>%n conexiones activas hacia la red Bitcoin</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n hora</numerusform><numerusform>%n horas</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n semana</numerusform><numerusform>%n semanas</numerusform></translation>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
     </message>
     <message>
         <source>Error</source>
@@ -317,17 +325,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Transacción entrante</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Fecha: %1
-Cantidad: %2
-Tipo: %3
-Dirección: %4</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -364,6 +361,10 @@ Dirección: %4</translation>
         <translation>Confirmado</translation>
     </message>
     <message>
+        <source>Priority</source>
+        <translation>prioridad</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>Copia dirección</translation>
     </message>
@@ -374,6 +375,18 @@ Dirección: %4</translation>
     <message>
         <source>Copy amount</source>
         <translation>Copiar Cantidad</translation>
+    </message>
+    <message>
+        <source>medium</source>
+        <translation>medio</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>si</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>no</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -437,6 +450,10 @@ Dirección: %4</translation>
 <context>
     <name>HelpMessageDialog</name>
     <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
+    </message>
+    <message>
         <source>version</source>
         <translation>versión</translation>
     </message>
@@ -444,18 +461,17 @@ Dirección: %4</translation>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>UI opciones</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Arranca minimizado
-</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation>bienvenido</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>Error</translation>
@@ -463,6 +479,10 @@ Dirección: %4</translation>
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>URI:</source>
+        <translation>url:</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -475,20 +495,16 @@ Dirección: %4</translation>
         <translation>&amp;Principal</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Inicia Bitcoin automáticamente despues de encender el computador</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Inicia Bitcoin al iniciar el sistema</translation>
-    </message>
-    <message>
         <source>Reset all client options to default.</source>
         <translation>Reestablece todas las opciones.</translation>
     </message>
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Red</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation>experto</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -511,16 +527,17 @@ Dirección: %4</translation>
         <translation>Puerto del servidor proxy (ej. 9050)</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation>y windows
+</translation>
+    </message>
+    <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Muestra solo un ícono en la bandeja después de minimizar la ventana</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimiza a la bandeja en vez de la barra de tareas</translation>
-    </message>
-    <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimiza la ventana en lugar de salir del programa cuando la ventana se cierra. Cuando esta opción esta activa el programa solo se puede cerrar seleccionando Salir desde el menu.</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -565,11 +582,7 @@ Dirección: %4</translation>
         <source>Total:</source>
         <translation>Total:</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>desincronizado</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -621,6 +634,10 @@ Dirección: %4</translation>
         <translation>&amp;Información</translation>
     </message>
     <message>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Tiempo de inicio</translation>
     </message>
@@ -639,6 +656,11 @@ Dirección: %4</translation>
     <message>
         <source>Block chain</source>
         <translation>Bloquea cadena</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>version
+</translation>
     </message>
     <message>
         <source>&amp;Open</source>
@@ -773,10 +795,6 @@ Dirección: %4</translation>
         <translation>Copiar Cantidad</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>La dirección de destinatarion no es valida, comprueba otra vez.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>La cantidad por pagar tiene que ser mayor 0.</translation>
     </message>
@@ -787,10 +805,6 @@ Dirección: %4</translation>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>El total sobrepasa tu saldo cuando se incluyen %1 como tasa de envio.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Tienes una dirección duplicada, solo puedes enviar a direcciónes individuales de una sola vez.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -909,6 +923,10 @@ Dirección: %4</translation>
 <context>
     <name>SplashScreen</name>
     <message>
+        <source>Bitcoin Core</source>
+        <translation>bitcoin core</translation>
+    </message>
+    <message>
         <source>[testnet]</source>
         <translation>[red-de-pruebas]</translation>
     </message>
@@ -1010,10 +1028,6 @@ Dirección: %4</translation>
         <source>, has not been successfully broadcast yet</source>
         <translation>, no ha sido emitido satisfactoriamente todavía</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Abierto para %n bloque más</numerusform><numerusform>Abierto para %n bloques más</numerusform></translation>
-    </message>
     <message>
         <source>unknown</source>
         <translation>desconocido</translation>
@@ -1041,10 +1055,6 @@ Dirección: %4</translation>
         <translation>Tipo</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Dirección</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Abierto hasta %1</translation>
     </message>
@@ -1059,6 +1069,10 @@ Dirección: %4</translation>
     <message>
         <source>Generated but not accepted</source>
         <translation>Generado pero no acceptado</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Etiqueta</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1095,10 +1109,6 @@ Dirección: %4</translation>
     <message>
         <source>Type of transaction.</source>
         <translation>Tipo de transacción.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Dirección de destino para la transacción</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -1236,6 +1246,10 @@ Dirección: %4</translation>
 <context>
     <name>WalletView</name>
     <message>
+        <source>&amp;Export</source>
+        <translation>y exportar</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar los datos de la pestaña actual a un archivo</translation>
     </message>
@@ -1309,6 +1323,11 @@ Dirección: %4</translation>
         <translation>Enviar informacion de seguimiento a la consola en vez del archivo debug.log</translation>
     </message>
     <message>
+        <source>Start minimized</source>
+        <translation>Arranca minimizado
+</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
         <translation>Intenta usar UPnP para mapear el puerto de escucha (default: 1 when listening)</translation>
     </message>
@@ -1320,10 +1339,6 @@ Dirección: %4</translation>
     <message>
         <source>Warning</source>
         <translation>Atención</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Advertencia: Esta versión está obsoleta, se necesita actualizar!</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -1379,10 +1394,6 @@ Dirección: %4</translation>
         <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Cantidad inválida</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Fondos insuficientes</translation>
     </message>
@@ -1405,10 +1416,6 @@ Dirección: %4</translation>
     <message>
         <source>Done loading</source>
         <translation>Carga completa</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Para utilizar la opción %s</translation>
     </message>
     <message>
         <source>Error</source>

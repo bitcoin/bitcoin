@@ -49,7 +49,7 @@ B2ARGS="-datadir=$D2 -debug=mempool"
 $BITCOIND $B2ARGS &
 B2PID=$!
 
-# Wait until all four nodes are at the same block number
+# Wait until both nodes are at the same block number
 function WaitBlocks {
     while :
     do
@@ -84,11 +84,11 @@ WaitPeers "$B1ARGS" 1
 
 # 2 block, 50 XBT each == 100 XBT
 # These will be transactions "A" and "B"
-$CLI $B1ARGS setgenerate true 2
+$CLI $B1ARGS generate 2
 
 WaitBlocks
 # 100 blocks, 0 mature == 0 XBT
-$CLI $B2ARGS setgenerate true 100
+$CLI $B2ARGS generate 100
 WaitBlocks
 
 CheckBalance "$B1ARGS" 100
@@ -130,7 +130,7 @@ WaitPeers "$B1ARGS" 1
 
 # Having B2 mine the next block puts the mutated
 # transaction C in the chain:
-$CLI $B2ARGS setgenerate true 1
+$CLI $B2ARGS generate 1
 WaitBlocks
 
 # B1 should still be able to spend 100, because D is conflicted

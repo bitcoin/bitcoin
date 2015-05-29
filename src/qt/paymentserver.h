@@ -93,6 +93,10 @@ public:
 
     // Verify that the payment request network matches the client network
     static bool verifyNetwork(const payments::PaymentDetails& requestDetails);
+    // Verify if the payment request is expired
+    static bool verifyExpired(const payments::PaymentDetails& requestDetails);
+    // Verify the payment request amount is valid
+    static bool verifyAmount(const CAmount& requestAmount);
 
 signals:
     // Fired when a valid payment request is received
@@ -127,7 +131,7 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 private:
-    bool processPaymentRequest(PaymentRequestPlus& request, SendCoinsRecipient& recipient);
+    bool processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient);
     void fetchRequest(const QUrl& url);
 
     // Setup networking

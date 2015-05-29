@@ -37,14 +37,14 @@ public:
         if (!BN_copy(this, &b))
         {
             BN_clear_free(this);
-            throw bignum_error("CBigNum::CBigNum(const CBigNum&) : BN_copy failed");
+            throw bignum_error("CBigNum::CBigNum(const CBigNum&): BN_copy failed");
         }
     }
 
     CBigNum& operator=(const CBigNum& b)
     {
         if (!BN_copy(this, &b))
-            throw bignum_error("CBigNum::operator= : BN_copy failed");
+            throw bignum_error("CBigNum::operator=: BN_copy failed");
         return (*this);
     }
 
@@ -151,7 +151,7 @@ inline const CBigNum operator+(const CBigNum& a, const CBigNum& b)
 {
     CBigNum r;
     if (!BN_add(&r, &a, &b))
-        throw bignum_error("CBigNum::operator+ : BN_add failed");
+        throw bignum_error("CBigNum::operator+: BN_add failed");
     return r;
 }
 
@@ -159,7 +159,7 @@ inline const CBigNum operator-(const CBigNum& a, const CBigNum& b)
 {
     CBigNum r;
     if (!BN_sub(&r, &a, &b))
-        throw bignum_error("CBigNum::operator- : BN_sub failed");
+        throw bignum_error("CBigNum::operator-: BN_sub failed");
     return r;
 }
 

@@ -6,6 +6,8 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_H
 #define BITCOIN_SCRIPT_SCRIPT_H
 
+#include "crypto/common.h"
+
 #include <assert.h>
 #include <climits>
 #include <limits>
@@ -391,7 +393,7 @@ public:
     CScript& operator<<(opcodetype opcode)
     {
         if (opcode < 0 || opcode > 0xff)
-            throw std::runtime_error("CScript::operator<<() : invalid opcode");
+            throw std::runtime_error("CScript::operator<<(): invalid opcode");
         insert(end(), (unsigned char)opcode);
         return *this;
     }
@@ -416,14 +418,16 @@ public:
         else if (b.size() <= 0xffff)
         {
             insert(end(), OP_PUSHDATA2);
-            unsigned short nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
+            uint8_t data[2];
+            WriteLE16(data, b.size());
+            insert(end(), data, data + sizeof(data));
         }
         else
         {
             insert(end(), OP_PUSHDATA4);
-            unsigned int nSize = b.size();
-            insert(end(), (unsigned char*)&nSize, (unsigned char*)&nSize + sizeof(nSize));
+            uint8_t data[4];
+            WriteLE32(data, b.size());
+            insert(end(), data, data + sizeof(data));
         }
         insert(end(), b.begin(), b.end());
         return *this;
@@ -496,15 +500,14 @@ public:
             {
                 if (end() - pc < 2)
                     return false;
-                nSize = 0;
-                memcpy(&nSize, &pc[0], 2);
+                nSize = ReadLE16(&pc[0]);
                 pc += 2;
             }
             else if (opcode == OP_PUSHDATA4)
             {
                 if (end() - pc < 4)
                     return false;
-                memcpy(&nSize, &pc[0], 4);
+                nSize = ReadLE32(&pc[0]);
                 pc += 4;
             }
             if (end() - pc < 0 || (unsigned int)(end() - pc) < nSize)

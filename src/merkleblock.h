@@ -104,7 +104,7 @@ public:
         }
     }
 
-    /** Construct a partial merkle tree from a list of transaction id's, and a mask that selects a subset of them */
+    /** Construct a partial merkle tree from a list of transaction ids, and a mask that selects a subset of them */
     CPartialMerkleTree(const std::vector<uint256> &vTxid, const std::vector<bool> &vMatch);
 
     CPartialMerkleTree();
@@ -138,6 +138,11 @@ public:
      * thus the filter will likely be modified.
      */
     CMerkleBlock(const CBlock& block, CBloomFilter& filter);
+
+    // Create from a CBlock, matching the txids in the set
+    CMerkleBlock(const CBlock& block, const std::set<uint256>& txids);
+
+    CMerkleBlock() {}
 
     ADD_SERIALIZE_METHODS;
 
