@@ -67,12 +67,72 @@ UTXO but where its block file has been pruned.
 
 Pruning is disabled by default.
 
+Big endian support
+--------------------
+
+Experimental support for big-endian CPU architectures was added in this
+release. This has been tested on at least MIPS and PPC hosts. The build
+system will automatically detect the endianness of the target.
+
+Memory usage optimization
+--------------------------
+
+There have been many changes in this release to reduce the default memory usage
+of a node, among which:
+
+- Accurate UTXO cache size accounting (#6102); this makes the option `-dbcache`
+  precise, where is did a gross underestimation of memory usage before
+- Reduce size of per-peer data structure (#6064 and others); this increases the
+  number of connections that can be supported with the same amount of memory
+- Reduce the number of threads (#5964, #5679); lowers the amount of (esp.
+  virtual) memory needed
+
+Privacy: Disable wallet transaction broadcast
+----------------------------------------------
+
+This release adds an option `-walletbroadcast=0` to prevent automatic
+transaction broadcast and rebroadcast (#5951). This option allows separating
+transaction submission from the node functionality.
+
+Making use of this, third-party scripts can be written to take care of
+transaction (re)broadcast:
+
+- Send the transaction as normal, either through RPC or the GUI
+- Retrieve the transaction data through RPC using `gettransaction` (NOT
+  `getrawtransaction`). The `hex` field of the result will contain the raw
+  hexadecimal representation of the transaction
+- The transaction can then be broadcasted through arbitrary mechanisms
+  supported by the script
+
+One such application is selective Tor usage, where the node runs on the normal
+internet but transactions are broadcasted over Tor.
+
+Privacy: Stream isolation for Tor
+----------------------------------
+
+This release adds functionality to create a new circuit for every peer
+connection, when the software is used with Tor. The new option,
+`-proxyrandomize`, is on by default.
+
+When enabled, every outgoing connection will (potentially) go through a
+different exit node. That significantly reduces the chance to get unlucky and
+pick a single exit node that is either malicious, or widely banned from the P2P
+network. This improves connection reliability as well as privacy, especially
+for the initial connections.
+
+**Important note:** If a non-Tor SOCKS5 proxy is configured that supports
+authentication, but doesn't require it, this change may cause it to reject
+connections. A user and password is sent where they weren't before. This setup
+is exceedingly rare, but in this case `-proxyrandomize=0` can be passed to
+disable the behavior.
 
 0.11.0 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
-behavior, not code moves, refactors or string updates.
+behavior, not code moves, refactors and string updates. For convenience in locating
+the code changes and accompanying discussion, both the pull request and
+git merge commit are mentioned.
 
 ### RPC and REST
 - #5461 `5f7279a` signrawtransaction: validate private key
@@ -90,7 +150,7 @@ behavior, not code moves, refactors or string updates.
 - #5199 `6364408` Add RPC call `gettxoutproof` to generate and verify merkle blocks
 - #5418 `16341cc` Report missing inputs in sendrawtransaction
 - #5937 `40f5e8d` show script verification errors in signrawtransaction result
-- #5420 `1fd2d39` [REST] getutxos REST command (based on Bip64)
+- #5420 `1fd2d39` getutxos REST command (based on Bip64)
 
 ### Configuration and command-line options
 - #5636 `a353ad4` Add option `-allowselfsignedrootcertificate` to allow self signed root certs (for testing payment requests)
@@ -123,7 +183,7 @@ behavior, not code moves, refactors or string updates.
 - #5507 `844ace9` Prevent DOS attacks on in-flight data structures
 - #5770 `32a8b6a` Sanitize command strings before logging them
 - #5859 `dd4ffce` Add correct bool combiner for net signals
-- #5876 `8e4fd0c` Add a NODE_GETUTXO service bit and document NODE_NETWORK.
+- #5876 `8e4fd0c` Add a NODE_GETUTXO service bit and document NODE_NETWORK
 - #6028 `b9311fb` Move nLastTry from CAddress to CAddrInfo
 - #5662 `5048465` Change download logic to allow calling getdata on inbound peers
 - #5971 `18d2832` replace absolute sleep with conditional wait
@@ -152,7 +212,7 @@ behavior, not code moves, refactors or string updates.
 
 ### Wallet
 - #2340 `811c71d` Discourage fee sniping with nLockTime
-- #5485 `d01bcc4` Enforce minRelayTxFee on wallet created tx and add a maxtxfee option.
+- #5485 `d01bcc4` Enforce minRelayTxFee on wallet created tx and add a maxtxfee option
 - #5508 `9a5cabf` Add RandAddSeedPerfmon to MakeNewKey
 - #4805 `8204e19` Do not flush the wallet in AddToWalletIfInvolvingMe(..)
 - #5319 `93b7544` Clean up wallet encryption code
