@@ -5,6 +5,8 @@
 
 #include "base58.h"
 
+#include <stdint.h>
+
 #include "corewallet/corewallet_db.h"
 #include "corewallet/corewallet_wallet.h"
 
@@ -109,6 +111,36 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pCoreWallet->externalPubKey.pubkey;
         }
+        else if (strType == "chainpath")
+        {
+            ssValue >> pCoreWallet->strChainPath;
+        }
+        else if (strType == "masterseed")
+        {
+            uint32_t seedNum;
+
+            ssKey >> seedNum;
+            ssValue >> pCoreWallet->strMasterseedHex;
+        }
+        else if (strType == "internalpubkey")
+        {
+            ssValue >> pCoreWallet->internalPubKey;
+        }
+        else if (strType == "externalpubkey")
+        {
+            ssValue >> pCoreWallet->externalPubKey;
+        }
+        else if (strType == "extpubkey")
+        {
+            CKeyID keyId;
+            CExtPubKey extPubKey;
+
+            ssKey >> keyId;
+            ssValue >> extPubKey;
+        }
+
+
+
     } catch (...)
     {
         return false;

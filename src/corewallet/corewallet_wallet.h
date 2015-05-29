@@ -21,27 +21,42 @@ public:
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
     std::map<CTxDestination, CAddressBookMetadata> mapAddressBook;
     int64_t nTimeFirstKey;
-    FileDB *walletDB;
-    
+    FileDB *walletPrivateDB;
+    FileDB *walletCacheDB;
+
+    std::string strChainPath;
+    std::string strMasterseedHex;
+    CExtPubKey internalPubKey;
+    CExtPubKey externalPubKey;
+
+
+    std::set<int> externalUsedKeysCache;
+
+    unsigned int internalNextPos;
+    unsigned int externalNextPos;
+
     Wallet(std::string strWalletFileIn)
     {
         //instantiate a wallet backend object and maps the stored values
-        walletDB = new FileDB(strWalletFileIn);
-        walletDB->LoadWallet(this);
+        walletPrivateDB = new FileDB(strWalletFileIn+".private.logdb");
+        walletPrivateDB->LoadWallet(this);
+
+        walletCacheDB = new FileDB(strWalletFileIn+".cache.logdb");
+        walletCacheDB->LoadWallet(this);
     }
     
-    CPubKey GenerateBip32Structure(const std::string& chainpath, unsigned char (&vchOut)[32], bool useSeed=false);
+    bool GenerateBip32Structure(const std::string& chainpath, unsigned char (&vchOut)[32], bool useSeed=false);
     CPubKey GenerateNewKey(int index=-1);
+    CPubKey GetNextUnusedKey(unsigned int& usedIndex);
+    CPubKey GetKeyAtIndex(unsigned int index, bool internal = false);
+    
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool LoadKeyMetadata(const CPubKey &pubkey, const CoreWallet::CKeyMetadata &metadata);
     bool LoadKey(const CKey& key, const CPubKey &pubkey);
     bool SetAddressBook(const CTxDestination& address, const std::string& purpose);
     
     CKeyID masterKeyID;
-    CExtPubKey internalPubKey;
-    CExtPubKey externalPubKey;
     unsigned char masterSeed[32];
-    std::string strChainPath;
 };
 
 // WalletModel: a wallet metadata class

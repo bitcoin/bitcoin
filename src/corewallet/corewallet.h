@@ -18,7 +18,7 @@ namespace CoreWallet {
         ~Manager() { }
         Wallet* GetWalletWithID(const std::string& walletIDIn);
         std::vector<std::string> GetWalletIDs();
-        void AddNewWallet(const std::string& walletID);
+        Wallet* AddNewWallet(const std::string& walletID);
         void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
     protected:
         std::map<std::string, WalletModel> mapWallets;

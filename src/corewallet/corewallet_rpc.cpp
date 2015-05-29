@@ -15,6 +15,7 @@
 #include "json/json_spirit_utils.h"
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/foreach.hpp>
 
 namespace CoreWallet
@@ -42,14 +43,14 @@ struct RPCDispatchEntry
 };
 
 //dispatch compatible rpc function definitions
-json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp);
+json_spirit::Value getaddress(const json_spirit::Array& params, bool fHelp);
 json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp);
 json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp);
 json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp);
 json_spirit::Value help(const json_spirit::Array& params, bool fHelp);
     
 static const RPCDispatchEntry vDispatchEntries[] = {
-    { "getnewaddress",                  &getnewaddress },
+    { "getaddress",                  &getaddress },
     { "listaddresses",                  &listaddresses },
     
     // Multiwallet
@@ -96,72 +97,56 @@ json_spirit::Value ValueFromParams(const json_spirit::Array& params, const std::
 ///////////////////////////
 // Keys/Addresses stack
 ///////////////////////////
-json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp)
+json_spirit::Value getaddress(const json_spirit::Array& params, bool fHelp)
 {
     Wallet *wallet = WalletFromParams(params);
     if (fHelp || !wallet)
         throw RPCHelpException(
-                            "getnewaddress\n"
+                            "getaddress\n"
                             "\nReturns a new Bitcoin address for receiving payments.\n"
                             "\nResult:\n"
                             "\"bitcoinaddress\"    (string) The new bitcoin address\n"
                             "\nExamples:\n"
-                            + HelpExampleCli("getnewaddress", "")
-                            + HelpExampleRpc("getnewaddress", "")
+                            + HelpExampleCli("getaddress", "")
+                            + HelpExampleRpc("getaddress", "")
                             );
     
 
-    json_spirit::Value value = ValueFromParams(params, "chainpath");
     json_spirit::Value valueIndex = ValueFromParams(params, "index");
     
     CKeyID keyID;
-    
-    if(value.is_null())
+    CPubKey newKey;
+    unsigned int index;
+
+    if (!valueIndex.is_null())
     {
-        int index = -1;
-        if (!valueIndex.is_null())
+        if (valueIndex.type() == json_spirit::str_type)
             index = atoi(valueIndex.get_str());
-            
-        CPubKey newKey = wallet->GenerateNewKey(index);
-        keyID = newKey.GetID();
-        wallet->SetAddressBook(keyID, "receive");
-        return CBitcoinAddress(keyID).ToString();
+        else
+            index = valueIndex.get_int();
+    }
+
+    if (valueIndex.is_null())
+    {
+        newKey = wallet->GetNextUnusedKey(index);
     }
     else
     {
-        //Bip32
-        std::string chainpath = value.get_str();
-        boost::to_lower(chainpath);
-        
-        json_spirit::Object obj;
-        if (chainpath == "m")
-        {
-            unsigned char vch[32];
-            json_spirit::Value seedHex = ValueFromParams(params, "seed");
-            bool useSeed = false;
-            if (!seedHex.is_null())
-            {
-                std::vector<unsigned char> result = ParseHex(seedHex.get_str());
-                memcpy((void *)&vch,(const void *)&result.front(),32);
-                useSeed = true;
-            }
-            
-            wallet->GenerateBip32Structure("m/44'/0'/0'/", vch, useSeed);
-            if (!useSeed)
-                obj.push_back(json_spirit::Pair("seed", HexStr(vch, vch+sizeof(vch))));
-        }
-        else
-        {
-//            CPubKey newKey = wallet->GenerateBip32Structure(vch, useSeed);
-//            keyID = newKey.GetID();
-//            wallet->SetAddressBook(keyID, "receive");
-//            obj.push_back(json_spirit::Pair("address", CBitcoinAddress(keyID).ToString()));
-        }
-            
-        return obj;
+        newKey = wallet->GetKeyAtIndex(index);
     }
+
+    keyID = newKey.GetID();
+    std::stringstream ss; ss << index;
+    json_spirit::Object obj;
+    std::string chainPath = wallet->strChainPath;
+    boost::replace_all(chainPath, "c", "0");
+    boost::replace_all(chainPath, "k", ss.str());
+    obj.push_back(json_spirit::Pair(chainPath, CBitcoinAddress(keyID).ToString()));
+
+
+    return obj;
 }
-    
+
 json_spirit::Value listaddresses(const json_spirit::Array& params, bool fHelp)
 {
     Wallet *wallet = WalletFromParams(params);
@@ -215,13 +200,31 @@ json_spirit::Value addwallet(const json_spirit::Array& params, bool fHelp)
                              + HelpExampleCli("addwallet", "\"anotherwallet\"")
                              + HelpExampleRpc("addwallet", "\"anotherwallet\"")
                              );
-    
+
+    json_spirit::Object obj;
+
     std::string walletID = walletIDValue.get_str();
-    CoreWallet::GetManager()->AddNewWallet(walletID);
-    
-    return json_spirit::Value::null;
+    Wallet *wallet = CoreWallet::GetManager()->AddNewWallet(walletID);
+
+    unsigned char vch[32];
+    json_spirit::Value seedHex = ValueFromParams(params, "seed");
+    bool useSeed = false;
+    if (!seedHex.is_null())
+    {
+        std::vector<unsigned char> result = ParseHex(seedHex.get_str());
+        memcpy((void *)&vch,(const void *)&result.front(),32);
+        useSeed = true;
+    }
+
+
+    bool success = wallet->GenerateBip32Structure("m/44'/0'/0'/c/k", vch, useSeed);
+    if (!useSeed)
+        obj.push_back(json_spirit::Pair("seed", HexStr(vch, vch+sizeof(vch))));
+
+
+    return obj;
 }
-    
+
 json_spirit::Value listwallets(const json_spirit::Array& params, bool fHelp)
 {
     if (fHelp)

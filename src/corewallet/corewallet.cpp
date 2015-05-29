@@ -75,7 +75,7 @@ void LoadAsModule(std::string& warningString, std::string& errorString, bool& st
     GetManager();
 }
 
-void Manager::AddNewWallet(const std::string& walletID)
+Wallet* Manager::AddNewWallet(const std::string& walletID)
 {
     if (mapWallets.find(walletID) != mapWallets.end())
         throw std::runtime_error(_("walletid already exists"));
@@ -87,6 +87,7 @@ void Manager::AddNewWallet(const std::string& walletID)
     mapWallets[walletID] = WalletModel(walletID, newWallet);
     
     WriteWalletList();
+    return newWallet;
 }
 
 Wallet* Manager::GetWalletWithID(const std::string& walletIDIn)
