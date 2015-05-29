@@ -31,6 +31,7 @@ testScripts=(
     'proxy_test.py'
     'merkle_blocks.py'
     'signrawtransactions.py'
+    'walletbackup.py'
 );
 testScriptsExt=(
     'bipdersig-p2p.py'
