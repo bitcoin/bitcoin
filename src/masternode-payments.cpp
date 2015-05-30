@@ -8,6 +8,7 @@
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
+#include "spork.h"
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
@@ -18,12 +19,44 @@ CMasternodePayments masternodePayments;
 map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
 map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
+bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue){
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return true;
+
+    //while syncing take the longest chain
+    if (fImporting || fReindex || pindexPrev->nHeight+1 < Checkpoints::GetTotalBlocksEstimate()) {
+        //super blocks will always be on these blocks, max 100 per budgeting
+        if(pindexPrev->nHeight+1 % GetBudgetPaymentCycleBlocks() < 100){
+            return true;
+        } else {
+            if(nBlockValue > nExpectedValue) return false;
+        }
+    } else { // we're synced so check the budget schedule
+        if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+            //the value of the block is evaluated in CheckBlock
+            return true;
+        } else {
+            if(nBlockValue > nExpectedValue) return false;
+        }
+    }
+
+    return true;
+}
+
 bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
 {
     //check if it's a budget block
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
         if(budget.IsTransactionValid(txNew, nBlockHeight)){
             return true;
+        } else {
+            LogPrintf("Invalid budget payment detected %s\n", txNew.ToString().c_str());
+            if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
+                return false;
+            } else {
+                LogPrintf("Budget enforcement is disabled, accepting block");
+                return true;
+            }
         }
     }
 
@@ -31,9 +64,30 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
     if(masternodePayments.IsTransactionValid(txNew, nBlockHeight))
     {
         return true;
+    } else {
+        LogPrintf("Invalid mn payment detected %s\n", txNew.ToString().c_str());
+        if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)){
+            return false;
+        } else {
+            LogPrintf("Masternode payment enforcement is disabled, accepting block");
+            return true;
+        }
     }
 
     return false;
+}
+
+
+void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return;
+    
+    if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+        budget.FillBlockPayee(txNew, nFees);
+    } else {
+        masternodePayments.FillBlockPayee(txNew, nFees);
+    }
 }
 
 std::string GetRequiredPaymentsString(int64_t nBlockHeight)
@@ -42,6 +96,47 @@ std::string GetRequiredPaymentsString(int64_t nBlockHeight)
         return budget.GetRequiredPaymentsString(nBlockHeight);
     } else {
         return masternodePayments.GetRequiredPaymentsString(nBlockHeight);
+    }
+}
+
+void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return;
+
+    bool hasPayment = true;
+    CScript payee;
+    
+    //spork
+    if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
+        //no masternode detected
+        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+        if(winningNode){
+            payee = GetScriptForDestination(winningNode->pubkey.GetID());
+        } else {
+            LogPrintf("CreateNewBlock: Failed to detect masternode to pay\n");
+            hasPayment = false;
+        }
+    }
+
+    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
+    CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
+    
+    txNew.vout[0].nValue = blockValue;
+
+    if(hasPayment){
+        txNew.vout.resize(2);
+
+        txNew.vout[1].scriptPubKey = payee;
+        txNew.vout[1].nValue = masternodePayment;
+
+        txNew.vout[0].nValue -= masternodePayment;
+
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CBitcoinAddress address2(address1);
+
+        LogPrintf("Masternode payment to %s\n", address2.ToString().c_str());
     }
 }
 
@@ -304,13 +399,13 @@ bool CMasternodePaymentWinner::IsValid()
 
     if(n == -1)
     {
-        if(fDebug) LogPrintf("CMasternodePaymentWinner::IsValid - Unknown Masternode\n");
+        LogPrintf("CMasternodePaymentWinner::IsValid - Unknown Masternode\n");
         return false;
     }
 
     if(n > MNPAYMENTS_SIGNATURES_TOTAL)
     {
-        if(fDebug) LogPrintf("CMasternodePaymentWinner::IsValid - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, n);
+        LogPrintf("CMasternodePaymentWinner::IsValid - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, n);
         return false;
     }
 

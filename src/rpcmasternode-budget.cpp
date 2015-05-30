@@ -248,7 +248,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         std::string strProposalName = params[1].get_str();
 
-        CBudgetProposal* prop = budget.Find(strProposalName);
+        CBudgetProposal* prop = budget.FindProposal(strProposalName);
 
         if(prop == NULL) return "Unknown proposal name";
 
@@ -283,7 +283,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         Object obj;
         
-        CBudgetProposal* prop = budget.Find(strProposalName);
+        CBudgetProposal* prop = budget.FindProposal(strProposalName);
 
         if(prop == NULL) return "Unknown proposal name";
 

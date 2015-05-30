@@ -184,7 +184,7 @@ void DumpBudgets()
     LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-CBudgetProposal *CBudgetManager::Find(const std::string &strProposalName)
+CBudgetProposal *CBudgetManager::FindProposal(const std::string &strProposalName)
 {
     //find the prop with the highest yes count
 
@@ -328,6 +328,68 @@ void CBudgetVote::Relay()
     BOOST_FOREACH(CNode* pnode, vNodes){
         pnode->PushMessage("inv", vInv);
     }
+}
+
+void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
+{    
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return;
+
+    int nHighestCount = 0;
+    CScript payee;
+    int64_t nAmount = 0;
+
+    // ------- Grab The Highest Count
+    
+    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
+    while(it != mapFinalizedBudgets.end())
+    {   
+        CFinalizedBudget* prop = &((*it).second);
+        if(prop->GetVoteCount() > nHighestCount){
+            if(pindexPrev->nHeight+1 >= prop->GetBlockStart() && pindexPrev->nHeight+1 <= prop->GetBlockEnd()){
+                if(prop->GetPayeeAndAmount(pindexPrev->nHeight+1, payee, nAmount)){
+                    nHighestCount = prop->GetVoteCount();
+                }
+            }
+        }
+
+        it++;
+    }
+
+    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
+
+    //miners get the full amount on these blocks
+    txNew.vout[0].nValue = blockValue;
+    
+    if(nHighestCount > 0){
+        txNew.vout.resize(2);
+
+        //these are super blocks, so their value can be much larger than normal
+        txNew.vout[1].scriptPubKey = payee;
+        txNew.vout[1].nValue = nAmount;
+
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CBitcoinAddress address2(address1);
+
+        LogPrintf("Budget payment to %s for %lld\n", address2.ToString().c_str(), nAmount);
+    }
+
+}
+
+bool CFinalizedBudget::GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, int64_t& nAmount)
+{
+    uint256 nProp = GetProposalByBlock(nBlockHeight);
+
+    CBudgetProposal* prop =  budget.FindProposal(nProp);    
+    if(prop){
+        payee = prop->GetPayee();
+        nAmount = prop->GetAmount();
+        return true;
+    }
+
+    LogPrintf("GetPayeeAndAmount - Couldn't find budget! %s\n", nProp.ToString().c_str());
+    return false;
 }
 
 void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -790,7 +852,7 @@ std::string CFinalizedBudget::GetProposals() {
     std::string ret = "aeu";
 
     BOOST_FOREACH(uint256& nHash, vecProposals){
-        CFinalizedBudget* prop = budget.Find(nHash);
+        CFinalizedBudget* prop = budget.FindFinalizedBudget(nHash);
 
         std::string token = nHash.ToString();
         if(prop) token = prop->GetName();
@@ -801,7 +863,7 @@ std::string CFinalizedBudget::GetProposals() {
     return ret;
 }
 
-CFinalizedBudget *CBudgetManager::Find(uint256 nHash)
+CFinalizedBudget *CBudgetManager::FindFinalizedBudget(uint256 nHash)
 {
     if(mapFinalizedBudgets.count(nHash))
         return &mapFinalizedBudgets[nHash];
@@ -809,6 +871,13 @@ CFinalizedBudget *CBudgetManager::Find(uint256 nHash)
     return NULL;
 }
 
+CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
+{
+    if(mapProposals.count(nHash))
+        return &mapProposals[nHash];
+
+    return NULL;
+}
 
 bool CBudgetManager::PropExists(uint256 nHash)
 {
@@ -950,6 +1019,7 @@ bool CFinalizedBudget::IsValid()
     //must be the correct block for payment to happen (once a month)
     if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) return false;
     if(GetBlockEnd() - nBlockStart > 100) return false;
+    if(vecProposals.size() > 100) return false;
 
     //make sure all prop names exist
     BOOST_FOREACH(uint256 nHash, vecProposals){

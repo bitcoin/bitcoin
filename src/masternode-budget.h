@@ -1,5 +1,5 @@
-
 // Copyright (c) 2014-2015 The Dash developers
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef MASTERNODE_BUDGET_H
@@ -90,8 +90,9 @@ public:
     void Calculate();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
-    CBudgetProposal *Find(const std::string &strProposalName);
-    CFinalizedBudget *Find(uint256 nHash);
+    CBudgetProposal *FindProposal(const std::string &strProposalName);
+    CBudgetProposal *FindProposal(uint256 nHash);
+    CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
 
     
@@ -108,6 +109,7 @@ public:
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int64_t nBlockHeight);
+    void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
     void Clear(){
         printf("Not implemented\n");
@@ -177,6 +179,7 @@ public:
         if(i > (int)vecProposals.size()-1) return 0;
         return vecProposals[i];
     }
+    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, int64_t& nAmount);
 
     uint256 GetHash(){
         /* 
