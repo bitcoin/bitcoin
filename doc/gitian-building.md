@@ -396,5 +396,5 @@ Uploading signatures
 ---------------------
 
 After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[dash/gitian.sigs](https://github.com/dash/gitian.sigs/) repository, or if that's not possible create a pull
+[dash/gitian.sigs](https://github.com/dashpay/gitian.sigs/) repository, or if that's not possible create a pull
 request. You can also mail the files to me (evan@dashpay.io) and I'll commit them.
