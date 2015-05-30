@@ -377,19 +377,41 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 
 }
 
-bool CFinalizedBudget::GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, int64_t& nAmount)
+std::string CFinalizedBudget::GetStatus()
 {
-    uint256 nProp = GetProposalByBlock(nBlockHeight);
+    std::string retBadHashes = "";
+    std::string retBadPayeeOrAmount = "";
 
-    CBudgetProposal* prop =  budget.FindProposal(nProp);    
-    if(prop){
-        payee = prop->GetPayee();
-        nAmount = prop->GetAmount();
-        return true;
+    for(int nBlockHeight = GetBlockStart(); nBlockHeight <= GetBlockEnd(); nBlockHeight++)
+    {
+        CTxBudgetPayment prop1;
+        if(!GetProposalByBlock(nBlockHeight, prop1)){
+            LogPrintf("CFinalizedBudget::GetStatus - Couldn't find budget payment for block %lld\n", nBlockHeight);
+            continue;
+        }
+
+        CBudgetProposal* prop2 =  budget.FindProposal(prop1.nProposalHash);    
+        if(!prop2){
+            if(retBadHashes == ""){
+                retBadHashes = "Unknown proposal hash! Check this proposal before voting" + prop1.nProposalHash.ToString();
+            } else {
+                retBadHashes += "," + prop1.nProposalHash.ToString();
+            }
+        } else {
+            if(prop2->GetPayee() != prop1.payee || prop2->GetAmount() != prop1.nAmount)
+            {
+                if(retBadPayeeOrAmount == ""){
+                    retBadPayeeOrAmount = "Budget payee/nAmount doesn't match our proposal! " + prop1.nProposalHash.ToString();
+                } else {
+                    retBadPayeeOrAmount += "," + prop1.nProposalHash.ToString();
+                }
+            }
+        }
     }
 
-    LogPrintf("GetPayeeAndAmount - Couldn't find budget! %s\n", nProp.ToString().c_str());
-    return false;
+    if(retBadHashes == "" && retBadPayeeOrAmount == "") return "OK";
+
+    return retBadHashes + retBadPayeeOrAmount;
 }
 
 void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -851,12 +873,12 @@ bool CBudgetProposalBroadcast::SignatureValid()
 std::string CFinalizedBudget::GetProposals() {
     std::string ret = "aeu";
 
-    BOOST_FOREACH(uint256& nHash, vecProposals){
-        CFinalizedBudget* prop = budget.FindFinalizedBudget(nHash);
+    BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals){
+        CFinalizedBudget* prop = budget.FindFinalizedBudget(payment.nProposalHash);
 
-        std::string token = nHash.ToString();
+        std::string token = payment.nProposalHash.ToString();
+
         if(prop) token = prop->GetName();
-
         if(ret == "") {ret = token;}
         else {ret = "," + token;}
     }
@@ -980,7 +1002,7 @@ bool CFinalizedBudgetBroadcast::Sign(CKey& keyMasternode, CPubKey& pubKeyMastern
 
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + strBudgetName + boost::lexical_cast<std::string>(nBlockStart);
-    BOOST_FOREACH(uint256& nHash, vecProposals) strMessage += nHash.ToString().c_str();
+    BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals) strMessage += payment.nProposalHash.ToString().c_str();
     
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode))
         return(" Error upon calling SignMessage");
@@ -996,7 +1018,7 @@ bool CFinalizedBudgetBroadcast::SignatureValid()
     std::string errorMessage;
 
     std::string strMessage = vin.prevout.ToStringShort() + strBudgetName + boost::lexical_cast<std::string>(nBlockStart);
-    BOOST_FOREACH(uint256& nHash, vecProposals) strMessage += nHash.ToString().c_str();
+    BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals) strMessage += payment.nProposalHash.ToString().c_str();
 
     CMasternode* pmn = mnodeman.Find(vin);
 
@@ -1020,11 +1042,6 @@ bool CFinalizedBudget::IsValid()
     if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) return false;
     if(GetBlockEnd() - nBlockStart > 100) return false;
     if(vecProposals.size() > 100) return false;
-
-    //make sure all prop names exist
-    BOOST_FOREACH(uint256 nHash, vecProposals){
-        if(!budget.PropExists(nHash)) return false;
-    }
 
     return true;
 }
@@ -1192,17 +1209,17 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(const CFinalizedBudget& oth
     vin = other.vin;
     strBudgetName = other.strBudgetName;
     nBlockStart = other.nBlockStart;
-    BOOST_FOREACH(uint256 hash, other.vecProposals) vecProposals.push_back(hash);
+    BOOST_FOREACH(CTxBudgetPayment out, other.vecProposals) vecProposals.push_back(out);
     mapVotes = other.mapVotes;
 }
 
-CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<uint256> vecProposalsIn)
+CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn)
 {
     vin = vinIn;
     printf("%s\n", vin.ToString().c_str());
     strBudgetName = strBudgetNameIn;
     nBlockStart = nBlockStartIn;
-    BOOST_FOREACH(uint256 hash, vecProposalsIn) vecProposals.push_back(hash);
+    BOOST_FOREACH(CTxBudgetPayment out, vecProposalsIn) vecProposals.push_back(out);
     mapVotes.clear();
 }
 
@@ -1215,12 +1232,16 @@ std::string CBudgetManager::GetRequiredPaymentsString(int64_t nBlockHeight)
     {   
         CFinalizedBudget* prop = &((*it).second);
         if(nBlockHeight >= prop->GetBlockStart() && nBlockHeight <= prop->GetBlockEnd()){
-            uint256 nPropHash = prop->GetProposalByBlock(nBlockHeight);
-            if(ret == "unknown-budget"){
-                ret = nPropHash.ToString().c_str();
+            CTxBudgetPayment payment;
+            if(prop->GetProposalByBlock(nBlockHeight, payment)){
+                if(ret == "unknown-budget"){
+                    ret = payment.nProposalHash.ToString().c_str();
+                } else {
+                    ret += ",";
+                    ret += payment.nProposalHash.ToString().c_str();
+                }
             } else {
-                ret += ",";
-                ret += nPropHash.ToString().c_str();
+                LogPrintf("CBudgetManager::GetRequiredPaymentsString - Couldn't find budget payment for block %lld\n", nBlockHeight);
             }
         }
 
