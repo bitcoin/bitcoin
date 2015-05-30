@@ -169,7 +169,22 @@ List accounts and their current balances.
     "amount"        : total amount received by the address.
     "confirmations" : number of confirmations of the most recent transaction included.
 .TP
+\fBbitcoin_listreceivedbyaccount ['minconf=1'] ['includeempty=false']\fR
+['minconf'] is the minimum number of confirmations before payments are included. ['includeempty'] whether to include addresses that haven't received any payments. Returns an array of objects containing:
+
+    "account"       : the account of the receiving address.
+    "amount"        : total amount received by the address.
+    "confirmations" : number of confirmations of the most recent transaction included.
+.TP
 \fBlistreceivedbyaddress ['minconf=1'] ['includeempty=false']\fR
+['minconf'] is the minimum number of confirmations before payments are included. ['includeempty'] whether to include addresses that haven't received any payments. Returns an array of objects containing:
+
+    "address"       : receiving address.
+    "account"       : the account of the receiving address.
+    "amount"        : total amount received by the address.
+    "confirmations" : number of confirmations of the most recent transaction included.
+.TP
+\fBbitcoin_listreceivedbyaddress ['minconf=1'] ['includeempty=false']\fR
 ['minconf'] is the minimum number of confirmations before payments are included. ['includeempty'] whether to include addresses that haven't received any payments. Returns an array of objects containing:
 
     "address"       : receiving address.

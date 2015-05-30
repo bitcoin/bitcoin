@@ -65,7 +65,7 @@ _creditsd() {
                 COMPREPLY=( $( compgen -W "add remove onetry" -- "$cur" ) )
                 return 0
                 ;;
-            getblock|getrawtransaction|listreceivedbyaccount|listreceivedbyaddress|sendrawtransaction)
+            getblock|getrawtransaction|listreceivedbyaccount|bitcoin_listreceivedbyaccount|listreceivedbyaddress|bitcoin_listreceivedbyaddress|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
