@@ -2286,7 +2286,6 @@ int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
     if (!wallet) return MP_ERR_WALLET_ACCESS;
     if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL;
-    LOCK(wallet->cs_wallet);
 
     // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
     if (!wallet->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
