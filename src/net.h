@@ -672,7 +672,11 @@ public:
     static uint64_t GetTotalBytesSent();
 };
 
-
+class CExplicitNetCleanup
+{
+public:
+    static void callCleanup();
+};
 
 class CTransaction;
 void RelayTransaction(const CTransaction& tx);

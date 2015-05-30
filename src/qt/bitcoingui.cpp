@@ -213,14 +213,19 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
 
+    // Jump directly to tabs in RPC-console
     connect(openInfoAction, SIGNAL(triggered()), rpcConsole, SLOT(showInfo()));
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(showConsole()));
     connect(openNetworkAction, SIGNAL(triggered()), rpcConsole, SLOT(showNetwork()));
     connect(openPeersAction, SIGNAL(triggered()), rpcConsole, SLOT(showPeers()));
+    connect(openRepairAction, SIGNAL(triggered()), rpcConsole, SLOT(showRepair()));
     connect(openConfEditorAction, SIGNAL(triggered()), rpcConsole, SLOT(showConfEditor()));
     connect(showBackupsAction, SIGNAL(triggered()), rpcConsole, SLOT(showBackups()));
     connect(labelConnectionsIcon, SIGNAL(clicked()), rpcConsole, SLOT(showPeers()));
 
+    // Get restart command-line parameters and handle restart
+    connect(rpcConsole, SIGNAL(handleRestart(QStringList)), this, SLOT(handleRestart(QStringList)));
+    
     // prevents an open debug window from becoming stuck/unusable on client shutdown
     connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
 
@@ -352,6 +357,8 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     openNetworkAction->setStatusTip(tr("Show network monitor"));
     openPeersAction = new QAction(QIcon(":/icons/connect_4"), tr("&Peers list"), this);
     openPeersAction->setStatusTip(tr("Show peers info"));
+    openRepairAction = new QAction(QIcon(":/icons/options"), tr("Wallet &Repair"), this);
+    openRepairAction->setStatusTip(tr("Show wallet repair options"));
     openConfEditorAction = new QAction(QIcon(":/icons/edit"), tr("Open &Configuration File"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
     showBackupsAction = new QAction(QIcon(":/icons/browse"), tr("Show Automatic &Backups"), this);
@@ -435,6 +442,7 @@ void BitcoinGUI::createMenuBar()
         tools->addAction(openRPCConsoleAction);
         tools->addAction(openNetworkAction);
         tools->addAction(openPeersAction);
+        tools->addAction(openRepairAction);
         tools->addSeparator();
         tools->addAction(openConfEditorAction);
         tools->addAction(showBackupsAction);
@@ -602,6 +610,7 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addAction(openRPCConsoleAction);
     trayIconMenu->addAction(openNetworkAction);
     trayIconMenu->addAction(openPeersAction);
+    trayIconMenu->addAction(openRepairAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(openConfEditorAction);
     trayIconMenu->addAction(showBackupsAction);
@@ -1107,6 +1116,13 @@ void BitcoinGUI::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
     uiInterface.ThreadSafeMessageBox.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
+}
+
+/** Get restart command-line parameters and request restart */
+void BitcoinGUI::handleRestart(QStringList args)
+{
+    if (!ShutdownRequested())
+        emit requestedRestart(args);
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl() :

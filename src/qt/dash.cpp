@@ -13,6 +13,7 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
+#include "net.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
 #include "splashscreen.h"
@@ -45,6 +46,7 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QProcess>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -173,6 +175,7 @@ public:
 public slots:
     void initialize();
     void shutdown();
+    void restart(QStringList args);
 
 signals:
     void initializeResult(int retval);
@@ -224,6 +227,7 @@ public slots:
 
 signals:
     void requestedInitialize();
+    void requestedRestart(QStringList args);
     void requestedShutdown();
     void stopThread();
     void splashFinished(QWidget *window);
@@ -270,6 +274,27 @@ void BitcoinCore::initialize()
             StartDummyRPCThread();
         }
         emit initializeResult(rv);
+    } catch (std::exception& e) {
+        handleRunawayException(&e);
+    } catch (...) {
+        handleRunawayException(NULL);
+    }
+}
+
+void BitcoinCore::restart(QStringList args)
+{      
+    try
+    {
+        qDebug() << __func__ << ": Running Restart in thread";
+        threadGroup.interrupt_all();
+        threadGroup.join_all();
+        PrepareShutdown();
+        qDebug() << __func__ << ": Shutdown finished";
+        emit shutdownResult(1);
+        CExplicitNetCleanup::callCleanup();
+        QProcess::startDetached(QApplication::applicationFilePath(), args);
+        qDebug() << __func__ << ": Restart initiated...";
+        QCoreApplication::quit();
     } catch (std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
@@ -375,6 +400,7 @@ void BitcoinApplication::startThread()
     connect(executor, SIGNAL(runawayException(QString)), this, SLOT(handleRunawayException(QString)));
     connect(this, SIGNAL(requestedInitialize()), executor, SLOT(initialize()));
     connect(this, SIGNAL(requestedShutdown()), executor, SLOT(shutdown()));
+    connect(window, SIGNAL(requestedRestart(QStringList)), executor, SLOT(restart(QStringList)));
     /*  make sure executor object is deleted in its own thread */
     connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
     connect(this, SIGNAL(stopThread()), coreThread, SLOT(quit()));
