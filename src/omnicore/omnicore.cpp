@@ -102,10 +102,6 @@ static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
-// part of 'breakout' feature
-static const int nBlockTop = 0;
-// static const int nBlockTop = 271000;
-
 static int nWaterlineBlock = 0;  //
 
 uint64_t global_metadex_market;
@@ -129,9 +125,6 @@ static uint64_t exodus_prev = 0;
 static uint64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
-
-const static int disable_Divs = 0;
-const static int disableLevelDB = 0;
 
 static int mastercoreInitialized = 0;
 
@@ -165,8 +158,6 @@ CMPSTOList *mastercore::s_stolistdb;
 // a copy from main.cpp -- unfortunately that one is in a private namespace
 int mastercore::GetHeight()
 {
-  if (0 < nBlockTop) return nBlockTop;
-
   LOCK(cs_main);
   return chainActive.Height();
 }
@@ -190,17 +181,6 @@ CBlockIndex* mastercore::GetBlockIndex(const uint256& hash)
     }
 
     return pBlockIndex;
-}
-
-// indicate whether persistence is enabled at this point, or not
-// used to write/read files, for breakout mode, debugging, etc.
-static bool readPersistence()
-{
-#ifdef  MY_HACK
-  return false;
-#else
-  return true;
-#endif
 }
 
 // indicate whether persistence is enabled at this point, or not
@@ -1958,15 +1938,9 @@ int mastercore_init()
   InitDebugLogLevels();
   ShrinkDebugLog();
 
-  if (isNonMainNet() && !UnitTest())
-  {
+  if (isNonMainNet() && !UnitTest()) {
     exodus_address = exodus_testnet;
   }
-  //If interested in changing regtest address do so here and uncomment
-  /*if (RegTest())
-  {
-    exodus_address = exodus_testnet;
-  }*/
 
   // check for --autocommit option and set transaction commit flag accordingly
   if (!GetBoolArg("-autocommit", true)) {
@@ -2013,17 +1987,12 @@ int mastercore_init()
   TryCreateDirectory(MPPersistencePath);
 
   // legacy code, setting to pre-genesis-block
-  static int snapshotHeight = (GENESIS_BLOCK - 1);
-  static const uint64_t snapshotDevMSC = 0;
-
+  static int snapshotHeight = GENESIS_BLOCK - 1;
   if (isNonMainNet()) snapshotHeight = START_TESTNET_BLOCK - 1;
-
   if (RegTest()) snapshotHeight = START_REGTEST_BLOCK - 1;
 
   ++mastercoreInitialized;
 
-  if (readPersistence())
-  {
     nWaterlineBlock = load_most_relevant_state();
     if (nWaterlineBlock > 0) {
         PrintToConsole("Loading persistent state: OK [block %d]\n", nWaterlineBlock);
@@ -2039,48 +2008,11 @@ int mastercore_init()
     if (nWaterlineBlock < snapshotHeight)
     {
       nWaterlineBlock = snapshotHeight;
-      exodus_prev=snapshotDevMSC;
+      exodus_prev=0;
     }
 
     // advance the waterline so that we start on the next unaccounted for block
     nWaterlineBlock += 1;
-  }
-  else
-  {
-  // my old way
-    nWaterlineBlock = GENESIS_BLOCK - 1;  // the DEX block
-
-    if (TestNet()) nWaterlineBlock = START_TESTNET_BLOCK; //testnet3
-
-    if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK; //testnet3
-
-#ifdef  MY_HACK
-//    nWaterlineBlock = MSC_DEX_BLOCK-3;
-//    if (isNonMainNet()) nWaterlineBlock = 272700;
-
-#if 0
-    if (isNonMainNet()) nWaterlineBlock = 272790;
-
-    update_tally_map("mfaiZGBkY4mBqt3PHPD2qWgbaafGa7vR64" , 1 , 500000, BALANCE);
-    update_tally_map("mxaYwMv2Brbs7CW9r5aYuEr1jKTSDXg1TH" , 1 , 100000, BALANCE);
-
-    update_tally_map("mfaiZGBkY4mBqt3PHPD2qWgbaafGa7vR64" , 2 , 500000, BALANCE);
-    update_tally_map("mxaYwMv2Brbs7CW9r5aYuEr1jKTSDXg1TH" , 2 , 100000, BALANCE);
-
-    update_tally_map("mfaiZGBkY4mBqt3PHPD2qWgbaafGa7vR64" , 3 , 500000, BALANCE);
-    update_tally_map("mxaYwMv2Brbs7CW9r5aYuEr1jKTSDXg1TH" , 3 , 100000, BALANCE);
-
-    update_tally_map("mfaiZGBkY4mBqt3PHPD2qWgbaafGa7vR64" , 2147483652 , 500000, BALANCE);
-    update_tally_map("mxaYwMv2Brbs7CW9r5aYuEr1jKTSDXg1TH" , 2147483652 , 100000, BALANCE);
-
-    update_tally_map("mfaiZGBkY4mBqt3PHPD2qWgbaafGa7vR64" , 2147483660 , 500000, BALANCE);
-    update_tally_map("mxaYwMv2Brbs7CW9r5aYuEr1jKTSDXg1TH" , 2147483660 , 100000, BALANCE);
-
-    update_tally_map("mfaiZGBkY4mBqt3PHPD2qWgbaafGa7vR64" , 2147483661 , 500000, BALANCE);
-    update_tally_map("mxaYwMv2Brbs7CW9r5aYuEr1jKTSDXg1TH" , 2147483661 , 100000, BALANCE);
-#endif
-#endif
-  }
 
   // collect the real Exodus balances available at the snapshot time
   // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
@@ -2088,9 +2020,9 @@ int mastercore_init()
   PrintToLog("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
   // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
-  (void) p_txlistdb->setLastAlert(nWaterlineBlock);
+  p_txlistdb->setLastAlert(nWaterlineBlock);
   // initial scan
-  (void) msc_initial_scan(nWaterlineBlock);
+  msc_initial_scan(nWaterlineBlock);
 
   // display Exodus balance
   exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
@@ -2148,7 +2080,7 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
   // NOTE1: Every incoming TX is checked, not just MP-ones because:
   //  if for some reason the incoming TX doesn't pass our parser validation steps successfuly, I'd still want to clear pending amounts for that TX.
   // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
-  (void) PendingDelete(tx.GetHash());
+  PendingDelete(tx.GetHash());
 
 CMPTransaction mp_obj;
 // save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)
@@ -2165,12 +2097,9 @@ int interp_ret = -555555, pop_ret;
     if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
 
     // of course only MP-related TXs get recorded
-    if (!disableLevelDB)
-    {
     bool bValid = (0 <= interp_ret);
 
       p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
-    }
   }
 
   return interp_ret;
@@ -3317,8 +3246,6 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
   if (reorgRecoveryMode > 0) {
     reorgRecoveryMode = 0;  // clear reorgRecovery here as this is likely re-entrant
 
-    // reset states
-    if(!readPersistence()) clear_all_state();
     p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
     t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight-1); // deleteAboveBlock functions are non-inclusive (>blocknum not >=blocknum)
     s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight-1);
@@ -3328,7 +3255,6 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
     if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
     if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
 
-    if(readPersistence()) {
       int best_state_block = load_most_relevant_state();
       if (best_state_block < 0) {
         // unable to recover easily, remove stale stale state bits and reparse from the beginning.
@@ -3336,7 +3262,6 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
       } else {
         nWaterlineBlock = best_state_block;
       }
-    }
 
     if (nWaterlineBlock < nBlockPrev) {
       // scan from the block after the best active block to catch up to the active chain
@@ -3344,11 +3269,7 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
     }
   }
 
-  if (0 < nBlockTop)
-    if (nBlockTop < nBlockPrev + 1)
-      return 0;
-
-  (void) eraseExpiredCrowdsale(pBlockIndex);
+  eraseExpiredCrowdsale(pBlockIndex);
 
   return 0;
 }
@@ -3361,10 +3282,6 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
   if (!mastercoreInitialized) {
     mastercore_init();
   }
-
-  if (0 < nBlockTop)
-    if (nBlockTop < nBlockNow)
-      return 0;
 
 // for every new received block must do:
 // 1) remove expired entries from the accept list (per spec accept entries are valid until their blocklimit expiration; because the customer can keep paying BTC for the offer in several installments)
@@ -3384,10 +3301,10 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
 
   // get the total MSC for this wallet, for QT display
-  (void) set_wallet_totals();
+  set_wallet_totals();
 
   // check the alert status, do we need to do anything else here?
-  (void) checkExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
+  checkExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
   // force an update of the UI once per processed block containing Omni transactions
   if (countMP > 0)  // there were Omni transactions in this block
@@ -3396,8 +3313,9 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
   }
 
   // save out the state after this block
-  if (writePersistence(nBlockNow))
+  if (writePersistence(nBlockNow)) {
     mastercore_save_state(pBlockIndex);
+  }
 
   return 0;
 }
