@@ -109,6 +109,7 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openNetworkAction;
     QAction *openPeersAction;
+    QAction *openRepairAction;
     QAction *openConfEditorAction;
     QAction *showBackupsAction;
     QAction *openAction;
@@ -145,12 +146,16 @@ private:
 signals:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString &uri);
+    /** Restart handling */
+    void requestedRestart(QStringList args);
 
 public slots:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks shown in the UI */
     void setNumBlocks(int count);
+    /** Get restart command-line parameters and request restart */
+    void handleRestart(QStringList args);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title

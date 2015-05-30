@@ -1739,11 +1739,13 @@ public:
 }
 instance_of_cnetcleanup;
 
-
-
-
-
-
+void CExplicitNetCleanup::callCleanup()
+{
+    // Explicit call to destructor of CNetCleanup because it's not implicitly called
+    // when the wallet is restarted from within the wallet itself.
+    CNetCleanup *tmp = new CNetCleanup();
+    delete tmp; // Stroustrup's gonna kill me for that
+}
 
 void RelayTransaction(const CTransaction& tx)
 {

@@ -59,6 +59,15 @@ private slots:
 
 public slots:
     void clear();
+    
+    /** Wallet repair options */
+    void walletSalvage();
+    void walletRescan();
+    void walletZaptxes1();
+    void walletZaptxes2();
+    void walletUpgrade();
+    void walletReindex();
+    
     void reject();
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
@@ -79,6 +88,8 @@ public slots:
     void showNetwork();
     /** Switch to peers tab and show */
     void showPeers();
+    /** Switch to wallet-repair tab and show */
+    void showRepair();
     /** Open external (default) editor with dash.conf */
     void showConfEditor();	
     /** Handle selection of peer in peers list */
@@ -92,11 +103,15 @@ signals:
     // For RPC command executor
     void stopExecutor();
     void cmdRequest(const QString &command);
+    /** Get restart command-line parameters and handle restart */
+    void handleRestart(QStringList args);
 
 private:
     static QString FormatBytes(quint64 bytes);
     void startExecutor();
     void setTrafficGraphRange(int mins);
+    /** Build parameter list for restart */
+    void buildParameterlist(QString arg);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
 
