@@ -604,6 +604,12 @@ std::string TXHistoryDialog::shrinkTxType(int txType, bool *fundsMoved)
 void TXHistoryDialog::tempPerfTest()
 {
     boost::timer timerAddMap;
+    CWallet *wallet = pwalletMain;
+    if (NULL == wallet) return;
+    TRY_LOCK(cs_main,lckMain);
+    if (!lckMain) return;
+    TRY_LOCK(wallet->cs_wallet, lckWallet);
+    if (!lckWallet) return;
     std::vector<uint256> vecTransactions;
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
