@@ -121,8 +121,8 @@ std::map<uint32_t, int64_t> global_balance_reserved_testeco;
  */
 bool autoCommit = true;
 
-static uint64_t exodus_prev = 0;
-static uint64_t exodus_balance;
+static int64_t exodus_prev = 0;
+static int64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
 
@@ -158,8 +158,8 @@ CMPSTOList *mastercore::s_stolistdb;
 // a copy from main.cpp -- unfortunately that one is in a private namespace
 int mastercore::GetHeight()
 {
-  LOCK(cs_main);
-  return chainActive.Height();
+    LOCK(cs_main);
+    return chainActive.Height();
 }
 
 uint32_t mastercore::GetLatestBlockTime()
@@ -1924,74 +1924,73 @@ static void clear_all_state()
  */
 int mastercore_init()
 {
-  if (mastercoreInitialized) {
-    // nothing to do
-    return 0;
-  }
+    if (mastercoreInitialized) {
+        // nothing to do
+        return 0;
+    }
 
-  PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
+    PrintToConsole("Initializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
 
-  PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
-  PrintToLog("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
-  PrintToLog("Build date: %s, based on commit: %s\n", BuildDate(), BuildCommit());
+    PrintToLog("\nInitializing Omni Core v%s [%s]\n", OmniCoreVersion(), Params().NetworkIDString());
+    PrintToLog("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    PrintToLog("Build date: %s, based on commit: %s\n", BuildDate(), BuildCommit());
 
-  InitDebugLogLevels();
-  ShrinkDebugLog();
+    InitDebugLogLevels();
+    ShrinkDebugLog();
 
-  if (isNonMainNet() && !UnitTest()) {
-    exodus_address = exodus_testnet;
-  }
+    if (isNonMainNet() && !UnitTest()) {
+        exodus_address = exodus_testnet;
+    }
 
-  // check for --autocommit option and set transaction commit flag accordingly
-  if (!GetBoolArg("-autocommit", true)) {
-      PrintToLog("Process was started with --autocommit set to false. "
-                 "Created Omni transactions will not be committed to wallet or broadcast.\n");
-      autoCommit = false;
-  }
-  // check for --startclean option and delete MP_ folders if present
-  if (GetBoolArg("-startclean", false)) {
-      PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
-      try {
-          boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
-          boost::filesystem::path txlistPath = GetDataDir() / "MP_txlist";
-          boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
-          boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
-          boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
-          if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
-          if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
-          if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
-          if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
-          if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
-          PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
-      }
-      catch (const boost::filesystem::filesystem_error& e)
-      {
-          PrintToLog("Failed to delete persistence folders: %s\n", e.what());
-          PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
-      }
-  }
-  
-  // TODO: the databases should be wiped, when reindexing, but currently,
-  // due to the block disconnect handlers, this results in different state,
-  // which is not correct. Util this is resolved, the original behavior is
-  // mirrored.
-  //
-  // See discussion: https://github.com/OmniLayer/omnicore/pull/25
+    // check for --autocommit option and set transaction commit flag accordingly
+    if (!GetBoolArg("-autocommit", true)) {
+        PrintToLog("Process was started with --autocommit set to false. "
+                "Created Omni transactions will not be committed to wallet or broadcast.\n");
+        autoCommit = false;
+    }
 
-  t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", false);
-  s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", false);
-  p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", false);
-  _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
+    // check for --startclean option and delete MP_ folders if present
+    if (GetBoolArg("-startclean", false)) {
+        PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
+        try {
+            boost::filesystem::path persistPath = GetDataDir() / "MP_persist";
+            boost::filesystem::path txlistPath = GetDataDir() / "MP_txlist";
+            boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
+            boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
+            boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
+            if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
+            if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
+            if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
+            if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
+            if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
+            PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
+        } catch (const boost::filesystem::filesystem_error& e) {
+            PrintToLog("Failed to delete persistence folders: %s\n", e.what());
+            PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
+        }
+    }
 
-  MPPersistencePath = GetDataDir() / "MP_persist";
-  TryCreateDirectory(MPPersistencePath);
+    // TODO: the databases should be wiped, when reindexing, but currently,
+    // due to the block disconnect handlers, this results in different state,
+    // which is not correct. Util this is resolved, the original behavior is
+    // mirrored.
+    //
+    // See discussion: https://github.com/OmniLayer/omnicore/pull/25
 
-  // legacy code, setting to pre-genesis-block
-  static int snapshotHeight = GENESIS_BLOCK - 1;
-  if (isNonMainNet()) snapshotHeight = START_TESTNET_BLOCK - 1;
-  if (RegTest()) snapshotHeight = START_REGTEST_BLOCK - 1;
+    t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", false);
+    s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", false);
+    p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", false);
+    _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
 
-  ++mastercoreInitialized;
+    MPPersistencePath = GetDataDir() / "MP_persist";
+    TryCreateDirectory(MPPersistencePath);
+
+    // legacy code, setting to pre-genesis-block
+    static int snapshotHeight = GENESIS_BLOCK - 1;
+    if (isNonMainNet()) snapshotHeight = START_TESTNET_BLOCK - 1;
+    if (RegTest()) snapshotHeight = START_REGTEST_BLOCK - 1;
+
+    ++mastercoreInitialized;
 
     nWaterlineBlock = load_most_relevant_state();
     if (nWaterlineBlock > 0) {
@@ -2001,37 +2000,36 @@ int mastercore_init()
     }
 
     if (nWaterlineBlock < 0) {
-      // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
-      clear_all_state();
+        // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
+        clear_all_state();
     }
 
-    if (nWaterlineBlock < snapshotHeight)
-    {
-      nWaterlineBlock = snapshotHeight;
-      exodus_prev=0;
+    if (nWaterlineBlock < snapshotHeight) {
+        nWaterlineBlock = snapshotHeight;
+        exodus_prev = 0;
     }
 
     // advance the waterline so that we start on the next unaccounted for block
     nWaterlineBlock += 1;
 
-  // collect the real Exodus balances available at the snapshot time
-  // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
-  exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  PrintToLog("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+    // collect the real Exodus balances available at the snapshot time
+    // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
+    exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+    PrintToLog("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
-  // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
-  p_txlistdb->setLastAlert(nWaterlineBlock);
-  // initial scan
-  msc_initial_scan(nWaterlineBlock);
+    // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
+    p_txlistdb->setLastAlert(nWaterlineBlock);
+    // initial scan
+    msc_initial_scan(nWaterlineBlock);
 
-  // display Exodus balance
-  exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-  PrintToLog("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+    // display Exodus balance
+    exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+    PrintToLog("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
 
-  PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
-  PrintToConsole("Omni Core initialization completed\n");
+    PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
+    PrintToConsole("Omni Core initialization completed\n");
 
-  return 0;
+    return 0;
 }
 
 /**
@@ -2072,37 +2070,36 @@ int mastercore_shutdown()
 // this is called for every new transaction that comes in (actually in block parsing loop)
 int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, CBlockIndex const * pBlockIndex)
 {
-  if (!mastercoreInitialized) {
-    mastercore_init();
-  }
+    if (!mastercoreInitialized) {
+        mastercore_init();
+    }
 
-  // clear pending, if any
-  // NOTE1: Every incoming TX is checked, not just MP-ones because:
-  //  if for some reason the incoming TX doesn't pass our parser validation steps successfuly, I'd still want to clear pending amounts for that TX.
-  // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
-  PendingDelete(tx.GetHash());
+    // clear pending, if any
+    // NOTE1: Every incoming TX is checked, not just MP-ones because:
+    // if for some reason the incoming TX doesn't pass our parser validation steps successfuly, I'd still want to clear pending amounts for that TX.
+    // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
+    PendingDelete(tx.GetHash());
 
-CMPTransaction mp_obj;
-// save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)
-int interp_ret = -555555, pop_ret;
+    CMPTransaction mp_obj;
+    // save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)
+    int interp_ret = -555555, pop_ret;
 
-  if (nBlock < nWaterlineBlock) return -1;  // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
+    if (nBlock < nWaterlineBlock) return -1; // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
 
-  pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime() );
-  if (0 == pop_ret)
-  {
-  // true MP transaction, validity (such as insufficient funds, or offer not found) is determined elsewhere
+    pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime());
+    if (0 == pop_ret) {
+        // true MP transaction, validity (such as insufficient funds, or offer not found) is determined elsewhere
 
-    interp_ret = mp_obj.interpretPacket();
-    if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
+        interp_ret = mp_obj.interpretPacket();
+        if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
 
-    // of course only MP-related TXs get recorded
-    bool bValid = (0 <= interp_ret);
+        // of course only MP-related TXs get recorded
+        bool bValid = (0 <= interp_ret);
 
-      p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
-  }
+        p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
+    }
 
-  return interp_ret;
+    return interp_ret;
 }
 
 // IsMine wrapper to determine whether the address is in our local wallet
@@ -3242,82 +3239,87 @@ int validity = 0;
   return true;
 }
 
-int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex) {
-  if (reorgRecoveryMode > 0) {
-    reorgRecoveryMode = 0;  // clear reorgRecovery here as this is likely re-entrant
+int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex)
+{
+    if (reorgRecoveryMode > 0) {
+        reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
-    p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
-    t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight-1); // deleteAboveBlock functions are non-inclusive (>blocknum not >=blocknum)
-    s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight-1);
-    reorgRecoveryMaxHeight = 0;
+        p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
+        t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight - 1); // deleteAboveBlock functions are non-inclusive (>blocknum not >=blocknum)
+        s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight - 1);
+        reorgRecoveryMaxHeight = 0;
 
-    nWaterlineBlock = GENESIS_BLOCK - 1;
-    if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
-    if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
+        nWaterlineBlock = GENESIS_BLOCK - 1;
+        if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
+        if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
 
-      int best_state_block = load_most_relevant_state();
-      if (best_state_block < 0) {
-        // unable to recover easily, remove stale stale state bits and reparse from the beginning.
-        clear_all_state();
-      } else {
-        nWaterlineBlock = best_state_block;
-      }
+        int best_state_block = load_most_relevant_state();
+        if (best_state_block < 0) {
+            // unable to recover easily, remove stale stale state bits and reparse from the beginning.
+            clear_all_state();
+        } else {
+            nWaterlineBlock = best_state_block;
+        }
 
-    if (nWaterlineBlock < nBlockPrev) {
-      // scan from the block after the best active block to catch up to the active chain
-      msc_initial_scan(nWaterlineBlock + 1);
+        if (nWaterlineBlock < nBlockPrev) {
+            // scan from the block after the best active block to catch up to the active chain
+            msc_initial_scan(nWaterlineBlock + 1);
+        }
     }
-  }
 
-  eraseExpiredCrowdsale(pBlockIndex);
+    eraseExpiredCrowdsale(pBlockIndex);
 
-  return 0;
+    return 0;
 }
 
 // called once per block, after the block has been processed
 // TODO: consolidate into *handler_block_begin() << need to adjust Accept expiry check.............
 // it performs cleanup and other functions
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
-    unsigned int countMP) {
-  if (!mastercoreInitialized) {
-    mastercore_init();
-  }
+        unsigned int countMP)
+{
+    if (!mastercoreInitialized) {
+        mastercore_init();
+    }
 
-// for every new received block must do:
-// 1) remove expired entries from the accept list (per spec accept entries are valid until their blocklimit expiration; because the customer can keep paying BTC for the offer in several installments)
-// 2) update the amount in the Exodus address
-  int64_t devmsc = 0;
-  unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
+    // for every new received block must do:
+    // 1) remove expired entries from the accept list (per spec accept entries are
+    //    valid until their blocklimit expiration; because the customer can keep
+    //    paying BTC for the offer in several installments)
+    // 2) update the amount in the Exodus address
+    int64_t devmsc = 0;
+    unsigned int how_many_erased = eraseExpiredAccepts(nBlockNow);
 
-  if (how_many_erased)
-    PrintToLog("%s(%d); erased %u accepts this block, line %d, file: %s\n",
-        __FUNCTION__, how_many_erased, nBlockNow, __LINE__, __FILE__);
+    if (how_many_erased) {
+        PrintToLog("%s(%d); erased %u accepts this block, line %d, file: %s\n",
+            __FUNCTION__, how_many_erased, nBlockNow, __LINE__, __FILE__);
+    }
 
-  // calculate devmsc as of this block and update the Exodus' balance
-  devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
+    // calculate devmsc as of this block and update the Exodus' balance
+    devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
 
-  if (msc_debug_exo)
-    PrintToLog("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
-        devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
+    if (msc_debug_exo) {
+        PrintToLog("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
+            devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
+    }
 
-  // get the total MSC for this wallet, for QT display
-  set_wallet_totals();
+    // get the total MSC for this wallet, for QT display
+    set_wallet_totals();
 
-  // check the alert status, do we need to do anything else here?
-  checkExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
+    // check the alert status, do we need to do anything else here?
+    checkExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
-  // force an update of the UI once per processed block containing Omni transactions
-  if (countMP > 0)  // there were Omni transactions in this block
-  {
-    uiInterface.OmniStateChanged();
-  }
+    // force an update of the UI once per processed block containing Omni transactions
+    if (countMP > 0) { // there were Omni transactions in this block
+        uiInterface.OmniStateChanged();
+    }
 
-  // save out the state after this block
-  if (writePersistence(nBlockNow)) {
-    mastercore_save_state(pBlockIndex);
-  }
+    // save out the state after this block
+    if (writePersistence(nBlockNow)) {
+        mastercore_save_state(pBlockIndex);
+    }
 
-  return 0;
+    return 0;
 }
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex)
