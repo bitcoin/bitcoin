@@ -398,9 +398,10 @@ in `gitian.sigs` to your signing machine and do
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
 gitian build.
 
-Uploading signatures
+Uploading signatures (not yet implemented)
 ---------------------
 
-After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[dash/gitian.sigs](https://github.com/dashpay/gitian.sigs/) repository, or if that's not possible create a pull
-request. You can also mail the files to me (evan@dashpay.io) and I'll commit them.
+In the future it will be possible to push your signatures (both the `.assert` and `.assert.sig` files) to the
+[dash/gitian.sigs](https://github.com/dashpay/gitian.sigs/) repository, or if that's not possible to create a pull
+request.
+There will be an official announcement when this repository is online.
