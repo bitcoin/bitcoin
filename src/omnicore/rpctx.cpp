@@ -737,8 +737,7 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            uint8_t action = CMPTransaction::ADD; // TODO: move into pending creation
-            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_TRADE, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, CMPTransaction::ADD);
             return txid.GetHex();
         }
     }
@@ -792,8 +791,7 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            uint8_t action = CMPTransaction::CANCEL_AT_PRICE; // TODO: move into pending creation
-            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_PRICE, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, CMPTransaction::CANCEL_AT_PRICE);
             return txid.GetHex();
         }
     }
@@ -843,10 +841,7 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            uint8_t action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // TODO: move into pending creation
-            int64_t amountForSale = 0;
-            int64_t amountDesired = 0;
-            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_PAIR, propertyIdForSale, 0, propertyIdDesired, 0, CMPTransaction::CANCEL_ALL_FOR_PAIR);
             return txid.GetHex();
         }
     }
@@ -890,12 +885,7 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
         if (!autoCommit) {
             return rawHex;
         } else {
-            uint8_t action = CMPTransaction::CANCEL_EVERYTHING; // TODO: move into pending creation
-            int64_t amountForSale = 0;
-            int64_t amountDesired = 0;
-            uint32_t propertyIdForSale = ecosystem;
-            uint32_t propertyIdDesired = ecosystem;
-            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, action);
+            PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_ECOSYSTEM, ecosystem, 0, ecosystem, 0, CMPTransaction::CANCEL_EVERYTHING);
             return txid.GetHex();
         }
     }
