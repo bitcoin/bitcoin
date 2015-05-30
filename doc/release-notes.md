@@ -67,6 +67,24 @@ UTXO but where its block file has been pruned.
 
 Pruning is disabled by default.
 
+Transaction Fees
+----------------
+
+This release restores the default fee required to relay transactions across the
+network and for miners to consider the transaction in their blocks to
+0.1mBTC per kilobyte. The previous drop to 0.01mBTC in 0.9 only achieved
+technical consensus for the relay fee (not mining), and on the basis of a $500
+exchange rate. It was applied to mining policy defaults as a last minute
+workaround for a bug that occurs when relay fee and mining fee are mismatched,
+and since that bug has not yet been fixed, the default relay fee is herein also
+restored to its former fee rate. Miners and nodes are expected to override this
+default to a reasonable preference using the minrelaytxfee option.
+
+Note that getting a transaction relayed across the network does NOT guarantee
+that the transaction will be accepted by a miner; by default, miners fill
+their blocks with 50 kilobytes of high-priority transactions (controlled by
+the blockprioritysize option), and then with 700 kilobytes (controlled by the
+blockmaxsize option) of the highest-fee-per-kilobyte transactions.
 
 0.11.0 Change log
 =================

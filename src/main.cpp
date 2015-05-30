@@ -63,9 +63,9 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
-CFeeRate minRelayTxFee = CFeeRate(1000);
+CFeeRate minRelayTxFee = CFeeRate(10000);
 
-// NOTE: init.cpp sets this to -minrelaytxfee * 10000; keep that constant in sync
+// NOTE: init.cpp sets this to -minrelaytxfee * 1000; keep that constant in sync
 /** Fees larger than this (in satoshi) are considered absurd */
 CFeeRate feerateAbsurd = CFeeRate(10000000);
 
