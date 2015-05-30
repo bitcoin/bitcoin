@@ -1970,17 +1970,10 @@ int mastercore_init()
         }
     }
 
-    // TODO: the databases should be wiped, when reindexing, but currently,
-    // due to the block disconnect handlers, this results in different state,
-    // which is not correct. Util this is resolved, the original behavior is
-    // mirrored.
-    //
-    // See discussion: https://github.com/OmniLayer/omnicore/pull/25
-
-    t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", false);
-    s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", false);
-    p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", false);
-    _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", false);
+    t_tradelistdb = new CMPTradeList(GetDataDir() / "MP_tradelist", fReindex);
+    s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
+    p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
+    _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
