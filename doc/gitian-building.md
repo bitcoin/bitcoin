@@ -378,7 +378,7 @@ Signing externally
 If you want to do the PGP signing on another device that's also possible; just define `SIGNER` as mentioned
 and follow the steps in the build process as normal.
 
-    gpg: skipped "laanwj": secret key not available
+    gpg: skipped "crowning-": secret key not available
 
 When you execute `gsign` you will get an error from GPG, which can be ignored. Copy the resulting `.assert` files
 in `gitian.sigs` to your signing machine and do
