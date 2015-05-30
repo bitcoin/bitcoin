@@ -805,7 +805,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
         {
             ::minRelayTxFee = CFeeRate(n);
-            ::feerateAbsurd = CFeeRate(n * 10000);
+            ::feerateAbsurd = CFeeRate(n * 1000);
         }
         else
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
