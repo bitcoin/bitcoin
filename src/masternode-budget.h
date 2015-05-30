@@ -24,6 +24,7 @@ class CFinalizedBudgetVote;
 class CBudgetProposal;
 class CBudgetProposalBroadcast;
 class CBudgetVote;
+class CTxBudgetPayment;
 
 #define VOTE_ABSTAIN  0
 #define VOTE_YES      1
@@ -135,6 +136,31 @@ public:
     }
 };
 
+
+class CTxBudgetPayment
+{
+public:
+    uint256 nProposalHash;
+    CScript payee;
+    int64_t nAmount;
+
+    CTxBudgetPayment() {
+        payee = CScript();
+        nAmount = 0;
+        nProposalHash = 0;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    //for saving to the serialized db
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(payee);
+        READWRITE(nAmount);
+        READWRITE(nProposalHash);
+    }
+};
+
 //
 // Finalized Budget : Contains the suggested proposals to pay on a given block
 //
@@ -150,7 +176,7 @@ public:
     CTxIn vin;
     std::string strBudgetName;
     int nBlockStart;
-    std::vector<uint256> vecProposals;
+    std::vector<CTxBudgetPayment> vecProposals;
     map<uint256, CFinalizedBudgetVote> mapVotes;
 
     CFinalizedBudget();  
@@ -172,14 +198,26 @@ public:
     std::string GetSubmittedBy() {return vin.prevout.ToStringShort();}
     int GetVoteCount() {return (int)mapVotes.size();}
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    uint256 GetProposalByBlock(int64_t nBlockHeight)
+    bool GetProposalByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment)
     {
         int i = nBlockHeight - GetBlockStart();
-        if(i < 0) return 0;
-        if(i > (int)vecProposals.size()-1) return 0;
-        return vecProposals[i];
+        if(i < 0) return false;
+        if(i > (int)vecProposals.size()-1) return false;
+        payment = vecProposals[i];
+        return true;
     }
-    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, int64_t& nAmount);
+    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, int64_t& nAmount)
+    {
+        int i = nBlockHeight - GetBlockStart();
+        if(i < 0) return false;
+        if(i > (int)vecProposals.size()-1) return false;
+        payee = vecProposals[i].payee;
+        nAmount = vecProposals[i].nAmount;
+        return true;
+    }
+
+    //checks the hashes to make sure we know about them
+    string GetStatus();
 
     uint256 GetHash(){
         /* 
@@ -221,7 +259,7 @@ private:
 public:
     CFinalizedBudgetBroadcast();
     CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
-    CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<uint256> vecProposalsIn);
+    CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool SignatureValid();

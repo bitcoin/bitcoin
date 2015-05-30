@@ -336,13 +336,21 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
 
-        std::vector<uint256> vecProps;
+        std::vector<CTxBudgetPayment> vecPayments;
         for(int i = 2; i < (int)params.size(); i++)
         {
             std::string strHash = params[i].get_str();
             uint256 hash(strHash);
-
-            vecProps.push_back(hash);
+            CBudgetProposal* prop = budget.FindProposal(hash);
+            if(!prop){
+                return "Invalid proposal " + strHash + ". Please check the proposal hash";
+            } else {
+                CTxBudgetPayment out;
+                out.nProposalHash = hash;
+                out.payee = prop->GetPayee();
+                out.nAmount = prop->GetAmount();
+                vecPayments.push_back(out);
+            }
         }
 
         CPubKey pubKeyMasternode;
@@ -353,7 +361,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return(" Error upon calling SetKey");
 
         //create the proposal incase we're the first to make it
-        CFinalizedBudgetBroadcast prop(activeMasternode.vin, strBudgetName, nBlockStart, vecProps);
+        CFinalizedBudgetBroadcast prop(activeMasternode.vin, strBudgetName, nBlockStart, vecPayments);
         if(!prop.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
@@ -479,6 +487,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
             bObj.push_back(Pair("Proposals",  prop->GetProposals().c_str()));
             bObj.push_back(Pair("VoteCount",  (int64_t)prop->GetVoteCount()));
+            bObj.push_back(Pair("Status",  prop->GetStatus().c_str()));
             resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
         }
 
