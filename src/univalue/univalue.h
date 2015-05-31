@@ -61,7 +61,7 @@ public:
     bool setObject();
 
     enum VType getType() const { return typ; }
-    std::string getValStr() const { return val; }
+    const std::string& getValStr() const { return val; }
     bool empty() const { return (values.size() == 0); }
 
     size_t size() const { return values.size(); }
@@ -247,4 +247,3 @@ extern const UniValue NullUniValue;
 const UniValue& find_value( const UniValue& obj, const std::string& name);
 
 #endif // BITCOIN_UNIVALUE_UNIVALUE_H
-

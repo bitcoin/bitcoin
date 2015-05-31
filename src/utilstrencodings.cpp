@@ -471,7 +471,7 @@ bool ParseDouble(const std::string& str, double *out)
     return endp && *endp == 0 && !errno;
 }
 
-std::string FormatParagraph(const std::string in, size_t width, size_t indent)
+std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
     std::stringstream out;
     size_t col = 0;
