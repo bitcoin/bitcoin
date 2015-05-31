@@ -25,11 +25,13 @@ BOOST_AUTO_TEST_CASE(alert_positive_authorization)
     BOOST_CHECK(CheckAlertAuthorization("16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj")); // Craig   <craig@omni.foundation>
     BOOST_CHECK(CheckAlertAuthorization("1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY")); // Michael <michael@omni.foundation>
     BOOST_CHECK(CheckAlertAuthorization("1zAtHRASgdHvZDfHs6xJquMghga4eG7gy"));  // Zathras <zathras@omni.foundation>
+    BOOST_CHECK(CheckAlertAuthorization("1dexX7zmPen1yBz2H9ZF62AK5TGGqGTZH"));  // dexX7   <dexx@bitwatch.co>
     BOOST_CHECK(CheckAlertAuthorization("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")); // Exodus (who has access?)
 
     // Confirm authorized sources for testnet
     BOOST_CHECK(CheckAlertAuthorization("mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j")); // Michael <michael@omni.foundation>
     BOOST_CHECK(CheckAlertAuthorization("mpZATHupfCLqet5N1YL48ByCM1ZBfddbGJ")); // Zathras <zathras@omni.foundation>
+    BOOST_CHECK(CheckAlertAuthorization("mk5SSx4kdexENHzLxk9FLhQdbbBexHUFTW")); // dexX7   <dexx@bitwatch.co>
 }
 
 BOOST_AUTO_TEST_CASE(alert_unauthorized_source)

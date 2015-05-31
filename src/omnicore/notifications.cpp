@@ -34,20 +34,19 @@ bool CheckAlertAuthorization(const std::string& sender)
     std::set<std::string> whitelisted;
 
     // TODO: check email addresses
-    // TODO: add dexX7 <dexx@bitwatch.co>
     // TODO: rename option to be more Omni Core specific
-
-    // TODO: update unit tests, if a source is updated
 
     // Mainnet
     whitelisted.insert("16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj"); // Craig   <craig@omni.foundation>
     whitelisted.insert("1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY"); // Michael <michael@omni.foundation>
     whitelisted.insert("1zAtHRASgdHvZDfHs6xJquMghga4eG7gy");  // Zathras <zathras@omni.foundation>
+    whitelisted.insert("1dexX7zmPen1yBz2H9ZF62AK5TGGqGTZH");  // dexX7   <dexx@bitwatch.co>
     whitelisted.insert("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"); // Exodus (who has access?)
 
     // Testnet
     whitelisted.insert("mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j"); // Michael <michael@omni.foundation>
     whitelisted.insert("mpZATHupfCLqet5N1YL48ByCM1ZBfddbGJ"); // Zathras <zathras@omni.foundation>
+    whitelisted.insert("mk5SSx4kdexENHzLxk9FLhQdbbBexHUFTW"); // dexX7   <dexx@bitwatch.co>
 
     // Add manually whitelisted sources
     if (mapArgs.count("-alertallowsender")) {
