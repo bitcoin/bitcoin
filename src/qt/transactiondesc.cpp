@@ -6,6 +6,7 @@
 
 #include "bitcoinunits.h"
 #include "guiutil.h"
+#include "paymentrequestplus.h"
 #include "paymentserver.h"
 #include "transactionrecord.h"
 
@@ -15,7 +16,6 @@
 #include "script/script.h"
 #include "timedata.h"
 #include "util.h"
-#include "wallet/db.h"
 #include "wallet/wallet.h"
 
 #include <stdint.h>

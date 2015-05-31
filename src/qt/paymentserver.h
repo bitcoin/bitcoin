@@ -32,13 +32,14 @@
 // sends them to the server.
 //
 
-#include "paymentrequestplus.h"
+#include "paymentrequest.pb.h"
 #include "walletmodel.h"
 
 #include <QObject>
 #include <QString>
 
 class OptionsModel;
+class PaymentRequestPlus;
 
 class CWallet;
 

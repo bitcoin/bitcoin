@@ -15,6 +15,8 @@
 #include <QList>
 #include <QString>
 
+struct CRecipient;
+
 //
 // Wraps dumb protocol buffer paymentRequest
 // with extra methods
@@ -34,7 +36,7 @@ public:
     bool getMerchant(X509_STORE* certStore, QString& merchant) const;
 
     // Returns list of outputs, amount
-    QList<std::pair<CScript,CAmount> > getPayTo() const;
+    QList<CRecipient> getPayTo() const;
 
     const payments::PaymentDetails& getDetails() const { return details; }
 

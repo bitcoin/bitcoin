@@ -10,6 +10,7 @@
 #include "paymentrequestplus.h"
 
 #include "util.h"
+#include "wallet/wallet.h"
 
 #include <stdexcept>
 
@@ -195,15 +196,15 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     return fResult;
 }
 
-QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
+QList<CRecipient> PaymentRequestPlus::getPayTo() const
 {
-    QList<std::pair<CScript,CAmount> > result;
-    for (int i = 0; i < details.outputs_size(); i++)
-    {
+    QList<CRecipient> result;
+    for (int i = 0; i < details.outputs_size(); i++) {
         const unsigned char* scriptStr = (const unsigned char*)details.outputs(i).script().data();
-        CScript s(scriptStr, scriptStr+details.outputs(i).script().size());
+        CScript s(scriptStr, scriptStr + details.outputs(i).script().size());
 
-        result.append(make_pair(s, details.outputs(i).amount()));
+        CRecipient recipient = {s, (CAmount)details.outputs(i).amount(), false};
+        result.append(recipient);
     }
     return result;
 }
