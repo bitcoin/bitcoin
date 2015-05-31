@@ -37,6 +37,8 @@ bool CheckAlertAuthorization(const std::string& sender)
     // TODO: add dexX7 <dexx@bitwatch.co>
     // TODO: rename option to be more Omni Core specific
 
+    // TODO: update unit tests, if a source is updated
+
     // Mainnet
     whitelisted.insert("16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj"); // Craig   <craig@omni.foundation>
     whitelisted.insert("1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY"); // Michael <michael@omni.foundation>
