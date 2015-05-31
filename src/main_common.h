@@ -337,8 +337,9 @@ public:
     CCriticalSection cs_LastBlockFile;
     CBlockFileInfo infoLastBlockFile;
     int nLastBlockFile;
+    int nTrimToTime;
 
-	MainState() : fImporting(false), fReindex(false), nLastBlockFile(0) {}
+	MainState() : fImporting(false), fReindex(false), nLastBlockFile(0), nTrimToTime(0) {}
 
 	bool ImportingOrReindexing() {
 		return fImporting || fReindex;

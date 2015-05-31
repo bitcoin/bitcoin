@@ -45,6 +45,7 @@ int64_t bitcoin_nTimeBestReceived = 0;
 int bitcoin_nScriptCheckThreads = 0;
 bool bitcoin_fBenchmark = false;
 bool bitcoin_fTxIndex = false;
+bool bitcoin_fTrimBlockFiles = true;
 unsigned int bitcoin_nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
@@ -975,6 +976,8 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &txOut, ui
             CDiskTxPos postx;
             if (bitcoin_pblocktree->ReadTxIndex(hash, postx)) {
                 CAutoFile file(Bitcoin_OpenBlockFile(postx, true), SER_DISK, Bitcoin_Params().ClientVersion());
+                if(!file && bitcoin_fTrimBlockFiles)
+                	 return error("Bitcoin: %s : block file pos nonexistant, probably trimmed, file: %d, pos: %d, hash: %s", __func__, postx.nFile, postx.nPos, hash.GetHex());
                 Bitcoin_CBlockHeader header;
                 try {
                     file >> header;
@@ -1013,6 +1016,9 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &txOut, ui
                     return true;
                 }
             }
+        } else {
+            if(bitcoin_fTrimBlockFiles)
+            	 return error("Bitcoin: %s : block file pos nonexistant, probably trimmed, file: %d, pos: %d, hash: %s", __func__, pindexSlow->GetBlockPos().nFile, pindexSlow->GetBlockPos().nPos, hash.GetHex());
         }
     }
 
@@ -2445,6 +2451,120 @@ bool static Bitcoin_DisconnectTipForClaim(CValidationState &state, Credits_CCoin
     return true;
 }
 
+bool Bitcoin_CheckTrimBlockFile(FILE* fileIn, const int nTrimToTime)
+{
+    int64_t nStart = GetTimeMillis();
+
+    int nLoaded = 0;
+    try {
+        CBufferedFile blkdat(fileIn, 2*BITCOIN_MAX_BLOCK_SIZE, BITCOIN_MAX_BLOCK_SIZE+8, SER_DISK, Bitcoin_Params().ClientVersion());
+        uint64_t nStartByte = 0;
+        uint64_t nRewind = blkdat.GetPos();
+        while (blkdat.good() && !blkdat.eof()) {
+            boost::this_thread::interruption_point();
+
+            blkdat.SetPos(nRewind);
+            nRewind++; // start one byte further next time, in case of failure
+            blkdat.SetLimit(); // remove former limit
+            unsigned int nSize = 0;
+            try {
+                // locate a header
+                unsigned char buf[MESSAGE_START_SIZE];
+                blkdat.FindByte(Bitcoin_Params().MessageStart()[0]);
+                nRewind = blkdat.GetPos()+1;
+                blkdat >> FLATDATA(buf);
+                if (memcmp(buf, Bitcoin_Params().MessageStart(), MESSAGE_START_SIZE))
+                    continue;
+                // read size
+                blkdat >> nSize;
+                if (nSize < 80 || nSize > BITCOIN_MAX_BLOCK_SIZE)
+                    continue;
+            } catch (std::exception &e) {
+                // no valid block header found; don't complain
+                break;
+            }
+            try {
+                // read block
+                uint64_t nBlockPos = blkdat.GetPos();
+                blkdat.SetLimit(nBlockPos + nSize);
+                Bitcoin_CBlock block;
+                blkdat >> block;
+                nRewind = blkdat.GetPos();
+
+                // check block
+                if (nBlockPos >= nStartByte) {
+                	if(block.nTime >= nTrimToTime) {
+                		return false;
+                	}
+                    nLoaded++;
+                }
+            } catch (std::exception &e) {
+                LogPrintf("Bitcoin: %s : Deserialize or I/O error - %s", __func__, e.what());
+            }
+        }
+        fclose(fileIn);
+    } catch(std::runtime_error &e) {
+        AbortNode(_("Error: system error: ") + e.what());
+    }
+    if (nLoaded > 0) {
+        LogPrintf("Bitcoin: Loaded %i blocks from file in %dms\n", nLoaded, GetTimeMillis() - nStart);
+		return true;
+    } else {
+    	return false;
+    }
+}
+
+bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo) {
+    AssertLockHeld(bitcoin_mainState.cs_main);
+
+    if(bitcoin_fTrimBlockFiles) {
+		const int nTrimToTime = pTrimTo->nTime;
+		const int nTrimToBlockFile = pTrimTo->nFile;
+
+		int nFile = 0;
+		while (true) {
+			if(nFile >= nTrimToBlockFile)
+				break;
+			CDiskBlockPos pos(nFile, 0);
+			FILE *fileTrim = Bitcoin_OpenBlockFile(pos, true);
+			if (!fileTrim)
+				continue;
+			LogPrintf("Bitcoin: Scanning block file blk%05u.dat for trimming...\n", (unsigned int)nFile);
+
+			if(Bitcoin_CheckTrimBlockFile(fileTrim, nTrimToTime)) {
+				LogPrintf("Bitcoin: Trimming file blk%05u.dat...\n", (unsigned int)nFile);
+
+				fileTrim = Bitcoin_OpenBlockFile(pos);
+				if (fileTrim) {
+					TruncateFile(fileTrim, 0);
+					FileCommit(fileTrim);
+					fclose(fileTrim);
+				}
+
+				fileTrim = Bitcoin_OpenUndoFile(pos);
+				if (fileTrim) {
+					TruncateFile(fileTrim, 0);
+					FileCommit(fileTrim);
+					fclose(fileTrim);
+				}
+
+				fileTrim = Bitcoin_OpenUndoFileClaim(pos);
+				if (fileTrim) {
+					TruncateFile(fileTrim, 0);
+					FileCommit(fileTrim);
+					fclose(fileTrim);
+				}
+			}
+			nFile++;
+		}
+
+		bitcoin_mainState.nTrimToTime = nTrimToTime;
+		bitcoin_pblocktree->WriteTrimToTime(bitcoin_mainState.nTrimToTime);
+    }
+
+	return true;
+}
+
 // Connect a new block to chainActive.
 bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pindexNew) {
     assert(pindexNew->pprev == bitcoin_chainActive.Tip());
@@ -2499,6 +2619,18 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
     bitcoin_mempool.check(bitcoin_pcoinsTip);
     // Update chainActive & related variables.
     Bitcoin_UpdateTip(pindexNew);
+
+    if(fastForwardClaimState) {
+    	//Every 20000 blocks, trim the bitcoin block files
+		int trimFrequency = 20000;
+		const Bitcoin_CBlockIndex * ptip = (Bitcoin_CBlockIndex*) bitcoin_chainActive.Tip();
+		if (ptip->nHeight > trimFrequency && ptip->nHeight % trimFrequency == 0) {
+			const Bitcoin_CBlockIndex * pTrimTo = bitcoin_chainActive[ptip->nHeight - trimFrequency];
+			if (!Bitcoin_TrimBlockHistory(pTrimTo)) {
+				return error("Bitcoin: ConnectTip() : Could not trim block history!");
+			}
+		}
+    }
 
     // Tell wallet about transactions that went from mempool
     // to conflicted:
@@ -2708,7 +2840,7 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 		return state.Abort(strprintf(_("Referenced claim block %s is not deep enough in the bitcoin blockchain"), pmoveToBitcoinIndex->phashBlock->ToString()));
 	}
 
-	// Initialize coinstip if not done yet
+	// Initialize coinstip if not done yet. This code should never execute since the fast forward claim state should have handled the updating of the tip before this segment is reached.
 	uint256 claimBestBlockHash = view.Claim_GetBestBlock();
 	if (claimBestBlockHash == uint256(0)) {
 		if (!Bitcoin_ConnectTipForClaim(state, view, bitcoin_chainActive.Genesis(), updateUndo, vBlockUndoClaims)) {
@@ -3325,6 +3457,7 @@ bool Bitcoin_ProcessBlock(CValidationState &state, CNode* pfrom, Bitcoin_CBlock*
     }
 
     LogPrintf("Bitcoin: ProcessBlock: ACCEPTED\n");
+
     return true;
 }
 
@@ -3422,6 +3555,8 @@ bool static Bitcoin_LoadBlockIndexDB()
     // Load block file info
     bitcoin_pblocktree->ReadLastBlockFile(bitcoin_mainState.nLastBlockFile);
     LogPrintf("Bitcoin: LoadBlockIndexDB(): last block file = %i\n", bitcoin_mainState.nLastBlockFile);
+    bitcoin_pblocktree->ReadTrimToTime(bitcoin_mainState.nTrimToTime);
+    LogPrintf("Bitcoin: LoadBlockIndexDB(): trim to time = %i\n", bitcoin_mainState.nTrimToTime);
     if (bitcoin_pblocktree->ReadBlockFileInfo(bitcoin_mainState.nLastBlockFile, bitcoin_mainState.infoLastBlockFile))
         LogPrintf("Bitcoin: LoadBlockIndexDB(): last block file info: %s\n", bitcoin_mainState.infoLastBlockFile.ToString());
 
@@ -3451,6 +3586,10 @@ bool static Bitcoin_LoadBlockIndexDB()
     // Check whether we have a transaction index
     bitcoin_pblocktree->ReadFlag("txindex", bitcoin_fTxIndex);
     LogPrintf("Bitcoin: LoadBlockIndexDB(): transaction index %s\n", bitcoin_fTxIndex ? "enabled" : "disabled");
+
+    // Check whether we have are trimming the bitcoin block files
+    bitcoin_pblocktree->ReadFlag("bitcoin_trimblockfiles", bitcoin_fTrimBlockFiles);
+    LogPrintf("Bitcoin: LoadBlockIndexDB(): trimming of block files %s\n", bitcoin_fTrimBlockFiles ? "enabled" : "disabled");
 
     // Load pointer to end of best chain
     std::map<uint256, Bitcoin_CBlockIndex*>::iterator it = bitcoin_mapBlockIndex.find(bitcoin_pcoinsTip->GetBestBlock());
@@ -3588,6 +3727,11 @@ bool Bitcoin_InitBlockIndex() {
     // Use the provided setting for -txindex in the new database
     bitcoin_fTxIndex = GetBoolArg("-txindex", false);
     bitcoin_pblocktree->WriteFlag("txindex", bitcoin_fTxIndex);
+
+    // Use the provided setting for -bitcoin_trimblockfiles in the new database
+    bitcoin_fTrimBlockFiles = GetBoolArg("-bitcoin_trimblockfiles", true);
+    bitcoin_pblocktree->WriteFlag("bitcoin_trimblockfiles", bitcoin_fTrimBlockFiles);
+
     LogPrintf("Bitcoin: Initializing databases...\n");
 
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
@@ -3660,12 +3804,17 @@ void Bitcoin_PrintBlockTree()
 
         // print item
         Bitcoin_CBlock block;
-        Bitcoin_ReadBlockFromDisk(block, pindex);
-        LogPrintf("%d (blk%05u.dat:0x%x)  %s  tx %u\n",
-            pindex->nHeight,
-            pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
-            DateTimeStrFormat("%Y-%m-%d %H:%M:%S", block.GetBlockTime()),
-            block.vtx.size());
+        if(Bitcoin_ReadBlockFromDisk(block, pindex)) {
+            LogPrintf("%d (blk%05u.dat:0x%x)  %s  tx %u\n",
+                pindex->nHeight,
+                pindex->GetBlockPos().nFile, pindex->GetBlockPos().nPos,
+                DateTimeStrFormat("%Y-%m-%d %H:%M:%S", block.GetBlockTime()),
+                block.vtx.size());
+		} else {
+			if(bitcoin_fTrimBlockFiles) {
+				LogPrintf("Bitcoin_Bitcoin_PrintBlockTree: Read attempt for missing block file, probably due to trimmed block files: %s\n", pindex->phashBlock->GetHex());
+			}
+		}
 
         // put the main time-chain first
         vector<Bitcoin_CBlockIndex*>& vNext = mapNext[pindex];
@@ -3898,29 +4047,36 @@ void static Bitcoin_ProcessGetData(CNode* pfrom)
                 {
                     // Send block from disk
                     Bitcoin_CBlock block;
-                    assert(Bitcoin_ReadBlockFromDisk(block, (*mi).second));
-                    if (inv.type == MSG_BLOCK)
-                        pfrom->PushMessage("block", block);
-                    else // MSG_FILTERED_BLOCK)
-                    {
-                        LOCK(pfrom->cs_filter);
-                        if (pfrom->pfilter)
-                        {
-                            Bitcoin_CMerkleBlock merkleBlock(block, *pfrom->pfilter);
-                            pfrom->PushMessage("merkleblock", merkleBlock);
-                            // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
-                            // This avoids hurting performance by pointlessly requiring a round-trip
-                            // Note that there is currently no way for a node to request any single transactions we didnt send here -
-                            // they must either disconnect and retry or request the full block.
-                            // Thus, the protocol spec specified allows for us to provide duplicate txn here,
-                            // however we MUST always provide at least what the remote peer needs
-                            typedef std::pair<unsigned int, uint256> PairType;
-                            BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
-                                if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
-                                    pfrom->PushMessage("tx", block.vtx[pair.first]);
-                        }
-                        // else
-                            // no response
+                    bool blockFound = true;
+                    if(bitcoin_fTrimBlockFiles) {
+                    	blockFound = Bitcoin_ReadBlockFromDisk(block, (*mi).second);
+                    } else {
+						assert(Bitcoin_ReadBlockFromDisk(block, (*mi).second));
+                    }
+                    if(blockFound) {
+						if (inv.type == MSG_BLOCK)
+							pfrom->PushMessage("block", block);
+						else // MSG_FILTERED_BLOCK)
+						{
+							LOCK(pfrom->cs_filter);
+							if (pfrom->pfilter)
+							{
+								Bitcoin_CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+								pfrom->PushMessage("merkleblock", merkleBlock);
+								// CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
+								// This avoids hurting performance by pointlessly requiring a round-trip
+								// Note that there is currently no way for a node to request any single transactions we didnt send here -
+								// they must either disconnect and retry or request the full block.
+								// Thus, the protocol spec specified allows for us to provide duplicate txn here,
+								// however we MUST always provide at least what the remote peer needs
+								typedef std::pair<unsigned int, uint256> PairType;
+								BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+									if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
+										pfrom->PushMessage("tx", block.vtx[pair.first]);
+							}
+							// else
+								// no response
+						}
                     }
 
                     // Trigger them to send a getblocks request for the next batch of inventory

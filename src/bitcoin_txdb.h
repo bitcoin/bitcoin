@@ -27,14 +27,13 @@ static const int64_t bitcoin_nMinDbCache = 4;
 /** Bitcoin_CCoinsView backed by the LevelDB coin database (chainstate/) */
 class Bitcoin_CCoinsViewDB : public Bitcoin_CCoinsView {
 private:
-	static const unsigned char COIN_KEY;
-	static const unsigned char BEST_CHAIN_KEY;
-
     void BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
     void BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins);
-protected:
-    CLevelDBWrapper db;
 public:
+	static const unsigned char COIN_KEY;
+	static const unsigned char BEST_CHAIN_KEY;
+    //This breaks encapsulation, yes
+    CLevelDBWrapper db;
     Bitcoin_CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
@@ -61,6 +60,8 @@ public:
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
     bool WriteLastBlockFile(int nFile);
+    bool ReadTrimToTime(int &nTrimToTime);
+    bool WriteTrimToTime(int nTrimToTime);
     bool WriteReindexing(bool fReindex);
     bool ReadReindexing(bool &fReindex);
     bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);

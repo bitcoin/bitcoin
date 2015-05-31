@@ -2427,10 +2427,6 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
 
     Credits_CCoinsViewCache credits_view(*credits_pcoinsTip, true);
 
-    int bitcoinBlockSteps;
-    if(!GetBitcoinBlockSteps(bitcoinBlockSteps, block.hashLinkedBitcoinBlock, state, *credits_pcoinsTip)) {
-		return state.Abort(_("Credits: ConnectTip() : Problem when calculating bitcoin block steps"));
-    }
 
 	uint256 hashNewTipBitcoinBlock = pindexNew->hashLinkedBitcoinBlock;
 	std::map<uint256, Bitcoin_CBlockIndex*>::iterator mi = bitcoin_mapBlockIndex.find(hashNewTipBitcoinBlock);
@@ -2439,11 +2435,15 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     }
 	const Bitcoin_CBlockIndex* palignToBitcoinIndex = (*mi).second;
 
+    int bitcoinBlockSteps;
+    if(!GetBitcoinBlockSteps(bitcoinBlockSteps, block.hashLinkedBitcoinBlock, state, *credits_pcoinsTip)) {
+		return state.Abort(_("Credits: ConnectTip() : Problem when calculating bitcoin block steps"));
+    }
 	const bool fastForwardClaimState = FastForwardClaimStateFor(palignToBitcoinIndex->nHeight, palignToBitcoinIndex->GetBlockHash());
 	if(fastForwardClaimState) {
-		LogPrintf("Credits: ConnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
+		LogPrintf("Credits: ConnectTip() : In fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
 	} else {
-		LogPrintf("Credits: ConnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
+		LogPrintf("Credits: ConnectTip() : Moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
 	}
 	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 	CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
@@ -2475,6 +2475,25 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     credits_mempool.check(credits_pcoinsTip);
     // Update chainActive & related variables.
     Bitcredit_UpdateTip(pindexNew);
+
+    if(!fastForwardClaimState) {
+    	//Every 3000 blocks, trim the bitcoin block files
+		int trimFrequency = 3000;
+		const Credits_CBlockIndex * ptip = (Credits_CBlockIndex*) credits_chainActive.Tip();
+		if (ptip->nHeight > trimFrequency && ptip->nHeight % trimFrequency == 0) {
+			const Credits_CBlockIndex * pTrimToCreditsBlock = credits_chainActive[ptip->nHeight - trimFrequency];
+
+			std::map<uint256, Bitcoin_CBlockIndex*>::iterator mi = bitcoin_mapBlockIndex.find(pTrimToCreditsBlock->hashLinkedBitcoinBlock);
+			if (mi == bitcoin_mapBlockIndex.end()) {
+		        return state.Abort(strprintf(_("Referenced claim bitcoin block %s can not be found"), pTrimToCreditsBlock->hashLinkedBitcoinBlock.ToString()));
+		    }
+			const Bitcoin_CBlockIndex* pTrimTo = (*mi).second;
+			if (!Bitcoin_TrimBlockHistory(pTrimTo)) {
+				return error("Bitcoin: ConnectTip() : Could not trim block history!");
+			}
+		}
+    }
+
     // Tell wallet about transactions that went from mempool
     // to conflicted:
     BOOST_FOREACH(const Credits_CTransaction &tx, txConflicted) {

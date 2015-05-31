@@ -987,18 +987,24 @@ int Bitcoin_CWallet::ScanForWalletTransactions(Bitcoin_CBlockIndex* pindexStart,
                 ShowProgress(_("Rescanning bitcoin wallet..."), std::max(1, std::min(99, (int)((Checkpoints::Bitcoin_GuessVerificationProgress(pindex, false) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
 
             Bitcoin_CBlock block;
-            Bitcoin_ReadBlockFromDisk(block, pindex);
-            BOOST_FOREACH(Bitcoin_CTransaction& tx, block.vtx)
-            {
-                if (AddToWalletIfInvolvingMe(tx.GetHash(), tx, &block, fUpdate))
-                    ret++;
-            }
+            if(Bitcoin_ReadBlockFromDisk(block, pindex)) {
+				BOOST_FOREACH(Bitcoin_CTransaction& tx, block.vtx)
+				{
+					if (AddToWalletIfInvolvingMe(tx.GetHash(), tx, &block, fUpdate))
+						ret++;
+				}
+			} else {
+				if(bitcoin_fTrimBlockFiles) {
+					LogPrintf("Bitcoin_ScanForWalletTransactions: Read attempt for missing block file, probably due to trimmed block files: %s\n", pindex->phashBlock->GetHex());
+				}
+			}
             pindex = bitcoin_chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
                 LogPrintf("Still rescanning bitcoin wallet. At block %d. Progress=%f\n", pindex->nHeight, Checkpoints::Bitcoin_GuessVerificationProgress(pindex));
             }
         }
+
         ShowProgress(_("Rescanning bitcoin wallet..."), 100); // hide progress dialog in GUI
     }
     return ret;

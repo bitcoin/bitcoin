@@ -13,6 +13,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "bitcoin_walletdb.h"
+#include "bitcoin_txdb.h"
 
 #include <algorithm>
 #include <map>

@@ -79,7 +79,7 @@ bool Bitcoin_CCoinsViewDB::GetStats(Bitcoin_CCoinsStats &stats) {
             CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, Bitcoin_Params().ClientVersion());
             char chType;
             ssKey >> chType;
-            if (chType == 'c') {
+            if (chType == COIN_KEY) {
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, Bitcoin_Params().ClientVersion());
                 Bitcoin_CCoins coins;
@@ -147,6 +147,14 @@ bool Bitcoin_CBlockTreeDB::ReadBlockFileInfo(int nFile, CBlockFileInfo &info) {
 
 bool Bitcoin_CBlockTreeDB::WriteLastBlockFile(int nFile) {
     return Write('l', nFile);
+}
+
+bool Bitcoin_CBlockTreeDB::WriteTrimToTime(int nTrimToTime) {
+    return Write('T', nTrimToTime);
+}
+
+bool Bitcoin_CBlockTreeDB::ReadTrimToTime(int &nTrimToTime) {
+    return Read('T', nTrimToTime);
 }
 
 bool Bitcoin_CBlockTreeDB::WriteReindexing(bool fReindexing) {
