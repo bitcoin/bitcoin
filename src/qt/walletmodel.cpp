@@ -290,8 +290,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return TransactionCreationFailed;
         }
 
-        // reject absurdly high fee > 0.1 bitcoin
-        if (nFeeRequired > 10000000)
+        // reject absurdly high fee
+        if (nFeeRequired > ::feerateAbsurd.GetFeePerK())
             return AbsurdFee;
     }
 

@@ -65,6 +65,10 @@ uint64_t nPruneTarget = 0;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
 
+// NOTE: init.cpp sets this to -minrelaytxfee * 10000; keep that constant in sync
+/** Fees larger than this (in satoshi) are considered absurd */
+CFeeRate feerateAbsurd = CFeeRate(10000000);
+
 CTxMemPool mempool(::minRelayTxFee);
 
 struct COrphanTx {
@@ -1038,10 +1042,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             dFreeCount += nSize;
         }
 
-        if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
+        if (fRejectAbsurdFee && nFees > ::feerateAbsurd.GetFee(nSize))
             return error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
                          hash.ToString(),
-                         nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
+                         nFees, ::feerateAbsurd.GetFee(nSize));
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
