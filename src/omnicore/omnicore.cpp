@@ -2324,12 +2324,12 @@ int CMPTxList::setLastAlert(int blockHeight)
            {
                if (atoi(vstr[0]) == 1) // is it valid?
                {
-                   if ( (atoi(vstr[1]) > lastAlertBlock) && (atoi(vstr[1]) < blockHeight) ) // is it the most recent and within our parsed range?
-                   {
-                      lastAlertTxid = skey.ToString();
-                      lastAlertData = svalue.ToString();
-                      lastAlertBlock = atoi(vstr[1]);
-                   }
+                    if ((atoi(vstr[1]) > lastAlertBlock) && (atoi(vstr[1]) <= blockHeight)) // is it the most recent and within our parsed range?
+                    {
+                        lastAlertTxid = skey.ToString();
+                        lastAlertData = svalue.ToString();
+                        lastAlertBlock = atoi(vstr[1]);
+                    }
                }
            }
        }
