@@ -14,13 +14,16 @@
 #include <string>
 #include <vector>
 
+namespace mastercore
+{
+
 //! Stores alert messages for Omni Core
 static std::string global_alert_message;
 
 /**
  * Alert string including meta data.
  */
-std::string mastercore::getMasterCoreAlertString()
+std::string getMasterCoreAlertString()
 {
     return global_alert_message;
 }
@@ -28,7 +31,7 @@ std::string mastercore::getMasterCoreAlertString()
 /**
  * Human readable alert message.
  */
-std::string mastercore::getMasterCoreAlertTextOnly()
+std::string getMasterCoreAlertTextOnly()
 {
     std::string message;
     std::vector<std::string> vstr;
@@ -47,7 +50,7 @@ std::string mastercore::getMasterCoreAlertTextOnly()
 /**
  * Sets the alert string.
  */
-void mastercore::setOmniCoreAlert(const std::string& alertMessage)
+void setOmniCoreAlert(const std::string& alertMessage)
 {
     global_alert_message = alertMessage;
 }
@@ -55,7 +58,7 @@ void mastercore::setOmniCoreAlert(const std::string& alertMessage)
 /**
  * Expires any alerts that need expiring.
  */
-bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
+bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
 {
     int32_t alertType = 0;
     uint64_t expiryValue = 0;
@@ -74,7 +77,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                         return true;
                     }
                     break;
-                case 2: //Text based alert only expiring by block time, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
+                case 2: //Text baseDEBUG d alert only expiring by block time, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
                     if (curTime > expiryValue) {
                         //the alert has expired, clear the global alert string
                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
@@ -138,7 +141,7 @@ bool mastercore::checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
 /**
  * Parses an alert string.
  */
-bool mastercore::parseAlertMessage(const std::string& rawAlertStr, int32_t* alertType, uint64_t* expiryValue, uint32_t* typeCheck, uint32_t* verCheck, std::string* alertMessage)
+bool parseAlertMessage(const std::string& rawAlertStr, int32_t* alertType, uint64_t* expiryValue, uint32_t* typeCheck, uint32_t* verCheck, std::string* alertMessage)
 {
     std::vector<std::string> vstr;
     boost::split(vstr, rawAlertStr, boost::is_any_of(":"), boost::token_compress_on);
@@ -162,3 +165,5 @@ bool mastercore::parseAlertMessage(const std::string& rawAlertStr, int32_t* aler
     return false;
 }
 
+
+} // namespace mastercore
