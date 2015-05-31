@@ -2414,7 +2414,7 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
     return ret;
 }
 
-set<CTxDestination> CWallet::GetAccountAddresses(string strAccount) const
+std::set<CTxDestination> CWallet::GetAccountAddresses(const std::string& strAccount) const
 {
     LOCK(cs_wallet);
     set<CTxDestination> result;

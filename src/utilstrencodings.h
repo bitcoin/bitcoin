@@ -88,11 +88,11 @@ inline std::string HexStr(const T& vch, bool fSpaces=false)
     return HexStr(vch.begin(), vch.end(), fSpaces);
 }
 
-/** 
+/**
  * Format a paragraph of text to a fixed width, adding spaces for
  * indentation to any added line.
  */
-std::string FormatParagraph(const std::string in, size_t width=79, size_t indent=0);
+std::string FormatParagraph(const std::string& in, size_t width = 79, size_t indent = 0);
 
 /**
  * Timing-attack-resistant comparison.
