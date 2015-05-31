@@ -4,6 +4,8 @@
 
 #include "omnicore/convert.h"
 
+#include "tinyformat.h"
+
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -398,6 +400,26 @@ std::vector<unsigned char> CreatePayload_MetaDExCancelEcosystem(uint8_t ecosyste
     PUSH_BACK_BYTES(payload, propertyIdDesired);
     PUSH_BACK_BYTES(payload, amountDesired);
     PUSH_BACK_BYTES(payload, action);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_OmniCoreAlert(int32_t alertType, uint64_t expiryValue, uint32_t typeCheck, uint32_t verCheck, const std::string& alertMessage)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 65535;
+    uint16_t messageVer = 65535;
+
+    std::string strAlertPacket = strprintf("%d:%d:%d:%d:%s",
+            alertType, expiryValue, typeCheck, verCheck, alertMessage);
+
+    mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder16(messageType);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    payload.insert(payload.end(), strAlertPacket.begin(), strAlertPacket.end());
+    payload.push_back('\0');
 
     return payload;
 }
