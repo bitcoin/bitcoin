@@ -21,6 +21,57 @@ namespace mastercore
 static std::string global_alert_message;
 
 /**
+ * Determines whether the sender is an authorized source for Omni Core alerts.
+ *
+ * The option "-alertallowsender=source" can be used to whitelist additional sources,
+ * and the option "-alertignoresender=source" can be used to ignore a source.
+ *
+ * To consider any alert as authorized, "-alertallowsender=any" can be used. This
+ * should only be done for testing purposes!
+ */
+bool CheckAlertAuthorization(const std::string& sender)
+{
+    std::set<std::string> whitelisted;
+
+    // TODO: check email addresses
+    // TODO: add dexX7 <dexx@bitwatch.co>
+    // TODO: rename option to be more Omni Core specific
+
+    // Mainnet
+    whitelisted.insert("16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj"); // Craig   <craig@omni.foundation>
+    whitelisted.insert("1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY"); // Michael <michael@omni.foundation>
+    whitelisted.insert("1zAtHRASgdHvZDfHs6xJquMghga4eG7gy");  // Zathras <zathras@omni.foundation>
+    whitelisted.insert("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"); // Exodus (who has access?)
+
+    // Testnet
+    whitelisted.insert("mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j"); // Michael <michael@omni.foundation>
+    whitelisted.insert("mpZATHupfCLqet5N1YL48ByCM1ZBfddbGJ"); // Zathras <zathras@omni.foundation>
+
+    // Add manually whitelisted sources
+    if (mapArgs.count("-alertallowsender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-alertallowsender"];
+
+        for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
+            whitelisted.insert(*it);
+        }
+    }
+
+    // Remove manually ignored sources
+    if (mapArgs.count("-alertignoresender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-alertignoresender"];
+
+        for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
+            whitelisted.erase(*it);
+        }
+    }
+
+    bool fAuthorized = (whitelisted.count(sender) ||
+                        whitelisted.count("any"));
+
+    return fAuthorized;
+}
+
+/**
  * Alert string including meta data.
  */
 std::string getMasterCoreAlertString()

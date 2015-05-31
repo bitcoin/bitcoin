@@ -77,19 +77,7 @@ int CMPTransaction::step2_Alert(std::string *new_global_alert_message)
   char alertString[SP_STRING_FIELD_LEN];
 
   // is sender authorized?
-  bool authorized = false;
-  if (
-     // TESTNET
-     (sender == "mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j") || // Michael
-     (sender == "mCraigAddress") || // Craig
-     (sender == "mpZATHupfCLqet5N1YL48ByCM1ZBfddbGJ") || // Zathras
-     // MAINNET
-     (sender == "1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY") || // Michael
-     (sender == "16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj") || // Craig
-     (sender == "1zAtHRASgdHvZDfHs6xJquMghga4eG7gy") || // Zathras
-     (sender == "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") // Exodus
-     //(sender=="1Anyone2Else3Who4Should5Be6Here") // Who else?  JR? David? DexX?
-     ) authorized = true;
+  bool authorized = CheckAlertAuthorization(sender);
 
   if(!authorized)
   {
@@ -1476,19 +1464,7 @@ int CMPTransaction::logicMath_Alert()
     }
 
     // is sender authorized?
-    bool authorized = false;
-    if (
-        // TESTNET
-        (sender == "mpDex4kSX4iscrmiEQ8fBiPoyeTH55z23j") || // Michael
-        (sender == "mCraigAddress") || // Craig
-        (sender == "mpZATHupfCLqet5N1YL48ByCM1ZBfddbGJ") || // Zathras
-        // MAINNET
-        (sender == "1MicH2Vu4YVSvREvxW1zAx2XKo2GQomeXY") || // Michael
-        (sender == "16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj") || // Craig
-        (sender == "1zAtHRASgdHvZDfHs6xJquMghga4eG7gy") || // Zathras
-        (sender == "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") // Exodus
-        //(sender=="1Anyone2Else3Who4Should5Be6Here") // Who else?  JR? David? DexX?
-        ) authorized = true;
+    bool authorized = CheckAlertAuthorization(sender);
 
     if (!authorized) {
         // not authorized, ignore alert

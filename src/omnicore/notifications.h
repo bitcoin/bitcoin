@@ -6,6 +6,9 @@
 
 namespace mastercore
 {
+/** Determines whether the sender is an authorized source for Omni Core alerts. */
+bool CheckAlertAuthorization(const std::string& sender);
+
 /** Alert string including meta data. */
 std::string getMasterCoreAlertString();
 
