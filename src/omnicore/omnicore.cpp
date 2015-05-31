@@ -749,8 +749,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
           GetScriptPushes(wtx.vout[i].scriptPubKey, temp_op_return_script_data);
           if (temp_op_return_script_data.size() > 0) {
               if (temp_op_return_script_data[0].size() > 8) {
+                  // only v0/v1 (and alert) txs are live, add 6f6d0002 to parse a v2 tx when one goes live
                   if(("6f6d0000" == temp_op_return_script_data[0].substr(0,8)) ||
-                     ("6f6d0001" == temp_op_return_script_data[0].substr(0,8))) { // only v0/v1 txs are live, add 6f6d0002 to parse a v2 tx when one goes live
+                     ("6f6d0001" == temp_op_return_script_data[0].substr(0,8)) ||
+                     ("6f6dffff" == temp_op_return_script_data[0].substr(0,8))) {
                       hasOmniBytes = true;
                   }
               }
