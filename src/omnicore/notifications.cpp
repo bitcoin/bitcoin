@@ -74,7 +74,7 @@ bool CheckAlertAuthorization(const std::string& sender)
 /**
  * Alert string including meta data.
  */
-std::string getMasterCoreAlertString()
+std::string GetOmniCoreAlertString()
 {
     return global_alert_message;
 }
@@ -82,7 +82,7 @@ std::string getMasterCoreAlertString()
 /**
  * Human readable alert message.
  */
-std::string getMasterCoreAlertTextOnly()
+std::string GetOmniCoreAlertTextOnly()
 {
     std::string message;
     std::vector<std::string> vstr;
@@ -101,7 +101,7 @@ std::string getMasterCoreAlertTextOnly()
 /**
  * Sets the alert string.
  */
-void setOmniCoreAlert(const std::string& alertMessage)
+void SetOmniCoreAlert(const std::string& alertMessage)
 {
     global_alert_message = alertMessage;
 }
@@ -109,7 +109,7 @@ void setOmniCoreAlert(const std::string& alertMessage)
 /**
  * Expires any alerts that need expiring.
  */
-bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
+bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
 {
     int32_t alertType = 0;
     uint64_t expiryValue = 0;
@@ -117,7 +117,7 @@ bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
     uint32_t verCheck = 0;
     std::string alertMessage;
     if (!global_alert_message.empty()) {
-        bool parseSuccess = parseAlertMessage(global_alert_message, &alertType, &expiryValue, &typeCheck, &verCheck, &alertMessage);
+        bool parseSuccess = ParseAlertMessage(global_alert_message, alertType, expiryValue, typeCheck, verCheck, alertMessage);
         if (parseSuccess) {
             switch (alertType) {
                 case 1: //Text based alert only expiring by block number, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
@@ -165,7 +165,7 @@ bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                         PrintToLog("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
                         PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
                         if (!GetBoolArg("-overrideforcedshutdown", false)) {
-                            std::string msgText = "Shutting down due to alert: " + getMasterCoreAlertTextOnly();
+                            std::string msgText = "Shutting down due to alert: " + GetOmniCoreAlertTextOnly();
                             AbortNode(msgText, msgText); // show same message to user as that which is logged
                         }
                         return false;
@@ -192,22 +192,22 @@ bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime)
 /**
  * Parses an alert string.
  */
-bool parseAlertMessage(const std::string& rawAlertStr, int32_t* alertType, uint64_t* expiryValue, uint32_t* typeCheck, uint32_t* verCheck, std::string* alertMessage)
+bool ParseAlertMessage(const std::string& rawAlertStr, int32_t& alertType, uint64_t& expiryValue, uint32_t& typeCheck, uint32_t& verCheck, std::string& alertMessage)
 {
     std::vector<std::string> vstr;
     boost::split(vstr, rawAlertStr, boost::is_any_of(":"), boost::token_compress_on);
     if (5 == vstr.size()) {
         try {
-            *alertType = boost::lexical_cast<int32_t>(vstr[0]);
-            *expiryValue = boost::lexical_cast<uint64_t>(vstr[1]);
-            *typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
-            *verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
+            alertType = boost::lexical_cast<int32_t>(vstr[0]);
+            expiryValue = boost::lexical_cast<uint64_t>(vstr[1]);
+            typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
+            verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
         } catch (const boost::bad_lexical_cast& e) {
-            PrintToLog("DEBUG ALERT - error in converting values from global alert string\n");
+            PrintToLog("DEBUG ALERT - error in converting values from global alert string: %s\n", e.what());
             return false;
         }
-        *alertMessage = vstr[4];
-        if ((*alertType < 1) || (*alertType > 4) || (*expiryValue == 0)) {
+        alertMessage = vstr[4];
+        if ((alertType < 1) || (alertType > 4) || (expiryValue == 0)) {
             PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, values are not as expected.\n");
             return false;
         }

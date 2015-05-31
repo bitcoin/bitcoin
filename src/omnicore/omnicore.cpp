@@ -2365,12 +2365,15 @@ int CMPTxList::setLastAlert(int blockHeight)
                 {
                     if(65535 == mp_obj.getType())
                     {
+                        // TODO: use new parsing/interpretation functions
                         if (0 == mp_obj.step2_Alert(&new_global_alert_message))
                         {
-                            setOmniCoreAlert(new_global_alert_message);
+                            SetOmniCoreAlert(new_global_alert_message);
                             // check if expired
-                            CBlockIndex* mpBlockIndex = chainActive[blockHeight];
-                            (void) checkExpiredAlerts(blockHeight, mpBlockIndex->GetBlockTime());
+                            CBlockIndex* pBlockIndex = chainActive[blockHeight];
+                            if (pBlockIndex != NULL) {
+                                CheckExpiredAlerts(blockHeight, pBlockIndex->GetBlockTime());
+                            }
                         }
                     }
                 }
@@ -3301,7 +3304,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     set_wallet_totals();
 
     // check the alert status, do we need to do anything else here?
-    checkExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
+    CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
     // force an update of the UI once per processed block containing Omni transactions
     if (countMP > 0) { // there were Omni transactions in this block

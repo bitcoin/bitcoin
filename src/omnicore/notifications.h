@@ -10,19 +10,19 @@ namespace mastercore
 bool CheckAlertAuthorization(const std::string& sender);
 
 /** Alert string including meta data. */
-std::string getMasterCoreAlertString();
+std::string GetOmniCoreAlertString();
 
 /** Human readable alert message. */
-std::string getMasterCoreAlertTextOnly();
+std::string GetOmniCoreAlertTextOnly();
 
 /** Sets the alert string. */
-void setOmniCoreAlert(const std::string& alertMessage);
+void SetOmniCoreAlert(const std::string& alertMessage);
 
 /** Expires any alerts that need expiring. */
-bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime);
+bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime);
 
 /** Parses an alert string. */
-bool parseAlertMessage(const std::string& rawAlertStr, int32_t* alertType, uint64_t* expiryValue, uint32_t* typeCheck, uint32_t* verCheck, std::string* alertMessage);
+bool ParseAlertMessage(const std::string& rawAlertStr, int32_t& alertType, uint64_t& expiryValue, uint32_t& typeCheck, uint32_t& verCheck, std::string& alertMessage);
 }
 
 #endif // OMNICORE_NOTIFICATIONS_H

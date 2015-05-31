@@ -429,7 +429,7 @@ void OverviewPage::updateAlerts()
     // override to check alert directly rather than passing in param as we won't always be calling from bitcoin in
     // the clientmodel emit for alertsChanged
     QString warnings = QString::fromStdString(GetWarnings("statusbar")); // get current bitcoin alert/warning directly
-    QString alertMessage = QString::fromStdString(getMasterCoreAlertTextOnly()); // just return the text message from alert
+    QString alertMessage = QString::fromStdString(GetOmniCoreAlertTextOnly()); // just return the text message from alert
     // any BitcoinCore or MasterCore alerts to display?
     if((!alertMessage.isEmpty()) || (!warnings.isEmpty())) showAlert = true;
     this->ui->labelAlerts->setVisible(showAlert);

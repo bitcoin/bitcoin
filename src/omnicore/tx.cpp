@@ -1505,7 +1505,7 @@ int CMPTransaction::logicMath_Alert()
     PrintToLog("\t   alert message: %s\n", alertMessage);
 
     // copy the alert string into the global_alert_message and return a 0 rc
-    setOmniCoreAlert(alertString);
+    SetOmniCoreAlert(alertString);
 
     // we have a new alert, fire a notify event if needed
     CAlert::Notify(alertMessage, true);

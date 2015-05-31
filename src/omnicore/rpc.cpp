@@ -1749,7 +1749,7 @@ Value getinfo_MP(const Array& params, bool fHelp)
 
     // handle alerts
     Object alertResponse;
-    std::string global_alert_message = getMasterCoreAlertString();
+    std::string global_alert_message = GetOmniCoreAlertString();
 
     if (!global_alert_message.empty()) {
         int32_t alertType = 0;
@@ -1758,7 +1758,7 @@ Value getinfo_MP(const Array& params, bool fHelp)
         uint32_t verCheck = 0;
         std::string alertTypeStr;
         std::string alertMessage;
-        bool parseSuccess = parseAlertMessage(global_alert_message, &alertType, &expiryValue, &typeCheck, &verCheck, &alertMessage);
+        bool parseSuccess = ParseAlertMessage(global_alert_message, alertType, expiryValue, typeCheck, verCheck, alertMessage);
         if (parseSuccess) {
             switch (alertType) {
                 case 0: alertTypeStr = "error";
