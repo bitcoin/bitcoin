@@ -2219,7 +2219,10 @@ static bool UseEncodingClassC(size_t nDataSize)
 {
     size_t nTotalSize = nDataSize + 2; // Marker "om"
     bool fDataEnabled = GetBoolArg("-datacarrier", true);
-
+    int nBlockNow = GetHeight();
+    if (!isAllowedOutputType(TX_NULL_DATA, nBlockNow)) {
+        fDataEnabled = false;
+    }
     return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
 }
 
