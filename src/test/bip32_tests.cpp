@@ -117,6 +117,10 @@ void RunTest(const TestVector &test) {
         }
         key = keyNew;
         pubkey = pubkeyNew;
+
+        CDataStream ss(SER_DISK, CLIENT_VERSION);
+        ss << pubkeyNew;
+        BOOST_CHECK(ss.size() == 75);
     }
 }
 
