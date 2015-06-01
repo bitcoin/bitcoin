@@ -1,5 +1,48 @@
-(note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
+Bitcoin Core version 0.11.0 is now available from:
+
+  <https://bitcoin.org/bin/bitcoin-core-0.11.0/>
+
+This is a new major version release, bringing both new features and
+bug fixes.
+
+Please report bugs using the issue tracker at github:
+
+  <https://github.com/bitcoin/bitcoin/issues>
+
+Upgrading and downgrading
+=========================
+
+How to Upgrade
+--------------
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), then run the
+installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
+bitcoind/bitcoin-qt (on Linux).
+
+Downgrade warning
+------------------
+
+Because release 0.10.0 and later makes use of headers-first synchronization and
+parallel block download (see further), the block files and databases are not
+backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+
+* Blocks will be stored on disk out of order (in the order they are
+received, really), which makes it incompatible with some tools or
+other programs. Reindexing using earlier versions will also not work
+anymore as a result of this.
+
+* The block index database will now hold headers for which no block is
+stored on disk, which earlier versions won't support.
+
+If you want to be able to downgrade smoothly, make a backup of your entire data
+directory. Without this your node will need start syncing (or importing from
+bootstrap.dat) anew afterwards. It is possible that the data from a completely
+synchronised 0.10 node may be usable in older versions as-is, but this is not
+supported and may break as soon as the older version attempts to reindex.
+
+This does not affect wallet forward or backward compatibility. There are no
+known problems when downgrading from 0.11.x to 0.10.x.
 
 Notable changes
 ===============
@@ -151,6 +194,7 @@ git merge commit are mentioned.
 - #5418 `16341cc` Report missing inputs in sendrawtransaction
 - #5937 `40f5e8d` show script verification errors in signrawtransaction result
 - #5420 `1fd2d39` getutxos REST command (based on Bip64)
+- #6193 `42746b0` [REST] remove json input for getutxos, limit to query max. 15 outpoints
 
 ### Configuration and command-line options
 - #5636 `a353ad4` Add option `-allowselfsignedrootcertificate` to allow self signed root certs (for testing payment requests)
@@ -158,6 +202,7 @@ git merge commit are mentioned.
 - #5951 `7efc9cf` Make it possible to disable wallet transaction broadcast (using `-walletbroadcast=0`)
 - #5911 `b6ea3bc` privacy: Stream isolation for Tor (on by default, use `-proxyrandomize=0` to disable)
 - #5863 `c271304` Add autoprune functionality (`-prune=<size>`)
+- #6153 `0bcf04f` Parameter interaction: disable upnp if -proxy set
 
 ### Block and transaction handling
 - #5367 `dcc1304` Do all block index writes in a batch
@@ -299,5 +344,93 @@ git merge commit are mentioned.
 - #6168 `b3024f0` contrib/linearize: Support linearization of testnet blocks
 - #6098 `7708fcd` Update Windows resource files (and add one for bitcoin-tx)
 - #6159 `e1412d3` Catch errors on datadir lock and pidfile delete
+- #6186 `182686c` Fix two problems in CSubnet parsing
+- #6174 `df992b9` doc: add translation strings policy
 
 [up to date until #5976]
+
+Credits
+=======
+
+Thanks to everyone who directly contributed to this release:
+
+- 21E14
+- Adam Weiss
+- Alex Morcos
+- ayeowch
+- azeteki
+- Ben Holden-Crowther
+- bikinibabe
+- BitcoinPRReadingGroup
+- Blake Jakopovic
+- BtcDrak
+- charlescharles
+- Chris Arnesen
+- Ciemon
+- CohibAA
+- Corinne Dashjr
+- Cory Fields
+- Cozz Lovan
+- Daira Hopwood
+- Daniel Kraft
+- Dave Collins
+- David A. Harding
+- dexX7
+- Earlz
+- Eric Lombrozo
+- Eric R. Schulz
+- Everett Forth
+- Flavien Charlon
+- fsb4000
+- Gavin Andresen
+- Gregory Maxwell
+- Heath
+- Ivan Pustogarov
+- Jameson Lopp
+- Jason Lewicki
+- Jeff Garzik
+- Jonas Schnelli
+- Jonathan Brown
+- Jorge Timón
+- joshr
+- jtimon
+- Julian Yap
+- Luca Venturini
+- Luke Dashjr
+- Manuel Araoz
+- MarcoFalke
+- Matt Bogosian
+- Matt Corallo
+- Micha
+- Michael Ford
+- Mike Hearn
+- mrbandrews
+- Nicolas Benoit
+- paveljanik
+- Pavel Janík
+- Pavel Vasin
+- Peter Todd
+- Philip Kaufmann
+- Pieter Wuille
+- pstratem
+- randy-waterhouse
+- Rob Van Mieghem
+- Ross Nicoll
+- Ruben de Vries
+- sandakersmann
+- Shaul Kfir
+- Shawn Wilkinson
+- sinetek
+- Suhas Daftuar
+- svost
+- Thomas Zander
+- UdjinM6
+- Vitalii Demianets
+- Wladimir J. van der Laan
+
+And all those who contributed additional code review and/or security research:
+
+- Sergio Demian Lerner
+
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+
