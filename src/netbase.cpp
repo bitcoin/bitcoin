@@ -35,8 +35,6 @@
 #define MSG_NOSIGNAL 0
 #endif
 
-using namespace std;
-
 // Settings
 static proxyType proxyInfo[NET_MAX];
 static proxyType nameProxy;
@@ -597,13 +595,13 @@ bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout, b
 
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed)
 {
-    string strDest;
+    std::string strDest;
     int port = portDefault;
 
     if (outProxyConnectionFailed)
         *outProxyConnectionFailed = false;
 
-    SplitHostPort(string(pszDest), port, strDest);
+    SplitHostPort(std::string(pszDest), port, strDest);
 
     proxyType nameProxy;
     GetNameProxy(nameProxy);
