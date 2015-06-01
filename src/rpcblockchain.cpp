@@ -218,6 +218,34 @@ Value getrawmempool(const Array& params, bool fHelp)
     }
 }
 
+Value clearmempool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "clearmempool\n"
+            "\nClears the memory pool and returns a list of the removed transactions.\n"
+            "\nResult:\n"
+            "[                     (json array of string)\n"
+            "  \"hash\"              (string) The transaction hash\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples\n"
+            + HelpExampleCli("clearmempool", "")
+            + HelpExampleRpc("clearmempool", "")
+        );
+
+    std::vector<uint256> vtxid;
+    mempool.queryHashes(vtxid);
+
+    Array removed;
+    BOOST_FOREACH(const uint256& hash, vtxid)
+        removed.push_back(hash.ToString());
+
+    mempool.clear();
+
+    return removed;
+}
+
 Value getblockhash(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)

@@ -58,8 +58,8 @@ sudo apt-get install pkg-config
 Clone the Omni Core repository:
 
 ```
- git clone https://github.com/mastercoin-MSC/mastercore.git
- cd mastercore/
+ git clone https://github.com/OmniLayer/omnicore.git.git
+ cd omnicore/
 ```
 
 Then, run:

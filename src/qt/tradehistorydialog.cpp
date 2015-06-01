@@ -16,6 +16,7 @@
 #include "omnicore/pending.h"
 #include "omnicore/rpc.h"
 #include "omnicore/rpctxobject.h"
+#include "omnicore/sp.h"
 #include "omnicore/tx.h"
 
 #include "amount.h"

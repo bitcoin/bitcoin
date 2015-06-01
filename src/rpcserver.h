@@ -216,6 +216,7 @@ extern json_spirit::Value getdifficulty(const json_spirit::Array& params, bool f
 extern json_spirit::Value settxfee(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getmempoolinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getrawmempool(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value clearmempool(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblockhash(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool fHelp);
@@ -268,6 +269,7 @@ extern json_spirit::Value sendtrade_OMNI(const json_spirit::Array& params, bool 
 extern json_spirit::Value sendcanceltradesbyprice_OMNI(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendcanceltradesbypair_OMNI(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendcancelalltrades_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendalert_OMNI(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,

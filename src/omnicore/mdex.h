@@ -1,7 +1,6 @@
 #ifndef OMNICORE_MDEX_H
 #define OMNICORE_MDEX_H
 
-#include "tinyformat.h"
 #include "uint256.h"
 
 #include <boost/lexical_cast.hpp>
@@ -14,7 +13,6 @@
 #include <stdint.h>
 
 #include <fstream>
-#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -26,60 +24,9 @@ typedef boost::rational<int128_t> rational_t;
 
 #define DISPLAY_PRECISION_LEN  50
 
-inline bool rangeInt64(const int128_t& value)
-{
-    return (std::numeric_limits<int64_t>::min() <= value && value <= std::numeric_limits<int64_t>::max());
-}
-
-inline bool rangeInt64(const rational_t& value)
-{
-    return (rangeInt64(value.numerator()) && rangeInt64(value.denominator()));
-}
-
-inline std::string xToString(const dec_float& value)
-{
-    return value.str(DISPLAY_PRECISION_LEN, std::ios_base::fixed);
-}
-
-inline std::string xToString(const int128_t& value)
-{
-    return strprintf("%s", boost::lexical_cast<std::string>(value));
-}
-
-inline std::string xToString(const rational_t& value)
-{
-    if (rangeInt64(value)) {
-        int64_t num = value.numerator().convert_to<int64_t>();
-        int64_t denom = value.denominator().convert_to<int64_t>();
-        dec_float x = dec_float(num) / dec_float(denom);
-        return xToString(x);
-    } else {
-        return strprintf("%s / %s", xToString(value.numerator()), xToString(value.denominator()));
-    }
-}
-
-inline int128_t xToInt128(const rational_t& value, bool fRoundUp)
-{
-    // for integer rounding up: ceil(num / denom) => 1 + (num - 1) / denom
-    int128_t result(0);
-
-    if (!fRoundUp) {
-        result = value.numerator() / value.denominator();
-    } else {
-        result = int128_t(1) + (value.numerator() - int128_t(1)) / value.denominator();
-    }
-
-    return result;
-}
-
-inline int64_t xToInt64(const rational_t& value, bool fRoundUp)
-{
-    int128_t result = xToInt128(value, fRoundUp);
-
-    assert(rangeInt64(result));
-
-    return result.convert_to<int64_t>();
-}
+std::string xToString(const dec_float& value);
+std::string xToString(const int128_t& value);
+std::string xToString(const rational_t& value);
 
 /** A trade on the distributed exchange.
  */
@@ -163,6 +110,7 @@ typedef std::map<rational_t, md_Set> md_PricesMap;
 //! Map of properties; there is a map of prices for each property
 typedef std::map<uint32_t, md_PricesMap> md_PropertiesMap;
 
+//! Global map for price and order data
 extern md_PropertiesMap metadex;
 
 // TODO: explore a property-pair, instead of a single property as map's key........

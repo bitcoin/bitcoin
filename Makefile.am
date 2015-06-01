@@ -32,7 +32,7 @@ OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
 
 COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
   leveldb_baseline.info test_bitcoin_filtered.info total_coverage.info \
-  baseline_filtered.info block_test_filtered.info \
+  baseline_filtered.info block_test_filtered.info omnicore_test.info omnicore_test_filtered.info \
   leveldb_baseline_filtered.info test_bitcoin_coverage.info test_bitcoin.info
 
 dist-hook:
@@ -167,11 +167,20 @@ block_test.info: test_bitcoin_filtered.info
 block_test_filtered.info: block_test.info
 	$(LCOV) -r $< "/usr/include/*" -o $@
 
+omnicore_test.info: test_bitcoin_filtered.info
+	-@TIMEOUT=15 qa/pull-tester/omnicore-rpc-tests.sh
+	$(LCOV) -c -d $(abs_builddir)/src --t OmniCoreRPCTest -o $@
+	$(LCOV) -z -d $(abs_builddir)/src
+	$(LCOV) -z -d $(abs_builddir)/src/leveldb
+
+omnicore_test_filtered.info: omnicore_test.info
+	$(LCOV) -r $< "/usr/include/*" -o $@
+
 test_bitcoin_coverage.info: baseline_filtered_combined.info test_bitcoin_filtered.info
 	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -o $@
 
-total_coverage.info:  baseline_filtered_combined.info test_bitcoin_filtered.info block_test_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info:  baseline_filtered_combined.info test_bitcoin_filtered.info block_test_filtered.info omnicore_test_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -a block_test_filtered.info -a omnicore_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
 test_bitcoin.coverage/.dirstamp:  test_bitcoin_coverage.info
 	$(GENHTML) -s $< -o $(@D)
@@ -191,11 +200,11 @@ check-local:
 	@qa/pull-tester/run-bitcoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS) 2>&1
 endif
 
-EXTRA_DIST = $(top_srcdir)/share/genbuild.sh qa/pull-tester/rpc-tests.sh qa/pull-tester/run-bitcoin-cli qa/rpc-tests $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING)
+EXTRA_DIST = $(top_srcdir)/share/genbuild.sh qa/pull-tester/rpc-tests.sh qa/pull-tester/omnicore-rpc-tests.sh qa/pull-tester/run-bitcoin-cli qa/rpc-tests $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING)
 
 CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 
 .INTERMEDIATE: $(COVERAGE_INFO)
 
 clean-local:
-	rm -rf test_bitcoin.coverage/ total.coverage/ $(OSX_APP)
+	rm -rf coverage_percent.txt test_bitcoin.coverage/ total.coverage/ qa/tmp $(OSX_APP)

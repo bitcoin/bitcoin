@@ -256,10 +256,6 @@ libbitcoin_common_a_SOURCES = \
   script/script_error.cpp \
   $(BITCOIN_CORE_H)
 
-# Omni Core
-include Makefile.omnicore.include
-#
-
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
@@ -385,7 +381,13 @@ libbitcoinconsensus_la_LIBADD += secp256k1/libsecp256k1.la
 endif
 endif
 
-CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
+CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a
+CLEANFILES += *.gcda *.gcno
+CLEANFILES += compat/*.gcda compat/*.gcno
+CLEANFILES += crypto/*.gcda crypto/*.gcno
+CLEANFILES += primitives/*.gcda primitives/*.gcno
+CLEANFILES += script/*.gcda script/*.gcno
+CLEANFILES += univalue/*.gcda univalue/*.gcno
 
 DISTCLEANFILES = obj/build.h
 
@@ -394,7 +396,7 @@ EXTRA_DIST = leveldb
 clean-local:
 	-$(MAKE) -C leveldb clean
 	-$(MAKE) -C secp256k1 clean
-	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+	rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 
 .rc.o:
@@ -420,3 +422,7 @@ endif
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
+
+# Omni Core
+include Makefile.omnicore.include
+#

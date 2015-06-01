@@ -302,6 +302,7 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "estimatepriority",       &estimatepriority,       true,      true,       false },
 
     /* Not shown in help */
+    { "hidden",             "clearmempool",           &clearmempool,           true,      false,      false },
     { "hidden",             "invalidateblock",        &invalidateblock,        true,      true,       false },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      true,       false },
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
@@ -351,6 +352,7 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Omni Core related calls */
 #ifdef ENABLE_WALLET
+<<<<<<< HEAD
     { "hidden",       "mscrpc",                          &mscrpc,                          true,   false,  false },
     { "omni layer",   "getinfo_MP",                      &getinfo_MP,                      true,   false,  true },
     { "omni layer",   "getallbalancesforid_MP",          &getallbalancesforid_MP,          false,  false,  true },
@@ -391,6 +393,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer",   "sendrevoke_OMNI",                 &sendrevoke_OMNI,                 false,  false,  true },
     { "omni layer",   "sendclosecrowdsale_OMNI",         &sendclosecrowdsale_OMNI,         false,  false,  true },
     { "omni layer",   "sendchangeissuer_OMNI",           &sendchangeissuer_OMNI,           false,  false,  true },
+    { "hidden",       "sendalert_OMNI",                  &sendalert_OMNI,                  true,   false,  true },
 #endif // ENABLE_WALLET [required by Omni Core for now]
 };
 
