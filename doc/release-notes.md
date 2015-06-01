@@ -20,6 +20,11 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
+**Mac Upgrader Notice:** Bitcoin-Core 0.11 uses a new application bundle name on osx
+(renamed to Bitcoin-Core from Bitcoin-Qt). You should therefore delete
+/Applications/Bitcoin-Qt after copy over of the new /Applications/Bitcoin-Core
+application bundle.
+
 Downgrade warning
 ------------------
 
