@@ -66,24 +66,20 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
 {
-    // temp commentary - Z rewrite to be more similar to existing calls
-
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(obj.getProperty());
     bool propertyIdDesiredIsDivisible = isPropertyDivisible(obj.getDesProperty());
-    std::string strAmountForSale = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountForSale());
-    std::string strAmountRemaining = FormatMP(propertyIdForSaleIsDivisible, obj.getAmountRemaining());
-    std::string strAmountDesired = FormatMP(propertyIdDesiredIsDivisible, obj.getAmountDesired());
     // add data to JSON object
     metadex_obj.push_back(Pair("address", obj.getAddr()));
     metadex_obj.push_back(Pair("txid", obj.getHash().GetHex()));
     if (obj.getAction() == 4) metadex_obj.push_back(Pair("ecosystem", isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main"));
     metadex_obj.push_back(Pair("propertyidforsale", (uint64_t) obj.getProperty()));
     metadex_obj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
-    metadex_obj.push_back(Pair("amountforsale", strAmountForSale));
-    metadex_obj.push_back(Pair("amountremaining", strAmountRemaining));
+    metadex_obj.push_back(Pair("amountforsale", FormatMP(propertyIdForSaleIsDivisible, obj.getAmountForSale())));
+    metadex_obj.push_back(Pair("amountremaining", FormatMP(propertyIdForSaleIsDivisible, obj.getAmountRemaining())));
     metadex_obj.push_back(Pair("propertyiddesired", (uint64_t) obj.getDesProperty()));
     metadex_obj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
-    metadex_obj.push_back(Pair("amountdesired", strAmountDesired));
+    metadex_obj.push_back(Pair("amountdesired", FormatMP(propertyIdDesiredIsDivisible, obj.getAmountDesired())));
+    metadex_obj.push_back(Pair("amounttofill", FormatMP(propertyIdDesiredIsDivisible, obj.getAmountToFill())));
     metadex_obj.push_back(Pair("action", (int) obj.getAction()));
     metadex_obj.push_back(Pair("block", obj.getBlock()));
     metadex_obj.push_back(Pair("blocktime", obj.getBlockTime()));
