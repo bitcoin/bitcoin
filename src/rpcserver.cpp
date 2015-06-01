@@ -352,7 +352,6 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Omni Core related calls */
 #ifdef ENABLE_WALLET
-<<<<<<< HEAD
     { "hidden",       "mscrpc",                          &mscrpc,                          true,   false,  false },
     { "omni layer",   "getinfo_MP",                      &getinfo_MP,                      true,   false,  true },
     { "omni layer",   "getallbalancesforid_MP",          &getallbalancesforid_MP,          false,  false,  true },

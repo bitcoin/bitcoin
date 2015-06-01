@@ -16,6 +16,7 @@
 // Boost includes
 #include <boost/exception/to_string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
 // Generic includes
 #include <string>
@@ -396,7 +397,7 @@ void populateRPCExtendedTypeMetaDEx(const uint256& txid, unsigned char action, u
                 std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + boost::to_string(refNumber));
                 if (strValue.empty()) continue;
                 std::vector<std::string> vstr;
-                boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
+                boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
                 if (vstr.size() != 3) {
                     PrintToLog("TXListDB Error - trade cancel number of tokens is not as expected (%s)\n", strValue);
                     continue;
