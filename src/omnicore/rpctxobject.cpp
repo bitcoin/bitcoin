@@ -270,8 +270,8 @@ void populateRPCTypeMetaDEx(CMPTransaction& omniObj, Object& txobj, bool extende
     txobj.push_back(Pair("amountremaining", FormatMP(omniObj.getProperty(), metaObj.getAmountRemaining())));
     txobj.push_back(Pair("propertyiddesired", (uint64_t)metaObj.getDesProperty()));
     txobj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
-    txobj.push_back(Pair("amountdesired", FormatMP(propertyIdDesiredIsDivisible, metaObj.getAmountDesired())));
-    txobj.push_back(Pair("amounttofill", FormatMP(propertyIdDesiredIsDivisible, metaObj.getAmountToFill())));
+    txobj.push_back(Pair("amountdesired", FormatMP(metaObj.getDesProperty(), metaObj.getAmountDesired())));
+    txobj.push_back(Pair("amounttofill", FormatMP(metaObj.getDesProperty(), metaObj.getAmountToFill())));
     txobj.push_back(Pair("unitprice", unitPriceStr));
     txobj.push_back(Pair("action", actionStr));
     if (metaObj.getAction() == 4) txobj.push_back(Pair("ecosystem", isTestEcosystemProperty(omniObj.getProperty()) ? "test" : "main"));

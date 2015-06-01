@@ -74,12 +74,12 @@ void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
     if (obj.getAction() == 4) metadex_obj.push_back(Pair("ecosystem", isTestEcosystemProperty(obj.getProperty()) ? "Test" : "Main"));
     metadex_obj.push_back(Pair("propertyidforsale", (uint64_t) obj.getProperty()));
     metadex_obj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
-    metadex_obj.push_back(Pair("amountforsale", FormatMP(propertyIdForSaleIsDivisible, obj.getAmountForSale())));
-    metadex_obj.push_back(Pair("amountremaining", FormatMP(propertyIdForSaleIsDivisible, obj.getAmountRemaining())));
+    metadex_obj.push_back(Pair("amountforsale", FormatMP(obj.getProperty(), obj.getAmountForSale())));
+    metadex_obj.push_back(Pair("amountremaining", FormatMP(obj.getProperty(), obj.getAmountRemaining())));
     metadex_obj.push_back(Pair("propertyiddesired", (uint64_t) obj.getDesProperty()));
     metadex_obj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
-    metadex_obj.push_back(Pair("amountdesired", FormatMP(propertyIdDesiredIsDivisible, obj.getAmountDesired())));
-    metadex_obj.push_back(Pair("amounttofill", FormatMP(propertyIdDesiredIsDivisible, obj.getAmountToFill())));
+    metadex_obj.push_back(Pair("amountdesired", FormatMP(obj.getDesProperty(), obj.getAmountDesired())));
+    metadex_obj.push_back(Pair("amounttofill", FormatMP(obj.getDesProperty(), obj.getAmountToFill())));
     metadex_obj.push_back(Pair("action", (int) obj.getAction()));
     metadex_obj.push_back(Pair("block", obj.getBlock()));
     metadex_obj.push_back(Pair("blocktime", obj.getBlockTime()));
