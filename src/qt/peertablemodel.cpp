@@ -68,6 +68,7 @@ public:
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
                 stats.nodeStateStats.nSyncHeight = -1;
+                stats.nodeStateStats.nCommonHeight = -1;
                 stats.fNodeStateStatsAvailable = false;
                 pnode->copyStats(stats.nodeStats);
                 cachedNodeStats.append(stats);
