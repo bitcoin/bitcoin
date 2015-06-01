@@ -1363,7 +1363,7 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
             FindNode((CNetAddr)addrConnect) || CNode::IsBanned(addrConnect) ||
             FindNode(addrConnect.ToStringIPPort()))
             return false;
-    } else if (FindNode(pszDest))
+    } else if (FindNode(std::string(pszDest)))
         return false;
 
     CNode* pnode = ConnectNode(addrConnect, pszDest);
@@ -1385,7 +1385,7 @@ void ThreadMessageHandler()
 {
     boost::mutex condition_mutex;
     boost::unique_lock<boost::mutex> lock(condition_mutex);
-    
+
     SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true)
     {
