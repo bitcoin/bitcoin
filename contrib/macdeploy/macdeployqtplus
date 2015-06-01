@@ -596,7 +596,7 @@ if os.path.exists("dist"):
 
 # ------------------------------------------------
 
-target = os.path.join("dist", "Bitcoin Core.app")
+target = os.path.join("dist", "Bitcoin-Qt.app")
 
 if verbose >= 2:
     print "+ Copying source bundle +"
