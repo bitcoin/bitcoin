@@ -2860,10 +2860,12 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 	view.Claim_SetBitcreditClaimTip(uint256(1));
 	//Move up or down depending on the state of the claim chain
 	if (pCurrentIndex->nHeight < pmoveToBitcoinIndex->nHeight) {
-		LogPrintf("Moving claim tip from height %d up to height %d\n", pCurrentIndex->nHeight, pmoveToBitcoinIndex->nHeight);
-		if(pmoveToBitcoinIndex->nHeight - pCurrentIndex->nHeight > 1) {
-			LogPrintf("...\n");
-		}
+	    if (bitcredit_fBenchmark) {
+			LogPrintf("Moving claim tip from height %d up to height %d\n", pCurrentIndex->nHeight, pmoveToBitcoinIndex->nHeight);
+			if(pmoveToBitcoinIndex->nHeight - pCurrentIndex->nHeight > 1) {
+				LogPrintf("...\n");
+			}
+	    }
 		do {
 			pCurrentIndex = bitcoin_chainActive.Next(pCurrentIndex);
 
@@ -2872,14 +2874,17 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 				return state.Abort(_("Could not connect block for claim db."));
 			}
 
-			PrintClaimMovement("Bitcoin: ConnectTipClaim: moved to ", pCurrentIndex, pmoveToBitcoinIndex);
+		    if (bitcredit_fBenchmark)
+		    	PrintClaimMovement("Bitcoin: ConnectTipClaim: moved to ", pCurrentIndex, pmoveToBitcoinIndex);
 		} while (pCurrentIndex->nHeight < pmoveToBitcoinIndex->nHeight);
 
 	} else if (pCurrentIndex->nHeight > pmoveToBitcoinIndex->nHeight) {
-		LogPrintf("Moving claim tip from height %d down to height %d\n", pCurrentIndex->nHeight, pmoveToBitcoinIndex->nHeight);
-		if(pCurrentIndex->nHeight - pmoveToBitcoinIndex->nHeight > 1) {
-			LogPrintf("...\n");
-		}
+	    if (bitcredit_fBenchmark) {
+			LogPrintf("Moving claim tip from height %d down to height %d\n", pCurrentIndex->nHeight, pmoveToBitcoinIndex->nHeight);
+			if(pCurrentIndex->nHeight - pmoveToBitcoinIndex->nHeight > 1) {
+				LogPrintf("...\n");
+			}
+	    }
 		 do {
 			if(!Bitcoin_DisconnectTipForClaim(state, view, pCurrentIndex, updateUndo, vBlockUndoClaims)) {
 				PrintClaimMovement("ERROR!!! Bitcoin: DisconnectTipClaim: error when disconnecting from ", pCurrentIndex, pmoveToBitcoinIndex);
@@ -2888,7 +2893,8 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 
 			pCurrentIndex = (Bitcoin_CBlockIndex*)pCurrentIndex->pprev;
 
-			PrintClaimMovement("Bitcoin: DisconnectTipClaim: disconnected to ", pCurrentIndex, pmoveToBitcoinIndex);
+			if (bitcredit_fBenchmark)
+				PrintClaimMovement("Bitcoin: DisconnectTipClaim: disconnected to ", pCurrentIndex, pmoveToBitcoinIndex);
 		} while (pCurrentIndex->nHeight > pmoveToBitcoinIndex->nHeight);
 	}
 
