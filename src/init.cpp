@@ -408,6 +408,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
     strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
     strUsage += "  -masternodeminprotocol=<n> " + strprintf(_("Ignore masternodes less than version (example: 70050; default: %u)"), MIN_POOL_PEER_PROTO_VERSION) + "\n";
+    strUsage += "  -budgetvotemode=<mode>    " + _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)") + "\n";
 
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), 0) + "\n";
@@ -1443,6 +1444,9 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
         }
 
+        //get the mode of budget voting for this masternode
+        strBudgetMode = GetArg("-budgetvotemode", "auto");
+
         strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()){
             std::string errorMessage;
@@ -1498,6 +1502,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Darksend rounds %d\n", nDarksendRounds);
     LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDarkcoinAmount);
+    LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
     /* Denominations
 
