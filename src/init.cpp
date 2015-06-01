@@ -764,105 +764,7 @@ bool InitPortBinding(CNetParams * netParams, std::string discoverKey, std::strin
     return true;
 }
 
-bool Bitcredit_InitDbAndCache(int64_t& nStart) {
-    size_t nTotalCache = (GetArg("-dbcache", bitcredit_nDefaultDbCache) << 20);
-    if (nTotalCache < (bitcredit_nMinDbCache << 20))
-        nTotalCache = (bitcredit_nMinDbCache << 20); // total cache cannot be less than nMinDbCache
-    else if (nTotalCache > (bitcredit_nMaxDbCache << 20))
-        nTotalCache = (bitcredit_nMaxDbCache << 20); // total cache cannot be greater than nMaxDbCache
-    size_t nBlockTreeDBCache = nTotalCache / 8;
-    if (nBlockTreeDBCache > (1 << 21) && !GetBoolArg("-txindex", false))
-        nBlockTreeDBCache = (1 << 21); // block tree db cache shouldn't be larger than 2 MiB
-    nTotalCache -= nBlockTreeDBCache;
-    //TODO - This size may not be ideal. Since this cache has been added extra it will heighten the total memory usage.
-    size_t nCoinDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
-    nTotalCache -= nCoinDBCache;
-    bitcredit_nCoinCacheSize = nTotalCache / 300; // coins in memory require around 300 bytes
-
-    bool fLoaded = false;
-    while (!fLoaded) {
-        bool fReset = credits_mainState.fReindex;
-        std::string strLoadError;
-
-        uiInterface.InitMessage(_("Credits: Loading block index..."));
-
-        nStart = GetTimeMillis();
-        do {
-            try {
-                Credits_UnloadBlockIndex();
-                delete credits_pcoinsTip;
-                delete bitcredit_pcoinsdbview;
-                delete bitcredit_pblocktree;
-
-                bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, credits_mainState.fReindex);
-                bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
-                credits_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
-
-                if (credits_mainState.fReindex)
-                    bitcredit_pblocktree->WriteReindexing(true);
-
-                if (!Credits_LoadBlockIndex()) {
-                    strLoadError = _("Credits: Error loading block database");
-                    break;
-                }
-
-                // If the loaded chain has a wrong genesis, bail out immediately
-                // (we're likely using a testnet datadir, or the other way around).
-                if (!credits_mapBlockIndex.empty() && credits_chainActive.Genesis() == NULL)
-                    return InitError(_("Credits: Incorrect or no genesis block found. Wrong datadir for network?"));
-
-                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Credits_Params().GenesisBlock().GetHash())
-                    return InitError(_("Credits: Genesis block not correct. Unable to start."));
-
-                // Initialize the block index (no-op if non-empty database was already loaded)
-                if (!Credits_InitBlockIndex()) {
-                    strLoadError = _("Credits: Error initializing block database");
-                    break;
-                }
-
-                // Check for changed -txindex state
-                if (bitcredit_fTxIndex != GetBoolArg("-txindex", false)) {
-                    strLoadError = _("Credits: You need to rebuild the database using -reindex to change -txindex");
-                    break;
-                }
-
-                uiInterface.InitMessage(_("Credits: Verifying blocks..."));
-                if (!Credits_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
-                              GetArg("-checkblocks", 288))) {
-                    strLoadError = _("Credits: Corrupted block database detected");
-                    break;
-                }
-            } catch(std::exception &e) {
-                if (fDebug) LogPrintf("%s\n", e.what());
-                strLoadError = _("Credits: Error opening block database");
-                break;
-            }
-
-            fLoaded = true;
-        } while(false);
-
-        if (!fLoaded) {
-            // first suggest a reindex
-            if (!fReset) {
-                bool fRet = uiInterface.ThreadSafeMessageBox(
-                    strLoadError + ".\n\n" + _("Credits: Do you want to rebuild the block database now?"),
-                    "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
-                if (fRet) {
-                    credits_mainState.fReindex = true;
-                    fRequestShutdown = false;
-                } else {
-                    LogPrintf("Credits: Aborted block database rebuild. Exiting.\n");
-                    return false;
-                }
-            } else {
-                return InitError(strLoadError);
-            }
-        }
-    }
-    return true;
-}
-
-bool Bitcoin_InitDbAndCache(int64_t& nStart) {
+bool InitDbAndCache(int64_t& nStart) {
     size_t nTotalCache = (GetArg("-dbcache", bitcoin_nDefaultDbCache) << 20);
     if (nTotalCache < (bitcoin_nMinDbCache << 20))
         nTotalCache = (bitcoin_nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -881,12 +783,13 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
         bool fReset = bitcoin_mainState.fReindex;
         std::string strLoadError;
 
-        uiInterface.InitMessage(_("Bitcoin: Loading block index..."));
+        uiInterface.InitMessage(_("Loading block indexes..."));
 
         nStart = GetTimeMillis();
         do {
             try {
                 Bitcoin_UnloadBlockIndex();
+                Credits_UnloadBlockIndex();
 
                 {
 					//Before wiping databases for reindex, check that we're not in a trimmed state.
@@ -894,7 +797,7 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
 					Bitcoin_CBlockTreeDB * trimCheck = new Bitcoin_CBlockTreeDB(nBlockTreeDBCache, false, false);
 					trimCheck->ReadTrimToTime(bitcoin_mainState.nTrimToTime);
 					if(bitcoin_mainState.fReindex && GetBoolArg("-bitcoin_trimblockfiles", true) && bitcoin_mainState.nTrimToTime != 0) {
-						strLoadError = _("Bitcoin: A reindex can not be started when trimming of bitcoin block files is enabled. Exiting.");
+						strLoadError = _("A reindex can not be started when trimming of bitcoin block files is enabled. Exiting.");
 						delete trimCheck; trimCheck = NULL;
 						return false;
 					}
@@ -904,16 +807,28 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 delete bitcoin_pcoinsTip;
                 delete bitcoin_pcoinsdbview;
                 delete bitcoin_pblocktree;
+                delete credits_pcoinsTip;
+                delete bitcredit_pcoinsdbview;
+                delete bitcredit_pblocktree;
 
                 bitcoin_pblocktree = new Bitcoin_CBlockTreeDB(nBlockTreeDBCache, false, bitcoin_mainState.fReindex);
                 bitcoin_pcoinsdbview = new Bitcoin_CCoinsViewDB(nCoinDBCache, false, bitcoin_mainState.fReindex);
                 bitcoin_pcoinsTip = new Bitcoin_CCoinsViewCache(*bitcoin_pcoinsdbview);
+                bitcredit_pblocktree = new Credits_CBlockTreeDB(nBlockTreeDBCache, false, credits_mainState.fReindex);
+                bitcredit_pcoinsdbview = new Credits_CCoinsViewDB(nCoinDBCache, false, credits_mainState.fReindex);
+                credits_pcoinsTip = new Credits_CCoinsViewCache(*bitcredit_pcoinsdbview);
 
                 if (bitcoin_mainState.fReindex)
                     bitcoin_pblocktree->WriteReindexing(true);
+                if (credits_mainState.fReindex)
+                    bitcredit_pblocktree->WriteReindexing(true);
 
                 if (!Bitcoin_LoadBlockIndex()) {
                     strLoadError = _("Bitcoin: Error loading block database");
+                    break;
+                }
+                if (!Credits_LoadBlockIndex()) {
+                    strLoadError = _("Credits: Error loading block database");
                     break;
                 }
 
@@ -921,10 +836,19 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 // (we're likely using a testnet datadir, or the other way around).
                 if (!bitcoin_mapBlockIndex.empty() && bitcoin_chainActive.Genesis() == NULL)
                     return InitError(_("Bitcoin: Incorrect or no genesis block found. Wrong datadir for network?"));
+                if (!credits_mapBlockIndex.empty() && credits_chainActive.Genesis() == NULL)
+                    return InitError(_("Credits: Incorrect or no genesis block found. Wrong datadir for network?"));
+                if (credits_chainActive.Genesis() != NULL && credits_chainActive.Genesis()->GetBlockHash() != Credits_Params().GenesisBlock().GetHash())
+                    return InitError(_("Credits: Genesis block not correct. Unable to start."));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!Bitcoin_InitBlockIndex()) {
                     strLoadError = _("Bitcoin: Error initializing block database");
+                    break;
+                }
+                // Initialize the block index (no-op if non-empty database was already loaded)
+                if (!Credits_InitBlockIndex()) {
+                    strLoadError = _("Credits: Error initializing block database");
                     break;
                 }
 
@@ -938,6 +862,10 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                 // Check for changed -txindex state
                 if (bitcoin_fTxIndex != GetBoolArg("-txindex", false)) {
                     strLoadError = _("Bitcoin: You need to rebuild the database using -reindex to change -txindex");
+                    break;
+                }
+                if (bitcredit_fTxIndex != GetBoolArg("-txindex", false)) {
+                    strLoadError = _("Credits: You need to rebuild the database using -reindex to change -txindex");
                     break;
                 }
 
@@ -954,9 +882,15 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
                     strLoadError = _("Bitcoin: Corrupted block database detected");
                     break;
                 }
+                uiInterface.InitMessage(_("Credits: Verifying blocks..."));
+                if (!Credits_CVerifyDB().VerifyDB(GetArg("-checklevel", 3),
+                              GetArg("-checkblocks", 288))) {
+                    strLoadError = _("Credits: Corrupted block database detected");
+                    break;
+                }
             } catch(std::exception &e) {
                 if (fDebug) LogPrintf("%s\n", e.what());
-                strLoadError = _("Bitcoin: Error opening block database");
+                strLoadError = _("Error opening block databases");
                 break;
             }
 
@@ -967,13 +901,14 @@ bool Bitcoin_InitDbAndCache(int64_t& nStart) {
             // first suggest a reindex
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeMessageBox(
-                    strLoadError + ".\n\n" + _("Bitcoin: Do you want to rebuild the block database now?"),
+                    strLoadError + ".\n\n" + _("Do you want to rebuild the block databases now?"),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     bitcoin_mainState.fReindex = true;
+                    credits_mainState.fReindex = true;
                     fRequestShutdown = false;
                 } else {
-                    LogPrintf("Aborted bitcoin block database rebuild. Exiting.\n");
+                    LogPrintf("Aborted block database rebuild. Exiting.\n");
                     return false;
                 }
             } else {
@@ -1428,7 +1363,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     InitDataDir("credits_blocks");
 
     // cache size calculations
-    if(!Bitcoin_InitDbAndCache(nStart)) {
+    if(!InitDbAndCache(nStart)) {
     	return false;
     }
     // As LoadBlockIndex can take several minutes, it's possible the user
@@ -1439,20 +1374,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
         LogPrintf("Shutdown requested. Exiting.\n");
         return false;
     }
-    LogPrintf("bitcoin block index %15dms\n", GetTimeMillis() - nStart);
-    // cache size calculations
-    if(!Bitcredit_InitDbAndCache(nStart)) {
-    	return false;
-    }
-    // As LoadBlockIndex can take several minutes, it's possible the user
-    // requested to kill the GUI during the last operation. If so, exit.
-    // As the program has not fully started yet, Shutdown() is possibly overkill.
-    if (fRequestShutdown)
-    {
-        LogPrintf("Shutdown requested. Exiting.\n");
-        return false;
-    }
-    LogPrintf("credits block index %15dms\n", GetTimeMillis() - nStart);
+    LogPrintf("block index %15dms\n", GetTimeMillis() - nStart);
 
     if (GetBoolArg("-bitcoin_printblockindex", false) || GetBoolArg("-bitcoin_printblocktree", false))
     {
