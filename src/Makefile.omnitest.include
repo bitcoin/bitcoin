@@ -1,6 +1,7 @@
 OMNICORE_TEST_H =
 
 OMNICORE_TEST_CPP = \
+  omnicore/test/alert_tests.cpp \
   omnicore/test/create_payload_tests.cpp \
   omnicore/test/encoding_b_tests.cpp \
   omnicore/test/encoding_c_tests.cpp \

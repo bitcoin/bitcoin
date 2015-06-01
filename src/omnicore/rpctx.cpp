@@ -948,4 +948,52 @@ Value sendchangeissuer_OMNI(const Array& params, bool fHelp)
     }
 }
 
+Value sendalert_OMNI(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 6)
+        throw runtime_error(
+            "sendalert_OMNI \"fromaddress\" alerttype expiryvalue typecheck versioncheck \"message\"\n"
+            "\nCreates and broadcasts an Omni Core alert.\n"
+            "\nNote: Omni Core ignores alerts from unauthorized sources.\n"
+            "\nArguments:\n"
+            "1. fromaddress       (string, required) the address to send from\n"
+            "2. alerttype         (number, required) the alert type\n"
+            "3. expiryvalue       (number, required) the block when the alert expires\n"
+            "4. typecheck         (number, required) the transaction type to target\n"
+            "5. versioncheck      (number, required) the client version to target\n"
+            "6. message           (string, required) the user-faced alert message\n"
+            "\nResult:\n"
+            "txid          (string) The transaction hash of the transaction\n"
+            "\nExamples\n"
+            + HelpExampleCli("sendalert_OMNI", "")
+            + HelpExampleRpc("sendalert_OMNI", "")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    int32_t alertType = params[1].get_int();
+    uint64_t expiryValue = params[2].get_uint64();
+    uint32_t typeCheck = params[3].get_uint64();
+    uint32_t verCheck = params[4].get_uint64();
+    std::string alertMessage = ParseText(params[5]);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_OmniCoreAlert(alertType, expiryValue, typeCheck, verCheck, alertMessage);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid = 0;
+    std::string rawHex;
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            return txid.GetHex();
+        }
+    }
+}
 

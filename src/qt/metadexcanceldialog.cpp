@@ -15,6 +15,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 
 #include <stdint.h>
 #include <stdio.h> // printf!

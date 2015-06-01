@@ -1969,9 +1969,7 @@ bool static DisconnectTip(CValidationState &state) {
 
     //! Omni Core: begin block disconnect notification
     LogPrint("handler", "Omni Core handler: block disconnect begin [height: %d, reindex: %d]\n", GetHeight(), (int)fReindex);
-    if (!fReindex) {
-        mastercore_handler_disc_begin(GetHeight(), pindexDelete);
-    }
+    mastercore_handler_disc_begin(GetHeight(), pindexDelete);
 
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
@@ -1981,9 +1979,7 @@ bool static DisconnectTip(CValidationState &state) {
 
     //! Omni Core: end of block disconnect notification
     LogPrint("handler", "Omni Core handler: block disconnect end [height: %d, reindex: %d]\n", GetHeight(), (int)fReindex);
-    if (!fReindex) {
-        mastercore_handler_disc_end(GetHeight(), pindexDelete);
-    }
+    mastercore_handler_disc_end(GetHeight(), pindexDelete);
 
     return true;
 }

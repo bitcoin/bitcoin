@@ -65,9 +65,8 @@ int const MAX_STATE_HISTORY = 50;
 // Maximum outputs per BTC Transaction
 #define MAX_BTC_OUTPUTS 16
 
-#define MAX_SHA256_OBFUSCATION_TIMES  255
-
 #define MIN_PAYLOAD_SIZE     8
+
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
 #define MAX_PACKETS         64
@@ -155,11 +154,9 @@ enum FILETYPES {
 #define OMNI_PROPERTY_TMSC  2
 
 // forward declarations
-std::string FormatPriceMP(double n);
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
 std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
-uint256 send_MP(const string &FromAddress, const string &ToAddress, const string &RedeemAddress, unsigned int PropertyID, uint64_t Amount);
 int64_t feeCheck(const string &address);
 
 /** Returns the Exodus address. */
@@ -382,22 +379,6 @@ public:
     bool isMPinBlockRange(int, int, bool);
 };
 
-class CMPPending
-{
-public:
-  string src; // the FromAddress
-  unsigned int prop;
-  int64_t amount;
-  int64_t type;
-  string desc; // the description
-
-  void print(uint256 txid) const
-  {
-    PrintToConsole("%s : %s %d %ld %ld %s\n", txid.GetHex(), src, prop, amount, type, desc);
-  }
- 
-};
-
 extern uint64_t global_metadex_market;
 //! Available balances of wallet properties in the main ecosystem
 extern std::map<uint32_t, int64_t> global_balance_money_maineco;
@@ -411,8 +392,6 @@ extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
-bool isRangeOK(const uint64_t input);
-int pendingAdd(const uint256 &txid, const string &FromAddress, unsigned int propId, int64_t Amount, int64_t type, const string &txDesc);
 
 string getLabel(const string &address);
 
@@ -436,18 +415,14 @@ extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
 
-typedef std::map<uint256, CMPPending> PendingMap;
-extern PendingMap my_pending;
 string strMPProperty(unsigned int i);
 
 int GetHeight(void);
 uint32_t GetLatestBlockTime(void);
 CBlockIndex* GetBlockIndex(const uint256& hash);
-bool isPropertyDivisible(unsigned int propertyId);
-string getPropertyName(unsigned int propertyId);
-bool isCrowdsaleActive(unsigned int propertyId);
-bool isCrowdsalePurchase(uint256 txid, string address, int64_t *propertyId = NULL, int64_t *userTokens = NULL, int64_t *issuerTokens = NULL);
+
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
+
 std::string FormatIndivisibleMP(int64_t n);
 
 int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
@@ -455,12 +430,11 @@ int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &rece
 
 bool isTestEcosystemProperty(unsigned int property);
 bool isMainEcosystemProperty(unsigned int property);
-uint32_t GetNextPropertyId(bool maineco);
+uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
 CMPTally *getTally(const string & address);
 
 int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
-bool checkExpiredAlerts(unsigned int curBlock, uint64_t curTime);
 int set_wallet_totals();
 
 char *c_strMasterProtocolTXType(int i);
@@ -470,10 +444,7 @@ bool isTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 
 bool update_tally_map(string who, unsigned int which_currency, int64_t amount, TallyType ttype);
-void setOmniCoreAlert(const std::string& alertMessage);
-std::string getMasterCoreAlertString();
-std::string getMasterCoreAlertTextOnly();
-bool parseAlertMessage(std::string rawAlertStr, int32_t *alertType, uint64_t *expiryValue, uint32_t *typeCheck, uint32_t *verCheck, std::string *alertMessage);
+
 std::string getTokenLabel(unsigned int propertyId);
 }
 
