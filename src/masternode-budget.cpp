@@ -18,6 +18,7 @@ std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
 std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
 std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
 std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
+int nSubmittedFinalBudget;
 
 int GetBudgetPaymentCycleBlocks(){
     if(Params().NetworkID() == CBaseChainParams::MAIN) return 16616; //(60*24*30)/2.6
@@ -291,6 +292,8 @@ bool CBudgetProposal::IsValid()
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
+
+    //TODO: if < 20 votes and 2+ weeks old, invalid
 
     if(pindexPrev->nHeight - nBlockStart < 0) return false;
     if(pindexPrev->nHeight > nBlockEnd) return false;
@@ -622,10 +625,15 @@ void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
 
 void CBudgetManager::NewBlock()
 {
-	//this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
-	if(chainActive.Height() % 6 != 0) return;
+    budget.CheckAndRemove();
 
-	mnodeman.DecrementVotedTimes();
+    if (strBudgetMode == "suggest") { //suggest the budget we see
+        SubmitFinalBudget();
+    }
+
+	//this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
+    if(chainActive.Height() % 6 != 0) return;
+    mnodeman.DecrementVotedTimes();
 }
 
 double CBudgetProposal::GetRatio()
@@ -1043,6 +1051,8 @@ bool CFinalizedBudget::IsValid()
     if(GetBlockEnd() - nBlockStart > 100) return false;
     if(vecProposals.size() > 100) return false;
 
+    //TODO: if N cycles old, invalid, invalid
+
     return true;
 }
 
@@ -1249,4 +1259,157 @@ std::string CBudgetManager::GetRequiredPaymentsString(int64_t nBlockHeight)
     }
 
     return ret;
+}
+
+void CBudgetManager::CheckAndRemove()
+{
+    std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
+    while(it != mapFinalizedBudgets.end())
+    {   
+        CFinalizedBudget* prop = &((*it).second);
+        if(!prop->IsValid()){
+            mapFinalizedBudgets.erase(it);
+        } else {
+            prop->AutoCheck();
+            it++;
+        }
+    }
+
+    std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
+    while(it2 != mapProposals.end())
+    {   
+        CBudgetProposal* prop = &((*it2).second);
+        if(!prop->IsValid()){
+            mapProposals.erase(it2);
+        } else {
+            it2++;
+        }
+    }
+}
+
+//evaluate if we should vote for this. Masternode only
+void CFinalizedBudget::AutoCheck()
+{
+    if(!fMasterNode || fAutoChecked) return;
+
+    if(Params().NetworkID() == CBaseChainParams::MAIN){
+        if(rand() % 100 > 5) return; //do this 1 in 20 blocks -- spread out the voting activity on mainnet
+    }
+    fAutoChecked = true; //we only need to check this once
+
+    if(strBudgetMode == "auto") //only vote for exact matches
+    {
+        std::vector<CBudgetProposal*> props1 = budget.GetBudget();
+
+        for(unsigned int i = 0; i < vecProposals.size(); i++){
+            if(i > props1.size()-1) {
+                LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");                
+                return;
+            }
+
+            if(vecProposals[i].nProposalHash != props1[i]->GetHash()){
+                LogPrintf("CFinalizedBudget::AutoCheck - item #%d doesn't match %s %s\n", i, vecProposals[i].nProposalHash.ToString().c_str(), props1[i]->GetHash().ToString().c_str());
+                return;                   
+            }
+
+            if(vecProposals[i].payee != props1[i]->GetPayee()){
+                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecProposals[i].payee.ToString().c_str(), props1[i]->GetPayee().ToString().c_str());
+                return;                   
+            }
+
+            if(vecProposals[i].nAmount != props1[i]->GetAmount()){
+                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecProposals[i].payee.ToString().c_str(), props1[i]->GetPayee().ToString().c_str());
+                return;                   
+            }
+
+            LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
+            SubmitVote();
+        }
+
+    } 
+    // Feature : Masternodes can delegate finalized budgets to a 3rd party simply by adding this option to the configuration
+    else if (strBudgetMode == vin.prevout.ToStringShort()) 
+    {
+        SubmitVote();
+    }
+}
+
+void CFinalizedBudget::SubmitVote()
+{
+    CPubKey pubKeyMasternode;
+    CKey keyMasternode;
+    std::string errorMessage;
+
+    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){ 
+        LogPrintf("CFinalizedBudget::SubmitVote - Error upon calling SetKey\n");
+        return;
+    }
+
+    CFinalizedBudgetVote vote(activeMasternode.vin, GetHash());
+    if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+        LogPrintf("CFinalizedBudget::SubmitVote - Failure to sign.");
+        return;
+    }
+
+    mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+    vote.Relay();
+    budget.UpdateFinalizedBudget(vote);
+}
+
+void SubmitFinalBudget()
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return;
+
+    int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
+    if(nSubmittedFinalBudget >= nBlockStart) return;
+    if(nBlockStart - pindexPrev->nHeight > 100) return;
+
+    std::vector<CBudgetProposal*> props1 = budget.GetBudget();
+
+    std::string strBudgetName = "main";
+    std::vector<CTxBudgetPayment> vecPayments;
+
+    for(unsigned int i = 0; i < props1.size(); i++){
+        CTxBudgetPayment out;
+        out.nProposalHash = props1[i]->GetHash();
+        out.payee = props1[i]->GetPayee();
+        out.nAmount = props1[i]->GetAmount();
+        vecPayments.push_back(out);
+    }
+
+    if(vecPayments.size() < 1) return;
+    nSubmittedFinalBudget = nBlockStart;
+
+    CPubKey pubKeyMasternode;
+    CKey keyMasternode;
+    std::string errorMessage;
+
+    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
+        LogPrintf("SubmitFinalBudget - Error upon calling SetKey");
+    }
+
+    //create the proposal incase we're the first to make it
+    CFinalizedBudgetBroadcast prop(activeMasternode.vin, strBudgetName, nBlockStart, vecPayments);
+    if(!prop.Sign(keyMasternode, pubKeyMasternode)){
+        LogPrintf("SubmitFinalBudget - Failure to sign.");
+    }
+
+    if(!prop.IsValid()){
+        LogPrintf("SubmitFinalBudget - Invalid prop (are all the hashes correct?)");
+    }
+
+    mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
+    prop.Relay();
+    budget.AddFinalizedBudget(prop);
+
+
+    CFinalizedBudgetVote vote(activeMasternode.vin, prop.GetHash());
+    if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+        LogPrintf("SubmitFinalBudget - Failure to sign.");
+    }
+
+    mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+    vote.Relay();
+    budget.UpdateFinalizedBudget(vote);
 }

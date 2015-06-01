@@ -42,6 +42,7 @@ void GetMasternodeBudgetEscrow(CScript& payee);
 
 //Amount of blocks in a months period of time (using 2.6 minutes per)
 int GetBudgetPaymentCycleBlocks();
+void SubmitFinalBudget();
 
 /** Save Budget Manager (budget.dat)
  */
@@ -113,12 +114,11 @@ public:
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
     void Clear(){
-        printf("Not implemented\n");
+        LogPrintf("Budget object cleared\n");
+        mapProposals.clear();
+        mapFinalizedBudgets.clear();
     }
-    void CheckAndRemove(){
-        printf("Not implemented\n");
-        //replace cleanup
-    }
+    void CheckAndRemove();
     std::string ToString() {return "not implemented";}
 
 
@@ -171,10 +171,11 @@ class CFinalizedBudget
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
+    bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
 
 public:
-    CTxIn vin;
     std::string strBudgetName;
+    CTxIn vin;
     int nBlockStart;
     std::vector<CTxBudgetPayment> vecProposals;
     map<uint256, CFinalizedBudgetVote> mapVotes;
@@ -215,6 +216,11 @@ public:
         nAmount = vecProposals[i].nAmount;
         return true;
     }
+
+    //check to see if we should vote on this
+    void AutoCheck();
+    //vote on this finalized budget as a masternode
+    void SubmitVote();
 
     //checks the hashes to make sure we know about them
     string GetStatus();
