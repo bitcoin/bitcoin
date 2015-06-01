@@ -45,16 +45,16 @@ BOOST_AUTO_TEST_CASE(alert_manual_sources)
     std::map<std::string, std::string> mapArgsOriginal = mapArgs;
     std::map<std::string, std::vector<std::string> > mapMultiArgsOriginal = mapMultiArgs;
 
-    mapArgs["-alertallowsender"] = "";
-    mapArgs["-alertignoresender"] = "";
+    mapArgs["-omnialertallowsender"] = "";
+    mapArgs["-omnialertignoresender"] = "";
 
     // Add 1JwSSu as allowed source for alerts
-    mapMultiArgs["-alertallowsender"].push_back("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
+    mapMultiArgs["-omnialertallowsender"].push_back("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
     BOOST_CHECK(CheckAlertAuthorization("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T"));
 
     // Then ignore some sources explicitly
-    mapMultiArgs["-alertignoresender"].push_back("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
-    mapMultiArgs["-alertignoresender"].push_back("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P");
+    mapMultiArgs["-omnialertignoresender"].push_back("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T");
+    mapMultiArgs["-omnialertignoresender"].push_back("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P");
     BOOST_CHECK(CheckAlertAuthorization("1zAtHRASgdHvZDfHs6xJquMghga4eG7gy")); // should still be authorized
     BOOST_CHECK(!CheckAlertAuthorization("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T"));
     BOOST_CHECK(!CheckAlertAuthorization("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));
@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE(alert_authorize_any_source)
     std::map<std::string, std::string> mapArgsOriginal = mapArgs;
     std::map<std::string, std::vector<std::string> > mapMultiArgsOriginal = mapMultiArgs;
 
-    mapArgs["-alertallowsender"] = "";
+    mapArgs["-omnialertallowsender"] = "";
 
     // Allow any source (e.g. for tests!)
-    mapMultiArgs["-alertallowsender"].push_back("any");
+    mapMultiArgs["-omnialertallowsender"].push_back("any");
     BOOST_CHECK(CheckAlertAuthorization("1JwSSubhmg6iPtRjtyqhUYYH7bZg3Lfy1T"));
     BOOST_CHECK(CheckAlertAuthorization("137uFtQ5EgMsreg4FVvL3xuhjkYGToVPqs"));
     BOOST_CHECK(CheckAlertAuthorization("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));

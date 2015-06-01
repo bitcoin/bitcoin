@@ -23,10 +23,10 @@ static std::string global_alert_message;
 /**
  * Determines whether the sender is an authorized source for Omni Core alerts.
  *
- * The option "-alertallowsender=source" can be used to whitelist additional sources,
- * and the option "-alertignoresender=source" can be used to ignore a source.
+ * The option "-omnialertallowsender=source" can be used to whitelist additional sources,
+ * and the option "-omnialertignoresender=source" can be used to ignore a source.
  *
- * To consider any alert as authorized, "-alertallowsender=any" can be used. This
+ * To consider any alert as authorized, "-omnialertallowsender=any" can be used. This
  * should only be done for testing purposes!
  */
 bool CheckAlertAuthorization(const std::string& sender)
@@ -34,7 +34,6 @@ bool CheckAlertAuthorization(const std::string& sender)
     std::set<std::string> whitelisted;
 
     // TODO: check email addresses
-    // TODO: rename option to be more Omni Core specific
 
     // Mainnet
     whitelisted.insert("16Zwbujf1h3v1DotKcn9XXt1m7FZn2o4mj"); // Craig   <craig@omni.foundation>
@@ -49,8 +48,8 @@ bool CheckAlertAuthorization(const std::string& sender)
     whitelisted.insert("mk5SSx4kdexENHzLxk9FLhQdbbBexHUFTW"); // dexX7   <dexx@bitwatch.co>
 
     // Add manually whitelisted sources
-    if (mapArgs.count("-alertallowsender")) {
-        const std::vector<std::string>& sources = mapMultiArgs["-alertallowsender"];
+    if (mapArgs.count("-omnialertallowsender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-omnialertallowsender"];
 
         for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
             whitelisted.insert(*it);
@@ -58,8 +57,8 @@ bool CheckAlertAuthorization(const std::string& sender)
     }
 
     // Remove manually ignored sources
-    if (mapArgs.count("-alertignoresender")) {
-        const std::vector<std::string>& sources = mapMultiArgs["-alertignoresender"];
+    if (mapArgs.count("-omnialertignoresender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-omnialertignoresender"];
 
         for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
             whitelisted.erase(*it);
@@ -129,7 +128,7 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                         return true;
                     }
                     break;
-                case 2: //Text baseDEBUG d alert only expiring by block time, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
+                case 2: //Text based alert only expiring by block time, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
                     if (curTime > expiryValue) {
                         //the alert has expired, clear the global alert string
                         PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
@@ -149,12 +148,8 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                     //check of the new tx type is supported at live block
                     bool txSupported = isTransactionTypeAllowed(expiryValue + 1, OMNI_PROPERTY_MSC, typeCheck, verCheck);
 
-                    // TODO: should be curBlock, not chainActive.Height()?
-                    // TODO: should be curBlock, not chainActive.Height()?
-                    // TODO: should be curBlock, not chainActive.Height()?
-
                     //check if we are at/past the live blockheight                    
-                    bool txLive = (chainActive.Height()>(int64_t) expiryValue);
+                    bool txLive = (curBlock > (int64_t) expiryValue);
 
                     //testnet allows all types of transactions, so override this here for testing
                     //txSupported = false; //testing
