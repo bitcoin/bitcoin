@@ -1170,7 +1170,12 @@ void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *optionsModel)
 /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
 void UnitDisplayStatusBarControl::updateDisplayUnit(int newUnits)
 {
-    setPixmap(QIcon(":/icons/unit_" + BitcoinUnits::id(newUnits)).pixmap(31,STATUSBAR_ICONSIZE));
+    if(Params().NetworkID() == CBaseChainParams::MAIN){
+       setPixmap(QIcon(":/icons/unit_" + BitcoinUnits::id(newUnits)).pixmap(39,STATUSBAR_ICONSIZE));
+    }
+    else{
+        setPixmap(QIcon(":/icons/unit_t" + BitcoinUnits::id(newUnits)).pixmap(39,STATUSBAR_ICONSIZE));
+    }
 }
 
 /** Shows context menu with Display Unit options by the mouse coordinates */
