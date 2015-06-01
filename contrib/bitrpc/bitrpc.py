@@ -184,6 +184,17 @@ elif cmd == "listreceivedbyaccount":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_listreceivedbyaccount":
+    try:
+        mc = raw_input("Minimum confirmations (optional): ")
+        incemp = raw_input("Include empty? (true/false, optional): ")
+        try:
+            print access.bitcoin_listreceivedbyaccount(mc, incemp)
+        except:
+            print access.bitcoin_listreceivedbyaccount()
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "listreceivedbyaddress":
     try:
         mc = raw_input("Minimum confirmations (optional): ")
@@ -192,6 +203,17 @@ elif cmd == "listreceivedbyaddress":
             print access.listreceivedbyaddress(mc, incemp)
         except:
             print access.listreceivedbyaddress()
+    except:
+        print "\n---An error occurred---\n"
+
+elif cmd == "bitcoin_listreceivedbyaddress":
+    try:
+        mc = raw_input("Minimum confirmations (optional): ")
+        incemp = raw_input("Include empty? (true/false, optional): ")
+        try:
+            print access.bitcoin_listreceivedbyaddress(mc, incemp)
+        except:
+            print access.bitcoin_listreceivedbyaddress()
     except:
         print "\n---An error occurred---\n"
 

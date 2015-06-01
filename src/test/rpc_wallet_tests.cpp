@@ -111,6 +111,13 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaddress 0 true"));
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaddress 0 true extra"), runtime_error);
 
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_listreceivedbyaddress"));
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_listreceivedbyaddress 0"));
+    BOOST_CHECK_THROW(CallRPC("bitcoin_listreceivedbyaddress not_int"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("bitcoin_listreceivedbyaddress 0 not_bool"), runtime_error);
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_listreceivedbyaddress 0 true"));
+    BOOST_CHECK_THROW(CallRPC("bitcoin_listreceivedbyaddress 0 true extra"), runtime_error);
+
     /*********************************
 	 * 		listreceivedbyaccount
 	 *********************************/
@@ -120,6 +127,13 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 not_bool"), runtime_error);
     BOOST_CHECK_NO_THROW(CallRPC("listreceivedbyaccount 0 true"));
     BOOST_CHECK_THROW(CallRPC("listreceivedbyaccount 0 true extra"), runtime_error);
+
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_listreceivedbyaccount"));
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_listreceivedbyaccount 0"));
+    BOOST_CHECK_THROW(CallRPC("bitcoin_listreceivedbyaccount not_int"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("bitcoin_listreceivedbyaccount 0 not_bool"), runtime_error);
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_listreceivedbyaccount 0 true"));
+    BOOST_CHECK_THROW(CallRPC("bitcoin_listreceivedbyaccount 0 true extra"), runtime_error);
 
     /*********************************
 	 * 		getrawchangeaddress

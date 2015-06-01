@@ -2374,11 +2374,13 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
 	const Bitcoin_CBlockIndex* pmoveFromBitcoinIndex = (*mi).second;
 
 	const bool fastForwardClaimState = FastForwardClaimStateFor(pmoveFromBitcoinIndex->nHeight, pmoveFromBitcoinIndex->GetBlockHash());
-	if(fastForwardClaimState) {
-		LogPrintf("Credits: DisconnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
-	} else {
-		LogPrintf("Credits: DisconnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
-	}
+    if (bitcredit_fBenchmark) {
+		if(fastForwardClaimState) {
+			LogPrintf("Credits: DisconnectTip() : No tmp db created, in fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
+		} else {
+			LogPrintf("Credits: DisconnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
+		}
+    }
 	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 	if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, credits_view, true, vBlockUndoClaims))
 		return error("Credits: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
@@ -2435,16 +2437,18 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     }
 	const Bitcoin_CBlockIndex* palignToBitcoinIndex = (*mi).second;
 
-    int bitcoinBlockSteps;
-    if(!GetBitcoinBlockSteps(bitcoinBlockSteps, block.hashLinkedBitcoinBlock, state, *credits_pcoinsTip)) {
-		return state.Abort(_("Credits: ConnectTip() : Problem when calculating bitcoin block steps"));
-    }
 	const bool fastForwardClaimState = FastForwardClaimStateFor(palignToBitcoinIndex->nHeight, palignToBitcoinIndex->GetBlockHash());
-	if(fastForwardClaimState) {
-		LogPrintf("Credits: ConnectTip() : In fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
-	} else {
-		LogPrintf("Credits: ConnectTip() : Moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
-	}
+    if (bitcredit_fBenchmark) {
+		int bitcoinBlockSteps;
+		if(!GetBitcoinBlockSteps(bitcoinBlockSteps, block.hashLinkedBitcoinBlock, state, *credits_pcoinsTip)) {
+			return state.Abort(_("Credits: ConnectTip() : Problem when calculating bitcoin block steps"));
+		}
+		if(fastForwardClaimState) {
+			LogPrintf("Credits: ConnectTip() : In fast forward state, claim tip is %d bitcoin blocks ahead\n", -bitcoinBlockSteps);
+		} else {
+			LogPrintf("Credits: ConnectTip() : Moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
+		}
+    }
 	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
 	CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
 	if (!Bitcredit_ConnectBlock(block, state, pindexNew, credits_view, true, vBlockUndoClaims, false)) {
@@ -2477,8 +2481,8 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     Bitcredit_UpdateTip(pindexNew);
 
     if(!fastForwardClaimState) {
-    	//Every 3000 blocks, trim the bitcoin block files
-		int trimFrequency = 3000;
+    	//Every 1000 blocks, trim the bitcoin block files
+		int trimFrequency = 1000;
 		const Credits_CBlockIndex * ptip = (Credits_CBlockIndex*) credits_chainActive.Tip();
 		if (ptip->nHeight > trimFrequency && ptip->nHeight % trimFrequency == 0) {
 			const Credits_CBlockIndex * pTrimToCreditsBlock = credits_chainActive[ptip->nHeight - trimFrequency];

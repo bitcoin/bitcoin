@@ -362,7 +362,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
     return wtx.GetHash().GetHex();
 }
 
-Value listaddressgroupings(const Array& params, bool fHelp)
+Value credits_listaddressgroupings(const Array& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
@@ -374,7 +374,7 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             "[\n"
             "  [\n"
             "    [\n"
-            "      \"bitcoinaddress\",     (string) The bitcoin address\n"
+            "      \"address\",     (string) The credits address\n"
             "      amount,                 (numeric) The amount in btc\n"
             "      \"account\"             (string, optional) The account\n"
             "    ]\n"
@@ -401,6 +401,53 @@ Value listaddressgroupings(const Array& params, bool fHelp)
                 LOCK(bitcredit_pwalletMain->cs_wallet);
                 if (bitcredit_pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != bitcredit_pwalletMain->mapAddressBook.end())
                     addressInfo.push_back(bitcredit_pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
+            }
+            jsonGrouping.push_back(addressInfo);
+        }
+        jsonGroupings.push_back(jsonGrouping);
+    }
+    return jsonGroupings;
+}
+
+Value bitcoin_listaddressgroupings(const Array& params, bool fHelp)
+{
+    if (fHelp)
+        throw runtime_error(
+            "bitcoin_listaddressgroupings\n"
+            "\nLists groups of addresses which have had their common ownership\n"
+            "made public by common use as inputs or as the resulting change\n"
+            "in past transactions\n"
+            "\nResult:\n"
+            "[\n"
+            "  [\n"
+            "    [\n"
+            "      \"address\",     (string) The bitcoin address\n"
+            "      amount,                 (numeric) The amount in btc\n"
+            "      \"account\"             (string, optional) The account\n"
+            "    ]\n"
+            "    ,...\n"
+            "  ]\n"
+            "  ,...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_listaddressgroupings", "")
+            + HelpExampleRpc("bitcoin_listaddressgroupings", "")
+        );
+
+    Array jsonGroupings;
+    map<CTxDestination, int64_t> balances = bitcoin_pwalletMain->GetAddressBalances(credits_pcoinsTip);
+    BOOST_FOREACH(set<CTxDestination> grouping, bitcoin_pwalletMain->GetAddressGroupings())
+    {
+        Array jsonGrouping;
+        BOOST_FOREACH(CTxDestination address, grouping)
+        {
+            Array addressInfo;
+            addressInfo.push_back(CBitcoinAddress(address).ToString());
+            addressInfo.push_back(ValueFromAmount(balances[address]));
+            {
+                LOCK(bitcoin_pwalletMain->cs_wallet);
+                if (bitcoin_pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != bitcoin_pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(bitcoin_pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -1056,12 +1103,141 @@ Value ListReceived(const Array& params, bool fByAccounts)
     return ret;
 }
 
-Value listreceivedbyaddress(const Array& params, bool fHelp)
+Value Bitcoin_ListReceived(const Array& params, bool fByAccounts)
+{
+    // Minimum confirmations
+    int nMinDepth = 1;
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
+
+    // Whether to include empty accounts
+    bool fIncludeEmpty = false;
+    if (params.size() > 1)
+        fIncludeEmpty = params[1].get_bool();
+
+    // Tally
+    map<CBitcoinAddress, tallyitem> mapTally;
+    for (map<uint256, Bitcoin_CWalletTx>::iterator it = bitcoin_pwalletMain->mapWallet.begin(); it != bitcoin_pwalletMain->mapWallet.end(); ++it)
+    {
+        const Bitcoin_CWalletTx& wtx = (*it).second;
+
+        if (wtx.IsCoinBase() || !Bitcoin_IsFinalTx(wtx))
+            continue;
+
+        int nDepth = wtx.GetDepthInMainChain();
+        if (nDepth < nMinDepth)
+            continue;
+
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        {
+            CTxDestination address;
+            if (!ExtractDestination(txout.scriptPubKey, address) || !IsMine(*bitcoin_pwalletMain, address))
+                continue;
+
+            tallyitem& item = mapTally[address];
+            item.nAmount += txout.nValue;
+            item.nConf = min(item.nConf, nDepth);
+            item.txids.push_back(wtx.GetHash());
+        }
+    }
+
+    // Reply
+    Array ret;
+    map<string, tallyitem> mapAccountTally;
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, bitcoin_pwalletMain->mapAddressBook)
+    {
+        const CBitcoinAddress& address = item.first;
+        const string& strAccount = item.second.name;
+        map<CBitcoinAddress, tallyitem>::iterator it = mapTally.find(address);
+        if (it == mapTally.end() && !fIncludeEmpty)
+            continue;
+
+        int64_t nAmount = 0;
+        int nConf = std::numeric_limits<int>::max();
+        if (it != mapTally.end())
+        {
+            nAmount = (*it).second.nAmount;
+            nConf = (*it).second.nConf;
+        }
+
+        if (fByAccounts)
+        {
+            tallyitem& item = mapAccountTally[strAccount];
+            item.nAmount += nAmount;
+            item.nConf = min(item.nConf, nConf);
+        }
+        else
+        {
+            Object obj;
+            obj.push_back(Pair("address",       address.ToString()));
+            obj.push_back(Pair("account",       strAccount));
+            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
+            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+            Array transactions;
+            if (it != mapTally.end())
+            {
+                BOOST_FOREACH(const uint256& item, (*it).second.txids)
+                {
+                    transactions.push_back(item.GetHex());
+                }
+            }
+            obj.push_back(Pair("txids", transactions));
+            ret.push_back(obj);
+        }
+    }
+
+    if (fByAccounts)
+    {
+        for (map<string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
+        {
+            int64_t nAmount = (*it).second.nAmount;
+            int nConf = (*it).second.nConf;
+            Object obj;
+            obj.push_back(Pair("account",       (*it).first));
+            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
+            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+            ret.push_back(obj);
+        }
+    }
+
+    return ret;
+}
+
+Value credits_listreceivedbyaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
             "listreceivedbyaddress ( minconf includeempty )\n"
             "\nList balances by receiving address.\n"
+            "\nArguments:\n"
+            "1. minconf       (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
+            "2. includeempty  (numeric, optional, dafault=false) Whether to include addresses that haven't received any payments.\n"
+
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
+            "    \"account\" : \"accountname\",       (string) The account of the receiving address. The default account is \"\".\n"
+            "    \"amount\" : x.xxx,                  (numeric) The total amount in cre received by the address\n"
+            "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("listreceivedbyaddress", "")
+            + HelpExampleCli("listreceivedbyaddress", "6 true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, true")
+        );
+
+    return ListReceived(params, false);
+}
+Value bitcoin_listreceivedbyaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "bitcoin_listreceivedbyaddress ( minconf includeempty )\n"
+            "\nList Bitcoin balances by receiving address.\n"
             "\nArguments:\n"
             "1. minconf       (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. includeempty  (numeric, optional, dafault=false) Whether to include addresses that haven't received any payments.\n"
@@ -1078,15 +1254,15 @@ Value listreceivedbyaddress(const Array& params, bool fHelp)
             "]\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("listreceivedbyaddress", "")
-            + HelpExampleCli("listreceivedbyaddress", "6 true")
-            + HelpExampleRpc("listreceivedbyaddress", "6, true")
+            + HelpExampleCli("bitcoin_listreceivedbyaddress", "")
+            + HelpExampleCli("bitcoin_listreceivedbyaddress", "6 true")
+            + HelpExampleRpc("bitcoin_listreceivedbyaddress", "6, true")
         );
 
-    return ListReceived(params, false);
+    return Bitcoin_ListReceived(params, false);
 }
 
-Value listreceivedbyaccount(const Array& params, bool fHelp)
+Value credits_listreceivedbyaccount(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
@@ -1113,6 +1289,34 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
         );
 
     return ListReceived(params, true);
+}
+Value bitcoin_listreceivedbyaccount(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "bitcoin_listreceivedbyaccount ( minconf includeempty )\n"
+            "\nList balances by account.\n"
+            "\nArguments:\n"
+            "1. minconf      (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
+            "2. includeempty (boolean, optional, default=false) Whether to include accounts that haven't received any payments.\n"
+
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"account\" : \"accountname\",  (string) The account name of the receiving account\n"
+            "    \"amount\" : x.xxx,             (numeric) The total amount received by addresses with this account\n"
+            "    \"confirmations\" : n           (numeric) The number of confirmations of the most recent transaction included\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_listreceivedbyaccount", "")
+            + HelpExampleCli("bitcoin_listreceivedbyaccount", "6 true")
+            + HelpExampleRpc("bitcoin_listreceivedbyaccount", "6, true")
+        );
+
+    return Bitcoin_ListReceived(params, true);
 }
 
 static void MaybePushAddress(Object & entry, const CTxDestination &dest)
