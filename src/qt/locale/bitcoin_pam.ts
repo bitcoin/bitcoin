@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>I-right click ban alilan ing address o libel</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Maglalang kang bayung address</translation>
     </message>
