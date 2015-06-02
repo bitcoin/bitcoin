@@ -140,6 +140,12 @@ static const signed int MIN_BLOCKS_TO_KEEP = 288;
 // Setting the target to > than 550MB will make it likely we can respect the target.
 static const signed int MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
 
+/**
+ * Check whether we have data for a block, and update the CBlockIndex
+ * by unsetting STORED_DATA and STORED_UNDO if the block was pruned.
+ */
+bool HaveBlockData(CBlockIndex *pindex);
+
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
@@ -206,7 +212,8 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
  * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
  * Pruning cannot take place until the longest chain is at least a certain length (100000 on mainnet, 1000 on testnet, 10 on regtest).
  * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
- * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
+ * The block index is updated by setting the CBlockFileInfo for a given file to NULL.
+ * The CBlockIndex BLOCK_STORED_DATA/STORED_UNDO information is lazily updated after files are deleted.
  * A db flag records the fact that at least some block files have been pruned.
  *
  * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
