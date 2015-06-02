@@ -2841,9 +2841,15 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to
-    // advance our tip.
+    // advance our tip, and isn't too many blocks ahead.
     bool fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
     bool fHasMoreWork = (chainActive.Tip() ? pindex->nChainWork > chainActive.Tip()->nChainWork : true);
+    // Blocks that are too out-of-order needlessly limit the effectiveness of
+    // pruning, because pruning will not delete block files that contain any
+    // blocks which are too close in height to the tip.  Apply this test
+    // regardless of whether pruning is enabled; it should generally be safe to
+    // not process unrequested blocks.
+    bool fTooFarAhead = (pindex->nHeight - chainActive.Height()) > MIN_BLOCKS_TO_KEEP;
 
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
@@ -2851,6 +2857,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     if (!fRequested) {  // If we didn't ask for it:
         if (pindex->nTx != 0) return true;  // This is a previously-processed block that was pruned
         if (!fHasMoreWork) return true;     // Don't process less-work chains
+        if (fTooFarAhead) return true;      // Block height is too high
     }
 
     if ((!CheckBlock(block, state)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
