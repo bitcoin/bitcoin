@@ -1137,10 +1137,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>所有只能看位址的目前全部餘額</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>還沒同步</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

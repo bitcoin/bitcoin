@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Prawy klik żeby edytować adres lub etykietę</translation>
+        <translation>Kliknij prawy przycisk aby edytować adres lub etykietę</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1096,10 +1096,6 @@
     <message>
         <source>Current total balance in watch-only addresses</source>
         <translation>Łączna kwota na podglądanych adresach</translation>
-    </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nie zsynchronizowany</translation>
     </message>
 </context>
 <context>

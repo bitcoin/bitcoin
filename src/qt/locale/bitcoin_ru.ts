@@ -1105,10 +1105,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Текущий общий баланс на адресах наблюдения</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>не синхронизировано</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

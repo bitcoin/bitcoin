@@ -100,7 +100,7 @@ Creating a release build
 ------------------------
 You can ignore this section if you are building `bitcoind` for your own use.
 
-bitcoind/bitcoin-cli binaries are not included in the Bitcoin-Qt.app bundle.
+bitcoind/bitcoin-cli binaries are not included in the Bitcoin-Core.app bundle.
 
 If you are building `bitcoind` or `Bitcoin-Qt` for others, your build machine should be set up
 as follows for maximum compatibility:
@@ -111,7 +111,7 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
-Once dependencies are compiled, see [doc/release-process.md](release-process.md) for how the Bitcoin-Qt.app
+Once dependencies are compiled, see [doc/release-process.md](release-process.md) for how the Bitcoin-Core.app
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running

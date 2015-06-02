@@ -53,12 +53,14 @@ $(1)_staging_prefix_dir:=$$($(1)_staging_dir)$($($(1)_type)_prefix)
 $(1)_extract_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)
 $(1)_download_dir:=$(base_download_dir)/$(1)-$($(1)_version)
 $(1)_build_dir:=$$($(1)_extract_dir)/$$($(1)_build_subdir)
+$(1)_cached_checksum:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz.hash
 $(1)_patch_dir:=$(base_build_dir)/$(host)/$(1)/$($(1)_version)-$($(1)_build_id)/.patches-$($(1)_build_id)
 $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_cached:=$(BASE_CACHE)/$(host)/$(1)/$(1)-$($(1)_version)-$($(1)_build_id).tar.gz
+$(1)_all_sources=$($(1)_file_name) $($(1)_extra_sources)
 
 #stamps
-$(1)_fetched=$$($(1)_source_dir)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name)
+$(1)_fetched=$(SOURCES_PATH)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name).hash
 $(1)_extracted=$$($(1)_extract_dir)/.stamp_extracted
 $(1)_preprocessed=$$($(1)_extract_dir)/.stamp_preprocessed
 $(1)_cleaned=$$($(1)_extract_dir)/.stamp_cleaned
@@ -154,7 +156,10 @@ endef
 define int_add_cmds
 $($(1)_fetched):
 	$(AT)mkdir -p $$(@D) $(SOURCES_PATH)
+	$(AT)rm -f $$@
+	$(AT)touch $$@
 	$(AT)cd $$(@D); $(call $(1)_fetch_cmds,$(1))
+	$(AT)cd $($(1)_source_dir); $(foreach source,$($(1)_all_sources),$(build_SHA256SUM) $(source) >> $$(@);)
 	$(AT)touch $$@
 $($(1)_extracted): | $($(1)_fetched)
 	$(AT)echo Extracting $(1)...
@@ -195,10 +200,12 @@ $($(1)_cached): | $($(1)_dependencies) $($(1)_postprocessed)
 	$(AT)rm -rf $$(@D) && mkdir -p $$(@D)
 	$(AT)mv $$($(1)_staging_dir)/$$(@F) $$(@)
 	$(AT)rm -rf $($(1)_staging_dir)
+$($(1)_cached_checksum): $($(1)_cached)
+	$(AT)cd $$(@D); $(build_SHA256SUM) $$(<F) > $$(@)
 
 .PHONY: $(1)
-$(1): | $($(1)_cached)
-.SECONDARY: $($(1)_postprocessed) $($(1)_staged) $($(1)_built) $($(1)_configured) $($(1)_preprocessed) $($(1)_extracted) $($(1)_fetched)
+$(1): | $($(1)_cached_checksum)
+.SECONDARY: $($(1)_cached) $($(1)_postprocessed) $($(1)_staged) $($(1)_built) $($(1)_configured) $($(1)_preprocessed) $($(1)_extracted) $($(1)_fetched)
 
 endef
 

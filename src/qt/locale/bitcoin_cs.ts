@@ -1137,10 +1137,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Aktuální stav účtu sledovaných adres</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nesynchronizováno</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

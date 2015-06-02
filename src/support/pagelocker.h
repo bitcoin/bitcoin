@@ -37,7 +37,6 @@ public:
 
     ~LockedPageManagerBase()
     {
-        assert(this->GetLockedPageCount() == 0);
     }
 
 

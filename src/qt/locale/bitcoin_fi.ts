@@ -1137,10 +1137,6 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nykyinen tase seurantaosoitetteissa</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>Ei ajan tasalla</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>

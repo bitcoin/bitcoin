@@ -765,11 +765,7 @@
         <source>Your current total balance</source>
         <translation>رصيدك الكلي الحالي</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>خارج المزامنه</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     </context>

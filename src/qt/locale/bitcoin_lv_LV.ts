@@ -933,11 +933,7 @@
         <source>Your current total balance</source>
         <translation>Jūsu kopējā tekošā bilance</translation>
     </message>
-    <message>
-        <source>out of sync</source>
-        <translation>nav sinhronizēts</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>

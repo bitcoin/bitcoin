@@ -14,7 +14,7 @@ Functionality to build scripts, as well as SignatureHash().
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from mininode import CTransaction, CTxOut, hash256
+from test_framework.mininode import CTransaction, CTxOut, hash256
 
 import sys
 bchr = chr
@@ -27,7 +27,7 @@ if sys.version > '3':
 import copy
 import struct
 
-import bignum
+import test_framework.bignum
 
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
