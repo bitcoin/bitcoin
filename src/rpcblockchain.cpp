@@ -206,7 +206,7 @@ UniValue getrawmempool(const UniValue& params, bool fHelp)
                     setDepends.insert(txin.prevout.hash.ToString());
             }
 
-            UniValue depends;
+            UniValue depends(UniValue::VARR);
             BOOST_FOREACH(const string& dep, setDepends)
             {
                 depends.push_back(dep);
@@ -635,7 +635,7 @@ UniValue getmempoolinfo(const UniValue& params, bool fHelp)
             + HelpExampleRpc("getmempoolinfo", "")
         );
 
-    UniValue ret;
+    UniValue ret(UniValue::VOBJ);
     ret.push_back(Pair("size", (int64_t) mempool.size()));
     ret.push_back(Pair("bytes", (int64_t) mempool.GetTotalTxSize()));
 
