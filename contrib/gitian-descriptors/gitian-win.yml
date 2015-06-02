@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-win-0.10"
+name: "bitcoin-win-0.12"
 enable_cache: true
 suites:
 - "precise"

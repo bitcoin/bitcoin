@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-linux-0.10"
+name: "bitcoin-linux-0.12"
 enable_cache: true
 suites:
 - "precise"
