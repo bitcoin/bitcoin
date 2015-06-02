@@ -889,7 +889,7 @@ static UniValue JSONRPCExecOne(const UniValue& req)
 
 static string JSONRPCExecBatch(const UniValue& vReq)
 {
-    UniValue ret;
+    UniValue ret(UniValue::VARR);
     for (unsigned int reqIdx = 0; reqIdx < vReq.size(); reqIdx++)
         ret.push_back(JSONRPCExecOne(vReq[reqIdx]));
 
