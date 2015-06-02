@@ -312,7 +312,7 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     CScriptID innerID(inner);
     CBitcoinAddress address(innerID);
 
-    UniValue result;
+    UniValue result(UniValue::VOBJ);
     result.push_back(Pair("address", address.ToString()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
