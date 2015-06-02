@@ -757,7 +757,7 @@ if config.dmg is not None:
     
     if fancy is None:
         try:
-            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname=app_bundle_name, ov=True)
+            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname="Bitcoin-Core", ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
     else:
@@ -772,7 +772,7 @@ if config.dmg is not None:
         if verbose >= 3:
             print "Creating temp image for modification..."
         try:
-            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=app_bundle_name, ov=True)
+            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname="Bitcoin-Core", ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
         
