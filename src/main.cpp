@@ -3993,6 +3993,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->PushMessage("verack");
         pfrom->ssSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
 
+        // Jumpstart header sync
+        if (pfrom->fNetworkNode)
+            pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), uint256());
+
         if (!pfrom->fInbound)
         {
             // Advertise our address
