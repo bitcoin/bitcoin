@@ -112,8 +112,17 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, Object& txobj, uint32_t txType,
         case MSC_TYPE_TRADE_OFFER:
             populateRPCTypeTradeOffer(mp_obj, txobj);
             break;
-        case MSC_TYPE_METADEX:
-            populateRPCTypeMetaDEx(mp_obj, txobj, extendedDetails);
+        case MSC_TYPE_METADEX_TRADE:
+            populateRPCTypeMetaDExTrade(mp_obj, txobj, extendedDetails);
+            break;
+        case MSC_TYPE_METADEX_CANCEL_PRICE:
+            populateRPCTypeMetaDExCancelPrice(mp_obj, txobj, extendedDetails);
+            break;
+        case MSC_TYPE_METADEX_CANCEL_PAIR:
+            populateRPCTypeMetaDExCancelPair(mp_obj, txobj, extendedDetails);
+            break;
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
+            populateRPCTypeMetaDExCancelEcosystem(mp_obj, txobj, extendedDetails);
             break;
         case MSC_TYPE_ACCEPT_OFFER_BTC:
             populateRPCTypeAcceptOffer(mp_obj, txobj);
@@ -150,7 +159,10 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_SIMPLE_SEND: return true;
         case MSC_TYPE_SEND_TO_OWNERS: return false;
         case MSC_TYPE_TRADE_OFFER: return false;
-        case MSC_TYPE_METADEX: return false;
+        case MSC_TYPE_METADEX_TRADE: return false;
+        case MSC_TYPE_METADEX_CANCEL_PRICE: return false;
+        case MSC_TYPE_METADEX_CANCEL_PAIR: return false;
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM: return false;
         case MSC_TYPE_ACCEPT_OFFER_BTC: return true;
         case MSC_TYPE_CREATE_PROPERTY_FIXED: return false;
         case MSC_TYPE_CREATE_PROPERTY_VARIABLE: return false;
@@ -237,7 +249,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("bitcoindesired", FormatDivisibleMP(temp_offer.getBTCDesiredOriginal())));
 }
 
-void populateRPCTypeMetaDEx(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
 {
     CMPMetaDEx metaObj;
     if (0 != omniObj.step2_Value()) return;
@@ -256,13 +268,6 @@ void populateRPCTypeMetaDEx(CMPTransaction& omniObj, Object& txobj, bool extende
     }
     std::string unitPriceStr = xToString(tempUnitPrice);
 
-    // action byte handling
-    std::string actionStr;
-    if (metaObj.getAction() == 1) actionStr = "new";
-    if (metaObj.getAction() == 2) actionStr = "cancel price";
-    if (metaObj.getAction() == 3) actionStr = "cancel pair";
-    if (metaObj.getAction() == 4) actionStr = "cancel all";
-
     // populate
     txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
     txobj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
@@ -273,9 +278,62 @@ void populateRPCTypeMetaDEx(CMPTransaction& omniObj, Object& txobj, bool extende
     txobj.push_back(Pair("amountdesired", FormatMP(metaObj.getDesProperty(), metaObj.getAmountDesired())));
     txobj.push_back(Pair("amounttofill", FormatMP(metaObj.getDesProperty(), metaObj.getAmountToFill())));
     txobj.push_back(Pair("unitprice", unitPriceStr));
-    txobj.push_back(Pair("action", actionStr));
-    if (metaObj.getAction() == 4) txobj.push_back(Pair("ecosystem", isTestEcosystemProperty(omniObj.getProperty()) ? "test" : "main"));
-    if (extendedDetails) populateRPCExtendedTypeMetaDEx(omniObj.getHash(), metaObj.getAction(), omniObj.getProperty(), omniObj.getAmount(), txobj);
+    if (extendedDetails) populateRPCExtendedTypeMetaDExTrade(omniObj.getHash(), omniObj.getProperty(), omniObj.getAmount(), txobj);
+}
+
+void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+{
+    CMPMetaDEx metaObj;
+    if (0 != omniObj.step2_Value()) return;
+    if (0 > omniObj.interpretPacket(NULL, &metaObj)) return;
+
+    // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
+    bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
+    bool propertyIdDesiredIsDivisible = isPropertyDivisible(metaObj.getDesProperty());
+    rational_t tempUnitPrice(int128_t(0));
+    if ((omniObj.getProperty() == OMNI_PROPERTY_MSC) || (omniObj.getProperty() == OMNI_PROPERTY_TMSC)) {
+        tempUnitPrice = metaObj.inversePrice();
+        if (!propertyIdDesiredIsDivisible) tempUnitPrice = tempUnitPrice/COIN;
+    } else {
+        tempUnitPrice = metaObj.unitPrice();
+        if (!propertyIdForSaleIsDivisible) tempUnitPrice = tempUnitPrice/COIN;
+    }
+    std::string unitPriceStr = xToString(tempUnitPrice);
+
+    // populate
+    txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
+    txobj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
+    txobj.push_back(Pair("amountforsale", FormatMP(omniObj.getProperty(), omniObj.getAmount())));
+    txobj.push_back(Pair("propertyiddesired", (uint64_t)metaObj.getDesProperty()));
+    txobj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
+    txobj.push_back(Pair("amountdesired", FormatMP(metaObj.getDesProperty(), metaObj.getAmountDesired())));
+    txobj.push_back(Pair("unitprice", unitPriceStr));
+    if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
+}
+
+void populateRPCTypeMetaDExCancelPair(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+{
+    CMPMetaDEx metaObj;
+    if (0 != omniObj.step2_Value()) return;
+    if (0 > omniObj.interpretPacket(NULL, &metaObj)) return;
+
+    // populate
+    txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
+    txobj.push_back(Pair("propertyiddesired", (uint64_t)metaObj.getDesProperty()));
+    if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
+}
+
+void populateRPCTypeMetaDExCancelEcosystem(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
+{
+    CMPMetaDEx metaObj;
+    if (0 != omniObj.step2_Value()) return;
+    if (0 > omniObj.interpretPacket(NULL, &metaObj)) return;
+
+    // populate
+    if (omniObj.getProperty() == 0) txobj.push_back(Pair("ecosystem", "both")); // property seems an odd place to store this
+    if (omniObj.getProperty() == 1) txobj.push_back(Pair("ecosystem", "main"));
+    if (omniObj.getProperty() == 2) txobj.push_back(Pair("ecosystem", "test"));
+    if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
 }
 
 void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, Object& txobj)
@@ -379,40 +437,43 @@ void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extende
     txobj.push_back(Pair("recipients", receiveArray));
 }
 
-void populateRPCExtendedTypeMetaDEx(const uint256& txid, unsigned char action, uint32_t propertyIdForSale, int64_t amountForSale, Object& txobj)
+void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, Object& txobj)
 {
-    if (action == 1) {
-        Array tradeArray;
-        int64_t totalReceived = 0, totalSold = 0;
-        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
-        std::string statusText = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold, totalReceived);
-        txobj.push_back(Pair("status", statusText));
-        if(statusText == "cancelled" || statusText == "cancelled part filled") txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
-        txobj.push_back(Pair("matches", tradeArray));
-    } else {
-        Array cancelArray;
-        int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
-        if (0<numberOfCancels) {
-            for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
-                Object cancelTx;
-                std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + boost::to_string(refNumber));
-                if (strValue.empty()) continue;
-                std::vector<std::string> vstr;
-                boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
-                if (vstr.size() != 3) {
-                    PrintToLog("TXListDB Error - trade cancel number of tokens is not as expected (%s)\n", strValue);
-                    continue;
-                }
-                uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
-                uint64_t amountUnreserved = boost::lexical_cast<uint64_t>(vstr[2]);
-                cancelTx.push_back(Pair("txid", vstr[0]));
-                cancelTx.push_back(Pair("propertyid", propId));
-                cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, amountUnreserved)));
-                cancelArray.push_back(cancelTx);
-            }
-        }
-        txobj.push_back(Pair("cancelledtransactions", cancelArray));
+    Array tradeArray;
+    int64_t totalReceived = 0, totalSold = 0;
+    t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+    std::string statusText = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold, totalReceived);
+    txobj.push_back(Pair("status", statusText));
+    if (statusText == "cancelled" || statusText == "cancelled part filled") {
+        txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
     }
+    txobj.push_back(Pair("matches", tradeArray));
+}
+
+void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
+{
+    Array cancelArray;
+    int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
+    if (0<numberOfCancels) {
+        for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
+            Object cancelTx;
+            std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + boost::to_string(refNumber));
+            if (strValue.empty()) continue;
+            std::vector<std::string> vstr;
+            boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
+            if (vstr.size() != 3) {
+                PrintToLog("TXListDB Error - trade cancel number of tokens is not as expected (%s)\n", strValue);
+                continue;
+            }
+            uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
+            uint64_t amountUnreserved = boost::lexical_cast<uint64_t>(vstr[2]);
+            cancelTx.push_back(Pair("txid", vstr[0]));
+            cancelTx.push_back(Pair("propertyid", propId));
+            cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, amountUnreserved)));
+            cancelArray.push_back(cancelTx);
+        }
+    }
+    txobj.push_back(Pair("cancelledtransactions", cancelArray));
 }
 
 /* Function to enumerate DEx purchases for a given txid and add to supplied JSON array

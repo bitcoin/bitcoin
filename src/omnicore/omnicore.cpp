@@ -140,7 +140,10 @@ static const int txRestrictionsRules[][3] = {
   {MSC_TYPE_CREATE_PROPERTY_VARIABLE, MSC_SP_BLOCK,       MP_TX_PKT_V1},
   {MSC_TYPE_CLOSE_CROWDSALE,          MSC_SP_BLOCK,       MP_TX_PKT_V0},
   {MSC_TYPE_SEND_TO_OWNERS,           MSC_STO_BLOCK,      MP_TX_PKT_V0},
-  {MSC_TYPE_METADEX,                  MSC_METADEX_BLOCK,  MP_TX_PKT_V0},
+  {MSC_TYPE_METADEX_TRADE,            MSC_METADEX_BLOCK,  MP_TX_PKT_V0},
+  {MSC_TYPE_METADEX_CANCEL_PRICE,     MSC_METADEX_BLOCK,  MP_TX_PKT_V0},
+  {MSC_TYPE_METADEX_CANCEL_PAIR,      MSC_METADEX_BLOCK,  MP_TX_PKT_V0},
+  {MSC_TYPE_METADEX_CANCEL_ECOSYSTEM, MSC_METADEX_BLOCK,  MP_TX_PKT_V0},
   {MSC_TYPE_OFFER_ACCEPT_A_BET,       MSC_BET_BLOCK,      MP_TX_PKT_V0},
   {MSC_TYPE_CREATE_PROPERTY_MANUAL,   MSC_MANUALSP_BLOCK,      MP_TX_PKT_V0},
   {MSC_TYPE_GRANT_PROPERTY_TOKENS,    MSC_MANUALSP_BLOCK,      MP_TX_PKT_V0},
@@ -3488,8 +3491,15 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
         return -777; // can't fill in the Offer object !
     }
 
-    if (mdex_o && MSC_TYPE_METADEX != type) {
-        return -778; // can't fill in the MetaDEx object !
+    if (mdex_o) {
+        if (type != MSC_TYPE_METADEX_TRADE
+                && type != MSC_TYPE_METADEX_CANCEL_PRICE
+                && type != MSC_TYPE_METADEX_CANCEL_PAIR
+                && type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+            return -778; // can't fill in the MetaDEx object !
+        } else {
+            return logicMath_MetaDEx(mdex_o); // temp
+        }
     }
 
     switch (type) {
@@ -3502,11 +3512,20 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
         case MSC_TYPE_TRADE_OFFER:
             return logicMath_TradeOffer(obj_o);
 
-        case MSC_TYPE_METADEX:
-            return logicMath_MetaDEx(mdex_o);
-
         case MSC_TYPE_ACCEPT_OFFER_BTC:
             return logicMath_AcceptOffer_BTC();
+
+        case MSC_TYPE_METADEX_TRADE:
+            return logicMath_MetaDExTrade();
+
+        case MSC_TYPE_METADEX_CANCEL_PRICE:
+            return logicMath_MetaDExCancelPrice();
+
+        case MSC_TYPE_METADEX_CANCEL_PAIR:
+            return logicMath_MetaDExCancelPair();
+
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
+            return logicMath_MetaDExCancelEcosystem();
 
         case MSC_TYPE_CREATE_PROPERTY_FIXED:
             return logicMath_CreatePropertyFixed();

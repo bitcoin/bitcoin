@@ -232,7 +232,12 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // grab pending object, extract details and skip if not a metadex trade
         CMPPending *p_pending = &(it->second);
-        if (p_pending->type != MSC_TYPE_METADEX) continue;
+        if (p_pending->type != MSC_TYPE_METADEX_TRADE
+                && p_pending->type != MSC_TYPE_METADEX_CANCEL_PRICE
+                && p_pending->type != MSC_TYPE_METADEX_CANCEL_PAIR
+                && p_pending->type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+            continue;
+        }
         uint32_t propertyId = p_pending->prop;
         int64_t amount = p_pending->amount;
 
@@ -273,7 +278,12 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         std::vector<std::string> vstr;
         boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
         if (vstr.size() > 2) {
-            if (atoi(vstr[2]) != MSC_TYPE_METADEX) continue;
+            if (atoi(vstr[2]) != MSC_TYPE_METADEX_TRADE
+                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_PRICE
+                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_PAIR
+                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                continue;
+            }
         }
 
         // check historyMap, if this tx exists don't waste resources doing anymore work on it

@@ -47,59 +47,49 @@ BOOST_AUTO_TEST_CASE(payload_dex_offer)
 
 BOOST_AUTO_TEST_CASE(payload_meta_dex_new_trade)
 {
-    // Trade tokens for tokens [type 21, version 0]
+    // Trade tokens for tokens [type 25, version 0]
     std::vector<unsigned char> vch = CreatePayload_MetaDExTrade(
         static_cast<uint32_t>(1),          // property: MSC
         static_cast<int64_t>(250000000),   // amount for sale: 2.5 MSC
         static_cast<uint32_t>(31),         // property desired: TetherUS
         static_cast<int64_t>(5000000000)); // amount desired: 50.0 TetherUS
-                                           // sub-action: (1) new-offer
 
     BOOST_CHECK_EQUAL(HexStr(vch),
-        "0000001500000001000000000ee6b2800000001f000000012a05f20001");
+        "0000001900000001000000000ee6b2800000001f000000012a05f200");
 }
 
 BOOST_AUTO_TEST_CASE(payload_meta_dex_cancel_at_price)
 {
-    // Trade tokens for tokens [type 21, version 0]
+    // Trade tokens for tokens [type 26, version 0]
     std::vector<unsigned char> vch = CreatePayload_MetaDExCancelPrice(
         static_cast<uint32_t>(1),          // property: MSC
         static_cast<int64_t>(250000000),   // amount for sale: 2.5 MSC
         static_cast<uint32_t>(31),         // property desired: TetherUS
         static_cast<int64_t>(5000000000)); // amount desired: 50.0 TetherUS
-                                           // sub-action: (2) cancel-at-price
 
     BOOST_CHECK_EQUAL(HexStr(vch),
-        "0000001500000001000000000ee6b2800000001f000000012a05f20002");
+        "0000001a00000001000000000ee6b2800000001f000000012a05f200");
 }
 
 BOOST_AUTO_TEST_CASE(payload_meta_dex_cancel_pair)
 {
-    // Trade tokens for tokens [type 21, version 0]
+    // Trade tokens for tokens [type 27, version 0]
     std::vector<unsigned char> vch = CreatePayload_MetaDExCancelPair(
         static_cast<uint32_t>(1),          // property: MSC
-                                           // amount for sale: 0.0 MSC
         static_cast<uint32_t>(31));        // property desired: TetherUS
-                                           // amount desired: 0.0 TetherUS
-                                           // sub-action: (3) cancel-pair
 
     BOOST_CHECK_EQUAL(HexStr(vch),
-        "000000150000000100000000000000000000001f000000000000000003");
+        "0000001b000000010000001f");
 }
 
 BOOST_AUTO_TEST_CASE(payload_meta_dex_cancel_ecosystem)
 {
-    // Trade tokens for tokens [type 21, version 0]
+    // Trade tokens for tokens [type 28, version 0]
     std::vector<unsigned char> vch = CreatePayload_MetaDExCancelEcosystem(
         static_cast<uint8_t>(1));          // ecosystem: Main
-                                           // property: MSC
-                                           // amount for sale: 0.0 MSC
-                                           // property desired: MSC
-                                           // amount for sale: 0.0 MSC
-                                           // sub-action: (4) cancel-ecosystem
 
     BOOST_CHECK_EQUAL(HexStr(vch),
-        "0000001500000001000000000000000000000001000000000000000004");
+        "0000001c01");
 }
 
 BOOST_AUTO_TEST_CASE(payload_accept_dex_offer)

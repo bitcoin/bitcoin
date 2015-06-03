@@ -55,8 +55,10 @@ private:
     // CreatePropertyMananged, GrantTokens, RevokeTokens, ChangeIssuer
     unsigned int property;
 
-    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged
+    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged, MetaDEx
     unsigned char ecosystem;
+
+    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged
     unsigned short prop_type;
     unsigned int prev_prop_id;
     char category[SP_STRING_FIELD_LEN];
@@ -71,7 +73,7 @@ private:
     // MetaDEx
     unsigned int desired_property;
     uint64_t desired_value;
-    unsigned char action;
+    unsigned char action; // depreciated
 
     // TradeOffer
     uint64_t amount_desired;
@@ -177,7 +179,10 @@ public:
     bool interpret_SimpleSend();
     bool interpret_SendToOwners();
     bool interpret_TradeOffer();
-    bool interpret_MetaDEx();
+    bool interpret_MetaDExTrade();
+    bool interpret_MetaDExCancelPrice();
+    bool interpret_MetaDExCancelPair();
+    bool interpret_MetaDExCancelEcosystem();
     bool interpret_AcceptOfferBTC();
     bool interpret_CreatePropertyFixed();
     bool interpret_CreatePropertyVariable();
@@ -196,6 +201,10 @@ public:
     int logicMath_TradeOffer(CMPOffer*);
     int logicMath_MetaDEx(CMPMetaDEx*);
     int logicMath_AcceptOffer_BTC();
+    int logicMath_MetaDExTrade();
+    int logicMath_MetaDExCancelPrice();
+    int logicMath_MetaDExCancelPair();
+    int logicMath_MetaDExCancelEcosystem();
     int logicMath_CreatePropertyFixed();
     int logicMath_CreatePropertyVariable();
     int logicMath_CloseCrowdsale();
