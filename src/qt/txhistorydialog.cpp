@@ -186,8 +186,17 @@ int TXHistoryDialog::PopulateHistoryMap()
             htxo.blockByteOffset = pendingWTx->nOrderPos;
         }
         htxo.valid = true; // all pending transactions are assumed to be valid while awaiting confirmation since all pending are outbound and we wouldn't let them be sent if invalid
-        if (p_pending->type == 0) { htxo.txType = "Send"; htxo.fundsMoved = true; } // we don't have a CMPTransaction class here so manually set the type for now
-        if (p_pending->type == 21) { htxo.txType = "MetaDEx Trade"; htxo.fundsMoved = false; } // send and metadex trades are the only supported outbound txs (thus only possible pending) for now
+        if (p_pending->type == MSC_TYPE_SIMPLE_SEND) {
+            htxo.txType = "Send";
+            htxo.fundsMoved = true;
+        } // we don't have a CMPTransaction class here so manually set the type for now
+        if (p_pending->type == MSC_TYPE_METADEX_TRADE
+                || p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE
+                || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR
+                || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+            htxo.txType = "MetaDEx Trade";
+            htxo.fundsMoved = false;
+        } // send and metadex trades are the only supported outbound txs (thus only possible pending) for now
         htxo.address = senderAddress; // always sender, all pending are outbound
         if(isPropertyDivisible(propertyId)) {htxo.amount = "-"+FormatDivisibleShortMP(amount)+getTokenLabel(propertyId);} else {htxo.amount="-"+FormatIndivisibleMP(amount)+getTokenLabel(propertyId);} // pending always outbound
         txHistoryMap.insert(std::make_pair(txid, htxo));
@@ -578,8 +587,12 @@ std::string TXHistoryDialog::shrinkTxType(int txType, bool *fundsMoved)
         case MSC_TYPE_RATELIMITED_MARK: displayType = "Rate Limit"; break;
         case MSC_TYPE_AUTOMATIC_DISPENSARY: displayType = "Auto Dispense"; break;
         case MSC_TYPE_TRADE_OFFER: displayType = "DEx Trade"; *fundsMoved = false; break;
-        case MSC_TYPE_METADEX: displayType = "MetaDEx Trade"; *fundsMoved = false; break;
         case MSC_TYPE_ACCEPT_OFFER_BTC: displayType = "DEx Accept"; *fundsMoved = false; break;
+        case MSC_TYPE_METADEX_TRADE:
+        case MSC_TYPE_METADEX_CANCEL_PRICE:
+        case MSC_TYPE_METADEX_CANCEL_PAIR:
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
+            displayType = "MetaDEx Trade"; *fundsMoved = false; break;
         case MSC_TYPE_CREATE_PROPERTY_FIXED: displayType = "Create Property"; break;
         case MSC_TYPE_CREATE_PROPERTY_VARIABLE: displayType = "Create Property"; break;
         case MSC_TYPE_PROMOTE_PROPERTY: displayType = "Promo Property"; break;

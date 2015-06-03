@@ -1267,7 +1267,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                     //populate based on type of tx
                     switch (MPTxTypeInt)
                     {
-                        case MSC_TYPE_METADEX:
+                        case MSC_TYPE_METADEX_TRADE:
+                        case MSC_TYPE_METADEX_CANCEL_PRICE:
+                        case MSC_TYPE_METADEX_CANCEL_PAIR:
+                        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
                              if (0 == mp_obj.step2_Value())
                              {
                                  propertyId = mp_obj.getProperty();
@@ -1448,13 +1451,31 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
         txobj->push_back(Pair("version", (int64_t)mp_obj.getVersion()));
         txobj->push_back(Pair("type_int", (int64_t)mp_obj.getType()));
         txobj->push_back(Pair("type", MPTxType));
-        if (MSC_TYPE_METADEX != MPTxTypeInt) txobj->push_back(Pair("propertyid", propertyId));
+        if (MSC_TYPE_METADEX_TRADE != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_PRICE != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_PAIR != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_ECOSYSTEM != MPTxTypeInt)
+        {
+            txobj->push_back(Pair("propertyid", propertyId));
+        }
         if ((MSC_TYPE_CREATE_PROPERTY_VARIABLE == MPTxTypeInt) || (MSC_TYPE_CREATE_PROPERTY_FIXED == MPTxTypeInt) || (MSC_TYPE_CREATE_PROPERTY_MANUAL == MPTxTypeInt))
         {
             txobj->push_back(Pair("propertyname", propertyName));
         }
-        if (MSC_TYPE_METADEX != MPTxTypeInt) txobj->push_back(Pair("divisible", divisible));
-        if (MSC_TYPE_METADEX != MPTxTypeInt) txobj->push_back(Pair("amount", FormatMP(propertyId, amount)));
+        if (MSC_TYPE_METADEX_TRADE != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_PRICE != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_PAIR != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_ECOSYSTEM != MPTxTypeInt)
+        {
+            txobj->push_back(Pair("divisible", divisible));
+        }
+        if (MSC_TYPE_METADEX_TRADE != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_PRICE != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_PAIR != MPTxTypeInt
+                && MSC_TYPE_METADEX_CANCEL_ECOSYSTEM != MPTxTypeInt)
+        {
+            txobj->push_back(Pair("amount", FormatMP(propertyId, amount)));
+        }
         if (crowdPurchase)
         {
             txobj->push_back(Pair("purchasedpropertyid", crowdPropertyId));
@@ -1472,7 +1493,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
             if (3 == sell_subaction) txobj->push_back(Pair("subaction", "Cancel"));
             txobj->push_back(Pair("bitcoindesired", ValueFromAmount(sell_btcdesired)));
         }
-        if (MSC_TYPE_METADEX == MPTxTypeInt)
+        if (MSC_TYPE_METADEX_TRADE == MPTxTypeInt
+                || MSC_TYPE_METADEX_CANCEL_PRICE == MPTxTypeInt
+                || MSC_TYPE_METADEX_CANCEL_PAIR == MPTxTypeInt
+                || MSC_TYPE_METADEX_CANCEL_ECOSYSTEM == MPTxTypeInt)
         {
             txobj->push_back(Pair("propertyidforsale", propertyId));
             txobj->push_back(Pair("propertyidforsaleisdivisible", mdex_propertyId_Div));
