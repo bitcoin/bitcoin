@@ -85,6 +85,7 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coincontrol.h \
   coins.h \
+  coinsbyscript.h \
   compat.h \
   compat/byteswap.h \
   compat/endian.h \
@@ -249,6 +250,7 @@ libbitcoin_common_a_SOURCES = \
   base58.cpp \
   chainparams.cpp \
   coins.cpp \
+  coinsbyscript.cpp \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \

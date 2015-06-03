@@ -10,6 +10,7 @@
 
 #include "amount.h"
 #include "coins.h"
+#include "coinsbyscript.h"
 #include "primitives/transaction.h"
 #include "sync.h"
 
@@ -93,6 +94,8 @@ private:
     CBlockPolicyEstimator* minerPolicyEstimator;
 
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
+    const bool& fTxOutsByAddressIndex;
+    CCoinsMapByScript mapCoinsByScript; // only used if -txoutsbyaddressindex
 
 public:
     mutable CCriticalSection cs;
@@ -100,7 +103,7 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
-    CTxMemPool(const CFeeRate& _minRelayFee);
+    CTxMemPool(const CFeeRate& _minRelayFee, const bool& _fTxOutsByAddressIndex);
     ~CTxMemPool();
 
     /**
@@ -123,6 +126,7 @@ public:
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
+    void GetCoinsByScript(const CScript& script, CCoinsByScript& coinsByScript) const;
     /**
      * Check that none of this transactions inputs are in the mempool, and thus
      * the tx is not dependent on other mempool transactions to be included in a block.

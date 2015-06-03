@@ -183,6 +183,8 @@ void Shutdown()
         pcoinscatcher = NULL;
         delete pcoinsdbview;
         pcoinsdbview = NULL;
+        delete pcoinsByScript;
+        pcoinsByScript = NULL;
         delete pblocktree;
         pblocktree = NULL;
     }
@@ -292,7 +294,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
     strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), 0));
-
+    strUsage += HelpMessageOpt("-txoutsbyaddressindex", strprintf(_("Maintain an address to unspent outputs index (rpc: gettxoutsbyaddress). The index is built on first use. (default: %u)"), 0));
+    
     strUsage += HelpMessageGroup(_("Connection options:"));
     strUsage += HelpMessageOpt("-addnode=<ip>", _("Add a node to connect to and attempt to keep the connection open"));
     strUsage += HelpMessageOpt("-banscore=<n>", strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), 100));
@@ -1142,6 +1145,61 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                 if (fHavePruned && !fPruneMode) {
                     strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
                     break;
+                }
+
+                // Check -txoutsbyaddressindex
+                pcoinsdbview->ReadFlag("txoutsbyaddressindex", fTxOutsByAddressIndex);
+                if (mapArgs.count("-txoutsbyaddressindex"))
+                {
+                    if (GetBoolArg("-txoutsbyaddressindex", false))
+                    {
+                        // build index
+                        if (!fTxOutsByAddressIndex)
+                        {
+                            if (!pcoinsdbview->DeleteAllCoinsByScript())
+                            {
+                                strLoadError = _("Error deleting txoutsbyaddressindex");
+                                break;
+                            }
+                            if (!pcoinsdbview->GenerateAllCoinsByScript())
+                            {
+                                strLoadError = _("Error building txoutsbyaddressindex");
+                                break;
+                            }
+                            CCoinsStats stats;
+                            if (!pcoinsdbview->GetStats(stats))
+                            {
+                                strLoadError = _("Error GetStats for txoutsbyaddressindex");
+                                break;
+                            }
+                            if (stats.nTransactionOutputs != stats.nAddressesOutputs)
+                            {
+                                strLoadError = _("Error compare stats for txoutsbyaddressindex");
+                                break;
+                            }
+                            pcoinsdbview->WriteFlag("txoutsbyaddressindex", true);
+                            fTxOutsByAddressIndex = true;
+                        }
+                    }
+                    else
+                    {
+                        if (fTxOutsByAddressIndex)
+                        {
+                            // remove index
+                            pcoinsdbview->DeleteAllCoinsByScript();
+                            pcoinsdbview->WriteFlag("txoutsbyaddressindex", false);
+                            fTxOutsByAddressIndex = false;
+                        }
+                    }
+                }
+                else if (fTxOutsByAddressIndex)
+                    return InitError(_("You need to provide -txoutsbyaddressindex. Do -txoutsbyaddressindex=0 to delete the index."));
+
+                // Init -txoutsbyaddressindex
+                if (fTxOutsByAddressIndex)
+                {
+                    pcoinsByScript = new CCoinsViewByScript(pcoinsdbview);
+                    pcoinsdbview->SetCoinsViewByScript(pcoinsByScript);
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
