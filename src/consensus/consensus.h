@@ -20,6 +20,6 @@ enum {
 };
 
 /** Used as the flags parameter to CheckFinalTx() in non-consensus code */
-static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = 0;
+static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_MEDIAN_TIME_PAST;
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
