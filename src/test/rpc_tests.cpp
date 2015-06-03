@@ -140,6 +140,24 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("20999999.99999999")), 2099999999999999LL);
 }
 
+BOOST_AUTO_TEST_CASE(json_parse_errors)
+{
+    Value value;
+    // Valid
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0"), value), true);
+    // Valid, with trailing whitespace
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0 "), value), true);
+    // Invalid, initial garbage
+    BOOST_CHECK_EQUAL(read_string(std::string("[1.0"), value), false);
+    BOOST_CHECK_EQUAL(read_string(std::string("a1.0"), value), false);
+    // Invalid, trailing garbage
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0sds"), value), false);
+    BOOST_CHECK_EQUAL(read_string(std::string("1.0]"), value), false);
+    // BTC addresses should fail parsing
+    BOOST_CHECK_EQUAL(read_string(std::string("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), value), false);
+    BOOST_CHECK_EQUAL(read_string(std::string("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), value), false);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
 {
     // Check IPv4 addresses
