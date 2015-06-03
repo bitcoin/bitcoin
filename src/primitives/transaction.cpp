@@ -70,6 +70,7 @@ uint256 CMutableTransaction::GetHash() const
 void CTransaction::UpdateHash() const
 {
     *const_cast<uint256*>(&hash) = SerializeHash(*this);
+    *const_cast<bool*>(&fHaveHash) = true;
 }
 
 CTransaction::CTransaction() : hash(0), nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }

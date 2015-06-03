@@ -171,6 +171,7 @@ class CTransaction
 {
 private:
     /** Memory only. */
+    bool fHaveHash;
     const uint256 hash;
     void UpdateHash() const;
 
@@ -205,7 +206,7 @@ public:
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
         if (ser_action.ForRead())
-            UpdateHash();
+            fHaveHash = false;
     }
 
     bool IsNull() const {
@@ -213,6 +214,8 @@ public:
     }
 
     const uint256& GetHash() const {
+        if (!fHaveHash)
+            UpdateHash();
         return hash;
     }
 
