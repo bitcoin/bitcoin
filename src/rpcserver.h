@@ -250,7 +250,7 @@ extern json_spirit::Value getinfo_MP(const json_spirit::Array& params, bool fHel
 extern json_spirit::Value getsto_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value setautocommit_OMNI(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettradehistoryforaddress_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gettradehistoryformarket_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value gettradehistoryforpair_OMNI(const json_spirit::Array& params, bool fHelp);
 
 //! Omni Core transaction calls
 extern json_spirit::Value send_OMNI(const json_spirit::Array& params, bool fHelp);

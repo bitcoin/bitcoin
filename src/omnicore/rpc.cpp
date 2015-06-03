@@ -973,42 +973,42 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
     return response;
 }
 
-Value gettradehistoryformarket_OMNI(const Array& params, bool fHelp)
+Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
             "gettradehistory_MP\n"
             "\nAllows user to retrieve MetaDEx trade history for the specified market\n"
             "\nArguments:\n"
-            "1. propertyid           (int, required) metadex market\n"
+            "1. propertyid           (int, required) the first side of the pair\n"
+            "2. propertyid           (int, required) the second side of the pair\n"
             "3. count                (int, optional) number of trades to retrieve (default: 10)\n"
         );
 
     Array response;
 
-    uint32_t market = 0;
-    int64_t tmpMarket = params[0].get_int64();
+    // obtain property identifiers for pair & check valid parameters
+    uint32_t propertyIdSideA = 0, propertyIdSideB = 0;
+    int64_t tmpPropertyIdSideA = params[0].get_int64();
+    int64_t tmpPropertyIdSideB = params[1].get_int64();
+    if (tmpPropertyIdSideA < 1 || tmpPropertyIdSideA > 4294967295 || tmpPropertyIdSideB < 1 || tmpPropertyIdSideB > 4294967295)
+         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
+    propertyIdSideA = boost::lexical_cast<uint32_t>(tmpPropertyIdSideA);
+    propertyIdSideB = boost::lexical_cast<uint32_t>(tmpPropertyIdSideB);
+    if (!_my_sps->hasSP(propertyIdSideA) || !_my_sps->hasSP(propertyIdSideB))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+    if ((propertyIdSideA != 1 && propertyIdSideA != 2 && propertyIdSideB != 1 && propertyIdSideB != 2) || propertyIdSideA == propertyIdSideB)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid trade pair");
 
-    if (tmpMarket < 1 || tmpMarket > 4294967295)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
-    market = boost::lexical_cast<uint32_t>(tmpMarket);
-
-    if (!_my_sps->hasSP(market))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Specified market does not exist");
-
+    // obtain count parameter if supplied
     int64_t count = 10;
     if (params.size() > 2) count = params[2].get_int64();
     if (count < 1) // TODO: do we need a maximum here?
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid value for count parameter");
 
     // metadex maps are irrelevant for this call, we are looking for completed trades which are stored in tradelistdb
+    t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response);
 
-    // this call will apply the concept of "market", since one side of the pair must always be MSC/TMSC we can simplify with buy/sell concepts
-    // "buyer" is always considered the party that is selling MSC
-    // "seller" is always considered the party that is selling SPT
-    t_tradelistdb->getTradesForMarket(market, response);
-
-    // TODO: sort response array on confirmations attribute and crop response to (count) most recent transactions
     return response;
 }
 
