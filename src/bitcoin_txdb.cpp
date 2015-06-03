@@ -136,6 +136,22 @@ bool Bitcoin_CBlockTreeDB::BatchWriteBlockIndex(std::vector<Bitcoin_CDiskBlockIn
     }
     return WriteBatch(batch);
 }
+bool Bitcoin_CBlockTreeDB::WriteBlockTxHashesWithInputs(const Bitcoin_CDiskBlockIndex& blockindex, const std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs)
+{
+    return Write(make_pair('h', blockindex.GetBlockHash()), vTxHashesWithInputs);
+}
+bool Bitcoin_CBlockTreeDB::BatchWriteBlockTxHashesWithInputs(std::vector<Bitcoin_CDiskBlockIndex>& vblockindexes, const std::vector<std::vector<pair<uint256, std::vector<COutPoint> > > > &vvTxHashesWithInputs)
+{
+    CLevelDBBatch batch;
+    for (unsigned int i = 0; i < vblockindexes.size(); i++) {
+    	Bitcoin_CDiskBlockIndex &blockindex = vblockindexes[i];
+    	batch.Write(make_pair('h', blockindex.GetBlockHash()), vvTxHashesWithInputs[i]);
+    }
+    return WriteBatch(batch);
+}
+bool Bitcoin_CBlockTreeDB::ReadBlockTxHashesWithInputs(const uint256 &blockHash, std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs) {
+    return Read(make_pair('h', blockHash), vTxHashesWithInputs);
+}
 
 bool Bitcoin_CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
     return Write(make_pair('f', nFile), info);

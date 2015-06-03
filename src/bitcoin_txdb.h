@@ -56,6 +56,9 @@ private:
 public:
     bool WriteBlockIndex(const Bitcoin_CDiskBlockIndex& blockindex);
     bool BatchWriteBlockIndex(std::vector<Bitcoin_CDiskBlockIndex>& vblockindexes);
+    bool WriteBlockTxHashesWithInputs(const Bitcoin_CDiskBlockIndex& blockindex, const std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs);
+    bool BatchWriteBlockTxHashesWithInputs(std::vector<Bitcoin_CDiskBlockIndex>& vblockindexes, const std::vector<std::vector<pair<uint256, std::vector<COutPoint> > > > &vTxHashesWithInputs);
+    bool ReadBlockTxHashesWithInputs(const uint256 &blockHash, std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
