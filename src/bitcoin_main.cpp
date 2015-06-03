@@ -2982,8 +2982,24 @@ bool Bitcoin_ReceivedBlockTransactions(const Bitcoin_CBlock &block, CValidationS
     if (pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS))
         bitcoin_setBlockIndexValid.insert(pindexNew);
 
-    if (!bitcoin_pblocktree->WriteBlockIndex(Bitcoin_CDiskBlockIndex(pindexNew)))
+    std::vector<pair<uint256, std::vector<COutPoint> > > vTxHashesWithInputs;
+    for (unsigned int i = 0; i < block.vtx.size(); i++) {
+		const Bitcoin_CTransaction& tx = block.vtx[i];
+
+		std::vector<COutPoint> inputs;
+		for (unsigned int j = 0; j < tx.vin.size(); j++) {
+			inputs.push_back(tx.vin[j].prevout);
+		}
+		vTxHashesWithInputs.push_back(make_pair(tx.GetHash(), inputs));
+	}
+
+    Bitcoin_CDiskBlockIndex diskIndexNew(pindexNew);
+
+    if (!bitcoin_pblocktree->WriteBlockIndex(diskIndexNew))
         return state.Abort(_("Failed to write block index"));
+
+    if (!bitcoin_pblocktree->WriteBlockTxHashesWithInputs(diskIndexNew, vTxHashesWithInputs))
+        return state.Abort(_("Failed to write block tx hashes"));
 
     // New best?
     if (!Bitcoin_ActivateBestChain(state))
