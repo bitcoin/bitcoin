@@ -113,6 +113,12 @@ public:
     std::string help(std::string name) const;
 
     /**
+     * Add or replace a CRPCCommand to the dispatch table
+     * @param pcommand RPC command to add or replace
+     */
+    void AddOrReplaceCommand(const CRPCCommand* pcommand);
+
+    /**
      * Execute a method.
      * @param method   Method to execute
      * @param params   Array of arguments (JSON objects)
@@ -122,7 +128,7 @@ public:
     json_spirit::Value execute(const std::string &method, const json_spirit::Array &params) const;
 };
 
-extern const CRPCTable tableRPC;
+extern CRPCTable tableRPC;
 
 /**
  * Utilities: convert hex-encoded Values

@@ -399,6 +399,11 @@ const CRPCCommand *CRPCTable::operator[](string name) const
     return (*it).second;
 }
 
+void CRPCTable::AddOrReplaceCommand(const CRPCCommand* pcommand)
+{
+    // add new command to the dispatch table
+    mapCommands[pcommand->name] = pcommand;
+}
 
 bool HTTPAuthorized(map<string, string>& mapHeaders)
 {
@@ -1035,4 +1040,4 @@ std::string HelpExampleRpc(string methodname, string args){
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
-const CRPCTable tableRPC;
+CRPCTable tableRPC;
