@@ -51,6 +51,7 @@ testScriptsExt=(
     'invalidblockrequest.py'
     'rawtransactions.py'
 #    'forknotify.py'
+    'p2p-acceptblock.py'
 );
 
 extArg="-extended"
