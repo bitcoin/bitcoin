@@ -675,24 +675,82 @@ int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t Ex
 
 static bool isAllowedOutputType(int whichType, int nBlock)
 {
-  int p2shAllowed = 0;
-  int opReturnAllowed = 0;
+    switch (whichType)
+    {
+        case TX_PUBKEYHASH:
+            return true;
 
-  if (OP_RETURN_BLOCK <= nBlock || isNonMainNet()) {
-    opReturnAllowed = 1;
-  }
+        case TX_MULTISIG:
+            return true;
 
-  if (P2SH_BLOCK <= nBlock || isNonMainNet()) {
-    p2shAllowed = 1;
-  }
-  // validTypes:
-  // 1) Pay to pubkey hash
-  // 2) Pay to Script Hash (IFF p2sh is allowed)
-  if ((TX_PUBKEYHASH == whichType) || (p2shAllowed && (TX_SCRIPTHASH == whichType)) || (opReturnAllowed && (TX_NULL_DATA == whichType))) {
-    return true;
-  } else {
+        case TX_SCRIPTHASH:
+            return (P2SH_BLOCK <= nBlock || isNonMainNet());
+
+        case TX_NULL_DATA:
+            return (OP_RETURN_BLOCK <= nBlock || isNonMainNet());
+    }
+
     return false;
-  }
+}
+
+static int getEncodingClass(const CTransaction& tx, int nBlock)
+{
+    bool hasExodus = false;
+    bool hasMultisig = false;
+    bool hasOpReturn = false;
+
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        const CTxOut& output = tx.vout[n];
+
+        txnouttype outType;
+        if (!GetOutputType(output.scriptPubKey, outType)) {
+            continue;
+        }
+        if (!isAllowedOutputType(outType, nBlock)) {
+            continue;
+        }
+
+        if (outType == TX_PUBKEYHASH) {
+            CTxDestination dest;
+            if (ExtractDestination(output.scriptPubKey, dest)) {
+                std::string strAddress = CBitcoinAddress(dest).ToString();
+                if (exodus_address == strAddress) {
+                    hasExodus = true;
+                } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
+                    hasExodus = true;
+                }
+            }
+        }
+        if (outType == TX_MULTISIG) {
+            hasMultisig = true;
+        }
+        if (outType == TX_NULL_DATA) {
+            std::vector<std::string> scriptPushes;
+            GetScriptPushes(output.scriptPubKey, scriptPushes);
+            if (scriptPushes.size() > 0) {
+                if (scriptPushes[0].size() > 8) {
+                    // only v0/v1 (and alert) txs are live, add 6f6d0002 to parse a v2 tx when one goes live
+                    if (("6f6d0000" == scriptPushes[0].substr(0,8)) ||
+                        ("6f6d0001" == scriptPushes[0].substr(0,8)) ||
+                        ("6f6dffff" == scriptPushes[0].substr(0,8))) {
+                        hasOpReturn = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if (hasOpReturn) {
+        return OMNI_CLASS_C;
+    }
+    if (hasExodus && hasMultisig) {
+        return OMNI_CLASS_B;
+    }
+    if (hasExodus) {
+        return OMNI_CLASS_A;
+    }
+
+    return NO_MARKER;
 }
 
 // idx is position within the block, 0-based
@@ -709,55 +767,18 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
   vector<int64_t>value_data;
   vector<string>multisig_script_data;
   vector<string>op_return_script_data;
-  int64_t ExodusValues[MAX_BTC_OUTPUTS] = { 0 };
-  int64_t TestNetMoneyValues[MAX_BTC_OUTPUTS] = { 0 };  // new way to get funded on TestNet, send TBTC to moneyman address
   string strReference;
   unsigned char single_pkt[MAX_PACKETS * PACKET_SIZE];
   unsigned int packet_size = 0;
-  int fMultisig = 0;
-  bool fOPReturn = false;
-  int marker_count = 0, getmoney_count = 0;
-  bool hasOmniBytes = false;
-  uint64_t inAll = 0;
-  uint64_t outAll = 0;
-  uint64_t txFee = 0;
-  int omniClass = 0;
   mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
 
 
-  // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
-  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-      outAll += wtx.vout[i].nValue;
-      txnouttype outType;
-      if (!GetOutputType(wtx.vout[i].scriptPubKey, outType)) continue; //unable to get an output type, ignore
-      if (outType == TX_PUBKEYHASH) { // look for exodus marker
-          CTxDestination dest;
-          string strAddress;
-          if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
-              strAddress = CBitcoinAddress(dest).ToString();
-              if (exodus_address == strAddress) {
-                  ExodusValues[marker_count++] = wtx.vout[i].nValue;
-              } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
-                  TestNetMoneyValues[getmoney_count++] = wtx.vout[i].nValue;
-              }
-          }
-      }
-      if (outType == TX_NULL_DATA) { // look for 'omni' bytes
-          vector<string>temp_op_return_script_data;
-          GetScriptPushes(wtx.vout[i].scriptPubKey, temp_op_return_script_data);
-          if (temp_op_return_script_data.size() > 0) {
-              if (temp_op_return_script_data[0].size() > 8) {
-                  // only v0/v1 (and alert) txs are live, add 6f6d0002 to parse a v2 tx when one goes live
-                  if(("6f6d0000" == temp_op_return_script_data[0].substr(0,8)) ||
-                     ("6f6d0001" == temp_op_return_script_data[0].substr(0,8)) ||
-                     ("6f6dffff" == temp_op_return_script_data[0].substr(0,8))) {
-                      hasOmniBytes = true;
-                  }
-              }
-          }
-      }
+  // ### CLASS IDENTIFICATION AND MARKER CHECK ###
+  int omniClass = getEncodingClass(wtx, nBlock);
+
+  if (omniClass == NO_MARKER) {
+      return -1; // No Exodus/Omni marker, thus not a valid Omni transaction
   }
-  if ((isNonMainNet() && getmoney_count)) {} else if ((!marker_count) && (!hasOmniBytes)) { return -1; } // no Exodus/omni marker, not a valid Omni transaction
   PrintToLog("____________________________________________________________________________________________________________________________________\n");
   PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
 
@@ -781,27 +802,19 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
           }
       } else {
           if ((whichType == TX_NULL_DATA) && (validType)) {
-              fOPReturn = true;
               GetScriptPushes(wtx.vout[i].scriptPubKey, op_return_script_data); // only one OP_RETURN output permitted per tx
               string debug_op_string;
               if (op_return_script_data.size() > 0) debug_op_string=op_return_script_data[0];
               if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, i);
-          } else { // likeky a multisig
-              txnouttype type;
-              std::vector<CTxDestination> vDest;
-              int nRequired;
-              if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) ++fMultisig;
           }
       }
   }
   if (msc_debug_parser_data) PrintToLog(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
 
-
-  // ### CLASS IDENTIFICATION ###
-  if (fOPReturn) omniClass = OMNI_CLASS_C; // the presence of an OP_RETURN output will enfore parsing as class C
-  if ((!fOPReturn) && (fMultisig)) omniClass = OMNI_CLASS_B; // no OP_RETURN output and the presence of multsig outputs will enforce parsing as class B
-  if (omniClass == 0) omniClass = OMNI_CLASS_A; // no class set, default to Class A
-
+  // Transaction fee related
+  int64_t outAll = wtx.GetValueOut();
+  int64_t inAll = 0;
+  int64_t txFee = 0;
 
   // ### SENDER IDENTIFICATION ### - collect input amounts and identify sender via "largest input by sum"
   int inputs_errors = 0;  // several types of erroroneous MP TX inputs
@@ -844,6 +857,27 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
 
   // ### CHECK FOR ANY REQUIRED EXODUS CROWDSALE PAYMENTS ###
+
+  // Exodus value gathering (required for fundraiser, class A)
+  std::vector<int64_t> ExodusValues;
+  std::vector<int64_t> TestNetMoneyValues;
+
+  for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+      CTxDestination dest;
+      if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+          std::string strAddress = CBitcoinAddress(dest).ToString();
+          if (exodus_address == strAddress) {
+              ExodusValues.push_back(wtx.vout[n].nValue);
+          } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
+              TestNetMoneyValues.push_back(wtx.vout[n].nValue);
+          }
+      }
+  }
+
+  // Dummy values (TODO: remove this)
+  ExodusValues.push_back(0);
+  TestNetMoneyValues.push_back(0);
+
   int64_t BTC_amount = ExodusValues[0];
   if (isNonMainNet()) { if (MONEYMAN_TESTNET_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0]; }
   if (RegTest()) { if (MONEYMAN_REGTEST_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0]; }
@@ -934,7 +968,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                   if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
                   if (!isAllowedOutputType(whichType, nBlock)) break;
                   if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (dataAddressValue == value_data[k])) { // this output matches data output, check if matches exodus output
-                      for (int exodus_idx=0;exodus_idx<marker_count;exodus_idx++) {
+                      for (unsigned int exodus_idx = 0; exodus_idx < ExodusValues.size(); exodus_idx++) {
                           if (value_data[k] == ExodusValues[exodus_idx]) { //this output matches data address value and exodus address value, choose as ref
                               if (strRefAddress.empty()) {
                                   strRefAddress = address_data[k];
