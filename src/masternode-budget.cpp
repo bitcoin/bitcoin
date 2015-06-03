@@ -295,10 +295,9 @@ bool CBudgetProposal::IsValid()
 
     //TODO: if < 20 votes and 2+ weeks old, invalid
 
-    if(pindexPrev->nHeight - nBlockStart < 0) return false;
-    if(pindexPrev->nHeight > nBlockEnd) return false;
+    if(pindexPrev->nHeight < nBlockStart || pindexPrev->nHeight > nBlockEnd) return false;
 
-    if(nBlockEnd - GetBudgetPaymentCycleBlocks() <= nBlockStart) return false;
+    if(nBlockEnd - nBlockStart <= GetBudgetPaymentCycleBlocks()) return false;
 
     return true;
 }
