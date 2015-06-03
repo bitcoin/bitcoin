@@ -116,21 +116,28 @@ Release Process
   
 	./bin/gbuild --commit credits=${VERSION} ../credits/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION} --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-linux.yml
-	pushd build/out
-	zip -r credits-${VERSION}-linux-gitian.zip *
-	mv credits-${VERSION}-linux-gitian.zip ../../../
-	popd
+	#Run command as one line
+	pushd build/out && zip -r credits-${VERSION}-linux-gitian.zip * && mv credits-${VERSION}-linux-gitian.zip ../../../ && popd && \
+	pushd build/out/bin/32 && zip credits-${VERSION}-linux-32-binaries.zip credits-cli credits-qt creditsd && mv credits-${VERSION}-linux-32-binaries.zip ../../../../../ && popd && \
+	pushd build/out/bin/64 && zip credits-${VERSION}-linux-64-binaries.zip credits-cli credits-qt creditsd && mv credits-${VERSION}-linux-64-binaries.zip ../../../../../ && popd
+	
 	./bin/gbuild --commit credits=${VERSION} ../credits/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-win.yml
-	pushd build/out
-	zip -r credits-${VERSION}-win-gitian.zip *
-	mv credits-${VERSION}-win-gitian.zip ../../../
-	popd
+	#Run command as one line
+	pushd build/out && zip -r credits-${VERSION}-win-gitian.zip * && mv credits-${VERSION}-win-gitian.zip ../../../ && popd && \
+	pushd build/out/32 && mv credits-*-win32-setup.exe credits-win32-setup.exe && \
+	zip credits-${VERSION}-win32-installer.zip credits-win32-setup.exe && mv credits-${VERSION}-win32-installer.zip ../../../../ && \
+	zip credits-${VERSION}-win32-binaries.zip credits-cli.exe credits-qt.exe creditsd.exe && mv credits-${VERSION}-win32-binaries.zip ../../../../ && popd && \
+	pushd build/out/64 && mv credits-*-win64-setup.exe credits-win64-setup.exe && \
+	zip credits-${VERSION}-win64-installer.zip credits-win64-setup.exe && mv credits-${VERSION}-win64-installer.zip ../../../../ && \
+	zip credits-${VERSION}-win64-binaries.zip credits-cli.exe credits-qt.exe creditsd.exe && mv credits-${VERSION}-win64-binaries.zip ../../../../ && popd
+
     ./bin/gbuild --commit credits=${VERSION} ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
     ./bin/gsign --signer $SIGNER --release ${VERSION}-osx --destination ../gitian.sigs/ ../credits/contrib/gitian-descriptors/gitian-osx-bitcoin.yml
-	pushd build/out
-	mv Credits-Qt.dmg ../../../
-	popd
+	#Run command as one line
+	pushd build/out && zip -r Credits-Qt-${VERSION}.zip Credits-Qt.dmg && mv Credits-Qt-${VERSION}.zip ../../../ && \
+	mv Credits-Qt.dmg ../../../ && popd
+	
 	popd
 
   Build output expected:
