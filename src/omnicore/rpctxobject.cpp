@@ -383,9 +383,9 @@ void populateRPCExtendedTypeMetaDEx(const uint256& txid, unsigned char action, u
 {
     if (action == 1) {
         Array tradeArray;
-        int64_t totalBought = 0, totalSold = 0;
-        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
-        std::string statusText = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold, totalBought);
+        int64_t totalReceived = 0, totalSold = 0;
+        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+        std::string statusText = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold, totalReceived);
         txobj.push_back(Pair("status", statusText));
         if(statusText == "cancelled" || statusText == "cancelled part filled") txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
         txobj.push_back(Pair("matches", tradeArray));

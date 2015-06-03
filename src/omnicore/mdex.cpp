@@ -677,12 +677,12 @@ bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)
 
 // returns a string denoting the status of a trade
 // to save doing a second levelDB iteration if already done in calling function, pass in optional totalSold & totalBought
-std::string mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold, int64_t totalBought)
+std::string mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold, int64_t totalReceived)
 {
-    if (totalSold == -1 || totalBought == -1) {
+    if (totalSold == -1 || totalReceived == -1) {
         // can only skip calling getMatchingTrades if these values were supplied (ie != default value of -1)
         Array tradeArray;
-        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     }
     bool orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
     bool partialFilled = false;

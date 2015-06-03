@@ -318,7 +318,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool divisibleForSale = false;
         bool divisibleDesired = false;
         Array tradeArray;
-        int64_t totalBought = 0;
+        int64_t totalReceived = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
         bool valid = false;
@@ -341,7 +341,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
                     propertyIdDesired = temp_metadexoffer.getDesProperty();
                     divisibleDesired = isPropertyDivisible(propertyIdDesired);
                     amountDesired = temp_metadexoffer.getAmountDesired();
-                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
                     orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
                 }
             }
@@ -367,9 +367,9 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         displayText += getTokenLabel(propertyIdDesired);
         std::string displayIn = "";
         std::string displayOut = "-";
-        if(divisibleDesired) { displayIn += FormatDivisibleShortMP(totalBought); } else { displayIn += FormatIndivisibleMP(totalBought); }
+        if(divisibleDesired) { displayIn += FormatDivisibleShortMP(totalReceived); } else { displayIn += FormatIndivisibleMP(totalReceived); }
         if(divisibleForSale) { displayOut += FormatDivisibleShortMP(totalSold); } else { displayOut += FormatIndivisibleMP(totalSold); }
-        if(totalBought == 0) displayIn = "0";
+        if(totalReceived == 0) displayIn = "0";
         if(totalSold == 0) displayOut = "0";
         displayIn += getTokenLabel(propertyIdDesired);
         displayOut += getTokenLabel(propertyIdForSale);
@@ -421,10 +421,10 @@ void TradeHistoryDialog::UpdateData()
         uint32_t propertyIdDesired = tmpObjTH->propertyIdDesired;
         int64_t amountForSale = tmpObjTH->amountForSale;
         Array tradeArray;
-        int64_t totalBought = 0;
+        int64_t totalReceived = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
-        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
         orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
 
         // work out new status & icon
@@ -443,9 +443,9 @@ void TradeHistoryDialog::UpdateData()
         // format new amounts
         std::string displayIn = "";
         std::string displayOut = "-";
-        if (isPropertyDivisible(propertyIdDesired)) { displayIn += FormatDivisibleShortMP(totalBought); } else { displayIn += FormatIndivisibleMP(totalBought); }
+        if (isPropertyDivisible(propertyIdDesired)) { displayIn += FormatDivisibleShortMP(totalReceived); } else { displayIn += FormatIndivisibleMP(totalReceived); }
         if (isPropertyDivisible(propertyIdForSale)) { displayOut += FormatDivisibleShortMP(totalSold); } else { displayOut += FormatIndivisibleMP(totalSold); }
-        if (totalBought == 0) displayIn = "0";
+        if (totalReceived == 0) displayIn = "0";
         if (totalSold == 0) displayOut = "0";
         displayIn += getTokenLabel(propertyIdDesired);
         displayOut += getTokenLabel(propertyIdForSale);

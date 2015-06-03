@@ -3000,95 +3000,74 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
 }
 
 // MPTradeList here
-bool CMPTradeList::getMatchingTrades(const uint256 txid, unsigned int propertyId, Array *tradeArray, int64_t *totalSold, int64_t *totalBought)
+bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, Array& tradeArray, int64_t& totalSold, int64_t& totalReceived)
 {
   if (!pdb) return false;
-  leveldb::Slice skey, svalue;
-  unsigned int count = 0;
-  *totalBought = 0;
-  *totalSold = 0;
+
+  int count = 0;
+  totalReceived = 0;
+  totalSold = 0;
 
   std::vector<std::string> vstr;
   string txidStr = txid.ToString();
   leveldb::Iterator* it = NewIterator();
-  for(it->SeekToFirst(); it->Valid(); it->Next())
-  {
-      skey = it->key();
-      svalue = it->value();
-      string strkey = it->key().ToString();
-      size_t txidMatch = strkey.find(txidStr);
-      if(txidMatch!=std::string::npos)
-      {
-          // we have a matching trade involving this txid
-          // get the txid of the match
-          string matchTxid;
-          // make sure string is correct length
-          if (strkey.length() == 129)
-          {
-              if (txidMatch==0) { matchTxid = strkey.substr(65,64); } else { matchTxid = strkey.substr(0,64); }
+  for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      // search key to see if this is a matching trade
+      std::string strKey = it->key().ToString();
+      std::string strValue = it->value().ToString();
+      std::string matchTxid;
+      size_t txidMatch = strKey.find(txidStr);
+      if (txidMatch == std::string::npos) continue; // no match
 
-              string strvalue = it->value().ToString();
-              boost::split(vstr, strvalue, boost::is_any_of(":"), token_compress_on);
-              if (7 == vstr.size()) // ensure there are the expected amount of tokens
-              {
-                  string address;
-                  string address1 = vstr[0];
-                  string address2 = vstr[1];
-                  unsigned int prop1 = 0;
-                  unsigned int prop2 = 0;
-                  uint64_t uAmount1 = 0;
-                  uint64_t uAmount2 = 0;
-                  uint64_t nBought = 0;
-                  uint64_t nSold = 0;
-                  string amountBought;
-                  string amountSold;
-                  string amount1;
-                  string amount2;
-                  prop1 = boost::lexical_cast<unsigned int>(vstr[2]);
-                  prop2 = boost::lexical_cast<unsigned int>(vstr[3]);
-                  uAmount1 = boost::lexical_cast<uint64_t>(vstr[4]);
-                  uAmount2 = boost::lexical_cast<uint64_t>(vstr[5]);
-                  if(isPropertyDivisible(prop1))
-                     { amount1 = FormatDivisibleMP(uAmount1); }
-                  else
-                     { amount1 = FormatIndivisibleMP(uAmount1); }
-                  if(isPropertyDivisible(prop2))
-                     { amount2 = FormatDivisibleMP(uAmount2); }
-                  else
-                     { amount2 = FormatIndivisibleMP(uAmount2); }
-
-                  // correct orientation of trade
-                  if (prop1 == propertyId)
-                  {
-                      address = address1;
-                      amountBought = amount2;
-                      amountSold = amount1;
-                      nBought = uAmount2;
-                      nSold = uAmount1;
-                  }
-                  else
-                  {
-                      address = address2;
-                      amountBought = amount1;
-                      amountSold = amount2;
-                      nBought = uAmount1;
-                      nSold = uAmount2;
-                  }
-                  int blockNum = atoi(vstr[6]);
-                  Object trade;
-                  trade.push_back(Pair("txid", matchTxid));
-                  trade.push_back(Pair("address", address));
-                  trade.push_back(Pair("block", blockNum));
-                  trade.push_back(Pair("amountsold", amountSold));
-                  trade.push_back(Pair("amountbought", amountBought));
-                  tradeArray->push_back(trade);
-                  ++count;
-                  *totalBought += nBought;
-                  *totalSold += nSold;
-              }
-          }
+      // sanity check key is the correct length
+      if (strKey.length() != 129) {
+          PrintToLog("TRADEDB error - length of key is not as expected (%s)\n", strKey);
+          continue;
       }
+
+      // obtain the txid of the match
+      if (txidMatch==0) { matchTxid = strKey.substr(65,64); } else { matchTxid = strKey.substr(0,64); }
+
+      // ensure correct amount of tokens in value string
+      boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
+      if (vstr.size() != 7) {
+          PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
+          continue;
+      }
+
+      // decode the details from the value string
+      std::string address1 = vstr[0];
+      std::string address2 = vstr[1];
+      uint32_t prop1 = boost::lexical_cast<uint32_t>(vstr[2]);
+      uint32_t prop2 = boost::lexical_cast<uint32_t>(vstr[3]);
+      int64_t amount1 = boost::lexical_cast<int64_t>(vstr[4]);
+      int64_t amount2 = boost::lexical_cast<int64_t>(vstr[5]);
+      int blockNum = atoi(vstr[6]);
+      std::string strAmount1 = FormatMP(prop1, amount1);
+      std::string strAmount2 = FormatMP(prop2, amount2);
+
+      // populate trade object and add to the trade array, correcting for orientation of trade
+      Object trade;
+      trade.push_back(Pair("txid", matchTxid));
+      trade.push_back(Pair("block", blockNum));
+      if (prop1 == propertyId) {
+          trade.push_back(Pair("address", address1));
+          trade.push_back(Pair("amountsold", strAmount1));
+          trade.push_back(Pair("amountreceived", strAmount2));
+          totalReceived += amount2;
+          totalSold += amount1;
+      } else {
+          trade.push_back(Pair("address", address2));
+          trade.push_back(Pair("amountsold", strAmount2));
+          trade.push_back(Pair("amountreceived", strAmount1));
+          totalReceived += amount1;
+          totalSold += amount2;
+      }
+      tradeArray.push_back(trade);
+      ++count;
   }
+
+  // clean up
   delete it;
   if (count) { return true; } else { return false; }
 }
