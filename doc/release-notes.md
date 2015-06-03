@@ -114,7 +114,8 @@ Big endian support
 --------------------
 
 Experimental support for big-endian CPU architectures was added in this
-release. This has been tested on at least MIPS and PPC hosts. The build
+release. All little-endian specific code was replaced with endian-neutral
+constructs. This has been tested on at least MIPS and PPC hosts. The build
 system will automatically detect the endianness of the target.
 
 Memory usage optimization
@@ -164,7 +165,7 @@ network. This improves connection reliability as well as privacy, especially
 for the initial connections.
 
 **Important note:** If a non-Tor SOCKS5 proxy is configured that supports
-authentication, but doesn't require it, this change may cause it to reject
+authentication, but doesn't require it, this change may cause that proxy to reject
 connections. A user and password is sent where they weren't before. This setup
 is exceedingly rare, but in this case `-proxyrandomize=0` can be passed to
 disable the behavior.
@@ -195,6 +196,7 @@ git merge commit are mentioned.
 - #5937 `40f5e8d` show script verification errors in signrawtransaction result
 - #5420 `1fd2d39` getutxos REST command (based on Bip64)
 - #6193 `42746b0` [REST] remove json input for getutxos, limit to query max. 15 outpoints
+- #6226 `5901596` json: fail read_string if string contains trailing garbage
 
 ### Configuration and command-line options
 - #5636 `a353ad4` Add option `-allowselfsignedrootcertificate` to allow self signed root certs (for testing payment requests)
@@ -223,6 +225,7 @@ git merge commit are mentioned.
 - #6102 `6fb90d8` Implement accurate UTXO cache size accounting
 - #6129 `2a82298` Bug fix for clearing fCheckForPruning
 - #5947 `e9af4e6` Alert if it is very likely we are getting a bad chain
+- #6203 `c00ae64` Remove P2SH coinbase flag, no longer interesting
 
 ### P2P protocol and network code
 - #5507 `844ace9` Prevent DOS attacks on in-flight data structures
@@ -236,6 +239,8 @@ git merge commit are mentioned.
 - #6059 `f026ab6` chainparams: use SeedSpec6's rather than CAddress's for fixed seeds
 - #6080 `31c0bf1` Add jonasschnellis dns seeder
 - #5976 `9f7809f` Reduce download timeouts as blocks arrive
+- #6172 `b4bbad1` Ignore getheaders requests when not synced
+- #5875 `304892f` Be stricter in processing unrequested blocks
 
 ### Validation
 - #5143 `48e1765` Implement BIP62 rule 6
@@ -265,6 +270,7 @@ git merge commit are mentioned.
 - #6076 `6c97fd1` wallet: fix boost::get usage with boost 1.58
 - #5511 `23c998d` Sort pending wallet transactions before reaccepting
 - #6126 `26e08a1` Change default nTxConfirmTarget to 2
+- #6183 `75a4d51` Fix off-by-one error w/ nLockTime in the wallet
 
 ### GUI
 - #5219 `f3af0c8` New icons
@@ -346,8 +352,7 @@ git merge commit are mentioned.
 - #6159 `e1412d3` Catch errors on datadir lock and pidfile delete
 - #6186 `182686c` Fix two problems in CSubnet parsing
 - #6174 `df992b9` doc: add translation strings policy
-
-[up to date until #5976]
+- #6210 `dfdb6dd` build: disable optional use of gmp in internal secp256k1 build
 
 Credits
 =======
