@@ -875,38 +875,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     }
   }
 
-  // ### POPULATE MULTISIG SCRIPT DATA ###
-  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-      CTxDestination address;
-      if (ExtractDestination(wtx.vout[i].scriptPubKey, address)) {} else { // if true it's a plain pay-to-pubkeyhash output
-          txnouttype type;
-          std::vector<CTxDestination> vDest;
-          int nRequired;
-          if (msc_debug_script) PrintToLog("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
-          if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) {
-              if (msc_debug_script) PrintToLog(" >> multisig: ");
-              BOOST_FOREACH(const CTxDestination &dest, vDest) {
-                  CBitcoinAddress address = CBitcoinAddress(dest);
-                  CKeyID keyID;
-                  if (!address.GetKeyID(keyID)) { } // TODO: add an error handler
-                  if (msc_debug_script) PrintToLog("%s ; ", address.ToString());
-              }
-              if (msc_debug_script) PrintToLog("\n");
-              // ignore first public key, as it should belong to the sender
-              // and it be used to avoid the creation of unspendable dust
-              GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
-          }
-      }
-  }
-
-
-  // ### PREPARE A FEW VARS ###
-  string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-  PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
-  unsigned char packets[MAX_PACKETS][32];
-  int mdata_count = 0;  // multisig data count
-
-
   // ### CLASS A PARSING ###
   if (omniClass == OMNI_CLASS_A) {
       string strScriptData;
@@ -1053,6 +1021,38 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
       if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
       // ### CLASS B SPECIFC PARSING ###
       if (omniClass == OMNI_CLASS_B) {
+
+          // ### POPULATE MULTISIG SCRIPT DATA ###
+          for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+              CTxDestination address;
+              if (ExtractDestination(wtx.vout[i].scriptPubKey, address)) {} else { // if true it's a plain pay-to-pubkeyhash output
+                  txnouttype type;
+                  std::vector<CTxDestination> vDest;
+                  int nRequired;
+                  if (msc_debug_script) PrintToLog("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
+                  if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) {
+                      if (msc_debug_script) PrintToLog(" >> multisig: ");
+                      BOOST_FOREACH(const CTxDestination &dest, vDest) {
+                          CBitcoinAddress address = CBitcoinAddress(dest);
+                          CKeyID keyID;
+                          if (!address.GetKeyID(keyID)) { } // TODO: add an error handler
+                          if (msc_debug_script) PrintToLog("%s ; ", address.ToString());
+                      }
+                      if (msc_debug_script) PrintToLog("\n");
+                      // ignore first public key, as it should belong to the sender
+                      // and it be used to avoid the creation of unspendable dust
+                      GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
+                  }
+              }
+          }
+
+          // ### PREPARE A FEW VARS ###
+          std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
+          PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
+          unsigned char packets[MAX_PACKETS][32];
+          int mdata_count = 0;  // multisig data count
+
+          // ### DEOBFUSCATE MULTISIG PACKETS ###
           for (unsigned int k = 0; k<multisig_script_data.size();k++) {
               if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
               CPubKey key(ParseHex(multisig_script_data[k]));
@@ -1080,7 +1080,18 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
           packet_size = mdata_count * (PACKET_SIZE - 1);
           if (sizeof(single_pkt)<packet_size) return -111;
           if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
+
+          // ### FINALIZE CLASS B ###
+          for (int m=0;m<mdata_count;m++) { // now decode mastercoin packets
+              if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
+              // check to ensure the sequence numbers are sequential and begin with 01 !
+              if (1+m != packets[m][0]) {
+                  if (msc_debug_spec) PrintToLog("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1+m, packets[m][0]);
+              }
+              memcpy(m*(PACKET_SIZE-1)+single_pkt, 1+packets[m], PACKET_SIZE-1); // now ignoring sequence numbers for Class B packets
+          }
       }
+
       // ### CLASS C SPECIFIC PARSING ###
       if (omniClass == OMNI_CLASS_C) {
           if (op_return_script_data.size() > 0) {
@@ -1095,15 +1106,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
   }
 
 
-  // ### FINALIZE CLASS B ###
-  for (int m=0;m<mdata_count;m++) { // now decode mastercoin packets
-      if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
-      // check to ensure the sequence numbers are sequential and begin with 01 !
-      if (1+m != packets[m][0]) {
-          if (msc_debug_spec) PrintToLog("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1+m, packets[m][0]);
-      }
-      memcpy(m*(PACKET_SIZE-1)+single_pkt, 1+packets[m], PACKET_SIZE-1); // now ignoring sequence numbers for Class B packets
-  }
+
 
 
   // ### SET MP TX INFO ###
