@@ -398,7 +398,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         if (strMode == "proposal")
         {
             const UniValue& dataval = find_value(oparam, "data");
-            if (dataval.isStr())
+            if (!dataval.isStr())
                 throw JSONRPCError(RPC_TYPE_ERROR, "Missing data String key for proposal");
 
             CBlock block;
