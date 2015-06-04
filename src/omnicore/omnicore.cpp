@@ -784,41 +784,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
   PrintToLog("____________________________________________________________________________________________________________________________________\n");
   PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
 
-
-  // ### DATA POPULATION ### - save output addresses, scripts, multsig and op_return data and determine tx class
-  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-      CTxDestination dest;
-      string strAddress;
-      txnouttype whichType;
-      bool validType = false;
-      if (!GetOutputType(wtx.vout[i].scriptPubKey, whichType)) validType=false;
-      if (isAllowedOutputType(whichType, nBlock)) validType=true;
-      if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
-          strAddress = CBitcoinAddress(dest).ToString();
-          if ((exodus_address != strAddress) && (validType)) {
-              if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", i, strAddress, wtx.vout[i].scriptPubKey.ToString());
-              // saving for Class A processing or reference
-              GetScriptPushes(wtx.vout[i].scriptPubKey, script_data);
-              address_data.push_back(strAddress);
-              value_data.push_back(wtx.vout[i].nValue);
-          }
-      } else {
-          if ((whichType == TX_NULL_DATA) && (validType)) {
-              GetScriptPushes(wtx.vout[i].scriptPubKey, op_return_script_data); // only one OP_RETURN output permitted per tx
-              string debug_op_string;
-              if (op_return_script_data.size() > 0) debug_op_string=op_return_script_data[0];
-              if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, i);
-          }
-      }
-  }
-  if (msc_debug_parser_data) PrintToLog(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
-
-  // Transaction fee related
-  int64_t outAll = wtx.GetValueOut();
-  int64_t inAll = 0;
-  int64_t txFee = 0;
-
   // ### SENDER IDENTIFICATION ### - collect input amounts and identify sender via "largest input by sum"
+  int64_t inAll = 0;
   int inputs_errors = 0;  // several types of erroroneous MP TX inputs
   map <string, uint64_t> inputs_sum_of_values;
   for (unsigned int i = 0; i < wtx.vin.size(); i++) {
@@ -840,7 +807,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
       if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
   }
   if (inputs_errors) { return -101; } // not a valid Omni TX, disallowed inputs invalidate the transaction
-  txFee = inAll - outAll; // miner fee
+  int64_t outAll = wtx.GetValueOut();
+  int64_t txFee = inAll - outAll; // miner fee
   uint64_t nMax = 0;
   for(map<string, uint64_t>::iterator my_it = inputs_sum_of_values.begin(); my_it != inputs_sum_of_values.end(); ++my_it) { // find largest by sum
       uint64_t nTemp = my_it->second;
@@ -874,6 +842,27 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
     }
   }
+
+  // ### DATA POPULATION ### - save output addresses, values and scripts
+  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+      CTxDestination dest;
+      string strAddress;
+      txnouttype whichType;
+      bool validType = false;
+      if (!GetOutputType(wtx.vout[i].scriptPubKey, whichType)) validType=false;
+      if (isAllowedOutputType(whichType, nBlock)) validType=true;
+      if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
+          strAddress = CBitcoinAddress(dest).ToString();
+          if ((exodus_address != strAddress) && (validType)) {
+              if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", i, strAddress, wtx.vout[i].scriptPubKey.ToString());
+              // saving for Class A processing or reference
+              GetScriptPushes(wtx.vout[i].scriptPubKey, script_data);
+              address_data.push_back(strAddress);
+              value_data.push_back(wtx.vout[i].nValue);
+          }
+      }
+  }
+  if (msc_debug_parser_data) PrintToLog(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
 
   // ### CLASS A PARSING ###
   if (omniClass == OMNI_CLASS_A) {
@@ -1094,6 +1083,22 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
       // ### CLASS C SPECIFIC PARSING ###
       if (omniClass == OMNI_CLASS_C) {
+
+          // ### POPULATE OP RETURN SCRIPT DATA ###
+          for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+              txnouttype whichType;
+              bool validType = false;
+              if (!GetOutputType(wtx.vout[i].scriptPubKey, whichType)) validType=false;
+              if (isAllowedOutputType(whichType, nBlock)) validType=true;
+              if ((whichType == TX_NULL_DATA) && (validType)) {
+                  GetScriptPushes(wtx.vout[i].scriptPubKey, op_return_script_data); // only one OP_RETURN output permitted per tx
+                  string debug_op_string;
+                  if (op_return_script_data.size() > 0) debug_op_string=op_return_script_data[0];
+                  if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, i);
+              }
+          }
+
+          // ### EXTRACT PAYLOAD FOR CLASS C ###
           if (op_return_script_data.size() > 0) {
               if (op_return_script_data[0].size() > 4) {
                   std::string payload = op_return_script_data[0].substr(4,op_return_script_data[0].size()-4); // strip out marker
