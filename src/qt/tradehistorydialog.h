@@ -11,6 +11,7 @@
 #include <QDialog>
 
 class WalletModel;
+class ClientModel;
 
 QT_BEGIN_NAMESPACE
 class QMenu;
@@ -50,13 +51,15 @@ class TradeHistoryDialog : public QDialog
 public:
     explicit TradeHistoryDialog(QWidget *parent = 0);
     ~TradeHistoryDialog();
-    void setModel(WalletModel *model);
+    void setWalletModel(WalletModel *model);
+    void setClientModel(ClientModel *model);
     GUIUtil::TableViewLastColumnResizingFixer *borrowedColumnResizingFixer;
     virtual void resizeEvent(QResizeEvent* event);
 
 private:
     Ui::tradeHistoryDialog *ui;
-    WalletModel *model;
+    ClientModel *clientModel;
+    WalletModel *walletModel;
     QMenu *contextMenu;
     TradeHistoryMap tradeHistoryMap;
 
