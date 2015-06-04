@@ -27,6 +27,7 @@
 #include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternodeman.h"
+#include "masternodeconfig.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
@@ -405,6 +406,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "\n" + _("Masternode options:") + "\n";
     strUsage += "  -masternode=<n>            " + strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0) + "\n";
     strUsage += "  -mnconf=<file>             " + strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf") + "\n";
+    strUsage += "  -mnconflock=<n>            " + strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1) + "\n";
     strUsage += "  -masternodeprivkey=<n>     " + _("Set the masternode private key") + "\n";
     strUsage += "  -masternodeaddr=<n>        " + _("Set external address:port to get to this masternode (example: address:port)") + "\n";
     strUsage += "  -masternodeminprotocol=<n> " + strprintf(_("Ignore masternodes less than version (example: 70050; default: %u)"), MIN_POOL_PEER_PROTO_VERSION) + "\n";
@@ -1463,6 +1465,17 @@ bool AppInit2(boost::thread_group& threadGroup)
 
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+        }
+    }
+
+    if(GetBoolArg("-mnconflock", true)) {
+        LogPrintf("Locking Masternodes:\n");
+        uint256 mnTxHash;
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+            LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
+            mnTxHash.SetHex(mne.getTxHash());
+            COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
+            pwalletMain->LockCoin(outpoint);
         }
     }
 

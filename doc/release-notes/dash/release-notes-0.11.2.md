@@ -1,8 +1,5 @@
-*This is a draft!*
-
 0.11.2 Release notes
 ====================
-
 
 Dash Core version 0.11.2 is now available from:
 
@@ -11,6 +8,14 @@ Dash Core version 0.11.2 is now available from:
 Please report bugs using the issue tracker at github:
 
   https://github.com/darkcoin/darkcoin/issues
+
+
+Masternode enhancements
+-----------------------
+
+When restarting the client the masternodes will be stored in the datadir in
+*mncache.dat* file (make sure you don't have any wallet with such name or this
+functionality will not be available for you)
 
 
 Mining and relay policy enhancements
@@ -65,7 +70,24 @@ dashd/dash-qt (on Linux).
 0.11.2 changelog
 ----------------
 
-- *to do ..*
+- BIP 66 integration
+- Strict DER signatures
+- Bump block header version to 3 (see notes above)
+- Masternode caching
+- Masternode payment scheduler
+- Better protection from cheating masternodes
+- Extended functionality for `masternode list` RPC command
+- Live Darksend and InstantX fee calculations in CoinControl
+- Darksend input caching
+- Open config file from within the wallet
+- New CSS-based wallet GUI with selectable interface themes
+- Configurable automatic wallet backups
+- Show sum of selected transactions in 'Transactions'-tab
+- Wallet GUI perfomance improvements
+- General stability improvements and bug fixes
+- Code restructure and modularization
+- Update Tor documentation
+- Translation updates
 
 
 Credits
@@ -73,6 +95,16 @@ Credits
 
 Thanks to who contributed to this release, at least:
 
-- *to do ..*
+- eduffield
+- UdjinM6
+- vertoe
+- mkinney
+- elanaint
+- absolutebit
+- Crowning
+- snogcel
+- morcos
+- 21E14
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/dash/).
+As well as the Bitcoin Core developers and everyone that helped translating on
+[Transifex](https://www.transifex.com/projects/p/darkcoin/).
