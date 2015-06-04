@@ -476,6 +476,8 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
 
 void CDarksendPool::Reset(){
     cachedLastSuccess = 0;
+    lastNewBlock = 0;
+    txCollateral = CMutableTransaction();
     vecMasternodesUsed.clear();
     UnlockCoins();
     SetNull();
@@ -494,13 +496,11 @@ void CDarksendPool::SetNull(bool clearEverything){
     entriesCount = 0;
     lastEntryAccepted = 0;
     countEntriesAccepted = 0;
-    lastNewBlock = 0;
 
     sessionUsers = 0;
     sessionDenom = 0;
     sessionFoundMasternode = false;
     vecSessionCollateral.clear();
-    txCollateral = CMutableTransaction();
 
     if(clearEverything){
         myEntries.clear();
@@ -882,7 +882,7 @@ void CDarksendPool::CheckTimeout(){
 
         if(GetTimeMillis()-lastTimeChanged >= (DARKSEND_QUEUE_TIMEOUT*1000)+addLagTime){
             lastTimeChanged = GetTimeMillis();
-
+            UnlockCoins();
             SetNull(true);
         }
     } else if(GetTimeMillis()-lastTimeChanged >= (DARKSEND_QUEUE_TIMEOUT*1000)+addLagTime){
@@ -1152,11 +1152,15 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         return;
     }
 
-    if (!CheckDiskSpace())
+    if (!CheckDiskSpace()) {
+        UnlockCoins();
         return;
+    }
 
     if(fMasterNode) {
         LogPrintf("CDarksendPool::SendDarksendDenominate() - Darksend from a Masternode is not supported currently.\n");
+        UnlockCoins();
+        SetNull(true);
         return;
     }
 
@@ -1188,6 +1192,8 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
+            UnlockCoins();
+            SetNull(true);
             return;
         }
     }
@@ -1299,6 +1305,8 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                     // in this case, something went wrong and we'll refuse to sign. It's possible we'll be charged collateral. But that's
                     // better then signing if the transaction doesn't look like what we wanted.
                     LogPrintf("CDarksendPool::Sign - My entries are not correct! Refusing to sign. %d entries %d target. \n", foundOutputs, targetOuputs);
+                    UnlockCoins();
+                    SetNull(true);
 
                     return false;
                 }
@@ -1363,7 +1371,7 @@ void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
 
         myEntries.clear();
         UnlockCoins();
-        if(!fMasterNode) SetNull(true);
+        SetNull(true);
 
         // To avoid race conditions, we'll only let DS run once per block
         cachedLastSuccess = chainActive.Tip()->nHeight;
@@ -1494,6 +1502,10 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     // initial phase, find a Masternode
     if(!sessionFoundMasternode){
+        // Clean if there is anything left from previous session
+        UnlockCoins();
+        SetNull(true);
+
         int nUseQueue = rand()%100;
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
@@ -1503,11 +1515,21 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             return false;
         }
 
-        //check our collateral
-        if(txCollateral != CMutableTransaction()){
+        //check our collateral nad create new if needed
+        std::string strReason;
+        CValidationState state;
+        if(txCollateral == CMutableTransaction()){
+            if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
+                LogPrintf("% -- create collateral error:%s\n", __func__, strReason.c_str());
+                return false;
+            }
+        } else {
             if(!IsCollateralValid(txCollateral)) {
-                txCollateral = CMutableTransaction();
-                LogPrintf("DoAutomaticDenominating -- Invalid collateral, resetting.\n");
+                LogPrintf("%s -- invalid collateral, recreating...\n", __func__);
+                if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
+                    LogPrintf("%s -- create collateral error: %s\n", __func__, strReason.c_str());
+                    return false;
+                }
             }
         }
 
@@ -1549,14 +1571,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                     CNode* pnode = FindNode(addr);
                     if(pnode)
                     {
-                        std::string strReason;
-                        if(txCollateral == CMutableTransaction()){
-                            if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
-                                LogPrintf("DoAutomaticDenominating -- dsa error:%s\n", strReason.c_str());
-                                return false;
-                            }
-                        }
-
                         CMasternode* pmn = mnodeman.Find(dsq.vin);
                         if(pmn == NULL)
                         {
@@ -1619,14 +1633,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 BOOST_FOREACH(CNode* pnode, vNodes)
                 {
                     if((CNetAddr)pnode->addr != (CNetAddr)pmn->addr) continue;
-
-                    std::string strReason;
-                    if(txCollateral == CMutableTransaction()){
-                        if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
-                            LogPrintf("DoAutomaticDenominating -- create collateral error:%s\n", strReason.c_str());
-                            return false;
-                        }
-                    }
 
                     pSubmittedToMasternode = pmn;
                     vecMasternodesUsed.push_back(pmn->vin);
