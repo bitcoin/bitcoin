@@ -121,6 +121,18 @@ CRPCConvertTable::CRPCConvertTable()
 
 static CRPCConvertTable rpcCvtTable;
 
+/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
+ * as well as objects and arrays.
+ */
+UniValue ParseNonRFCJSONValue(const std::string& strVal)
+{
+    UniValue jVal;
+    if (!jVal.read(std::string("[")+strVal+std::string("]")) ||
+        !jVal.isArray() || jVal.size()!=1)
+        throw runtime_error(string("Error parsing JSON:")+strVal);
+    return jVal[0];
+}
+
 /** Convert strings to command-specific RPC representation */
 UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
 {
@@ -129,28 +141,12 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
         const std::string& strVal = strParams[idx];
 
-        // insert string value directly
         if (!rpcCvtTable.convert(strMethod, idx)) {
+            // insert string value directly
             params.push_back(strVal);
-        }
-
-        // parse string as JSON, insert bool/number/object/etc. value
-        else {
-            //according to rfc4627 null, true, false are not valid json strings
-            UniValue jVal;
-            if(strVal == "null")
-                jVal.setNull();
-            else if(strVal == "true")
-                jVal.setBool(true);
-            else if(strVal == "false")
-                jVal.setBool(false);
-            else
-            {
-                if (!jVal.read(strVal) || (jVal.isNull() && strVal.size() > 0))
-                    if(!jVal.setNumStr(strVal) || jVal.isNull())
-                        throw runtime_error(string("Error parsing JSON:")+strVal);
-            }
-            params.push_back(jVal);
+        } else {
+            // parse string as JSON, insert bool/number/object/etc. value
+            params.push_back(ParseNonRFCJSONValue(strVal));
         }
     }
 

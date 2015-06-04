@@ -143,23 +143,20 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
 
 BOOST_AUTO_TEST_CASE(json_parse_errors)
 {
-    UniValue value;
     // Valid
-    BOOST_CHECK_EQUAL(value.read(std::string("1.0")), false);
-    BOOST_CHECK_EQUAL(value.read(std::string("[1.0]")), true);
-    // Valid, with trailing whitespace
-    BOOST_CHECK_EQUAL(value.read(std::string("1.0 ")), false);
-    BOOST_CHECK_EQUAL(value.read(std::string("[1.0 ] ")), true);
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0").get_real(), 1.0);
+    // Valid, with leading or trailing whitespace
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue(" 1.0").get_real(), 1.0);
+    BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0 ").get_real(), 1.0);
     // Invalid, initial garbage
-    BOOST_CHECK_EQUAL(value.read(std::string("[1.0")), false);
-    BOOST_CHECK_EQUAL(value.read(std::string("[a1.0]")), false);
-     BOOST_CHECK_EQUAL(value.read(std::string("[\"a1.0\"]")), true);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("[1.0"), std::runtime_error);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("a1.0"), std::runtime_error);
     // Invalid, trailing garbage
-    BOOST_CHECK_EQUAL(value.read(std::string("1.0sds")), false);
-    BOOST_CHECK_EQUAL(value.read(std::string("1.0]")), false);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
     // BTC addresses should fail parsing
-    BOOST_CHECK_EQUAL(value.read(std::string("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W")), false);
-    BOOST_CHECK_EQUAL(value.read(std::string("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL")), false);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
+    BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
