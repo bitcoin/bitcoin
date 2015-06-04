@@ -53,20 +53,14 @@ int const MAX_STATE_HISTORY = 50;
 #define OMNI_CLASS_B 2
 #define OMNI_CLASS_C 3
 
-// Maximum number of keys supported in Class B
-#define CLASS_B_MAX_SENDABLE_PACKETS 2
-
-// Master Protocol Transaction (Packet) Version
+// Omni Layer Transaction (Packet) Version
 #define MP_TX_PKT_V0  0
 #define MP_TX_PKT_V1  1
-
-// Maximum outputs per BTC Transaction
-#define MAX_BTC_OUTPUTS 16
 
 #define MIN_PAYLOAD_SIZE     5
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
-#define MAX_PACKETS         64
+#define MAX_PACKETS        255
 
 // Transaction types, from the spec
 enum TransactionType {
