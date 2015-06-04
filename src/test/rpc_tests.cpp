@@ -143,20 +143,23 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
 
 BOOST_AUTO_TEST_CASE(json_parse_errors)
 {
-    Value value;
+    UniValue value;
     // Valid
-    BOOST_CHECK_EQUAL(read_string(std::string("1.0"), value), true);
+    BOOST_CHECK_EQUAL(value.read(std::string("1.0")), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("[1.0]")), true);
     // Valid, with trailing whitespace
-    BOOST_CHECK_EQUAL(read_string(std::string("1.0 "), value), true);
+    BOOST_CHECK_EQUAL(value.read(std::string("1.0 ")), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("[1.0 ] ")), true);
     // Invalid, initial garbage
-    BOOST_CHECK_EQUAL(read_string(std::string("[1.0"), value), false);
-    BOOST_CHECK_EQUAL(read_string(std::string("a1.0"), value), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("[1.0")), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("[a1.0]")), false);
+     BOOST_CHECK_EQUAL(value.read(std::string("[\"a1.0\"]")), true);
     // Invalid, trailing garbage
-    BOOST_CHECK_EQUAL(read_string(std::string("1.0sds"), value), false);
-    BOOST_CHECK_EQUAL(read_string(std::string("1.0]"), value), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("1.0sds")), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("1.0]")), false);
     // BTC addresses should fail parsing
-    BOOST_CHECK_EQUAL(read_string(std::string("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), value), false);
-    BOOST_CHECK_EQUAL(read_string(std::string("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), value), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W")), false);
+    BOOST_CHECK_EQUAL(value.read(std::string("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL")), false);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_boostasiotocnetaddr)
