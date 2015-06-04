@@ -101,9 +101,11 @@ bool AppInit(int argc, char* argv[])
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
-        // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-        if (!SelectParamsFromCommandLine()) {
-            fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+        // Check for -chain, -testnet or -regtest parameter (Params() calls are only valid after this clause)
+        try {
+            SelectParamsFromCommandLine();
+        } catch(std::exception &e) {
+            fprintf(stderr, "Error: %s\n", e.what());
             return false;
         }
 

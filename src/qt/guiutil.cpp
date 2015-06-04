@@ -568,12 +568,10 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 #ifdef WIN32
 boost::filesystem::path static StartupShortcutPath()
 {
-    if (GetBoolArg("-testnet", false))
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (testnet).lnk";
-    else if (GetBoolArg("-regtest", false))
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (regtest).lnk";
-
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    std::string chain = ChainNameFromCommandLine();
+    if (chain == CBaseChainParams::MAIN)
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcoin (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
@@ -606,7 +604,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
             // Start client minimized
             QString strArgs = "-min";
             // Set -testnet /-regtest options
-            strArgs += QString::fromStdString(strprintf(" -testnet=%d -regtest=%d", GetBoolArg("-testnet", false), GetBoolArg("-regtest", false)));
+            strArgs += QString::fromStdString(strprintf(" -chain=%s", ChainNameFromCommandLine()));
 
 #ifdef UNICODE
             boost::scoped_array<TCHAR> args(new TCHAR[strArgs.length() + 1]);
@@ -706,16 +704,15 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         boost::filesystem::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
             return false;
+        std::string chain = ChainNameFromCommandLine();
         // Write a bitcoin.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
-        if (GetBoolArg("-testnet", false))
-            optionFile << "Name=Bitcoin (testnet)\n";
-        else if (GetBoolArg("-regtest", false))
-            optionFile << "Name=Bitcoin (regtest)\n";
-        else
+        if (chain == CBaseChainParams::MAIN)
             optionFile << "Name=Bitcoin\n";
-        optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", GetBoolArg("-testnet", false), GetBoolArg("-regtest", false));
+        else
+            optionFile << strprintf("Name=Bitcoin (%s)\n", chain);
+        optionFile << "Exec=" << pszExePath << strprintf(" -min -chain=%s\n", chain);
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
         optionFile.close();

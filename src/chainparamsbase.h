@@ -15,13 +15,11 @@
 class CBaseChainParams
 {
 public:
-    enum Network {
-        MAIN,
-        TESTNET,
-        REGTEST,
-
-        MAX_NETWORK_TYPES
-    };
+    /** BIP70 chain name strings (main, test or regtest) */
+    static const std::string MAIN;
+    static const std::string TESTNET;
+    static const std::string REGTEST;
+    static const std::string MAX_NETWORK_TYPES;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
@@ -34,29 +32,43 @@ protected:
 };
 
 /**
+ * Creates a CBaseChainParams of the chosen chain and returns a
+ * pointer to it. The caller has to delete the object.
+ * Raises an error if the chain is not supported.
+ */
+CBaseChainParams* FactoryBaseParams(std::string chain);
+/**
+ * Returns a string with the help messages for the chainparams options. 
+ */
+std::string GetParamsHelpMessages();
+/**
+ * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+ * Returns CBaseChainParams::MAIN by default.
+ * Returns CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given.
+ */
+std::string ChainNameFromCommandLine();
+
+/** Functions that relay on internal state */
+/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
 const CBaseChainParams& BaseParams();
 
-/** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(CBaseChainParams::Network network);
-
 /**
- * Looks for -regtest or -testnet and returns the appropriate Network ID.
- * Returns MAX_NETWORK_TYPES if an invalid combination is given.
+ * Sets the params returned by BaseParams() to those for the appropriate chain returned by ChainNameFromCommandLine().
+ * Raises a std::runtime_error if an unsupported chain name is given.
  */
-CBaseChainParams::Network NetworkIdFromCommandLine();
+void SelectBaseParams(std::string chain);
 
 /**
  * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Raises a std::runtime_error if an invalid combination is given or if the chain is not supported.
  */
-bool SelectBaseParamsFromCommandLine();
+void SelectBaseParamsFromCommandLine();
 
 /**
- * Return true if SelectBaseParamsFromCommandLine() has been called to select
- * a network.
+ * Return true if SelectBaseParamsFromCommandLine() has been called to select a chain.
  */
 bool AreBaseParamsConfigured();
 

@@ -45,6 +45,11 @@ public:
         MAX_BASE58_TYPES
     };
 
+    /**
+     * Maps strNetworkID [see BIP70] to chainID (hashGenesisBlock and genesis checkpoint)
+     */
+    static const std::map<std::string, uint256> supportedChains;
+
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
@@ -65,7 +70,7 @@ public:
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** In the future use NetworkIDString() for RPC fields */
     bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
-    /** Return the BIP70 network string (main, test or regtest) */
+    /** Returns the BIP70 chain name string (main, testnet3 or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
@@ -96,21 +101,33 @@ protected:
 };
 
 /**
+ * Creates a CChainParams of the chosen chain and returns a
+ * pointer to it. The caller has to delete the object.
+ * Raises a std::runtime_error if the chain is not supported.
+ */
+CChainParams* ParamsFactory(std::string chain);
+
+/** Functions that relay on internal state */
+/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
 const CChainParams &Params();
 
-/** Return parameters for the given network. */
-CChainParams &Params(CBaseChainParams::Network network);
-
-/** Sets the params returned by Params() to those for the given network. */
-void SelectParams(CBaseChainParams::Network network);
+/**
+ * Returns parameters for the given BIP70 chain name.
+ */
+const CChainParams& Params(std::string chain);
 
 /**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Sets the params returned by Params() to those for the given BIP70 chain name.
  */
-bool SelectParamsFromCommandLine();
+void SelectParams(std::string chain);
+
+/**
+ * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
+ * Raises a std::runtime_error if an invalid combination is given or if the chain is not supported.
+ */
+void SelectParamsFromCommandLine();
 
 #endif // BITCOIN_CHAINPARAMS_H

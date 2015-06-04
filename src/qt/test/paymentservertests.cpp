@@ -141,7 +141,7 @@ void PaymentServerTests::paymentServerTests()
     data = DecodeBase64(paymentrequest1_cert2_BASE64);
     byteArray = QByteArray((const char*)&data[0], data.size());
     r.paymentRequest.parse(byteArray);
-    // Ensure the request is initialized, because network "main" is default, even for
+    // Ensure the request is initialized, because network CBaseChainParams::MAIN is default, even for
     // uninizialized payment requests and that will fail our test here.
     QVERIFY(r.paymentRequest.IsInitialized());
     QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
