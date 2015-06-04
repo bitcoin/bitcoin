@@ -302,6 +302,8 @@ void SendMPDialog::sendMPTransaction()
     // unlock the wallet
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid()) {
+        QMessageBox::critical( this, "Send transaction failed",
+        "The send transaction has been cancelled.\n\nThe wallet unlock process must be completed to send a transaction." );
         return; // unlock wallet was cancelled/failed
     }
 
@@ -315,9 +317,8 @@ void SendMPDialog::sendMPTransaction()
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
-        string strError = error_str(result);
         QMessageBox::critical( this, "Send transaction failed",
-        "The send transaction has been cancelled.\n\nThe wallet unlock process must be completed to send a transaction." );
+        "The send transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(error_str(result)));
         return;
     } else {
         if (!autoCommit) {
