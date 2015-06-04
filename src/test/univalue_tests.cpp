@@ -63,6 +63,48 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
+BOOST_AUTO_TEST_CASE(univalue_typecheck)
+{
+    UniValue v1;
+    BOOST_CHECK(v1.setNumStr("1"));
+    BOOST_CHECK(v1.isNum());
+    BOOST_CHECK_THROW(v1.get_bool(), runtime_error);
+
+    UniValue v2;
+    BOOST_CHECK(v2.setBool(true));
+    BOOST_CHECK_EQUAL(v2.get_bool(), true);
+    BOOST_CHECK_THROW(v2.get_int(), runtime_error);
+
+    UniValue v3;
+    BOOST_CHECK(v3.setNumStr("32482348723847471234"));
+    BOOST_CHECK_THROW(v3.get_int64(), runtime_error);
+    BOOST_CHECK(v3.setNumStr("1000"));
+    BOOST_CHECK_EQUAL(v3.get_int64(), 1000);
+
+    UniValue v4;
+    BOOST_CHECK(v4.setNumStr("2147483648"));
+    BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648);
+    BOOST_CHECK_THROW(v4.get_int(), runtime_error);
+    BOOST_CHECK(v4.setNumStr("1000"));
+    BOOST_CHECK_EQUAL(v4.get_int(), 1000);
+    BOOST_CHECK_THROW(v4.get_str(), runtime_error);
+    BOOST_CHECK_EQUAL(v4.get_real(), 1000);
+    BOOST_CHECK_THROW(v4.get_array(), runtime_error);
+    BOOST_CHECK_THROW(v4.getKeys(), runtime_error);
+    BOOST_CHECK_THROW(v4.getValues(), runtime_error);
+    BOOST_CHECK_THROW(v4.get_obj(), runtime_error);
+
+    UniValue v5;
+    BOOST_CHECK(v5.read("[true, 10]"));
+    BOOST_CHECK_NO_THROW(v5.get_array());
+    std::vector<UniValue> vals = v5.getValues();
+    BOOST_CHECK_THROW(vals[0].get_int(), runtime_error);
+    BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
+
+    BOOST_CHECK_EQUAL(vals[1].get_int(), 10);
+    BOOST_CHECK_THROW(vals[1].get_bool(), runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(univalue_set)
 {
     UniValue v(UniValue::VSTR, "foo");
