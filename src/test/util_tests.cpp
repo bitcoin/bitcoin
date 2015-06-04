@@ -146,29 +146,27 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
-    BOOST_CHECK_EQUAL(FormatMoney(0, false), "0.00");
-    BOOST_CHECK_EQUAL(FormatMoney((COIN/10000)*123456789, false), "12345.6789");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN, true), "+1.00");
-    BOOST_CHECK_EQUAL(FormatMoney(-COIN, false), "-1.00");
-    BOOST_CHECK_EQUAL(FormatMoney(-COIN, true), "-1.00");
+    BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
+    BOOST_CHECK_EQUAL(FormatMoney((COIN/10000)*123456789), "12345.6789");
+    BOOST_CHECK_EQUAL(FormatMoney(-COIN), "-1.00");
 
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*100000000, false), "100000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*10000000, false), "10000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*1000000, false), "1000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*100000, false), "100000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*10000, false), "10000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*1000, false), "1000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*100, false), "100.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN*10, false), "10.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN, false), "1.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/10, false), "0.10");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/100, false), "0.01");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/1000, false), "0.001");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/10000, false), "0.0001");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/100000, false), "0.00001");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/1000000, false), "0.000001");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/10000000, false), "0.0000001");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN/100000000, false), "0.00000001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*100000000), "100000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*10000000), "10000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*1000000), "1000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*100000), "100000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*10000), "10000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*1000), "1000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*100), "100.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN*10), "10.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN), "1.00");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/10), "0.10");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/100), "0.01");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/1000), "0.001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/10000), "0.0001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/100000), "0.00001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/1000000), "0.000001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/10000000), "0.0000001");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN/100000000), "0.00000001");
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseMoney)

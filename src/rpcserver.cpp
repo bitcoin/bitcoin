@@ -133,7 +133,7 @@ CAmount AmountFromValue(const UniValue& value)
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
-    return UniValue(UniValue::VREAL, FormatMoney(amount, false));
+    return UniValue(UniValue::VREAL, FormatMoney(amount));
 }
 
 uint256 ParseHashV(const UniValue& v, string strName)
