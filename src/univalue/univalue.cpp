@@ -6,7 +6,11 @@
 #include <ctype.h>
 #include <iomanip>
 #include <sstream>
+#include <stdexcept>      // std::runtime_error
+
 #include "univalue.h"
+
+#include "utilstrencodings.h" // ParseXX
 
 using namespace std;
 
@@ -225,3 +229,76 @@ const UniValue& find_value( const UniValue& obj, const std::string& name)
 
     return NullUniValue;
 }
+
+std::vector<std::string> UniValue::getKeys() const
+{
+    if (typ != VOBJ)
+        throw std::runtime_error("JSON value is not an object as expected");
+    return keys;
+}
+
+std::vector<UniValue> UniValue::getValues() const
+{
+    if (typ != VOBJ && typ != VARR)
+        throw std::runtime_error("JSON value is not an object or array as expected");
+    return values;
+}
+
+bool UniValue::get_bool() const
+{
+    if (typ != VBOOL)
+        throw std::runtime_error("JSON value is not a boolean as expected");
+    return getBool();
+}
+
+std::string UniValue::get_str() const
+{
+    if (typ != VSTR)
+        throw std::runtime_error("JSON value is not a string as expected");
+    return getValStr();
+}
+
+int UniValue::get_int() const
+{
+    if (typ != VNUM)
+        throw std::runtime_error("JSON value is not an integer as expected");
+    int32_t retval;
+    if (!ParseInt32(getValStr(), &retval))
+        throw std::runtime_error("JSON integer out of range");
+    return retval;
+}
+
+int64_t UniValue::get_int64() const
+{
+    if (typ != VNUM)
+        throw std::runtime_error("JSON value is not an integer as expected");
+    int64_t retval;
+    if (!ParseInt64(getValStr(), &retval))
+        throw std::runtime_error("JSON integer out of range");
+    return retval;
+}
+
+double UniValue::get_real() const
+{
+    if (typ != VREAL && typ != VNUM)
+        throw std::runtime_error("JSON value is not a number as expected");
+    double retval;
+    if (!ParseDouble(getValStr(), &retval))
+        throw std::runtime_error("JSON double out of range");
+    return retval;
+}
+
+const UniValue& UniValue::get_obj() const
+{
+    if (typ != VOBJ)
+        throw std::runtime_error("JSON value is not an object as expected");
+    return *this;
+}
+
+const UniValue& UniValue::get_array() const
+{
+    if (typ != VARR)
+        throw std::runtime_error("JSON value is not an array as expected");
+    return *this;
+}
+

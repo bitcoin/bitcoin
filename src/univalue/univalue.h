@@ -13,7 +13,6 @@
 
 #include <sstream>        // .get_int64()
 #include <utility>        // std::pair
-#include <stdlib.h>       // atoi(), atof()   TODO: remove
 
 class UniValue {
 public:
@@ -75,7 +74,7 @@ public:
 
     bool isNull() const { return (typ == VNULL); }
     bool isTrue() const { return (typ == VBOOL) && (val == "1"); }
-    bool isFalse() const { return (!isTrue()); }
+    bool isFalse() const { return (typ == VBOOL) && (val != "1"); }
     bool isBool() const { return (typ == VBOOL); }
     bool isStr() const { return (typ == VSTR); }
     bool isNum() const { return (typ == VNUM); }
@@ -140,26 +139,21 @@ private:
     void writeObject(unsigned int prettyIndent, unsigned int indentLevel, std::string& s) const;
 
 public:
-    //
-    // The following were added for compatibility with json_spirit.
-    // Most duplicate other methods, and should be removed.
-    //
-    std::vector<std::string> getKeys() const { return keys; }
-    std::vector<UniValue> getValues() const { return values; }
-    bool get_bool() const { return getBool(); }
-    std::string get_str() const { return getValStr(); }
-    int get_int() const { return atoi(getValStr().c_str()); }
-    double get_real() const { return atof(getValStr().c_str()); }
-    const UniValue& get_obj() const { return *this; }
-    const UniValue& get_array() const { return *this; }
+    // Strict type-specific getters, these throw std::runtime_error if the
+    // value is of unexpected type
+    std::vector<std::string> getKeys() const;
+    std::vector<UniValue> getValues() const;
+    bool get_bool() const;
+    std::string get_str() const;
+    int get_int() const;
+    int64_t get_int64() const;
+    double get_real() const;
+    const UniValue& get_obj() const;
+    const UniValue& get_array() const;
+
     enum VType type() const { return getType(); }
     bool push_back(std::pair<std::string,UniValue> pear) {
         return pushKV(pear.first, pear.second);
-    }
-    int64_t get_int64() const {
-        int64_t ret;
-        std::istringstream(getValStr()) >> ret;
-        return ret;
     }
     friend const UniValue& find_value( const UniValue& obj, const std::string& name);
 };
