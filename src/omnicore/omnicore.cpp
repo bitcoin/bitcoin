@@ -698,6 +698,7 @@ static int getEncodingClass(const CTransaction& tx, int nBlock)
     bool hasExodus = false;
     bool hasMultisig = false;
     bool hasOpReturn = false;
+    bool hasMoney = false;
 
     for (unsigned int n = 0; n < tx.vout.size(); ++n) {
         const CTxOut& output = tx.vout[n];
@@ -713,11 +714,12 @@ static int getEncodingClass(const CTransaction& tx, int nBlock)
         if (outType == TX_PUBKEYHASH) {
             CTxDestination dest;
             if (ExtractDestination(output.scriptPubKey, dest)) {
-                std::string strAddress = CBitcoinAddress(dest).ToString();
-                if (exodus_address == strAddress) {
+                CBitcoinAddress address(dest);
+                if (address == ExodusAddress()) {
                     hasExodus = true;
-                } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
-                    hasExodus = true;
+                }
+                if (address == MoneyAddress(nBlock)) {
+                    hasMoney = true;
                 }
             }
         }
@@ -746,7 +748,7 @@ static int getEncodingClass(const CTransaction& tx, int nBlock)
     if (hasExodus && hasMultisig) {
         return OMNI_CLASS_B;
     }
-    if (hasExodus) {
+    if (hasExodus || hasMoney) {
         return OMNI_CLASS_A;
     }
 
@@ -855,34 +857,23 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
       return -5;
   }
 
-
-  // ### CHECK FOR ANY REQUIRED EXODUS CROWDSALE PAYMENTS ###
-
-  // Exodus value gathering (required for fundraiser, class A)
-  std::vector<int64_t> ExodusValues;
-  std::vector<int64_t> TestNetMoneyValues;
-
-  for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
-      CTxDestination dest;
-      if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
-          std::string strAddress = CBitcoinAddress(dest).ToString();
-          if (exodus_address == strAddress) {
-              ExodusValues.push_back(wtx.vout[n].nValue);
-          } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
-              TestNetMoneyValues.push_back(wtx.vout[n].nValue);
-          }
-      }
+  if (!bRPConly)
+  {
+    // ### CHECK FOR ANY REQUIRED EXODUS CROWDSALE PAYMENTS ###
+    int64_t BTC_amount = 0;
+    for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+        CTxDestination dest;
+        if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+            if (CBitcoinAddress(dest) == MoneyAddress(nBlock)) {
+                BTC_amount = wtx.vout[n].nValue;
+                break; // TODO: maybe sum all values
+            }
+        }
+    }
+    if (0 < BTC_amount) {
+        TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
+    }
   }
-
-  // Dummy values (TODO: remove this)
-  ExodusValues.push_back(0);
-  TestNetMoneyValues.push_back(0);
-
-  int64_t BTC_amount = ExodusValues[0];
-  if (isNonMainNet()) { if (MONEYMAN_TESTNET_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0]; }
-  if (RegTest()) { if (MONEYMAN_REGTEST_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0]; }
-  if (0 < BTC_amount && !bRPConly) (void) TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
-
 
   // ### POPULATE MULTISIG SCRIPT DATA ###
   for (unsigned int i = 0; i < wtx.vout.size(); i++) {
@@ -959,6 +950,15 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                       strRefAddress = ""; // blank ref address
                       if (msc_debug_parser_data) PrintToLog("Reference Address sequence number collision, will fall back to evaluating matching output amounts\n");
                       break;
+                  }
+              }
+          }
+          std::vector<int64_t> ExodusValues;
+          for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+              CTxDestination dest;
+              if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+                  if (CBitcoinAddress(dest) == ExodusAddress()) {
+                      ExodusValues.push_back(wtx.vout[n].nValue);
                   }
               }
           }
@@ -3406,7 +3406,36 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex)
  */
 const CBitcoinAddress ExodusAddress()
 {
-    return CBitcoinAddress(exodus_address);
+    static CBitcoinAddress address(exodus_address);
+
+    return address;
+}
+
+/**
+ * Returns the Exodus fundraiser address.
+ *
+ * Main network:
+ *   1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P
+ *
+ * Test network:
+ *   mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv (for blocks <  270775)
+ *   moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP (for blocks >= 270775)
+ *
+ * @return The Exodus fundraiser address
+ */
+const CBitcoinAddress MoneyAddress(int nBlock)
+{
+    static CBitcoinAddress moneysAddress(getmoney_testnet);
+    static CBitcoinAddress exodusAddress = ExodusAddress();
+
+    if (MONEYMAN_TESTNET_BLOCK <= nBlock && isNonMainNet()) {
+        return moneysAddress;
+    }
+    else if (MONEYMAN_REGTEST_BLOCK <= nBlock && RegTest()) {
+        return moneysAddress;
+    }
+
+    return exodusAddress;
 }
 
  // the 31-byte packet & the packet #

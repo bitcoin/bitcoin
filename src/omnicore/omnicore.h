@@ -162,6 +162,9 @@ bool feeCheck(const std::string& address, size_t nDataSize);
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
 
+/** Returns the Exodus fundraiser address. */
+const CBitcoinAddress MoneyAddress(int nBlock = 0);
+
 //! Used to indicate, whether to automatically commit created transactions
 extern bool autoCommit;
 
