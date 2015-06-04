@@ -1497,14 +1497,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         int nUseQueue = rand()%100;
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
-        sessionTotalValue = pwalletMain->GetTotalValue(vCoins);
-
-        //randomize the amounts we mix
-        if(sessionTotalValue > nBalanceNeedsAnonymized) sessionTotalValue = nBalanceNeedsAnonymized;
-
-        double fDarkcoinSubmitted = (sessionTotalValue / CENT);
-        LogPrintf("Submitting Darksend for %f DASH CENT - sessionTotalValue %d\n", fDarkcoinSubmitted, sessionTotalValue);
-
         if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
             strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
@@ -1554,8 +1546,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                 // connect to Masternode and submit the queue request
                 if(ConnectNode((CAddress)addr, NULL, true)){
-                    CNode* pNode = FindNode(addr);
-                    if(pNode)
+                    CNode* pnode = FindNode(addr);
+                    if(pnode)
                     {
                         std::string strReason;
                         if(txCollateral == CMutableTransaction()){
@@ -1575,8 +1567,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                         vecMasternodesUsed.push_back(dsq.vin);
                         sessionDenom = dsq.nDenom;
 
-                        pNode->PushMessage("dsa", sessionDenom, txCollateral);
-                        LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d %d - %s\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue), pNode->addr.ToString().c_str());
+                        pnode->PushMessage("dsa", sessionDenom, txCollateral);
+                        LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d - %s\n", sessionDenom, pnode->addr.ToString().c_str());
                         strAutoDenomResult = "";
                         dsq.time = 0; //remove node
                         return true;
@@ -1641,10 +1633,12 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                     std::vector<CAmount> vecAmounts;
                     pwalletMain->ConvertList(vCoins, vecAmounts);
-                    sessionDenom = GetDenominationsByAmounts(vecAmounts);
+                    // try to get random denoms out of vecAmounts
+                    while(sessionDenom == 0)
+                        sessionDenom = GetDenominationsByAmounts(vecAmounts, true);
 
                     pnode->PushMessage("dsa", sessionDenom, txCollateral);
-                    LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d - denom %d\n", sessionDenom, GetDenominationsByAmount(sessionTotalValue));
+                    LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d\n", sessionDenom);
                     strAutoDenomResult = "";
                     return true;
                 }
@@ -1946,7 +1940,7 @@ int CDarksendPool::GetDenominations(const std::vector<CTxDSOut>& vout){
 }
 
 // return a bitshifted integer representing the denominations in this list
-int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout){
+int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fRandDenom){
     std::vector<pair<int64_t, int> > denomUsed;
 
     // make a list of denominations, with zero uses
@@ -1970,7 +1964,7 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout){
     // if the denomination is used, shift the bit on.
     // then move to the next
     BOOST_FOREACH (PAIRTYPE(int64_t, int)& s, denomUsed)
-        denom |= s.second << c++;
+        denom |= ((fRandDenom ? rand()%2 : 1) * s.second) << c++;
 
     // Function returns as follows:
     //
@@ -1983,7 +1977,7 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout){
 }
 
 
-int CDarksendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount){
+int CDarksendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount, bool fRandDenom){
     CScript e = CScript();
     std::vector<CTxOut> vout1;
 
@@ -1996,7 +1990,7 @@ int CDarksendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount){
         nOutputs++;
     }
 
-    return GetDenominations(vout1);
+    return GetDenominations(vout1, fRandDenom);
 }
 
 int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
@@ -2026,12 +2020,6 @@ int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){
             nOutputs++;
         }
         LogPrintf("GetDenominationsByAmount --- %d nOutputs %d\n", v, nOutputs);
-    }
-
-    //add non-denom left overs as change
-    if(nValueLeft > 0){
-        CTxOut o(nValueLeft, e);
-        vout1.push_back(o);
     }
 
     return GetDenominations(vout1);
