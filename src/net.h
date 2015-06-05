@@ -210,6 +210,9 @@ public:
         nTime = 0;
     }
 
+    // Called by CNode::EndMessage() and unit tests: modify stream to set size/checksum of header
+    static unsigned int FinalizeHeader(CDataStream& s);
+
     bool complete() const
     {
         if (!in_data)
