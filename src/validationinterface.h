@@ -29,7 +29,6 @@ void SyncWithWallets(const CTransaction& tx, const CBlock* pblock = NULL);
 class CValidationInterface {
 protected:
     virtual void SyncTransaction(const CTransaction &tx, const CBlock *pblock) {}
-    virtual void EraseFromWallet(const uint256 &hash) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
     virtual void UpdatedTransaction(const uint256 &hash) {}
     virtual void Inventory(const uint256 &hash) {}
@@ -43,8 +42,6 @@ protected:
 struct CMainSignals {
     /** Notifies listeners of updated transaction data (transaction, and optionally the block it is found in. */
     boost::signals2::signal<void (const CTransaction &, const CBlock *)> SyncTransaction;
-    /** Notifies listeners of an erased transaction (currently disabled, requires transaction replacement). */
-    boost::signals2::signal<void (const uint256 &)> EraseTransaction;
     /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */
