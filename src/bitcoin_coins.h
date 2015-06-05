@@ -259,26 +259,26 @@ class Bitcoin_CCoinsView
 {
 public:
     // Retrieve the Bitcoin_CCoins (unspent transaction outputs) for a given txid
-    virtual bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    virtual bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
 
     // Modify the Bitcoin_CCoins for a given txid
-    virtual bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    virtual bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
 
     // Just check whether we have data for a given txid.
     // This may (but cannot always) return true for fully spent transactions
-    virtual bool HaveCoins(const uint256 &txid);
+    virtual bool Bitcoin_HaveCoins(const uint256 &txid);
 
     // Retrieve the block hash whose state this Bitcoin_CCoinsView currently represents
-    virtual uint256 GetBestBlock();
+    virtual uint256 Bitcoin_GetBestBlock();
 
     // Modify the currently active block hash
-    virtual bool SetBestBlock(const uint256 &hashBlock);
+    virtual bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
 
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
-    virtual bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
+    virtual bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
 
     // Calculate statistics about the unspent transaction output set
-    virtual bool GetStats(Bitcoin_CCoinsStats &stats);
+    virtual bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
 
     // As we use Bitcoin_CCoinsViews polymorphically, have a virtual destructor
     virtual ~Bitcoin_CCoinsView() {}
@@ -293,15 +293,15 @@ protected:
 
 public:
     Bitcoin_CCoinsViewBacked(Bitcoin_CCoinsView &viewIn);
-    bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    void SetBackend(Bitcoin_CCoinsView &viewIn);
-    Bitcoin_CCoinsView *GetBackend();
-    bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool GetStats(Bitcoin_CCoinsStats &stats);
+    bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    bool Bitcoin_HaveCoins(const uint256 &txid);
+    uint256 Bitcoin_GetBestBlock();
+    bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
+    void Bitcoin_SetBackend(Bitcoin_CCoinsView &viewIn);
+    Bitcoin_CCoinsView *Bitcoin_GetBackend();
+    bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
 };
 
 
@@ -309,31 +309,31 @@ public:
 class Bitcoin_CCoinsViewCache : public Bitcoin_CCoinsViewBacked
 {
 protected:
-    uint256 hashBlock;
-    std::map<uint256,Bitcoin_CCoins> cacheCoins;
+    uint256 bitcoin_hashBlock;
+    std::map<uint256,Bitcoin_CCoins> bitcoin_cacheCoins;
 
 public:
     Bitcoin_CCoinsViewCache(Bitcoin_CCoinsView &baseIn, bool fDummy = false);
 
     // Standard Bitcoin_CCoinsView methods
-    bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    bool Bitcoin_HaveCoins(const uint256 &txid);
+    uint256 Bitcoin_GetBestBlock();
+    bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
+    bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
 
     // Return a modifiable reference to a Bitcoin_CCoins. Check HaveCoins first.
     // Many methods explicitly require a Bitcoin_CCoinsViewCache because of this method, to reduce
     // copying.
-    Bitcoin_CCoins &GetCoins(const uint256 &txid);
+    Bitcoin_CCoins &Bitcoin_GetCoins(const uint256 &txid);
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
-    bool Flush();
+    bool Bitcoin_Flush();
 
     // Calculate the size of the cache (in number of transactions)
-    unsigned int GetCacheSize();
+    unsigned int Bitcoin_GetCacheSize();
 
     /** Amount of bitcoins coming in to a transaction
         Note that lightweight clients may not know anything besides the hash of previous transactions,
@@ -342,18 +342,18 @@ public:
         @param[in] tx	transaction for which we are checking input total
         @return	Sum of value of all inputs (scriptSigs)
      */
-    int64_t GetValueIn(const Bitcoin_CTransaction& tx);
+    int64_t Bitcoin_GetValueIn(const Bitcoin_CTransaction& tx);
 
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view
-    bool HaveInputs(const Bitcoin_CTransaction& tx);
+    bool Bitcoin_HaveInputs(const Bitcoin_CTransaction& tx);
 
     // Return priority of tx at height nHeight
-    double GetPriority(const Bitcoin_CTransaction &tx, int nHeight);
+    double Bitcoin_GetPriority(const Bitcoin_CTransaction &tx, int nHeight);
 
-    const CTxOut &GetOutputFor(const Bitcoin_CTxIn& input);
+    const CTxOut &Bitcoin_GetOutputFor(const Bitcoin_CTxIn& input);
 
 private:
-    std::map<uint256,Bitcoin_CCoins>::iterator FetchCoins(const uint256 &txid);
+    std::map<uint256,Bitcoin_CCoins>::iterator Bitcoin_FetchCoins(const uint256 &txid);
 };
 
 #endif

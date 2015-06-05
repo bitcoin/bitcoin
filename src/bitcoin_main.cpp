@@ -542,7 +542,7 @@ bool Bitcoin_AreInputsStandard(const Bitcoin_CTransaction& tx, Bitcoin_CCoinsVie
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
+        const CTxOut& prev = mapInputs.Bitcoin_GetOutputFor(tx.vin[i]);
 
         vector<vector<unsigned char> > vSolutions;
         txnouttype whichType;
@@ -611,7 +611,7 @@ unsigned int Bitcoin_GetP2SHSigOpCount(const Bitcoin_CTransaction& tx, Bitcoin_C
     unsigned int nSigOps = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOut &prevout = inputs.GetOutputFor(tx.vin[i]);
+        const CTxOut &prevout = inputs.Bitcoin_GetOutputFor(tx.vin[i]);
         if (prevout.scriptPubKey.IsPayToScriptHash())
             nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
     }
@@ -812,17 +812,17 @@ bool Bitcoin_AcceptToMemoryPool(Bitcoin_CTxMemPool& pool, CValidationState &stat
         {
         LOCK(pool.cs);
         Bitcoin_CCoinsViewMemPool viewMemPool(*bitcoin_pcoinsTip, pool);
-        view.SetBackend(viewMemPool);
+        view.Bitcoin_SetBackend(viewMemPool);
 
         // do we already have it?
-        if (view.HaveCoins(hash))
+        if (view.Bitcoin_HaveCoins(hash))
             return false;
 
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
         // only helps filling in pfMissingInputs (to determine missing vs spent).
         BOOST_FOREACH(const Bitcoin_CTxIn txin, tx.vin) {
-            if (!view.HaveCoins(txin.prevout.hash)) {
+            if (!view.Bitcoin_HaveCoins(txin.prevout.hash)) {
                 if (pfMissingInputs)
                     *pfMissingInputs = true;
                 return false;
@@ -830,15 +830,15 @@ bool Bitcoin_AcceptToMemoryPool(Bitcoin_CTxMemPool& pool, CValidationState &stat
         }
 
         // are the actual inputs available?
-        if (!view.HaveInputs(tx))
+        if (!view.Bitcoin_HaveInputs(tx))
             return state.Invalid(error("Bitcoin: AcceptToMemoryPool : inputs already spent"),
                                  BITCOIN_REJECT_DUPLICATE, "bad-txns-inputs-spent");
 
         // Bring the best block into scope
-        view.GetBestBlock();
+        view.Bitcoin_GetBestBlock();
 
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-        view.SetBackend(dummy);
+        view.Bitcoin_SetBackend(dummy);
         }
 
         // Check for non-standard pay-to-script-hash in inputs
@@ -849,10 +849,10 @@ bool Bitcoin_AcceptToMemoryPool(Bitcoin_CTxMemPool& pool, CValidationState &stat
         // you should add code here to check that the transaction does a
         // reasonable number of ECDSA signature verifications.
 
-        int64_t nValueIn = view.GetValueIn(tx);
+        int64_t nValueIn = view.Bitcoin_GetValueIn(tx);
         int64_t nValueOut = tx.GetValueOut();
         int64_t nFees = nValueIn-nValueOut;
-        double dPriority = view.GetPriority(tx, bitcoin_chainActive.Height());
+        double dPriority = view.Bitcoin_GetPriority(tx, bitcoin_chainActive.Height());
 
         Bitcoin_CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, bitcoin_chainActive.Height());
         unsigned int nSize = entry.GetTxSize();
@@ -999,7 +999,7 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &txOut, ui
             {
                 Bitcoin_CCoinsViewCache &view = *bitcoin_pcoinsTip;
                 Bitcoin_CCoins coins;
-                if (view.GetCoins(hash, coins))
+                if (view.Bitcoin_GetCoins(hash, coins))
                     nHeight = coins.nHeight;
             }
             if (nHeight > 0)
@@ -1456,7 +1456,7 @@ void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         BOOST_FOREACH(const Bitcoin_CTxIn &txin, tx.vin) {
-            Bitcoin_CCoins &coins = inputs.GetCoins(txin.prevout.hash);
+            Bitcoin_CCoins &coins = inputs.Bitcoin_GetCoins(txin.prevout.hash);
             Bitcoin_CTxInUndo undo;
             ret = coins.Spend(txin.prevout, undo);
             assert(ret);
@@ -1473,7 +1473,7 @@ void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state
     }
 
     // add outputs
-    ret = inputs.SetCoins(txhash, Bitcoin_CCoins(tx, nHeight));
+    ret = inputs.Bitcoin_SetCoins(txhash, Bitcoin_CCoins(tx, nHeight));
     assert(ret);
     if(fastForwardClaimState) {
         ret = claim_inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight));
@@ -1553,19 +1553,19 @@ bool Bitcoin_CheckInputs(const Bitcoin_CTransaction& tx, CValidationState &state
 
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
-        if (!inputs.HaveInputs(tx))
+        if (!inputs.Bitcoin_HaveInputs(tx))
             return state.Invalid(error("Bitcoin: CheckInputs() : %s inputs unavailable", tx.GetHash().ToString()));
 
         // While checking, GetBestBlock() refers to the parent block.
         // This is also true for mempool checks.
-        Bitcoin_CBlockIndex *pindexPrev = bitcoin_mapBlockIndex.find(inputs.GetBestBlock())->second;
+        Bitcoin_CBlockIndex *pindexPrev = bitcoin_mapBlockIndex.find(inputs.Bitcoin_GetBestBlock())->second;
         int nSpendHeight = pindexPrev->nHeight + 1;
         int64_t nValueIn = 0;
         int64_t nFees = 0;
         for (unsigned int i = 0; i < tx.vin.size(); i++)
         {
             const COutPoint &prevout = tx.vin[i].prevout;
-            const Bitcoin_CCoins &coins = inputs.GetCoins(prevout.hash);
+            const Bitcoin_CCoins &coins = inputs.Bitcoin_GetCoins(prevout.hash);
 
             // If prev is coinbase, check that it's matured
             if (coins.IsCoinBase()) {
@@ -1607,7 +1607,7 @@ bool Bitcoin_CheckInputs(const Bitcoin_CTransaction& tx, CValidationState &state
         if (fScriptChecks) {
             for (unsigned int i = 0; i < tx.vin.size(); i++) {
                 const COutPoint &prevout = tx.vin[i].prevout;
-                const Bitcoin_CCoins &coins = inputs.GetCoins(prevout.hash);
+                const Bitcoin_CCoins &coins = inputs.Bitcoin_GetCoins(prevout.hash);
 
                 // Verify signature
                 Bitcoin_CScriptCheck check(coins, tx, i, flags, 0);
@@ -1649,7 +1649,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
 {
     const bool fastForwardClaimState = FastForwardClaimStateFor(pindex->nHeight, pindex->GetBlockHash());
 
-    assert(pindex->GetBlockHash() == view.GetBestBlock());
+    assert(pindex->GetBlockHash() == view.Bitcoin_GetBestBlock());
     if(fastForwardClaimState) {
         assert(claim_view.Claim_GetBestBlock() == pindex->GetBlockHash());
         assert(claim_view.Claim_GetBitcreditClaimTip() == uint256(1));
@@ -1680,7 +1680,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
         // have outputs available even in the block itself, so we handle that case
         // specially with outsEmpty.
         Bitcoin_CCoins outsEmpty;
-        Bitcoin_CCoins &outs = view.HaveCoins(hash) ? view.GetCoins(hash) : outsEmpty;
+        Bitcoin_CCoins &outs = view.Bitcoin_HaveCoins(hash) ? view.Bitcoin_GetCoins(hash) : outsEmpty;
         outs.ClearUnspendable();
 
         Bitcoin_CCoins outsBlock = Bitcoin_CCoins(tx, pindex->nHeight);
@@ -1704,7 +1704,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
                 const COutPoint &out = tx.vin[j].prevout;
                 const Bitcoin_CTxInUndo &undo = txundo.vprevout[j];
                 Bitcoin_CCoins coins;
-                view.GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
+                view.Bitcoin_GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
                 if (undo.nHeight != 0) {
                     // undo data contains height: this is the last output of the prevout tx being spent
                     if (!coins.IsPruned())
@@ -1722,14 +1722,14 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
                 if (coins.vout.size() < out.n+1)
                     coins.vout.resize(out.n+1);
                 coins.vout[out.n] = undo.txout;
-                if (!view.SetCoins(out.hash, coins))
+                if (!view.Bitcoin_SetCoins(out.hash, coins))
                     return error("Bitcoin: DisconnectBlock() : cannot restore coin inputs");
             }
         }
     }
 
     // move best block pointer to prevout block
-    view.SetBestBlock(pindex->pprev->GetBlockHash());
+    view.Bitcoin_SetBestBlock(pindex->pprev->GetBlockHash());
 
     if(fastForwardClaimState) {
         Bitcoin_CBlockUndoClaim claim_blockUndo;
@@ -2021,7 +2021,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0) : pindex->pprev->GetBlockHash();
-    assert(hashPrevBlock == view.GetBestBlock());
+    assert(hashPrevBlock == view.Bitcoin_GetBestBlock());
     if(fastForwardClaimState) {
         assert(claim_view.Claim_GetBestBlock() == hashPrevBlock);
         if(pindex->pprev == NULL) {
@@ -2034,7 +2034,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block.GetHash() == Bitcoin_Params().HashGenesisBlock()) {
-        view.SetBestBlock(pindex->GetBlockHash());
+        view.Bitcoin_SetBestBlock(pindex->GetBlockHash());
         if(fastForwardClaimState) {
             claim_view.Claim_SetBestBlock(pindex->GetBlockHash());
             //Claim tip set to 1 to indicate credits non-aligned chainstate. Only happens on bitcoin initial download
@@ -2075,7 +2075,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
     if (fEnforceBIP30) {
         for (unsigned int i = 0; i < block.vtx.size(); i++) {
             uint256 hash = block.GetTxHash(i);
-            if (view.HaveCoins(hash) && !view.GetCoins(hash).IsPruned())
+            if (view.Bitcoin_HaveCoins(hash) && !view.Bitcoin_GetCoins(hash).IsPruned())
                 return state.DoS(100, error("Bitcoin: ConnectBlock() : tried to overwrite transaction"),
                                  BITCOIN_REJECT_INVALID, "bad-txns-BIP30");
         }
@@ -2112,7 +2112,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
 
         if (!tx.IsCoinBase())
         {
-            if (!view.HaveInputs(tx))
+            if (!view.Bitcoin_HaveInputs(tx))
                 return state.DoS(100, error("Bitcoin: ConnectBlock() : inputs missing/spent"),
                                  BITCOIN_REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
@@ -2127,7 +2127,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
                                      BITCOIN_REJECT_INVALID, "bad-blk-sigops");
             }
 
-            nFees += view.GetValueIn(tx)-tx.GetValueOut();
+            nFees += view.Bitcoin_GetValueIn(tx)-tx.GetValueOut();
 
             if(!skipVerifySignature) {
 				std::vector<Bitcoin_CScriptCheck> vChecks;
@@ -2215,7 +2215,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
 
     // add this block to the view's block chain
     bool ret;
-    ret = view.SetBestBlock(pindex->GetBlockHash());
+    ret = view.Bitcoin_SetBestBlock(pindex->GetBlockHash());
     assert(ret);
     if(fastForwardClaimState) {
     	ret = claim_view.Claim_SetBestBlock(pindex->GetBlockHash());
@@ -2334,17 +2334,17 @@ bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state
 // Update the on-disk chain state.
 bool static Bitcoin_WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (!Bitcoin_IsInitialBlockDownload() || bitcoin_pcoinsTip->GetCacheSize() > bitcoin_nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
+    if (!Bitcoin_IsInitialBlockDownload() || bitcoin_pcoinsTip->Bitcoin_GetCacheSize() > bitcoin_nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical Bitcoin_CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-        if (!Bitcoin_CheckDiskSpace(100 * 2 * 2 * bitcoin_pcoinsTip->GetCacheSize()))
+        if (!Bitcoin_CheckDiskSpace(100 * 2 * 2 * bitcoin_pcoinsTip->Bitcoin_GetCacheSize()))
             return state.Error("out of disk space");
         Bitcoin_FlushBlockFile();
         bitcoin_pblocktree->Sync();
-        if (!bitcoin_pcoinsTip->Flush())
+        if (!bitcoin_pcoinsTip->Bitcoin_Flush())
             return state.Abort(_("Failed to write to coin database"));
         nLastWrite = GetTimeMicros();
     }
@@ -2405,7 +2405,7 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
         Credits_CCoinsViewCache credits_view(*credits_pcoinsTip, true);
         if (!Bitcoin_DisconnectBlock(block, state, pindexDelete, view, credits_view, true))
             return error("Bitcoin: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-        assert(view.Flush());
+        assert(view.Bitcoin_Flush());
         if(fastForwardClaimState) {
             LogPrintf("Bitcoin: DisconnectTip(): fastforward claim state applied\n");
         	assert(credits_view.Claim_Flush());
@@ -2602,7 +2602,7 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
             return error("Bitcoin: ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         bitcoin_mapBlockSource.erase(inv.hash);
-        assert(view.Flush());
+        assert(view.Bitcoin_Flush());
         if(fastForwardClaimState) {
             LogPrintf("Bitcoin: ConnectTip(): fastforward claim state applied\n");
         	assert(claim_view.Claim_Flush());
@@ -3629,7 +3629,7 @@ bool static Bitcoin_LoadBlockIndexDB()
     LogPrintf("Bitcoin: LoadBlockIndexDB(): trimming of block files %s\n", bitcoin_fTrimBlockFiles ? "enabled" : "disabled");
 
     // Load pointer to end of best chain
-    std::map<uint256, Bitcoin_CBlockIndex*>::iterator it = bitcoin_mapBlockIndex.find(bitcoin_pcoinsTip->GetBestBlock());
+    std::map<uint256, Bitcoin_CBlockIndex*>::iterator it = bitcoin_mapBlockIndex.find(bitcoin_pcoinsTip->Bitcoin_GetBestBlock());
     if (it == bitcoin_mapBlockIndex.end())
         return true;
     bitcoin_chainActive.SetTip(it->second);
@@ -3702,7 +3702,7 @@ bool Bitcoin_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
             }
         }
         // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
-        if (nCheckLevel >= 3 && pindex == pindexState && (coins.GetCacheSize() + bitcoin_pcoinsTip->GetCacheSize()) <= 2*bitcoin_nCoinCacheSize + 32000) {
+        if (nCheckLevel >= 3 && pindex == pindexState && (coins.Bitcoin_GetCacheSize() + bitcoin_pcoinsTip->Bitcoin_GetCacheSize()) <= 2*bitcoin_nCoinCacheSize + 32000) {
             bool fClean = true;
             if (!Bitcoin_DisconnectBlock(block, state, pindex, coins, claim_coins, false, &fClean))
                 return error("Bitcoin: VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -4030,7 +4030,7 @@ bool static Bitcoin_AlreadyHave(const CInv& inv)
             bool txInMap = false;
             txInMap = bitcoin_mempool.exists(inv.hash);
             return txInMap || bitcoin_mapOrphanTransactions.count(inv.hash) ||
-                bitcoin_pcoinsTip->HaveCoins(inv.hash);
+                bitcoin_pcoinsTip->Bitcoin_HaveCoins(inv.hash);
         }
     case MSG_BLOCK:
         return bitcoin_mapBlockIndex.count(inv.hash) ||

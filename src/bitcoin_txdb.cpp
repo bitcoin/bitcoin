@@ -12,64 +12,64 @@
 
 using namespace std;
 
-const unsigned char Bitcoin_CCoinsViewDB::COIN_KEY = 'c';
-const unsigned char Bitcoin_CCoinsViewDB::BEST_CHAIN_KEY = 'B';
+const unsigned char Bitcoin_CCoinsViewDB::BITCOIN_COIN_KEY = 'c';
+const unsigned char Bitcoin_CCoinsViewDB::BITCOIN_BEST_CHAIN_KEY = 'B';
 
-void Bitcoin_CCoinsViewDB::BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins) {
+void Bitcoin_CCoinsViewDB::Bitcoin_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins) {
     if (coins.IsPruned())
-        batch.Erase(make_pair(COIN_KEY, hash));
+        batch.Erase(make_pair(BITCOIN_COIN_KEY, hash));
     else
-        batch.Write(make_pair(COIN_KEY, hash), coins);
+        batch.Write(make_pair(BITCOIN_COIN_KEY, hash), coins);
 }
-void Bitcoin_CCoinsViewDB::BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
-    batch.Write(BEST_CHAIN_KEY, hash);
-}
-
-bool Bitcoin_CCoinsViewDB::GetCoins(const uint256 &txid, Bitcoin_CCoins &coins) {
-    return db.Read(make_pair(COIN_KEY, txid), coins);
+void Bitcoin_CCoinsViewDB::Bitcoin_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+    batch.Write(BITCOIN_BEST_CHAIN_KEY, hash);
 }
 
-bool Bitcoin_CCoinsViewDB::SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins) {
+bool Bitcoin_CCoinsViewDB::Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins) {
+    return db.Read(make_pair(BITCOIN_COIN_KEY, txid), coins);
+}
+
+bool Bitcoin_CCoinsViewDB::Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins) {
     CLevelDBBatch batch;
-    BatchWriteCoins(batch, txid, coins);
+    Bitcoin_BatchWriteCoins(batch, txid, coins);
     return db.WriteBatch(batch);
 }
 
-bool Bitcoin_CCoinsViewDB::HaveCoins(const uint256 &txid) {
-    return db.Exists(make_pair(COIN_KEY, txid));
+bool Bitcoin_CCoinsViewDB::Bitcoin_HaveCoins(const uint256 &txid) {
+    return db.Exists(make_pair(BITCOIN_COIN_KEY, txid));
 }
 
-uint256 Bitcoin_CCoinsViewDB::GetBestBlock() {
+uint256 Bitcoin_CCoinsViewDB::Bitcoin_GetBestBlock() {
     uint256 hashBestChain;
-    if (!db.Read(BEST_CHAIN_KEY, hashBestChain))
+    if (!db.Read(BITCOIN_BEST_CHAIN_KEY, hashBestChain))
         return uint256(0);
     return hashBestChain;
 }
 
-bool Bitcoin_CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
+bool Bitcoin_CCoinsViewDB::Bitcoin_SetBestBlock(const uint256 &hashBlock) {
     CLevelDBBatch batch;
-    BatchWriteHashBestChain(batch, hashBlock);
+    Bitcoin_BatchWriteHashBestChain(batch, hashBlock);
     return db.WriteBatch(batch);
 }
 
-bool Bitcoin_CCoinsViewDB::BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock) {
+bool Bitcoin_CCoinsViewDB::Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
     for (std::map<uint256, Bitcoin_CCoins>::const_iterator it = mapCoins.begin(); it != mapCoins.end(); it++)
-        BatchWriteCoins(batch, it->first, it->second);
+    	Bitcoin_BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
-        BatchWriteHashBestChain(batch, hashBlock);
+    	Bitcoin_BatchWriteHashBestChain(batch, hashBlock);
 
     return db.WriteBatch(batch);
 }
 
-bool Bitcoin_CCoinsViewDB::GetStats(Bitcoin_CCoinsStats &stats) {
+bool Bitcoin_CCoinsViewDB::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
     CHashWriter ss(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
-    stats.hashBlock = GetBestBlock();
+    stats.hashBlock = Bitcoin_GetBestBlock();
     ss << stats.hashBlock;
     int64_t nTotalAmount = 0;
     while (pcursor->Valid()) {
@@ -79,7 +79,7 @@ bool Bitcoin_CCoinsViewDB::GetStats(Bitcoin_CCoinsStats &stats) {
             CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, Bitcoin_Params().ClientVersion());
             char chType;
             ssKey >> chType;
-            if (chType == COIN_KEY) {
+            if (chType == BITCOIN_COIN_KEY) {
                 leveldb::Slice slValue = pcursor->value();
                 CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, Bitcoin_Params().ClientVersion());
                 Bitcoin_CCoins coins;
@@ -109,7 +109,7 @@ bool Bitcoin_CCoinsViewDB::GetStats(Bitcoin_CCoinsStats &stats) {
         }
     }
     delete pcursor;
-    stats.nHeight = bitcoin_mapBlockIndex.find(GetBestBlock())->second->nHeight;
+    stats.nHeight = bitcoin_mapBlockIndex.find(Bitcoin_GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;

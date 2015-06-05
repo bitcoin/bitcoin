@@ -271,7 +271,8 @@ QString Bitcoin_TransactionDesc::toHTML(Bitcoin_CWallet *wallet, Bitcoin_CWallet
             COutPoint prevout = txin.prevout;
 
             Bitcoin_CCoins prev;
-            if(bitcoin_pcoinsTip->GetCoins(prevout.hash, prev))
+            //TODO - Does this need to make a difference depending on if we are displaying claim coins and "normal" bitcoins?
+            if(bitcoin_pcoinsTip->Bitcoin_GetCoins(prevout.hash, prev))
             {
                 if (prevout.n < prev.vout.size())
                 {

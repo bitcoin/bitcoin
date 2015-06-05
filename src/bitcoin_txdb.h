@@ -27,22 +27,22 @@ static const int64_t bitcoin_nMinDbCache = 4;
 /** Bitcoin_CCoinsView backed by the LevelDB coin database (chainstate/) */
 class Bitcoin_CCoinsViewDB : public Bitcoin_CCoinsView {
 private:
-    void BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
-    void BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins);
+    void Bitcoin_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
+    void Bitcoin_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins);
 public:
-	static const unsigned char COIN_KEY;
-	static const unsigned char BEST_CHAIN_KEY;
+	static const unsigned char BITCOIN_COIN_KEY;
+	static const unsigned char BITCOIN_BEST_CHAIN_KEY;
     //This breaks encapsulation, yes
     CLevelDBWrapper db;
     Bitcoin_CCoinsViewDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool HaveCoins(const uint256 &txid);
-    uint256 GetBestBlock();
-    bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool GetStats(Bitcoin_CCoinsStats &stats);
+    bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    bool Bitcoin_HaveCoins(const uint256 &txid);
+    uint256 Bitcoin_GetBestBlock();
+    bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
+    bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
+    bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
 };
 
 /** Access to the block database (blocks/index/) */
