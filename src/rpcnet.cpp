@@ -346,7 +346,7 @@ UniValue getnettotals(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getnettotals", "")
             + HelpExampleRpc("getnettotals", "")
-       );
+        );
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
