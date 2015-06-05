@@ -26,7 +26,7 @@ output.
 
 Optional config file setting for linearize-data:
 * "netmagic": network magic number
-* "max_out_sz": maximum output file size (default 1000*1000*1000)
+* "max_out_sz": maximum output file size (default 1,000,000,000)
 * "split_timestamp": Split files when a new month is first seen, in addition to
 reaching a maximum file size.
 * "file_timestamp": Set each file's last-modified time to that of the
