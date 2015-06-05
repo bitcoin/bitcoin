@@ -535,7 +535,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
     }
 
     // -loadblock=
-    BOOST_FOREACH(boost::filesystem::path &path, vImportFiles) {
+    BOOST_FOREACH(const boost::filesystem::path& path, vImportFiles) {
         FILE *file = fopen(path.string().c_str(), "rb");
         if (file) {
             CImportingNow imp;
@@ -929,15 +929,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
         std::string warningString;
         std::string errorString;
-        
+
         if (!CWallet::Verify(strWalletFile, warningString, errorString))
             return false;
-        
+
         if (!warningString.empty())
             InitWarning(warningString);
         if (!errorString.empty())
             return InitError(warningString);
-        
+
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
     // ********************************************************* Step 6: network initialization
@@ -946,7 +946,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
-        BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
+        BOOST_FOREACH(const std::string& snet, mapMultiArgs["-onlynet"]) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
                 return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
@@ -1003,13 +1003,13 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     bool fBound = false;
     if (fListen) {
         if (mapArgs.count("-bind") || mapArgs.count("-whitebind")) {
-            BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
+            BOOST_FOREACH(const std::string& strBind, mapMultiArgs["-bind"]) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(strprintf(_("Cannot resolve -bind address: '%s'"), strBind));
                 fBound |= Bind(addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
             }
-            BOOST_FOREACH(std::string strBind, mapMultiArgs["-whitebind"]) {
+            BOOST_FOREACH(const std::string& strBind, mapMultiArgs["-whitebind"]) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, 0, false))
                     return InitError(strprintf(_("Cannot resolve -whitebind address: '%s'"), strBind));
@@ -1029,7 +1029,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     if (mapArgs.count("-externalip")) {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-externalip"]) {
+        BOOST_FOREACH(const std::string& strAddr, mapMultiArgs["-externalip"]) {
             CService addrLocal(strAddr, GetListenPort(), fNameLookup);
             if (!addrLocal.IsValid())
                 return InitError(strprintf(_("Cannot resolve -externalip address: '%s'"), strAddr));
@@ -1037,7 +1037,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    BOOST_FOREACH(string strDest, mapMultiArgs["-seednode"])
+    BOOST_FOREACH(const std::string& strDest, mapMultiArgs["-seednode"])
         AddOneShot(strDest);
 
     // ********************************************************* Step 7: load block chain
@@ -1362,7 +1362,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     std::vector<boost::filesystem::path> vImportFiles;
     if (mapArgs.count("-loadblock"))
     {
-        BOOST_FOREACH(string strFile, mapMultiArgs["-loadblock"])
+        BOOST_FOREACH(const std::string& strFile, mapMultiArgs["-loadblock"])
             vImportFiles.push_back(strFile);
     }
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
