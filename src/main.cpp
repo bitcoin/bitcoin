@@ -916,16 +916,111 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return false;
 
+    uint256 hashConflicting;
+    CAmount nConflictingFees = 0;
+    size_t nConflictingSize = 0;
+
     // Check for conflicts with in-memory transactions
     {
     LOCK(pool.cs); // protect pool.mapNextTx
+    const CTransaction *ptxConflicting = NULL;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
         if (pool.mapNextTx.count(outpoint))
         {
-            // Disable replacement feature for now
-            return false;
+            if (ptxConflicting)
+            {
+                // For simplicity we only replace transactions on a 1-for-1 basis.
+                if (pool.mapNextTx[outpoint].ptx != ptxConflicting)
+                    return state.DoS(0, error("AcceptToMemoryPool: replacement %s conflicts with more than one other transaction",
+                                              hash.ToString()),
+                                     REJECT_DUPLICATE, "bad-txns-inputs-spent");
+            }
+            else
+            {
+                ptxConflicting = pool.mapNextTx[outpoint].ptx;
+                hashConflicting = ptxConflicting->GetHash();
+
+                if (GetBoolArg("-firstseensafe", true))
+                {
+                    // Check that the replacement is first-seen-safe.
+                    //
+                    // This requires the conflicting transaction's vout to be a
+                    // subset of the replacement. Outputs can pay more than before,
+                    // but not less. For simplicity we require the order of outputs
+                    // be unchanged.
+                    if (tx.vout.size() < ptxConflicting->vout.size())
+                    {
+                        return state.DoS(0, error("AcceptToMemoryPool: replacement has %s fewer outputs than original %s",
+                                                  hash.ToString(),
+                                                  hashConflicting.ToString()),
+                                         REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                    }
+                    for (unsigned int j = 0; j < ptxConflicting->vout.size(); j++)
+                    {
+                        if (ptxConflicting->vout[j].scriptPubKey != tx.vout[j].scriptPubKey ||
+                            ptxConflicting->vout[j].nValue > tx.vout[j].nValue)
+                        {
+                            return state.DoS(0, error("AcceptToMemoryPool: replacement %s outputs not a subset of original %s",
+                                                      hash.ToString(),
+                                                      hashConflicting.ToString()),
+                                             REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                        }
+                    }
+                }
+
+                // Make sure the outputs of the transaction we're replacing
+                // have not been spent.
+                std::map<COutPoint, CInPoint>::iterator it;
+                it = pool.mapNextTx.lower_bound(COutPoint(hashConflicting, 0));
+                if (it != pool.mapNextTx.end() && it->first.hash == hashConflicting)
+                {
+                    return state.DoS(0, error("AcceptToMemoryPool: outpoint %s:%d already spent; can't replace with %s",
+                                              hashConflicting.ToString(), it->first.n,
+                                              hash.ToString()),
+                                     REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                }
+
+                set<COutPoint> setConflictsPrevouts;
+                for (unsigned int j = 0; j < ptxConflicting->vin.size(); j++)
+                {
+                    setConflictsPrevouts.insert(ptxConflicting->vin[j].prevout);
+                }
+
+                for (unsigned int j = 0; j < tx.vin.size(); j++)
+                {
+                    // Check that any new inputs spend only confirmed coins. It
+                    // might not be economically rational to replace a
+                    // transaction that spent confirmed inputs with one that
+                    // spent the result of a long chain of inputs, as the total
+                    // fee/KB might go down. Forcing all new inputs to be
+                    // confirmed is a simple way of avoiding that problem.
+                    //
+                    // Note that if we ever change this to allow the spending
+                    // of unconfirmed coins, we also need to check that the
+                    // transaction doesn't itself spend an output of the
+                    // conflicting transaction. If it did, when the conflict
+                    // was removed this transaction would become an orphan.
+                    if (!setConflictsPrevouts.count(tx.vin[j].prevout))
+                    {
+                        // Rather than check the UTXO set - potentially
+                        // expensive - it's cheaper to just check that the new
+                        // input refers to a tx that is *not* in the mempool.
+                        if (pool.exists(tx.vin[j].prevout.hash))
+                            return state.DoS(0, error("AcceptToMemoryPool: replacement %s adds unconfirmed input, idx %d",
+                                                      hash.ToString(), j),
+                                             REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                    }
+
+                }
+
+                // Save fees and size for later so we don't have to get the
+                // pool.cs lock again.
+                const CTxMemPoolEntry& entryConflicting = pool.mapTx.at(hashConflicting);
+                nConflictingFees = entryConflicting.GetFee();
+                nConflictingSize = entryConflicting.GetTxSize();
+            }
         }
     }
     }
@@ -1034,6 +1129,51 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                          hash.ToString(),
                          nFees, ::minRelayTxFee.GetFee(nSize) * 10000);
 
+        // Replacing previous transactions?
+        if (nConflictingSize)
+        {
+            // First of all we can't allow a replacement unless it pays greater
+            // fees than the transaction it conflicts with - if we did the
+            // bandwidth used by the replaced transactions would not be paid
+            // for.
+            if (nFees < nConflictingFees)
+            {
+                return state.DoS(0, error("AcceptToMemoryPool: rejecting replacement %s, less fees than conflicting txs; %s < %s",
+                                          hash.ToString(), FormatMoney(nFees), FormatMoney(nConflictingFees)),
+                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
+            }
+
+            // Secondly in addition to paying more fees the new transaction
+            // must also pay for its own bandwidth. We use the minimum relay tx
+            // fee as for this calculation, on the basis that an attacker could
+            // simply flood minimum fee transactions instead; we're not
+            // allowing them to do anything that they previously can't do.
+            CAmount nDeltaFees = nFees - nConflictingFees;
+            if (nDeltaFees < ::minRelayTxFee.GetFee(nSize))
+            {
+                return state.DoS(0,
+                        error("AcceptToMemoryPool: rejecting replacement %s, not enough additional fees to relay; %s < %s",
+                            hash.ToString(),
+                            FormatMoney(nDeltaFees),
+                            FormatMoney(::minRelayTxFee.GetFee(nSize))),
+                        REJECT_INSUFFICIENTFEE, "insufficient fee");
+            }
+
+            // Finally require that the overall fees-per-kb of the replacement
+            // be higher than the replaced.
+            CFeeRate oldFeeRate(nConflictingFees, nConflictingSize);
+            CFeeRate newFeeRate(nFees, nSize);
+            if (newFeeRate <= oldFeeRate)
+            {
+                return state.DoS(0,
+                        error("AcceptToMemoryPool: rejecting replacement %s; new fee %s <= old fee %s",
+                              hash.ToString(),
+                              newFeeRate.ToString(),
+                              oldFeeRate.ToString()),
+                        REJECT_INSUFFICIENTFEE, "insufficient fee");
+            }
+        }
+
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
@@ -1055,8 +1195,25 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
         }
 
+        // Remove conflicting transaction(s) from mempool (if any)
+        //
+        // This should nearly always be either zero or one conflicting
+        // transactions, but as the mempool isn't locked the whole time it's
+        // possible there may be more than one.
+        list<CTransaction> ltxConflicted;
+        pool.removeConflicts(tx, ltxConflicted);
+
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
+
+        BOOST_FOREACH(const CTransaction &txConflicted, ltxConflicted)
+        {
+            LogPrint("mempool", "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
+                     txConflicted.GetHash().ToString(),
+                     hash.ToString(),
+                     FormatMoney(nFees - nConflictingFees),
+                     (int)nSize - (int)nConflictingSize);
+        }
     }
 
     SyncWithWallets(tx, NULL);
