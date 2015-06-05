@@ -243,8 +243,13 @@ int LogPrintStr(const std::string &str)
         }
 
         // Debug print useful for profiling
-        if (fLogTimestamps && fStartedNewLine)
-            ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+        if (fLogTimestamps && fStartedNewLine) {
+            std::locale loc(std::locale::classic(), new boost::posix_time::time_facet("%Y-%m-%dT%H:%M:%sZ"));
+            std::stringstream ss;
+            ss.imbue(loc);
+            ss << boost::posix_time::microsec_clock::universal_time();
+            ret += fprintf(fileout, "[%s] ", ss.str().c_str());
+        }
         if (!str.empty() && str[str.size()-1] == '\n')
             fStartedNewLine = true;
         else
