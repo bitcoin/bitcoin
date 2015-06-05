@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
 
     double vd = -7.21;
     UniValue v7(vd);
-    BOOST_CHECK(v7.isNum());
+    BOOST_CHECK(v7.isReal());
     BOOST_CHECK_EQUAL(v7.getValStr(), "-7.21");
 
     string vs("yawn");
@@ -63,6 +63,48 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
+BOOST_AUTO_TEST_CASE(univalue_typecheck)
+{
+    UniValue v1;
+    BOOST_CHECK(v1.setNumStr("1"));
+    BOOST_CHECK(v1.isNum());
+    BOOST_CHECK_THROW(v1.get_bool(), runtime_error);
+
+    UniValue v2;
+    BOOST_CHECK(v2.setBool(true));
+    BOOST_CHECK_EQUAL(v2.get_bool(), true);
+    BOOST_CHECK_THROW(v2.get_int(), runtime_error);
+
+    UniValue v3;
+    BOOST_CHECK(v3.setNumStr("32482348723847471234"));
+    BOOST_CHECK_THROW(v3.get_int64(), runtime_error);
+    BOOST_CHECK(v3.setNumStr("1000"));
+    BOOST_CHECK_EQUAL(v3.get_int64(), 1000);
+
+    UniValue v4;
+    BOOST_CHECK(v4.setNumStr("2147483648"));
+    BOOST_CHECK_EQUAL(v4.get_int64(), 2147483648);
+    BOOST_CHECK_THROW(v4.get_int(), runtime_error);
+    BOOST_CHECK(v4.setNumStr("1000"));
+    BOOST_CHECK_EQUAL(v4.get_int(), 1000);
+    BOOST_CHECK_THROW(v4.get_str(), runtime_error);
+    BOOST_CHECK_EQUAL(v4.get_real(), 1000);
+    BOOST_CHECK_THROW(v4.get_array(), runtime_error);
+    BOOST_CHECK_THROW(v4.getKeys(), runtime_error);
+    BOOST_CHECK_THROW(v4.getValues(), runtime_error);
+    BOOST_CHECK_THROW(v4.get_obj(), runtime_error);
+
+    UniValue v5;
+    BOOST_CHECK(v5.read("[true, 10]"));
+    BOOST_CHECK_NO_THROW(v5.get_array());
+    std::vector<UniValue> vals = v5.getValues();
+    BOOST_CHECK_THROW(vals[0].get_int(), runtime_error);
+    BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
+
+    BOOST_CHECK_EQUAL(vals[1].get_int(), 10);
+    BOOST_CHECK_THROW(vals[1].get_bool(), runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(univalue_set)
 {
     UniValue v(UniValue::VSTR, "foo");
@@ -72,20 +114,20 @@ BOOST_AUTO_TEST_CASE(univalue_set)
 
     BOOST_CHECK(v.setObject());
     BOOST_CHECK(v.isObject());
-    BOOST_CHECK_EQUAL(v.count(), 0);
+    BOOST_CHECK_EQUAL(v.size(), 0);
     BOOST_CHECK_EQUAL(v.getType(), UniValue::VOBJ);
     BOOST_CHECK(v.empty());
 
     BOOST_CHECK(v.setArray());
     BOOST_CHECK(v.isArray());
-    BOOST_CHECK_EQUAL(v.count(), 0);
+    BOOST_CHECK_EQUAL(v.size(), 0);
 
     BOOST_CHECK(v.setStr("zum"));
     BOOST_CHECK(v.isStr());
     BOOST_CHECK_EQUAL(v.getValStr(), "zum");
 
     BOOST_CHECK(v.setFloat(-1.01));
-    BOOST_CHECK(v.isNum());
+    BOOST_CHECK(v.isReal());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
 
     BOOST_CHECK(v.setInt((int)1023));
@@ -145,7 +187,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
     BOOST_CHECK(arr.push_backV(vec));
 
     BOOST_CHECK_EQUAL(arr.empty(), false);
-    BOOST_CHECK_EQUAL(arr.count(), 5);
+    BOOST_CHECK_EQUAL(arr.size(), 5);
 
     BOOST_CHECK_EQUAL(arr[0].getValStr(), "1023");
     BOOST_CHECK_EQUAL(arr[1].getValStr(), "zippy");
@@ -157,7 +199,7 @@ BOOST_AUTO_TEST_CASE(univalue_array)
 
     arr.clear();
     BOOST_CHECK(arr.empty());
-    BOOST_CHECK_EQUAL(arr.count(), 0);
+    BOOST_CHECK_EQUAL(arr.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(univalue_object)
@@ -197,7 +239,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     BOOST_CHECK(obj.pushKVs(obj2));
 
     BOOST_CHECK_EQUAL(obj.empty(), false);
-    BOOST_CHECK_EQUAL(obj.count(), 9);
+    BOOST_CHECK_EQUAL(obj.size(), 9);
 
     BOOST_CHECK_EQUAL(obj["age"].getValStr(), "100");
     BOOST_CHECK_EQUAL(obj["first"].getValStr(), "John");
@@ -230,7 +272,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     objTypes["distance"] = UniValue::VNUM;
     objTypes["time"] = UniValue::VNUM;
     objTypes["calories"] = UniValue::VNUM;
-    objTypes["temperature"] = UniValue::VNUM;
+    objTypes["temperature"] = UniValue::VREAL;
     objTypes["cat1"] = UniValue::VNUM;
     objTypes["cat2"] = UniValue::VNUM;
     BOOST_CHECK(obj.checkObject(objTypes));
@@ -240,11 +282,11 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 
     obj.clear();
     BOOST_CHECK(obj.empty());
-    BOOST_CHECK_EQUAL(obj.count(), 0);
+    BOOST_CHECK_EQUAL(obj.size(), 0);
 }
 
 static const char *json1 =
-"[1.1,{\"key1\":\"str\",\"key2\":800,\"key3\":{\"name\":\"martian\"}}]";
+"[1.10000000,{\"key1\":\"str\",\"key2\":800,\"key3\":{\"name\":\"martian\"}}]";
 
 BOOST_AUTO_TEST_CASE(univalue_readwrite)
 {
@@ -255,13 +297,13 @@ BOOST_AUTO_TEST_CASE(univalue_readwrite)
     BOOST_CHECK(v.read(strJson1));
 
     BOOST_CHECK(v.isArray());
-    BOOST_CHECK_EQUAL(v.count(), 2);
+    BOOST_CHECK_EQUAL(v.size(), 2);
 
-    BOOST_CHECK_EQUAL(v[0].getValStr(), "1.1");
+    BOOST_CHECK_EQUAL(v[0].getValStr(), "1.10000000");
 
     UniValue obj = v[1];
     BOOST_CHECK(obj.isObject());
-    BOOST_CHECK_EQUAL(obj.count(), 3);
+    BOOST_CHECK_EQUAL(obj.size(), 3);
 
     BOOST_CHECK(obj["key1"].isStr());
     BOOST_CHECK_EQUAL(obj["key1"].getValStr(), "str");
