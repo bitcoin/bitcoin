@@ -27,6 +27,7 @@
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/math/distributions/poisson.hpp>
@@ -75,6 +76,8 @@ struct COrphanTx {
 map<uint256, COrphanTx> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 void EraseOrphansFor(NodeId peer);
+
+static bool SanityCheckMessage(CNode* peer, const CNetMessage& msg);
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -533,6 +536,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
 void RegisterNodeSignals(CNodeSignals& nodeSignals)
 {
     nodeSignals.GetHeight.connect(&GetHeight);
+    nodeSignals.SanityCheckMessages.connect(&SanityCheckMessage);
     nodeSignals.ProcessMessages.connect(&ProcessMessages);
     nodeSignals.SendMessages.connect(&SendMessages);
     nodeSignals.InitializeNode.connect(&InitializeNode);
@@ -542,6 +546,7 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals)
 void UnregisterNodeSignals(CNodeSignals& nodeSignals)
 {
     nodeSignals.GetHeight.disconnect(&GetHeight);
+    nodeSignals.SanityCheckMessages.disconnect(&SanityCheckMessage);
     nodeSignals.ProcessMessages.disconnect(&ProcessMessages);
     nodeSignals.SendMessages.disconnect(&SendMessages);
     nodeSignals.InitializeNode.disconnect(&InitializeNode);
@@ -3830,6 +3835,30 @@ std::string GetWarnings(const std::string& strFor)
 //
 // Messages
 //
+
+static std::map<std::string, size_t> maxMessageSizes = boost::assign::map_list_of
+    ("getaddr",0)
+    ("mempool",0)
+    ("ping",8)
+    ("pong",8)
+    ("verack", 0)
+    ;
+
+bool static SanityCheckMessage(CNode* peer, const CNetMessage& msg)
+{
+    const std::string& strCommand = msg.hdr.GetCommand();
+    if (msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH ||
+        (maxMessageSizes.count(strCommand) && msg.hdr.nMessageSize > maxMessageSizes[strCommand])) {
+        LogPrint("net", "Oversized %s message from peer=%i (%d bytes)\n",
+                 SanitizeString(strCommand), peer->GetId(), msg.hdr.nMessageSize);
+        Misbehaving(peer->GetId(), 20);
+        return msg.hdr.nMessageSize <= MAX_PROTOCOL_MESSAGE_LENGTH;
+    }
+    // This would be a good place for more sophisticated DoS detection/prevention.
+    // (e.g. disconnect a peer that is flooding us with excessive messages)
+
+    return true;
+}
 
 
 bool static AlreadyHave(const CInv& inv)
