@@ -38,7 +38,6 @@ extern std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
 extern CBudgetManager budget;
 
 void DumpBudgets();
-void GetMasternodeBudgetEscrow(CScript& payee);
 
 //Amount of blocks in a months period of time (using 2.6 minutes per)
 int GetBudgetPaymentCycleBlocks();
