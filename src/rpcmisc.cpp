@@ -135,7 +135,7 @@ Value bitcoin_getinfo(const Array& params, bool fHelp)
         bitcredit_pwalletMain->ClaimTxInPoints(mapClaimTxInPoints);
 
         obj.push_back(Pair("walletversion", bitcoin_pwalletMain->GetVersion()));
-        obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(credits_pcoinsTip, mapClaimTxInPoints))));
+        obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(bitcoin_pcoinsTip, mapClaimTxInPoints))));
     }
 #endif
     obj.push_back(Pair("blocks",        (int)bitcoin_chainActive.Height()));

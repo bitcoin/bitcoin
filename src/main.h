@@ -245,7 +245,7 @@ int64_t Credits_GetMinFee(const Credits_CTransaction& tx, unsigned int nBytes, b
     @param[in] mapInputs    Map of previous transactions that have outputs we're spending
     @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Credits_CCoinsViewCache& credits_view);
+bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache& claim_view);
 
 /** Count ECDSA signature operations the old-fashioned (pre-0.6) way
     @return number of sigops this transaction's outputs will produce when spent
@@ -259,7 +259,7 @@ unsigned int Bitcredit_GetLegacySigOpCount(const Credits_CTransaction& tx);
     @return maximum number of sigops required to validate this transaction's inputs
     @see Credits_CTransaction::FetchInputs
  */
-unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Credits_CCoinsViewCache& bitcredit_inputs);
+unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Credits_CCoinsViewCache& bitcredit_inputs, Bitcoin_CCoinsViewCache& claim_inputs);
 
 
 inline bool Credits_AllowFree(double dPriority)
@@ -269,19 +269,19 @@ inline bool Credits_AllowFree(double dPriority)
     return dPriority > COIN * 144 / 250;
 }
 
-bool Bitcredit_FindBestBlockAndCheckClaims(Credits_CCoinsViewCache &credits_view, const int64_t nClaimedCoins);
+bool Bitcredit_FindBestBlockAndCheckClaims(Bitcoin_CCoinsViewCache &claim_view, const int64_t nClaimedCoins);
 //Check that the claiming attempts being done are within the limits (90% of total monetary base and max 15 000 000  coins). Max bitcoin block height (600 000) tested in Bitcredit_CheckBlockHeader
-bool Bitcredit_CheckClaimsAreInBounds(Credits_CCoinsViewCache &credits_inputs, const int64_t nTryClaimedCoins, const int nBitcoinBlockHeight);
+bool Bitcredit_CheckClaimsAreInBounds(Bitcoin_CCoinsViewCache &claim_inputs, const int64_t nTryClaimedCoins, const int nBitcoinBlockHeight);
 
 // Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
 // This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
 // instead of being performed inline.
-bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
+bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Bitcoin_CCoinsViewCache &claim_inputs, int64_t &nTotalClaimedCoins, bool fScriptChecks = true,
                  unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS,
                  std::vector<Bitcredit_CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
-void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Credits_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
+void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &state, Credits_CCoinsViewCache &bitcredit_inputs, Bitcoin_CCoinsViewCache &claim_inputs, Credits_CTxUndo &txundo,  int nHeight, const uint256 &txhash);
 
 // Context-independent validity checks
 bool Bitcredit_CheckTransaction(const Credits_CTransaction& tx, CValidationState& state);
@@ -471,14 +471,14 @@ bool Credits_ReadBlockFromDisk(Credits_CBlock& block, const Credits_CBlockIndex*
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 /** Calculates resurrection of deposit base. Should be used just before coins are updated */
 void UpdateResurrectedDepositBase(const Credits_CBlockIndex* pBlockToTrim, const Credits_CTransaction &tx, int64_t &nResurrectedDepositBase, Credits_CCoinsViewCache& credits_view);
 /** Calculates trimming of deposit base. Should be used just after coins are updated */
 void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_CBlock &trimBlock, int64_t &nTrimmedDepositBase, Credits_CCoinsViewCache& credits_view);
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcredit_AddToBlockIndex(Credits_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);

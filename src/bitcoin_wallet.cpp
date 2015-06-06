@@ -651,7 +651,7 @@ bool Bitcoin_CWallet::IsMine(const Bitcoin_CTxIn &txin) const
     return false;
 }
 
-int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Credits_CCoinsViewCache* claim_view) const
+int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CCoinsViewCache* claim_view) const
 {
     {
         LOCK(cs_wallet);
@@ -677,7 +677,7 @@ int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Credits_CCoinsViewC
     }
     return 0;
 }
-int64_t Bitcoin_CWallet::GetDebit(const Credits_CTxIn &txin, Credits_CCoinsViewCache* claim_view) const
+int64_t Bitcoin_CWallet::GetDebit(const Credits_CTxIn &txin, Bitcoin_CCoinsViewCache* claim_view) const
 {
     {
         LOCK(cs_wallet);
@@ -770,7 +770,7 @@ int Bitcoin_CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
-void Bitcoin_CWalletTx::Claim_GetAmounts(Credits_CCoinsViewCache* claim_view, list<pair<CTxDestination, int64_t> >& listReceived,
+void Bitcoin_CWalletTx::Claim_GetAmounts(Bitcoin_CCoinsViewCache* claim_view, list<pair<CTxDestination, int64_t> >& listReceived,
                            list<pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, string& strSentAccount) const
 {
     nFee = 0;
@@ -885,7 +885,7 @@ void Bitcoin_CWalletTx::Bitcoin_GetAmounts(list<pair<CTxDestination, int64_t> >&
 	}
 }
 
-void Bitcoin_CWalletTx::Claim_GetAccountAmounts(Credits_CCoinsViewCache* claim_view, const string& strAccount, int64_t& nReceived,
+void Bitcoin_CWalletTx::Claim_GetAccountAmounts(Bitcoin_CCoinsViewCache* claim_view, const string& strAccount, int64_t& nReceived,
                                   int64_t& nSent, int64_t& nFee) const
 {
     nReceived = nSent = nFee = 0;
@@ -1102,7 +1102,7 @@ void Bitcoin_CWallet::ResendWalletTransactions()
 // Actions
 //
 
-int64_t Bitcoin_CWallet::GetBalance(Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+int64_t Bitcoin_CWallet::GetBalance(Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     int64_t nTotal = 0;
     {
@@ -1123,7 +1123,7 @@ int64_t Bitcoin_CWallet::GetBalance(Credits_CCoinsViewCache* claim_view, map<uin
     return nTotal;
 }
 
-int64_t Bitcoin_CWallet::GetUnconfirmedBalance(Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+int64_t Bitcoin_CWallet::GetUnconfirmedBalance(Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     int64_t nTotal = 0;
     {
@@ -1143,7 +1143,7 @@ int64_t Bitcoin_CWallet::GetUnconfirmedBalance(Credits_CCoinsViewCache* claim_vi
     return nTotal;
 }
 
-int64_t Bitcoin_CWallet::GetImmatureBalance(Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
+int64_t Bitcoin_CWallet::GetImmatureBalance(Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const
 {
     int64_t nTotal = 0;
     {
@@ -1162,7 +1162,7 @@ int64_t Bitcoin_CWallet::GetImmatureBalance(Credits_CCoinsViewCache* claim_view,
 }
 
 // Find the depth of the claim best block
-int Bitcoin_CWallet::GetBestBlockClaimDepth(Credits_CCoinsViewCache* claim_view) const
+int Bitcoin_CWallet::GetBestBlockClaimDepth(Bitcoin_CCoinsViewCache* claim_view) const
 {
 	int nHeight = 0;
 	uint256 bestBlockHash = claim_view->Claim_GetBestBlock();
@@ -1178,7 +1178,7 @@ int Bitcoin_CWallet::GetBestBlockClaimDepth(Credits_CCoinsViewCache* claim_view)
 }
 
 // populate vCoins with vector of spendable COutputs
-void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const
+void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, bool fOnlyConfirmed, const CCoinControl *coinControl) const
 {
     vCoins.clear();
 
@@ -1381,7 +1381,7 @@ bool Bitcoin_CWallet::SelectCoinsMinConf(int64_t nTargetValue, int nConfMine, in
     return true;
 }
 
-bool Bitcoin_CWallet::SelectCoins(int64_t nTargetValue, set<pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Credits_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl* coinControl) const
+bool Bitcoin_CWallet::SelectCoins(int64_t nTargetValue, set<pair<const Bitcoin_CWalletTx*,unsigned int> >& setCoinsRet, int64_t& nValueRet, Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl* coinControl) const
 {
     vector<Bitcoin_COutput> vCoins;
     AvailableCoins(vCoins, claim_view, mapFilterTxInPoints, true, coinControl);
@@ -1925,7 +1925,7 @@ int64_t Bitcoin_CWallet::GetOldestKeyPoolTime()
     return keypool.nTime;
 }
 
-std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Credits_CCoinsViewCache* claim_view)
+std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Bitcoin_CCoinsViewCache* claim_view)
 {
     map<CTxDestination, int64_t> balances;
 

@@ -377,6 +377,22 @@ void Bitcoin_CCoinsViewCache::Claim_GetValueIn(const Bitcoin_CTransaction& tx, C
 
     return;
 }
+int64_t Bitcoin_CCoinsViewCache::Claim_GetValueIn(const Credits_CTransaction& tx) {
+	assert(tx.IsClaim());
+
+    int64_t nResult = 0;
+	for (unsigned int i = 0; i < tx.vin.size(); i++) {
+		const COutPoint &prevout = tx.vin[i].prevout;
+		const Claim_CCoins &coins = Claim_GetCoins(prevout.hash);
+
+		assert(coins.IsAvailable(prevout.n));
+
+		nResult += coins.vout[prevout.n].nValueClaimable;
+	}
+
+    return nResult;
+}
+
 
 bool Bitcoin_CCoinsViewCache::Bitcoin_HaveInputs(const Bitcoin_CTransaction& tx)
 {

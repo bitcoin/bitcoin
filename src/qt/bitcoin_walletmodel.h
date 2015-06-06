@@ -30,7 +30,7 @@ class CPubKey;
 class Bitcoin_CWallet;
 class Credits_CWallet;
 class uint256;
-class Credits_CCoinsViewCache;
+class Bitcoin_CCoinsViewCache;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -128,9 +128,9 @@ public:
     Bitcoin_TransactionTableModel *getTransactionTableModel();
     Bitcoin_RecentRequestsTableModel *getRecentRequestsTableModel();
 
-    qint64 getBalance(Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
-    qint64 getUnconfirmedBalance(Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
-    qint64 getImmatureBalance(Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getBalance(Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints, const CCoinControl *coinControl = NULL) const;
+    qint64 getUnconfirmedBalance(Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    qint64 getImmatureBalance(Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
@@ -182,9 +182,9 @@ public:
     UnlockContext requestUnlock();
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Credits_CCoinsViewCache *credits_view);
-    bool isSpent(const COutPoint& outpoint, Credits_CCoinsViewCache *credits_view) const;
-    void listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Credits_CCoinsViewCache* credits_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
+    void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<Bitcoin_COutput>& vOutputs, Bitcoin_CCoinsViewCache* claim_view);
+    bool isSpent(const COutPoint& outpoint, Bitcoin_CCoinsViewCache* claim_view) const;
+    void listCoins(std::map<QString, std::vector<Bitcoin_COutput> >& mapCoins, Bitcoin_CCoinsViewCache* claim_view, map<uint256, set<int> >& mapFilterTxInPoints) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
