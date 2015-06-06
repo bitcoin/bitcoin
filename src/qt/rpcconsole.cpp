@@ -485,10 +485,10 @@ void RPCConsole::startExecutor()
 
 void RPCConsole::on_tabWidget_currentChanged(int index)
 {
-    if(ui->tabWidget->widget(index) == ui->tab_console)
-    {
+    if (ui->tabWidget->widget(index) == ui->tab_console)
         ui->lineEdit->setFocus();
-    }
+    else if (ui->tabWidget->widget(index) != ui->tab_peers)
+        clearSelectedNode();
 }
 
 void RPCConsole::on_openDebugLogfileButton_clicked()
@@ -558,12 +558,11 @@ void RPCConsole::peerLayoutChanged()
         return;
 
     // find the currently selected row
-    int selectedRow;
+    int selectedRow = -1;
     QModelIndexList selectedModelIndex = ui->peerWidget->selectionModel()->selectedIndexes();
-    if (selectedModelIndex.isEmpty())
-        selectedRow = -1;
-    else
+    if (!selectedModelIndex.isEmpty()) {
         selectedRow = selectedModelIndex.first().row();
+    }
 
     // check if our detail node has a row in the table (it may not necessarily
     // be at selectedRow since its position can change after a layout change)
@@ -573,9 +572,6 @@ void RPCConsole::peerLayoutChanged()
     {
         // detail node dissapeared from table (node disconnected)
         fUnselect = true;
-        cachedNodeid = -1;
-        ui->detailWidget->hide();
-        ui->peerHeading->setText(tr("Select a peer to view detailed information."));
     }
     else
     {
@@ -590,10 +586,8 @@ void RPCConsole::peerLayoutChanged()
         stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
     }
 
-    if (fUnselect && selectedRow >= 0)
-    {
-        ui->peerWidget->selectionModel()->select(QItemSelection(selectedModelIndex.first(), selectedModelIndex.last()),
-            QItemSelectionModel::Deselect);
+    if (fUnselect && selectedRow >= 0) {
+        clearSelectedNode();
     }
 
     if (fReselect)
@@ -694,6 +688,14 @@ void RPCConsole::disconnectSelectedNode()
     // Find the node, disconnect it and clear the selected node
     if (CNode *bannedNode = FindNode(strNode.toStdString())) {
         bannedNode->CloseSocketDisconnect();
-        ui->peerWidget->selectionModel()->clearSelection();
+        clearSelectedNode();
     }
+}
+
+void RPCConsole::clearSelectedNode()
+{
+    ui->peerWidget->selectionModel()->clearSelection();
+    cachedNodeid = -1;
+    ui->detailWidget->hide();
+    ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 }
