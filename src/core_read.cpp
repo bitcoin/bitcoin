@@ -111,6 +111,8 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx, bool fTry
     CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
     try {
         ssData >> tx;
+        if (!ssData.empty())
+            return false;
     }
     catch (const std::exception&) {
         return false;
