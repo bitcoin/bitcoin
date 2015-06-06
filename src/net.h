@@ -234,8 +234,8 @@ public:
 class CNode
 {
 public:
+    CNodeStats stats;
     // socket
-    uint64_t nServices;
     SOCKET hSocket;
     CDataStream ssSend;
     size_t nSendSize; // total size of all vSendMsg entries
@@ -607,7 +607,7 @@ public:
     static void ClearBanned(); // needed for unit testing
     static bool IsBanned(CNetAddr ip);
     static bool Ban(const CNetAddr &ip);
-    void copyStats(CNodeStats &stats);
+    void copyStats(CNodeStats& statsIn);
 
     static bool IsWhitelistedRange(const CNetAddr &ip);
     static void AddWhitelistedRange(const CSubNet &subnet);

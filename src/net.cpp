@@ -486,22 +486,22 @@ void CNode::AddWhitelistedRange(const CSubNet &subnet) {
     vWhitelistedRange.push_back(subnet);
 }
 
-void CNode::copyStats(CNodeStats &stats)
+void CNode::copyStats(CNodeStats& statsIn)
 {
-    stats.nodeid = this->GetId();
-    stats.nServices = nServices;
-    stats.nLastSend = nLastSend;
-    stats.nLastRecv = nLastRecv;
-    stats.nTimeConnected = nTimeConnected;
-    stats.nTimeOffset = nTimeOffset;
-    stats.addrName = addrName;
-    stats.nVersion = nVersion;
-    stats.cleanSubVer = cleanSubVer;
-    stats.fInbound = fInbound;
-    stats.nStartingHeight = nStartingHeight;
-    stats.nSendBytes = nSendBytes;
-    stats.nRecvBytes = nRecvBytes;
-    stats.fWhitelisted = fWhitelisted;
+    statsIn.nodeid = this->GetId();
+    statsIn.nServices = stats.nServices;
+    statsIn.nLastSend = nLastSend;
+    statsIn.nLastRecv = nLastRecv;
+    statsIn.nTimeConnected = nTimeConnected;
+    statsIn.nTimeOffset = nTimeOffset;
+    statsIn.addrName = addrName;
+    statsIn.nVersion = nVersion;
+    statsIn.cleanSubVer = cleanSubVer;
+    statsIn.fInbound = fInbound;
+    statsIn.nStartingHeight = nStartingHeight;
+    statsIn.nSendBytes = nSendBytes;
+    statsIn.nRecvBytes = nRecvBytes;
+    statsIn.fWhitelisted = fWhitelisted;
 
     // It is common for nodes with good ping times to suddenly become lagged,
     // due to a new block arriving or other large transfer.
@@ -515,11 +515,11 @@ void CNode::copyStats(CNodeStats &stats)
     }
 
     // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
-    stats.dPingTime = (((double)nPingUsecTime) / 1e6);
-    stats.dPingWait = (((double)nPingUsecWait) / 1e6);
+    statsIn.dPingTime = (((double)nPingUsecTime) / 1e6);
+    statsIn.dPingWait = (((double)nPingUsecWait) / 1e6);
 
     // Leave string empty if addrLocal invalid (not filled in yet)
-    stats.addrLocal = addrLocal.IsValid() ? addrLocal.ToString() : "";
+    statsIn.addrLocal = addrLocal.IsValid() ? addrLocal.ToString() : "";
 }
 
 // requires LOCK(cs_vRecvMsg)
@@ -1907,7 +1907,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     addrKnown(5000, 0.001, insecure_rand()),
     setInventoryKnown(SendBufferSize() / 1000)
 {
-    nServices = 0;
+    stats.nServices = 0;
     hSocket = hSocketIn;
     nRecvVersion = INIT_PROTO_VERSION;
     nLastSend = 0;
