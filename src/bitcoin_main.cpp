@@ -2434,8 +2434,10 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!Bitcoin_WriteChainState(state))
         return false;
-    if (!Bitcoin_WriteChainStateClaim(state))
-        return false;
+    if(fastForwardClaimState) {
+		if (!Bitcoin_WriteChainStateClaim(state))
+			return false;
+    }
     // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
@@ -2621,8 +2623,10 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
     // Write the chain state to disk, if necessary.
     if (!Bitcoin_WriteChainState(state))
         return false;
-    if (!Bitcoin_WriteChainStateClaim(state))
-        return false;
+    if(fastForwardClaimState) {
+		if (!Bitcoin_WriteChainStateClaim(state))
+			return false;
+    }
     // Remove conflicting transactions from the mempool.
     list<Bitcoin_CTransaction> txConflicted;
     BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
