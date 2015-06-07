@@ -783,6 +783,21 @@ public:
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
     void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
+
+
+    std::string HDchainPath;
+    CExtPubKey HDexternalPubKey;
+    CExtPubKey HDinternalPubKey;
+    unsigned char HDmasterSeed[32];
+    CKeyID HDmasterKeyID;
+    CKeyingMaterial vMasterSeed;
+
+    bool HDSetChainPath(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, const CExtPubKey& pubMasterKey, bool overwrite = false);
+    bool HDGetChildPubKeyAtIndex(CPubKey &pubKeyOut, unsigned int index, bool internal = false);
+    bool HDGetNextChildPubKey(CPubKey &pubKeyOut, bool internal = false);
+    bool HDDeriveKeyFromKeyID(CKey& keyOut, CKeyID keyId) const;
+    bool GetKey(const CKeyID &address, CKey &keyOut) const;
+    std::string HDGetChainPath();
 };
 
 /** A key allocated from the key pool. */

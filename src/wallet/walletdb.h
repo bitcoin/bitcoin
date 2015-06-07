@@ -110,8 +110,8 @@ public:
     bool WriteWatchOnly(const CScript &script);
     bool EraseWatchOnly(const CScript &script);
 
-    bool WriteHDMasterSeed(const std::string &masterSeedHex);
-    bool EraseHDMasterSeed(const CScript &dest);
+    bool WriteHDMasterSeed(const CKeyingMaterial& masterSeed);
+    bool EraseHDMasterSeed();
 
     bool WriteHDExternalPubKey(const CExtPubKey &externalPubKey);
     bool WriteHDInternalPubKey(const CExtPubKey &internalPubKey);

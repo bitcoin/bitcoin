@@ -15,11 +15,13 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utilstrencodings.h"
 #include "wallet.h"
 #include "walletdb.h"
 
 #include <stdint.h>
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include <univalue.h>
@@ -128,7 +130,6 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     return CBitcoinAddress(keyID).ToString();
 }
-
 
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
@@ -2442,3 +2443,116 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
     return result;
 }
+
+/* BIP32 stack */
+const std::string hd_default_chainpath = "m/44'/0'/0'/c/k";
+
+UniValue hdchainpath(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp)
+        throw runtime_error(
+                            "hdchainpath set|get (<chainpath>|default) (<masterseed_hex>)\n"
+                            "\nEnables/sets HD option for this wallet\n"
+                            "\nArguments:\n"
+                            "1. chainpath        (string, optional, default="+hd_default_chainpath+") chainpath for hd wallet structure\n"
+                            "   m stands for master, c for internal/external key-switch, k stands for upcounting child key index"
+                            "2. masterseed_hex   (string/hex, optional) use this seed for master key generation\n"
+                            "\nResult\n"
+                            "{\n"
+                            "  \"seed_hex\" : \"<hexstr>\",  (string) seed used during master key generation (only if no masterseed hex was provided\n"
+                            "}\n"
+
+                            "\nExamples\n"
+                            + HelpExampleCli("hdchainpath", "get")
+                            + HelpExampleCli("hdchainpath", "set m/44'/0'/0'/c/k")
+                            + HelpExampleRpc("hdchainpath", "set m/44'/0'/0'/c/k")
+                            );
+
+    UniValue result(UniValue::VOBJ);
+
+    if(params[0].get_str() == "set")
+    {
+        assert(pwalletMain != NULL);
+        const unsigned int bip32MasterSeedLength = 32;
+
+        CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
+        bool fGenerateMasterSeed = true;
+        CExtPubKey masterPubKey;
+        std::string chainPath = hd_default_chainpath;
+        if (params.size() > 1 && params[1].isStr() && params[1].get_str() != "default")
+            chainPath = params[1].get_str(); //todo bip32 chainpath sanity
+
+        if (params.size() > 2 && params[2].isStr())
+        {
+            if (!IsHex(params[2].get_str()))
+                throw runtime_error("HD master seed must encoded in hex");
+
+            std::vector<unsigned char> seed = ParseHex(params[2].get_str());
+            if (seed.size() != bip32MasterSeedLength)
+                throw runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
+
+            memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
+            memory_cleanse(&seed[0], bip32MasterSeedLength);
+            fGenerateMasterSeed = false;
+        }
+
+        pwalletMain->HDSetChainPath(chainPath, fGenerateMasterSeed, vSeed, masterPubKey);
+        if (fGenerateMasterSeed)
+            result.push_back(Pair("seed_hex", HexStr(vSeed)));
+    }
+
+
+
+    return result;
+}
+
+UniValue hdgetaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+                            "hdgetaddress (<childindex>)\n"
+                            "\nReturns a Bitcoin address for receiving payments.\n"
+                            "\nautomatically uses the next available childindex if no index is given"
+                            "\nArguments:\n"
+                            "1. \"childindex\"        (numeric, optional) child key index. ATTENTION: automatic index counting will start at the highes available child key index\n"
+                            "{\n"
+                            "  \"address\" : \"<address>\",  string) The new bitcoin address\n"
+                            "  \"chainpath\" : \"<keyschainpath>\",  string) The used chainpath\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdgetaddress", "")
+                            + HelpExampleCli("hdgetaddress", "100")
+                            + HelpExampleRpc("hdgetaddress", "")
+                            );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    CPubKey newKey;
+    if (params.size() == 1 && params[0].isNum())
+    {
+        if (!pwalletMain->HDGetChildPubKeyAtIndex(newKey, params[0].get_int()))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
+    }
+    else
+    {
+        if (!pwalletMain->HDGetNextChildPubKey(newKey))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
+    }
+    CKeyID keyID = newKey.GetID();
+    
+    pwalletMain->SetAddressBook(keyID, "", "receive");
+
+    std::string keysChainPath = pwalletMain->HDGetChainPath();
+    std::stringstream ss; ss << pwalletMain->mapKeyMetadata[keyID].nChild;
+    boost::replace_all(keysChainPath, "c", "0");
+    boost::replace_all(keysChainPath, "k", ss.str());
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("address", CBitcoinAddress(keyID).ToString()));
+    result.push_back(Pair("chainpath", keysChainPath));
+    return result;
+}
+/* end BIP32 stack */

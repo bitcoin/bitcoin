@@ -129,13 +129,13 @@ bool CWalletDB::EraseWatchOnly(const CScript &dest)
 }
 
 /* BIP32 STACK */
-bool CWalletDB::WriteHDMasterSeed(const std::string &masterSeedHex)
+bool CWalletDB::WriteHDMasterSeed(const CKeyingMaterial& masterSeed)
 {
     nWalletDBUpdated++;
-    return Write(std::string("hdmasterseed"), masterSeedHex);
+    return Write(std::string("hdmasterseed"), masterSeed);
 }
 
-bool CWalletDB::EraseHDMasterSeed(const CScript &dest)
+bool CWalletDB::EraseHDMasterSeed()
 {
     nWalletDBUpdated++;
     return Erase(std::string("hdmasterseed"));
@@ -542,6 +542,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             CPubKey vchPubKey;
             ssKey >> vchPubKey;
+            if (!vchPubKey.IsValid())
+            {
+                strErr = "Error reading wallet database: CPubKey corrupt";
+                return false;
+            }
             if (!pwallet->LoadKey(CKey(), vchPubKey))
             {
                 strErr = "Error reading wallet database: LoadKey failed";
@@ -663,6 +668,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             ssValue >> pwallet->HDchainPath;
         }
+        else if (strType == "hdmasterseed")
+        {
+            ssValue >> pwallet->vMasterSeed;
+        }
+
     } catch (...)
     {
         return false;
