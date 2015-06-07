@@ -191,7 +191,8 @@ extern json_spirit::Value bitcoin_walletlock(const json_spirit::Array& params, b
 extern json_spirit::Value bitcredit_encryptwallet(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value deposit_encryptwallet(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_encryptwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value validateaddress(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value credits_validateaddress(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_validateaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcredit_getinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_getinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcredit_getwalletinfo(const json_spirit::Array& params, bool fHelp);

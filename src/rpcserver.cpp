@@ -278,7 +278,8 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Utility functions */
     { "createmultisig",         &createmultisig,         true,      true ,      false },
-    { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+    { "validateaddress",        &credits_validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+    { "bitcoin_validateaddress",        &bitcoin_validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
 #ifdef ENABLE_WALLET

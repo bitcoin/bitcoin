@@ -335,6 +335,13 @@ elif cmd == "validateaddress":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_validateaddress":
+    try:
+        addr = raw_input("Address: ")
+        print access.bitcoin_validateaddress(addr)
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "walletpassphrase":
     try:
         pwd = getpass.getpass(prompt="Enter wallet passphrase: ")

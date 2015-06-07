@@ -232,15 +232,24 @@ Sends amount from the server's available balance to 'bitcoinaddress'. amount is 
 \fBstop\fR
 Stops the bitcoin server.
 .TP    
-\fBvalidateaddress 'bitcoinaddress'\fR
-Checks that 'bitcoinaddress' looks like a proper bitcoin address. Returns an object containing:
+\fBvalidateaddress 'address'\fR
+Checks that 'address' looks like a proper address. Returns an object containing:
 
     "isvalid" : true or false.
     "ismine"  : true if the address is in the server's wallet.
-    "address" : bitcoinaddress.
+    "address" : address.
 
     *note: ismine and address are only returned if the address is valid.
+.TP    
+\fBbitcoin_validateaddress 'address'\fR
+Checks that 'address' looks like a proper address. Returns an object containing:
 
+    "isvalid" : true or false.
+    "ismine"  : true if the address is in the server's wallet.
+    "address" : address.
+
+    *note: ismine and address are only returned if the address is valid.
+    
 .SH "SEE ALSO"
 credits.conf(5)
 .SH AUTHOR
