@@ -275,7 +275,7 @@ CExtPubKey CExtKey::Neuter() const {
     return ret;
 }
 
-void CExtKey::Encode(unsigned char code[74]) const {
+void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
     code[0] = nDepth;
     memcpy(code+1, vchFingerprint, 4);
     code[5] = (nChild >> 24) & 0xFF; code[6] = (nChild >> 16) & 0xFF;
@@ -286,12 +286,12 @@ void CExtKey::Encode(unsigned char code[74]) const {
     memcpy(code+42, key.begin(), 32);
 }
 
-void CExtKey::Decode(const unsigned char code[74]) {
+void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     nDepth = code[0];
     memcpy(vchFingerprint, code+1, 4);
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
-    key.Set(code+42, code+74, true);
+    key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
 }
 
 bool ECC_InitSanityCheck() {
