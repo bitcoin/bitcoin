@@ -63,7 +63,7 @@ void CTxOut::print() const
     LogPrintf("%s\n", ToString());
 }
 
-CTxOutClaim::CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn)
+CTxOutClaim::CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn)
 {
 	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalIn), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginalIn));
 	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableIn), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimableIn));
@@ -72,11 +72,12 @@ CTxOutClaim::CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CS
 	nValueOriginal = nValueOriginalIn;
 	nValueClaimable = nValueClaimableIn;
     scriptPubKey = scriptPubKeyIn;
+    nValueOriginalHasBeenSpent = nValueOriginalHasBeenSpentIn;
 }
 
 std::string CTxOutClaim::ToString() const
 {
-    return strprintf("CTxOutClaim(nValueOriginal=%d.%08d, nValueClaimable=%d.%08d, scriptPubKey=%s(%s))", nValueOriginal / COIN, nValueOriginal % COIN, nValueClaimable / COIN, nValueClaimable % COIN, scriptPubKey.ToString().substr(0,30), HexStr(scriptPubKey.begin(), scriptPubKey.end(), false));
+    return strprintf("CTxOutClaim(nValueOriginal=%d.%08d, nValueClaimable=%d.%08d, scriptPubKey=%s(%s), nValueOriginalHasBeenSpent=%d)", nValueOriginal / COIN, nValueOriginal % COIN, nValueClaimable / COIN, nValueClaimable % COIN, scriptPubKey.ToString().substr(0,30), HexStr(scriptPubKey.begin(), scriptPubKey.end(), false), nValueOriginalHasBeenSpent);
 }
 
 void CTxOutClaim::print() const

@@ -179,19 +179,21 @@ public:
     int64_t nValueOriginal;
     int64_t nValueClaimable;
     CScript scriptPubKey;
+    int nValueOriginalHasBeenSpent;
 
     CTxOutClaim()
     {
         SetNull();
     }
 
-    CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn);
+    CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn);
 
     IMPLEMENT_SERIALIZE
     (
         READWRITE(nValueOriginal);
         READWRITE(nValueClaimable);
         READWRITE(scriptPubKey);
+        READWRITE(nValueOriginalHasBeenSpent);
 
         assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginal));
         assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimable));
@@ -203,6 +205,7 @@ public:
         nValueOriginal = -1;
         nValueClaimable = -1;
         scriptPubKey.clear();
+        nValueOriginalHasBeenSpent = 0;
     }
 
     bool IsNull() const
@@ -216,7 +219,8 @@ public:
     {
         return (a.nValueOriginal       == b.nValueOriginal &&
         		a.nValueClaimable       == b.nValueClaimable &&
-                a.scriptPubKey == b.scriptPubKey);
+                a.scriptPubKey == b.scriptPubKey &&
+                a.nValueOriginalHasBeenSpent == b.nValueOriginalHasBeenSpent);
     }
 
     friend bool operator!=(const CTxOutClaim& a, const CTxOutClaim& b)
@@ -430,6 +434,7 @@ public:
         }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
+        READWRITE(VARINT(txout.nValueOriginalHasBeenSpent));
     });)
 };
 

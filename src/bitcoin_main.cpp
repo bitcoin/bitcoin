@@ -1476,7 +1476,8 @@ void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state
     ret = inputs.Bitcoin_SetCoins(txhash, Bitcoin_CCoins(tx, nHeight));
     assert(ret);
     if(fastForwardClaimState) {
-        ret = inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight));
+        //TODO - nValueOriginalHasBeenSpentIn must be set correctly here
+        ret = inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight, 0));
         assert(ret);
     }
 }
@@ -1514,7 +1515,8 @@ void Bitcoin_UpdateCoinsForClaim(const Bitcoin_CTransaction& tx, CValidationStat
 	}
 
     // add outputs
-    ret = inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight, claimSum));
+    //TODO - nValueOriginalHasBeenSpentIn must be set correctly here
+    ret = inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight, claimSum, 0));
     assert(ret);
 }
 void Bitcoin_UpdateCoinsForClaimCoinbase(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, int64_t& nFeesOriginal, int64_t& nFeesClaimable, int nHeight, const uint256 &txhash)
@@ -1528,7 +1530,8 @@ void Bitcoin_UpdateCoinsForClaimCoinbase(const Bitcoin_CTransaction& tx, CValida
 	claimSum.nValueClaimableSum = nFeesClaimable;
 
     // add outputs
-    ret = inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight, claimSum));
+    //TODO - nValueOriginalHasBeenSpentIn must be set correctly here
+    ret = inputs.Claim_SetCoins(txhash, Claim_CCoins(tx, nHeight, claimSum, 0));
     assert(ret);
 }
 
@@ -1755,7 +1758,8 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
             Claim_CCoins &claim_outs = view.Claim_HaveCoins(hash) ? view.Claim_GetCoins(hash) : claim_outsEmpty;
             claim_outs.ClearUnspendable();
 
-            Claim_CCoins claim_outsBlock = Claim_CCoins(tx, pindex->nHeight);
+            //TODO - nValueOriginalHasBeenSpentIn must be set correctly here
+            Claim_CCoins claim_outsBlock = Claim_CCoins(tx, pindex->nHeight, 0);
             // The Bitcoin_CCoins serialization does not serialize negative numbers.
             // No network rules currently depend on the version here, so an inconsistency is harmless
             // but it must be corrected before txout nversion ever influences a network rule.
@@ -1845,7 +1849,8 @@ void RevertCoin(const Bitcoin_CTransaction &tx, Bitcoin_CBlockIndex* pindex, Bit
     Claim_CCoins &outs = view.Claim_HaveCoins(hash) ? view.Claim_GetCoins(hash) : outsEmpty;
     outs.ClearUnspendable();
 
-    Claim_CCoins outsBlock = Claim_CCoins(tx, pindex->nHeight);
+    //TODO - nValueOriginalHasBeenSpentIn must be set correctly here
+    Claim_CCoins outsBlock = Claim_CCoins(tx, pindex->nHeight, 0);
     // The Claim_CCoins serialization does not serialize negative numbers.
     // No network rules currently depend on the version here, so an inconsistency is harmless
     // but it must be corrected before txout nversion ever influences a network rule.

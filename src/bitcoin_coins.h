@@ -308,7 +308,7 @@ public:
 
     //TODO - test this fractional calculation.
     // construct a Claim_CCoins from a CTransaction, at a given height
-    Claim_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn, const ClaimSum& claimSum) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
+    Claim_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn, const ClaimSum& claimSum, int nValueOriginalHasBeenSpentIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
 
 		if(fCoinBase) {
 			const int64_t nTotalReduceFees = claimSum.nValueOriginalSum - claimSum.nValueClaimableSum;
@@ -322,7 +322,7 @@ public:
 				}
 				assert(nValueClaimable >= 0 && nValueClaimable <= nValue);
 
-				vout.push_back(CTxOutClaim(nValue, nValueClaimable, txout.scriptPubKey));
+				vout.push_back(CTxOutClaim(nValue, nValueClaimable, txout.scriptPubKey, nValueOriginalHasBeenSpentIn));
 			}
 		} else {
 			BOOST_FOREACH(const CTxOut & txout, tx.vout) {
@@ -330,7 +330,7 @@ public:
 				const int64_t nValueClaimable = ReduceByFraction(nValue, claimSum.nValueClaimableSum, claimSum.nValueOriginalSum);
 				assert(nValueClaimable >= 0 && nValueClaimable <= nValue);
 
-				vout.push_back(CTxOutClaim(nValue, nValueClaimable, txout.scriptPubKey));
+				vout.push_back(CTxOutClaim(nValue, nValueClaimable, txout.scriptPubKey, nValueOriginalHasBeenSpentIn));
 			}
 		}
 
@@ -342,9 +342,9 @@ public:
     //There are only two use cases for this constructor:
     //1. To create an object that can be compared with equalsExcludingClaimable
     //2. In Bitcoin block connect and disconnect when fast forwarding the claim chainstate
-    Claim_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
+    Claim_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn, int nValueOriginalHasBeenSpentIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
     	BOOST_FOREACH(const CTxOut & txout, tx.vout) {
-    		vout.push_back(CTxOutClaim(txout.nValue, txout.nValue, txout.scriptPubKey));
+    		vout.push_back(CTxOutClaim(txout.nValue, txout.nValue, txout.scriptPubKey, nValueOriginalHasBeenSpentIn));
     	}
 
     	ClearUnspendable();
@@ -369,7 +369,8 @@ public:
      		const CTxOutClaim &txout = vout[i];
      		const CTxOutClaim &btxout = b.vout[i];
              if (txout.nValueOriginal != btxout.nValueOriginal ||
-            	txout.scriptPubKey != btxout.scriptPubKey) {
+            	txout.scriptPubKey != btxout.scriptPubKey ||
+            	txout.nValueOriginalHasBeenSpent != btxout.nValueOriginalHasBeenSpent) {
                  return false;
              }
      	}
