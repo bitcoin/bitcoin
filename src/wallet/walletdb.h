@@ -43,9 +43,12 @@ enum DBErrors
 class CKeyMetadata
 {
 public:
-    static const int CURRENT_VERSION=1;
+    static const int CURRENT_VERSION=2;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
+
+    unsigned int nChild;
+    CKeyID parentKeyID;
 
     CKeyMetadata()
     {
@@ -53,7 +56,7 @@ public:
     }
     CKeyMetadata(int64_t nCreateTime_)
     {
-        nVersion = CKeyMetadata::CURRENT_VERSION;
+        SetNull();
         nCreateTime = nCreateTime_;
     }
 
@@ -64,12 +67,20 @@ public:
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nCreateTime);
+        if(nVersion >= 2)
+        {
+            READWRITE(nChild);
+            READWRITE(parentKeyID);
+        }
+
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
+        nChild = 0;
+        parentKeyID = CKeyID();
     }
 };
 
