@@ -128,6 +128,49 @@ bool CWalletDB::EraseWatchOnly(const CScript &dest)
     return Erase(std::make_pair(std::string("watchs"), *(const CScriptBase*)(&dest)));
 }
 
+/* BIP32 STACK */
+bool CWalletDB::WriteHDMasterSeed(const std::string &masterSeedHex)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("hdmasterseed"), masterSeedHex);
+}
+
+bool CWalletDB::EraseHDMasterSeed(const CScript &dest)
+{
+    nWalletDBUpdated++;
+    return Erase(std::string("hdmasterseed"));
+}
+
+bool CWalletDB::WriteHDExternalPubKey(const CExtPubKey &externalPubKey)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("hdexternalpubkey"), externalPubKey);
+}
+
+bool CWalletDB::WriteHDInternalPubKey(const CExtPubKey &internalPubKey)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("hdinternalpubkey"), internalPubKey);
+}
+
+bool CWalletDB::WriteHDChainPath(const std::string &chainPath)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("hdchainpath"), chainPath);
+}
+
+bool CWalletDB::WriteHDPubKey(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta)
+{
+    nWalletDBUpdated++;
+
+    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
+               keyMeta))
+        return false;
+
+    return Write(std::make_pair(std::string("hdpubkey"), vchPubKey), '1');
+}
+/* END: BIP32 STACK */
+
 bool CWalletDB::WriteBestBlock(const CBlockLocator& locator)
 {
     nWalletDBUpdated++;
@@ -495,6 +538,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
+        else if (strType == "hdpubkey")
+        {
+            CPubKey vchPubKey;
+            ssKey >> vchPubKey;
+            if (!pwallet->LoadKey(CKey(), vchPubKey))
+            {
+                strErr = "Error reading wallet database: LoadKey failed";
+                return false;
+            }
+        }
         else if (strType == "mkey")
         {
             unsigned int nID;
@@ -597,6 +650,18 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: LoadDestData failed";
                 return false;
             }
+        }
+        else if (strType == "hdexternalpubkey")
+        {
+            ssValue >> pwallet->HDexternalPubKey;
+        }
+        else if (strType == "hdinternalpubkey")
+        {
+            ssValue >> pwallet->HDinternalPubKey;
+        }
+        else if (strType == "hdchainpath")
+        {
+            ssValue >> pwallet->HDchainPath;
         }
     } catch (...)
     {

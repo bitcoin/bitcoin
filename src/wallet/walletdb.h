@@ -110,6 +110,15 @@ public:
     bool WriteWatchOnly(const CScript &script);
     bool EraseWatchOnly(const CScript &script);
 
+    bool WriteHDMasterSeed(const std::string &masterSeedHex);
+    bool EraseHDMasterSeed(const CScript &dest);
+
+    bool WriteHDExternalPubKey(const CExtPubKey &externalPubKey);
+    bool WriteHDInternalPubKey(const CExtPubKey &internalPubKey);
+
+    bool WriteHDChainPath(const std::string &chainPath);
+    bool WriteHDPubKey(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta);
+
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
 
