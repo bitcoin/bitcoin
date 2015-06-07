@@ -226,8 +226,11 @@ Moves funds between accounts.
 \fBsendfrom* <'account'> <'bitcoinaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
 Sends amount from account's balance to 'bitcoinaddress'. This method will fail if there is less than amount bitcoins with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
 .TP     
-\fBsendtoaddress 'bitcoinaddress' 'amount' ['comment'] ['comment-to']\fR
-Sends amount from the server's available balance to 'bitcoinaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
+\fBsendtoaddress 'address' 'amount' ['comment'] ['comment-to']\fR
+Sends amount from the server's available balance to 'address'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
+.TP    
+\fBbitcoin:sendtoaddress 'address' 'amount' ['comment'] ['comment-to']\fR
+Sends amount from the server's available balance to 'address'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
 .TP    
 \fBstop\fR
 Stops the bitcoin server.

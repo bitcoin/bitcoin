@@ -43,7 +43,7 @@ def check_array_result(object_array, to_match, expected):
 
 def run_test(nodes):
     # Simple send, 0 to 1:
-    txid = nodes[0].sendtoaddress(nodes[1].getnewaddress(), 0.1)
+    txid = nodes[0].bitcoin_sendtoaddress(nodes[1].getnewaddress(), 0.1)
     sync_mempools(nodes)
     check_array_result(nodes[0].bitcoin_listtransactions(),
                        {"txid":txid},
@@ -62,7 +62,7 @@ def run_test(nodes):
                        {"category":"receive","account":"","amount":Decimal("0.1"),"confirmations":1})
 
     # send-to-self:
-    txid = nodes[0].sendtoaddress(nodes[0].getnewaddress(), 0.2)
+    txid = nodes[0].bitcoin_sendtoaddress(nodes[0].getnewaddress(), 0.2)
     check_array_result(nodes[0].bitcoin_listtransactions(),
                        {"txid":txid, "category":"send"},
                        {"amount":Decimal("-0.2")})
