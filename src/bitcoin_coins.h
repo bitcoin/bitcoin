@@ -418,7 +418,7 @@ public:
         nSize += ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion);
 
         unsigned int nMaskSize = 0, nMaskCode = 0;
-        CalcMaskSize(nMaskSize, nMaskCode, vout);
+        CalcMaskSize(nMaskSize, nMaskCode);
 
         bool fFirst = vout.size() > 0 && !vout[0].IsNull();
         bool fSecond = vout.size() > 1 && !vout[1].IsNull();
@@ -444,7 +444,7 @@ public:
         ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
 
         unsigned int nMaskSize = 0, nMaskCode = 0;
-        CalcMaskSize(nMaskSize, nMaskCode, vout);
+        CalcMaskSize(nMaskSize, nMaskCode);
 
         bool fFirst = vout.size() > 0 && !vout[0].IsNull();
         bool fSecond = vout.size() > 1 && !vout[1].IsNull();
