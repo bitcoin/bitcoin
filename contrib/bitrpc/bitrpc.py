@@ -114,6 +114,16 @@ elif cmd == "getnewaddress":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_getnewaddress":
+    try:
+        acct = raw_input("Enter an account name: ")
+        try:
+            print access.bitcoin_getnewaddress(acct)
+        except:
+            print access.bitcoin_getnewaddress()
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "getreceivedbyaccount":
     try:
         acct = raw_input("Enter an account (optional): ")
@@ -229,6 +239,18 @@ elif cmd == "listtransactions":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_listtransactions":
+    try:
+        acct = raw_input("Account (optional): ")
+        count = raw_input("Number of transactions (optional): ")
+        frm = raw_input("Skip (optional):")
+        try:
+            print access.bitcoin_listtransactions(acct, count, frm)
+        except:
+            print access.bitcoin_listtransactions()
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "move":
     try:
         frm = raw_input("From: ")
@@ -320,6 +342,13 @@ elif cmd == "validateaddress":
     try:
         addr = raw_input("Address: ")
         print access.validateaddress(addr)
+    except:
+        print "\n---An error occurred---\n"
+
+elif cmd == "bitcoin_validateaddress":
+    try:
+        addr = raw_input("Address: ")
+        print access.bitcoin_validateaddress(addr)
     except:
         print "\n---An error occurred---\n"
 

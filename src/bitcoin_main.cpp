@@ -2368,7 +2368,7 @@ void static Bitcoin_UpdateTip(Bitcoin_CBlockIndex *pindexNew) {
             LogPrintf("Bitcoin: SetBestChain: %d of last 100 blocks above version %d\n", nUpgraded, (int)Bitcoin_CBlock::CURRENT_VERSION);
         if (nUpgraded > 100/2)
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-            strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
+            strMiscWarning = _("Bitcoin: Warning: This version is obsolete, upgrade required!");
     }
 }
 

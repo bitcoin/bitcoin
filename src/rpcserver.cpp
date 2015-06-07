@@ -81,13 +81,23 @@ void RPCTypeCheck(const Object& o,
     }
 }
 
-int64_t AmountFromValue(const Value& value)
+int64_t Credits_AmountFromValue(const Value& value)
+{
+    double dAmount = value.get_real();
+    if (dAmount <= 0.0 || dAmount > 30000000.0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+    int64_t nAmount = roundint64(dAmount * COIN);
+    if (!Credits_MoneyRange(nAmount))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+    return nAmount;
+}
+int64_t Bitcoin_AmountFromValue(const Value& value)
 {
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     int64_t nAmount = roundint64(dAmount * COIN);
-    if (!Credits_MoneyRange(nAmount))
+    if (!Bitcoin_MoneyRange(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
 }
@@ -278,7 +288,8 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Utility functions */
     { "createmultisig",         &createmultisig,         true,      true ,      false },
-    { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+    { "validateaddress",        &credits_validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+    { "bitcoin_validateaddress",        &bitcoin_validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
 #ifdef ENABLE_WALLET
@@ -296,7 +307,8 @@ static const CRPCCommand vRPCCommands[] =
     { "getaccount",             &getaccount,             false,     false,      true },
     { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
-    { "getnewaddress",          &getnewaddress,          true,      false,      true },
+    { "getnewaddress",          &credits_getnewaddress,          true,      false,      true },
+    { "bitcoin_getnewaddress",          &bitcoin_getnewaddress,          true,      false,      true },
     { "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
     { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
     { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
@@ -318,13 +330,15 @@ static const CRPCCommand vRPCCommands[] =
     { "listreceivedbyaddress",  &credits_listreceivedbyaddress,  false,     false,      true },
     { "bitcoin_listreceivedbyaddress",  &bitcoin_listreceivedbyaddress,  false,     false,      true },
     { "listsinceblock",         &listsinceblock,         false,     false,      true },
-    { "listtransactions",       &listtransactions,       false,     false,      true },
+    { "listtransactions",       &credits_listtransactions,       false,     false,      true },
+    { "bitcoin_listtransactions",       &bitcoin_listtransactions,       false,     false,      true },
     { "listunspent",            &listunspent,            false,     false,      true },
     { "lockunspent",            &lockunspent,            false,     false,      true },
     { "move",                   &movecmd,                false,     false,      true },
     { "sendfrom",               &sendfrom,               false,     false,      true },
     { "sendmany",               &sendmany,               false,     false,      true },
-    { "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+    { "sendtoaddress",          &credits_sendtoaddress,          false,     false,      true },
+    { "bitcoin_sendtoaddress",          &bitcoin_sendtoaddress,          false,     false,      true },
     { "setaccount",             &setaccount,             true,      false,      true },
     { "settxfee",               &settxfee,               false,     false,      true },
     { "signmessage",            &signmessage,            false,     false,      true },

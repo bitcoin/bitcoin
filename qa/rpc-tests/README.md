@@ -12,6 +12,9 @@ Copy this to create new regression tests.
 ### [listtransactions.py](listtransactions.py)
 Tests for the listtransactions RPC call.
 
+### [bitcoin_listtransactions.py](bitcoin_listtransactions.py)
+Tests for the bitcoin_listtransactions RPC call.
+
 ### [util.py](util.sh)
 Generally useful functions.
 

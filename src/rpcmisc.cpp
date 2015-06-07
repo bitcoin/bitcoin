@@ -196,18 +196,18 @@ public:
 };
 #endif
 
-Value validateaddress(const Array& params, bool fHelp)
+Value credits_validateaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "validateaddress \"bitcoinaddress\"\n"
-            "\nReturn information about the given bitcoin address.\n"
+            "validateaddress \"address\"\n"
+            "\nReturn information about the given address.\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"     (string, required) The bitcoin address to validate\n"
+            "1. \"address\"     (string, required) The address to validate\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,         (boolean) If the address is valid or not. If not, this is the only property returned.\n"
-            "  \"address\" : \"bitcoinaddress\", (string) The bitcoin address validated\n"
+            "  \"address\" : \"address\", (string) The address validated\n"
             "  \"ismine\" : true|false,          (boolean) If the address is yours or not\n"
             "  \"isscript\" : true|false,        (boolean) If the key is a script\n"
             "  \"pubkey\" : \"publickeyhex\",    (string) The hex value of the raw public key\n"
@@ -238,6 +238,52 @@ Value validateaddress(const Array& params, bool fHelp)
         }
         if (bitcredit_pwalletMain && bitcredit_pwalletMain->mapAddressBook.count(dest))
             ret.push_back(Pair("account", bitcredit_pwalletMain->mapAddressBook[dest].name));
+#endif
+    }
+    return ret;
+}
+Value bitcoin_validateaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "bitcoin_validateaddress \"address\"\n"
+            "\nReturn information about the given address.\n"
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) The address to validate\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"isvalid\" : true|false,         (boolean) If the address is valid or not. If not, this is the only property returned.\n"
+            "  \"address\" : \"address\", (string) The address validated\n"
+            "  \"ismine\" : true|false,          (boolean) If the address is yours or not\n"
+            "  \"isscript\" : true|false,        (boolean) If the key is a script\n"
+            "  \"pubkey\" : \"publickeyhex\",    (string) The hex value of the raw public key\n"
+            "  \"iscompressed\" : true|false,    (boolean) If the address is compressed\n"
+            "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+            + HelpExampleRpc("bitcoin_validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
+        );
+
+    CBitcoinAddress address(params[0].get_str());
+    bool isValid = address.IsValid();
+
+    Object ret;
+    ret.push_back(Pair("isvalid", isValid));
+    if (isValid)
+    {
+        CTxDestination dest = address.Get();
+        string currentAddress = address.ToString();
+        ret.push_back(Pair("address", currentAddress));
+#ifdef ENABLE_WALLET
+        bool fMine = bitcoin_pwalletMain ? IsMine(*bitcoin_pwalletMain, dest) : false;
+        ret.push_back(Pair("ismine", fMine));
+        if (fMine) {
+            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
+            ret.insert(ret.end(), detail.begin(), detail.end());
+        }
+        if (bitcoin_pwalletMain && bitcoin_pwalletMain->mapAddressBook.count(dest))
+            ret.push_back(Pair("account", bitcoin_pwalletMain->mapAddressBook[dest].name));
 #endif
     }
     return ret;

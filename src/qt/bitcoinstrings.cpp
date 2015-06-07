@@ -277,7 +277,7 @@ QT_TRANSLATE_NOOP("bitcredit-core", "Wallet needed to be rewritten: restart Cred
 QT_TRANSLATE_NOOP("bitcredit-core", "Wallet options:"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Warning"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Warning: Deprecated argument -debugnet ignored, use -debug=net"),
-QT_TRANSLATE_NOOP("bitcredit-core", "Warning: This version is obsolete, upgrade required!"),
+QT_TRANSLATE_NOOP("bitcredit-core", "Credits: Warning: This version is obsolete, upgrade required!"),
 QT_TRANSLATE_NOOP("bitcredit-core", "You need to rebuild the database using -reindex to change -txindex"),
 QT_TRANSLATE_NOOP("bitcredit-core", "Zapping all transactions from wallet..."),
 QT_TRANSLATE_NOOP("bitcredit-core", "on startup"),
