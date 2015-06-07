@@ -170,7 +170,8 @@ extern json_spirit::Value credits_listreceivedbyaddress(const json_spirit::Array
 extern json_spirit::Value bitcoin_listreceivedbyaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value credits_listreceivedbyaccount(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_listreceivedbyaccount(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value listtransactions(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value credits_listtransactions(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value bitcoin_listtransactions(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value credits_listaddressgroupings(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_listaddressgroupings(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listaccounts(const json_spirit::Array& params, bool fHelp);

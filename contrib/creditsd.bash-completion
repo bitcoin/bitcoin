@@ -85,7 +85,7 @@ _creditsd() {
             COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
             return 0
             ;;
-        getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
+        getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|bitcoin_listtransactions|move|sendfrom|sendmany)
             _bitcoin_accounts
             return 0
             ;;

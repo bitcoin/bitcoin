@@ -206,6 +206,20 @@ Returns a list of the last ['count'] transactions for 'account' \- for all accou
 
     *note: requires bitcoin 0.3.20 or later.
 .TP
+\fBbitcoin_listtransactions 'account' ['count=10']\fR
+Returns a list of the last ['count'] transactions for 'account' \- for all accounts if 'account' is not specified or is "*". Each entry in the list may contain:
+
+    "category"      : will be generate, send, receive, or move.
+    "amount"        : amount of transaction.
+    "fee"           : Fee (if any) paid (only for send transactions).
+    "confirmations" : number of confirmations (only for generate/send/receive).
+    "txid"          : transaction ID (only for generate/send/receive).
+    "otheraccount"  : account funds were moved to or from (only for move).
+    "message"       : message associated with transaction (only for send).
+    "to"            : message-to associated with transaction (only for send).
+
+    *note: requires bitcoin 0.3.20 or later.
+.TP
 \fBmove <'fromaccount'> <'toaccount'> <'amount'> ['minconf=1'] ['comment']\fR
 Moves funds between accounts.
 .TP

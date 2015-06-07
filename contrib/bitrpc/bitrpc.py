@@ -229,6 +229,18 @@ elif cmd == "listtransactions":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_listtransactions":
+    try:
+        acct = raw_input("Account (optional): ")
+        count = raw_input("Number of transactions (optional): ")
+        frm = raw_input("Skip (optional):")
+        try:
+            print access.bitcoin_listtransactions(acct, count, frm)
+        except:
+            print access.bitcoin_listtransactions()
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "move":
     try:
         frm = raw_input("From: ")

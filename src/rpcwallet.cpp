@@ -53,7 +53,7 @@ void Bitcoin_EnsureWalletIsUnlocked()
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the bitcoin wallet passphrase with bitcoin_walletpassphrase first.");
 }
 
-void WalletTxToJSON(const Credits_CWalletTx& wtx, Object& entry)
+void Credits_WalletTxToJSON(const Credits_CWalletTx& wtx, Object& entry)
 {
     int confirms = wtx.GetDepthInMainChain();
     entry.push_back(Pair("confirmations", confirms));
@@ -64,6 +64,29 @@ void WalletTxToJSON(const Credits_CWalletTx& wtx, Object& entry)
         entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
         entry.push_back(Pair("blockindex", wtx.nIndex));
         entry.push_back(Pair("blocktime", (int64_t)(credits_mapBlockIndex[wtx.hashBlock]->nTime)));
+    }
+    uint256 hash = wtx.GetHash();
+    entry.push_back(Pair("txid", hash.GetHex()));
+    Array conflicts;
+    BOOST_FOREACH(const uint256& conflict, wtx.GetConflicts())
+        conflicts.push_back(conflict.GetHex());
+    entry.push_back(Pair("walletconflicts", conflicts));
+    entry.push_back(Pair("time", wtx.GetTxTime()));
+    entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
+    BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
+        entry.push_back(Pair(item.first, item.second));
+}
+void Bitcoin_WalletTxToJSON(const Bitcoin_CWalletTx& wtx, Object& entry)
+{
+    int confirms = wtx.GetDepthInMainChain();
+    entry.push_back(Pair("confirmations", confirms));
+    if (wtx.IsCoinBase())
+        entry.push_back(Pair("generated", true));
+    if (confirms > 0)
+    {
+        entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
+        entry.push_back(Pair("blockindex", wtx.nIndex));
+        entry.push_back(Pair("blocktime", (int64_t)(bitcoin_mapBlockIndex[wtx.hashBlock]->nTime)));
     }
     uint256 hash = wtx.GetHash();
     entry.push_back(Pair("txid", hash.GetHex()));
@@ -1326,7 +1349,7 @@ static void MaybePushAddress(Object & entry, const CTxDestination &dest)
         entry.push_back(Pair("address", addr.ToString()));
 }
 
-void ListTransactions(const Credits_CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+void Credits_ListTransactions(const Credits_CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
 {
     int64_t nFee;
     string strSentAccount;
@@ -1349,7 +1372,7 @@ void ListTransactions(const Credits_CWalletTx& wtx, const string& strAccount, in
             entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
-                WalletTxToJSON(wtx, entry);
+                Credits_WalletTxToJSON(wtx, entry);
             ret.push_back(entry);
         }
     }
@@ -1382,7 +1405,69 @@ void ListTransactions(const Credits_CWalletTx& wtx, const string& strAccount, in
                 }
                 entry.push_back(Pair("amount", ValueFromAmount(r.second)));
                 if (fLong)
-                    WalletTxToJSON(wtx, entry);
+                	Credits_WalletTxToJSON(wtx, entry);
+                ret.push_back(entry);
+            }
+        }
+    }
+}
+void Bitcoin_ListTransactions(const Bitcoin_CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret)
+{
+    int64_t nFee;
+    string strSentAccount;
+    list<pair<CTxDestination, int64_t> > listReceived;
+    list<pair<CTxDestination, int64_t> > listSent;
+
+    wtx.Bitcoin_GetAmounts(listReceived, listSent, nFee, strSentAccount);
+
+    bool fAllAccounts = (strAccount == string("*"));
+
+    // Sent
+    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    {
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& s, listSent)
+        {
+            Object entry;
+            entry.push_back(Pair("account", strSentAccount));
+            MaybePushAddress(entry, s.first);
+            entry.push_back(Pair("category", "send"));
+            entry.push_back(Pair("amount", ValueFromAmount(-s.second)));
+            entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
+            if (fLong)
+                Bitcoin_WalletTxToJSON(wtx, entry);
+            ret.push_back(entry);
+        }
+    }
+
+    // Received
+    if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
+    {
+        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& r, listReceived)
+        {
+            string account;
+            if (bitcoin_pwalletMain->mapAddressBook.count(r.first))
+                account = bitcoin_pwalletMain->mapAddressBook[r.first].name;
+            if (fAllAccounts || (account == strAccount))
+            {
+                Object entry;
+                entry.push_back(Pair("account", account));
+                MaybePushAddress(entry, r.first);
+                if (wtx.IsCoinBase())
+                {
+                    if (wtx.GetDepthInMainChain() < 1)
+                        entry.push_back(Pair("category", "orphan"));
+                    else if (wtx.GetBlocksToMaturity() > 0)
+                        entry.push_back(Pair("category", "immature"));
+                    else
+                        entry.push_back(Pair("category", "generate"));
+                }
+                else
+                {
+                    entry.push_back(Pair("category", "receive"));
+                }
+                entry.push_back(Pair("amount", ValueFromAmount(r.second)));
+                if (fLong)
+                    Bitcoin_WalletTxToJSON(wtx, entry);
                 ret.push_back(entry);
             }
         }
@@ -1406,7 +1491,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, Ar
     }
 }
 
-Value listtransactions(const Array& params, bool fHelp)
+Value credits_listtransactions(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 3)
         throw runtime_error(
@@ -1423,7 +1508,7 @@ Value listtransactions(const Array& params, bool fHelp)
             "  {\n"
             "    \"account\":\"accountname\",       (string) The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
-            "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for \n"
+            "    \"address\":\"address\",    (string) The address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
             "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
             "                                                transaction between accounts, and not associated with an address,\n"
@@ -1487,7 +1572,113 @@ Value listtransactions(const Array& params, bool fHelp)
     {
         Credits_CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0)
-            ListTransactions(*pwtx, strAccount, 0, true, ret);
+        	Credits_ListTransactions(*pwtx, strAccount, 0, true, ret);
+        CAccountingEntry *const pacentry = (*it).second.second;
+        if (pacentry != 0)
+            AcentryToJSON(*pacentry, strAccount, ret);
+
+        if ((int)ret.size() >= (nCount+nFrom)) break;
+    }
+    // ret is newest to oldest
+
+    if (nFrom > (int)ret.size())
+        nFrom = ret.size();
+    if ((nFrom + nCount) > (int)ret.size())
+        nCount = ret.size() - nFrom;
+    Array::iterator first = ret.begin();
+    std::advance(first, nFrom);
+    Array::iterator last = ret.begin();
+    std::advance(last, nFrom+nCount);
+
+    if (last != ret.end()) ret.erase(last, ret.end());
+    if (first != ret.begin()) ret.erase(ret.begin(), first);
+
+    std::reverse(ret.begin(), ret.end()); // Return oldest to newest
+
+    return ret;
+}
+Value bitcoin_listtransactions(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 3)
+        throw runtime_error(
+            "bitcoin_listtransactions ( \"account\" count from )\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "                                     If \"\" is set, it will list transactions for the default account.\n"
+            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
+            "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
+
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. \n"
+            "                                                It will be \"\" for the default account.\n"
+            "    \"address\":\"address\",    (string) The address of the transaction. Not present for \n"
+            "                                                move transactions (category = move).\n"
+            "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
+            "                                                transaction between accounts, and not associated with an address,\n"
+            "                                                transaction id or block. 'send' and 'receive' transactions are \n"
+            "                                                associated with an address, transaction id and block details\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in btc. This is negative for the 'send' category, and for the\n"
+            "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
+            "                                         and for the 'move' category for inbound funds.\n"
+            "    \"fee\": x.xxx,             (numeric) The amount of the fee in btc. This is negative and only available for the \n"
+            "                                         'send' category of transactions.\n"
+            "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and \n"
+            "                                         'receive' category of transactions.\n"
+            "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"txid\": \"transactionid\", (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+            "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
+            "                                          for 'send' and 'receive' category of transactions.\n"
+            "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
+            "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came \n"
+            "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
+            "                                          negative amounts).\n"
+            "  }\n"
+            "]\n"
+
+            "\nExamples:\n"
+            "\nList the most recent 10 transactions in the systems\n"
+            + HelpExampleCli("bitcoin_listtransactions", "") +
+            "\nList the most recent 10 transactions for the tabby account\n"
+            + HelpExampleCli("bitcoin_listtransactions", "\"tabby\"") +
+            "\nList transactions 100 to 120 from the tabby account\n"
+            + HelpExampleCli("bitcoin_listtransactions", "\"tabby\" 20 100") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("bitcoin_listtransactions", "\"tabby\", 20, 100")
+        );
+
+    string strAccount = "*";
+    if (params.size() > 0)
+        strAccount = params[0].get_str();
+    int nCount = 10;
+    if (params.size() > 1)
+        nCount = params[1].get_int();
+    int nFrom = 0;
+    if (params.size() > 2)
+        nFrom = params[2].get_int();
+
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    if (nFrom < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+
+    Array ret;
+
+    std::list<CAccountingEntry> acentries;
+    Bitcoin_CWallet::TxItems txOrdered = bitcoin_pwalletMain->OrderedTxItems(acentries, strAccount);
+
+    // iterate backwards until we have nCount items to return:
+    for (Bitcoin_CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+    {
+    	Bitcoin_CWalletTx *const pwtx = (*it).second.first;
+        if (pwtx != 0)
+            Bitcoin_ListTransactions(*pwtx, strAccount, 0, true, ret);
         CAccountingEntry *const pacentry = (*it).second.second;
         if (pacentry != 0)
             AcentryToJSON(*pacentry, strAccount, ret);
@@ -1653,7 +1844,7 @@ Value listsinceblock(const Array& params, bool fHelp)
         Credits_CWalletTx tx = (*it).second;
 
         if (depth == -1 || tx.GetDepthInMainChain() < depth)
-            ListTransactions(tx, "*", 0, true, transactions);
+        	Credits_ListTransactions(tx, "*", 0, true, transactions);
     }
 
     Credits_CBlockIndex *pblockLast = credits_chainActive[credits_chainActive.Height() + 1 - target_confirms];
@@ -1721,10 +1912,10 @@ Value gettransaction(const Array& params, bool fHelp)
     if (wtx.IsFromMe())
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
-    WalletTxToJSON(wtx, entry);
+    Credits_WalletTxToJSON(wtx, entry);
 
     Array details;
-    ListTransactions(wtx, "*", 0, false, details);
+    Credits_ListTransactions(wtx, "*", 0, false, details);
     entry.push_back(Pair("details", details));
 
     CDataStream ssTx(SER_NETWORK, CREDITS_PROTOCOL_VERSION);
