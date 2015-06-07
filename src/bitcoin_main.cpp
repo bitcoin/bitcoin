@@ -2332,7 +2332,7 @@ bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state
 }
 
 // Update the on-disk chain state.
-bool static Bitcoin_WriteChainState(CValidationState &state) {
+bool Bitcoin_WriteChainState(CValidationState &state, bool writeBitcoin, bool writeClaim) {
     static int64_t nLastWrite = 0;
     if (!Bitcoin_IsInitialBlockDownload() || bitcoin_pcoinsTip->GetCacheSize() > bitcoin_nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical Bitcoin_CCoins structures on disk are around 100 bytes in size.
@@ -2344,27 +2344,14 @@ bool static Bitcoin_WriteChainState(CValidationState &state) {
             return state.Error("out of disk space");
         Bitcoin_FlushBlockFile();
         bitcoin_pblocktree->Sync();
-        if (!bitcoin_pcoinsTip->Bitcoin_Flush())
-            return state.Abort(_("Failed to write to coin database"));
-        nLastWrite = GetTimeMicros();
-    }
-    return true;
-}
-
-bool Bitcoin_WriteChainStateClaim(CValidationState &state) {
-    static int64_t nLastWrite = 0;
-    if (!Bitcoin_IsInitialBlockDownload() || bitcoin_pcoinsTip->GetCacheSize() > bitcoin_nCoinCacheSize || GetTimeMicros() > nLastWrite + 600*1000000) {
-        // Typical Bitcoin_CCoins structures on disk are around 100 bytes in size.
-        // Pushing a new one to the database can cause it to be written
-        // twice (once in the log, and once in the tables). This is already
-        // an overestimation, as most will delete an existing entry or
-        // overwrite one. Still, use a conservative safety factor of 2.
-        if (!Bitcoin_CheckDiskSpace(200 * 2 * 2 * bitcoin_pcoinsTip->GetCacheSize()))
-            return state.Error("out of disk space");
-        Bitcoin_FlushBlockFile();
-        bitcoin_pblocktree->Sync();
-        if (!bitcoin_pcoinsTip->Claim_Flush())
-            return state.Abort(_("Failed to write to claim coin database"));
+        if(writeBitcoin) {
+			if (!bitcoin_pcoinsTip->Bitcoin_Flush())
+				return state.Abort(_("Failed to write to coin database"));
+        }
+        if(writeClaim) {
+            if (!bitcoin_pcoinsTip->Claim_Flush())
+                return state.Abort(_("Failed to write to claim coin database"));
+        }
         nLastWrite = GetTimeMicros();
     }
     return true;
@@ -2432,12 +2419,9 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     if (bitcoin_fBenchmark)
         LogPrintf("Bitcoin: - Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
-    if (!Bitcoin_WriteChainState(state))
+    if (!Bitcoin_WriteChainState(state, true, fastForwardClaimState))
         return false;
-    if(fastForwardClaimState) {
-		if (!Bitcoin_WriteChainStateClaim(state))
-			return false;
-    }
+
     // Resurrect mempool transactions from the disconnected block.
     BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
         // ignore validation errors in resurrected transactions
@@ -2621,12 +2605,8 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
     if (bitcoin_fBenchmark)
         LogPrintf("Bitcoin: - Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
-    if (!Bitcoin_WriteChainState(state))
+    if (!Bitcoin_WriteChainState(state, true, fastForwardClaimState))
         return false;
-    if(fastForwardClaimState) {
-		if (!Bitcoin_WriteChainStateClaim(state))
-			return false;
-    }
     // Remove conflicting transactions from the mempool.
     list<Bitcoin_CTransaction> txConflicted;
     BOOST_FOREACH(const Bitcoin_CTransaction &tx, block.vtx) {
