@@ -43,7 +43,7 @@ def check_array_result(object_array, to_match, expected):
 
 def run_test(nodes):
     # Simple send, 0 to 1:
-    txid = nodes[0].bitcoin_sendtoaddress(nodes[1].getnewaddress(), 0.1)
+    txid = nodes[0].bitcoin_sendtoaddress(nodes[1].bitcoin_getnewaddress(), 0.1)
     sync_mempools(nodes)
     check_array_result(nodes[0].bitcoin_listtransactions(),
                        {"txid":txid},
@@ -62,7 +62,7 @@ def run_test(nodes):
                        {"category":"receive","account":"","amount":Decimal("0.1"),"confirmations":1})
 
     # send-to-self:
-    txid = nodes[0].bitcoin_sendtoaddress(nodes[0].getnewaddress(), 0.2)
+    txid = nodes[0].bitcoin_sendtoaddress(nodes[0].bitcoin_getnewaddress(), 0.2)
     check_array_result(nodes[0].bitcoin_listtransactions(),
                        {"txid":txid, "category":"send"},
                        {"amount":Decimal("-0.2")})
@@ -71,7 +71,7 @@ def run_test(nodes):
                        {"amount":Decimal("0.2")})
 
     # sendmany from node1: twice to self, twice to node2:
-    send_to = { nodes[0].getnewaddress() : 0.11, nodes[1].getnewaddress() : 0.22,
+    send_to = { nodes[0].bitcoin_getnewaddress() : 0.11, nodes[1].bitcoin_getnewaddress() : 0.22,
                 nodes[0].getaccountaddress("from1") : 0.33, nodes[1].getaccountaddress("toself") : 0.44 }
     txid = nodes[1].sendmany("", send_to)
     sync_mempools(nodes)

@@ -108,7 +108,7 @@ string AccountFromValue(const Value& value)
     return strAccount;
 }
 
-Value getnewaddress(const Array& params, bool fHelp)
+Value credits_getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
@@ -142,6 +142,43 @@ Value getnewaddress(const Array& params, bool fHelp)
     CKeyID keyID = newKey.GetID();
 
     bitcredit_pwalletMain->SetAddressBook(keyID, strAccount, "receive");
+
+    return CBitcoinAddress(keyID).ToString();
+}
+Value bitcoin_getnewaddress(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "bitcoin_getnewaddress ( \"account\" )\n"
+            "\nReturns a new Bitcoin address for receiving payments.\n"
+            "If 'account' is specified (recommended), it is added to the address book \n"
+            "so payments received with the address will be credited to 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"        (string, optional) The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "\nResult:\n"
+            "\"baddress\"    (string) The new address\n"
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getnewaddress", "")
+            + HelpExampleCli("bitcoin_getnewaddress", "\"\"")
+            + HelpExampleCli("bitcoin_getnewaddress", "\"myaccount\"")
+            + HelpExampleRpc("bitcoin_getnewaddress", "\"myaccount\"")
+        );
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount;
+    if (params.size() > 0)
+        strAccount = AccountFromValue(params[0]);
+
+    if (!bitcoin_pwalletMain->IsLocked())
+    	bitcoin_pwalletMain->TopUpKeyPool();
+
+    // Generate a new key that is added to wallet
+    CPubKey newKey;
+    if (!bitcoin_pwalletMain->GetKeyFromPool(newKey))
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CKeyID keyID = newKey.GetID();
+
+    bitcoin_pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
     return CBitcoinAddress(keyID).ToString();
 }

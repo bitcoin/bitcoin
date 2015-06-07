@@ -114,6 +114,16 @@ elif cmd == "getnewaddress":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_getnewaddress":
+    try:
+        acct = raw_input("Enter an account name: ")
+        try:
+            print access.bitcoin_getnewaddress(acct)
+        except:
+            print access.bitcoin_getnewaddress()
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "getreceivedbyaccount":
     try:
         acct = raw_input("Enter an account (optional): ")

@@ -145,6 +145,8 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 	 *********************************/
     BOOST_CHECK_NO_THROW(CallRPC("getnewaddress"));
     BOOST_CHECK_NO_THROW(CallRPC("getnewaddress getnewaddress_demoaccount"));
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_getnewaddress"));
+    BOOST_CHECK_NO_THROW(CallRPC("bitcoin_getnewaddress bitcoin_getnewaddress_demoaccount"));
 
     /*********************************
 	 * 		getaccountaddress
