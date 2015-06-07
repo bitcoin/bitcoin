@@ -1,10 +1,6 @@
-<TS language="fr_CA" version="2.0">
+<TS language="fr_CA" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Double-cliquez afin de modifier l'adress ou l'étiquette</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Créer une nouvelle adresse</translation>
@@ -173,8 +169,8 @@
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <source>Address</source>
-        <translation>Addresse</translation>
+        <source>Label</source>
+        <translation>Record</translation>
     </message>
     </context>
 <context>

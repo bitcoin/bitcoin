@@ -20,9 +20,9 @@ if cmd == "backupwallet":
     try:
         path = raw_input("Enter destination path/filename: ")
         print access.backupwallet(path)
-    except:
-        print "\n---An error occurred---\n"
-        
+    except Exception as inst:
+        print inst
+
 elif cmd == "encryptwallet":
     try:
         pwd = getpass.getpass(prompt="Enter passphrase: ")
@@ -32,29 +32,29 @@ elif cmd == "encryptwallet":
             print "\n---Wallet encrypted. Server stopping, restart to run with encrypted wallet---\n"
         else:
             print "\n---Passphrases do not match---\n"
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getaccount":
     try:
         addr = raw_input("Enter a Bitcoin address: ")
         print access.getaccount(addr)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getaccountaddress":
     try:
         acct = raw_input("Enter an account name: ")
         print access.getaccountaddress(acct)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getaddressesbyaccount":
     try:
         acct = raw_input("Enter an account name: ")
         print access.getaddressesbyaccount(acct)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getbalance":
     try:
@@ -64,57 +64,57 @@ elif cmd == "getbalance":
             print access.getbalance(acct, mc)
         except:
             print access.getbalance()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getblockbycount":
     try:
         height = raw_input("Height: ")
         print access.getblockbycount(height)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getblockcount":
     try:
         print access.getblockcount()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getblocknumber":
     try:
         print access.getblocknumber()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getconnectioncount":
     try:
         print access.getconnectioncount()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getdifficulty":
     try:
         print access.getdifficulty()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getgenerate":
     try:
         print access.getgenerate()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "gethashespersec":
     try:
         print access.gethashespersec()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getinfo":
     try:
         print access.getinfo()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getnewaddress":
     try:
@@ -123,8 +123,8 @@ elif cmd == "getnewaddress":
             print access.getnewaddress(acct)
         except:
             print access.getnewaddress()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getreceivedbyaccount":
     try:
@@ -134,8 +134,8 @@ elif cmd == "getreceivedbyaccount":
             print access.getreceivedbyaccount(acct, mc)
         except:
             print access.getreceivedbyaccount()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getreceivedbyaddress":
     try:
@@ -145,15 +145,15 @@ elif cmd == "getreceivedbyaddress":
             print access.getreceivedbyaddress(addr, mc)
         except:
             print access.getreceivedbyaddress()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "gettransaction":
     try:
         txid = raw_input("Enter a transaction ID: ")
         print access.gettransaction(txid)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "getwork":
     try:
@@ -162,8 +162,8 @@ elif cmd == "getwork":
             print access.gettransaction(data)
         except:
             print access.gettransaction()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "help":
     try:
@@ -172,8 +172,8 @@ elif cmd == "help":
             print access.help(cmd)
         except:
             print access.help()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "listaccounts":
     try:
@@ -182,8 +182,8 @@ elif cmd == "listaccounts":
             print access.listaccounts(mc)
         except:
             print access.listaccounts()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "listreceivedbyaccount":
     try:
@@ -193,8 +193,8 @@ elif cmd == "listreceivedbyaccount":
             print access.listreceivedbyaccount(mc, incemp)
         except:
             print access.listreceivedbyaccount()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "listreceivedbyaddress":
     try:
@@ -204,8 +204,8 @@ elif cmd == "listreceivedbyaddress":
             print access.listreceivedbyaddress(mc, incemp)
         except:
             print access.listreceivedbyaddress()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "listtransactions":
     try:
@@ -216,8 +216,8 @@ elif cmd == "listtransactions":
             print access.listtransactions(acct, count, frm)
         except:
             print access.listtransactions()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "move":
     try:
@@ -230,8 +230,8 @@ elif cmd == "move":
             print access.move(frm, to, amt, mc, comment)
         except:
             print access.move(frm, to, amt)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "sendfrom":
     try:
@@ -245,8 +245,8 @@ elif cmd == "sendfrom":
             print access.sendfrom(frm, to, amt, mc, comment, commentto)
         except:
             print access.sendfrom(frm, to, amt)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "sendmany":
     try:
@@ -258,8 +258,8 @@ elif cmd == "sendmany":
             print access.sendmany(frm,to,mc,comment)
         except:
             print access.sendmany(frm,to)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "sendtoaddress":
     try:
@@ -271,16 +271,16 @@ elif cmd == "sendtoaddress":
             print access.sendtoaddress(to,amt,comment,commentto)
         except:
             print access.sendtoaddress(to,amt)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "setaccount":
     try:
         addr = raw_input("Address: ")
         acct = raw_input("Account:")
         print access.setaccount(addr,acct)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "setgenerate":
     try:
@@ -290,36 +290,36 @@ elif cmd == "setgenerate":
             print access.setgenerate(gen, cpus)
         except:
             print access.setgenerate(gen)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "settxfee":
     try:
         amt = raw_input("Amount:")
         print access.settxfee(amt)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "stop":
     try:
         print access.stop()
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "validateaddress":
     try:
         addr = raw_input("Address: ")
         print access.validateaddress(addr)
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "walletpassphrase":
     try:
         pwd = getpass.getpass(prompt="Enter wallet passphrase: ")
         access.walletpassphrase(pwd, 60)
         print "\n---Wallet unlocked---\n"
-    except:
-        print "\n---An error occurred---\n"
+    except Exception as inst:
+        print inst
 
 elif cmd == "walletpassphrasechange":
     try:
@@ -328,10 +328,8 @@ elif cmd == "walletpassphrasechange":
         access.walletpassphrasechange(pwd, pwd2)
         print
         print "\n---Passphrase changed---\n"
-    except:
-        print
-        print "\n---An error occurred---\n"
-        print
+    except Exception as inst:
+        print inst
 
 else:
     print "Command not found or not supported"

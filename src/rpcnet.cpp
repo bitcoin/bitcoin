@@ -17,12 +17,11 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
-#include "json/json_spirit_value.h"
+#include "univalue/univalue.h"
 
-using namespace json_spirit;
 using namespace std;
 
-Value getconnectioncount(const Array& params, bool fHelp)
+UniValue getconnectioncount(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -40,7 +39,7 @@ Value getconnectioncount(const Array& params, bool fHelp)
     return (int)vNodes.size();
 }
 
-Value ping(const Array& params, bool fHelp)
+UniValue ping(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -60,7 +59,7 @@ Value ping(const Array& params, bool fHelp)
         pNode->fPingQueued = true;
     }
 
-    return Value::null;
+    return NullUniValue;
 }
 
 static void CopyNodeStats(std::vector<CNodeStats>& vstats)
@@ -76,7 +75,7 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
     }
 }
 
-Value getpeerinfo(const Array& params, bool fHelp)
+UniValue getpeerinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -121,10 +120,10 @@ Value getpeerinfo(const Array& params, bool fHelp)
     vector<CNodeStats> vstats;
     CopyNodeStats(vstats);
 
-    Array ret;
+    UniValue ret(UniValue::VARR);
 
     BOOST_FOREACH(const CNodeStats& stats, vstats) {
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
         CNodeStateStats statestats;
         bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
         obj.push_back(Pair("id", stats.nodeid));
@@ -152,7 +151,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
             obj.push_back(Pair("banscore", statestats.nMisbehavior));
             obj.push_back(Pair("synced_headers", statestats.nSyncHeight));
             obj.push_back(Pair("synced_blocks", statestats.nCommonHeight));
-            Array heights;
+            UniValue heights(UniValue::VARR);
             BOOST_FOREACH(int height, statestats.vHeightInFlight) {
                 heights.push_back(height);
             }
@@ -166,7 +165,7 @@ Value getpeerinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-Value addnode(const Array& params, bool fHelp)
+UniValue addnode(const UniValue& params, bool fHelp)
 {
     string strCommand;
     if (params.size() == 2)
@@ -191,7 +190,7 @@ Value addnode(const Array& params, bool fHelp)
     {
         CAddress addr;
         OpenNetworkConnection(addr, NULL, strNode.c_str());
-        return Value::null;
+        return NullUniValue;
     }
 
     LOCK(cs_vAddedNodes);
@@ -213,10 +212,10 @@ Value addnode(const Array& params, bool fHelp)
         vAddedNodes.erase(it);
     }
 
-    return Value::null;
+    return NullUniValue;
 }
 
-Value getaddednodeinfo(const Array& params, bool fHelp)
+UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -255,29 +254,29 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     if (params.size() == 1)
     {
         LOCK(cs_vAddedNodes);
-        BOOST_FOREACH(string& strAddNode, vAddedNodes)
+        BOOST_FOREACH(const std::string& strAddNode, vAddedNodes)
             laddedNodes.push_back(strAddNode);
     }
     else
     {
         string strNode = params[1].get_str();
         LOCK(cs_vAddedNodes);
-        BOOST_FOREACH(string& strAddNode, vAddedNodes)
+        BOOST_FOREACH(const std::string& strAddNode, vAddedNodes) {
             if (strAddNode == strNode)
             {
                 laddedNodes.push_back(strAddNode);
                 break;
             }
+        }
         if (laddedNodes.size() == 0)
             throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
     }
 
-    Array ret;
+    UniValue ret(UniValue::VARR);
     if (!fDns)
     {
-        BOOST_FOREACH(string& strAddNode, laddedNodes)
-        {
-            Object obj;
+        BOOST_FOREACH (const std::string& strAddNode, laddedNodes) {
+            UniValue obj(UniValue::VOBJ);
             obj.push_back(Pair("addednode", strAddNode));
             ret.push_back(obj);
         }
@@ -285,17 +284,16 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     }
 
     list<pair<string, vector<CService> > > laddedAddreses(0);
-    BOOST_FOREACH(string& strAddNode, laddedNodes)
-    {
+    BOOST_FOREACH(const std::string& strAddNode, laddedNodes) {
         vector<CService> vservNode(0);
         if(Lookup(strAddNode.c_str(), vservNode, Params().GetDefaultPort(), fNameLookup, 0))
             laddedAddreses.push_back(make_pair(strAddNode, vservNode));
         else
         {
-            Object obj;
+            UniValue obj(UniValue::VOBJ);
             obj.push_back(Pair("addednode", strAddNode));
             obj.push_back(Pair("connected", false));
-            Array addresses;
+            UniValue addresses(UniValue::VARR);
             obj.push_back(Pair("addresses", addresses));
         }
     }
@@ -303,17 +301,16 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     LOCK(cs_vNodes);
     for (list<pair<string, vector<CService> > >::iterator it = laddedAddreses.begin(); it != laddedAddreses.end(); it++)
     {
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("addednode", it->first));
 
-        Array addresses;
+        UniValue addresses(UniValue::VARR);
         bool fConnected = false;
-        BOOST_FOREACH(CService& addrNode, it->second)
-        {
+        BOOST_FOREACH(const CService& addrNode, it->second) {
             bool fFound = false;
-            Object node;
+            UniValue node(UniValue::VOBJ);
             node.push_back(Pair("address", addrNode.ToString()));
-            BOOST_FOREACH(CNode* pnode, vNodes)
+            BOOST_FOREACH(CNode* pnode, vNodes) {
                 if (pnode->addr == addrNode)
                 {
                     fFound = true;
@@ -321,6 +318,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
                     node.push_back(Pair("connected", pnode->fInbound ? "inbound" : "outbound"));
                     break;
                 }
+            }
             if (!fFound)
                 node.push_back(Pair("connected", "false"));
             addresses.push_back(node);
@@ -333,7 +331,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     return ret;
 }
 
-Value getnettotals(const Array& params, bool fHelp)
+UniValue getnettotals(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 0)
         throw runtime_error(
@@ -351,34 +349,35 @@ Value getnettotals(const Array& params, bool fHelp)
             + HelpExampleRpc("getnettotals", "")
        );
 
-    Object obj;
+    UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
     obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
     obj.push_back(Pair("timemillis", GetTimeMillis()));
     return obj;
 }
 
-static Array GetNetworksInfo()
+static UniValue GetNetworksInfo()
 {
-    Array networks;
+    UniValue networks(UniValue::VARR);
     for(int n=0; n<NET_MAX; ++n)
     {
         enum Network network = static_cast<enum Network>(n);
         if(network == NET_UNROUTABLE)
             continue;
         proxyType proxy;
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
         GetProxy(network, proxy);
         obj.push_back(Pair("name", GetNetworkName(network)));
         obj.push_back(Pair("limited", IsLimited(network)));
         obj.push_back(Pair("reachable", IsReachable(network)));
-        obj.push_back(Pair("proxy", proxy.IsValid() ? proxy.ToStringIPPort() : string()));
+        obj.push_back(Pair("proxy", proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string()));
+        obj.push_back(Pair("proxy_randomize_credentials", proxy.randomize_credentials));
         networks.push_back(obj);
     }
     return networks;
 }
 
-Value getnetworkinfo(const Array& params, bool fHelp)
+UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
@@ -418,7 +417,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
 
     LOCK(cs_main);
 
-    Object obj;
+    UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("version",       CLIENT_VERSION));
     obj.push_back(Pair("subversion",
         FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>())));
@@ -428,12 +427,12 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("networks",      GetNetworksInfo()));
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
-    Array localAddresses;
+    UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);
         BOOST_FOREACH(const PAIRTYPE(CNetAddr, LocalServiceInfo) &item, mapLocalHost)
         {
-            Object rec;
+            UniValue rec(UniValue::VOBJ);
             rec.push_back(Pair("address", item.first.ToString()));
             rec.push_back(Pair("port", item.second.nPort));
             rec.push_back(Pair("score", item.second.nScore));
@@ -444,7 +443,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     return obj;
 }
 
-Value disconnectpeer(const Array& params, bool fHelp)
+UniValue disconnectpeer(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -456,7 +455,7 @@ Value disconnectpeer(const Array& params, bool fHelp)
             + HelpExampleRpc("disconnectpeer", "11")
         );
 
-    RPCTypeCheck(params, boost::assign::list_of(int_type));
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
 
     int node_id = params[0].get_int();
 
@@ -466,7 +465,7 @@ Value disconnectpeer(const Array& params, bool fHelp)
         if (node->GetId() == node_id)
         {
             node->CloseSocketDisconnect();
-            return Value::null;
+            return NullUniValue;
         }
     }
     throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid peer id");

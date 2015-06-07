@@ -74,11 +74,11 @@ In the VirtualBox GUI click "Create" and choose the following parameters in the 
 - Disk size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side 
 - Push the `Create` button
 
-Get the [Debian 7.7 net installer](http://cdimage.debian.org/debian-cd/7.7.0/amd64/iso-cd/debian-7.7.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
+Get the [Debian 7.8 net installer](http://cdimage.debian.org/debian-cd/7.8.0/amd64/iso-cd/debian-7.8.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
 This DVD image can be validated using a SHA256 hashing tool, for example on
 Unixy OSes by entering the following in a terminal:
 
-    echo "d440e85b4121f94608748139f25dbce1ad36771348b002fe07d4d44b9d9e623f  debian-7.7.0-amd64-netinst.iso" | sha256sum -c
+    echo "e39c36d6adc0fd86c6edb0e03e22919086c883b37ca194d063b8e3e8f6ff6a3a  debian-7.8.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
 After creating the VM, we need to configure it. 
@@ -87,7 +87,7 @@ After creating the VM, we need to configure it.
 
 ![](gitian-building/network_settings.png)
 
-- Click `Advanced`, then `Port Forwarding`. We want to set up a port through where we can reach the VM to get files in and out.
+- Click `Advanced`, then `Port Forwarding`. We want to set up a port through which we can reach the VM to get files in and out.
 - Create a new rule by clicking the plus icon.
 
 ![](gitian-building/port_forwarding_rules.png)
@@ -111,7 +111,7 @@ Installing Debian
 
 This section will explain how to install Debian on the newly created VM.
 
-- Choose the non-graphical installer.  We do not need the graphical environment, it will only increase installation time and disk usage.
+- Choose the non-graphical installer.  We do not need the graphical environment; it will only increase installation time and disk usage.
 
 ![](gitian-building/debian_install_1_boot_menu.png)
 
@@ -144,7 +144,7 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 
 ![](gitian-building/debian_install_9_user_password.png)
 
-- The installer will set up the clock using a time server, this process should be automatic
+- The installer will set up the clock using a time server; this process should be automatic
 - Set up the clock: choose a time zone (depends on the locale settings that you picked earlier; specifics don't matter)  
 
 ![](gitian-building/debian_install_10_configure_clock.png)
@@ -371,7 +371,7 @@ COMMIT=2014_03_windows_unicode_path
 Signing externally
 -------------------
 
-If you want to do the PGP signing on another device that's also possible; just define `SIGNER` as mentioned
+If you want to do the PGP signing on another device, that's also possible; just define `SIGNER` as mentioned
 and follow the steps in the build process as normal.
 
     gpg: skipped "laanwj": secret key not available
@@ -393,4 +393,4 @@ Uploading signatures
 
 After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
 [bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if that's not possible create a pull
-request. You can also mail the files to me (laanwj@gmail.com) and I'll commit them.
+request. You can also mail the files to Wladimir (laanwj@gmail.com) and he will commit them.

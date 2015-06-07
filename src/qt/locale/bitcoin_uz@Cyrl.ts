@@ -1,10 +1,6 @@
-<TS language="uz@Cyrl" version="2.0">
+<TS language="uz@Cyrl" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Манзил ёки ёрлиқни таҳрирлаш учун икки марта босинг</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Янги манзил яратинг</translation>
@@ -156,10 +152,6 @@
         <translation>Махфий сузни узгартириш</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Ҳамёнга эски ва янги паролларингизни киритинг.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Ҳамённи кодлашни тасдиқлаш</translation>
     </message>
@@ -186,10 +178,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Ҳамёнга янги махфий сўз киритинг.&lt;br/&gt;Илтимос, &lt;b&gt;ўнта ёки тасодифий белгили&lt;/b&gt; махфий сўздан фойдаланинг ёки &lt;b&gt;саккизта ёки кўпроқ сўзлар&lt;/b&gt;дан фойдаланинг.</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Bitcoin кодлаш жараёнини тугатиш учун ёпилади. Ёдда сақланг: ҳамёнингизни кодлаш компьютерингизни зарарлаган зарарли дастурлар томонидан bitcoin тангаларингизни ўғирланишидан тўлиқ ҳимоя қила олмайди.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -309,10 +297,6 @@
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Тангаларни Bitcoin манзилига жўнатиш</translation>
-    </message>
-    <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Bitcoin учун мослаш танловларини ўзгартириш</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -489,18 +473,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Кирувчи операция</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Санаси: %1
-Миқдори: %2
-Тури: %3
-Манзили: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -693,10 +665,6 @@ Address: %4
         <translation>йўқ</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Агар ўтказманинг ҳажми 1000 байтдан ошса, ёрлиқ қизаради.</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Бу дегани солиқ ҳар кб учун камида %1  талаб қилинади.</translation>
     </message>
@@ -707,14 +675,6 @@ Address: %4
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Юқори муҳимликка эга бўлган ўтказмалар тезда блокнинг ичига қўшимча олади.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Агар муҳимлиги "ўртача"дан паст бўлса, ушбу ёрлиқ қизил бўлиб ёнади.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Агар қабул қилувчи %1дан кичик миқдорни қабул қилса, ушбу ёрлиқ қизил бўлиб ёнади.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -833,22 +793,6 @@ Address: %4
         <source>command-line options</source>
         <translation>буйруқлар қатори орқали мослаш</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>UI мосламалари</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Йиғилганларни бошлаш</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Тўлов сўровлари учун SSL асос сертификатларини ўрнатиш (стандарт: -system-)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ишга тушиш вақтида маълумотлар директориясини танлаш (стандарт: 0)</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -923,14 +867,6 @@ Address: %4
         <translation>&amp;Асосий</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Тизимга киргандан сўнг Bitcoin дастури автоматик ишга туширилсин.</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>Тизимга кирганда Bitcoin &amp;ишга туширилсин</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>&amp;Маълумотлар базаси кеши</translation>
     </message>
@@ -995,10 +931,6 @@ Address: %4
         <translation>Фойдаланувчи интерфейси &amp;тили:</translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Фойдаланувчи тили интерфесини шу ерда ўрнатиш мумкин. TУшбу созлама Bitcoin қайта ишга туширилганда кучга киради.</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>Миқдорларни кўрсатиш учун &amp;қисм:</translation>
     </message>
@@ -1025,10 +957,6 @@ Address: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ўзгаришлар амалга ошиши учун мижозни қайта ишга тушириш талаб қилинади.</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Мижоз ўчирилади. Давом эттиришни хоҳлайсизми?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1125,14 +1053,6 @@ Address: %4
     <message>
         <source>%1 s</source>
         <translation>%1 с</translation>
-    </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>ТАРМОҚ</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>НОМАЪЛУМ</translation>
     </message>
     <message>
         <source>None</source>
@@ -1297,16 +1217,8 @@ Address: %4
         <translation>Тузатиш журнали файли</translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Жорий махлумотлар директориясидан Bitcoin тузатиш журнали файлини очинг. Бу катта журнал файллари учун бир неча сонияни олиши мумкин.</translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Терминални тозалаш</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Bitcoin RPC терминлга хуш келибсиз.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1390,6 +1302,26 @@ Address: %4
     <message>
         <source>Requested payments history</source>
         <translation>Сўралган тўлов тарихи</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>Тўловни &amp;сўраш</translation>
+    </message>
+    <message>
+        <source>Show the selected request (does the same as double clicking an entry)</source>
+        <translation>Танланган сўровни кўрсатиш (икки марта босилганда ҳам бир хил амал бажарилсин)</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Кўрсатиш</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>Танланганларни рўйхатдан ўчириш</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Ўчириш</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1693,10 +1625,6 @@ Address: %4
         <translation>Тури</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Манзил</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>%1 гача очиш</translation>
     </message>
@@ -1711,6 +1639,10 @@ Address: %4
     <message>
         <source>Generated but not accepted</source>
         <translation>Яратилди, аммо қабул қилинмади</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Ёрлиқ</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1743,10 +1675,6 @@ Address: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Пул ўтказмаси тури</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Ўтказиладиган жараён манзили.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -1919,8 +1847,20 @@ Address: %4
         <translation>Синов тармоғидан фойдаланинг</translation>
     </message>
     <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Ишга тушиш вақтида маълумотлар директориясини танлаш (стандарт: 0)</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Маълумот</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Тўлов сўровлари учун SSL асос сертификатларини ўрнатиш (стандарт: -system-)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Йиғилганларни бошлаш</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>

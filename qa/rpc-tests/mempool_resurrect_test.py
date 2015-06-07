@@ -8,9 +8,8 @@
 # the blockchain is re-organized.
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 import os
 import shutil
 
@@ -34,7 +33,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()
-
         # Spend block 1/2/3's coinbase transactions
         # Mine a block.
         # Create three more transactions, spending the spends
@@ -51,12 +49,12 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spends1_id = [ self.nodes[0].sendrawtransaction(tx) for tx in spends1_raw ]
 
         blocks = []
-        blocks.extend(self.nodes[0].setgenerate(True, 1))
+        blocks.extend(self.nodes[0].generate(1))
 
         spends2_raw = [ self.create_tx(txid, node0_address, 49.99) for txid in spends1_id ]
         spends2_id = [ self.nodes[0].sendrawtransaction(tx) for tx in spends2_raw ]
 
-        blocks.extend(self.nodes[0].setgenerate(True, 1))
+        blocks.extend(self.nodes[0].generate(1))
 
         # mempool should be empty, all txns confirmed
         assert_equal(set(self.nodes[0].getrawmempool()), set())
@@ -76,7 +74,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             assert(tx["confirmations"] == 0)
 
         # Generate another block, they should all get mined
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         # mempool should be empty, all txns confirmed
         assert_equal(set(self.nodes[0].getrawmempool()), set())
         for txid in spends1_id+spends2_id:

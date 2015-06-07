@@ -15,7 +15,7 @@ class uint256;
 class UniValue;
 
 // core_read.cpp
-extern CScript ParseScript(std::string s);
+extern CScript ParseScript(const std::string& s);
 extern bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx);
 extern bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 extern uint256 ParseHashUV(const UniValue& v, const std::string& strName);

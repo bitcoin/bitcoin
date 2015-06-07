@@ -6,20 +6,24 @@
 #include "rpcclient.h"
 
 #include "base58.h"
-#include "wallet.h"
+#include "main.h"
+#include "wallet/wallet.h"
+
+#include "test/test_bitcoin.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
-using namespace json_spirit;
+#include "univalue/univalue.h"
 
-extern Array createArgs(int nRequired, const char* address1 = NULL, const char* address2 = NULL);
-extern Value CallRPC(string args);
+using namespace std;
+
+extern UniValue createArgs(int nRequired, const char* address1 = NULL, const char* address2 = NULL);
+extern UniValue CallRPC(string args);
 
 extern CWallet* pwalletMain;
 
-BOOST_AUTO_TEST_SUITE(rpc_wallet_tests)
+BOOST_FIXTURE_TEST_SUITE(rpc_wallet_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {
@@ -32,7 +36,7 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
     // new, compressed:
     const char address2Hex[] = "0388c2037017c62240b6b72ac1a2a5f94da790596ebd06177c8572752922165cb4";
 
-    Value v;
+    UniValue v;
     CBitcoinAddress address;
     BOOST_CHECK_NO_THROW(v = addmultisig(createArgs(1, address1Hex), false));
     address.SetString(v.get_str());
@@ -63,13 +67,13 @@ BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 BOOST_AUTO_TEST_CASE(rpc_wallet)
 {
     // Test RPC calls for various wallet statistics
-    Value r;
+    UniValue r;
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CPubKey demoPubkey = pwalletMain->GenerateNewKey();
     CBitcoinAddress demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
-    Value retValue;
+    UniValue retValue;
     string strAccount = "walletDemoAccount";
     string strPurpose = "receive";
     BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
@@ -210,7 +214,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
      *********************************/
     BOOST_CHECK_THROW(CallRPC("getaddressesbyaccount"), runtime_error);
     BOOST_CHECK_NO_THROW(retValue = CallRPC("getaddressesbyaccount " + strAccount));
-    Array arr = retValue.get_array();
+    UniValue arr = retValue.get_array();
     BOOST_CHECK(arr.size() > 0);
     BOOST_CHECK(CBitcoinAddress(arr[0].get_str()).Get() == demoAddress.Get());
 }

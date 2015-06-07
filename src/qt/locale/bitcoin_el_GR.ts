@@ -1,9 +1,9 @@
-<TS language="el_GR" version="2.0">
+<TS language="el_GR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Διπλό-κλικ για επεξεργασία της διεύθυνσης ή της ετικέτας</translation>
+        <source>Right-click to edit address or label</source>
+        <translation>Δεξί-κλικ για επεξεργασία της διεύθυνσης ή της ετικέτας</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Νέα</translation>
+        <translation>&amp;Νέo</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -91,7 +91,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Η εξαγωγή απέτυχε</translation>
+        <translation>Η Εξαγωγή Απέτυχε</translation>
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
@@ -102,7 +102,7 @@
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>Ετικέτα</translation>
+        <translation>Επιγραφή</translation>
     </message>
     <message>
         <source>Address</source>
@@ -156,10 +156,6 @@
         <translation>Άλλαξε κωδικο πρόσβασης</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Εισάγετε τον παλιό και τον νεο κωδικο στο πορτοφολι.</translation>
-    </message>
-    <message>
         <source>Confirm wallet encryption</source>
         <translation>Επιβεβαίωσε την κρυπτογραφηση του πορτοφολιού</translation>
     </message>
@@ -187,10 +183,6 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Εισάγετε τον νέο κωδικό πρόσβασης στον πορτοφόλι &lt;br/&gt; Παρακαλώ χρησιμοποιείστε ένα κωδικό με &lt;b&gt; 10 ή περισσότερους τυχαίους χαρακτήρες&lt;/b&gt; ή &lt;b&gt; οχτώ ή παραπάνω λέξεις&lt;/b&gt;.</translation>
-    </message>
-    <message>
-        <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Το Bitcoin θα κλεισει τώρα για να τελειώσει την διαδικασία κρυπτογραφησης. Θυμησου ότι κρυπτογραφώντας το πορτοφολι σου δεν μπορείς να προστατέψεις πλήρως τα bitcoins σου από κλοπή στην περίπτωση όπου μολυνθεί ο υπολογιστής σου με κακόβουλο λογισμικό.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -312,10 +304,6 @@
         <translation>Στείλε νομίσματα σε μια διεύθυνση bitcoin</translation>
     </message>
     <message>
-        <source>Modify configuration options for Bitcoin</source>
-        <translation>Επεργασία  ρυθμισεων επιλογών για το Bitcoin</translation>
-    </message>
-    <message>
         <source>Backup wallet to another location</source>
         <translation>Δημιουργία αντιγράφου ασφαλείας πορτοφολιού σε άλλη τοποθεσία</translation>
     </message>
@@ -423,33 +411,13 @@
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>Εμφανιση του Bitcoin-Qt μήνυματος βοήθειας για να πάρετε μια λίστα με τις πιθανές επιλογές Bitcoin γραμμής εντολών.</translation>
     </message>
-    <message numerus="yes">
-        <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n ενεργή σύνδεση στο δίκτυο Bitcoin</numerusform><numerusform>%n ενεργές συνδέσεις στο δίκτυο Βitcoin</numerusform></translation>
-    </message>
     <message>
         <source>No block source available...</source>
         <translation>Η πηγή του μπλοκ δεν ειναι διαθέσιμη... </translation>
     </message>
-    <message numerus="yes">
-        <source>%n hour(s)</source>
-        <translation><numerusform>%n ώρες </numerusform><numerusform>%n ώρες </numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n day(s)</source>
-        <translation><numerusform>%n ημέρες </numerusform><numerusform>%n ημέρες </numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <source>%n week(s)</source>
-        <translation><numerusform>%n εβδομαδες</numerusform><numerusform>%n εβδομαδες</numerusform></translation>
-    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 και %2</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n year(s)</source>
-        <translation><numerusform>%n έτος</numerusform><numerusform>%n έτη</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -490,18 +458,6 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Εισερχόμενη συναλλαγή</translation>
-    </message>
-    <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Ημερομηνία: %1
-Ποσό: %2
-Τύπος: %3
-Διεύθυνση: %4
-</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -631,7 +587,7 @@ Address: %4
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Αντιγραφή ταρίφας</translation>
+        <translation>Αντιγραφή μετα-ταρίφας</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -702,24 +658,12 @@ Address: %4
         <translation>όχι</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Η ετικετα γινετε κοκκινη , αν το μεγεθος της συναλαγης ειναι μεγαλητερο απο 1000 bytes.</translation>
-    </message>
-    <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Ελάχιστο χρεώσιμο ποσό τουλάχιστο %1 ανα kB</translation>
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Συναλλαγές με υψηλότερη προτεραιότητα είναι πιο πιθανό να περιλαμβάνονται σε ένα μπλοκ.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Η ετικέτα γίνεται κόκκινη , αν το μέγεθος της συναλαγής είναι μεγαλύτερο απο το ",μεσαίο",</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Η ετικέτα γίνεται κόκκινη , αν ο παραλήπτης παραλάβει ένα ποσό μικρότερο απο %1.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -843,30 +787,6 @@ Address: %4
         <source>command-line options</source>
         <translation>επιλογής γραμμής εντολών</translation>
     </message>
-    <message>
-        <source>UI options</source>
-        <translation>επιλογές UI</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Όρισε γλώσσα, για παράδειγμα "de_DE"(προεπιλογή:τοπικές ρυθμίσεις)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Έναρξη ελαχιστοποιημένο</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ορίστε SSL root certificates για αίτηση πληρωμής (default: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Εμφάνισε την οθόνη εκκίνησης κατά την εκκίνηση(προεπιλογή:1)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Επιλογή καταλόγου</translation>
-    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -941,14 +861,6 @@ Address: %4
         <translation>&amp;Κύριο</translation>
     </message>
     <message>
-        <source>Automatically start Bitcoin after logging in to the system.</source>
-        <translation>Αυτόματη εκκίνηση του Bitcoin μετά την εισαγωγή στο σύστημα</translation>
-    </message>
-    <message>
-        <source>&amp;Start Bitcoin on system login</source>
-        <translation>&amp;Έναρξη του Βιtcoin κατά την εκκίνηση του συστήματος</translation>
-    </message>
-    <message>
         <source>Size of &amp;database cache</source>
         <translation>Μέγεθος κρυφής μνήμης βάσης δεδομένων.</translation>
     </message>
@@ -973,8 +885,16 @@ Address: %4
         <translation>Διεύθυνση IP του διαμεσολαβητή (π.χ. 127.0.0.1  / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>URLs από τρίτους (π.χ. ένας εξερευνητής μπλοκ) τα οποία εμφανίζονται στην καρτέλα συναλλαγών ως στοιχεία μενού. Το %s στα URL αντικαθιστάται από την τιμή της κατατεμαχισμένης συναλλαγής.</translation>
+    </message>
+    <message>
         <source>Third party transaction URLs</source>
         <translation>Διευθύνσεις τρίτων συναλλαγών.</translation>
+    </message>
+    <message>
+        <source>Active command-line options that override above options:</source>
+        <translation>Ενεργές επιλογές γραμμής-εντολών που παρακάμπτουν τις παραπάνω επιλογές:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -989,6 +909,10 @@ Address: %4
         <translation>&amp;Δίκτυο</translation>
     </message>
     <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0 = αυτόματο, &lt;0 = ελεύθεροι πυρήνες)</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>Π&amp;ορτοφόλι</translation>
     </message>
@@ -999,6 +923,14 @@ Address: %4
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>Επιλογή κατα πόσο να αναδείχνονται οι δυνατότητες ελέγχου κερμάτων.</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation>Εάν απενεργοποιήσετε το ξόδεμα μη επικυρωμένων ρέστων, τα ρέστα από μια συναλλαγή δεν μπορούν να χρησιμοποιηθούν έως ότου αυτή η συναλλαγή έχει έστω μια επικύρωση. Αυτό επίσης επηρεάζει το πως υπολογίζεται το υπόλοιπό σας.</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>&amp;Ξόδεμα μη επικυρωμένων ρέστων</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1041,10 +973,6 @@ Address: %4
         <translation>&amp;Ελαχιστοποίηση στην περιοχή ειδοποιήσεων αντί της γραμμής εργασιών</translation>
     </message>
     <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Ελαχιστοποίηση αντί για έξοδο κατά το κλείσιμο του παραθύρου</translation>
-    </message>
-    <message>
         <source>M&amp;inimize on close</source>
         <translation>Ε&amp;λαχιστοποίηση κατά το κλείσιμο</translation>
     </message>
@@ -1057,10 +985,6 @@ Address: %4
         <translation>Γλώσσα περιβάλλοντος εργασίας: </translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin.</source>
-        <translation>Εδώ μπορεί να ρυθμιστεί η γλώσσα διεπαφής χρήστη. Αυτή η ρύθμιση θα ισχύσει μετά την επανεκκίνηση του Bitcoin.</translation>
-    </message>
-    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Μονάδα μέτρησης:</translation>
     </message>
@@ -1070,7 +994,8 @@ Address: %4
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Επιλογή κατα πόσο να αναδείχνονται οι δυνατότητες ελέγχου κερμάτων.</translation>
+        <translation>Επιλογή κατα πόσο να αναδείχνονται οι δυνατότητες ελέγχου κερμάτων.
+</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1095,10 +1020,6 @@ Address: %4
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Χρειάζεται επανεκκίνηση του προγράμματος για να ενεργοποιηθούν οι αλλαγές.</translation>
-    </message>
-    <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Η εφαρμογή θα τερματιστεί. Θέλετε να προχωρήσετε;</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1160,6 +1081,10 @@ Address: %4
         <translation>Το τρέχον συνολικό υπόλοιπο</translation>
     </message>
     <message>
+        <source>Your current balance in watch-only addresses</source>
+        <translation>Το τρέχον υπόλοιπο σας σε διευθύνσεις παρακολούθησης μόνο</translation>
+    </message>
+    <message>
         <source>Spendable:</source>
         <translation>Ξοδεμένα:</translation>
     </message>
@@ -1168,8 +1093,16 @@ Address: %4
         <translation>Πρόσφατες συναλλαγές</translation>
     </message>
     <message>
-        <source>out of sync</source>
-        <translation>εκτός συγχρονισμού</translation>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation>Μη επικυρωμένες συναλλαγές σε διευθύνσεις παρακολούθησης μόνο</translation>
+    </message>
+    <message>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>Εξορυγμένο υπόλοιπο σε διευθύνσεις παρακολούθησης μόνο που δεν έχει ωριμάσει ακόμα</translation>
+    </message>
+    <message>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Το τρέχον συνολικό υπόλοιπο σε διευθύνσεις παρακολούθησης μόνο</translation>
     </message>
 </context>
 <context>
@@ -1187,12 +1120,12 @@ Address: %4
         <translation>Η αίτηση πληρωμής έχει αρνηθεί.</translation>
     </message>
     <message>
-        <source>Payment request has expired.</source>
-        <translation>Η αίτηση πληρωμής έχει λήξει.</translation>
-    </message>
-    <message>
         <source>Payment request is not initialized.</source>
         <translation>Η αίτηση πληρωμής δεν έχει αρχίζει ακόμα.</translation>
+    </message>
+    <message>
+        <source>Requested payment amount of %1 is too small (considered dust).</source>
+        <translation>Το ζητούμενο ποσό πληρωμής του %1 είναι πολύ μικρό (θεωρείται σκόνη)</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -1215,6 +1148,18 @@ Address: %4
         <translation>Επιστροφή ποσού από %1</translation>
     </message>
     <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Σφάλμα επικοινωνίας με %1: %2</translation>
+    </message>
+    <message>
+        <source>Payment request cannot be parsed!</source>
+        <translation>Η αίτηση πληρωμής δεν μπορεί να αναλυθεί!</translation>
+    </message>
+    <message>
+        <source>Bad response from server %1</source>
+        <translation>Κακή απάντηση από διακομιστή %1</translation>
+    </message>
+    <message>
         <source>Payment acknowledged</source>
         <translation>Πληρωμή αναγνωρίστηκε</translation>
     </message>
@@ -1225,10 +1170,6 @@ Address: %4
 </context>
 <context>
     <name>PeerTableModel</name>
-    <message>
-        <source>Address/Hostname</source>
-        <translation>Διεύθυθνση/Όνομα υπολογιστή</translation>
-    </message>
     <message>
         <source>Ping Time</source>
         <translation>Χρόνος καθυστέρησης</translation>
@@ -1259,14 +1200,6 @@ Address: %4
     <message>
         <source>%1 s</source>
         <translation>%1 s</translation>
-    </message>
-    <message>
-        <source>NETWORK</source>
-        <translation>Δίκτυο</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>Άγνωστο(α)</translation>
     </message>
     <message>
         <source>None</source>
@@ -1331,6 +1264,10 @@ Address: %4
         <translation>Χρησιμοποιηση της OpenSSL εκδοσης</translation>
     </message>
     <message>
+        <source>Using BerkeleyDB version</source>
+        <translation>Χρήση BerkeleyDB έκδοσης</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Χρόνος εκκίνησης</translation>
     </message>
@@ -1359,12 +1296,56 @@ Address: %4
         <translation>Παραλήφθησαν</translation>
     </message>
     <message>
+        <source>Sent</source>
+        <translation>Αποστολή</translation>
+    </message>
+    <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;Χρήστες</translation>
+    </message>
+    <message>
+        <source>Select a peer to view detailed information.</source>
+        <translation>Επιλέξτε ένα χρήστη για να δείτε αναλυτικές πληροφορίες.</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>Έκδοση</translation>
     </message>
     <message>
         <source>Services</source>
         <translation>Υπηρεσίες</translation>
+    </message>
+    <message>
+        <source>Starting Height</source>
+        <translation>Αρχικό ύψος</translation>
+    </message>
+    <message>
+        <source>Sync Height</source>
+        <translation>Ύψος συγχονισμού</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>Σκορ αποκλησμού</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>Χρόνος σύνδεσης</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>Τελευταία αποστολή</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>Τελευταία λήψη</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Σταλθέντα bytes</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Ληφθέντα bytes</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1411,16 +1392,8 @@ Address: %4
         <translation>Αρχείο καταγραφής εντοπισμού σφαλμάτων </translation>
     </message>
     <message>
-        <source>Open the Bitcoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Ανοίξτε το αρχείο καταγραφής εντοπισμού σφαλμάτων από τον τρέχοντα κατάλογο δεδομένων. Αυτό μπορεί να πάρει μερικά δευτερόλεπτα για τα μεγάλα αρχεία καταγραφής. </translation>
-    </message>
-    <message>
         <source>Clear console</source>
         <translation>Καθαρισμός κονσόλας</translation>
-    </message>
-    <message>
-        <source>Welcome to the Bitcoin RPC console.</source>
-        <translation>Καλώς ήρθατε στην Bitcoin RPC κονσόλα.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1466,7 +1439,11 @@ Address: %4
         <source>Unknown</source>
         <translation>Άγνωστο(α)</translation>
     </message>
-    </context>
+    <message>
+        <source>Fetching...</source>
+        <translation>Ανάκτηση...</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1480,6 +1457,10 @@ Address: %4
     <message>
         <source>&amp;Message:</source>
         <translation>&amp;Μήνυμα:</translation>
+    </message>
+    <message>
+        <source>R&amp;euse an existing receiving address (not recommended)</source>
+        <translation>Ε&amp;παναχρησιμοποίηση υπάρχουσας διεύθυνσης λήψης (δεν συνιστάται)</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1496,6 +1477,10 @@ Address: %4
     <message>
         <source>Show</source>
         <translation>Εμφάνιση</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>Αφαίρεση επιλεγμένων καταχωρίσεων από τη λίστα</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -1525,8 +1510,16 @@ Address: %4
         <translation>Αντιγραφη της επιλεγμενης διεύθυνσης στο πρόχειρο του συστηματος</translation>
     </message>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>Αντιγραφή &amp;Διεύθυνσης</translation>
+    </message>
+    <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Αποθήκευση εικόνας...</translation>
+    </message>
+    <message>
+        <source>Request payment to %1</source>
+        <translation>Αίτηση πληρωμής για %1</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -1546,7 +1539,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation>Ετικέτα</translation>
+        <translation>Επιγραφή</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1569,7 +1562,7 @@ Address: %4
     </message>
     <message>
         <source>Label</source>
-        <translation>Ετικέτα</translation>
+        <translation>Επιγραφή</translation>
     </message>
     <message>
         <source>Message</source>
@@ -1601,6 +1594,10 @@ Address: %4
     <message>
         <source>Coin Control Features</source>
         <translation>Χαρακτηρηστικά επιλογής κερμάτων</translation>
+    </message>
+    <message>
+        <source>Inputs...</source>
+        <translation>Εισροές...</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -1639,6 +1636,14 @@ Address: %4
         <translation>Ρέστα:</translation>
     </message>
     <message>
+        <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
+        <translation>Όταν ενεργό, αλλά η διεύθυνση ρέστων είναι κενή ή άκυρη, τα ρέστα θα σταλούν σε μία πρόσφατα δημιουργημένη διεύθυνση.</translation>
+    </message>
+    <message>
+        <source>Custom change address</source>
+        <translation>Προσαρμοσμένη διεύθυνση ρέστων</translation>
+    </message>
+    <message>
         <source>Transaction Fee:</source>
         <translation>Τέλος συναλλαγής:</translation>
     </message>
@@ -1647,12 +1652,32 @@ Address: %4
         <translation>Επιλογή...</translation>
     </message>
     <message>
-        <source>Minimize</source>
-        <translation>Ελαχιστοποίηση</translation>
+        <source>per kilobyte</source>
+        <translation>ανά kilobyte</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Προτεινόμενο: </translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>Προσαρμογή:</translation>
+    </message>
+    <message>
+        <source>Confirmation time:</source>
+        <translation>Χρόνος επικύρωσης:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>κανονικό</translation>
     </message>
     <message>
         <source>fast</source>
         <translation>Γρήγορο</translation>
+    </message>
+    <message>
+        <source>(confirmation may take longer)</source>
+        <translation>(η επικύρωση ίσως χρειαστεί περισσότερο χρόνο)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1731,10 +1756,6 @@ Address: %4
         <translation>ή</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Η διεύθυνση του αποδέκτη δεν είναι σωστή. Παρακαλώ ελέγξτε ξανά.</translation>
-    </message>
-    <message>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Το ποσό πληρωμής πρέπει να είναι μεγαλύτερο από 0.</translation>
     </message>
@@ -1745,10 +1766,6 @@ Address: %4
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Το σύνολο υπερβαίνει το υπόλοιπό σας όταν συμπεριληφθεί και η αμοιβή %1</translation>
-    </message>
-    <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Βρέθηκε η ίδια διεύθυνση δύο φορές. Επιτρέπεται μία μόνο εγγραφή για κάθε διεύθυνση, σε κάθε διαδικασία αποστολής.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -1798,12 +1815,20 @@ Address: %4
         <translation>Επιλογή διεύθυνσης που έχει ήδη χρησιμοποιηθεί</translation>
     </message>
     <message>
+        <source>This is a normal payment.</source>
+        <translation>Αυτή είναι μια απλή πληρωμή.</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>Η διεύθυνση Bitcoin που θα σταλεί η πληρωμή</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Επικόλληση διεύθυνσης από το πρόχειρο</translation>
+        <translation>Επικόλληση διεύθυνσης από το βιβλίο διευθύνσεων</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1816,6 +1841,10 @@ Address: %4
     <message>
         <source>Message:</source>
         <translation>Μήνυμα:</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation>Εισάγεται μία ετικέτα για αυτή την διεύθυνση για να προστεθεί στη λίστα με τις χρησιμοποιημένες διευθύνσεις</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1846,10 +1875,6 @@ Address: %4
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Υπογραφή Μηνύματος</translation>
-    </message>
-    <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Μπορείτε να υπογράφετε μηνύματα με τις διευθύνσεις σας, ώστε ν' αποδεικνύετε πως αυτές σας ανήκουν. Αποφεύγετε να υπογράφετε κάτι αόριστο καθώς ενδέχεται να εξαπατηθείτε. Υπογράφετε μόνο πλήρης δηλώσεις με τις οποίες συμφωνείτε.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -1902,10 +1927,6 @@ Address: %4
     <message>
         <source>&amp;Verify Message</source>
         <translation>&amp;Επιβεβαίωση μηνύματος</translation>
-    </message>
-    <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Πληκτρολογήστε την υπογραφή διεύθυνσης, μήνυμα (βεβαιωθείτε ότι έχετε αντιγράψει τις αλλαγές γραμμής, κενά, tabs, κ.λπ. ακριβώς) και την υπογραφή παρακάτω, για να ελέγξει το μήνυμα. Να είστε προσεκτικοί για να μην διαβάσετε περισσότερα στην υπογραφή ό, τι είναι στην υπογραφή ίδιο το μήνυμα , για να μην εξαπατηθούν από έναν άνθρωπο -in - the-middle επίθεση.</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -2024,10 +2045,6 @@ Address: %4
         <source>Status</source>
         <translation>Κατάσταση</translation>
     </message>
-    <message numerus="yes">
-        <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, έχει μεταδοθεί μέσω %n κόμβων</numerusform><numerusform>, έχει μεταδοθεί μέσω %n κόμβων</numerusform></translation>
-    </message>
     <message>
         <source>Date</source>
         <translation>Ημερομηνία</translation>
@@ -2063,10 +2080,6 @@ Address: %4
     <message>
         <source>Credit</source>
         <translation>Πίστωση </translation>
-    </message>
-    <message numerus="yes">
-        <source>matures in %n more block(s)</source>
-        <translation><numerusform>ωρίμανση σε %n επιπλέον μπλοκ</numerusform><numerusform>ωρίμανση σε %n επιπλέον μπλοκ</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2140,10 +2153,6 @@ Address: %4
         <source>, has not been successfully broadcast yet</source>
         <translation>, δεν έχει ακόμα μεταδοθεί μ' επιτυχία</translation>
     </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Ανοιχτό για %n μπλοκ</numerusform><numerusform>Ανοιχτό για %n μπλοκ</numerusform></translation>
-    </message>
     <message>
         <source>unknown</source>
         <translation>άγνωστο</translation>
@@ -2171,14 +2180,6 @@ Address: %4
         <translation>Τύπος</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Διεύθυνση</translation>
-    </message>
-    <message numerus="yes">
-        <source>Open for %n more block(s)</source>
-        <translation><numerusform>Ανοιχτό για %n μπλοκ</numerusform><numerusform>Ανοιχτό για %n μπλοκ</numerusform></translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Ανοιχτό μέχρι %1</translation>
     </message>
@@ -2199,6 +2200,10 @@ Address: %4
         <translation>Offline</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Επιγραφή</translation>
+    </message>
+    <message>
         <source>Unconfirmed</source>
         <translation>Ανεπιβεβαίωτες</translation>
     </message>
@@ -2208,7 +2213,7 @@ Address: %4
     </message>
     <message>
         <source>Received with</source>
-        <translation>Παραλαβή με</translation>
+        <translation>Ελήφθη με</translation>
     </message>
     <message>
         <source>Received from</source>
@@ -2216,7 +2221,7 @@ Address: %4
     </message>
     <message>
         <source>Sent to</source>
-        <translation>Αποστολή προς</translation>
+        <translation>Απεστάλη προς</translation>
     </message>
     <message>
         <source>Payment to yourself</source>
@@ -2245,10 +2250,6 @@ Address: %4
     <message>
         <source>Type of transaction.</source>
         <translation>Είδος συναλλαγής.</translation>
-    </message>
-    <message>
-        <source>Destination address of transaction.</source>
-        <translation>Διεύθυνση αποστολής της συναλλαγής.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
@@ -2358,6 +2359,10 @@ Address: %4
         <translation>Επιτυχής εξαγωγή</translation>
     </message>
     <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>Το ιστορικό συναλλαγών αποθηκεύτηκε επιτυχώς στο %1.</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Αρχείο οριοθετημένο με κόμματα (*.csv)</translation>
     </message>
@@ -2396,7 +2401,11 @@ Address: %4
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation>Μονάδα μέτρησης προβολής ποσών. Κάντε κλικ για επιλογή άλλης μονάδας.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -2432,6 +2441,10 @@ Address: %4
     <message>
         <source>Backup Failed</source>
         <translation>Αποτυχία κατά τη δημιουργία αντιγράφου</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Παρουσιάστηκε σφάλμα κατά την αποθήκευση των δεδομένων πορτοφολιού στο %1.</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
@@ -2477,41 +2490,12 @@ Address: %4
         <translation>Να δέχεσαι συνδέσεις από έξω(προεπιλογή:1)</translation>
     </message>
     <message>
-        <source>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>%s, you must set a rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Αποθηκευση σε συγκεκριμένη διεύθυνση. Χρησιμοποιήστε τα πλήκτρα [Host] : συμβολισμός θύρα για IPv6</translation>
     </message>
     <message>
-        <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Σφάλμα: Η συναλλαγή απορρίφθηκε.
-Αυτό ίσως οφείλεται στο ότι τα νομίσματά σας έχουν ήδη ξοδευτεί, π.χ. με την αντιγραφή του wallet.dat σε άλλο σύστημα και την χρήση τους εκεί, χωρίς η συναλλαγή να έχει καταγραφεί στο παρόν σύστημα.</translation>
-    </message>
-    <message>
-        <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation>Σφάλμα: Αυτή η συναλλαγή απαιτεί αμοιβή συναλλαγής τουλάχιστον %s λόγω του μεγέθους, πολυπλοκότητας ή της χρήσης πρόσφατης παραλαβής κεφαλαίου</translation>
+        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
+        <translation>Εισαγωγή δοκιμαστικής λειτουργίας παλινδρόμησης, που χρησιμοποιεί μια ειδική αλυσίδα στην οποία τα μπλοκ επιλύονται στιγμιαία.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
@@ -2558,10 +2542,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Εντοπισθηκε διεφθαρμενη βαση δεδομενων των μπλοκ</translation>
     </message>
     <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Ανακαλύψτε την δικη σας IP διεύθυνση (προεπιλογή: 1 όταν ακούει και δεν - externalip) </translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Θελετε να δημιουργηθει τωρα η βαση δεδομενων του μπλοκ? </translation>
     </message>
@@ -2590,10 +2570,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Προειδοποίηση: Χαμηλός χώρος στο δίσκο  </translation>
     </message>
     <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Σφάλμα: το πορτοφόλι είναι κλειδωμένο, δεν μπορεί να δημιουργηθεί συναλλαγή</translation>
-    </message>
-    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>ταλαιπωρηθειτε για να ακούσετε σε οποιαδήποτε θύρα. Χρήση - ακούστε = 0 , αν θέλετε αυτό.</translation>
     </message>
@@ -2610,12 +2586,16 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Δεν ειναι αρκετες περιγραφες αρχείων διαθέσιμες.</translation>
     </message>
     <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Εισαγωγή μπλοκ από εξωτερικό αρχείο blk000?.dat</translation>
+        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
+        <translation>Μόνο σύνδεση σε κόμβους του δικτύου &lt;net&gt; (ipv4, ipv6 ή onion)</translation>
     </message>
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Επιλέξτε αρχείο πορτοφολιού (μέσα απο κατάλογο δεδομένων)</translation>
+    </message>
+    <message>
+        <source>This is intended for regression testing tools and app development.</source>
+        <translation>Αυτό προορίζεται για εργαλεία δοκιμών παλινδρόμησης και την ανάπτυξη εφαρμογών.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2624,6 +2604,10 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Verifying wallet...</source>
         <translation>Επαλήθευση πορτοφολιου... </translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>Το πορτοφόλι %s βρίσκεται έξω από το φάκελο δεδομένων %s</translation>
     </message>
     <message>
         <source>Wallet options:</source>
@@ -2638,6 +2622,14 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Αδυναμία κλειδώματος του φακέλου δεδομένων %s. Πιθανώς το Bitcoin να είναι ήδη ενεργό.</translation>
     </message>
     <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Προειδοποίηση: Παρακαλώ ελέγξτε ότι η ημερομηνία και ώρα του υπολογιστή σας είναι σωστά ρυθμισμένες! Εάν το ρολόι σας είναι λάθος το Bitcoin Core δεν θα λειτουργήσει σωστά. </translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: 0)</source>
+        <translation>Επιλογή φακέλου δεδομένων στην εκκίνηση (προεπιλεγμένο: 0)</translation>
+    </message>
+    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Σύνδεση μέσω διαμεσολαβητή SOCKS5</translation>
     </message>
@@ -2650,12 +2642,20 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Σφάλμα φόρτωσης wallet.dat: Το Πορτοφόλι απαιτεί μια νεότερη έκδοση του Bitcoin</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Σφάλμα ανάγνωσης από τη βάση δεδομένων, γίνεται τερματισμός.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Σφάλμα: Μη συμβατή παράμετρος -tor. Χρησιμοποιήσε την παράμετρο -onion</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Πληροφορία</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
+        <translation>Η εκκίνηση ελέγχου ορθότητας απέτυχε.  Γίνεται τερματισμός του Bitcoin Core.</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2666,12 +2666,36 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Node relay options:</source>
+        <translation>Επιλογές αναμετάδοσης κόμβου: </translation>
+    </message>
+    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>Ρυθμίσεις SSL: (ανατρέξτε στο Bitcoin Wiki για οδηγίες ρυθμίσεων SSL)</translation>
     </message>
     <message>
+        <source>RPC server options:</source>
+        <translation>Επιλογές διακομιστή RPC:</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Αποστολή πληροφοριών εντοπισμού σφαλμάτων στην κονσόλα αντί του αρχείου debug.log</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ορίστε SSL root certificates για αίτηση πληρωμής (default: -system-)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Όρισε γλώσσα, για παράδειγμα "de_DE"(προεπιλογή:τοπικές ρυθμίσεις)</translation>
+    </message>
+    <message>
+        <source>Show all debugging options (usage: --help -help-debug)</source>
+        <translation>Προβολή όλων των επιλογών εντοπισμού σφαλμάτων (χρήση: --help -help-debug)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: 1)</source>
+        <translation>Εμφάνισε την οθόνη εκκίνησης κατά την εκκίνηση(προεπιλογή:1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2680,6 +2704,10 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Signing transaction failed</source>
         <translation>Η υπογραφή συναλλαγής απέτυχε </translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Έναρξη ελαχιστοποιημένο</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2708,10 +2736,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Warning</source>
         <translation>Προειδοποίηση</translation>
-    </message>
-    <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Προειδοποίηση: Αυτή η έκδοση είναι ξεπερασμένη, απαιτείται αναβάθμιση </translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -2798,10 +2822,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή: '%s'</translation>
     </message>
     <message>
-        <source>Print block tree on startup (default: %u)</source>
-        <translation>Εκτύπωση μπλοκ δέντρου κατά την εκκίνηση (προεπιλογή: %u)</translation>
-    </message>
-    <message>
         <source>Server certificate file (default: %s)</source>
         <translation>Αρχείο πιστοποιητικού του διακομιστή  (προεπιλογή: %s)</translation>
     </message>
@@ -2834,10 +2854,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Μη έγκυρο ποσό για την παράμετρο -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount</source>
-        <translation>Λάθος ποσότητα</translation>
-    </message>
-    <message>
         <source>Insufficient funds</source>
         <translation>Ανεπαρκές κεφάλαιο</translation>
     </message>
@@ -2868,10 +2884,6 @@ for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Done loading</source>
         <translation>Η φόρτωση ολοκληρώθηκε</translation>
-    </message>
-    <message>
-        <source>To use the %s option</source>
-        <translation>Χρήση της %s επιλογής</translation>
     </message>
     <message>
         <source>Error</source>

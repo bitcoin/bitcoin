@@ -1,6 +1,6 @@
 Deterministic OSX Dmg Notes.
 
-Working OSX DMG's are created in Linux by combining a recent clang,
+Working OSX DMGs are created in Linux by combining a recent clang,
 the Apple's binutils (ld, ar, etc), and DMG authoring tools.
 
 Apple uses clang extensively for development and has upstreamed the necessary
@@ -30,7 +30,7 @@ originally done in toolchain4.
 To complicate things further, all builds must target an Apple SDK. These SDKs
 are free to download, but not redistributable.
 To obtain it, register for a developer account, then download the XCode 6.1.1 dmg:
-https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
+https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
 
 This file is several gigabytes in size, but only a single directory inside is
 needed: Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk
@@ -58,7 +58,7 @@ libdmg-hfsplus project is used to compress it. There are several bugs in this
 tool and its maintainer has seemingly abandoned the project. It has been forked
 and is available (with fixes) here: https://github.com/theuni/libdmg-hfsplus .
 
-The 'dmg' tool has the ability to create DMG's from scratch as well, but this
+The 'dmg' tool has the ability to create DMGs from scratch as well, but this
 functionality is broken. Only the compression feature is currently used.
 Ideally, the creation could be fixed and genisoimage would no longer be necessary.
 

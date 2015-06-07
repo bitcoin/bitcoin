@@ -7,13 +7,14 @@
 
 #include "rpcprotocol.h"
 #include "util.h"
-#include "ui_interface.h"
 
 #include <set>
 #include <stdint.h>
 
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include "univalue/univalue.h"
+
 using namespace std;
-using namespace json_spirit;
 
 class CRPCConvertParam
 {
@@ -29,9 +30,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getaddednodeinfo", 0 },
     { "setgenerate", 0 },
     { "setgenerate", 1 },
+    { "generate", 0 },
     { "getnetworkhashps", 0 },
     { "getnetworkhashps", 1 },
     { "sendtoaddress", 1 },
+    { "sendtoaddress", 4 },
     { "settxfee", 0 },
     { "getreceivedbyaddress", 1 },
     { "getreceivedbyaccount", 1 },
@@ -59,6 +62,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listsinceblock", 2 },
     { "sendmany", 1 },
     { "sendmany", 2 },
+    { "sendmany", 4 },
     { "addmultisigaddress", 0 },
     { "addmultisigaddress", 1 },
     { "createmultisig", 0 },
@@ -76,6 +80,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendrawtransaction", 1 },
     { "gettxout", 1 },
     { "gettxout", 2 },
+    { "gettxoutproof", 0 },
     { "lockunspent", 0 },
     { "lockunspent", 1 },
     { "importprivkey", 2 },
@@ -117,25 +122,32 @@ CRPCConvertTable::CRPCConvertTable()
 
 static CRPCConvertTable rpcCvtTable;
 
-/** Convert strings to command-specific RPC representation */
-Array RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
+ * as well as objects and arrays.
+ */
+UniValue ParseNonRFCJSONValue(const std::string& strVal)
 {
-    Array params;
+    UniValue jVal;
+    if (!jVal.read(std::string("[")+strVal+std::string("]")) ||
+        !jVal.isArray() || jVal.size()!=1)
+        throw runtime_error(string("Error parsing JSON:")+strVal);
+    return jVal[0];
+}
+
+/** Convert strings to command-specific RPC representation */
+UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::string> &strParams)
+{
+    UniValue params(UniValue::VARR);
 
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
         const std::string& strVal = strParams[idx];
 
-        // insert string value directly
         if (!rpcCvtTable.convert(strMethod, idx)) {
+            // insert string value directly
             params.push_back(strVal);
-        }
-
-        // parse string as JSON, insert bool/number/object/etc. value
-        else {
-            Value jVal;
-            if (!read_string(strVal, jVal))
-                throw runtime_error(string("Error parsing JSON:")+strVal);
-            params.push_back(jVal);
+        } else {
+            // parse string as JSON, insert bool/number/object/etc. value
+            params.push_back(ParseNonRFCJSONValue(strVal));
         }
     }
 

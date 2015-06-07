@@ -9,6 +9,8 @@
 
 #include "base58.h"
 
+#include <openssl/x509.h>
+
 #include <QByteArray>
 #include <QList>
 #include <QString>
@@ -27,7 +29,6 @@ public:
     bool SerializeToString(std::string* output) const;
 
     bool IsInitialized() const;
-    QString getPKIType() const;
     // Returns true if merchant's identity is authenticated, and
     // returns human-readable merchant identity in merchant
     bool getMerchant(X509_STORE* certStore, QString& merchant) const;

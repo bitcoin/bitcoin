@@ -4,9 +4,11 @@
 
 #include "compat/sanity.h"
 #include "key.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
-BOOST_AUTO_TEST_SUITE(sanity_tests)
+
+BOOST_FIXTURE_TEST_SUITE(sanity_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(basic_sanity)
 {

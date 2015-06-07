@@ -4,6 +4,7 @@
 
 #include "hash.h"
 #include "utilstrencodings.h"
+#include "test/test_bitcoin.h"
 
 #include <vector>
 
@@ -11,7 +12,7 @@
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(hash_tests)
+BOOST_FIXTURE_TEST_SUITE(hash_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {

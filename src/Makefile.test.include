@@ -39,6 +39,7 @@ BITCOIN_TESTS =\
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
+  test/bip32_tests.cpp \
   test/bloom_tests.cpp \
   test/checkblock_tests.cpp \
   test/Checkpoints_tests.cpp \
@@ -50,13 +51,17 @@ BITCOIN_TESTS =\
   test/hash_tests.cpp \
   test/key_tests.cpp \
   test/main_tests.cpp \
+  test/mempool_tests.cpp \
   test/miner_tests.cpp \
   test/mruset_tests.cpp \
   test/multisig_tests.cpp \
   test/netbase_tests.cpp \
   test/pmt_tests.cpp \
+  test/policyestimator_tests.cpp \
+  test/pow_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
+  test/scheduler_tests.cpp \
   test/script_P2SH_tests.cpp \
   test/script_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -65,6 +70,7 @@ BITCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/test_bitcoin.cpp \
+  test/test_bitcoin.h \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
   test/uint256_tests.cpp \
@@ -74,7 +80,7 @@ BITCOIN_TESTS =\
 if ENABLE_WALLET
 BITCOIN_TESTS += \
   test/accounting_tests.cpp \
-  test/wallet_tests.cpp \
+  wallet/test/wallet_tests.cpp \
   test/rpc_wallet_tests.cpp
 endif
 

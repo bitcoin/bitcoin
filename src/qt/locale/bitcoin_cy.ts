@@ -1,10 +1,6 @@
-<TS language="cy" version="2.0">
+<TS language="cy" version="2.1">
 <context>
     <name>AddressBookPage</name>
-    <message>
-        <source>Double-click to edit address or label</source>
-        <translation>Clicio dwywaith i olygu cyfeiriad neu label</translation>
-    </message>
     <message>
         <source>Create a new address</source>
         <translation>Creu cyfeiriad newydd</translation>
@@ -70,10 +66,6 @@
     <message>
         <source>Change passphrase</source>
         <translation>Newid cyfrinymadrodd</translation>
-    </message>
-    <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Teipiwch yr hen cyfrinymadrodd a chyfrinymadrodd newydd i mewn i'r waled.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -445,12 +437,12 @@
         <translation>Math</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Cyfeiriad</translation>
-    </message>
-    <message>
         <source>Open until %1</source>
         <translation>Agor tan %1</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Label</translation>
     </message>
     </context>
 <context>
