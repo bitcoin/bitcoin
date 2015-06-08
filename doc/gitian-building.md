@@ -287,6 +287,9 @@ git checkout v${VERSION}
 cd ..
 ```
 
+**Note**: if you've installed Gitian before May 16, 2015, please update to the latest version, see https://github.com/devrandom/gitian-builder/issues/86
+
+
 Setting up gitian images
 -------------------------
 
