@@ -78,7 +78,7 @@ public:
     void removeConflicts(const Bitcoin_CTransaction &tx, std::list<Bitcoin_CTransaction>& removed);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, Bitcoin_CCoins &coins);
+    void pruneSpent(const uint256& hash, Claim_CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 
@@ -106,7 +106,7 @@ protected:
 
 public:
     Bitcoin_CCoinsViewMemPool(Bitcoin_CCoinsView &baseIn, Bitcoin_CTxMemPool &mempoolIn);
-    bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    bool GetCoins(const uint256 &txid, Claim_CCoins &coins);
     bool HaveCoins(const uint256 &txid);
 };
 

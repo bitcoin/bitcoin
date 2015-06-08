@@ -270,14 +270,15 @@ QString Bitcoin_TransactionDesc::toHTML(Bitcoin_CWallet *wallet, Bitcoin_CWallet
         {
             COutPoint prevout = txin.prevout;
 
-            Bitcoin_CCoins prev;
+            Claim_CCoins prev;
             //TODO - Does this need to make a difference depending on if we are displaying claim coins and "normal" bitcoins?
             if(bitcoin_pcoinsTip->Bitcoin_GetCoins(prevout.hash, prev))
             {
                 if (prevout.n < prev.vout.size())
                 {
                     strHTML += "<li>";
-                    const CTxOut &vout = prev.vout[prevout.n];
+                    const CTxOutClaim &voutClaim = prev.vout[prevout.n];
+                    const CTxOut vout(voutClaim.nValueOriginal, voutClaim.scriptPubKey);
                     CTxDestination address;
                     if (ExtractDestination(vout.scriptPubKey, address))
                     {

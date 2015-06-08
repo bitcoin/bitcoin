@@ -108,7 +108,7 @@ static const uint64_t bitcoin_nMinDiskSpace = 52428800;
 
 
 class Bitcoin_CBlockTreeDB;
-class Bitcoin_CTxUndo;
+class Bitcoin_CTxUndoClaim;
 class Bitcoin_CScriptCheck;
 class CValidationState;
 class Bitcoin_CWalletInterface;
@@ -183,7 +183,7 @@ uint64_t Bitcoin_GetTotalMonetaryBase(int nHeight);
 void Bitcoin_UpdateTime(Bitcoin_CBlockHeader& block, const Bitcoin_CBlockIndex* pindexPrev);
 
 /** Verify a signature */
-bool Bitcoin_VerifySignature(const Bitcoin_CCoins& txFrom, const Bitcoin_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+bool Bitcoin_VerifySignature(const Claim_CCoins& txFrom, const Bitcoin_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Abort with a message */
 bool AbortNode(const std::string &msg);
 /** Get statistics from node state */
@@ -248,7 +248,7 @@ bool Bitcoin_CheckInputs(const Bitcoin_CTransaction& tx, CValidationState &state
                  std::vector<Bitcoin_CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
-void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndo &txundo, Bitcoin_CTxUndoClaim &claim_txundo,  int nHeight, const uint256 &txhash);
+void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndoClaim &txundo, Bitcoin_CTxUndoClaim &claim_txundo,  int nHeight, const uint256 &txhash);
 
 // Context-independent validity checks
 bool Bitcoin_CheckTransaction(const Bitcoin_CTransaction& tx, CValidationState& state);
@@ -259,76 +259,6 @@ bool Bitcoin_CheckTransaction(const Bitcoin_CTransaction& tx, CValidationState& 
 bool Bitcoin_IsStandardTx(const Bitcoin_CTransaction& tx, std::string& reason);
 
 bool Bitcoin_IsFinalTx(const Bitcoin_CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
-
-/** Undo information for a CBlock */
-class Bitcoin_CBlockUndo
-{
-public:
-    std::vector<Bitcoin_CTxUndo> vtxundo; // for all but the coinbase
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(vtxundo);
-    )
-
-    bool WriteToDisk(FILE * writeToFile, CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
-    {
-        // Open history file to append
-        CAutoFile fileout = CAutoFile(writeToFile, SER_DISK, netParams->ClientVersion());
-        if (!fileout)
-            return error("Bitcoin: CBlockUndo::WriteToDisk : OpenUndoFile failed");
-
-        // Write index header
-        unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(netParams->MessageStart()) << nSize;
-
-        // Write undo data
-        long fileOutPos = ftell(fileout);
-        if (fileOutPos < 0)
-            return error("Bitcoin: CBlockUndo::WriteToDisk : ftell failed");
-        pos.nPos = (unsigned int)fileOutPos;
-        fileout << *this;
-
-        // calculate & write checksum
-        CHashWriter hasher(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
-        hasher << hashBlock;
-        hasher << *this;
-        fileout << hasher.GetHash();
-
-        // Flush stdio buffers and commit to disk before returning
-        fflush(fileout);
-        if (!Bitcoin_IsInitialBlockDownload())
-            FileCommit(fileout);
-
-        return true;
-    }
-
-    bool ReadFromDisk(FILE * readFromFile, const CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
-    {
-        // Open history file to read
-        CAutoFile filein = CAutoFile(readFromFile, SER_DISK, netParams->ClientVersion());
-        if (!filein)
-            return error("Bitcoin: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
-
-        // Read block
-        uint256 hashChecksum;
-        try {
-            filein >> *this;
-            filein >> hashChecksum;
-        }
-        catch (std::exception &e) {
-            return error("Bitcoin: %s : Deserialize or I/O error - %s", __func__, e.what());
-        }
-
-        // Verify checksum
-        CHashWriter hasher(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
-        hasher << hashBlock;
-        hasher << *this;
-        if (hashChecksum != hasher.GetHash())
-            return error("Bitcoin: CBlockUndo::ReadFromDisk : Checksum mismatch");
-
-        return true;
-    }
-};
 
 /** Undo information for a CBlock */
 class Bitcoin_CBlockUndoClaim
@@ -414,7 +344,7 @@ private:
 
 public:
     Bitcoin_CScriptCheck() {}
-    Bitcoin_CScriptCheck(const Bitcoin_CCoins& txFromIn, const Bitcoin_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+    Bitcoin_CScriptCheck(const Claim_CCoins& txFromIn, const Bitcoin_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
         scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
 
