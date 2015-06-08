@@ -40,3 +40,6 @@ signers:
   C060A6635913D98A3587D7DB1C2491FFEB0EF770:
     name: "Cory Fields"
     key: "cfields"
+  37EC7D7B0A217CDB4B4E007E7FAB114267E4FA04:
+    name: "Peter Todd"
+    key: "petertodd"
