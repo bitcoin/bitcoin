@@ -2444,18 +2444,34 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     return result;
 }
 
-/* BIP32 stack */
-const std::string hd_default_chainpath = "m/44'/0'/0'/c/k";
+/*
+///////////
+BIP32 stack
+///////////
 
-UniValue hdchainpath(const UniValue& params, bool fHelp)
+default chainpath after bip44
+m = master key
+<num>' or <num>h = hardened key
+c stands for internal/external chain switch
+  c=0 for external addresses
+  c=1 for internal addresses
+  
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/0 for the first external key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/0 for the first internal key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/1 for the second external key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/1 for the second internal key
+*/
+const std::string hd_default_chainpath = "m/44'/0'/0'/c";
+
+UniValue hdaddchain(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
     if (fHelp)
         throw runtime_error(
-                            "hdchainpath set|get (<chainpath>|default) (<masterseed_hex>)\n"
-                            "\nEnables/sets HD option for this wallet\n"
+                            "hdaddchain (<chainpath>|default) (<masterseed_hex>)\n"
+                            "\nAdds a HD/Bip32 chain \n"
                             "\nArguments:\n"
                             "1. chainpath        (string, optional, default="+hd_default_chainpath+") chainpath for hd wallet structure\n"
                             "   m stands for master, c for internal/external key-switch, k stands for upcounting child key index"
@@ -2466,46 +2482,40 @@ UniValue hdchainpath(const UniValue& params, bool fHelp)
                             "}\n"
 
                             "\nExamples\n"
-                            + HelpExampleCli("hdchainpath", "get")
-                            + HelpExampleCli("hdchainpath", "set m/44'/0'/0'/c/k")
-                            + HelpExampleRpc("hdchainpath", "set m/44'/0'/0'/c/k")
+                            + HelpExampleCli("hdaddchain", "set")
+                            + HelpExampleCli("hdaddchain", "set m/44'/0'/0'/c/k")
+                            + HelpExampleRpc("hdaddchain", "set m/44'/0'/0'/c/k")
                             );
 
     UniValue result(UniValue::VOBJ);
 
-    if(params[0].get_str() == "set")
+    assert(pwalletMain != NULL);
+    const unsigned int bip32MasterSeedLength = 32;
+
+    CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
+    bool fGenerateMasterSeed = true;
+    CExtPubKey masterPubKey;
+    std::string chainPath = hd_default_chainpath;
+    if (params.size() > 0 && params[0].isStr() && params[0].get_str() != "default")
+        chainPath = params[1].get_str(); //todo bip32 chainpath sanity
+
+    if (params.size() > 1 && params[1].isStr())
     {
-        assert(pwalletMain != NULL);
-        const unsigned int bip32MasterSeedLength = 32;
+        if (!IsHex(params[1].get_str()))
+            throw runtime_error("HD master seed must encoded in hex");
 
-        CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
-        bool fGenerateMasterSeed = true;
-        CExtPubKey masterPubKey;
-        std::string chainPath = hd_default_chainpath;
-        if (params.size() > 1 && params[1].isStr() && params[1].get_str() != "default")
-            chainPath = params[1].get_str(); //todo bip32 chainpath sanity
+        std::vector<unsigned char> seed = ParseHex(params[1].get_str());
+        if (seed.size() != bip32MasterSeedLength)
+            throw runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
 
-        if (params.size() > 2 && params[2].isStr())
-        {
-            if (!IsHex(params[2].get_str()))
-                throw runtime_error("HD master seed must encoded in hex");
-
-            std::vector<unsigned char> seed = ParseHex(params[2].get_str());
-            if (seed.size() != bip32MasterSeedLength)
-                throw runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
-
-            memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
-            memory_cleanse(&seed[0], bip32MasterSeedLength);
-            fGenerateMasterSeed = false;
-        }
-
-        pwalletMain->HDSetChainPath(chainPath, fGenerateMasterSeed, vSeed, masterPubKey);
-        if (fGenerateMasterSeed)
-            result.push_back(Pair("seed_hex", HexStr(vSeed)));
+        memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
+        memory_cleanse(&seed[0], bip32MasterSeedLength);
+        fGenerateMasterSeed = false;
     }
 
-
-
+    pwalletMain->HDSetChainPath(chainPath, fGenerateMasterSeed, vSeed, masterPubKey);
+    if (fGenerateMasterSeed)
+        result.push_back(Pair("seed_hex", HexStr(vSeed)));
     return result;
 }
 
@@ -2515,7 +2525,7 @@ UniValue hdgetaddress(const UniValue& params, bool fHelp)
         throw runtime_error(
                             "hdgetaddress (<childindex>)\n"
                             "\nReturns a Bitcoin address for receiving payments.\n"
-                            "\nautomatically uses the next available childindex if no index is given"
+                            "\nAutomatically uses the next available childindex if no index is given"
                             "\nArguments:\n"
                             "1. \"childindex\"        (numeric, optional) child key index. ATTENTION: automatic index counting will start at the highes available child key index\n"
                             "{\n"
@@ -2533,12 +2543,14 @@ UniValue hdgetaddress(const UniValue& params, bool fHelp)
     CPubKey newKey;
     if (params.size() == 1 && params[0].isNum())
     {
-        if (!pwalletMain->HDGetChildPubKeyAtIndex(newKey, params[0].get_int()))
+        HDChainID emptyId;
+        if (!pwalletMain->HDGetChildPubKeyAtIndex(emptyId, newKey, params[0].get_int()))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
     }
     else
     {
-        if (!pwalletMain->HDGetNextChildPubKey(newKey))
+        HDChainID emptyId;
+        if (!pwalletMain->HDGetNextChildPubKey(emptyId, newKey))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
     }
     CKeyID keyID = newKey.GetID();

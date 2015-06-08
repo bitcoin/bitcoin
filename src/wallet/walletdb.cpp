@@ -129,34 +129,40 @@ bool CWalletDB::EraseWatchOnly(const CScript &dest)
 }
 
 /* BIP32 STACK */
-bool CWalletDB::WriteHDMasterSeed(const CKeyingMaterial& masterSeed)
+bool CWalletDB::WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed)
 {
     nWalletDBUpdated++;
-    return Write(std::string("hdmasterseed"), masterSeed);
+    return Write(std::make_pair(std::string("hdmasterseed"), hash), masterSeed);
 }
 
-bool CWalletDB::EraseHDMasterSeed()
+bool CWalletDB::WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret)
 {
     nWalletDBUpdated++;
-    return Erase(std::string("hdmasterseed"));
+    return Write(std::make_pair(std::string("hdcryptedmasterseed"), hash), vchCryptedSecret);
 }
 
-bool CWalletDB::WriteHDExternalPubKey(const CExtPubKey &externalPubKey)
+bool CWalletDB::EraseHDMasterSeed(const uint256& hash)
 {
     nWalletDBUpdated++;
-    return Write(std::string("hdexternalpubkey"), externalPubKey);
+    return Erase(std::make_pair(std::string("hdmasterseed"), hash));
 }
 
-bool CWalletDB::WriteHDInternalPubKey(const CExtPubKey &internalPubKey)
+bool CWalletDB::WriteHDExternalPubKey(const uint256& hash, const CExtPubKey &externalPubKey)
 {
     nWalletDBUpdated++;
-    return Write(std::string("hdinternalpubkey"), internalPubKey);
+    return Write(std::make_pair(std::string("hdexternalpubkey"), hash), externalPubKey);
 }
 
-bool CWalletDB::WriteHDChainPath(const std::string &chainPath)
+bool CWalletDB::WriteHDInternalPubKey(const uint256& hash, const CExtPubKey &internalPubKey)
 {
     nWalletDBUpdated++;
-    return Write(std::string("hdchainpath"), chainPath);
+    return Write(std::make_pair(std::string("hdinternalpubkey"), hash), internalPubKey);
+}
+
+bool CWalletDB::WriteHDChainPath(const uint256& hash, const std::string &chainPath)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("hdchainpath"), hash), chainPath);
 }
 
 bool CWalletDB::WriteHDPubKey(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta)
@@ -168,6 +174,12 @@ bool CWalletDB::WriteHDPubKey(const CPubKey& vchPubKey, const CKeyMetadata& keyM
         return false;
 
     return Write(std::make_pair(std::string("hdpubkey"), vchPubKey), '1');
+}
+
+bool CWalletDB::WriteHDAchiveChain(const uint256& hash)
+{
+    nWalletDBUpdated++;
+    return Write(std::string("hdactivechain"), hash);
 }
 /* END: BIP32 STACK */
 
@@ -658,21 +670,42 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "hdexternalpubkey")
         {
-            ssValue >> pwallet->HDexternalPubKey;
+            uint256 chainHash;
+            CExtPubKey extPubKey;
+            ssKey >> chainHash;
+            ssValue >> extPubKey;
+
+            pwallet->hdChains[chainHash].externalPubKey = extPubKey;
         }
         else if (strType == "hdinternalpubkey")
         {
-            ssValue >> pwallet->HDinternalPubKey;
+            uint256 chainHash;
+            CExtPubKey extPubKey;
+            ssKey >> chainHash;
+            ssValue >> extPubKey;
+
+            pwallet->hdChains[chainHash].internalPubKey = extPubKey;
         }
         else if (strType == "hdchainpath")
         {
-            ssValue >> pwallet->HDchainPath;
+            uint256 chainHash;
+            std::string chainPath;
+            ssKey >> chainHash;
+            ssValue >> chainPath;
+            pwallet->hdChains[chainHash].chainPath = chainPath;
         }
         else if (strType == "hdmasterseed")
         {
-            ssValue >> pwallet->vMasterSeed;
+            uint256 masterPubKeyHash;
+            CKeyingMaterial masterSeed;
+            ssKey >> masterPubKeyHash;
+            ssValue >> masterSeed;
+            pwallet->AddMasterSeed(masterPubKeyHash, masterSeed);
         }
-
+        else if (strType == "hdactivechain")
+        {
+            ssValue >> pwallet->HDactiveChain;
+        }
     } catch (...)
     {
         return false;

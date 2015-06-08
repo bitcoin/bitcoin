@@ -7,7 +7,7 @@
 bool CHDKeyStore::AddMasterSeed(const HDChainID& hash, const CKeyingMaterial& masterSeed)
 {
     LOCK(cs_KeyStore);
-    if (!IsCrypted())
+    if (IsCrypted())
     {
         std::vector<unsigned char> vchCryptedSecret;
         if (!EncryptSeed(masterSeed, hash, vchCryptedSecret))

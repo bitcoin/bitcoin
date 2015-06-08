@@ -234,7 +234,7 @@ extern UniValue getblockchaininfo(const UniValue& params, bool fHelp);
 extern UniValue getnetworkinfo(const UniValue& params, bool fHelp);
 extern UniValue setmocktime(const UniValue& params, bool fHelp);
 extern UniValue resendwallettransactions(const UniValue& params, bool fHelp);
-extern UniValue hdchainpath(const UniValue& params, bool fHelp);
+extern UniValue hdaddchain(const UniValue& params, bool fHelp);
 extern UniValue hdgetaddress(const UniValue& params, bool fHelp);
 
 extern UniValue getrawtransaction(const UniValue& params, bool fHelp); // in rcprawtransaction.cpp
