@@ -20,7 +20,7 @@ namespace boost {
 
 //extern uint64_t bitcoin_nAccountingEntryNumber;
 //extern Bitcoin_CDBEnv bitcoin_bitdb;
-//extern Bitcoin_CWallet* bitcoin_pwalletMain;
+extern Bitcoin_CWallet* bitcoin_pwalletMain;
 
 extern uint64_t bitcredit_nAccountingEntryNumber;
 extern Credits_CDBEnv bitcredit_bitdb;
@@ -30,7 +30,6 @@ extern uint64_t deposit_nAccountingEntryNumber;
 extern Credits_CDBEnv deposit_bitdb;
 extern Credits_CWallet* deposit_pwalletMain;
 
-extern Bitcoin_CWallet* bitcoin_pwalletMain;
 
 void StartShutdown();
 bool ShutdownRequested();

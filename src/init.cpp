@@ -642,7 +642,7 @@ void Bitcredit_ThreadFlushWalletDB(const char * threadName, const Credits_CWalle
     }
 }
 
-void InitPeersFromNetParams(int start, CNetParams * params) {
+void InitPeersFromNetParams(int64_t start, CNetParams * params) {
     	const std::string fileName = params->AddrFileName();
         CAddrDB adb(fileName, params->MessageStart(), params->ClientVersion());
         if (!adb.Read(params->addrman)) {

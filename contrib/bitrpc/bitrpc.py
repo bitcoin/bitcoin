@@ -55,6 +55,17 @@ elif cmd == "getbalance":
     except:
         print "\n---An error occurred---\n"
 
+elif cmd == "bitcoin_getbalance":
+    try:
+        acct = raw_input("Enter an account (optional): ")
+        mc = raw_input("Minimum confirmations (optional): ")
+        try:
+            print access.bitcoin_getbalance(acct, mc)
+        except:
+            print access.bitcoin_getbalance()
+    except:
+        print "\n---An error occurred---\n"
+
 elif cmd == "getblockbycount":
     try:
         height = raw_input("Height: ")
