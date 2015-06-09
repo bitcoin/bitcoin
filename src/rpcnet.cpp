@@ -206,6 +206,13 @@ UniValue addnode(const UniValue& params, bool fHelp)
     }
     else if(strCommand == "remove")
     {
+        CNode* pNode = FindNode(strNode.c_str());
+
+        if (pNode != NULL)
+        {
+            pNode->CloseSocketDisconnect();
+        }
+
         if (it == vAddedNodes.end())
             throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
         vAddedNodes.erase(it);
