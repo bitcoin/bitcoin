@@ -596,6 +596,7 @@ public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     //! Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key, const CPubKey &pubkey) { return CCryptoKeyStore::AddKeyPubKey(key, pubkey); }
+
     //! Load metadata (used by LoadWallet)
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
 
@@ -785,14 +786,12 @@ public:
     /** Set whether this wallet broadcasts transactions. */
     void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
 
-    std::map<uint256, CHDChain> hdChains;
-    uint256 HDactiveChain;
+    uint256 activeHDChain;
 
     bool HDSetChainPath(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, const CExtPubKey& pubMasterKey, bool overwrite = false);
     bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, unsigned int nIndex, bool internal = false);
-    bool HDGetNextChildPubKey(const HDChainID& chainIDIn, CPubKey &pubKeyOut, bool internal = false);
-    bool HDDeriveKeyFromKeyID(CKey& keyOut, CKeyID keyId) const;
-    bool GetKey(const CKeyID &address, CKey &keyOut) const;
+    bool HDGetNextChildPubKey(const HDChainID& chainId, CPubKey &pubKeyOut, std::string& newKeysChainpathOut, bool internal = false);
+    bool EncryptHDSeeds(CKeyingMaterial& vMasterKeyIn);
     std::string HDGetChainPath();
 };
 

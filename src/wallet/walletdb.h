@@ -9,6 +9,8 @@
 #include "amount.h"
 #include "wallet/db.h"
 #include "key.h"
+#include "keystore.h"
+#include "hdkeystore.h"
 
 #include <list>
 #include <stdint.h>
@@ -43,13 +45,9 @@ enum DBErrors
 class CKeyMetadata
 {
 public:
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=1;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
-
-    unsigned int nChild;
-    CKeyID parentKeyID;
-    uint256 chainHash;
 
     CKeyMetadata()
     {
@@ -68,21 +66,12 @@ public:
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nCreateTime);
-        if(nVersion >= 2)
-        {
-            READWRITE(nChild);
-            READWRITE(parentKeyID);
-            READWRITE(chainHash);
-        }
-
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
-        nChild = 0;
-        parentKeyID = CKeyID();
     }
 };
 
@@ -120,7 +109,8 @@ public:
     bool WriteHDInternalPubKey(const uint256& hash, const CExtPubKey &internalPubKey);
 
     bool WriteHDChainPath(const uint256& hash, const std::string &chainPath);
-    bool WriteHDPubKey(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta);
+    bool WriteHDChain(const CHDChain& chain);
+    bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
 
     bool WriteHDAchiveChain(const uint256& hash);
 

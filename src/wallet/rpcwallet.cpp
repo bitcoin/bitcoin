@@ -2490,8 +2490,9 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
     UniValue result(UniValue::VOBJ);
 
     assert(pwalletMain != NULL);
-    const unsigned int bip32MasterSeedLength = 32;
+    EnsureWalletIsUnlocked();
 
+    const unsigned int bip32MasterSeedLength = 32;
     CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
     bool fGenerateMasterSeed = true;
     CExtPubKey masterPubKey;
@@ -2558,9 +2559,7 @@ UniValue hdgetaddress(const UniValue& params, bool fHelp)
     pwalletMain->SetAddressBook(keyID, "", "receive");
 
     std::string keysChainPath = pwalletMain->HDGetChainPath();
-    std::stringstream ss; ss << pwalletMain->mapKeyMetadata[keyID].nChild;
     boost::replace_all(keysChainPath, "c", "0");
-    boost::replace_all(keysChainPath, "k", ss.str());
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("address", CBitcoinAddress(keyID).ToString()));

@@ -138,7 +138,13 @@ bool CWalletDB::WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& ma
 bool CWalletDB::WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret)
 {
     nWalletDBUpdated++;
-    return Write(std::make_pair(std::string("hdcryptedmasterseed"), hash), vchCryptedSecret);
+    if (!Write(std::make_pair(std::string("hdcryptedmasterseed"), hash), vchCryptedSecret))
+        return false;
+
+    Erase(std::make_pair(std::string("hdmasterseed"), hash));
+    Erase(std::make_pair(std::string("hdmasterseed"), hash));
+
+    return true;
 }
 
 bool CWalletDB::EraseHDMasterSeed(const uint256& hash)
@@ -165,15 +171,21 @@ bool CWalletDB::WriteHDChainPath(const uint256& hash, const std::string &chainPa
     return Write(std::make_pair(std::string("hdchainpath"), hash), chainPath);
 }
 
-bool CWalletDB::WriteHDPubKey(const CPubKey& vchPubKey, const CKeyMetadata& keyMeta)
+bool CWalletDB::WriteHDChainPath(const CHDChain &chain)
+{
+    nWalletDBUpdated++;
+    return Write(std::make_pair(std::string("hdchain"), chain.chainHash), chain);
+}
+
+bool CWalletDB::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta)
 {
     nWalletDBUpdated++;
 
-    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey),
+    if (!Write(std::make_pair(std::string("keymeta"), hdPubKey.pubkey),
                keyMeta))
         return false;
 
-    return Write(std::make_pair(std::string("hdpubkey"), vchPubKey), '1');
+    return Write(std::make_pair(std::string("hdpubkey"), hdPubKey.pubkey), hdPubKey);
 }
 
 bool CWalletDB::WriteHDAchiveChain(const uint256& hash)
@@ -550,21 +562,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
-        else if (strType == "hdpubkey")
-        {
-            CPubKey vchPubKey;
-            ssKey >> vchPubKey;
-            if (!vchPubKey.IsValid())
-            {
-                strErr = "Error reading wallet database: CPubKey corrupt";
-                return false;
-            }
-            if (!pwallet->LoadKey(CKey(), vchPubKey))
-            {
-                strErr = "Error reading wallet database: LoadKey failed";
-                return false;
-            }
-        }
         else if (strType == "mkey")
         {
             unsigned int nID;
@@ -702,9 +699,42 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> masterSeed;
             pwallet->AddMasterSeed(masterPubKeyHash, masterSeed);
         }
+        else if (strType == "hdcryptedmasterseed")
+        {
+            uint256 masterPubKeyHash;
+            std::vector<unsigned char> vchCryptedSecret;
+            ssKey >> masterPubKeyHash;
+            ssValue >> vchCryptedSecret;
+            pwallet->AddCryptedMasterSeed(masterPubKeyHash, vchCryptedSecret);
+        }
         else if (strType == "hdactivechain")
         {
-            ssValue >> pwallet->HDactiveChain;
+            ssValue >> pwallet->activeHDChain;
+        }
+        else if (strType == "hdpubkey")
+        {
+            CHDPubKey hdPubKey;
+            ssValue >> hdPubKey;
+            if (!hdPubKey.IsValid())
+            {
+                strErr = "Error reading wallet database: CHDPubKey corrupt";
+                return false;
+            }
+            if (!pwallet->LoadHDPubKey(hdPubKey))
+            {
+                strErr = "Error reading wallet database: LoadHDPubKey failed";
+                return false;
+            }
+        }
+        else if (strType == "hdchain")
+        {
+            CHDChain chain;
+            ssValue >> chain;
+            if (!pwallet->AddChain(chain))
+            {
+                strErr = "Error reading wallet database: AddChain failed";
+                return false;
+            }
         }
     } catch (...)
     {
