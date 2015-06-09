@@ -52,6 +52,16 @@ function CheckBalance {
     exit 1
   fi
 }
+# Bitcoin_CheckBalance -datadir=... amount account minconf
+function Bitcoin_CheckBalance {
+  declare -i EXPECT="$2"
+  B=$( $CLI $1 bitcoin_getbalance $3 $4 )
+  if (( $( echo "$B == $EXPECT" | bc ) == 0 ))
+  then
+    echoerr "bad balance: $B (expected $2)"
+    exit 1
+  fi
+}
 
 # Use: Address <datadir> [account]
 function Address {
