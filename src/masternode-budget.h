@@ -304,7 +304,11 @@ public:
     void Relay();
 
     uint256 GetHash(){
-        return Hash(BEGIN(vin), END(vin), BEGIN(nBudgetHash), END(nBudgetHash), BEGIN(nTime), END(nTime));
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << nBudgetHash;
+        ss << nTime;
+        return ss.GetHash();
     }
 
     ADD_SERIALIZE_METHODS;
@@ -479,7 +483,12 @@ public:
     }
 
     uint256 GetHash(){
-        return Hash(BEGIN(vin), END(vin), BEGIN(nProposalHash), END(nProposalHash), BEGIN(nVote), END(nVote), BEGIN(nTime), END(nTime));
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << nProposalHash;
+        ss << nVote;
+        ss << nTime;
+        return ss.GetHash();
     }
 
     ADD_SERIALIZE_METHODS;
