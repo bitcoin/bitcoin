@@ -598,24 +598,64 @@ void StartRPCThreads()
     if (((mapArgs["-rpcpassword"] == "") ||
          (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
     {
+        boost::filesystem::path pathConf = GetConfigFile();
+
         unsigned char rand_pwd[32];
         GetRandBytes(rand_pwd, 32);
-        uiInterface.ThreadSafeMessageBox(strprintf(
-            _("To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:\n"
-              "%s\n"
-              "It is recommended you use the following random password:\n"
-              "rpcuser=bitcoinrpc\n"
-              "rpcpassword=%s\n"
-              "(you do not need to remember this password)\n"
-              "The username and password MUST NOT be the same.\n"
-              "If the file does not exist, create it with owner-readable-only file permissions.\n"
-              "It is also recommended to set alertnotify so you are notified of problems;\n"
-              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
+
+        std::string generatedPassword = EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32);
+
+        if (!boost::filesystem::exists(pathConf))
+        {
+            // No config file, create one and insert generated password.
+            FILE* fileout = NULL;
+            fileout = fopen(pathConf.string().c_str(), "w");
+            setbuf(fileout, NULL); // unbuffered
+
+            std::string defaultConfContents = "# Generated rpcuser and rpcpassword\n";
+            defaultConfContents += "rpcuser=bitcoinrpc\n";
+            defaultConfContents += "rpcpassword=" + generatedPassword + "\n";
+
+            fwrite(defaultConfContents.data(), 1, defaultConfContents.size(), fileout);
+
+            FileCommit(fileout);
+
+            fclose(fileout);
+
+            mapArgs["-rpcuser"] = "bitcoinrpc";
+            mapArgs["-rpcpassword"] = generatedPassword;
+
+            strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
+
+            uiInterface.ThreadSafeMessageBox(strprintf(
+                _("Warning: rpcuser and rpcpassword were generated for your convenience (you can change them in "
+                  "%s)\n"
+                  "It is also recommended to set alertnotify so you are notified of problems;\n"
+                  "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
+                    GetConfigFile().string()),
+                    "", CClientUIInterface::MSG_WARNING| CClientUIInterface::SECURE);
+        }
+        else
+        {
+            // Then there is a config file, but it does not contain an rpcuser and rpcpassword setting.
+            // It seems a bit forward to append them to the user's file, so we will fail and exit as before.
+            uiInterface.ThreadSafeMessageBox(strprintf(
+                _("To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:\n"
+                "%s\n"
+                "It is recommended you use the following random password:\n"
+                "rpcuser=bitcoinrpc\n"
+                "rpcpassword=%s\n"
+                "(you do not need to remember this password)\n"
+                "The username and password MUST NOT be the same.\n"
+                "It is also recommended to set alertnotify so you are notified of problems;\n"
+                "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
                 GetConfigFile().string(),
-                EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
+                generatedPassword),
                 "", CClientUIInterface::MSG_ERROR | CClientUIInterface::SECURE);
-        StartShutdown();
-        return;
+
+            StartShutdown();
+            return;
+        }
     }
 
     assert(rpc_io_service == NULL);
