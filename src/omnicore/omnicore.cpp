@@ -778,43 +778,82 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     std::string strSender;
     int64_t inAll = 0;
 
-    int inputs_errors = 0;  // several types of erroroneous MP TX inputs
-    std::map<std::string, int64_t> inputs_sum_of_values;
+    // ### SENDER IDENTIFICATION ###
+    if (omniClass != OMNI_CLASS_C)
+    {
+        // OLD LOGIC - collect input amounts and identify sender via "largest input by sum"
 
-    for (unsigned int i = 0; i < wtx.vin.size(); ++i) {
-        if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
-        CTransaction txPrev;
-        uint256 hashBlock;
-        if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; } // get the vin's previous transaction
-        unsigned int n = wtx.vin[i].prevout.n;
-        CTxDestination source;
-        txnouttype whichType;
-        inAll += txPrev.vout[n].nValue;
-        if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
-            if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
-            if (!isAllowedOutputType(whichType, nBlock)) { ++inputs_errors; break; }
-            CBitcoinAddress addressSource(source);
-            inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
+        int inputs_errors = 0;
+        std::map<std::string, int64_t> inputs_sum_of_values;
+
+        for (unsigned int i = 0; i < wtx.vin.size(); ++i) {
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
+            CTransaction txPrev;
+            uint256 hashBlock;
+            if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; } // get the vin's previous transaction
+            unsigned int n = wtx.vin[i].prevout.n;
+            CTxDestination source;
+            txnouttype whichType;
+            inAll += txPrev.vout[n].nValue;
+            if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
+                if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
+                if (!isAllowedOutputType(whichType, nBlock)) { ++inputs_errors; break; }
+                CBitcoinAddress addressSource(source);
+                inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
+            }
+            else ++inputs_errors;
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
         }
-        else ++inputs_errors;
-        if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
-    }
-    if (inputs_errors) { return -101; } // not a valid Omni TX, disallowed inputs invalidate the transaction
+        if (inputs_errors) { return -101; } // not a valid Omni TX, disallowed inputs invalidate the transaction
 
-    int64_t nMax = 0;
-    for (std::map<std::string, int64_t>::iterator it = inputs_sum_of_values.begin(); it != inputs_sum_of_values.end(); ++it) { // find largest by sum
-        int64_t nTemp = it->second;
-        if (nTemp > nMax) {
-            strSender = it->first;
-            if (msc_debug_exo) PrintToLog("looking for The Sender: %s , nMax=%lu, nTemp=%lu\n", strSender, nMax, nTemp);
-            nMax = nTemp;
+        int64_t nMax = 0;
+        for (std::map<std::string, int64_t>::iterator it = inputs_sum_of_values.begin(); it != inputs_sum_of_values.end(); ++it) { // find largest by sum
+            int64_t nTemp = it->second;
+            if (nTemp > nMax) {
+                strSender = it->first;
+                if (msc_debug_exo) PrintToLog("looking for The Sender: %s , nMax=%lu, nTemp=%d\n", strSender, nMax, nTemp);
+                nMax = nTemp;
+            }
+        }
+    }
+    else
+    {
+        // NEW LOGIC - the sender is chosen based on the first vin
+
+        // 1. determine the sender, but invalidate transaction, if the input is not accepted
+        {
+            unsigned int vin_n = 0; // the first input
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", vin_n, wtx.vin[vin_n].scriptSig.ToString());
+            CTransaction txPrev;
+            uint256 hashBlock;
+            if (!GetTransaction(wtx.vin[vin_n].prevout.hash, txPrev, hashBlock, true)) { return -101; }
+            unsigned int n = wtx.vin[vin_n].prevout.n;
+            CTxDestination source;
+            txnouttype whichType;
+            inAll += txPrev.vout[n].nValue;
+            if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) {
+                if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { return -101; }
+                if (!isAllowedOutputType(whichType, nBlock)) { return -101; }
+                strSender = CBitcoinAddress(source).ToString();
+            }
+        }
+
+        // 2. iterate over the remaining inputs to determine the transaction fee
+        // TODO: this is only required for some transaction types, but not all
+        for (unsigned int i = 1; i < wtx.vin.size(); i++) {
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
+            CTransaction txPrev;
+            uint256 hashBlock;
+            if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; }
+            unsigned int n = wtx.vin[i].prevout.n;
+            inAll += txPrev.vout[n].nValue;
         }
     }
 
     int64_t outAll = wtx.GetValueOut();
     int64_t txFee = inAll - outAll; // miner fee
     if (!strSender.empty()) {
-        if (msc_debug_verbose) PrintToLog("The Sender: %s : His Input Sum of Values= %s ; fee= %s\n", strSender, FormatDivisibleMP(nMax), FormatDivisibleMP(txFee));
+        if (msc_debug_verbose) PrintToLog("The Sender: %s : fee= %s\n", strSender, FormatDivisibleMP(txFee));
     } else {
         PrintToLog("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex());
         return -5;
