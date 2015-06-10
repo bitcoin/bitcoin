@@ -340,9 +340,11 @@ At any time you can check the package installation and build progress with
 ```bash
 tail -f var/install.log
 tail -f var/build.log
+```
 
 Output from `gbuild` will look something like
 
+```bash
     Initialized empty Git repository in /home/debian/gitian-builder/inputs/dash/.git/
     remote: Reusing existing pack: 35606, done.
     remote: Total 35606 (delta 0), reused 0 (delta 0)
@@ -364,6 +366,7 @@ Output from `gbuild` will look something like
     Creating build script (var/build-script)
     lxc-start: Connection refused - inotify event with no name (mask 32768)
     Running build script (log in var/build.log)
+```
 
 Building an alternative repository
 -----------------------------------
