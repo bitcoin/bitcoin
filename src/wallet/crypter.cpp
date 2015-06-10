@@ -307,7 +307,7 @@ bool CCryptoKeyStore::DecryptSeed(const std::vector<unsigned char>& vchCiphertex
 {
     LOCK(cs_KeyStore);
 
-    if(!DecryptSecret(vMasterKey, vchCiphertextIn, seedPubHash, seedOut))
+    if (!DecryptSecret(vMasterKey, vchCiphertextIn, seedPubHash, seedOut))
         return false;
 
     return true;

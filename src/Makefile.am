@@ -164,7 +164,7 @@ BITCOIN_CORE_H = \
   version.h \
   wallet/crypter.h \
   wallet/db.h \
-	wallet/hdkeystore.h \
+  wallet/hdkeystore.h \
   wallet/wallet.h \
   wallet/wallet_ismine.h \
   wallet/walletdb.h \
@@ -235,7 +235,7 @@ libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
-	wallet/hdkeystore.cpp \
+  wallet/hdkeystore.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \

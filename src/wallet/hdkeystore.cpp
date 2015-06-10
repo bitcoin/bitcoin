@@ -112,13 +112,13 @@ bool CHDKeyStore::GetAvailableChainIDs(std::vector<HDChainID>& chainIDs)
 
     if (IsCrypted())
     {
-        for(std::map<HDChainID, std::vector<unsigned char> >::iterator it = mapHDCryptedMasterSeeds.begin(); it != mapHDCryptedMasterSeeds.end(); ++it) {
+        for (std::map<HDChainID, std::vector<unsigned char> >::iterator it = mapHDCryptedMasterSeeds.begin(); it != mapHDCryptedMasterSeeds.end(); ++it) {
             chainIDs.push_back(it->first);
         }
     }
     else
     {
-        for(std::map<HDChainID, CKeyingMaterial >::iterator it = mapHDMasterSeeds.begin(); it != mapHDMasterSeeds.end(); ++it) {
+        for (std::map<HDChainID, CKeyingMaterial >::iterator it = mapHDMasterSeeds.begin(); it != mapHDMasterSeeds.end(); ++it) {
             chainIDs.push_back(it->first);
         }
     }
@@ -142,6 +142,20 @@ bool CHDKeyStore::GetKey(const CKeyID &address, CKey &keyOut) const
     return CCryptoKeyStore::GetKey(address, keyOut);
 }
 
+bool CHDKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
+{
+    LOCK(cs_KeyStore);
+
+    std::map<CKeyID, CHDPubKey>::const_iterator mi = mapHDPubKeys.find(address);
+    if (mi != mapHDPubKeys.end())
+    {
+        vchPubKeyOut = mi->second.pubkey;
+        return true;
+    }
+
+    return CCryptoKeyStore::GetPubKey(address, vchPubKeyOut);
+}
+
 bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
 {
     //this methode required no locking
@@ -150,6 +164,7 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
     std::vector<std::string> pathFragments;
     boost::split(pathFragments, chainPath, boost::is_any_of("/"));
 
+    LogPrintf("hdwallet", "derive key %s\n", chainPath);
     CExtKey extKey;
     CExtKey parentKey;
     BOOST_FOREACH(std::string fragment, pathFragments)
@@ -188,6 +203,7 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
         }
     }
     keyOut = parentKey.key;
+    LogPrintf("hdwallet", "derived key with adr: %s\n", CBitcoinAddress(keyOut.GetPubKey().GetID()).ToString());
     return true;
 }
 
@@ -212,6 +228,7 @@ bool CHDKeyStore::DeriveHDPubKeyAtIndex(const HDChainID chainId, CHDPubKey& hdPu
     hdPubKeyOut.chainHash = chainId;
     hdPubKeyOut.nChild = nIndex;
     hdPubKeyOut.chainPath = hdChain.chainPath;
+    hdPubKeyOut.internal = internal;
     boost::replace_all(hdPubKeyOut.chainPath, "c", itostr(internal)); //replace the chain switch index
     hdPubKeyOut.chainPath += "/"+itostr(nIndex);
 
@@ -225,12 +242,12 @@ unsigned int CHDKeyStore::GetNextChildIndex(const HDChainID& chainId, bool inter
     {
         LOCK(cs_KeyStore);
         //get next unused child index
-        for(std::map<CKeyID, CHDPubKey>::iterator it = mapHDPubKeys.begin(); it != mapHDPubKeys.end(); ++it)
-            if (it->second.chainHash == chainId)
+        for (std::map<CKeyID, CHDPubKey>::iterator it = mapHDPubKeys.begin(); it != mapHDPubKeys.end(); ++it)
+            if (it->second.chainHash == chainId && it->second.internal == internal)
                 vIndices.push_back(it->second.nChild);
     }
 
-    for(unsigned int i=0;i<0x80000000;i++)
+    for (unsigned int i=0;i<0x80000000;i++)
         if (std::find(vIndices.begin(), vIndices.end(), i) == vIndices.end())
             return i;
 
@@ -247,7 +264,7 @@ bool CHDKeyStore::AddChain(const CHDChain& chain)
 bool CHDKeyStore::GetChain(const HDChainID chainId, CHDChain& chainOut) const
 {
     LOCK(cs_KeyStore);
-    std::map<HDChainID, CHDChain>::const_iterator it=mapChains.find(hash);
+    std::map<HDChainID, CHDChain>::const_iterator it=mapChains.find(chainId);
     if (it == mapChains.end())
         return false;
 

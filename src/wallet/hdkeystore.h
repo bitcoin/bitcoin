@@ -22,6 +22,7 @@ public:
     unsigned int nChild; //child index
     HDChainID chainHash; //hash of the chains master pubkey
     std::string chainPath; //individual key chainpath like m/44'/0'/0'/0/1
+    bool internal;
 
     CHDPubKey()
     {
@@ -48,9 +49,10 @@ public:
         nVersion = this->nVersion;
 
         READWRITE(pubkey);
+        READWRITE(nChild);
         READWRITE(chainHash);
         READWRITE(chainPath);
-        READWRITE(nChild);
+        READWRITE(internal);
     }
 };
 
@@ -160,5 +162,8 @@ public:
 
     //!get a key with given keyid for signing, etc. (private key operation)
     bool GetKey(const CKeyID &address, CKey &keyOut) const;
+
+    //!get a pubkey with given keyid for verifiying, etc.
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 };
 #endif // BITCOIN_WALLET_HDKEYSTORE_H

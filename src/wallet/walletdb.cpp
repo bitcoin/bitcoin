@@ -153,25 +153,7 @@ bool CWalletDB::EraseHDMasterSeed(const uint256& hash)
     return Erase(std::make_pair(std::string("hdmasterseed"), hash));
 }
 
-bool CWalletDB::WriteHDExternalPubKey(const uint256& hash, const CExtPubKey &externalPubKey)
-{
-    nWalletDBUpdated++;
-    return Write(std::make_pair(std::string("hdexternalpubkey"), hash), externalPubKey);
-}
-
-bool CWalletDB::WriteHDInternalPubKey(const uint256& hash, const CExtPubKey &internalPubKey)
-{
-    nWalletDBUpdated++;
-    return Write(std::make_pair(std::string("hdinternalpubkey"), hash), internalPubKey);
-}
-
-bool CWalletDB::WriteHDChainPath(const uint256& hash, const std::string &chainPath)
-{
-    nWalletDBUpdated++;
-    return Write(std::make_pair(std::string("hdchainpath"), hash), chainPath);
-}
-
-bool CWalletDB::WriteHDChainPath(const CHDChain &chain)
+bool CWalletDB::WriteHDChain(const CHDChain &chain)
 {
     nWalletDBUpdated++;
     return Write(std::make_pair(std::string("hdchain"), chain.chainHash), chain);
@@ -665,32 +647,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
-        else if (strType == "hdexternalpubkey")
-        {
-            uint256 chainHash;
-            CExtPubKey extPubKey;
-            ssKey >> chainHash;
-            ssValue >> extPubKey;
-
-            pwallet->hdChains[chainHash].externalPubKey = extPubKey;
-        }
-        else if (strType == "hdinternalpubkey")
-        {
-            uint256 chainHash;
-            CExtPubKey extPubKey;
-            ssKey >> chainHash;
-            ssValue >> extPubKey;
-
-            pwallet->hdChains[chainHash].internalPubKey = extPubKey;
-        }
-        else if (strType == "hdchainpath")
-        {
-            uint256 chainHash;
-            std::string chainPath;
-            ssKey >> chainHash;
-            ssValue >> chainPath;
-            pwallet->hdChains[chainHash].chainPath = chainPath;
-        }
         else if (strType == "hdmasterseed")
         {
             uint256 masterPubKeyHash;
@@ -709,7 +665,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "hdactivechain")
         {
-            ssValue >> pwallet->activeHDChain;
+            HDChainID chainID;
+            ssValue >> chainID;
+            pwallet->HDSetActiveChainID(chainID, false); //don't check if the chain exists because this record could come in before the CHDChain object itself
         }
         else if (strType == "hdpubkey")
         {

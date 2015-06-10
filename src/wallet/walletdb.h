@@ -55,7 +55,7 @@ public:
     }
     CKeyMetadata(int64_t nCreateTime_)
     {
-        SetNull();
+        nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = nCreateTime_;
     }
 
@@ -104,14 +104,8 @@ public:
     bool WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed);
     bool WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret);
     bool EraseHDMasterSeed(const uint256& hash);
-
-    bool WriteHDExternalPubKey(const uint256& hash, const CExtPubKey &externalPubKey);
-    bool WriteHDInternalPubKey(const uint256& hash, const CExtPubKey &internalPubKey);
-
-    bool WriteHDChainPath(const uint256& hash, const std::string &chainPath);
     bool WriteHDChain(const CHDChain& chain);
     bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
-
     bool WriteHDAchiveChain(const uint256& hash);
 
     bool WriteBestBlock(const CBlockLocator& locator);
