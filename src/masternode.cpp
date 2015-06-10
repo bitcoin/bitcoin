@@ -503,11 +503,13 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 CMasternodePing::CMasternodePing()
 {
     vin = CTxIn();
+    blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
 }
 
 CMasternodePing::CMasternodePing(CTxIn& newVin)
 {
     vin = newVin;
+    blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
 }
 
 
@@ -517,7 +519,7 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     std::string strMasterNodeSignMessage;
 
     sigTime = GetAdjustedTime();
-    std::string strMessage =  boost::lexical_cast<std::string>(sigTime);
+    std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
         LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage.c_str());
@@ -549,30 +551,43 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
     if(pmn != NULL && pmn->protocolVersion >= nMasternodeMinProtocol)
     {
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
-        // take this only if it's newer
-        if(pmn->lastMnping < sigTime)
+        // take this only if it's newer and was last updated more then MASTERNODE_MIN_MNP_SECONDS ago
+        if(pmn->lastMnping < sigTime && !pmn->UpdatedWithin(MASTERNODE_MIN_MNP_SECONDS))
         {
-            std::string strMessage = boost::lexical_cast<std::string>(sigTime);
+            std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
             std::string errorMessage = "";
             if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
             {
-                LogPrintf("mnping - Got bad Masternode address signature %s \n", vin.ToString().c_str());
+                LogPrintf("mnping - Got bad Masternode address signature %s\n", vin.ToString());
                 nDos = 33;
                 return false;
             }
 
             pmn->lastMnping = sigTime;
 
-            if(!pmn->UpdatedWithin(MASTERNODE_MIN_MNP_SECONDS))
+            BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+            if (mi != mapBlockIndex.end() && (*mi).second)
             {
-                pmn->UpdateLastSeen();
-                pmn->Check();
-                if(!pmn->IsEnabled()) return false;
-                
-                Relay();
-                return true;
+                if((*mi).second->nHeight < chainActive.Height() - 24)
+                {
+                    LogPrintf("mnping - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
+                    nDos = 33;
+                    return false;
+                }
+            } else {
+                if (fDebug) LogPrintf("mnping - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
+                // maybe we stuck so we shouldn't ban this node, just fail to accept it
+                // TODO: or should we also request this block?
+                return false;
             }
+
+            pmn->UpdateLastSeen();
+            pmn->Check();
+            if(!pmn->IsEnabled()) return false;
+
+            Relay();
+            return true;
         }
     }
 
