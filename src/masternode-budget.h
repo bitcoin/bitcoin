@@ -99,7 +99,7 @@ public:
     
     void CleanUp();
 
-    int64_t GetTotalBudget();
+    int64_t GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal*> GetBudget();
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
     bool IsBudgetPaymentBlock(int nBlockHeight);
@@ -218,6 +218,8 @@ public:
 
     //check to see if we should vote on this
     void AutoCheck();
+    //total dash paid out by this budget
+    int64_t GetTotalPayout();
     //vote on this finalized budget as a masternode
     void SubmitVote();
 

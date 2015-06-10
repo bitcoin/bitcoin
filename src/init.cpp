@@ -1420,6 +1420,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     CBudgetDB budgetdb;
     CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
+    
     if (readResult2 == CBudgetDB::FileError)
         LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
     else if (readResult2 != CBudgetDB::Ok)

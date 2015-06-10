@@ -131,6 +131,7 @@ bool CBudgetDB::Write(const CBudgetManager& budgetToSave)
 
 CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& budgetToLoad)
 {
+
     int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathDB.string().c_str(), "rb");
@@ -245,16 +246,10 @@ void DumpBudgets()
 
 void CBudgetManager::AddFinalizedBudget(CFinalizedBudget& prop)
 {
-    printf("! 1\n");
-
     LOCK(cs);
     if(mapFinalizedBudgets.count(prop.GetHash())) return;
 
-    printf("! 2\n");
-
     mapFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
-
-    printf("! 3\n");
 }
 
 void CBudgetManager::AddProposal(CBudgetProposal& prop)
@@ -267,6 +262,9 @@ void CBudgetManager::AddProposal(CBudgetProposal& prop)
 
 void CBudgetManager::CheckAndRemove()
 {
+    return;
+
+    //segfault happening in the following code sometimes
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
@@ -456,7 +454,11 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     std::vector<CBudgetProposal*> ret;
 
     int64_t nBudgetAllocated = 0;
-    int64_t nTotalBudget = GetTotalBudget();
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return ret;
+
+    int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
+    int64_t nTotalBudget = GetTotalBudget(nBlockStart);
 
 
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
@@ -528,12 +530,21 @@ std::string CBudgetManager::GetRequiredPaymentsString(int64_t nBlockHeight)
     return ret;
 }
 
-int64_t CBudgetManager::GetTotalBudget()
+int64_t CBudgetManager::GetTotalBudget(int nHeight)
 {
     if(chainActive.Tip() == NULL) return 0;
 
-    const CBlockIndex* pindex = chainActive.Tip();
-    return (GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, 0)/100)*15;
+    //get min block value and calculate from that
+    int64_t nSubsidy = 5 * COIN;
+
+    if(Params().NetworkID() == CBaseChainParams::TESTNET){
+        for(int i = 46200; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
+    } else {
+        // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
+        for(int i = 210240; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
+    }
+
+    return ((nSubsidy/100)*10)*576*30;
 }
 
 void CBudgetManager::NewBlock()
@@ -781,13 +792,18 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
 bool CBudgetProposal::IsValid()
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return false;
+    if(pindexPrev == NULL) return true;
 
     //TODO: if < 20 votes and 2+ weeks old, invalid
 
     if(pindexPrev->nHeight < nBlockStart || pindexPrev->nHeight > nBlockEnd) return false;
 
     if(nBlockEnd - nBlockStart <= GetBudgetPaymentCycleBlocks()) return false;
+
+    //can only pay out 10% of the possible coins (min value of coins)
+    if(nAmount > budget.GetTotalBudget(nBlockStart)) {
+        return false;
+    }
 
     return true;
 }
@@ -1131,6 +1147,17 @@ void CFinalizedBudget::AutoCheck()
     }
 }
 
+int64_t CFinalizedBudget::GetTotalPayout()
+{
+    int64_t ret = 0;
+
+    for(unsigned int i = 0; i < vecProposals.size(); i++){
+        ret += vecProposals[i].nAmount;
+    }
+
+    return ret;
+}
+
 std::string CFinalizedBudget::GetProposals() {
     std::string ret = "aeu";
 
@@ -1189,6 +1216,9 @@ bool CFinalizedBudget::IsValid()
     if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) return false;
     if(GetBlockEnd() - nBlockStart > 100) return false;
     if(vecProposals.size() > 100) return false;
+
+    //can only pay out 10% of the possible coins (min value of coins)
+    if(GetTotalPayout() > budget.GetTotalBudget(nBlockStart)) return false;
 
     //TODO: if N cycles old, invalid, invalid
 
