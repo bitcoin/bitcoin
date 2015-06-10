@@ -170,7 +170,7 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
     BOOST_FOREACH(std::string fragment, pathFragments)
     {
         bool harden = false;
-        if (fragment.back() == '\'')
+        if (*fragment.rbegin() == '\'')
         {
             harden = true;
             fragment = fragment.substr(0,fragment.size()-1);
