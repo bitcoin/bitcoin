@@ -262,18 +262,15 @@ void CBudgetManager::AddProposal(CBudgetProposal& prop)
 
 void CBudgetManager::CheckAndRemove()
 {
-    return;
-
-    //segfault happening in the following code sometimes
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
         CFinalizedBudget* prop = &((*it).second);
         if(!prop->IsValid()){
-            mapFinalizedBudgets.erase(it);
+            mapFinalizedBudgets.erase(it++);
         } else {
             prop->AutoCheck();
-            it++;
+            ++it;
         }
     }
 
@@ -282,9 +279,9 @@ void CBudgetManager::CheckAndRemove()
     {
         CBudgetProposal* prop = &((*it2).second);
         if(!prop->IsValid()){
-            mapProposals.erase(it2);
+            mapProposals.erase(it2++);
         } else {
-            it2++;
+            ++it2;
         }
     }
 }
