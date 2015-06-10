@@ -277,7 +277,7 @@ QString Bitcoin_TransactionDesc::toHTML(Bitcoin_CWallet *wallet, Bitcoin_CWallet
                 if (prevout.n < prev.vout.size())
                 {
                     strHTML += "<li>";
-                    const CTxOutClaim &voutClaim = prev.vout[prevout.n];
+                    const Bitcoin_CTxOut &voutClaim = prev.vout[prevout.n];
                     const CTxOut vout(voutClaim.nValueOriginal, voutClaim.scriptPubKey);
                     CTxDestination address;
                     if (ExtractDestination(vout.scriptPubKey, address))

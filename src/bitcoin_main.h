@@ -108,7 +108,7 @@ static const uint64_t bitcoin_nMinDiskSpace = 52428800;
 
 
 class Bitcoin_CBlockTreeDB;
-class Bitcoin_CTxUndoClaim;
+class Bitcoin_CTxUndo;
 class Bitcoin_CScriptCheck;
 class CValidationState;
 class Bitcoin_CWalletInterface;
@@ -248,7 +248,7 @@ bool Bitcoin_CheckInputs(const Bitcoin_CTransaction& tx, CValidationState &state
                  std::vector<Bitcoin_CScriptCheck> *pvChecks = NULL);
 
 // Apply the effects of this transaction on the UTXO set represented by view
-void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndoClaim &txundo, Bitcoin_CTxUndoClaim &claim_txundo,  int nHeight, const uint256 &txhash);
+void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndo &txundo, Bitcoin_CTxUndo &claim_txundo,  int nHeight, const uint256 &txhash);
 
 // Context-independent validity checks
 bool Bitcoin_CheckTransaction(const Bitcoin_CTransaction& tx, CValidationState& state);
@@ -264,7 +264,7 @@ bool Bitcoin_IsFinalTx(const Bitcoin_CTransaction &tx, int nBlockHeight = 0, int
 class Bitcoin_CBlockUndoClaim
 {
 public:
-    std::vector<Bitcoin_CTxUndoClaim> vtxundo; // for all but the coinbase
+    std::vector<Bitcoin_CTxUndo> vtxundo; // for all but the coinbase
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vtxundo);

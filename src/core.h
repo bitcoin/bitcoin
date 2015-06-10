@@ -173,7 +173,7 @@ public:
 /** An output of a transaction.  It contains the public key that the next input
  * must be able to sign with to claim it.
  */
-class CTxOutClaim
+class Bitcoin_CTxOut
 {
 public:
     int64_t nValueOriginal;
@@ -181,12 +181,12 @@ public:
     CScript scriptPubKey;
     int nValueOriginalHasBeenSpent;
 
-    CTxOutClaim()
+    Bitcoin_CTxOut()
     {
         SetNull();
     }
 
-    CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn);
+    Bitcoin_CTxOut(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn);
 
     IMPLEMENT_SERIALIZE
     (
@@ -195,9 +195,9 @@ public:
         READWRITE(scriptPubKey);
         READWRITE(nValueOriginalHasBeenSpent);
 
-        assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginal));
-        assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimable));
-        assert_with_stacktrace(nValueOriginal >= nValueClaimable, strprintf("CTxOutClaim() : valueOriginal less than valueClaimable: %d:%d", nValueOriginal, nValueClaimable));
+        assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("Bitcoin_CTxOut() : valueOriginal out of range: %d", nValueOriginal));
+        assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("Bitcoin_CTxOut() : valueClaimable out of range: %d", nValueClaimable));
+        assert_with_stacktrace(nValueOriginal >= nValueClaimable, strprintf("Bitcoin_CTxOut() : valueOriginal less than valueClaimable: %d:%d", nValueOriginal, nValueClaimable));
     )
 
     void SetNull()
@@ -228,7 +228,7 @@ public:
         return ((nValueOriginal*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
     }
 
-    friend bool operator==(const CTxOutClaim& a, const CTxOutClaim& b)
+    friend bool operator==(const Bitcoin_CTxOut& a, const Bitcoin_CTxOut& b)
     {
         return (a.nValueOriginal       == b.nValueOriginal &&
         		a.nValueClaimable       == b.nValueClaimable &&
@@ -236,7 +236,7 @@ public:
                 a.nValueOriginalHasBeenSpent == b.nValueOriginalHasBeenSpent);
     }
 
-    friend bool operator!=(const CTxOutClaim& a, const CTxOutClaim& b)
+    friend bool operator!=(const Bitcoin_CTxOut& a, const Bitcoin_CTxOut& b)
     {
         return !(a == b);
     }
@@ -420,16 +420,16 @@ public:
 };
 
 /** wrapper for CTxOut that provides a more compact serialization */
-class CTxOutClaimCompressor
+class Bitcoin_CTxOutCompressor
 {
 private:
-    CTxOutClaim &txout;
+    Bitcoin_CTxOut &txout;
 
 public:
     static uint64_t CompressAmount(uint64_t nAmount);
     static uint64_t DecompressAmount(uint64_t nAmount);
 
-    CTxOutClaimCompressor(CTxOutClaim &txoutIn) : txout(txoutIn) { }
+    Bitcoin_CTxOutCompressor(Bitcoin_CTxOut &txoutIn) : txout(txoutIn) { }
 
     IMPLEMENT_SERIALIZE(({
         if (!fRead) {

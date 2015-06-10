@@ -158,21 +158,21 @@ public:
  *  last output of the affected transaction, its metadata as well
  *  (coinbase or not, height, transaction version)
  */
-class Bitcoin_CTxInUndoClaim
+class Bitcoin_CTxInUndo
 {
 public:
-    CTxOutClaim txout;         // the txout data before being spent
+    Bitcoin_CTxOut txout;         // the txout data before being spent
     bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
     unsigned int nHeight; // if the outpoint was the last unspent: its height
     int nVersion;         // if the outpoint was the last unspent: its version
 
-    Bitcoin_CTxInUndoClaim() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    Bitcoin_CTxInUndoClaim(const CTxOutClaim &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    Bitcoin_CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
+    Bitcoin_CTxInUndo(const Bitcoin_CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const {
         return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
                (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
-               ::GetSerializeSize(CTxOutClaimCompressor(REF(txout)), nType, nVersion);
+               ::GetSerializeSize(Bitcoin_CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
     template<typename Stream>
@@ -180,7 +180,7 @@ public:
         ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion);
         if (nHeight > 0)
             ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
-        ::Serialize(s, CTxOutClaimCompressor(REF(txout)), nType, nVersion);
+        ::Serialize(s, Bitcoin_CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
     template<typename Stream>
@@ -191,16 +191,16 @@ public:
         fCoinBase = nCode & 1;
         if (nHeight > 0)
             ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
-        ::Unserialize(s, REF(CTxOutClaimCompressor(REF(txout))), nType, nVersion);
+        ::Unserialize(s, REF(Bitcoin_CTxOutCompressor(REF(txout))), nType, nVersion);
     }
 };
 
 /** Undo information for a Bitcoin_CTransaction */
-class Bitcoin_CTxUndoClaim
+class Bitcoin_CTxUndo
 {
 public:
     // undo information for all txins
-    std::vector<Bitcoin_CTxInUndoClaim> vprevout;
+    std::vector<Bitcoin_CTxInUndo> vprevout;
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vprevout);

@@ -28,16 +28,16 @@ void Claim_CCoins::CalcMaskSize(unsigned int &nBytes, unsigned int &nNonzeroByte
 }
 
 bool Claim_CCoins::Spend(int nPos) {
-	Bitcoin_CTxInUndoClaim undo;
+	Bitcoin_CTxInUndo undo;
     COutPoint out(0, nPos);
     return Spend(out, undo);
 }
-bool Claim_CCoins::Spend(const COutPoint &out, Bitcoin_CTxInUndoClaim &undo) {
+bool Claim_CCoins::Spend(const COutPoint &out, Bitcoin_CTxInUndo &undo) {
     if (out.n >= vout.size())
         return false;
     if (vout[out.n].IsNull())
         return false;
-    undo = Bitcoin_CTxInUndoClaim(vout[out.n]);
+    undo = Bitcoin_CTxInUndo(vout[out.n]);
     vout[out.n].SetNull();
     Cleanup();
     if (vout.size() == 0) {
@@ -296,13 +296,13 @@ unsigned int Bitcoin_CCoinsViewCache::GetCacheSize() {
     return bitcoin_cacheCoins.size() + claim_cacheCoins.size();
 }
 
-const CTxOutClaim &Bitcoin_CCoinsViewCache::Bitcoin_GetOutputFor(const Bitcoin_CTxIn& input)
+const Bitcoin_CTxOut &Bitcoin_CCoinsViewCache::Bitcoin_GetOutputFor(const Bitcoin_CTxIn& input)
 {
     const Claim_CCoins &coins = Bitcoin_GetCoins(input.prevout.hash);
     assert(coins.IsAvailable(input.prevout.n));
     return coins.vout[input.prevout.n];
 }
-const CTxOutClaim& Bitcoin_CCoinsViewCache::Claim_GetOut(const COutPoint &outpoint) {
+const Bitcoin_CTxOut& Bitcoin_CCoinsViewCache::Claim_GetOut(const COutPoint &outpoint) {
 	const Claim_CCoins &coins = Claim_GetCoins(outpoint.hash);
 	assert(coins.IsAvailable(outpoint.n));
 	return coins.vout[outpoint.n];

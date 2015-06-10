@@ -384,7 +384,7 @@ public:
     				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
     					if(claimCoins.HasClaimable(i)) {
     						const CTxOut& txout = tx.vout[i];
-    						const CTxOutClaim &txoutClaim = claimCoins.vout[i];
+    						const Bitcoin_CTxOut &txoutClaim = claimCoins.vout[i];
 
     						assert_with_stacktrace(txout.nValue == txoutClaim.nValueOriginal, strprintf("CWallet:GetCreditForTx() : value not equal to valueOriginal: %d:%d, \nTx:\n%s, \nclaimcoins:\n%s", txout.nValue, txoutClaim.nValueOriginal, tx.ToString(), claimCoins.ToString()));
     						assert_with_stacktrace(Bitcoin_MoneyRange(txoutClaim.nValueClaimable), strprintf("CWallet:GetCreditForTx() : value out of range: %d:%d, Hash: %s", txout.nValue, txoutClaim.nValueClaimable, hashTx.ToString()));
@@ -787,7 +787,7 @@ public:
 						if (!pwallet->IsSpent(hashTx, i, nClaimBestBlockDepth))
 						{
 							const CTxOut &txout = vout[i];
-							const CTxOutClaim &txoutClaim = claimCoins.vout[i];
+							const Bitcoin_CTxOut &txoutClaim = claimCoins.vout[i];
 
 							assert_with_stacktrace(Bitcoin_MoneyRange(txoutClaim.nValueClaimable), strprintf("CWalletTx:GetAvailableCredit() : value out of range: %d:%d, Hash: %s", txout.nValue, txoutClaim.nValueClaimable, hashTx.ToString()));
 							nCredit += pwallet->GetCredit(txout, txoutClaim.nValueClaimable);

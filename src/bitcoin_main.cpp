@@ -542,7 +542,7 @@ bool Bitcoin_AreInputsStandard(const Bitcoin_CTransaction& tx, Bitcoin_CCoinsVie
 
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOutClaim& prev = mapInputs.Bitcoin_GetOutputFor(tx.vin[i]);
+        const Bitcoin_CTxOut& prev = mapInputs.Bitcoin_GetOutputFor(tx.vin[i]);
 
         vector<vector<unsigned char> > vSolutions;
         txnouttype whichType;
@@ -611,7 +611,7 @@ unsigned int Bitcoin_GetP2SHSigOpCount(const Bitcoin_CTransaction& tx, Bitcoin_C
     unsigned int nSigOps = 0;
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        const CTxOutClaim &prevout = inputs.Bitcoin_GetOutputFor(tx.vin[i]);
+        const Bitcoin_CTxOut &prevout = inputs.Bitcoin_GetOutputFor(tx.vin[i]);
         if (prevout.scriptPubKey.IsPayToScriptHash())
             nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig);
     }
@@ -1450,21 +1450,21 @@ void Bitcoin_UpdateTime(Bitcoin_CBlockHeader& block, const Bitcoin_CBlockIndex* 
 
 
 //TODO - No need to keep the undos in different vectors anymore
-void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndoClaim &txundo, Bitcoin_CTxUndoClaim &claim_txundo, int nHeight, const uint256 &txhash, const bool& fastForwardClaimState)
+void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndo &txundo, Bitcoin_CTxUndo &claim_txundo, int nHeight, const uint256 &txhash, const bool& fastForwardClaimState)
 {
     bool ret;
     // mark inputs spent
     if (!tx.IsCoinBase()) {
         BOOST_FOREACH(const Bitcoin_CTxIn &txin, tx.vin) {
         	Claim_CCoins &coins = inputs.Bitcoin_GetCoins(txin.prevout.hash);
-        	Bitcoin_CTxInUndoClaim undo;
+        	Bitcoin_CTxInUndo undo;
             ret = coins.Spend(txin.prevout, undo);
             assert(ret);
             txundo.vprevout.push_back(undo);
 
             if(fastForwardClaimState) {
             	Claim_CCoins &claim_coins = inputs.Claim_GetCoins(txin.prevout.hash);
-            	Bitcoin_CTxInUndoClaim claim_undo;
+            	Bitcoin_CTxInUndo claim_undo;
                 ret = claim_coins.Spend(txin.prevout, claim_undo);
                 assert(ret);
                 claim_txundo.vprevout.push_back(claim_undo);
@@ -1482,7 +1482,7 @@ void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state
     }
 }
 
-void Bitcoin_UpdateCoinsForClaim(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, int64_t& nFeesOriginal, int64_t& nFeesClaimable, Bitcoin_CTxUndoClaim &txundo, int nHeight, const uint256 &txhash)
+void Bitcoin_UpdateCoinsForClaim(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, int64_t& nFeesOriginal, int64_t& nFeesClaimable, Bitcoin_CTxUndo &txundo, int nHeight, const uint256 &txhash)
 {
 	assert(!tx.IsCoinBase());
 
@@ -1507,7 +1507,7 @@ void Bitcoin_UpdateCoinsForClaim(const Bitcoin_CTransaction& tx, CValidationStat
 	BOOST_FOREACH(const Bitcoin_CTxIn &txin, tx.vin) {
 		Claim_CCoins &coins = inputs.Claim_GetCoins(txin.prevout.hash);
 
-		Bitcoin_CTxInUndoClaim undo;
+		Bitcoin_CTxInUndo undo;
 		ret = coins.Spend(txin.prevout, undo);
 		assert(ret);
 
@@ -1700,12 +1700,12 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
 
         // restore inputs
         if (i > 0) { // not coinbases
-            const Bitcoin_CTxUndoClaim &txundo = blockUndo.vtxundo[i-1];
+            const Bitcoin_CTxUndo &txundo = blockUndo.vtxundo[i-1];
             if (txundo.vprevout.size() != tx.vin.size())
                 return error("Bitcoin: DisconnectBlock() : transaction and undo data inconsistent");
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
-                const Bitcoin_CTxInUndoClaim &undo = txundo.vprevout[j];
+                const Bitcoin_CTxInUndo &undo = txundo.vprevout[j];
                 Claim_CCoins coins;
                 view.Bitcoin_GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
                 if (undo.nHeight != 0) {
@@ -1773,12 +1773,12 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
 
             // restore inputs
             if (i > 0) { // not coinbases
-                const Bitcoin_CTxUndoClaim &claim_txundo = claim_blockUndo.vtxundo[i-1];
+                const Bitcoin_CTxUndo &claim_txundo = claim_blockUndo.vtxundo[i-1];
                 if (claim_txundo.vprevout.size() != tx.vin.size())
                     return error("Bitcoin: DisconnectBlock() : transaction and claim undo data inconsistent");
                 for (unsigned int j = tx.vin.size(); j-- > 0;) {
                     const COutPoint &claim_out = tx.vin[j].prevout;
-                    const Bitcoin_CTxInUndoClaim &claim_undo = claim_txundo.vprevout[j];
+                    const Bitcoin_CTxInUndo &claim_undo = claim_txundo.vprevout[j];
                     Claim_CCoins claim_coins;
                     view.Claim_GetCoins(claim_out.hash, claim_coins); // this can fail if the prevout was already entirely spent
                     if (claim_undo.nHeight != 0) {
@@ -1917,7 +1917,7 @@ bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& st
         const Bitcoin_CTransaction &tx = block.vtx[i];
         RevertCoin(tx, pindex, view, fClean);
 
-		const Bitcoin_CTxUndoClaim &txundo = blockUndo.vtxundo[i-1];
+		const Bitcoin_CTxUndo &txundo = blockUndo.vtxundo[i-1];
 
 		if (txundo.vprevout.size() != tx.vin.size())
 			return error("Bitcoin: Bitcoin_DisconnectBlockForClaim() : transaction and claim undo data inconsistent");
@@ -1925,7 +1925,7 @@ bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& st
 		for (unsigned int j = tx.vin.size(); j-- > 0;) {
 			const COutPoint &out = tx.vin[j].prevout;
 
-			const Bitcoin_CTxInUndoClaim &undo = txundo.vprevout[j];
+			const Bitcoin_CTxInUndo &undo = txundo.vprevout[j];
 
 			Claim_CCoins coins;
 
@@ -2143,8 +2143,8 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
             }
         }
 
-        Bitcoin_CTxUndoClaim txundo;
-        Bitcoin_CTxUndoClaim claim_txundo;
+        Bitcoin_CTxUndo txundo;
+        Bitcoin_CTxUndo claim_txundo;
         Bitcoin_UpdateCoins(tx, state, view, txundo, claim_txundo, pindex->nHeight, block.GetTxHash(i), fastForwardClaimState);
         if (!tx.IsCoinBase()) {
             blockundo.vtxundo.push_back(txundo);
@@ -2307,7 +2307,7 @@ bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state
 
         nInputs += tx.vin.size();
 
-        Bitcoin_CTxUndoClaim txundo;
+        Bitcoin_CTxUndo txundo;
         Bitcoin_UpdateCoinsForClaim(tx, state, view, nFeesOriginal, nFeesClaimable, txundo, pindex->nHeight, block.GetTxHash(i));
         blockundo.vtxundo.push_back(txundo);
     }

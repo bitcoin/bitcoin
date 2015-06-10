@@ -63,11 +63,11 @@ void CTxOut::print() const
     LogPrintf("%s\n", ToString());
 }
 
-CTxOutClaim::CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn)
+Bitcoin_CTxOut::Bitcoin_CTxOut(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn)
 {
-	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalIn), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginalIn));
-	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableIn), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimableIn));
-	assert_with_stacktrace(nValueOriginalIn >= nValueClaimableIn, strprintf("CTxOutClaim() : valueOriginal less than valueClaimable: %d:%d", nValueOriginalIn, nValueClaimableIn));
+	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalIn), strprintf("Bitcoin_CTxOut() : valueOriginal out of range: %d", nValueOriginalIn));
+	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableIn), strprintf("Bitcoin_CTxOut() : valueClaimable out of range: %d", nValueClaimableIn));
+	assert_with_stacktrace(nValueOriginalIn >= nValueClaimableIn, strprintf("Bitcoin_CTxOut() : valueOriginal less than valueClaimable: %d:%d", nValueOriginalIn, nValueClaimableIn));
 
 	nValueOriginal = nValueOriginalIn;
 	nValueClaimable = nValueClaimableIn;
@@ -75,12 +75,12 @@ CTxOutClaim::CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CS
     nValueOriginalHasBeenSpent = nValueOriginalHasBeenSpentIn;
 }
 
-std::string CTxOutClaim::ToString() const
+std::string Bitcoin_CTxOut::ToString() const
 {
-    return strprintf("CTxOutClaim(nValueOriginal=%d.%08d, nValueClaimable=%d.%08d, scriptPubKey=%s(%s), nValueOriginalHasBeenSpent=%d)", nValueOriginal / COIN, nValueOriginal % COIN, nValueClaimable / COIN, nValueClaimable % COIN, scriptPubKey.ToString().substr(0,30), HexStr(scriptPubKey.begin(), scriptPubKey.end(), false), nValueOriginalHasBeenSpent);
+    return strprintf("Bitcoin_CTxOut(nValueOriginal=%d.%08d, nValueClaimable=%d.%08d, scriptPubKey=%s(%s), nValueOriginalHasBeenSpent=%d)", nValueOriginal / COIN, nValueOriginal % COIN, nValueClaimable / COIN, nValueClaimable % COIN, scriptPubKey.ToString().substr(0,30), HexStr(scriptPubKey.begin(), scriptPubKey.end(), false), nValueOriginalHasBeenSpent);
 }
 
-void CTxOutClaim::print() const
+void Bitcoin_CTxOut::print() const
 {
     LogPrintf("%s\n", ToString());
 }
@@ -205,7 +205,7 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
     return n;
 }
 
-uint64_t CTxOutClaimCompressor::CompressAmount(uint64_t n)
+uint64_t Bitcoin_CTxOutCompressor::CompressAmount(uint64_t n)
 {
     if (n == 0)
         return 0;
@@ -224,7 +224,7 @@ uint64_t CTxOutClaimCompressor::CompressAmount(uint64_t n)
     }
 }
 
-uint64_t CTxOutClaimCompressor::DecompressAmount(uint64_t x)
+uint64_t Bitcoin_CTxOutCompressor::DecompressAmount(uint64_t x)
 {
     // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
     if (x == 0)

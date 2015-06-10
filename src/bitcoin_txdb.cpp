@@ -192,7 +192,7 @@ bool Bitcoin_CCoinsViewDB::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) {
                 ss << VARINT(coins.nHeight);
                 stats.nTransactions++;
                 for (unsigned int i=0; i<coins.vout.size(); i++) {
-                    const CTxOutClaim &out = coins.vout[i];
+                    const Bitcoin_CTxOut &out = coins.vout[i];
                     if (!out.IsNull()) {
                         stats.nTransactionOutputs++;
                         ss << VARINT(i+1);
@@ -246,7 +246,7 @@ bool Bitcoin_CCoinsViewDB::Claim_GetStats(Claim_CCoinsStats &stats) {
                 ss << (coins.fCoinBase ? 'c' : 'n');
                 ss << VARINT(coins.nHeight);
                 for (unsigned int i=0; i<coins.vout.size(); i++) {
-                    const CTxOutClaim &out = coins.vout[i];
+                    const Bitcoin_CTxOut &out = coins.vout[i];
                     if (!out.IsNull()) {
                         ss << VARINT(i+1);
                         ss << out;
