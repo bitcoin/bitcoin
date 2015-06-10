@@ -752,10 +752,9 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else // Valid address
         {
-            CPubKey pubkey;
             CKeyID keyid;
             addr.GetKeyID(keyid);
-            if (!model->getPubKey(keyid, pubkey)) // Unknown change address
+            if (!model->havePrivKey(keyid)) // Unknown change address
             {
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
             }
