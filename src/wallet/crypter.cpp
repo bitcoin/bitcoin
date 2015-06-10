@@ -255,7 +255,7 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
     {
         LOCK(cs_KeyStore);
         if (!IsCrypted())
-            return CKeyStore::GetPubKey(address, vchPubKeyOut);
+            return CBasicKeyStore::GetPubKey(address, vchPubKeyOut);
 
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
         if (mi != mapCryptedKeys.end())
@@ -263,6 +263,8 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
             vchPubKeyOut = (*mi).second.first;
             return true;
         }
+        // Check for watch-only pubkeys
+        return CBasicKeyStore::GetPubKey(address, vchPubKeyOut);
     }
     return false;
 }
