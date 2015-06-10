@@ -108,6 +108,9 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     script = GetScriptForDestination(pubkey.GetID());
     if (HaveWatchOnly(script))
         RemoveWatchOnly(script);
+    script = GetScriptForRawPubKey(pubkey);
+    if (HaveWatchOnly(script))
+        RemoveWatchOnly(script);
 
     if (!fFileBacked)
         return true;
