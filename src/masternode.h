@@ -291,10 +291,10 @@ public:
     }
     
     uint256 GetHash(){
-         return Hash(
-            BEGIN(sigTime), END(sigTime), 
-            BEGIN(pubkey), END(pubkey)
-        );
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << sigTime;
+        ss << pubkey;
+        return ss.GetHash();
     }
 
 };
@@ -330,7 +330,10 @@ public:
     void Relay();    
 
     uint256 GetHash(){
-         return Hash(BEGIN(vin), END(vin), BEGIN(sigTime), END(sigTime));
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << sigTime;
+        return ss.GetHash();
     }
 };
 #endif
