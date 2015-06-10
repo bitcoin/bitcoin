@@ -24,15 +24,6 @@ namespace Checkpoints {
      */
     static const double SIGCHECK_VERIFICATION_FACTOR = 5.0;
 
-    bool CheckBlock(const CCheckpointData& data, int nHeight, const uint256& hash)
-    {
-        const MapCheckpoints& checkpoints = data.mapCheckpoints;
-
-        MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
-        if (i == checkpoints.end()) return true;
-        return hash == i->second;
-    }
-
     //! Guess how far we are in the verification process at the given block index
     double GuessVerificationProgress(const CCheckpointData& data, CBlockIndex *pindex, bool fSigchecks) {
         if (pindex==NULL)
