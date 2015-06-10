@@ -394,6 +394,7 @@ extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
+bool IsMyAddressSpendable(const std::string &address);
 
 string getLabel(const string &address);
 

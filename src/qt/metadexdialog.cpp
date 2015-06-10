@@ -402,10 +402,10 @@ void MetaDExDialog::FullRefresh()
         (my_it->second).init();
         while (0 != (id = (my_it->second).next())) {
             if(id==propertyId) {
-                if (IsMyAddress(address)) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
+                if (IsMyAddressSpendable(address)) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
             }
             if (((id==OMNI_PROPERTY_MSC) && (!testeco)) || ((id==OMNI_PROPERTY_TMSC) && (testeco))) {
-                if (IsMyAddress(address)) ui->buyAddressCombo->addItem((my_it->first).c_str());
+                if (IsMyAddressSpendable(address)) ui->buyAddressCombo->addItem((my_it->first).c_str());
             }
         }
     }

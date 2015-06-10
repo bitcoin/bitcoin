@@ -2101,15 +2101,27 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
 }
 
 // IsMine wrapper to determine whether the address is in our local wallet
-bool IsMyAddress(const std::string &address) 
+bool IsMyAddress(const std::string &address)
 {
   if (!pwalletMain) return false;
 
   const CBitcoinAddress& mscaddress = address;
-
-  CTxDestination lookupaddress = mscaddress.Get(); 
+  CTxDestination lookupaddress = mscaddress.Get();
 
   return (IsMine(*pwalletMain, lookupaddress));
+}
+
+// IsMine wrapper to determine whether the address is spendable
+bool IsMyAddressSpendable(const std::string &address)
+{
+   if (!pwalletMain) return false;
+
+   const CBitcoinAddress& mscaddress = address;
+   CTxDestination destination = mscaddress.Get();
+   isminetype mineType = pwalletMain ? IsMine(*pwalletMain, destination) : ISMINE_NO;
+   if (mineType & ISMINE_SPENDABLE) return true;
+
+   return false; // eg (mineType & ISMINE_NO)  (mineType & ISMINE_WATCH_ONLY)  and so on, not considered spendable
 }
 
 // gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
