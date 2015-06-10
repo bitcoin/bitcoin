@@ -309,6 +309,7 @@ class CMasternodePing
 public:
 
     CTxIn vin;
+    uint256 blockHash;
     std::vector<unsigned char> vchSig;
     int64_t sigTime; //dsee message times
     //removed stop
@@ -321,6 +322,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vin);
+        READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
     }
