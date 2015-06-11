@@ -113,6 +113,8 @@ std::map<uint32_t, int64_t> global_balance_reserved_maineco;
 std::map<uint32_t, int64_t> global_balance_money_testeco;
 //! Reserved balances of wallet properties in the test ecosystem
 std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Vector containing a list of properties relative to the wallet
+std::vector<uint32_t> global_wallet_property_list;
 
 /**
  * Used to indicate, whether to automatically commit created transactions.
@@ -610,33 +612,48 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 //       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
 int mastercore::set_wallet_totals()
 {
-    int my_addresses_count = 0;
-    int64_t propertyId;
-    unsigned int nextSPID = _my_sps->peekNextSPID(1); // main eco
-    unsigned int nextTestSPID = _my_sps->peekNextSPID(2); // test eco
-
-    //zero bals
+    //zero balances
     global_balance_money_maineco.clear();
     global_balance_money_testeco.clear();
+    global_balance_reserved_maineco.clear();
     global_balance_reserved_testeco.clear();
-    global_balance_reserved_testeco.clear();
+    global_wallet_property_list.clear();
 
+    // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
     for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-        if (IsMyAddressSpendable(my_it->first)) { // TODO: DECISION NEEDED - Should "Wallet Totals" include watch only???
-            for (propertyId = 1; propertyId<nextSPID; propertyId++) { //main eco
-                global_balance_money_maineco[propertyId] += getUserAvailableMPbalance(my_it->first, propertyId);
-                global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-                global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-                if (propertyId < 3) global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, ACCEPT_RESERVE);
+        // check if the address is a wallet address (including watched addresses)
+        std::string address = my_it->first;
+        if (!IsMyAddress(address)) continue;
+
+        // iterate only those properties in the TokenMap for this address
+        my_it->second.init();
+        uint32_t propertyId;
+        while (0 != (propertyId = (my_it->second).next())) {
+            // add to the global wallet property list (avoiding duplicates)
+            if (std::find(global_wallet_property_list.begin(), global_wallet_property_list.end(), propertyId) != global_wallet_property_list.end()) {
+                global_wallet_property_list.push_back(propertyId);
             }
-            for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) { //test eco
-                global_balance_money_testeco[propertyId-2147483647] += getUserAvailableMPbalance(my_it->first, propertyId);
-                global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-                global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
+
+            // check if the address is spendable (only spendable balances are included in totals)
+            if (!IsMyAddressSpendable(address)) continue;
+
+            // work out the balances for the address/property combo
+            int64_t balance = getUserAvailableMPbalance(address, propertyId);
+            int64_t reserved = getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+            reserved += getMPbalance(address, propertyId, METADEX_RESERVE);
+            if (propertyId < 3) reserved += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+
+            // add to global balances - TODO merge main and test eco globals
+            if (!isTestEcosystemProperty(propertyId)) {
+                global_balance_money_maineco[propertyId] += balance;
+                global_balance_reserved_maineco[propertyId] += reserved;
+            } else {
+                global_balance_money_testeco[propertyId-2147483647] += balance;
+                global_balance_reserved_testeco[propertyId-2147483647] += reserved;
             }
         }
     }
-    return (my_addresses_count);
+    return 0;
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
