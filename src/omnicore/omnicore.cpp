@@ -610,47 +610,33 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 //       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
 int mastercore::set_wallet_totals()
 {
-  //concerned about efficiency here, time how long this takes, averaging 0.02-0.04s on my system
-  //timer t;
-  int my_addresses_count = 0;
-  int64_t propertyId;
-  unsigned int nextSPID = _my_sps->peekNextSPID(1); // real eco
-  unsigned int nextTestSPID = _my_sps->peekNextSPID(2); // test eco
+    int my_addresses_count = 0;
+    int64_t propertyId;
+    unsigned int nextSPID = _my_sps->peekNextSPID(1); // main eco
+    unsigned int nextTestSPID = _my_sps->peekNextSPID(2); // test eco
 
-  //zero bals
-  for (propertyId = 1; propertyId<nextSPID; propertyId++) //main eco
-  {
-    global_balance_money_maineco[propertyId] = 0;
-    global_balance_reserved_maineco[propertyId] = 0;
-  }
-  for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) //test eco
-  {
-    global_balance_money_testeco[propertyId-2147483647] = 0;
-    global_balance_reserved_testeco[propertyId-2147483647] = 0;
-  }
+    //zero bals
+    global_balance_money_maineco.clear();
+    global_balance_money_testeco.clear();
+    global_balance_reserved_testeco.clear();
+    global_balance_reserved_testeco.clear();
 
-  for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-  {
-    if (IsMyAddress(my_it->first))
-    {
-       for (propertyId = 1; propertyId<nextSPID; propertyId++) //main eco
-       {
-              //global_balance_money_maineco[propertyId] += getMPbalance(my_it->first, propertyId, BALANCE);
-              global_balance_money_maineco[propertyId] += getUserAvailableMPbalance(my_it->first, propertyId);
-              global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-              global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-              if (propertyId < 3) global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, ACCEPT_RESERVE);
-       }
-       for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) //test eco
-       {
-              //global_balance_money_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, BALANCE);
-              global_balance_money_testeco[propertyId-2147483647] += getUserAvailableMPbalance(my_it->first, propertyId);
-              global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-              global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-       }
+    for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        if (IsMyAddressSpendable(my_it->first)) { // TODO: DECISION NEEDED - Should "Wallet Totals" include watch only???
+            for (propertyId = 1; propertyId<nextSPID; propertyId++) { //main eco
+                global_balance_money_maineco[propertyId] += getUserAvailableMPbalance(my_it->first, propertyId);
+                global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
+                global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
+                if (propertyId < 3) global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, ACCEPT_RESERVE);
+            }
+            for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) { //test eco
+                global_balance_money_testeco[propertyId-2147483647] += getUserAvailableMPbalance(my_it->first, propertyId);
+                global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
+                global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
+            }
+        }
     }
-  }
-  return (my_addresses_count);
+    return (my_addresses_count);
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
