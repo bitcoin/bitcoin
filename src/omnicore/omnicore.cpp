@@ -631,7 +631,7 @@ void mastercore::set_wallet_totals()
             global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
             global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
             global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
-            if (propertyId < 3) global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
         }
     }
 }
