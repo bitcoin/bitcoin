@@ -673,6 +673,20 @@ int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t Ex
   return -1;
 }
 
+static bool isAllowedInputType(int whichType, int nBlock)
+{
+    switch (whichType)
+    {
+        case TX_PUBKEYHASH:
+            return true;
+
+        case TX_SCRIPTHASH:
+            return (P2SH_BLOCK <= nBlock || isNonMainNet());
+    }
+
+    return false;
+}
+
 static bool isAllowedOutputType(int whichType, int nBlock)
 {
     switch (whichType)
@@ -797,7 +811,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             inAll += txPrev.vout[n].nValue;
             if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
                 if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
-                if (!isAllowedOutputType(whichType, nBlock)) { ++inputs_errors; break; }
+                if (!isAllowedInputType(whichType, nBlock)) { ++inputs_errors; break; }
                 CBitcoinAddress addressSource(source);
                 inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
             }
@@ -831,9 +845,9 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             CTxDestination source;
             txnouttype whichType;
             inAll += txPrev.vout[n].nValue;
+            if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { return -101; }
+            if (!isAllowedInputType(whichType, nBlock)) { return -101; }
             if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) {
-                if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { return -101; }
-                if (!isAllowedOutputType(whichType, nBlock)) { return -101; }
                 strSender = CBitcoinAddress(source).ToString();
             }
         }
@@ -2236,7 +2250,7 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
           if (!GetOutputType(pcoin->vout[i].scriptPubKey, whichType))
             continue;
 
-          if (!isAllowedOutputType(whichType, nHeight))
+          if (!isAllowedInputType(whichType, nHeight))
             continue;
 
           CTxDestination dest;
