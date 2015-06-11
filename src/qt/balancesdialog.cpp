@@ -179,15 +179,8 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
             uint32_t propertyId = *it;
             std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
             std::string spName = getPropertyName(propertyId).c_str();
-            std::string available, reserved;
-            // TODO: merge test & main eco globals
-            if (!isTestEcosystemProperty(propertyId)) {
-                available = FormatMP(propertyId, global_balance_money_maineco[propertyId]);
-                reserved = FormatMP(propertyId, global_balance_reserved_maineco[propertyId]);
-            } else {
-                available = FormatMP(propertyId, global_balance_money_testeco[propertyId]);
-                reserved = FormatMP(propertyId, global_balance_reserved_testeco[propertyId]);
-            }
+            std::string available = FormatMP(propertyId, global_balance_money[propertyId]);
+            std::string reserved = FormatMP(propertyId, global_balance_reserved[propertyId]);
             AddRow(spId, spName, reserved, available);
         }
     } else {

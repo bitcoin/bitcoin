@@ -287,21 +287,21 @@ void OverviewPage::updateOmni()
     // force a refresh of wallet totals
     set_wallet_totals();
     // always show MSC
-    UpdatePropertyBalance(1,global_balance_money_maineco[1],global_balance_reserved_maineco[1]);
+    UpdatePropertyBalance(1,global_balance_money[1],global_balance_reserved[1]);
     // loop properties and update overview
     unsigned int propertyId;
     unsigned int maxPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
     unsigned int maxPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
     // main eco
     for (propertyId = 2; propertyId < maxPropIdMainEco; propertyId++) {
-        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
-            UpdatePropertyBalance(propertyId,global_balance_money_maineco[propertyId],global_balance_reserved_maineco[propertyId]);
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
+            UpdatePropertyBalance(propertyId,global_balance_money[propertyId],global_balance_reserved[propertyId]);
         }
     }
     // test eco
     for (propertyId = 2147483647; propertyId < maxPropIdTestEco; propertyId++) {
-        if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
-            UpdatePropertyBalance(propertyId,global_balance_money_testeco[propertyId-2147483647],global_balance_reserved_testeco[propertyId-2147483647]);
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
+            UpdatePropertyBalance(propertyId,global_balance_money[propertyId],global_balance_reserved[propertyId]);
         }
     }
 }

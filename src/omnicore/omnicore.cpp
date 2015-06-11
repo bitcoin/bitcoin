@@ -105,14 +105,10 @@ static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 static int nWaterlineBlock = 0;  //
 
 uint64_t global_metadex_market;
-//! Available balances of wallet properties in the main ecosystem
-std::map<uint32_t, int64_t> global_balance_money_maineco;
-//! Reserved balances of wallet properties in the main ecosystem
-std::map<uint32_t, int64_t> global_balance_reserved_maineco;
-//! Available balances of wallet properties in the test ecosystem
-std::map<uint32_t, int64_t> global_balance_money_testeco;
-//! Reserved balances of wallet properties in the test ecosystem
-std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Available balances of wallet properties
+std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+std::map<uint32_t, int64_t> global_balance_reserved;
 //! Vector containing a list of properties relative to the wallet
 std::vector<uint32_t> global_wallet_property_list;
 
@@ -613,10 +609,8 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 int mastercore::set_wallet_totals()
 {
     //zero balances
-    global_balance_money_maineco.clear();
-    global_balance_money_testeco.clear();
-    global_balance_reserved_maineco.clear();
-    global_balance_reserved_testeco.clear();
+    global_balance_money.clear();
+    global_balance_reserved.clear();
     global_wallet_property_list.clear();
 
     // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
@@ -637,20 +631,11 @@ int mastercore::set_wallet_totals()
             // check if the address is spendable (only spendable balances are included in totals)
             if (!IsMyAddressSpendable(address)) continue;
 
-            // work out the balances for the address/property combo
-            int64_t balance = getUserAvailableMPbalance(address, propertyId);
-            int64_t reserved = getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-            reserved += getMPbalance(address, propertyId, METADEX_RESERVE);
-            if (propertyId < 3) reserved += getMPbalance(address, propertyId, ACCEPT_RESERVE);
-
-            // add to global balances - TODO merge main and test eco globals
-            if (!isTestEcosystemProperty(propertyId)) {
-                global_balance_money_maineco[propertyId] += balance;
-                global_balance_reserved_maineco[propertyId] += reserved;
-            } else {
-                global_balance_money_testeco[propertyId-2147483647] += balance;
-                global_balance_reserved_testeco[propertyId-2147483647] += reserved;
-            }
+            // work out the balances and add to globals
+            global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
+            if (propertyId < 3) global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
         }
     }
     return 0;

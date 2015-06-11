@@ -97,7 +97,7 @@ void SendMPDialog::updatePropSelector()
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     ui->propertyComboBox->clear();
     for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
-        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);
             std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
             if(spName.size()>23) spName=spName.substr(0,23) + "...";
@@ -107,7 +107,7 @@ void SendMPDialog::updatePropSelector()
         }
     }
     for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
-        if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);
             std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
             if(spName.size()>23) spName=spName.substr(0,23)+"...";
@@ -189,7 +189,7 @@ void SendMPDialog::updateProperty()
 
     // populate balance for global wallet
     int64_t globalAvailable = 0;
-    if (propertyId<2147483648) { globalAvailable = global_balance_money_maineco[propertyId]; } else { globalAvailable = global_balance_money_testeco[propertyId-2147483647]; }
+    if (propertyId<2147483648) { globalAvailable = global_balance_money[propertyId]; } else { globalAvailable = global_balance_money[propertyId]; }
     ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, globalAvailable) + getTokenLabel(propertyId)));
 
 #if QT_VERSION >= 0x040700

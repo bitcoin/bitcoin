@@ -382,14 +382,10 @@ public:
 };
 
 extern uint64_t global_metadex_market;
-//! Available balances of wallet properties in the main ecosystem
-extern std::map<uint32_t, int64_t> global_balance_money_maineco;
-//! Reserved balances of wallet properties in the main ecosystem
-extern std::map<uint32_t, int64_t> global_balance_reserved_maineco;
-//! Available balances of wallet properties in the test ecosystem
-extern std::map<uint32_t, int64_t> global_balance_money_testeco;
-//! Reserved balances of wallet properties in the test ecosystem
-extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Available balances of wallet properties
+extern std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+extern std::map<uint32_t, int64_t> global_balance_reserved;
 //! Vector containing a list of properties relative to the wallet
 extern std::vector<uint32_t> global_wallet_property_list;
 
