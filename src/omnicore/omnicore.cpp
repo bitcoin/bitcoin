@@ -937,9 +937,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         unsigned char seq = 0xFF;
         int64_t dataAddressValue = 0;
         for (unsigned k = 0; k < script_data.size(); ++k) { // Step 1, locate the data packet
-            txnouttype whichType;
-            if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
-            if (!IsAllowedOutputType(whichType, nBlock)) break;
             std::string strSub = script_data[k].substr(2,16); // retrieve bytes 1-9 of packet for peek & decode comparison
             seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
             if (("0000000000000001" == strSub) || ("0000000000000002" == strSub)) { // peek & decode comparison
@@ -959,9 +956,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         if (!strDataAddress.empty()) { // Step 2, try to locate address with seqnum = DataAddressSeq+1 (also verify Step 1, we should now have a valid data packet)
             unsigned char expectedRefAddressSeq = dataAddressSeq + 1;
             for (unsigned k = 0; k < script_data.size(); ++k) { // loop through outputs
-                txnouttype whichType;
-                if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
-                if (!IsAllowedOutputType(whichType, nBlock)) break;
                 seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
                 if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (expectedRefAddressSeq == seq)) { // found reference address with matching sequence number
                     if (strRefAddress.empty()) { // confirm we have not already located a reference address
@@ -985,9 +979,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             }
             if (strRefAddress.empty()) { // Step 3, if we still don't have a reference address, see if we can locate an address with matching output amounts
                 for (unsigned k = 0; k < script_data.size(); ++k) { // loop through outputs
-                    txnouttype whichType;
-                    if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
-                    if (!IsAllowedOutputType(whichType, nBlock)) break;
                     if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (dataAddressValue == value_data[k])) { // this output matches data output, check if matches exodus output
                         for (unsigned int exodus_idx = 0; exodus_idx < ExodusValues.size(); exodus_idx++) {
                             if (value_data[k] == ExodusValues[exodus_idx]) { //this output matches data address value and exodus address value, choose as ref
