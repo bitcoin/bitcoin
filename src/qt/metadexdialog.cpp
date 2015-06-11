@@ -7,6 +7,7 @@
 
 #include "omnicore_qtutils.h"
 
+#include "clientmodel.h"
 #include "walletmodel.h"
 
 #include "omnicore/createpayload.h"
@@ -47,7 +48,8 @@ using namespace mastercore;
 MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExDialog),
-    model(0)
+    clientModel(0),
+    walletModel(0)
 {
     ui->setupUi(this);
     //open
@@ -102,9 +104,17 @@ MetaDExDialog::~MetaDExDialog()
     delete ui;
 }
 
-void MetaDExDialog::setModel(WalletModel *model)
+void MetaDExDialog::setClientModel(ClientModel *model)
 {
-    this->model = model;
+    this->clientModel = model;
+    if (NULL != model) {
+        connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
+    }
+}
+
+void MetaDExDialog::setWalletModel(WalletModel *model)
+{
+    this->walletModel = model;
     if (NULL != model) {
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
     }
@@ -597,7 +607,7 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // unlock the wallet
-    WalletModel::UnlockContext ctx(model->requestUnlock());
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled/failed

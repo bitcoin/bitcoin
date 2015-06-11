@@ -10,6 +10,7 @@
 #include <QDialog>
 
 class WalletModel;
+class ClientModel;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -37,7 +38,8 @@ public:
     void UpdateOffers();
     void UpdateSellOffers();
     void UpdateBuyOffers();
-    void setModel(WalletModel *model);
+    void setWalletModel(WalletModel *model);
+    void setClientModel(ClientModel *model);
     void recalcTotal(bool useBuyFields);
 
 public slots:
@@ -51,7 +53,8 @@ public slots:
 
 private:
     Ui::MetaDExDialog *ui;
-    WalletModel *model;
+    ClientModel *clientModel;
+    WalletModel *walletModel;
 
 private slots:
     void buyTrade();
