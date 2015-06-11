@@ -732,7 +732,7 @@ static int getEncodingClass(const CTransaction& tx, int nBlock)
                 if (address == ExodusAddress()) {
                     hasExodus = true;
                 }
-                if (address == MoneyAddress(nBlock)) {
+                if (address == ExodusCrowdsaleAddress(nBlock)) {
                     hasMoney = true;
                 }
             }
@@ -879,7 +879,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
             CTxDestination dest;
             if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
-                if (CBitcoinAddress(dest) == MoneyAddress(nBlock)) {
+                if (CBitcoinAddress(dest) == ExodusCrowdsaleAddress(nBlock)) {
                     BTC_amount = wtx.vout[n].nValue;
                     break; // TODO: maybe sum all values
                 }
@@ -3464,7 +3464,7 @@ const CBitcoinAddress ExodusAddress()
 }
 
 /**
- * Returns the Exodus fundraiser address.
+ * Returns the Exodus crowdsale address.
  *
  * Main network:
  *   1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P
@@ -3475,7 +3475,7 @@ const CBitcoinAddress ExodusAddress()
  *
  * @return The Exodus fundraiser address
  */
-const CBitcoinAddress MoneyAddress(int nBlock)
+const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock)
 {
     static CBitcoinAddress moneysAddress(getmoney_testnet);
     static CBitcoinAddress exodusAddress = ExodusAddress();
