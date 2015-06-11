@@ -630,7 +630,7 @@ int mastercore::set_wallet_totals()
         uint32_t propertyId;
         while (0 != (propertyId = (my_it->second).next())) {
             // add to the global wallet property list (avoiding duplicates)
-            if (std::find(global_wallet_property_list.begin(), global_wallet_property_list.end(), propertyId) != global_wallet_property_list.end()) {
+            if (std::find(global_wallet_property_list.begin(), global_wallet_property_list.end(), propertyId) == global_wallet_property_list.end()) {
                 global_wallet_property_list.push_back(propertyId);
             }
 
