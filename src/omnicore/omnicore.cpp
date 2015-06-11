@@ -303,22 +303,18 @@ CMPTally *mastercore::getTally(const string & address)
 }
 
 // look at balance for an address
-int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype)
+int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype)
 {
-uint64_t balance = 0;
+    int64_t balance = 0;
+    if (TALLY_TYPE_COUNT <= ttype) return 0;
+    if (ttype == ACCEPT_RESERVE && property > OMNI_PROPERTY_TMSC) return 0; // ACCEPT_RESERVE is always empty except for props 1 & 2
 
-  if (TALLY_TYPE_COUNT <= ttype) return 0;
-
-  LOCK(cs_tally);
-
-const map<string, CMPTally>::iterator my_it = mp_tally_map.find(Address);
-
-  if (my_it != mp_tally_map.end())
-  {
-    balance = (my_it->second).getMoney(property, ttype);
-  }
-
-  return balance;
+    LOCK(cs_tally);
+    const map<string, CMPTally>::iterator my_it = mp_tally_map.find(Address);
+    if (my_it != mp_tally_map.end()) {
+        balance = (my_it->second).getMoney(property, ttype);
+    }
+    return balance;
 }
 
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property)
@@ -606,7 +602,7 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 // TODO: optimize efficiency -- iterate only over wallet's addresses in the future
 // NOTE: if we loop over wallet addresses we miss tokens that may be in change addresses (since mapAddressBook does not
 //       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
-int mastercore::set_wallet_totals()
+void mastercore::set_wallet_totals()
 {
     //zero balances
     global_balance_money.clear();
@@ -614,7 +610,7 @@ int mastercore::set_wallet_totals()
     global_wallet_property_list.clear();
 
     // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
-    for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for(std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         // check if the address is a wallet address (including watched addresses)
         std::string address = my_it->first;
         if (!IsMyAddress(address)) continue;
@@ -638,7 +634,6 @@ int mastercore::set_wallet_totals()
             if (propertyId < 3) global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
         }
     }
-    return 0;
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)

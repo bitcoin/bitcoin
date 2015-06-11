@@ -390,7 +390,7 @@ extern std::map<uint32_t, int64_t> global_balance_reserved;
 extern std::vector<uint32_t> global_wallet_property_list;
 
 
-int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
+int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
 bool IsMyAddress(const std::string &address);
 bool IsMyAddressSpendable(const std::string &address);
@@ -437,7 +437,7 @@ uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 CMPTally *getTally(const string & address);
 
 int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
-int set_wallet_totals();
+void set_wallet_totals();
 
 char *c_strMasterProtocolTXType(int i);
 
