@@ -390,6 +390,9 @@ extern std::map<uint32_t, int64_t> global_balance_reserved_maineco;
 extern std::map<uint32_t, int64_t> global_balance_money_testeco;
 //! Reserved balances of wallet properties in the test ecosystem
 extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Vector containing a list of properties relative to the wallet
+extern std::vector<uint32_t> global_wallet_property_list;
+
 
 int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
