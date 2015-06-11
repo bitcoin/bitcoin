@@ -25,7 +25,7 @@ Run all possible tests with `qa/pull-tester/rpc-tests.sh -extended`.
 
 Possible options:
 
-````
+```
 -h, --help       show this help message and exit
   --nocleanup      Leave bitcoinds and test.* datadir on exit or error
   --noshutdown     Don't stop bitcoinds after the test execution
