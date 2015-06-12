@@ -179,7 +179,6 @@ void SendMPDialog::updateProperty()
         }
         if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
         if (IsMyAddress(address) != ISMINE_SPENDABLE) continue; // ignore this address, it's not spendable
-        if ((address.substr(0,1)=="2") || (address.substr(0,3)=="3")) continue; //quick hack to not show P2SH addresses in from selector (can't be sent from UI)
         ui->sendFromComboBox->addItem(QString::fromStdString(address + " \t" + FormatMP(propertyId, getUserAvailableMPbalance(address, propertyId)) + getTokenLabel(propertyId)));
     }
 
