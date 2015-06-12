@@ -33,9 +33,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Cannot obtain a lock on data directory %s. Bitcoin Core is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Continuously rate-limit free transactions to <n>*1000 bytes per minute "
-"(default: %u)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
 "effective with disabled wallet functionality)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -47,9 +44,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Distributed under the MIT software license, see the accompanying file "
 "COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Enter regression test mode, which uses a special chain in which blocks can "
-"be solved instantly."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Error: Listening for incoming connections failed (listen returned error %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -68,24 +62,13 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Fees (in BTC/Kb) smaller than this are considered zero fee for relaying "
 "(default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Fees (in BTC/Kb) smaller than this are considered zero fee for transaction "
-"creation (default: %s)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Flush database activity from memory pool to disk log every <n> megabytes "
-"(default: %u)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "How thorough the block verification of -checkblocks is (0-4, default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "If paytxfee is not set, include enough fee so transactions begin "
 "confirmation on average within n blocks (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"In this mode -genproclimit controls how many blocks are generated "
-"immediately."),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Log transaction priority and fee per kB when mining blocks (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Maintain a full transaction index, used by the getrawtransaction rpc call "
 "(default: %u)"),
@@ -113,8 +96,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Reverting this setting requires re-downloading the entire blockchain. "
 "(default: 0 = disable pruning blocks, >%u = target size in MiB to use for "
 "block files)"),
-QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Require high priority for relaying free or low-fee transactions (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
@@ -151,6 +132,12 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
 "%s)"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"WARNING: abnormally high number of blocks generated, %d blocks received in "
+"the last %d hours (%d expected)"),
+QT_TRANSLATE_NOOP("bitcoin-core", ""
+"WARNING: check your network connection, %d blocks received in the last %d "
+"hours (%d expected)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Warning: -maxtxfee is set very high! Fees this large could be paid on a "
 "single transaction."),
@@ -193,7 +180,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Acceptable ciphers (default: %s)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Activating best chain..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Add a node to connect to and attempt to keep the connection open"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Allow self signed root certificates (default: 0)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Always query for peer addresses via DNS lookup (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Attempt to recover private keys from a corrupt wallet.dat"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Block creation options:"),
@@ -212,7 +198,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Copyright (C) 2009-%i The Bitcoin Core Develo
 QT_TRANSLATE_NOOP("bitcoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Could not parse -rpcbind value %s as network address"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Debugging/Testing options:"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Disable safemode, override a real safe mode event (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do not load the wallet and disable wallet RPC calls"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Done loading"),
@@ -230,7 +215,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error: Disk space is low!"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error: Unsupported argument -tor found, use -onion."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Fee (in BTC/kB) to add to transactions you send (default: %s)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Force safe mode (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Generate coins (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "How many blocks to check at startup (default: %u, 0 = all)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "If <category> is not supplied, output all debugging information."),
@@ -250,7 +234,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid amount for -paytxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid netmask specified in -whitelist: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Limit size of signature cache to <n> entries (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Listen for connections on <port> (default: %u or testnet: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Loading addresses..."),
@@ -263,7 +246,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Maximum per-connection send buffer, <n>*1000 
 QT_TRANSLATE_NOOP("bitcoin-core", "Need to specify a port with -whitebind: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Node relay options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Not enough file descriptors available."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Only accept block chain matching built-in checkpoints (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Password for JSON-RPC connections"),
@@ -273,14 +255,11 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC server options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "RPC support for HTTP persistent connections (default: %d)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Randomly drop 1 of every <n> network messages"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Randomly fuzz 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rebuild block chain index from current blk000??.dat files on startup"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay and mine data carrier transactions (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescan the block chain for missing wallet transactions"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Rescanning..."),
-QT_TRANSLATE_NOOP("bitcoin-core", "Run a thread to flush wallet periodically (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Run in the background as a daemon and accept commands"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Send trace/debug info to console instead of debug.log file"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Send transactions as zero-fee transactions if possible (default: %u)"),
@@ -293,7 +272,6 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Set language, for example \"de_DE\" (default:
 QT_TRANSLATE_NOOP("bitcoin-core", "Set maximum block size in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set minimum block size in bytes (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Set the number of threads to service RPC calls (default: %d)"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Sets the DB_PRIVATE flag in the wallet db environment (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Show all debugging options (usage: --help -help-debug)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Show splash screen on startup (default: 1)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
@@ -306,11 +284,9 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Specify wallet file (within data directory)")
 QT_TRANSLATE_NOOP("bitcoin-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Spend unconfirmed change when sending transactions (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Start minimized"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Stop running after importing blocks from disk (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "The transaction amount is too small to pay the fee"),
 QT_TRANSLATE_NOOP("bitcoin-core", "This help message"),
 QT_TRANSLATE_NOOP("bitcoin-core", "This is experimental software."),
-QT_TRANSLATE_NOOP("bitcoin-core", "This is intended for regression testing tools and app development."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Threshold for disconnecting misbehaving peers (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Transaction amounts must be positive"),
