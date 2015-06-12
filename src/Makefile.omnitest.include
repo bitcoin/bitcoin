@@ -11,6 +11,7 @@ OMNICORE_TEST_CPP = \
   omnicore/test/obfuscation_tests.cpp \
   omnicore/test/output_restriction_tests.cpp \
   omnicore/test/parsing_a_tests.cpp \
+  omnicore/test/parsing_c_tests.cpp \
   omnicore/test/rounduint64_tests.cpp \
   omnicore/test/rpc_requirements_tests.cpp \
   omnicore/test/rpc_value_tests.cpp \
