@@ -132,7 +132,6 @@ void BalancesDialog::setWalletModel(WalletModel *model)
 
 void BalancesDialog::UpdatePropSelector()
 {
-    set_wallet_totals();
     QString spId = ui->propSelectorWidget->itemData(ui->propSelectorWidget->currentIndex()).toString();
     ui->propSelectorWidget->clear();
     ui->propSelectorWidget->addItem("Wallet Totals (Summary)","2147483646"); //use last possible ID for summary for now

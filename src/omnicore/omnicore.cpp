@@ -3306,6 +3306,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
     // force an update of the UI once per processed block containing Omni transactions
     if (countMP > 0) { // there were Omni transactions in this block
+        set_wallet_totals();
         uiInterface.OmniStateChanged();
     }
 

@@ -284,8 +284,6 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
 
 void OverviewPage::updateOmni()
 {
-    // force a refresh of wallet totals
-    set_wallet_totals();
     // always show MSC
     UpdatePropertyBalance(1,global_balance_money[1],global_balance_reserved[1]);
     // loop properties and update overview

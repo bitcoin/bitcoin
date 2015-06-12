@@ -355,8 +355,6 @@ void SendMPDialog::sendButtonClicked()
 
 void SendMPDialog::balancesUpdated()
 {
-    set_wallet_totals();
-
     updatePropSelector();
     updateProperty();
     updateFrom();
