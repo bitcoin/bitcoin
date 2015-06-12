@@ -98,6 +98,8 @@ using namespace mastercore;
 CCriticalSection cs_tally;
 
 static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
+
+static const string exodus_mainnet = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
@@ -3474,9 +3476,13 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex)
  */
 const CBitcoinAddress ExodusAddress()
 {
-    static CBitcoinAddress address(exodus_address);
-
-    return address;
+    if (isNonMainNet()) {
+        static CBitcoinAddress testAddress(exodus_testnet);
+        return testAddress;
+    } else {
+        static CBitcoinAddress mainAddress(exodus_mainnet);
+        return mainAddress;
+    }
 }
 
 /**
@@ -3493,17 +3499,16 @@ const CBitcoinAddress ExodusAddress()
  */
 const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock)
 {
-    static CBitcoinAddress moneysAddress(getmoney_testnet);
-    static CBitcoinAddress exodusAddress = ExodusAddress();
-
     if (MONEYMAN_TESTNET_BLOCK <= nBlock && isNonMainNet()) {
-        return moneysAddress;
+        static CBitcoinAddress moneyAddress(getmoney_testnet);
+        return moneyAddress;
     }
     else if (MONEYMAN_REGTEST_BLOCK <= nBlock && RegTest()) {
-        return moneysAddress;
+        static CBitcoinAddress moneyAddress(getmoney_testnet);
+        return moneyAddress;
     }
 
-    return exodusAddress;
+    return ExodusAddress();
 }
 
  // the 31-byte packet & the packet #
