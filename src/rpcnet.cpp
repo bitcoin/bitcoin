@@ -227,11 +227,11 @@ UniValue disconnectnode(const UniValue& params, bool fHelp)
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
         );
 
-    string strNode = params[0].get_str();
+    CNode* pNode = FindNode(params[0].get_str());
+    if (pNode == NULL)
+        throw JSONRPCError(RPC_CLIENT_NODE_NOT_CONNECTED, "Node not found in connected nodes");
 
-    CNode* pNode = FindNode(strNode.c_str());
-    if (pNode != NULL)
-        pNode->CloseSocketDisconnect();
+    pNode->CloseSocketDisconnect();
 
     return NullUniValue;
 }
