@@ -34,6 +34,7 @@
 #include "base58.h"
 #include "chainparams.h"
 #include "coincontrol.h"
+#include "coins.h"
 #include "init.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
@@ -796,6 +797,12 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
     return NO_MARKER;
 }
 
+// TODO: move
+CCoinsView mastercore::viewDummy;
+CCoinsViewCache mastercore::view(&viewDummy);
+static unsigned int nCacheHits = 0;
+static unsigned int nCacheMiss = 0;
+
 // idx is position within the block, 0-based
 // int msc_tx_push(const CTransaction &wtx, int nBlock, unsigned int idx)
 // INPUT: bRPConly -- set to true to avoid moving funds; to be called from various RPC calls like this
@@ -815,11 +822,40 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     PrintToLog("____________________________________________________________________________________________________________________________________\n");
     PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
 
-    // ### SENDER IDENTIFICATION ### - collect input amounts and identify sender via "largest input by sum"
-    std::string strSender;
-    int64_t inAll = 0;
+    // Fetch previous transactions (inputs)
+    BOOST_FOREACH(const CTxIn& txIn, wtx.vin) {
+        unsigned int nOut = txIn.prevout.n;
+        CCoinsModifier coins = view.ModifyCoins(txIn.prevout.hash);
+
+        if (coins->IsAvailable(nOut)) {
+            ++nCacheHits;
+            continue;
+        } else {
+            ++nCacheMiss;
+        }
+
+        CTransaction txPrev;
+        uint256 hashBlock;
+        if (!GetTransaction(txIn.prevout.hash, txPrev, hashBlock, true)) {
+            PrintToConsole("%s() ERROR: failed to get transaction %s\n", __func__, txIn.prevout.hash.GetHex());
+            return -101;
+        }
+
+        if (nOut >= coins->vout.size()) {
+            coins->vout.resize(nOut+1);
+        }
+        coins->vout[nOut].scriptPubKey = txPrev.vout[nOut].scriptPubKey;
+        coins->vout[nOut].nValue = txPrev.vout[nOut].nValue;
+    }
+
+    if (!view.HaveInputs(wtx)) { // TODO: should never fail, use assertion
+        PrintToConsole("%s() ERROR: fetched inputs, but not available %s\n", __func__, wtx.GetHash().GetHex());
+        return -102;
+    }
 
     // ### SENDER IDENTIFICATION ###
+    std::string strSender;
+
     if (omniClass != OMNI_CLASS_C)
     {
         // OLD LOGIC - collect input amounts and identify sender via "largest input by sum"
@@ -829,18 +865,22 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
         for (unsigned int i = 0; i < wtx.vin.size(); ++i) {
             if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
-            CTransaction txPrev;
-            uint256 hashBlock;
-            if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; } // get the vin's previous transaction
-            unsigned int n = wtx.vin[i].prevout.n;
+
+            const CTxIn& txIn = wtx.vin[i];
+            const CTxOut& txOut = view.GetOutputFor(txIn);
+
+            if (txOut.IsNull()) { // TODO: should never fail, use assertion
+                PrintToConsole("%s() ERROR: coins fetched, but not available\n", __func__);
+                return -103;
+            }
+
             CTxDestination source;
             txnouttype whichType;
-            inAll += txPrev.vout[n].nValue;
-            if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
-                if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
+            if (ExtractDestination(txOut.scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
+                if (!GetOutputType(txOut.scriptPubKey, whichType)) { ++inputs_errors; break; }
                 if (!IsAllowedInputType(whichType, nBlock)) { ++inputs_errors; break; }
                 CBitcoinAddress addressSource(source);
-                inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
+                inputs_sum_of_values[addressSource.ToString()] += txOut.nValue;
             }
             else ++inputs_errors;
             if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
@@ -861,38 +901,32 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     {
         // NEW LOGIC - the sender is chosen based on the first vin
 
-        // 1. determine the sender, but invalidate transaction, if the input is not accepted
+        // determine the sender, but invalidate transaction, if the input is not accepted
         {
             unsigned int vin_n = 0; // the first input
             if (msc_debug_vin) PrintToLog("vin=%d:%s\n", vin_n, wtx.vin[vin_n].scriptSig.ToString());
-            CTransaction txPrev;
-            uint256 hashBlock;
-            if (!GetTransaction(wtx.vin[vin_n].prevout.hash, txPrev, hashBlock, true)) { return -101; }
-            unsigned int n = wtx.vin[vin_n].prevout.n;
-            CTxDestination source;
+
+            const CTxIn& txIn = wtx.vin[vin_n];
+            const CTxOut& txOut = view.GetOutputFor(txIn);
+
+            if (txOut.IsNull()) { // TODO: should never fail, use assertion
+                PrintToConsole("%s() ERROR: coins fetched, but not available\n", __func__);
+                return -105;
+            }
             txnouttype whichType;
-            inAll += txPrev.vout[n].nValue;
-            if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { return -101; }
+            if (!GetOutputType(txOut.scriptPubKey, whichType)) { return -101; }
             if (!IsAllowedInputType(whichType, nBlock)) { return -101; }
-            if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) {
+            CTxDestination source;
+            if (ExtractDestination(txOut.scriptPubKey, source)) {
                 strSender = CBitcoinAddress(source).ToString();
             }
         }
-
-        // 2. iterate over the remaining inputs to determine the transaction fee
-        // TODO: this is only required for some transaction types, but not all
-        for (unsigned int i = 1; i < wtx.vin.size(); i++) {
-            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
-            CTransaction txPrev;
-            uint256 hashBlock;
-            if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; }
-            unsigned int n = wtx.vin[i].prevout.n;
-            inAll += txPrev.vout[n].nValue;
-        }
     }
 
+    int64_t inAll = view.GetValueIn(wtx);
     int64_t outAll = wtx.GetValueOut();
     int64_t txFee = inAll - outAll; // miner fee
+
     if (!strSender.empty()) {
         if (msc_debug_verbose) PrintToLog("The Sender: %s : fee= %s\n", strSender, FormatDivisibleMP(txFee));
     } else {

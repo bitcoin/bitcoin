@@ -8,6 +8,8 @@
 
 class CBitcoinAddress;
 class CBlockIndex;
+class CCoinsView;
+class CCoinsViewCache;
 class CTransaction;
 
 #include "omnicore/log.h"
@@ -480,6 +482,10 @@ extern std::map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
+
+// TODO: move, rename
+extern CCoinsView viewDummy;
+extern CCoinsViewCache view;
 
 std::string strMPProperty(uint32_t propertyId);
 
