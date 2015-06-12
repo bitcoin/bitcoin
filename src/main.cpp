@@ -62,7 +62,7 @@ bool fTxIndex = false;
 bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
 unsigned int nCoinCacheSize = 5000;
-
+bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in duffs) are considered zero fee (for relaying and mining)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
@@ -4958,7 +4958,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    else if (strCommand == "alert")
+    else if (fAlerts && strCommand == "alert")
     {
         CAlert alert;
         vRecv >> alert;
