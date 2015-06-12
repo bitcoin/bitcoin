@@ -2094,14 +2094,6 @@ int IsMyAddress(const std::string &address)
     const CBitcoinAddress& omniAddress = address;
     CTxDestination omniDest = omniAddress.Get();
     return IsMine(*pwalletMain, omniDest);
-
-/*  if (!pwalletMain) return false;
-
-  const CBitcoinAddress& mscaddress = address;
-  CTxDestination lookupaddress = mscaddress.Get();
-
-  return (IsMine(*pwalletMain, lookupaddress));
-*/
 }
 
 // gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
