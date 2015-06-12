@@ -13,6 +13,7 @@
 #include "script/standard.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "wallet/wallet.h"
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
@@ -194,11 +195,11 @@ void PaymentServerTests::paymentServerTests()
     // Ensure the request is initialized
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
-    QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
-    foreach (const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
+    QList<CRecipient> sendingTos = r.paymentRequest.getPayTo();
+    foreach (const CRecipient& sendingTo, sendingTos) {
         CTxDestination dest;
-        if (ExtractDestination(sendingTo.first, dest))
-            QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);
+        if (ExtractDestination(sendingTo.scriptPubKey, dest))
+            QCOMPARE(PaymentServer::verifyAmount(sendingTo.nAmount), false);
     }
 
     delete server;

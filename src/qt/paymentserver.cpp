@@ -7,6 +7,7 @@
 #include "bitcoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
+#include "paymentrequestplus.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -559,17 +560,16 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
 
     request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
 
-    QList<std::pair<CScript, CAmount> > sendingTos = request.getPayTo();
+    QList<CRecipient> sendingTos = request.getPayTo();
     QStringList addresses;
 
-    foreach(const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
+    foreach (const CRecipient& sendingTo, sendingTos) {
         // Extract and check destination addresses
         CTxDestination dest;
-        if (ExtractDestination(sendingTo.first, dest)) {
+        if (ExtractDestination(sendingTo.scriptPubKey, dest)) {
             // Append destination address
             addresses.append(QString::fromStdString(CBitcoinAddress(dest).ToString()));
-        }
-        else if (!recipient.authenticatedMerchant.isEmpty()) {
+        } else if (!recipient.authenticatedMerchant.isEmpty()) {
             // Unauthenticated payment requests to custom bitcoin addresses are not supported
             // (there is no good way to tell the user where they are paying in a way they'd
             // have a chance of understanding).
@@ -582,22 +582,22 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
         // Bitcoin amounts are stored as (optional) uint64 in the protobuf messages (see paymentrequest.proto),
         // but CAmount is defined as int64_t. Because of that we need to verify that amounts are in a valid range
         // and no overflow has happened.
-        if (!verifyAmount(sendingTo.second)) {
+        if (!verifyAmount(sendingTo.nAmount)) {
             emit message(tr("Payment request rejected"), tr("Invalid payment request."), CClientUIInterface::MSG_ERROR);
             return false;
         }
 
         // Extract and check amounts
-        CTxOut txOut(sendingTo.second, sendingTo.first);
+        CTxOut txOut(sendingTo.nAmount, sendingTo.scriptPubKey);
         if (txOut.IsDust(::minRelayTxFee)) {
             emit message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
-                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
+                .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.nAmount)),
                 CClientUIInterface::MSG_ERROR);
 
             return false;
         }
 
-        recipient.amount += sendingTo.second;
+        recipient.amount += sendingTo.nAmount;
         // Also verify that the final amount is still in a valid range after adding additional amounts.
         if (!verifyAmount(recipient.amount)) {
             emit message(tr("Payment request rejected"), tr("Invalid payment request."), CClientUIInterface::MSG_ERROR);

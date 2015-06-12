@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_WALLETMODELTRANSACTION_H
 #define BITCOIN_QT_WALLETMODELTRANSACTION_H
 
-#include "walletmodel.h"
+#include "amount.h"
 
 #include <QObject>
 
