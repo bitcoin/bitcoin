@@ -510,6 +510,8 @@ bool IsAllowedInputType(int whichType, int nBlock);
 bool IsAllowedOutputType(int whichType, int nBlock);
 /** Checks, if the transaction type and version is supported and enabled. */
 bool IsTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty = false);
+/** Returns the encoding class, used to embed a payload. */
+int GetEncodingClass(const CTransaction& tx, int nBlock);
 
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 

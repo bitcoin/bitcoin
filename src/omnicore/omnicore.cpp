@@ -724,7 +724,15 @@ bool mastercore::IsAllowedOutputType(int whichType, int nBlock)
     return false;
 }
 
-static int getEncodingClass(const CTransaction& tx, int nBlock)
+/**
+ * Returns the encoding class, used to embed a payload.
+ *
+ *   0 None
+ *   1 Class A (p2pkh)
+ *   2 Class B (multisig)
+ *   3 Class C (op-return)
+ */
+int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
 {
     bool hasExodus = false;
     bool hasMultisig = false;
@@ -797,7 +805,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
 
     // ### CLASS IDENTIFICATION AND MARKER CHECK ###
-    int omniClass = getEncodingClass(wtx, nBlock);
+    int omniClass = GetEncodingClass(wtx, nBlock);
 
     if (omniClass == NO_MARKER) {
         return -1; // No Exodus/Omni marker, thus not a valid Omni transaction
