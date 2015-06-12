@@ -284,6 +284,10 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
 
 void OverviewPage::updateOmni()
 {
+    // Omni alerts come as block transactions and do not trip bitcoin alertsChanged() signal so let's check the
+    // alert status when we're notified of an Omni state change
+    updateAlerts();
+
     // always show MSC
     UpdatePropertyBalance(1,global_balance_money[1],global_balance_reserved[1]);
     // loop properties and update overview
@@ -306,10 +310,6 @@ void OverviewPage::updateOmni()
 
 void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
-    // Mastercore alerts come as block transactions and do not trip bitcoin alertsChanged() signal so let's check the
-    // alert status with the update balance signal that comes in after each block to see if it had any alerts in it
-    updateAlerts();
-
     //int unit = walletModel->getOptionsModel()->getDisplayUnit(); //only needed if we decide not to use new overview property list
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
