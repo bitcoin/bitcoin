@@ -1196,7 +1196,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             // ### EXTRACT PAYLOAD FOR CLASS C ###
             for (unsigned int n = 0; n < op_return_script_data.size(); ++n) {
-                if (op_return_script_data[0].size() > 4) {
+                if (op_return_script_data[n].size() > 4) {
                     std::string payload = op_return_script_data[n].substr(4); // strip out marker
                     unsigned int size = payload.size() / 2; // get packet byte size - hex so always a multiple of 2
                     memcpy(single_pkt+packet_size, &ParseHex(payload)[0], size); // load the packet ready to set mp tx info
