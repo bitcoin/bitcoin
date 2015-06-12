@@ -485,10 +485,10 @@ void RPCConsole::startExecutor()
 
 void RPCConsole::on_tabWidget_currentChanged(int index)
 {
-    if(ui->tabWidget->widget(index) == ui->tab_console)
-    {
+    if (ui->tabWidget->widget(index) == ui->tab_console)
         ui->lineEdit->setFocus();
-    }
+    else if (ui->tabWidget->widget(index) != ui->tab_peers)
+        clearSelectedNode();
 }
 
 void RPCConsole::on_openDebugLogfileButton_clicked()
@@ -558,12 +558,11 @@ void RPCConsole::peerLayoutChanged()
         return;
 
     // find the currently selected row
-    int selectedRow;
+    int selectedRow = -1;
     QModelIndexList selectedModelIndex = ui->peerWidget->selectionModel()->selectedIndexes();
-    if (selectedModelIndex.isEmpty())
-        selectedRow = -1;
-    else
+    if (!selectedModelIndex.isEmpty()) {
         selectedRow = selectedModelIndex.first().row();
+    }
 
     // check if our detail node has a row in the table (it may not necessarily
     // be at selectedRow since its position can change after a layout change)
@@ -573,9 +572,6 @@ void RPCConsole::peerLayoutChanged()
     {
         // detail node dissapeared from table (node disconnected)
         fUnselect = true;
-        cachedNodeid = -1;
-        ui->detailWidget->hide();
-        ui->peerHeading->setText(tr("Select a peer to view detailed information."));
     }
     else
     {
@@ -590,10 +586,8 @@ void RPCConsole::peerLayoutChanged()
         stats = clientModel->getPeerTableModel()->getNodeStats(detailNodeRow);
     }
 
-    if (fUnselect && selectedRow >= 0)
-    {
-        ui->peerWidget->selectionModel()->select(QItemSelection(selectedModelIndex.first(), selectedModelIndex.last()),
-            QItemSelectionModel::Deselect);
+    if (fUnselect && selectedRow >= 0) {
+        clearSelectedNode();
     }
 
     if (fReselect)
@@ -611,7 +605,8 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     cachedNodeid = stats->nodeStats.nodeid;
 
     // update the detail ui with latest node information
-    QString peerAddrDetails(QString::fromStdString(stats->nodeStats.addrName));
+    QString peerAddrDetails(QString::fromStdString(stats->nodeStats.addrName) + " ");
+    peerAddrDetails += tr("(node id: %1)").arg(QString::number(stats->nodeStats.nodeid));
     if (!stats->nodeStats.addrLocal.empty())
         peerAddrDetails += "<br />" + tr("via %1").arg(QString::fromStdString(stats->nodeStats.addrLocal));
     ui->peerHeading->setText(peerAddrDetails);
@@ -622,11 +617,13 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerBytesRecv->setText(FormatBytes(stats->nodeStats.nRecvBytes));
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetTime() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingTime));
+    ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingWait));
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
-    ui->peerVersion->setText(QString("%1").arg(stats->nodeStats.nVersion));
+    ui->peerVersion->setText(QString("%1").arg(QString::number(stats->nodeStats.nVersion)));
     ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     ui->peerDirection->setText(stats->nodeStats.fInbound ? tr("Inbound") : tr("Outbound"));
-    ui->peerHeight->setText(QString("%1").arg(stats->nodeStats.nStartingHeight));
+    ui->peerHeight->setText(QString("%1").arg(QString::number(stats->nodeStats.nStartingHeight)));
+    ui->peerWhitelisted->setText(stats->nodeStats.fWhitelisted ? tr("Yes") : tr("No"));
 
     // This check fails for example if the lock was busy and
     // nodeStateStats couldn't be fetched.
@@ -639,9 +636,12 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
             ui->peerSyncHeight->setText(QString("%1").arg(stats->nodeStateStats.nSyncHeight));
         else
             ui->peerSyncHeight->setText(tr("Unknown"));
-    } else {
-        ui->peerBanScore->setText(tr("Fetching..."));
-        ui->peerSyncHeight->setText(tr("Fetching..."));
+
+        // Common height is init to -1
+        if (stats->nodeStateStats.nCommonHeight > -1)
+            ui->peerCommonHeight->setText(QString("%1").arg(stats->nodeStateStats.nCommonHeight));
+        else
+            ui->peerCommonHeight->setText(tr("Unknown"));
     }
 
     ui->detailWidget->show();
@@ -688,6 +688,14 @@ void RPCConsole::disconnectSelectedNode()
     // Find the node, disconnect it and clear the selected node
     if (CNode *bannedNode = FindNode(strNode.toStdString())) {
         bannedNode->CloseSocketDisconnect();
-        ui->peerWidget->selectionModel()->clearSelection();
+        clearSelectedNode();
     }
+}
+
+void RPCConsole::clearSelectedNode()
+{
+    ui->peerWidget->selectionModel()->clearSelection();
+    cachedNodeid = -1;
+    ui->detailWidget->hide();
+    ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 }
