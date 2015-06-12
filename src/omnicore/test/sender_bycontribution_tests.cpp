@@ -25,6 +25,9 @@ BOOST_AUTO_TEST_SUITE(omnicore_sender_bycontribution_tests)
 static CTxOut PayToPubKeyHash_Exodus();
 static CTxOut PayToBareMultisig_1of3();
 static CTxOut PayToPubKeyHash_Unrelated();
+static CTxOut PayToPubKey_Unrelated();
+static CTxOut PayToScriptHash_Unrelated();
+static CTxOut NonStandardOutput();
 
 /** Creates a dummy class B transaction with the given inputs. */
 static CTransaction TxClassB(const std::vector<CTxOut>& txInputs)
@@ -129,6 +132,35 @@ void shuffleAndCheck(std::vector<CTxOut>& vouts, unsigned nRounds)
         std::string strSender;
         BOOST_CHECK(GetSenderByContribution(vouts, strSender));
         BOOST_CHECK_EQUAL(strSenderFirst, strSender);
+    }
+}
+
+/**
+ * Tests the invalidation of the transaction, when there are not allowed inputs.
+ */
+BOOST_AUTO_TEST_CASE(invalid_inputs)
+{
+    {
+        std::vector<CTxOut> vouts;
+        vouts.push_back(PayToPubKey_Unrelated());
+        vouts.push_back(PayToPubKeyHash_Unrelated());
+        std::string strSender;
+        BOOST_CHECK(!GetSenderByContribution(vouts, strSender));
+    }
+    {
+        std::vector<CTxOut> vouts;
+        vouts.push_back(PayToPubKeyHash_Unrelated());
+        vouts.push_back(PayToBareMultisig_1of3());
+        std::string strSender;
+        BOOST_CHECK(!GetSenderByContribution(vouts, strSender));
+    }
+    {
+        std::vector<CTxOut> vouts;
+        vouts.push_back(PayToScriptHash_Unrelated());
+        vouts.push_back(PayToPubKeyHash_Exodus());
+        vouts.push_back(NonStandardOutput());
+        std::string strSender;
+        BOOST_CHECK(!GetSenderByContribution(vouts, strSender));
     }
 }
 
@@ -434,6 +466,44 @@ static CTxOut PayToPubKeyHash_Unrelated()
 {
     CBitcoinAddress address("1f2dj45pxYb8BCW5sSbCgJ5YvXBfSapeX");
     CScript scriptPubKey = GetScriptForDestination(address.Get());
+    int64_t amount = GetDustThreshold(scriptPubKey);
+
+    return CTxOut(amount, scriptPubKey);
+}
+
+static CTxOut PayToPubKey_Unrelated()
+{
+    std::vector<unsigned char> vchPubKey = ParseHex(
+        "04ad90e5b6bc86b3ec7fac2c5fbda7423fc8ef0d58df594c773fa05e2c281b2bfe"
+        "877677c668bd13603944e34f4818ee03cadd81a88542b8b4d5431264180e2c28");
+
+    CPubKey pubKey(vchPubKey.begin(), vchPubKey.end());
+
+    CScript scriptPubKey;
+    scriptPubKey << ToByteVector(pubKey) << OP_CHECKSIG;
+
+    int64_t amount = GetDustThreshold(scriptPubKey);
+
+    txnouttype outType;
+    BOOST_CHECK(GetOutputType(scriptPubKey, outType));
+    BOOST_CHECK(outType == TX_PUBKEY);
+
+    return CTxOut(amount, scriptPubKey);
+}
+
+static CTxOut PayToScriptHash_Unrelated()
+{
+    CBitcoinAddress address("3MbYQMMmSkC3AgWkj9FMo5LsPTW1zBTwXL");
+    CScript scriptPubKey = GetScriptForDestination(address.Get());
+    int64_t amount = GetDustThreshold(scriptPubKey);
+
+    return CTxOut(amount, scriptPubKey);
+}
+
+static CTxOut NonStandardOutput()
+{
+    CScript scriptPubKey;
+    scriptPubKey << ParseHex("decafbad") << OP_DROP << OP_TRUE;
     int64_t amount = GetDustThreshold(scriptPubKey);
 
     return CTxOut(amount, scriptPubKey);
