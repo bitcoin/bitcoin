@@ -12,32 +12,87 @@ $(package)_patches=mac-qmake.conf fix-xcb-include-order.patch qt5-tablet-osx.pat
 define $(package)_set_vars
 $(package)_config_opts_release = -release
 $(package)_config_opts_debug   = -debug
-$(package)_config_opts += -opensource -confirm-license -no-audio-backend -no-sql-tds -no-glib -no-icu
-$(package)_config_opts += -no-cups -no-iconv -no-gif -no-audio-backend -no-freetype
-$(package)_config_opts += -no-sql-sqlite -no-nis -no-cups -no-iconv -no-pch
-$(package)_config_opts += -no-gif -no-feature-style-plastique
-$(package)_config_opts += -no-qml-debug -no-pch -no-nis -nomake examples -nomake tests
-$(package)_config_opts += -no-feature-style-cde -no-feature-style-s60 -no-feature-style-motif
-$(package)_config_opts += -no-feature-style-windowsmobile -no-feature-style-windowsce
+$(package)_config_opts += -opensource -confirm-license
+$(package)_config_opts += -no-audio-backend
+$(package)_config_opts += -no-glib
+$(package)_config_opts += -no-icu
+$(package)_config_opts += -no-cups
+$(package)_config_opts += -no-iconv
+$(package)_config_opts += -no-gif
+$(package)_config_opts += -no-freetype
+$(package)_config_opts += -no-nis
+$(package)_config_opts += -no-pch
+$(package)_config_opts += -no-feature-style-plastique
+$(package)_config_opts += -no-qml-debug
+$(package)_config_opts += -nomake examples
+$(package)_config_opts += -nomake tests
+$(package)_config_opts += -no-feature-style-cde
+$(package)_config_opts += -no-feature-style-s60
+$(package)_config_opts += -no-feature-style-motif
+$(package)_config_opts += -no-feature-style-windowsmobile
+$(package)_config_opts += -no-feature-style-windowsce
 $(package)_config_opts += -no-feature-style-cleanlooks
-$(package)_config_opts += -no-sql-db2 -no-sql-ibase -no-sql-oci -no-sql-tds -no-sql-mysql
-$(package)_config_opts += -no-sql-odbc -no-sql-psql -no-sql-sqlite -no-sql-sqlite2
-$(package)_config_opts += -skip qtsvg -skip qtwebkit -skip qtwebkit-examples -skip qtserialport
-$(package)_config_opts += -skip qtdeclarative -skip qtmultimedia -skip qtimageformats -skip qtx11extras
-$(package)_config_opts += -skip qtlocation -skip qtsensors -skip qtquick1 -skip qtxmlpatterns
-$(package)_config_opts += -skip qtquickcontrols -skip qtactiveqt -skip qtconnectivity -skip qtmacextras
-$(package)_config_opts += -skip qtwinextras -skip qtxmlpatterns -skip qtscript -skip qtdoc
-
-$(package)_config_opts += -prefix $(host_prefix) -bindir $(build_prefix)/bin
-$(package)_config_opts += -no-c++11 -openssl-linked  -v -static -silent -pkg-config
-$(package)_config_opts += -qt-libpng -qt-libjpeg -qt-zlib -qt-pcre
+$(package)_config_opts += -no-sql-db2
+$(package)_config_opts += -no-sql-ibase
+$(package)_config_opts += -no-sql-oci
+$(package)_config_opts += -no-sql-tds
+$(package)_config_opts += -no-sql-mysql
+$(package)_config_opts += -no-sql-odbc
+$(package)_config_opts += -no-sql-psql
+$(package)_config_opts += -no-sql-sqlite
+$(package)_config_opts += -no-sql-sqlite2
+$(package)_config_opts += -skip qtsvg
+$(package)_config_opts += -skip qtwebkit
+$(package)_config_opts += -skip qtwebkit-examples
+$(package)_config_opts += -skip qtserialport
+$(package)_config_opts += -skip qtdeclarative
+$(package)_config_opts += -skip qtmultimedia
+$(package)_config_opts += -skip qtimageformats
+$(package)_config_opts += -skip qtx11extras
+$(package)_config_opts += -skip qtlocation
+$(package)_config_opts += -skip qtsensors
+$(package)_config_opts += -skip qtquick1
+$(package)_config_opts += -skip qtquickcontrols
+$(package)_config_opts += -skip qtactiveqt
+$(package)_config_opts += -skip qtconnectivity
+$(package)_config_opts += -skip qtmacextras
+$(package)_config_opts += -skip qtwinextras
+$(package)_config_opts += -skip qtxmlpatterns
+$(package)_config_opts += -skip qtscript
+$(package)_config_opts += -skip qtdoc
+$(package)_config_opts += -prefix $(host_prefix)
+$(package)_config_opts += -bindir $(build_prefix)/bin
+$(package)_config_opts += -no-c++11
+$(package)_config_opts += -openssl-linked
+$(package)_config_opts += -v
+$(package)_config_opts += -static
+$(package)_config_opts += -silent
+$(package)_config_opts += -pkg-config
+$(package)_config_opts += -qt-libpng
+$(package)_config_opts += -qt-libjpeg
+$(package)_config_opts += -qt-zlib
+$(package)_config_opts += -qt-pcre
 
 ifneq ($(build_os),darwin)
-$(package)_config_opts_darwin = -xplatform macx-clang-linux -device-option MAC_SDK_PATH=$(OSX_SDK) -device-option CROSS_COMPILE="$(host)-"
-$(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION) -device-option MAC_TARGET=$(host) -device-option MAC_LD64_VERSION=$(LD64_VERSION)
+$(package)_config_opts_darwin = -xplatform macx-clang-linux
+$(package)_config_opts_darwin += -device-option MAC_SDK_PATH=$(OSX_SDK)
+$(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION)
+$(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
+$(package)_config_opts_darwin += -device-option MAC_LD64_VERSION=$(LD64_VERSION)
 endif
 
-$(package)_config_opts_linux  = -qt-xkbcommon -qt-xcb  -no-eglfs -no-linuxfb -system-freetype -no-sm -fontconfig -no-xinput2 -no-libudev -no-egl -no-opengl
+$(package)_config_opts_linux  = -qt-xkbcommon
+$(package)_config_opts_linux += -qt-xcb
+$(package)_config_opts_linux += -no-eglfs
+$(package)_config_opts_linux += -no-linuxfb
+$(package)_config_opts_linux += -system-freetype
+$(package)_config_opts_linux += -no-sm
+$(package)_config_opts_linux += -fontconfig
+$(package)_config_opts_linux += -no-xinput2
+$(package)_config_opts_linux += -no-libudev
+$(package)_config_opts_linux += -no-egl
+$(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_arm_linux  = -platform linux-g++ -xplatform $(host)
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 $(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
