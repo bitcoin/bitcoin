@@ -315,6 +315,22 @@
            </layout>
           </item>
           <item>
+           <widget class="QLabel" name="buyAddressFeeWarningLabel">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel { 
+border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-repeat;background-position: 10px center;color: #133959;background-color: rgb(255,191,142); color:rgb(142,61,0);} </string>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_14">
             <property name="topMargin">
              <number>0</number>
@@ -554,6 +570,22 @@
              </layout>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="sellAddressFeeWarningLabel">
+            <property name="font">
+             <font>
+              <pointsize>8</pointsize>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel { 
+border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-repeat;background-position: 10px center;color: #133959;background-color: rgb(255,191,142); color:rgb(142,61,0);} </string>
+            </property>
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_15">
