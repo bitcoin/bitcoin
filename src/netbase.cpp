@@ -1332,7 +1332,7 @@ bool operator!=(const CSubNet& a, const CSubNet& b)
 
 bool operator<(const CSubNet& a, const CSubNet& b)
 {
-    return (a.network < b.network || (a.network == b.network && memcmp(a.netmask, b.netmask, 16)));
+    return (a.network < b.network || (a.network == b.network && memcmp(a.netmask, b.netmask, 16) < 0));
 }
 
 #ifdef WIN32
