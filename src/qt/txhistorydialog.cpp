@@ -87,6 +87,7 @@ TXHistoryDialog::TXHistoryDialog(QWidget *parent) :
        ui->txHistoryTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Interactive);
     #endif
     ui->txHistoryTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->txHistoryTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     ui->txHistoryTable->verticalHeader()->setVisible(false);
     ui->txHistoryTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->txHistoryTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -210,11 +211,14 @@ int TXHistoryDialog::PopulateHistoryMap()
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), boost::token_compress_on);
     int64_t lastTXBlock = 999999; // set artificially high initially until first wallet tx is processed
-    // iterate through wallet entries backwards
+    // iterate through wallet entries backwards, limiting to most recent n (default 500) transactions (override with --omniuiwalletscope=n)
+    int walletTxCount = 0, walletTxMax = GetArg("-omniuiwalletscope", 500);
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
         CWalletTx *const pwtx = (*it).second.first;
+        if (walletTxCount >= walletTxMax) break;
+        ++walletTxCount;
         if (pwtx != 0) {
             uint256 hash = pwtx->GetHash();
             // check txlistdb, if not there it's not a confirmed Omni transaction so move to next transaction

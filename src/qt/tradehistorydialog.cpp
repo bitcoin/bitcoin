@@ -268,7 +268,11 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
     // ### START WALLET TRANSACTIONS PROCESSING ###
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    // iterate through wallet entries backwards, limiting to most recent n (default 500) transactions (override with --omniuiwalletscope=n)
+    int walletTxCount = 0, walletTxMax = GetArg("-omniuiwalletscope", 500);
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        if (walletTxCount >= walletTxMax) break;
+        ++walletTxCount;
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx == 0) continue;
         uint256 hash = pwtx->GetHash();
