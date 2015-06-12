@@ -215,9 +215,9 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
     return str;
 }
 
-inline bool isNonMainNet()
+inline bool MainNet()
 {
-    return Params().NetworkIDString() != "main";
+    return Params().NetworkIDString() == "main";
 }
 
 inline bool TestNet()
@@ -233,6 +233,11 @@ inline bool RegTest()
 inline bool UnitTest()
 {
     return Params().NetworkIDString() == "unittest";
+}
+
+inline bool isNonMainNet()
+{
+    return !MainNet() && !UnitTest();
 }
 
 std::string FormatDivisibleShortMP(int64_t n)
@@ -2023,7 +2028,7 @@ int mastercore_init()
     InitDebugLogLevels();
     ShrinkDebugLog();
 
-    if (isNonMainNet() && !UnitTest()) {
+    if (isNonMainNet()) {
         exodus_address = exodus_testnet;
     }
 
