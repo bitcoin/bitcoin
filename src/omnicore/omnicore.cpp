@@ -859,8 +859,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     if (omniClass != OMNI_CLASS_C)
     {
         // OLD LOGIC - collect input amounts and identify sender via "largest input by sum"
-
-        int inputs_errors = 0;
         std::map<std::string, int64_t> inputs_sum_of_values;
 
         for (unsigned int i = 0; i < wtx.vin.size(); ++i) {
@@ -876,16 +874,14 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             CTxDestination source;
             txnouttype whichType;
+            if (!GetOutputType(txOut.scriptPubKey, whichType)) { return -104; }
+            if (!IsAllowedInputType(whichType, nBlock)) { return -105; }
             if (ExtractDestination(txOut.scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
-                if (!GetOutputType(txOut.scriptPubKey, whichType)) { ++inputs_errors; break; }
-                if (!IsAllowedInputType(whichType, nBlock)) { ++inputs_errors; break; }
                 CBitcoinAddress addressSource(source);
                 inputs_sum_of_values[addressSource.ToString()] += txOut.nValue;
             }
-            else ++inputs_errors;
-            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
+            else return -106;
         }
-        if (inputs_errors) { return -101; } // not a valid Omni TX, disallowed inputs invalidate the transaction
 
         int64_t nMax = 0;
         for (std::map<std::string, int64_t>::iterator it = inputs_sum_of_values.begin(); it != inputs_sum_of_values.end(); ++it) { // find largest by sum
@@ -911,15 +907,16 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
             if (txOut.IsNull()) { // TODO: should never fail, use assertion
                 PrintToConsole("%s() ERROR: coins fetched, but not available\n", __func__);
-                return -105;
+                return -107;
             }
             txnouttype whichType;
-            if (!GetOutputType(txOut.scriptPubKey, whichType)) { return -101; }
-            if (!IsAllowedInputType(whichType, nBlock)) { return -101; }
+            if (!GetOutputType(txOut.scriptPubKey, whichType)) { return -108; }
+            if (!IsAllowedInputType(whichType, nBlock)) { return -109; }
             CTxDestination source;
             if (ExtractDestination(txOut.scriptPubKey, source)) {
                 strSender = CBitcoinAddress(source).ToString();
             }
+            else return -110;
         }
     }
 
@@ -1206,7 +1203,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                     packet_size += size;
                 }
             }
-            if (packet_size < MIN_PAYLOAD_SIZE) { return -111; }
+            if (packet_size < MIN_PAYLOAD_SIZE) { return -112; }
         }
     }
 
