@@ -159,7 +159,7 @@ enum FILETYPES {
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
 std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
-int64_t feeCheck(const string &address);
+bool feeCheck(const string &address, size_t nDataSize);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
