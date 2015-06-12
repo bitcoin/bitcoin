@@ -544,7 +544,7 @@ Value listbanned(const Array& params, bool fHelp)
     {
         Object rec;
         rec.push_back(Pair("address", (*it).first.ToString()));
-        rec.push_back(Pair("bannedtill", (*it).second));
+        rec.push_back(Pair("banned_untill", (*it).second));
         bannedAddresses.push_back(rec);
     }
 
