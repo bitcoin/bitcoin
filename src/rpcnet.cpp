@@ -214,6 +214,28 @@ UniValue addnode(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue disconnectnode(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "disconnectnode \"node\" \n"
+            "\nImmediately disconnects from the specified node.\n"
+            "\nArguments:\n"
+            "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
+            "\nExamples:\n"
+            + HelpExampleCli("disconnectnode", "\"192.168.0.6:8333\"")
+            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
+        );
+
+    string strNode = params[0].get_str();
+
+    CNode* pNode = FindNode(strNode.c_str());
+    if (pNode != NULL)
+        pNode->CloseSocketDisconnect();
+
+    return NullUniValue;
+}
+
 UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
