@@ -28,6 +28,7 @@ class CTransaction;
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 using json_spirit::Array;
 
@@ -387,7 +388,7 @@ extern std::map<uint32_t, int64_t> global_balance_money;
 //! Reserved balances of wallet propertiess
 extern std::map<uint32_t, int64_t> global_balance_reserved;
 //! Vector containing a list of properties relative to the wallet
-extern std::vector<uint32_t> global_wallet_property_list;
+extern std::set<uint32_t> global_wallet_property_list;
 
 
 int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype);

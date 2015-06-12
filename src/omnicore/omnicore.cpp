@@ -110,7 +110,7 @@ std::map<uint32_t, int64_t> global_balance_money;
 //! Reserved balances of wallet propertiess
 std::map<uint32_t, int64_t> global_balance_reserved;
 //! Vector containing a list of properties relative to the wallet
-std::vector<uint32_t> global_wallet_property_list;
+std::set<uint32_t> global_wallet_property_list;
 
 /**
  * Used to indicate, whether to automatically commit created transactions.
@@ -620,10 +620,8 @@ void mastercore::set_wallet_totals()
         my_it->second.init();
         uint32_t propertyId;
         while (0 != (propertyId = (my_it->second).next())) {
-            // add to the global wallet property list (avoiding duplicates)
-            if (std::find(global_wallet_property_list.begin(), global_wallet_property_list.end(), propertyId) == global_wallet_property_list.end()) {
-                global_wallet_property_list.push_back(propertyId);
-            }
+            // add to the global wallet property list
+            global_wallet_property_list.insert(propertyId);
 
             // check if the address is spendable (only spendable balances are included in totals)
             if (addressIsMine != ISMINE_SPENDABLE) continue;
@@ -635,9 +633,6 @@ void mastercore::set_wallet_totals()
             global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
         }
     }
-
-    // sort the global wallet property list
-    std::sort (global_wallet_property_list.begin(), global_wallet_property_list.end());
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)

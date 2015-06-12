@@ -137,7 +137,7 @@ void BalancesDialog::UpdatePropSelector()
     ui->propSelectorWidget->clear();
     ui->propSelectorWidget->addItem("Wallet Totals (Summary)","2147483646"); //use last possible ID for summary for now
     // populate property selector
-    for (std::vector<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
+    for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
         uint32_t propertyId = *it;
         std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
         std::string spName = getPropertyName(propertyId).c_str();
@@ -176,7 +176,7 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
         ui->balancesTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Property Name"));
 
         // loop over the wallet property list and add the wallet totals
-        for (std::vector<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
+        for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
             uint32_t propertyId = *it;
             std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
             std::string spName = getPropertyName(propertyId).c_str();
