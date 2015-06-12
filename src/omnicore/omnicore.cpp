@@ -634,6 +634,9 @@ void mastercore::set_wallet_totals()
             global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
         }
     }
+
+    // sort the global wallet property list
+    std::sort (global_wallet_property_list.begin(), global_wallet_property_list.end());
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
