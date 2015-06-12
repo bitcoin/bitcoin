@@ -2194,13 +2194,6 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
 return n_total;
 }
 
-int64_t feeCheck(const string &address)
-{
-    // check the supplied address against selectCoins to determine if sufficient fees for send
-    CCoinControl coinControl;
-    return selectCoins(address, coinControl, 0);
-}
-
 // This function determines whether it is valid to use a Class C transaction for a given payload size
 static bool UseEncodingClassC(size_t nDataSize)
 {
@@ -2211,6 +2204,26 @@ static bool UseEncodingClassC(size_t nDataSize)
         fDataEnabled = false;
     }
     return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
+}
+
+bool feeCheck(const string &address, size_t nDataSize)
+{
+    // check the supplied address against selectCoins to determine if sufficient fees for send
+    CCoinControl coinControl;
+    int64_t inputTotal = selectCoins(address, coinControl, 0);
+    bool ClassC = UseEncodingClassC(nDataSize);
+    int64_t minFee = 0;
+
+    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
+    if (ClassC) {
+        // estimated minimum fee calculation for Class C with payload of nDataSize
+        minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+    } else {
+        // estimated minimum fee calculation for Class B with payload of nDataSize
+        minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+    }
+
+    return inputTotal >= minFee;
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
