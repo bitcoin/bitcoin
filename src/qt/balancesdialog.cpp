@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "sync.h"
 #include "ui_interface.h"
+#include "wallet_ismine.h"
 
 #include <stdint.h>
 #include <map>
@@ -204,8 +205,9 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
             if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
 
             // determine if this address is in the wallet
-            if (!IsMyAddress(address)) continue; //ignore this address, it's not ours
-            if (!IsMyAddressSpendable(address)) watchAddress = true;
+            int addressIsMine = IsMyAddress(address);
+            if (!addressIsMine) continue; // ignore this address, not in wallet
+            if (addressIsMine != ISMINE_SPENDABLE) watchAddress = true;
 
             // obtain the balances for the address
             int64_t available = getUserAvailableMPbalance(address, propertyId);

@@ -21,6 +21,7 @@
 #include "amount.h"
 #include "sync.h"
 #include "uint256.h"
+#include "wallet_ismine.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -402,10 +403,10 @@ void MetaDExDialog::FullRefresh()
         (my_it->second).init();
         while (0 != (id = (my_it->second).next())) {
             if(id==propertyId) {
-                if (IsMyAddressSpendable(address)) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
             }
             if (((id==OMNI_PROPERTY_MSC) && (!testeco)) || ((id==OMNI_PROPERTY_TMSC) && (testeco))) {
-                if (IsMyAddressSpendable(address)) ui->buyAddressCombo->addItem((my_it->first).c_str());
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
             }
         }
     }

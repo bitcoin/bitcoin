@@ -392,8 +392,7 @@ extern std::vector<uint32_t> global_wallet_property_list;
 
 int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
-bool IsMyAddress(const std::string &address);
-bool IsMyAddressSpendable(const std::string &address);
+int IsMyAddress(const std::string &address);
 
 string getLabel(const string &address);
 

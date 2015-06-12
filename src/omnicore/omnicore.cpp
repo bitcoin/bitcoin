@@ -613,7 +613,8 @@ void mastercore::set_wallet_totals()
     for(std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         // check if the address is a wallet address (including watched addresses)
         std::string address = my_it->first;
-        if (!IsMyAddress(address)) continue;
+        int addressIsMine = IsMyAddress(address);
+        if (!addressIsMine) continue;
 
         // iterate only those properties in the TokenMap for this address
         my_it->second.init();
@@ -625,7 +626,7 @@ void mastercore::set_wallet_totals()
             }
 
             // check if the address is spendable (only spendable balances are included in totals)
-            if (!IsMyAddressSpendable(address)) continue;
+            if (addressIsMine != ISMINE_SPENDABLE) continue;
 
             // work out the balances and add to globals
             global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
@@ -2087,27 +2088,20 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
 }
 
 // IsMine wrapper to determine whether the address is in our local wallet
-bool IsMyAddress(const std::string &address)
+int IsMyAddress(const std::string &address)
 {
-  if (!pwalletMain) return false;
+    if (!pwalletMain) return ISMINE_NO;
+    const CBitcoinAddress& omniAddress = address;
+    CTxDestination omniDest = omniAddress.Get();
+    return IsMine(*pwalletMain, omniDest);
+
+/*  if (!pwalletMain) return false;
 
   const CBitcoinAddress& mscaddress = address;
   CTxDestination lookupaddress = mscaddress.Get();
 
   return (IsMine(*pwalletMain, lookupaddress));
-}
-
-// IsMine wrapper to determine whether the address is spendable
-bool IsMyAddressSpendable(const std::string &address)
-{
-   if (!pwalletMain) return false;
-
-   const CBitcoinAddress& mscaddress = address;
-   CTxDestination destination = mscaddress.Get();
-   isminetype mineType = pwalletMain ? IsMine(*pwalletMain, destination) : ISMINE_NO;
-   if (mineType & ISMINE_SPENDABLE) return true;
-
-   return false; // eg (mineType & ISMINE_NO)  (mineType & ISMINE_WATCH_ONLY)  and so on, not considered spendable
+*/
 }
 
 // gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
