@@ -328,28 +328,51 @@ void MetaDExDialog::UpdateOffers()
     // update the balances for the buy and sell addreses
     UpdateBuyAddressBalance();
     UpdateSellAddressBalance();
-
 }
 
 // This function updates the balance for the currently selected sell address
 void MetaDExDialog::UpdateSellAddressBalance()
 {
     QString currentSetSellAddress = ui->sellAddressCombo->currentText();
-    unsigned int propertyId = global_metadex_market;
-    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
-    string sellBalStr;
-    if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
-    ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
+    if (currentSetSellAddress.isEmpty()) {
+        ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: N/A"));
+        ui->sellAddressFeeWarningLabel->setVisible(false);
+    } else {
+        unsigned int propertyId = global_metadex_market;
+        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
+        string sellBalStr;
+        if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
+        ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
+        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
+        if (feeCheck(currentSetSellAddress.toStdString(), 28)) {
+            ui->sellAddressFeeWarningLabel->setVisible(false);
+        } else {
+            ui->sellAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
+            ui->sellAddressFeeWarningLabel->setVisible(true);
+        }
+    }
 }
 
 // This function updates the balance for the currently selected buy address
 void MetaDExDialog::UpdateBuyAddressBalance()
 {
     QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
-    unsigned int propertyId = OMNI_PROPERTY_MSC;
-    if (global_metadex_market >= TEST_ECO_PROPERTY_1) propertyId = OMNI_PROPERTY_TMSC;
-    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
-    ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
+    if (currentSetBuyAddress.isEmpty()) {
+        ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: N/A"));
+        ui->buyAddressFeeWarningLabel->setVisible(false);
+    } else {
+        unsigned int propertyId = OMNI_PROPERTY_MSC;
+        if (global_metadex_market >= TEST_ECO_PROPERTY_1) propertyId = OMNI_PROPERTY_TMSC;
+        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
+        ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
+        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
+        if (feeCheck(currentSetBuyAddress.toStdString(), 28)) {
+            ui->buyAddressFeeWarningLabel->setVisible(false);
+        } else {
+            ui->buyAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
+            ui->buyAddressFeeWarningLabel->setVisible(true);
+        }
+    }
 }
 
 // This function performs a full refresh of all elements - for example when switching markets

@@ -141,21 +141,23 @@ void SendMPDialog::updateFrom()
         currentSetFromAddress = "";
     }
 
-    // warning label will be lit if insufficient fees for a typical simple send of 2KB or less
-    int64_t inputTotal = feeCheck(currentSetFromAddress);
-    int64_t minWarn = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(2000); // based on 3x <200 byte outputs (change/reference/data) & total tx size of <2KB
-    if (inputTotal >= minWarn) {
+    if (currentSetFromAddress.empty()) {
+        ui->balanceLabel->setText(QString::fromStdString("Address Balance: N/A"));
         ui->feeWarningLabel->setVisible(false);
     } else {
-        ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");
-        ui->feeWarningLabel->setVisible(true);
-    }
-
-    // update the balance for the selected address
-    QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
-    uint32_t propertyId = spId.toUInt();
-    if (propertyId > 0) {
-        ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
+        // update the balance for the selected address
+        QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
+        uint32_t propertyId = spId.toUInt();
+        if (propertyId > 0) {
+            ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
+        }
+        // warning label will be lit if insufficient fees for simple send (16 byte payload)
+        if (feeCheck(currentSetFromAddress, 16)) {
+            ui->feeWarningLabel->setVisible(false);
+        } else {
+            ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");
+            ui->feeWarningLabel->setVisible(true);
+        }
     }
 }
 
