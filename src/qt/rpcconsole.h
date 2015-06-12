@@ -76,7 +76,7 @@ public slots:
     void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
     /** Handle updated peer information */
     void peerLayoutChanged();
-	/** Disconnect a selected node on the Peers tab */
+    /** Disconnect a selected node on the Peers tab */
     void disconnectSelectedNode();
 
 signals:
@@ -90,6 +90,8 @@ private:
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
+    /** clear the selected node */
+    void clearSelectedNode();
 
     enum ColumnWidths
     {
