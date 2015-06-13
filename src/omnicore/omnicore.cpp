@@ -769,16 +769,15 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
             hasMultisig = true;
         }
         if (outType == TX_NULL_DATA) {
+            // Ensure there is a payload, and the first pushed element equals,
+            // or starts with the "om" marker
             std::vector<std::string> scriptPushes;
-            GetScriptPushes(output.scriptPubKey, scriptPushes);
-            if (scriptPushes.size() > 0) {
-                if (scriptPushes[0].size() > 8) {
-                    // only v0/v1 (and alert) txs are live, add 6f6d0002 to parse a v2 tx when one goes live
-                    if (("6f6d0000" == scriptPushes[0].substr(0,8)) ||
-                        ("6f6d0001" == scriptPushes[0].substr(0,8)) ||
-                        ("6f6dffff" == scriptPushes[0].substr(0,8))) {
-                        hasOpReturn = true;
-                    }
+            if (!GetScriptPushes(output.scriptPubKey, scriptPushes)) {
+                continue;
+            }
+            if (!scriptPushes.empty()) {
+                if ("6f6d" == scriptPushes[0].substr(0,4)) {
+                    hasOpReturn = true;
                 }
             }
         }
