@@ -550,6 +550,8 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer)
 
     LogPrint("mempool", "stored orphan tx %s (mapsz %u prevsz %u)\n", hash.ToString(),
              mapOrphanTransactions.size(), mapOrphanTransactionsByPrev.size());
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
+    statsClient.inc("transactions.orphans.add", 1.0f);
     return true;
 }
 
@@ -568,6 +570,7 @@ void static EraseOrphanTx(uint256 hash)
             mapOrphanTransactionsByPrev.erase(itPrev);
     }
     mapOrphanTransactions.erase(it);
+    statsClient.inc("transactions.orphans.remove", 1.0f);
 }
 
 void EraseOrphansFor(NodeId peer)
@@ -584,6 +587,7 @@ void EraseOrphansFor(NodeId peer)
         }
     }
     if (nErased > 0) LogPrint("mempool", "Erased %d orphan tx from peer %d\n", nErased, peer);
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
 }
 
 
@@ -600,6 +604,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
         EraseOrphanTx(it->first);
         ++nEvicted;
     }
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
     return nEvicted;
 }
 
@@ -919,8 +924,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
-    if (pool.exists(hash))
+    if (pool.exists(hash)) {
+        statsClient.inc("transactions.duplicate", 1.0f);
         return false;
+    }
 
     // Check for conflicts with in-memory transactions
     {
@@ -1065,6 +1072,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
         statsClient.count("transactions.sizeBytes", nSize, 1.0f);
         statsClient.count("transactions.fees", nFees, 1.0f);
+        statsClient.count("transactions.inputValue", nValueIn, 1.0f);
+        statsClient.count("transactions.outputValue", nValueOut, 1.0f);
+        statsClient.count("transactions.sigOps", nSigOps, 1.0f);
+        statsClient.count("transactions.priority", dPriority, 1.0f);
     }
 
     SyncWithWallets(tx, NULL);
@@ -1333,7 +1344,7 @@ void Misbehaving(NodeId pnode, int howmuch)
     {
         LogPrintf("%s: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", __func__, state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
         state->fShouldBan = true;
-        statsClient.inc("misbehavior.banned", 1.0);
+        statsClient.inc("misbehavior.banned", 1.0f);
     } else {
         LogPrintf("%s: %s (%d -> %d)\n", __func__, state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
         statsClient.count("misbehavior.amount", howmuch, 1.0);
@@ -2744,6 +2755,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::time_duration diff = finish - start;
     statsClient.timing("CheckBlock_us", diff.total_microseconds(), 1.0f);
+    statsClient.gauge("blocks.currentSizeBytes", ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION));
+    statsClient.gauge("blocks.currentNumTransactions", block.vtx.size());
+    statsClient.gauge("blocks.currentSigOps", nSigOps);
 
     return true;
 }

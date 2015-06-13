@@ -741,6 +741,9 @@ void ThreadSocketHandler()
             int spvNodes = 0;
             int inboundNodes = 0;
             int outboundNodes = 0;
+            int ipv4Nodes = 0;
+            int ipv6Nodes = 0;
+            int torNodes = 0;
             BOOST_FOREACH(CNode* pnode, vNodes)
             {
                 if(pnode->fClient)
@@ -751,11 +754,20 @@ void ThreadSocketHandler()
                     inboundNodes++;
                 else
                     outboundNodes++;
+                if(pnode->addr.IsIPv4())
+                    ipv4Nodes++;
+                if(pnode->addr.IsIPv6())
+                    ipv6Nodes++;
+                if(pnode->addr.IsTor())
+                    torNodes++;
             }
             statsClient.gauge("peers.spvNodeConnections", spvNodes, 1.0f);
             statsClient.gauge("peers.fullNodeConnections", fullNodes, 1.0f);
             statsClient.gauge("peers.inboundConnections", inboundNodes, 1.0f);
             statsClient.gauge("peers.outboundConnections", outboundNodes, 1.0f);
+            statsClient.gauge("peers.ipv4Connections", ipv4Nodes, 1.0f);
+            statsClient.gauge("peers.ipv6Connections", ipv6Nodes, 1.0f);
+            statsClient.gauge("peers.torConnections", torNodes, 1.0f);
         }
 
         //
