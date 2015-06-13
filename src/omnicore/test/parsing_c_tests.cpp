@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
             txOutputs.push_back(txOut);
         }
         {
-            CScript scriptPubKey; // has no marker!
+            CScript scriptPubKey; // has no marker and will be ignored!
             scriptPubKey << OP_RETURN << ParseHex("4d756c686f6c6c616e64204472697665");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
@@ -310,10 +310,38 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
         BOOST_CHECK_EQUAL(metaTx.getSender(), "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2");
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "12222222222222222222222222234555555"
-                "5555555555555555555567888888888896c686f6c6c616e64204472697665ffff1"
+                "555555555555555555556788888888889ffff11111111111111111111111111111"
                 "111111111111111111111111111111111111111111111111111111111111111111"
                 "111111111111111111111111111111111111111111111111111111111111111111"
-                "11111111111111111111111111111111111111111111111111111111117");
+                "1111111111111111111111111111117");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
+{
+    {
+        int nBlock = OP_RETURN_BLOCK;
+
+        std::vector<CTxOut> txInputs;
+        txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
+
+        std::vector<CTxOut> txOutputs;
+        {
+            CScript scriptPubKey;
+            scriptPubKey << OP_RETURN;
+            scriptPubKey << ParseHex("6f6d00000000000000010000000006dac2c0");
+            scriptPubKey << ParseHex("00000000000000030000000000000d48");
+            CTxOut txOut = CTxOut(0, scriptPubKey);
+            txOutputs.push_back(txOut);
+        }
+
+        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
+
+        CMPTransaction metaTx;
+        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2");
+        BOOST_CHECK_EQUAL(metaTx.getPayload(),
+                "00000000000000010000000006dac2c000000000000000030000000000000d48");
     }
 }
 

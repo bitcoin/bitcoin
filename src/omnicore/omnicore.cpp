@@ -1187,20 +1187,31 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 if (!GetOutputType(wtx.vout[n].scriptPubKey, whichType)) { continue; }
                 if (!IsAllowedOutputType(whichType, nBlock)) { continue; }
                 if (whichType == TX_NULL_DATA) {
-                    GetScriptPushes(wtx.vout[n].scriptPubKey, op_return_script_data);
-                    std::string debug_op_string;
-                    if (op_return_script_data.size() > 0) debug_op_string = op_return_script_data[0];
-                    if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, n);
+                    // only consider outputs, which are explicitly tagged
+                    std::vector<std::string> vstrPushes;
+                    if (!GetScriptPushes(wtx.vout[n].scriptPubKey, vstrPushes)) { continue; }
+                    // TODO: maybe encapsulate the following sort of messy code
+                    if (!vstrPushes.empty()) {
+                        if ("6f6d" == vstrPushes[0].substr(0,4)) {
+                            // strip out the marker at the very beginning
+                            vstrPushes[0] = vstrPushes[0].substr(4);
+                            // add the data to the rest
+                            op_return_script_data.insert(op_return_script_data.end(), vstrPushes.begin(), vstrPushes.end());
+
+                            std::string debug_op_string;
+                            if (vstrPushes[0].size() > 0) debug_op_string = vstrPushes[0];
+                            if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, n);
+                        }
+                    }
                 }
             }
-
             // ### EXTRACT PAYLOAD FOR CLASS C ###
             for (unsigned int n = 0; n < op_return_script_data.size(); ++n) {
-                if (op_return_script_data[n].size() > 4) {
-                    std::string payload = op_return_script_data[n].substr(4); // strip out marker
-                    unsigned int size = payload.size() / 2; // get packet byte size - hex so always a multiple of 2
-                    memcpy(single_pkt+packet_size, &ParseHex(payload)[0], size); // load the packet ready to set mp tx info
-                    packet_size += size;
+                if (!op_return_script_data[n].empty()) {
+                    assert(IsHex(op_return_script_data[n])); // via GetScriptPushes()
+                    std::vector<unsigned char> vch = ParseHex(op_return_script_data[n]);
+                    memcpy(single_pkt+packet_size, &vch[0], vch.size());
+                    packet_size += vch.size();
                 }
             }
             if (packet_size < MIN_PAYLOAD_SIZE) { return -112; }

@@ -163,6 +163,41 @@ BOOST_AUTO_TEST_CASE(extract_scripthash_test)
     BOOST_CHECK_EQUAL(vstrSolutions[0], HexStr(ToByteVector(innerId)));
 }
 
+BOOST_AUTO_TEST_CASE(extract_no_nulldata_test)
+{
+    // Null data script
+    CScript script;
+    script << OP_RETURN;
+
+    // Check script type
+    txnouttype outtype;
+    BOOST_CHECK(GetOutputType(script, outtype));
+    BOOST_CHECK_EQUAL(outtype, TX_NULL_DATA);
+
+    // Confirm extracted data
+    std::vector<std::string> vstrSolutions;
+    BOOST_CHECK(GetScriptPushes(script, vstrSolutions));
+    BOOST_CHECK_EQUAL(vstrSolutions.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(extract_empty_nulldata_test)
+{
+    // Null data script
+    CScript script;
+    script << OP_RETURN << ParseHex("");
+
+    // Check script type
+    txnouttype outtype;
+    BOOST_CHECK(GetOutputType(script, outtype));
+    BOOST_CHECK_EQUAL(outtype, TX_NULL_DATA);
+
+    // Confirm extracted data
+    std::vector<std::string> vstrSolutions;
+    BOOST_CHECK(GetScriptPushes(script, vstrSolutions));
+    BOOST_CHECK_EQUAL(vstrSolutions.size(), 1);
+    BOOST_CHECK_EQUAL(vstrSolutions[0].size(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(extract_nulldata_test)
 {
     std::vector<unsigned char> vchPayload = ParseHex(
@@ -182,6 +217,41 @@ BOOST_AUTO_TEST_CASE(extract_nulldata_test)
     BOOST_CHECK(GetScriptPushes(script, vstrSolutions));
     BOOST_CHECK_EQUAL(vstrSolutions.size(), 1);
     BOOST_CHECK_EQUAL(vstrSolutions[0], HexStr(vchPayload));
+}
+
+BOOST_AUTO_TEST_CASE(extract_nulldata_multipush_test)
+{
+    std::vector<std::string> vstrPayloads;
+    vstrPayloads.push_back("6f6d");
+    vstrPayloads.push_back("00000000000000010000000006dac2c0");
+    vstrPayloads.push_back("01d84bcec5b65aa1a03d6abfd975824c75856a2961");
+    vstrPayloads.push_back("00000000000000030000000000000d48");
+    vstrPayloads.push_back("05627138bb55251bfb289a1ec390eafd3755b1a698");
+    vstrPayloads.push_back("00000032010001000000005465737473004f6d6e6920436f726500546573"
+            "7420546f6b656e7300687474703a2f2f6275696c6465722e62697477617463682e636f2f005"
+            "573656420746f2074657374207468652065787472616374696f6e206f66206d756c7469706c"
+            "652070757368657320696e20616e204f505f52455455524e207363726970742e00000000000"
+            "00f4240");
+
+    // Null data script
+    CScript script;
+    script << OP_RETURN;
+    for (unsigned n = 0; n < vstrPayloads.size(); ++n) {
+        script << ParseHex(vstrPayloads[n]);
+    }
+
+    // Check script type
+    txnouttype outtype;
+    BOOST_CHECK(GetOutputType(script, outtype));
+    BOOST_CHECK_EQUAL(outtype, TX_NULL_DATA);
+
+    // Confirm extracted data
+    std::vector<std::string> vstrSolutions;
+    BOOST_CHECK(GetScriptPushes(script, vstrSolutions));
+    BOOST_CHECK_EQUAL(vstrSolutions.size(), vstrPayloads.size());
+    for (unsigned n = 0; n < vstrSolutions.size(); ++n) {
+        BOOST_CHECK_EQUAL(vstrSolutions[n], vstrPayloads[n]);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(extract_anypush_test)
