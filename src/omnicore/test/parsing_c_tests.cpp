@@ -173,6 +173,29 @@ BOOST_AUTO_TEST_CASE(reference_identification)
     }
 }
 
+BOOST_AUTO_TEST_CASE(empty_op_return)
+{
+    {
+        int nBlock = std::numeric_limits<int>().max();
+
+        std::vector<CTxOut> txInputs;
+        txInputs.push_back(createTxOut(900000, "35iqJySouevicrYzMhjKSsqokSGwGovGov"));
+
+        std::vector<CTxOut> txOutputs;
+        txOutputs.push_back(OpReturn_PlainMarker());
+        txOutputs.push_back(PayToPubKeyHash_Unrelated());
+
+        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
+
+        CMPTransaction metaTx;
+        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK(metaTx.getPayload().empty());
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "35iqJySouevicrYzMhjKSsqokSGwGovGov");
+        // via PayToPubKeyHash_Unrelated:
+        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "1f2dj45pxYb8BCW5sSbCgJ5YvXBfSapeX");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(multiple_op_return_short)
 {
     {
@@ -273,6 +296,32 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
 
 BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
 {
+    {
+        int nBlock = std::numeric_limits<int>().max();
+
+        std::vector<CTxOut> txInputs;
+        txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
+        txInputs.push_back(PayToBareMultisig_3of5());
+
+        std::vector<CTxOut> txOutputs;
+        txOutputs.push_back(OpReturn_SimpleSend());
+        txOutputs.push_back(PayToScriptHash_Unrelated());
+        txOutputs.push_back(OpReturn_MultiSimpleSend());
+
+        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
+
+        CMPTransaction metaTx;
+        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2");
+        BOOST_CHECK_EQUAL(metaTx.getPayload(),
+                // OpReturn_SimpleSend (without marker):
+                "00000000000000070000000006dac2c0"
+                // OpReturn_MultiSimpleSend (without marker):
+                "00000000000000070000000000002329"
+                "0062e907b15cbf27d5425399ebf6f0fb50ebb88f18"
+                "000000000000001f0000000001406f40"
+                "05da59767e81f4b019fe9f5984dbaa4f61bf197967");
+    }
     {
         int nBlock = OP_RETURN_BLOCK;
 

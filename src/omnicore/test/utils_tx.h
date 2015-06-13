@@ -13,10 +13,9 @@ CTxOut PayToBareMultisig_3of5();
 CTxOut OpReturn_Empty();
 CTxOut OpReturn_UnrelatedShort();
 CTxOut OpReturn_Unrelated();
-CTxOut OpReturn_Tagged_A();
-CTxOut OpReturn_Tagged_B();
-CTxOut OpReturn_Tagged_C();
+CTxOut OpReturn_PlainMarker();
 CTxOut OpReturn_SimpleSend();
+CTxOut OpReturn_MultiSimpleSend();
 CTxOut NonStandardOutput();
 
 

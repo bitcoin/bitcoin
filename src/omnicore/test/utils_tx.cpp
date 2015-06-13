@@ -149,26 +149,10 @@ CTxOut OpReturn_Unrelated()
     return CTxOut(0, scriptPubKey);
 }
 
-CTxOut OpReturn_Tagged_A()
+CTxOut OpReturn_PlainMarker()
 {
     CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("6f6d0000408");
-
-    return CTxOut(0, scriptPubKey);
-}
-
-CTxOut OpReturn_Tagged_B()
-{
-    CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("6f6d00011516");
-
-    return CTxOut(0, scriptPubKey);
-}
-
-CTxOut OpReturn_Tagged_C()
-{
-    CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("6f6dffff2342");
+    scriptPubKey << OP_RETURN << ParseHex("6f6d");
 
     return CTxOut(0, scriptPubKey);
 }
@@ -177,6 +161,20 @@ CTxOut OpReturn_SimpleSend()
 {
     CScript scriptPubKey;
     scriptPubKey << OP_RETURN << ParseHex("6f6d00000000000000070000000006dac2c0");
+
+    return CTxOut(0, scriptPubKey);
+}
+
+
+CTxOut OpReturn_MultiSimpleSend()
+{
+    CScript scriptPubKey;
+    scriptPubKey << OP_RETURN;
+    scriptPubKey << ParseHex("6f6d");
+    scriptPubKey << ParseHex("00000000000000070000000000002329");
+    scriptPubKey << ParseHex("0062e907b15cbf27d5425399ebf6f0fb50ebb88f18");
+    scriptPubKey << ParseHex("000000000000001f0000000001406f40");
+    scriptPubKey << ParseHex("05da59767e81f4b019fe9f5984dbaa4f61bf197967");
 
     return CTxOut(0, scriptPubKey);
 }

@@ -29,14 +29,12 @@ BOOST_AUTO_TEST_CASE(class_no_marker)
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(OpReturn_Unrelated());
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_C());
         mutableTx.vout.push_back(NonStandardOutput());
-        mutableTx.vout.push_back(OpReturn_Tagged_B());
+        mutableTx.vout.push_back(OpReturn_SimpleSend());
         mutableTx.vout.push_back(OpReturn_UnrelatedShort());
         mutableTx.vout.push_back(OpReturn_Empty());
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
 
         CTransaction tx(mutableTx);
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), NO_MARKER);
@@ -47,14 +45,13 @@ BOOST_AUTO_TEST_CASE(class_no_marker)
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(OpReturn_Unrelated());
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_C());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
         mutableTx.vout.push_back(NonStandardOutput());
-        mutableTx.vout.push_back(OpReturn_Tagged_B());
         mutableTx.vout.push_back(OpReturn_UnrelatedShort());
         mutableTx.vout.push_back(OpReturn_Empty());
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
+        mutableTx.vout.push_back(OpReturn_MultiSimpleSend());
 
         CTransaction tx(mutableTx);
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), NO_MARKER);
@@ -124,12 +121,11 @@ BOOST_AUTO_TEST_CASE(class_class_a)
         mutableTx.vout.push_back(PayToPubKeyHash_Exodus());
         mutableTx.vout.push_back(OpReturn_Empty());
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_C());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
         mutableTx.vout.push_back(NonStandardOutput());
-        mutableTx.vout.push_back(OpReturn_Tagged_B());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
         mutableTx.vout.push_back(OpReturn_Unrelated());
 
         CTransaction tx(mutableTx);
@@ -187,13 +183,12 @@ BOOST_AUTO_TEST_CASE(class_class_b)
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
         mutableTx.vout.push_back(PayToBareMultisig_1of3());
         mutableTx.vout.push_back(OpReturn_UnrelatedShort());
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
-        mutableTx.vout.push_back(OpReturn_Tagged_C());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
         mutableTx.vout.push_back(PayToBareMultisig_3of5());
         mutableTx.vout.push_back(OpReturn_Unrelated());
         mutableTx.vout.push_back(NonStandardOutput());
-        mutableTx.vout.push_back(OpReturn_Tagged_B());
+        mutableTx.vout.push_back(OpReturn_SimpleSend());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
         mutableTx.vout.push_back(PayToPubKeyHash_Exodus());
 
@@ -226,7 +221,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         int nBlock = OP_RETURN_BLOCK;
 
         CMutableTransaction mutableTx;
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
 
         CTransaction tx(mutableTx);
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
@@ -235,7 +230,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         int nBlock = std::numeric_limits<int>().max();
 
         CMutableTransaction mutableTx;
-        mutableTx.vout.push_back(OpReturn_Tagged_B());
+        mutableTx.vout.push_back(OpReturn_SimpleSend());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
 
@@ -248,7 +243,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(NonStandardOutput());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
         mutableTx.vout.push_back(OpReturn_Empty());
         mutableTx.vout.push_back(OpReturn_Unrelated());
@@ -270,7 +265,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         mutableTx.vout.push_back(PayToBareMultisig_1of3());
         mutableTx.vout.push_back(NonStandardOutput());
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
-        mutableTx.vout.push_back(OpReturn_Tagged_B());
+        mutableTx.vout.push_back(OpReturn_MultiSimpleSend());
         mutableTx.vout.push_back(PayToBareMultisig_3of5());
 
         CTransaction tx(mutableTx);
@@ -288,7 +283,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
         mutableTx.vout.push_back(NonStandardOutput());
         mutableTx.vout.push_back(PayToPubKeyHash_ExodusCrowdsale(nBlock));
-        mutableTx.vout.push_back(OpReturn_Tagged_C());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
 
         CTransaction tx(mutableTx);
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
@@ -298,11 +293,14 @@ BOOST_AUTO_TEST_CASE(class_class_c)
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
+        mutableTx.vout.push_back(OpReturn_MultiSimpleSend());
         mutableTx.vout.push_back(PayToBareMultisig_1of3());
+        mutableTx.vout.push_back(PayToBareMultisig_1of3());
+        mutableTx.vout.push_back(OpReturn_SimpleSend());
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
         mutableTx.vout.push_back(NonStandardOutput());
-        mutableTx.vout.push_back(OpReturn_Tagged_A());
+        mutableTx.vout.push_back(OpReturn_PlainMarker());
         mutableTx.vout.push_back(PayToPubKeyHash_Exodus());
         mutableTx.vout.push_back(PayToPubKeyHash_ExodusCrowdsale(nBlock));
 
