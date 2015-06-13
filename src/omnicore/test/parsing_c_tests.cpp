@@ -1,3 +1,5 @@
+#include "omnicore/test/utils_tx.h"
+
 #include "omnicore/createpayload.h"
 #include "omnicore/encoding.h"
 #include "omnicore/omnicore.h"
@@ -20,13 +22,6 @@
 using namespace mastercore;
 
 BOOST_AUTO_TEST_SUITE(omnicore_parsing_c_tests)
-
-static CTxOut PayToPubKeyHash_Exodus();
-static CTxOut PayToPubKey_Unrelated();
-static CTxOut NonStandardOutput();
-static CTxOut PayToBareMultisig_1of3();
-static CTxOut OpReturn_SimpleSend();
-static CTxOut OpReturn_Unrelated();
 
 /** Creates a dummy transaction with the given inputs and outputs. */
 static CTransaction TxClassC(const std::vector<CTxOut>& txInputs, const std::vector<CTxOut>& txOuts)
@@ -322,89 +317,5 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
     }
 }
 
-static CTxOut PayToPubKeyHash_Exodus()
-{
-    CBitcoinAddress address = ExodusAddress();
-    CScript scriptPubKey = GetScriptForDestination(address.Get());
-    int64_t amount = GetDustThreshold(scriptPubKey);
-
-    return CTxOut(amount, scriptPubKey);
-}
-
-static CTxOut PayToPubKey_Unrelated()
-{
-    std::vector<unsigned char> vchPubKey = ParseHex(
-        "04ad90e5b6bc86b3ec7fac2c5fbda7423fc8ef0d58df594c773fa05e2c281b2bfe"
-        "877677c668bd13603944e34f4818ee03cadd81a88542b8b4d5431264180e2c28");
-
-    CPubKey pubKey(vchPubKey.begin(), vchPubKey.end());
-
-    CScript scriptPubKey;
-    scriptPubKey << ToByteVector(pubKey) << OP_CHECKSIG;
-
-    int64_t amount = GetDustThreshold(scriptPubKey);
-
-    txnouttype outType;
-    BOOST_CHECK(GetOutputType(scriptPubKey, outType));
-    BOOST_CHECK(outType == TX_PUBKEY);
-
-    return CTxOut(amount, scriptPubKey);
-}
-
-static CTxOut PayToBareMultisig_1of3()
-{
-    std::vector<unsigned char> vchPayload1 = ParseHex(
-        "04ad90e5b6bc86b3ec7fac2c5fbda7423fc8ef0d58df594c773fa05e2c281b2bfe"
-        "877677c668bd13603944e34f4818ee03cadd81a88542b8b4d5431264180e2c28");
-    std::vector<unsigned char> vchPayload2 = ParseHex(
-        "026766a63686d2cc5d82c929d339b7975010872aa6bf76f6fac69f28f8e293a914");
-    std::vector<unsigned char> vchPayload3 = ParseHex(
-        "02959b8e2f2e4fb67952cda291b467a1781641c94c37feaa0733a12782977da23b");
-
-    CPubKey pubKey1(vchPayload1.begin(), vchPayload1.end());
-    CPubKey pubKey2(vchPayload2.begin(), vchPayload2.end());
-    CPubKey pubKey3(vchPayload3.begin(), vchPayload3.end());
-
-    // 1-of-3 bare multisig script
-    CScript scriptPubKey;
-    scriptPubKey << CScript::EncodeOP_N(1);
-    scriptPubKey << ToByteVector(pubKey1);
-    scriptPubKey << ToByteVector(pubKey2);
-    scriptPubKey << ToByteVector(pubKey3);
-    scriptPubKey << CScript::EncodeOP_N(3);
-    scriptPubKey << OP_CHECKMULTISIG;
-
-    int64_t amount = GetDustThreshold(scriptPubKey);
-
-    return CTxOut(amount, scriptPubKey);
-}
-
-static CTxOut OpReturn_SimpleSend()
-{
-    CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("6f6d00000000000000070000000006dac2c0");
-
-    return CTxOut(0, scriptPubKey);
-}
-
-static CTxOut OpReturn_Unrelated()
-{
-    CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("7468697320697320646578782028323031352d30362d313229");
-
-    return CTxOut(0, scriptPubKey);
-}
-
-static CTxOut NonStandardOutput()
-{
-    CScript scriptPubKey;
-    scriptPubKey << ParseHex("decafbad") << OP_DROP << OP_TRUE;
-    int64_t amount = GetDustThreshold(scriptPubKey);
-
-    return CTxOut(amount, scriptPubKey);
-}
-
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

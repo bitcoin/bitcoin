@@ -1,3 +1,5 @@
+#include "omnicore/test/utils_tx.h"
+
 #include "omnicore/createpayload.h"
 #include "omnicore/encoding.h"
 #include "omnicore/omnicore.h"
@@ -9,7 +11,6 @@
 #include "primitives/transaction.h"
 #include "script/script.h"
 #include "script/standard.h"
-#include "utilstrencodings.h"
 
 #include <stdint.h>
 #include <limits>
@@ -20,10 +21,6 @@
 using namespace mastercore;
 
 BOOST_AUTO_TEST_SUITE(omnicore_parsing_a_tests)
-
-static CTxOut PayToPubKey_Unrelated();
-static CTxOut NonStandardOutput();
-static CTxOut OpReturn_Unrelated();
 
 /** Creates a dummy transaction with the given inputs and outputs. */
 static CTransaction TxClassA(const std::vector<CTxOut>& txInputs, const std::vector<CTxOut>& txOuts)
@@ -58,7 +55,6 @@ static CTransaction TxClassA(const std::vector<CTxOut>& txInputs, const std::vec
     for (std::vector<CTxOut>::const_iterator it = txOuts.begin(); it != txOuts.end(); ++it)
     {
         const CTxOut& txOut = *it;
-
         mutableTx.vout.push_back(txOut);
     }
 
@@ -77,7 +73,8 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         int nBlock = std::numeric_limits<int>().max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(1765000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(50000, "1JcWjikLW5CFV5XVTNSvqssJctYTwEf7Pc"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(createTxOut(6000, "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));
@@ -89,6 +86,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 50000);
         BOOST_CHECK_EQUAL(metaTx.getSender(), "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk");
         BOOST_CHECK_EQUAL(metaTx.getReceiver(), "1CcJFxoEW5PUwesMVxGrq6kAPJ1TJsSVqq");
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
@@ -97,10 +95,10 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         int nBlock = std::numeric_limits<int>().max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(907500, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(907500, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
 
         std::vector<CTxOut> txOutputs;
-        
         txOutputs.push_back(createTxOut(6000, "1CVE9Au1XEm3MsiMuLcMKryYWXHeMv9tBn"));
         txOutputs.push_back(createTxOut(6000, "1CcJFxoEW5PUwesMVxGrq6kAPJ1TJsSVqq"));
         txOutputs.push_back(createTxOut(1747000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
@@ -110,6 +108,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 50000);
         BOOST_CHECK_EQUAL(metaTx.getSender(), "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk");
         BOOST_CHECK_EQUAL(metaTx.getReceiver(), "1CcJFxoEW5PUwesMVxGrq6kAPJ1TJsSVqq");
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000200000002540be400000000");
@@ -121,7 +120,6 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
 
         std::vector<CTxOut> txOutputs;
-
         txOutputs.push_back(NonStandardOutput());
         txOutputs.push_back(NonStandardOutput());
         txOutputs.push_back(NonStandardOutput());
@@ -151,19 +149,20 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         int nBlock = std::numeric_limits<int>().max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(87000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(createTxOut(6000, "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));
         txOutputs.push_back(createTxOut(6000, "1HKTxLaqcbH5GcqpAbStfFwH2zvho6q8ZD"));
         txOutputs.push_back(createTxOut(6000, "1HEBH9TXCR3NkKaNd5ZLugxzmc3Feqkbns"));
-        txOutputs.push_back(createTxOut(1747000, "1CcJFxoEW5PUwesMVxGrq6kAPJ1TJsSVqq"));
-        txOutputs.push_back(createTxOut(1747000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txOutputs.push_back(createTxOut(7000, "1CcJFxoEW5PUwesMVxGrq6kAPJ1TJsSVqq"));
+        txOutputs.push_back(createTxOut(7000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
 
         CTransaction dummyTx = TxClassA(txInputs, txOutputs);
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 55000);
         BOOST_CHECK_EQUAL(metaTx.getSender(), "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk");
         BOOST_CHECK_EQUAL(metaTx.getReceiver(), "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk");
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
@@ -172,19 +171,24 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         int nBlock = std::numeric_limits<int>().max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(100000, "34xhWktMFEGRTRmWf1hdNn1SyDDWiXa18H"));
+        txInputs.push_back(createTxOut(100000, "34xhWktMFEGRTRmWf1hdNn1SyDDWiXa18H"));
+        txInputs.push_back(createTxOut(200000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txInputs.push_back(createTxOut(100000, "34xhWktMFEGRTRmWf1hdNn1SyDDWiXa18H"));
+        txInputs.push_back(createTxOut(200000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(createTxOut(6000, "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"));
         txOutputs.push_back(createTxOut(6000, "1HKTxLaqcbH5GcqpAbStfFwH2zvho6q8ZD"));
         txOutputs.push_back(createTxOut(6000, "1HQkdXiA2mWmoQkrknyxrHTfeBoKhthq23"));
         txOutputs.push_back(createTxOut(6001, "1CcJFxoEW5PUwesMVxGrq6kAPJ1TJsSVqq"));
-        txOutputs.push_back(createTxOut(1747000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
+        txOutputs.push_back(createTxOut(665999, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
 
         CTransaction dummyTx = TxClassA(txInputs, txOutputs);
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 10000);
         BOOST_CHECK_EQUAL(metaTx.getSender(), "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk");
         BOOST_CHECK_EQUAL(metaTx.getReceiver(), "1HQkdXiA2mWmoQkrknyxrHTfeBoKhthq23");
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
@@ -290,43 +294,5 @@ BOOST_AUTO_TEST_CASE(invalid_class_a)
     }
 }
 
-static CTxOut PayToPubKey_Unrelated()
-{
-    std::vector<unsigned char> vchPubKey = ParseHex(
-        "04ad90e5b6bc86b3ec7fac2c5fbda7423fc8ef0d58df594c773fa05e2c281b2bfe"
-        "877677c668bd13603944e34f4818ee03cadd81a88542b8b4d5431264180e2c28");
-
-    CPubKey pubKey(vchPubKey.begin(), vchPubKey.end());
-
-    CScript scriptPubKey;
-    scriptPubKey << ToByteVector(pubKey) << OP_CHECKSIG;
-
-    int64_t amount = GetDustThreshold(scriptPubKey);
-
-    txnouttype outType;
-    BOOST_CHECK(GetOutputType(scriptPubKey, outType));
-    BOOST_CHECK(outType == TX_PUBKEY);
-
-    return CTxOut(amount, scriptPubKey);
-}
-
-static CTxOut OpReturn_Unrelated()
-{
-    CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("7468697320697320646578782028323031352d30362d313129");
-
-    return CTxOut(0, scriptPubKey);
-}
-
-static CTxOut NonStandardOutput()
-{
-    CScript scriptPubKey;
-    scriptPubKey << ParseHex("decafbad") << OP_DROP << OP_TRUE;
-    int64_t amount = GetDustThreshold(scriptPubKey);
-
-    return CTxOut(amount, scriptPubKey);
-}
-
 
 BOOST_AUTO_TEST_SUITE_END()
-
