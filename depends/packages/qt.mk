@@ -1,13 +1,13 @@
 PACKAGE=qt
-$(package)_version=5.2.1
-$(package)_download_path=http://download.qt-project.org/official_releases/qt/5.2/$($(package)_version)/single
+$(package)_version=5.4.2
+$(package)_download_path=http://download.qt-project.org/official_releases/qt/5.4/$($(package)_version)/single
 $(package)_file_name=$(package)-everywhere-opensource-src-$($(package)_version).tar.gz
-$(package)_sha256_hash=84e924181d4ad6db00239d87250cc89868484a14841f77fb85ab1f1dbdcd7da1
+$(package)_sha256_hash=cfc768c55f0a0cd232bed914a9022528f8f2e50cb010bf0e4f3f62db3dfa17bd
 $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch qt5-tablet-osx.patch qt5-yosemite.patch
+$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
@@ -22,16 +22,11 @@ $(package)_config_opts += -opensource -confirm-license \
     -no-freetype \
     -no-nis \
     -no-pch \
-    -no-feature-style-plastique \
     -no-qml-debug \
     -nomake examples \
     -nomake tests \
-    -no-feature-style-cde \
-    -no-feature-style-s60 \
-    -no-feature-style-motif \
     -no-feature-style-windowsmobile \
     -no-feature-style-windowsce \
-    -no-feature-style-cleanlooks \
     -no-sql-db2 \
     -no-sql-ibase \
     -no-sql-oci \
@@ -63,6 +58,7 @@ $(package)_config_opts += -opensource -confirm-license \
     -prefix $(host_prefix) \
     -bindir $(build_prefix)/bin \
     -no-c++11 \
+    -no-reduce-relocations \
     -openssl-linked \
     -v \
     -static \
@@ -102,7 +98,6 @@ endef
 define $(package)_preprocess_cmds
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   sed -i.old "s/src_plugins.depends = src_sql src_xml src_network/src_plugins.depends = src_xml src_network/" qtbase/src/src.pro && \
-  sed -i.old "/XIproto.h/d" qtbase/src/plugins/platforms/xcb/qxcbxsettings.cpp && \
   sed -i.old 's/if \[ "$$$$XPLATFORM_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/if \[ "$$$$BUILD_ON_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/' qtbase/configure && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/Info.plist.lib qtbase/mkspecs/macx-clang-linux/ &&\
@@ -110,8 +105,6 @@ define $(package)_preprocess_cmds
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
   patch -p1 < $($(package)_patch_dir)/fix-xcb-include-order.patch && \
-  patch -p1 < $($(package)_patch_dir)/qt5-tablet-osx.patch && \
-  patch -d qtbase -p1 < $($(package)_patch_dir)/qt5-yosemite.patch && \
   echo "QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
