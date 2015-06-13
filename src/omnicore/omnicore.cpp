@@ -1214,7 +1214,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                     packet_size += vch.size();
                 }
             }
-            if (packet_size < MIN_PAYLOAD_SIZE) { return -112; }
         }
     }
 

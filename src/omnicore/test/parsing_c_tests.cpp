@@ -173,52 +173,6 @@ BOOST_AUTO_TEST_CASE(reference_identification)
     }
 }
 
-BOOST_AUTO_TEST_CASE(op_return_payload_too_small)
-{
-    {
-        int nBlock = OP_RETURN_BLOCK;
-
-        std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "1MV8MySYueghUDMsjNV67CfeRXmQZAxjSW"));
-
-        std::vector<CTxOut> txOutputs;
-        {
-            CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d00000304");
-            CTxOut txOut = CTxOut(0, scriptPubKey);
-            txOutputs.push_back(txOut);
-        }
-        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
-
-        CMPTransaction metaTx;
-        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) != 0);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(op_return_payload_min_size)
-{
-    {
-        int nBlock = OP_RETURN_BLOCK;
-
-        std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "1KsXJ5XuoXHHkevNm3bLpqWPP4PtGEjfuE"));
-
-        std::vector<CTxOut> txOutputs;
-        {
-            CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6dffffffff05");
-            CTxOut txOut = CTxOut(0, scriptPubKey);
-            txOutputs.push_back(txOut);
-        }
-        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
-
-        CMPTransaction metaTx;
-        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "1KsXJ5XuoXHHkevNm3bLpqWPP4PtGEjfuE");
-        BOOST_CHECK_EQUAL(metaTx.getPayload(), "ffffffff05");
-    }
-}
-
 BOOST_AUTO_TEST_CASE(multiple_op_return_short)
 {
     {
