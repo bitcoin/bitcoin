@@ -162,6 +162,9 @@ public:
     /** Write/Read estimates to disk */
     bool WriteFeeEstimates(CAutoFile& fileout) const;
     bool ReadFeeEstimates(CAutoFile& filein);
+
+    void removeOldTransactions(int64_t nTime);
+    void trimToMaxSize(unsigned int currentHeight);
 };
 
 /** 

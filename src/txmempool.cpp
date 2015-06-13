@@ -48,7 +48,7 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 }
 
 CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
-    nTransactionsUpdated(0)
+    nTransactionsUpdated(0), totalTxSize(0)
 {
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
@@ -101,6 +101,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
         mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
+
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
     return true;
@@ -400,6 +401,51 @@ bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
         if (exists(tx.vin[i].prevout.hash))
             return false;
     return true;
+}
+
+void CTxMemPool::removeOldTransactions(int64_t nTime)
+{
+    std::list<uint256> removalQueue;
+
+    uint64_t nMaxMempoolSize = std::max((int64_t)0, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE));
+    int64_t nCutOff = nTime - (nMaxMempoolSize / MAX_BLOCK_SIZE * 600);
+
+    BOOST_FOREACH(const PAIRTYPE(uint256, CTxMemPoolEntry)& entry, mempool.mapTx) {
+        const uint256& hash = entry.first;
+        const CTxMemPoolEntry& e = entry.second;
+
+        if (e.GetTime() < nCutOff) {
+            removalQueue.push_back(hash);
+        }
+    }
+
+    BOOST_FOREACH(const uint256& hash, removalQueue) {
+        std::list<CTransaction> removed;
+        remove(mapTx[hash].GetTx(), removed, true);
+    }
+}
+
+void CTxMemPool::trimToMaxSize(unsigned int currentHeight) {
+    uint64_t nMaxMempoolSize = std::max((int64_t)0, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE));
+    while (GetTotalTxSize() >= nMaxMempoolSize) {
+        uint256 lowestFeeRateTransaction;
+        CFeeRate lowestFeeRate(std::numeric_limits<int64_t>::max());
+        std::list<uint256> removalQueue;
+
+        BOOST_FOREACH(const PAIRTYPE(uint256, CTxMemPoolEntry)& entry, mempool.mapTx) {
+            const uint256& hash = entry.first;
+            const CTxMemPoolEntry& e = entry.second;
+            CFeeRate feeRate = CFeeRate(e.GetFee(), e.GetTxSize());
+
+            if (feeRate < lowestFeeRate) {
+                lowestFeeRateTransaction = hash;
+                lowestFeeRate = feeRate;
+            }
+        }
+
+        std::list<CTransaction> removed;
+        remove(mapTx[lowestFeeRateTransaction].GetTx(), removed, true);
+    }
 }
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
