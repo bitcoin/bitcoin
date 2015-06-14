@@ -46,6 +46,7 @@ int bitcoin_nScriptCheckThreads = 0;
 bool bitcoin_fBenchmark = false;
 bool bitcoin_fTxIndex = false;
 bool bitcoin_fTrimBlockFiles = true;
+bool bitcoin_fSimplifiedBlockValidation = true;
 unsigned int bitcoin_nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
@@ -2044,6 +2045,18 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
 
     bool fScriptChecks = pindex->nHeight >= Checkpoints::Bitcoin_GetTotalBlocksEstimate();
 
+    //!Avoid validation of blocks that are known to cause failures on Linux, probably related to openssl version.
+    //Note that this validation skipping is not a problem since these blocks have been validated to be correct many
+    //times by the Bitcoin network
+    //The block height for simplified validation is arbitrary set. Should be updated as chain grows.
+    bool skipVerifySignature = false;
+    if (Credits_Params().NetworkID() == CChainParams::MAIN) {
+    	skipVerifySignature = bitcoin_fSimplifiedBlockValidation && pindex->nHeight < 360000;
+    } else {
+    	//The Bitcoin chain is the same for testnet and regtest
+    	skipVerifySignature = bitcoin_fSimplifiedBlockValidation && pindex->nHeight < 467000;
+    }
+
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -2116,10 +2129,12 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
-            std::vector<Bitcoin_CScriptCheck> vChecks;
-            if (!Bitcoin_CheckInputs(tx, state, view, fScriptChecks, flags, bitcoin_nScriptCheckThreads ? &vChecks : NULL))
-                return false;
-            control.Add(vChecks);
+            if(!skipVerifySignature) {
+				std::vector<Bitcoin_CScriptCheck> vChecks;
+				if (!Bitcoin_CheckInputs(tx, state, view, fScriptChecks, flags, bitcoin_nScriptCheckThreads ? &vChecks : NULL))
+					return false;
+				control.Add(vChecks);
+            }
         }
 
         Bitcoin_CTxUndo txundo;

@@ -113,8 +113,6 @@ void Bitcoin_TxToJSON(const Bitcoin_CTransaction& tx, const uint256 hashBlock, O
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
-    entry.push_back(Pair("type", (int64_t)tx.nTxType));
-    entry.push_back(Pair("signingkeyid", tx.signingKeyId.GetHex()));
     entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
     Array vin;
     BOOST_FOREACH(const Bitcoin_CTxIn& txin, tx.vin)

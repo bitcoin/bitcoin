@@ -1050,6 +1050,7 @@ bool Bitcredit_AppInit2(boost::thread_group& threadGroup) {
     fServer = GetBoolArg("-server", false);
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
+    bitcoin_fSimplifiedBlockValidation = GetBoolArg("-bitcoin_simplifiedblockvalidation", true);
     setvbuf(stdout, NULL, _IOLBF, 0);
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
