@@ -132,6 +132,11 @@ void ClientModel::updateOmniState()
     emit refreshOmniState();
 }
 
+void ClientModel::updateOmniPending(bool pending)
+{
+    emit refreshOmniPending(pending);
+}
+
 void ClientModel::updateAlert(const QString &hash, int status)
 {
     // Show error message notification for new alert
@@ -213,6 +218,12 @@ static void OmniStateChanged(ClientModel *clientmodel)
     QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
 }
 
+static void OmniPendingChanged(ClientModel *clientmodel, bool pending)
+{
+    // Triggered when Omni pending map adds/removes transactions
+    QMetaObject::invokeMethod(clientmodel, "updateOmniPending", Qt::QueuedConnection, Q_ARG(bool, pending));
+}
+
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
     // emits signal "showProgress"
@@ -243,6 +254,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.OmniStateChanged.connect(boost::bind(OmniStateChanged, this));
+    uiInterface.OmniPendingChanged.connect(boost::bind(OmniPendingChanged, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -252,4 +264,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.OmniStateChanged.disconnect(boost::bind(OmniStateChanged, this));
+    uiInterface.OmniPendingChanged.disconnect(boost::bind(OmniPendingChanged, this, _1));
 }

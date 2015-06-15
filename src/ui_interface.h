@@ -101,6 +101,9 @@ public:
 
     /** Omni balances have been updated. */
     boost::signals2::signal<void ()> OmniStateChanged;
+
+    /** Omni pending status has been changed */
+    boost::signals2::signal<void (bool pending)> OmniPendingChanged;
 };
 
 extern CClientUIInterface uiInterface;
