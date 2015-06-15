@@ -3240,7 +3240,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
                 //UPDATE MASTERNODE LAST PAID TIME
                 CMasternode* pmn = mnodeman.Find(payee);
                 if(pmn != NULL) {
-                    pmn->nLastPaid = GetAdjustedTime(); 
+                    pmn->nLastPaid = chainActive.Tip()->nTime; 
                 }
                 LogPrintf("%s : Update Masternode Last Paid Time - %d\n", __func__, chainActive.Tip()->nHeight);
             }

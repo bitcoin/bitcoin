@@ -226,7 +226,6 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
 }
 
 bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, CScript donationAddress, int donationPercentage, std::string &retErrorMessage) {
-
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
     {
@@ -239,6 +238,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
         }
         
         CMasternode mn(mnb);
+        mn.UpdateLastSeen();
         mnodeman.Add(mn);
     }
     

@@ -192,7 +192,7 @@ public:
 
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool IsScheduled(CMasternode& mn);
+    bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
 
     void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);
