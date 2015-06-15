@@ -403,6 +403,9 @@ int mastercore_init();
 /** Global handler to shut down Omni Core. */
 int mastercore_shutdown();
 
+/** Global handler to total wallet balances. */
+void set_wallet_totals();
+
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
@@ -437,7 +440,6 @@ uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 CMPTally *getTally(const string & address);
 
 int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
-void set_wallet_totals();
 
 char *c_strMasterProtocolTXType(int i);
 

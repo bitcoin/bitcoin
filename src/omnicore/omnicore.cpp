@@ -602,7 +602,7 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 // TODO: optimize efficiency -- iterate only over wallet's addresses in the future
 // NOTE: if we loop over wallet addresses we miss tokens that may be in change addresses (since mapAddressBook does not
 //       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
-void mastercore::set_wallet_totals()
+void set_wallet_totals()
 {
     //zero balances
     global_balance_money.clear();
@@ -3297,9 +3297,6 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         PrintToLog("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
             devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
     }
-
-    // get the total MSC for this wallet, for QT display
-    set_wallet_totals();
 
     // check the alert status, do we need to do anything else here?
     CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
