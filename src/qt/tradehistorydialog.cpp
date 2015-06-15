@@ -503,9 +503,7 @@ void TradeHistoryDialog::UpdateData()
 void TradeHistoryDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (NULL != model) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateTradeHistoryTable()));
-    }
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
 }
 
 void TradeHistoryDialog::setClientModel(ClientModel *model)

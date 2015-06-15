@@ -85,9 +85,7 @@ void SendMPDialog::setClientModel(ClientModel *model)
 void SendMPDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balancesUpdated()));
-    }
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
 }
 
 void SendMPDialog::updatePropSelector()

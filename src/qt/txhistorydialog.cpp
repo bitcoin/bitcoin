@@ -148,9 +148,7 @@ void TXHistoryDialog::setClientModel(ClientModel *model)
 void TXHistoryDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateHistory()));
-    }
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
 }
 
 int TXHistoryDialog::PopulateHistoryMap()
