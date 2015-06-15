@@ -68,10 +68,10 @@ class ProxyTest(BitcoinTestFramework):
             ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf1.addr),'-proxyrandomize=1'], 
             ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),'-proxyrandomize=0'], 
             ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf2.addr),'-proxyrandomize=1'], 
-            ['-listen', '-debug=net', '-debug=proxy', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0']
+            ['-listen', '-debug=net', '-debug=proxy', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0', '-noonion']
             ])
 
-    def node_test(self, node, proxies, auth):
+    def node_test(self, node, proxies, auth, test_onion=True):
         rv = []
         # Test: outgoing IPv4 connection through node
         node.addnode("15.61.23.23:1234", "onetry")
@@ -99,17 +99,18 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(cmd.password, None)
         rv.append(cmd)
 
-        # Test: outgoing onion connection through node
-        node.addnode("bitcoinostk4e4re.onion:8333", "onetry")
-        cmd = proxies[2].queue.get()
-        assert(isinstance(cmd, Socks5Command))
-        assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "bitcoinostk4e4re.onion")
-        assert_equal(cmd.port, 8333)
-        if not auth:
-            assert_equal(cmd.username, None)
-            assert_equal(cmd.password, None)
-        rv.append(cmd)
+        if test_onion:
+            # Test: outgoing onion connection through node
+            node.addnode("bitcoinostk4e4re.onion:8333", "onetry")
+            cmd = proxies[2].queue.get()
+            assert(isinstance(cmd, Socks5Command))
+            assert_equal(cmd.atyp, AddressType.DOMAINNAME)
+            assert_equal(cmd.addr, "bitcoinostk4e4re.onion")
+            assert_equal(cmd.port, 8333)
+            if not auth:
+                assert_equal(cmd.username, None)
+                assert_equal(cmd.password, None)
+            rv.append(cmd)
 
         # Test: outgoing DNS name connection through node
         node.addnode("node.noumenon:8333", "onetry")
@@ -139,8 +140,41 @@ class ProxyTest(BitcoinTestFramework):
         assert_equal(len(credentials), 4)
 
         # proxy on IPv6 localhost
-        self.node_test(self.nodes[3], [self.serv3, self.serv3, self.serv3, self.serv3], False)
+        self.node_test(self.nodes[3], [self.serv3, self.serv3, self.serv3, self.serv3], False, False)
+
+        def networks_dict(d):
+            r = {}
+            for x in d['networks']:
+                r[x['name']] = x
+            return r
+
+        # test RPC getnetworkinfo
+        n0 = networks_dict(self.nodes[0].getnetworkinfo())
+        for net in ['ipv4','ipv6','onion']:
+            assert_equal(n0[net]['proxy'], '%s:%i' % (self.conf1.addr))
+            assert_equal(n0[net]['proxy_randomize_credentials'], True)
+        assert_equal(n0['onion']['reachable'], True)
+
+        n1 = networks_dict(self.nodes[1].getnetworkinfo())
+        for net in ['ipv4','ipv6']:
+            assert_equal(n1[net]['proxy'], '%s:%i' % (self.conf1.addr))
+            assert_equal(n1[net]['proxy_randomize_credentials'], False)
+        assert_equal(n1['onion']['proxy'], '%s:%i' % (self.conf2.addr))
+        assert_equal(n1['onion']['proxy_randomize_credentials'], False)
+        assert_equal(n1['onion']['reachable'], True)
         
+        n2 = networks_dict(self.nodes[2].getnetworkinfo())
+        for net in ['ipv4','ipv6','onion']:
+            assert_equal(n2[net]['proxy'], '%s:%i' % (self.conf2.addr))
+            assert_equal(n2[net]['proxy_randomize_credentials'], True)
+        assert_equal(n2['onion']['reachable'], True)
+
+        n3 = networks_dict(self.nodes[3].getnetworkinfo())
+        for net in ['ipv4','ipv6']:
+            assert_equal(n3[net]['proxy'], '[%s]:%i' % (self.conf3.addr))
+            assert_equal(n3[net]['proxy_randomize_credentials'], False)
+        assert_equal(n3['onion']['reachable'], False)
+
 if __name__ == '__main__':
     ProxyTest().main()
 
