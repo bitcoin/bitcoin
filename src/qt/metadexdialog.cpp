@@ -82,8 +82,6 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->sellList->setFocusPolicy(Qt::NoFocus);
     ui->sellList->setAlternatingRowColors(true);
 
-    ui->pendingLabel->setVisible(false);
-
     connect(ui->switchButton, SIGNAL(clicked()), this, SLOT(switchButtonClicked()));
     connect(ui->buyButton, SIGNAL(clicked()), this, SLOT(buyTrade()));
     connect(ui->sellButton, SIGNAL(clicked()), this, SLOT(sellTrade()));
@@ -122,14 +120,6 @@ void MetaDExDialog::setWalletModel(WalletModel *model)
 void MetaDExDialog::OrderRefresh()
 {
     UpdateOffers();
-    // check for pending transactions, could be more filtered to just trades here
-    bool pending = false;
-    for(PendingMap::iterator my_it = my_pending.begin(); my_it != my_pending.end(); ++my_it)
-    {
-        // if we get here there are pending transactions in the wallet, flag warning to MetaDEx
-        pending = true;
-    }
-    if(pending) { ui->pendingLabel->setVisible(true); } else { ui->pendingLabel->setVisible(false); }
 }
 
 // Executed when the switch market button is clicked

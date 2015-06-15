@@ -680,25 +680,6 @@ border: 1px solid rgb(142,61,0);padding:5px 5px 5px 5px;background-repeat: no-re
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="QLabel" name="pendingLabel">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color:rgb(167, 125, 19)</string>
-     </property>
-     <property name="text">
-      <string>* YOU HAVE TRANSACTIONS WAITING FOR CONFIRMATION *</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>
