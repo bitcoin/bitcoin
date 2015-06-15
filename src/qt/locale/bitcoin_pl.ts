@@ -1,4 +1,4 @@
-<TS language="pl" version="2.1">
+<TS language="pl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2623,10 +2623,6 @@
         <translation>Określ plik portfela (w obrębie folderu danych)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Jest to przeznaczone dla narzędzi testowania regresji i rozwoju aplikacji.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Użyj UPnP do przekazania portu nasłuchu (domyślnie : %u)</translation>
     </message>
@@ -2765,14 +2761,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>Opcje serwera RPC:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Losowo ignoruje 1 z każdych &lt;n&gt; wiadomości sieciowych.</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Losowo miesza 1 z wszystkich &lt;n&gt; wiadomości sieciowych.</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2915,10 +2903,6 @@
         <translation>Jak dokładna jest weryfikacja bloków przy -checkblocks (0-4, domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Loguj priorytety transakcji i opłaty na kB podczas kopania bloków (domyślnie: %u)</translation>
-    </message>
-    <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
         <translation>Utrzymuj pełny indeks transakcji, używany przy wywołaniu RPC getrawtransaction (domyślnie: %u)</translation>
     </message>
@@ -2935,10 +2919,6 @@
         <translation>Błąd ładowania wallet.dat</translation>
     </message>
     <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Wymuś tryb bezpieczny (domyślnie: %u)</translation>
-    </message>
-    <message>
         <source>Generate coins (default: %u)</source>
         <translation>Generuj monety (domyślnie: %u)</translation>
     </message>
@@ -2953,10 +2933,6 @@
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Nieprawidłowy adres -proxy: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Ogranicz rozmiar pamięci podręcznej sygnatur do &lt;n&gt; wpisów (domyślnie: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -2979,10 +2955,6 @@
         <translation>Maksymalny bufor wysyłania na połączenie, &lt;n&gt;*1000 bajtów (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Akceptuj tylko łańcuch bloków zgodny z wbudowanymi punktami kontrolnymi (domyślnie: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Dołączaj znacznik czasu do logowania (domyślnie: %u)</translation>
     </message>
@@ -2993,10 +2965,6 @@
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Przekazuj transakcje multisig inne niż P2SH (domyślnie: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Uruchom wątek do okresowego zapisywania portfela (domyślnie: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3019,10 +2987,6 @@
         <translation>Ustaw liczbę wątków do obsługi RPC (domyślnie: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Ustaw flagę DB_PRIVATE w środowisku wallet db (domyślnie: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Wskaż plik konfiguracyjny (domyślnie: %s)</translation>
     </message>
@@ -3037,10 +3001,6 @@
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Wydawaj niepotwierdzoną resztę podczas wysyłania transakcji (domyślnie: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Zatrzymaj po zaimportowaniu bloków z dysku (domyślnie: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

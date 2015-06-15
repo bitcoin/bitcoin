@@ -1,4 +1,4 @@
-<TS language="es" version="2.1">
+<TS language="es" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2769,16 +2769,8 @@
         <translation>Distribuido bajo la licencia de software MIT, vea la copia del archivo adjunto o &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Ingresar en el modo de prueba de regresión, que utiliza una cadena especial en la que los bloques se pueden resolver instantáneamente.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Ejecutar comando cuando una transacción del monedero cambia (%s en cmd se remplazará por TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>En este modo -genproclimit controla cuántos bloques se generan de inmediato.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2921,10 +2913,6 @@
         <translation>Especificar archivo de monedero (dentro del directorio de datos)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Esto afecta a las herramientas de prueba de regresión y al desarrollo informático de la aplicación.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Usar UPnP para asignar el puerto de escucha (predeterminado:: %u)</translation>
     </message>
@@ -2997,10 +2985,6 @@
         <translation>Tarifas (en BTC/Kb) más pequeños que esto se consideran cero cuota de reinstalación (por defecto: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Tarifas (en BTC/Kb) más pequeños que esto se consideran cero cuota para la creación de la transacción (por defecto: %s)</translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Si el pago de comisión no está establecido, incluir la cuota suficiente para que las transacciones comiencen la confirmación en una media de n bloques ( por defecto :%u)</translation>
     </message>
@@ -3011,10 +2995,6 @@
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Consulta de direcciones pares mediante búsqueda de DNS, si bajo en direcciones (por defecto: 1 a menos que - conectar)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
-        <translation>Se requiere alta prioridad para retransmitir transacciones gratis o de baja comisión (por defecto:%u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3159,14 +3139,6 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation>Soporte RPC para conexiones HTTP persistentes (por defecto: %d)</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Ignorar 1 de cada &lt;n&gt; mensajes de red al azar</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Introducir datos fuzz en 1 de cada &lt;n&gt; mensajes de red al azar</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3317,16 +3289,8 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
         <translation>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Volcar la actividad de la base de datos de memoria al registro en disco cada &lt;n&gt; megabytes (predeterminado: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Nivel de rigor en la verificación de bloques de -checkblocks (0-4; predeterminado: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Registrar prioridad de las transacciones y cuota por kB cuando se minen bloques (por defecto: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3357,16 +3321,8 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
         <translation>Siempre consultar direcciones de otros equipos por medio de DNS lookup (por defecto: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Inhabilitar el modo seguro, no considerar un suceso real de modo seguro (predeterminado: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Error al cargar wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Forzar modo seguro (por defecto: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3383,10 +3339,6 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Dirección -proxy inválida: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Limitar tamaño de la cache de firmas a &lt;n&gt; entradas (predeterminado: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3409,10 +3361,6 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
         <translation>Búfer de recepción máximo por conexión, , &lt;n&gt;*1000 bytes (por defecto: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Aceptar solamente cadena de bloques que concuerde con los puntos de control internos (predeterminado: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Anteponer marca temporal a la información de depuración (por defecto: %u)</translation>
     </message>
@@ -3423,10 +3371,6 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Relay non-P2SH multisig (default: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Ejecutar un hilo para limpiar de la memoria el monedero periódicamente (predeterminado:  %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3449,10 +3393,6 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
         <translation>Establecer el número de procesos para llamadas del servicio RPC (por defecto: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Establece la opción DB_PRIVATE en el entorno de base de datos del monedero (predeterminado: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Especificar archivo de configuración (por defecto: %s)</translation>
     </message>
@@ -3467,10 +3407,6 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Gastar cambio no confirmado al enviar transacciones (predeterminado: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Detener después de importar los bloques del disco (por defecto: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

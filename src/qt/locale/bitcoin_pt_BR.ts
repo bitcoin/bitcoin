@@ -1,4 +1,4 @@
-<TS language="pt_BR" version="2.1">
+<TS language="pt_BR" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -276,7 +276,7 @@
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Backup Carteira...</translation>
+        <translation>&amp;Backup da carteira...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
@@ -288,7 +288,7 @@
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>Endereços de &amp;Recebimento...</translation>
+        <translation>Endereços de &amp;recebimento...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -2734,7 +2734,7 @@
     </message>
     <message>
         <source>Specify data directory</source>
-        <translation>Especificar diretório de dados</translation>
+        <translation>Especificar o diretório de dados</translation>
     </message>
     <message>
         <source>Connect to a node to retrieve peer addresses, and disconnect</source>
@@ -2773,16 +2773,12 @@
         <translation>Distribuido sob a licença MIT software license. Veja os termos em &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Entra no modo de teste de regressão, que usa uma cadeia especial onde os blocos podem ser resolvidos instantaneamente.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Executar comando quando uma transação da carteira mudar (%s no comando será substituído por TxID)</translation>
+        <translation>Executa um comando quando uma transação da carteira mudar (%s no comando será substituído por TxID)</translation>
     </message>
     <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>Neste modo -genproclimit controla quantos blocos são gerados imediatamente.</translation>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Reduz o armazenamento requerido prunando (apagando) blocos antigos. Este modo desativa o suporte a carteira e é incompatível com -txindex. Aviso: Reverter essa opção requer re-baixar o blockchain inteiro. (padrão: 0 = disativado, &gt;%u = Tamanho em mega para os arquivos de bloco)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2834,7 +2830,7 @@
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
-        <translation>Conectar apenas a nó(s) específico(s)</translation>
+        <translation>Conectar apenas a cliente(s) específico(s)</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -2921,10 +2917,6 @@
         <translation>Especifique o arquivo da carteira (dentro do diretório de dados)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Isso é usado para testes de regressão e ferramentas de desenvolvimento.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Use UPnP para mapear a porta de entrada (padrão: %u)</translation>
     </message>
@@ -2969,20 +2961,20 @@
         <translation>Não foi possível obter acesso exclusivo ao diretório de dados %s. Provavelmente Bitcoin já está sendo executado.</translation>
     </message>
     <message>
+        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
+        <translation>Descobrir o próprio IP (padrão: 1 enquanto aguardando conexões e sem -externalip ou -proxy)</translation>
+    </message>
+    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Erro: Aceitar conexões de entrada falhou (retornou erro %s)</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Executa o comando quando um alerta relevante é recebido ou vemos uma longa segregação (%s em cmd é substituído pela mensagem)</translation>
+        <translation>Executa um comando quando um alerta relevante é recebido ou vemos uma longa segregação (%s em cmd é substituído pela mensagem)</translation>
     </message>
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>Taxas (em BTC/Kb) menores do que este valor são consideradas inexistentes para divulgação (padrão: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Taxas (em BTC/Kb) menores do que este valor são consideradas inexistentes para a criação da transação (padrão: %s)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3089,14 +3081,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
         <translation>Opções do servidor RPC:</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Aleatoriamente descarta 1 em cada &lt;n&gt; mensagens da rede</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Aleatoriamente embaralha 1 em cada &lt;n&gt; mensagens da rede</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Mandar informação de trace/debug para o console em vez de para o arquivo debug.log</translation>
     </message>
@@ -3194,7 +3178,7 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Executar comando quando o melhor bloco mudar (%s no comando será substituído pelo hash do bloco)</translation>
+        <translation>Executa um comando quando o melhor bloco mudar (%s no comando será substituído pelo hash do bloco)</translation>
     </message>
     <message>
         <source>Upgrade wallet to latest format</source>
@@ -3210,7 +3194,7 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>This help message</source>
-        <translation>Esta mensagem de ajuda</translation>
+        <translation>Exibe esta mensagem de ajuda</translation>
     </message>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
@@ -3229,16 +3213,20 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
         <translation>(padrão: %s)</translation>
     </message>
     <message>
+        <source>Acceptable ciphers (default: %s)</source>
+        <translation>Cífras aceitas (padrão: %s)</translation>
+    </message>
+    <message>
         <source>Error loading wallet.dat</source>
         <translation>Erro ao carregar wallet.dat</translation>
     </message>
     <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Forçar modo seguro (default: %u)</translation>
-    </message>
-    <message>
         <source>Generate coins (default: %u)</source>
         <translation>Gerar moedas (padrão: %u)</translation>
+    </message>
+    <message>
+        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
+        <translation>Quantos blocos devem ser checados ao iniciar (padrão: %u, 0 = todos)</translation>
     </message>
     <message>
         <source>Include IP addresses in debug output (default: %u)</source>
@@ -3247,10 +3235,6 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Endereço -proxy inválido: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Tamanho limite do cache de assinaturas de &lt;n&gt; entradas (padrão: %u)</translation>
     </message>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3263,6 +3247,18 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>Server private key (default: %s)</source>
         <translation>Chave privada do servidor (padrão: %s)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>Definir tamanho mínimo do bloco, em bytes (padrão: %u)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Especificar arquivo de configuração (padrão: %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Especificar tempo para desistência de conexões, em mili segundos (mínimo: 1, padrão: %d)</translation>
     </message>
     <message>
         <source>Specify pid file (default: %s)</source>
@@ -3294,7 +3290,7 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Adicionar um nó com o qual se conectar e tentar manter a conexão ativa</translation>
+        <translation>Adicionar um cliente para se conectar e tentar manter a conexão ativa</translation>
     </message>
     <message>
         <source>Loading wallet...</source>

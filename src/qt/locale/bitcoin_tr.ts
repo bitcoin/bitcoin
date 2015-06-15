@@ -1,4 +1,4 @@
-<TS language="tr" version="2.1">
+<TS language="tr" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2813,10 +2813,6 @@
         <translation>Belirtilen adrese bağlan ve daima ondan dinle. IPv6 için [makine]:port yazımını kullanınız</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
-        <translation>Devamlı olarak ücretsiz muameleleri dakikada &lt;n&gt;*1000 bayt olarak sınırla (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Tüm cüzdan muamelelerini sil ve başlangıçta -rescan ile sadece blok zincirinin parçası olanları geri getir</translation>
     </message>
@@ -2825,16 +2821,8 @@
         <translation>MIT yazılım lisansı kapsamında yayınlanmıştır, ekteki COPYING dosyasına ya da &lt;http://www.opensource.org/licenses/mit-license.php&gt; adresine bakınız.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Blokların anında çözülebileceği özel bir zincir kullanan regresyon deneme kipine gir.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Bir cüzdan muamelesi değiştiğinde komutu çalıştır (komuttaki %s muamele kimliği ile değiştirilecektir)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>Bu kipte -genproclimit kaç sayıda bloğun anında oluşturulduğunu kontrol eder.</translation>
     </message>
     <message>
         <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
@@ -2993,10 +2981,6 @@
         <translation>Cüzdan dosyası belirtiniz (veri klasörünün içinde)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Bu, regresyon deneme araçları ve uygulama geliştirmesi için tasarlanmıştır. </translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Dinleme portunu haritalamak için UPnP kullan (varsayılan: %u)</translation>
     </message>
@@ -3073,10 +3057,6 @@
         <translation>Kb başına BTC olarak bundan düşük ücretler aktarım için sıfır değerinde ücret olarak kabul edilir (varsayılan: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Kb başına BTC olarak bundan düşük ücretler muamele oluşturulması için sıfır değerinde ücret olarak kabul edilir (varsayılan: %s)</translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Eğer paytxfee ayarlanmadıysa kafi derecede ücret ekleyin ki muameleler teyite vasati n blok içinde başlasın (varsayılan: %u)</translation>
     </message>
@@ -3099,10 +3079,6 @@
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Her vekil bağlantısı için kimlik verilerini rastgele yap. Bu, Tor akış izolasyonunu etkinleştirir (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
-        <translation>Ücretsiz ya da düşük ücretli muamelelerin geçişi için yüksek öncelik iste (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3171,10 +3147,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Activating best chain...</source>
         <translation>En iyi zincir etkinleştiriliyor...</translation>
-    </message>
-    <message>
-        <source>Allow self signed root certificates (default: 0)</source>
-        <translation>Kendinden imzalı kök sertifikalara müsaade et (varsayılan: 0)</translation>
     </message>
     <message>
         <source>Can't run with a wallet in prune mode.</source>
@@ -3267,14 +3239,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation>Kalıcı HTTP bağlantıları için RPC desteği (varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Her &lt;n&gt; şebeke mesajından rastgele 1 mesajı görmezden gel</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Her &lt;n&gt; şebeke mesajından rastgele birini bulanıklaştır</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
@@ -3425,16 +3389,8 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>(1 = tx meta verilerini tut mesela hesap sahibi ve ödeme talebi bilgileri, 2 = tx meta verilerini at)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Veritabanı etkinliğini bellekten disk kütüğüne her &lt;n&gt; megabaytta aktar (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>-checkblocks'un blok kontrolünün ne kadar kapsamlı olacağı (0 ilâ 4, varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Blok oluşturulduğunda muamele önceliğini ve kB başı ücreti kütüğe al (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3465,16 +3421,8 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Eş adresleri sorgulaması için daima DNS aramasını kullan (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Güvenli kipi devre dışı bırak, gerçek bir güvenli olayı geçersiz kıl (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>wallet.dat dosyasının yüklenmesinde hata oluştu</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Güvenli kipi zorla (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3491,10 +3439,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Geçersiz -proxy adresi: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>İmza arabelleğinin boyutunu &lt;n&gt; unsurla sınırla (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3521,10 +3465,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Her bağlantı için azami yollama tamponu, &lt;n&gt;*1000 bayt (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Sadece yerleşik kontrol noktalarıyla eşleşen blok zincirini kabul et (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Hata ayıklama verilerinin önüne zaman damgası ekle (varsayılan: %u)</translation>
     </message>
@@ -3535,10 +3475,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>P2SH olmayan çoklu imzaları aktar (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Periyodik olarak cüdanı diske yazdırmak için bir iş parçacığı çalıştır (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3561,10 +3497,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Hizmet RCP aramaları iş parçacığı sayısını belirle (varsayılan: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Cüzdan veritabanı ortamında DB_PRIVATE bayrağını koyar (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Yapılandırma dosyası belirtiniz (varsayılan: %s)</translation>
     </message>
@@ -3579,10 +3511,6 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Gönderme muamelelerinde teyit edilmemiş para üstünü harca (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Diskten blokları içeri aktardıktan sonra çalışmayı durdur (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

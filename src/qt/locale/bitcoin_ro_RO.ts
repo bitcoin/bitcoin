@@ -1,4 +1,4 @@
-<TS language="ro_RO" version="2.1">
+<TS language="ro_RO" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2713,16 +2713,8 @@
         <translation>Distribuit sub licenţa de programe MIT/X11, vezi fişierul însoţitor COPYING sau &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Iniţiază modul de test regresie, care foloseşte un lanţ special în care blocurile pot fi rezolvate instantaneu.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Execută comanda cînd o tranzacţie a portofelului se schimbă (%s în cmd este înlocuit de TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>În acest mod -genproclimit controlează cîte blocuri sînt generate imediat.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2857,10 +2849,6 @@
         <translation>Specifică fişierul portofel (în dosarul de date)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Este folosită pentru programe de testare a regresiei în algoritmi şi dezvoltare de alte aplicaţii.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Foloseşte mapare UPnP pentru asculatere port (implicit: %u)</translation>
     </message>
@@ -2983,14 +2971,6 @@
     <message>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation>RPC suportă pentru HTTP conexiuni persistente (implicit: %d)</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Aleator sccapă 1 din fiecare &lt;n&gt; mesaje ale reţelei</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Aleator aproximează 1 din fiecare &lt;n&gt; mesaje ale reţelei</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3125,10 +3105,6 @@
         <translation>Eroare la încărcarea wallet.dat: Portofel corupt</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Goleşte baza de date a activităţii din memoria pool în jurnal pe disc la fiecare &lt;n&gt; megaocteţi (implicit: %u)</translation>
-    </message>
-    <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Produce toate informaţiile de depanare (implicit: %u &lt;category&gt; furnizată este opţională)</translation>
     </message>
@@ -3143,10 +3119,6 @@
     <message>
         <source>Error loading wallet.dat</source>
         <translation>Eroare la încărcarea wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Forţează mod sigur (implicit: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>

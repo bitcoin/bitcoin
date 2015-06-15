@@ -1,4 +1,4 @@
-<TS language="ca@valencia" version="2.1">
+<TS language="ca@valencia" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2503,16 +2503,8 @@
         <translation>Elimina totes les transaccions del moneder i només recupera aquelles de la cadena de blocs a través de -rescan a l'inici</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Entra en el mode de proves de regressió, que utilitza una cadena especial en què els blocs poden resoldre's al moment.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Executa una orde quan una transacció del moneder canvie (%s en cmd es canvia per TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>En este mode -genproclimit controla quants blocs es generen immediatament.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2643,10 +2635,6 @@
         <translation>Especifica un fitxer de moneder (dins del directori de dades)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Això s'així per a eines de proves de regressió per al desenvolupament d'aplicacions.</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>S'estan verificant els blocs...</translation>
     </message>
@@ -2705,10 +2693,6 @@
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>Comissions (en BTC/Kb) inferiors a això es consideren de comissió zero per a la transmissió (per defecte: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Comissions (en BTC/Kb) inferiors a això es consideren de comissió zero per a la creació de la transacció (per defecte: %s)</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -2801,14 +2785,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>Opcions del servidor RPC:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Descarta a l'atzar 1 de cada &lt;n&gt; missatges de la xarxa</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Introdueix incertesa en 1 de cada &lt;n&gt; missatges de la xarxa</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

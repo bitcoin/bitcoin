@@ -1,4 +1,4 @@
-<TS language="sv" version="2.1">
+<TS language="sv" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2806,10 +2806,6 @@ Var vänlig och försök igen.</translation>
         <translation>Bind till given adress och lyssna alltid på den. Använd [värd]:port notation för IPv6</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
-        <translation>Hastighetsbegränsa avgiftsfria transaktionerna till &lt;n&gt;*1000 bytes per minut (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Ta bort alla plånbokstransaktioner och återskapa bara dom som är en del av blockkedjan genom att ange -rescan vid uppstart</translation>
     </message>
@@ -2818,16 +2814,8 @@ Var vänlig och försök igen.</translation>
         <translation>Distribuerad under MIT mjukvarulicens, se den bifogade filen COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Ange regressiontestläge, som använder en speciell kedja i vilka block kan lösas omedelbart.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Exekvera kommando när en plånbokstransaktion ändras (%s i cmd är ersatt av TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>I denna mode kontrollerar -genproclimit hur många block som genereras på en gång.</translation>
     </message>
     <message>
         <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
@@ -2848,6 +2836,14 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Det går inte att binda till %s på den här datorn. Bitcoin Core är förmodligen redan igång.</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>Varning: Onormalt antal block block genererade. %d block mottagna senaste %d timmarna (%d förväntade)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>Varning: Kontrollera din närverksanslutning. %d block mottagna senaste %d timmarna, (%d förväntade)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2986,10 +2982,6 @@ Var vänlig och försök igen.</translation>
         <translation>Ange plånboksfil (inom datakatalogen)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Detta är avsett för regressionstestningsverktyg och applikationsutveckling.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Använd UPnP för att mappa den lyssnande porten (förvalt: %u)</translation>
     </message>
@@ -3066,10 +3058,6 @@ Var vänlig och försök igen.</translation>
         <translation>Avgifter (i BTC/Kb) mindre än detta betraktas som nollavgift för vidarebefodran (förvalt: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Avgifter (i BTC/Kb) mindre än detta betraktas som nollavgift för transaktionsskapande (förvalt: %s)</translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Om paytxfee inte är satt, inkludera tillräcklig avgift så att transaktionen börjar att konfirmeras inom n blocks (förvalt: %u)</translation>
     </message>
@@ -3092,10 +3080,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Slumpa autentiseringen för varje proxyanslutning. Detta möjliggör Tor ström-isolering (förvalt: %u)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
-        <translation>Begär hög prioritet för att vidarebefodra lågavgiftstransaktioner (förvalt: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3160,10 +3144,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Activating best chain...</source>
         <translation>Aktiverar bästa kedjan...</translation>
-    </message>
-    <message>
-        <source>Allow self signed root certificates (default: 0)</source>
-        <translation>Tillåt självsignerade root-certifikat  (förvalt: 0)</translation>
     </message>
     <message>
         <source>Can't run with a wallet in prune mode.</source>
@@ -3256,14 +3236,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation>RPC support för HTTP permanent anslutning (förvalt: %d)</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Slumpmässigt tappa 1 av varje &lt;n&gt; nåtverksmeddelande</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Slupmässigt brus 1 gång varje &lt;n&gt; nätverksmeddelande</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
@@ -3414,16 +3386,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>(1 = spara tx metadata t.ex. kontoägare och betalningsbegäransinformation, 2 = släng tx metadata)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Töm databasens minnespool till disk varje &lt;n&gt; megabytes (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hur grundlig blockverifikationen vid -checkblocks är (0-4, förvalt: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Logga transaktionsprioritet och avgift per kB vid blockbrytning (förvalt: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3454,16 +3418,8 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Sök alltid efter klientadresser med DNS sökningen (förvalt: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Avaktivera säkert läge. Åsidosätt en riktigt säkert läge händelse (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Fel vid inläsning av plånboksfilen wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Tvångskör i säkert läge (förvalt: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3480,10 +3436,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ogiltig -proxy adress: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Begränsa signaturcachestorleken till &lt;n&gt; poster (förvalt: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3510,10 +3462,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Maximal sändningsbuffert per anslutning, &lt;n&gt;*1000 byte (förvalt: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Acceptera bara blockkedjans matchande inbyggda kontrollpunkter (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Skriv ut tidsstämpel i avlusningsinformationen (förvalt: %u)</translation>
     </message>
@@ -3524,10 +3472,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Reläa icke P2SH multisig (förvalt: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Kör en tråd för att tömma plånboken periodiskt (förvalt: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3550,10 +3494,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Ange antalet trådar för att hantera RPC anrop (förvalt: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Sätt DB_PRIVATE flaggan i plånbokens databasmiljö (förvalt: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Ange konfigurationsfil (förvalt: %s)</translation>
     </message>
@@ -3568,10 +3508,6 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Spendera okonfirmerad växel när transaktioner sänds (förvalt: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Sluta köra efter importen av block från disk är klar (förvalt: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

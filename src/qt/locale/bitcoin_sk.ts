@@ -1,4 +1,4 @@
-<TS language="sk" version="2.1">
+<TS language="sk" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2471,16 +2471,8 @@
         <translation>Spojiť s danou adresou a vždy na nej počúvať. Použite zápis [host]:port pre IPv6</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Vojsť do režimu regresného testovania, ktorý používa špeciálnu reťaz v ktorej môžu byť bloky v okamihu vyriešené.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Vykonaj príkaz keď sa zmení transakcia peňaženky (%s v príkaze je nahradená TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>V tomto režime -getproclimit kontroluje koľko blokov sa vytvorí okamžite.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2613,10 +2605,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Označ súbor peňaženky (v priečinku s dátami)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Toto je mienené nástrojom pre regresné testovania a vývoj programu.</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Overujem bloky...</translation>
     </message>
@@ -2657,10 +2645,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Poplatky (v BTC/Kb) nižšie ako toľkoto sa považujú za nulové pri postupovaní transakcií (predvolené: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Poplatky (v BTC/Kb) nižšie ako toľkoto sa považujú za nulové pri vytváraní transakcií (predvolené: %s)</translation>
-    </message>
-    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Nastaviť najväčšiu veľkosť vysoká-dôležitosť/nízke-poplatky transakcií v bajtoch (prednastavené: %d)</translation>
     </message>
@@ -2699,14 +2683,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>RPC server options:</source>
         <translation>Možnosti servra RPC:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Náhodne zahadzuj 1 z každých &lt;n&gt; sieťových správ</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Náhodne premiešaj 1 z každých &lt;n&gt; sieťových správ</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2823,10 +2799,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Chyba načítania wallet.dat: Peňaženka je poškodená</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Zaznamenať prioritu transakcie a poplatok za kB pri ťažení blokov (predvolené: %u)</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

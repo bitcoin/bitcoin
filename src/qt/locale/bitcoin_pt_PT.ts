@@ -1,4 +1,4 @@
-<TS language="pt_PT" version="2.1">
+<TS language="pt_PT" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2672,16 +2672,8 @@
         <translation>Distribuido através da licença de software MIT, verifique o ficheiro anexado COPYING ou &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Entre no modo de teste de regressão, que usa uma cadeia especial cujos blocos podem ser resolvidos instantaneamente.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Executar comando quando uma das transações na carteira mudar (no comando, %s é substituído pelo ID da Transação)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>O modo -genproclimit controla quantos blocos são generados imediatamente.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2822,10 +2814,6 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Especifique ficheiro de carteira (dentro da pasta de dados)</translation>
-    </message>
-    <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Isto têm como fim a realização de testes de regressão para pools e desenvolvimento de aplicações.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>

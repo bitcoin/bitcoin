@@ -1,4 +1,4 @@
-<TS language="nl" version="2.1">
+<TS language="nl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2741,16 +2741,8 @@
         <translation>Uitgegeven onder de MIT software licentie, zie het bijgevoegde bestand COPYING of &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Schakel regressietest-modus in, die een speciale blokketen gebruikt waarin blokken onmiddellijk opgelost kunnen worden.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Voer opdracht uit zodra een portemonneetransactie verandert (%s in cmd wordt vervangen door TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>In deze modus, -genproclimit controleert hoeveel blokken er onmiddellijk worden gegenereerd.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2893,10 +2885,6 @@
         <translation>Specificeer het portemonnee bestand (vanuit de gegevensmap)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Dit is bedoeld voor regressie test toepassingen en applicatie onwikkeling.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Gebruik UPnP om de luisterende poort te mappen (standaard: %u)</translation>
     </message>
@@ -2963,10 +2951,6 @@
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding (voor doorgeven) (standaard: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding transactieaanmaak (standaard: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3100,14 +3084,6 @@
     <message>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation>RPC ondersteuning voor HTTP persisten verbindingen (default: %d)</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Laat willekeurig 1 elke &lt;n&gt; netwerkberichten vallen</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Fuzz willekeurig 1 van elke &lt;n&gt; netwerkberichten</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3246,16 +3222,8 @@
         <translation>(1 = behoudt tx meta data bijv. account eigenaar en betalingsverzoek informatie, 2. sla tx meta data niet op)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Leeg database-activiteit uit de geheugen pool naar schijf log elke &lt;n&gt; megabytes (standaard: %u) </translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hoe grondig de blokverificatie van -checkblocks is (0-4, standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Log transactieprioriteit en -kosten per kB bij het mijnen van blokken (standaard: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3282,16 +3250,8 @@
         <translation>Vind anderen door middel van een DNS-naslag (standaard: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Veilige modus uitschakelen, hef een echte veilige modus gebeurtenis uit (default: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Fout bij laden wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Forceer veilige modus (default: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3308,10 +3268,6 @@
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ongeldig -proxy adres: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Limiteer grootte van de handtekening cache tot &lt;n&gt; entries (default: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3334,10 +3290,6 @@
         <translation>Maximum per-connectie zendbuffer, &lt;n&gt;*1000 bytes (standaard: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Accepteer alleen blokkenketen die overeenkomt met de ingebouwde checkpoints (standaard: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Prepend debug output met tijdstempel (standaard: %u)</translation>
     </message>
@@ -3348,10 +3300,6 @@
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Relay non-P2SH multisig (default: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Draai een proces om de wallet periodiek te flushen (default: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3374,10 +3322,6 @@
         <translation>Stel het aantal threads in om RPC-aanvragen mee te bedienen (standaard: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Plaatst de DB_PRIVATE vlag in de wallet db omgeving (default: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Specificeer configuratie bestand (standaard: %s)</translation>
     </message>
@@ -3392,10 +3336,6 @@
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Besteed onbevestigd wisselgeld bij het versturen van transacties (standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Stop uitvoeren na het importeren van blokken van de schijf (standaard: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

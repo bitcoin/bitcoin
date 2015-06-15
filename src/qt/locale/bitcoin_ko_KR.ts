@@ -1,4 +1,4 @@
-<TS language="ko_KR" version="2.1">
+<TS language="ko_KR" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2401,10 +2401,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>RPC 서버 설정</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>모든 네트워크 메시지 마다 무작위로 1이 떨어진다</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

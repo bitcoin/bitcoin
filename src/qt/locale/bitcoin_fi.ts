@@ -1,4 +1,4 @@
-<TS language="fi" version="2.1">
+<TS language="fi" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2635,16 +2635,8 @@
         <translation>Kytkeydy annettuun osoitteeseen ja pidä linja aina auki. Käytä [host]:portin merkintätapaa IPv6:lle.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Aloita regression testimoodi joka käyttää erikoisketjua jossa lohkoja voidaan ratkaista välittömästi.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>Tässä moodissa -genproclimit ohjaa kuinka monta lohkoa luodaan välittömästi.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2775,10 +2767,6 @@
         <translation>Aseta lompakkotiedosto (data-hakemiston sisällä)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Tämä on tarkoitettu regression testityökaluille ja ohjelman kehittämiseen.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Käytä UPnP:ta kuuntelevan portin kartoittamiseen (oletus: %u)</translation>
     </message>
@@ -2861,14 +2849,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>RPC-palvelimen valinnat:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Satunnaisesti pudota 1 joka &lt;n&gt; verkkoviestistä</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Satunnaisesti sekoita 1 joka &lt;n&gt; verkkoviestistä</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2993,10 +2973,6 @@
     <message>
         <source>Error loading wallet.dat</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Pakota yhteensopivuustila (oletus: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>

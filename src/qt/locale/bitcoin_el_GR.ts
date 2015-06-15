@@ -1,4 +1,4 @@
-<TS language="el_GR" version="2.1">
+<TS language="el_GR" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2494,10 +2494,6 @@
         <translation>Αποθηκευση σε συγκεκριμένη διεύθυνση. Χρησιμοποιήστε τα πλήκτρα [Host] : συμβολισμός θύρα για IPv6</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Εισαγωγή δοκιμαστικής λειτουργίας παλινδρόμησης, που χρησιμοποιεί μια ειδική αλυσίδα στην οποία τα μπλοκ επιλύονται στιγμιαία.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
     </message>
@@ -2592,10 +2588,6 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Επιλέξτε αρχείο πορτοφολιού (μέσα απο κατάλογο δεδομένων)</translation>
-    </message>
-    <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Αυτό προορίζεται για εργαλεία δοκιμών παλινδρόμησης και την ανάπτυξη εφαρμογών.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2800,10 +2792,6 @@
     <message>
         <source>Error loading wallet.dat</source>
         <translation>Σφάλμα φόρτωσης αρχείου wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Επιβολή ασφαλής λειτουργίας (προεπιλογή: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>

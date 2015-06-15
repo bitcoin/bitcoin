@@ -1,4 +1,4 @@
-<TS language="cs" version="2.1">
+<TS language="cs" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2671,16 +2671,8 @@
         <translation>Šířen pod softwarovou licencí MIT, viz přiložený soubor COPYING nebo &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Přepnout do módu testování regresí, který používá speciální řetězec, ve kterém mohou být bloky okamžitě vyřešeny.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Spustit příkaz, když se objeví transakce týkající se peněženky (%s se v příkazu nahradí za TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>V tomto módu -genproclimit určuje, kolik bloků je vygenerováno okamžitě.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2823,10 +2815,6 @@
         <translation>Udej název souboru s peněženkou (v rámci datového adresáře)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Tohle je určeno pro nástroje na regresní testování a vyvíjení aplikací.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Použít UPnP k namapování naslouchacího portu (výchozí: %u)</translation>
     </message>
@@ -2893,10 +2881,6 @@
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>Poplatky (v BTC/Kb) menší než tato hodnota jsou považovány za nulové pro účely přeposílání transakcí (výchozí: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Poplatky (v BTC/Kb) menší než tato hodnota jsou považovány za nulové pro účely vytváření transakcí (výchozí: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3009,14 +2993,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>Možnosti RPC serveru:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Náhodně zahazovat jednu z každých &lt;n&gt; síťových zpráv</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Náhodně pozměňovat jednu z každých &lt;n&gt; síťových zpráv</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3155,16 +3131,8 @@
         <translation>(1 = ukládat transakční metadata, např. majitele účtu a informace o platebním požadavku, 2 = mazat transakční metadata)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Promítnout databázovou aktivitu z paměťového prostoru do záznamu na disku každých &lt;n&gt; megabajtů (výchozí: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Jak moc důkladná má být verifikace bloků -checkblocks (0-4, výchozí: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Zaznamenávat během těžení bloků prioritu transakce a poplatek za kB (výchozí: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3195,16 +3163,8 @@
         <translation>Vždy získávat adresy dalších protějšků přes DNS (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Vypnout bezpečný režim (safemode), překrýt skutečnou událost bezpečného režimu (výchozí: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Chyba při načítání wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Vynutit bezpečný mód (výchozí: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3221,10 +3181,6 @@
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Neplatná -proxy adresa: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Omezit velikost vyrovnávací paměti pro podpisy na &lt;n&gt; položek (výchozí: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3247,10 +3203,6 @@
         <translation>Maximální velikost odesílacího bufferu pro každé spojení, &lt;n&gt;*1000 bajtů (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Uznávat pouze řetězec bloků, který odpovídá vnitřním kontrolním bodům (výchozí: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Připojit před ladicí výstup časové razítko (výchozí: %u)</translation>
     </message>
@@ -3261,10 +3213,6 @@
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Přeposílat ne-P2SH multisig (výchozí: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Spustit vlákno pročišťující periodicky peněženku (výchozí: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3287,10 +3235,6 @@
         <translation>Nastavení počtu vláken pro servisní RPC volání (výchozí: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Nastavit příznak DB_PRIVATE v databázovém prostředí peněženky (výchozí: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Konfigurační soubor (výchozí: %s)</translation>
     </message>
@@ -3301,10 +3245,6 @@
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Utrácet i ještě nepotvrzené drobné při posílání transakcí (výchozí: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Ukončit se po importu bloků z disku (výchozí: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

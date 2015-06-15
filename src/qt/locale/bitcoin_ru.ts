@@ -1,4 +1,4 @@
-<TS language="ru" version="2.1">
+<TS language="ru" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2619,16 +2619,8 @@
         <translation>Распространяется под лицензией MIT, см. приложенный файл COPYING или &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Войти в режим тестирования на регрессии, в котором используется специальная цепь, где блоки находятся мгновенно.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Выполнить команду, когда меняется транзакция в бумажнике (%s в команде заменяется на TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>В этом режиме -genproclimit определяет, сколько блоков генерируется немедленно.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2771,10 +2763,6 @@
         <translation>Укажите файл бумажника (внутри каталога данных)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Это рассчитано на инструменты регрессионного тестирования и разработку приложений.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: %u)</translation>
     </message>
@@ -2841,10 +2829,6 @@
     <message>
         <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>Комиссии (в BTC/Кб) меньшие этого значения считаются нулевыми для трансляции (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Комиссии (в BTC/Кб) меньшие этого значения считаются нулевыми для создания транзакции (по умолчанию: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3003,14 +2987,6 @@ rpcpassword=%s
         <translation>Поддержка RPC постоянных HTTP подключений (по умолчанию: %d)</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Случайно отбрасывать 1 из каждых &lt;n&gt; сетевых сообщений</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Случайно разбрасывать 1 из каждых &lt;n&gt; сетевых сообщений</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Выводить информацию трассировки/отладки на консоль вместо файла debug.log</translation>
     </message>
@@ -3147,16 +3123,8 @@ rpcpassword=%s
         <translation>(1 = сохранять метаданные транзакции: например, владельца аккаунта и информацию запроса платежа; 2 = отбросить метаданные)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Сбрасывать активность базы данных из памяти на диск каждые &lt;n&gt; мегабайт (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Насколько тщательна проверка контрольных блоков -checkblocks (0-4, по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Записывать в лог приоритет транзакции и комиссию на килобайт во время добычи блоков (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3187,16 +3155,8 @@ rpcpassword=%s
         <translation>Всегда запрашивать адреса участников с помощью DNS (по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Отключить безопасный режим, перекрыть реальное событие безопасного режима (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Ошибка при загрузке wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Принудительный безопасный режим (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3213,10 +3173,6 @@ rpcpassword=%s
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Неверный адрес -proxy: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Ограничить размер кэша подписей &lt;n&gt; записями (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3239,10 +3195,6 @@ rpcpassword=%s
         <translation>Максимальный размер буфера отправки на соединение, &lt;n&gt;*1000 байт (по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Принимать цепь блоков, лишь если она соответствует встроенным контрольным точкам (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Дописывать отметки времени к отладочному выводу (по умолчанию: %u)</translation>
     </message>
@@ -3253,10 +3205,6 @@ rpcpassword=%s
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Транслировать не-P2SH мультиподпись (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Запустить поток для периодического сохранения бумажника (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3275,10 +3223,6 @@ rpcpassword=%s
         <translation>Задать число потоков выполнения запросов RPC (по умолчанию: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Установить флаг DB_PRIVATE в окружении базы данных бумажника (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Указать конфигурационный файл (по умолчанию: %s)</translation>
     </message>
@@ -3293,10 +3237,6 @@ rpcpassword=%s
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Тратить неподтвержденную сдачу при отправке транзакций (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Остановиться после импорта блоков с диска (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
