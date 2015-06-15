@@ -5,6 +5,7 @@
 #include "omnicore/sp.h"
 
 #include "uint256.h"
+#include "ui_interface.h"
 
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
@@ -87,6 +88,10 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         pending.type = type;
         my_pending.insert(std::make_pair(txid, pending));
     }
+
+    // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
+    set_wallet_totals();
+    uiInterface.OmniStateChanged();
 }
 
 /**
