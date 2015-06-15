@@ -207,7 +207,8 @@ extern json_spirit::Value bitcoin_getblockchaininfo(const json_spirit::Array& pa
 extern json_spirit::Value bitcredit_getnetworkinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value bitcoin_getnetworkinfo(const json_spirit::Array& params, bool fHelp);
 
-extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
+extern json_spirit::Value credits_getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
+extern json_spirit::Value bitcoin_getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value lockunspent(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listlockunspent(const json_spirit::Array& params, bool fHelp);

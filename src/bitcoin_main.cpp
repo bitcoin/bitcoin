@@ -124,8 +124,8 @@ struct Bitcoin_CMainSignals {
     boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
     // Notifies listeners about an inventory item being seen on the network.
     boost::signals2::signal<void (const uint256 &)> Inventory;
-//    // Tells listeners to broadcast their data.
-//    boost::signals2::signal<void ()> Broadcast;
+    // Tells listeners to broadcast their data.
+    boost::signals2::signal<void ()> Broadcast;
 } bitcoin_g_signals;
 }
 
@@ -135,11 +135,11 @@ void Bitcoin_RegisterWallet(Bitcoin_CWalletInterface* pwalletIn) {
     bitcoin_g_signals.UpdatedTransaction.connect(boost::bind(&Bitcoin_CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     bitcoin_g_signals.SetBestChain.connect(boost::bind(&Bitcoin_CWalletInterface::SetBestChain, pwalletIn, _1));
     bitcoin_g_signals.Inventory.connect(boost::bind(&Bitcoin_CWalletInterface::Inventory, pwalletIn, _1));
-//    bitcoin_g_signals.Broadcast.connect(boost::bind(&Bitcoin_CWalletInterface::ResendWalletTransactions, pwalletIn));
+    bitcoin_g_signals.Broadcast.connect(boost::bind(&Bitcoin_CWalletInterface::ResendWalletTransactions, pwalletIn));
 }
 
 void Bitcoin_UnregisterWallet(Bitcoin_CWalletInterface* pwalletIn) {
-//    bitcoin_g_signals.Broadcast.disconnect(boost::bind(&Bitcoin_CWalletInterface::ResendWalletTransactions, pwalletIn));
+    bitcoin_g_signals.Broadcast.disconnect(boost::bind(&Bitcoin_CWalletInterface::ResendWalletTransactions, pwalletIn));
     bitcoin_g_signals.Inventory.disconnect(boost::bind(&Bitcoin_CWalletInterface::Inventory, pwalletIn, _1));
     bitcoin_g_signals.SetBestChain.disconnect(boost::bind(&Bitcoin_CWalletInterface::SetBestChain, pwalletIn, _1));
     bitcoin_g_signals.UpdatedTransaction.disconnect(boost::bind(&Bitcoin_CWalletInterface::UpdatedTransaction, pwalletIn, _1));
@@ -148,7 +148,7 @@ void Bitcoin_UnregisterWallet(Bitcoin_CWalletInterface* pwalletIn) {
 }
 
 void Bitcoin_UnregisterAllWallets() {
-//    bitcoin_g_signals.Broadcast.disconnect_all_slots();
+    bitcoin_g_signals.Broadcast.disconnect_all_slots();
     bitcoin_g_signals.Inventory.disconnect_all_slots();
     bitcoin_g_signals.SetBestChain.disconnect_all_slots();
     bitcoin_g_signals.UpdatedTransaction.disconnect_all_slots();
@@ -5064,14 +5064,13 @@ bool Bitcoin_SendMessages(CNode* pto, bool fSendTrickle)
             Bitcoin_PushGetBlocks(pto, (Bitcoin_CBlockIndex*)bitcoin_chainActive.Tip(), uint256(0));
         }
 
-        //Disabled, only used in *Claim functions
         // Resend wallet transactions that haven't gotten in a block yet
         // Except during reindex, importing and IBD, when old wallet
         // transactions become unconfirmed and spams other nodes.
-//        if (!bitcoin_mainState.ImportingOrReindexing() && !Bitcoin_IsInitialBlockDownload())
-//        {
-//            bitcoin_g_signals.Broadcast();
-//        }
+        if (!bitcoin_mainState.ImportingOrReindexing() && !Bitcoin_IsInitialBlockDownload())
+        {
+            bitcoin_g_signals.Broadcast();
+        }
 
         //
         // Message: inventory

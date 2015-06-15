@@ -51,7 +51,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
     out.push_back(Pair("addresses", a));
 }
 
-void TxToJSON(const Credits_CTransaction& tx, const uint256 hashBlock, Object& entry)
+void Credits_TxToJSON(const Credits_CTransaction& tx, const uint256 hashBlock, Object& entry)
 {
     entry.push_back(Pair("txid", tx.GetHash().GetHex()));
     entry.push_back(Pair("version", tx.nVersion));
@@ -109,7 +109,65 @@ void TxToJSON(const Credits_CTransaction& tx, const uint256 hashBlock, Object& e
     }
 }
 
-Value getrawtransaction(const Array& params, bool fHelp)
+void Bitcoin_TxToJSON(const Bitcoin_CTransaction& tx, const uint256 hashBlock, Object& entry)
+{
+    entry.push_back(Pair("txid", tx.GetHash().GetHex()));
+    entry.push_back(Pair("version", tx.nVersion));
+    entry.push_back(Pair("type", (int64_t)tx.nTxType));
+    entry.push_back(Pair("signingkeyid", tx.signingKeyId.GetHex()));
+    entry.push_back(Pair("locktime", (int64_t)tx.nLockTime));
+    Array vin;
+    BOOST_FOREACH(const Bitcoin_CTxIn& txin, tx.vin)
+    {
+        Object in;
+        if (tx.IsCoinBase())
+            in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+        else
+        {
+            in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
+            in.push_back(Pair("vout", (int64_t)txin.prevout.n));
+            Object o;
+            o.push_back(Pair("asm", txin.scriptSig.ToString()));
+            o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+            in.push_back(Pair("scriptSig", o));
+        }
+        vin.push_back(in);
+    }
+    entry.push_back(Pair("vin", vin));
+    Array vout;
+    for (unsigned int i = 0; i < tx.vout.size(); i++)
+    {
+        const CTxOut& txout = tx.vout[i];
+        Object out;
+        out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
+        out.push_back(Pair("n", (int64_t)i));
+        Object o;
+        ScriptPubKeyToJSON(txout.scriptPubKey, o, true);
+        out.push_back(Pair("scriptPubKey", o));
+        vout.push_back(out);
+    }
+    entry.push_back(Pair("vout", vout));
+
+    if (hashBlock != 0)
+    {
+        entry.push_back(Pair("blockhash", hashBlock.GetHex()));
+        map<uint256, Bitcoin_CBlockIndex*>::iterator mi = bitcoin_mapBlockIndex.find(hashBlock);
+        if (mi != bitcoin_mapBlockIndex.end() && (*mi).second)
+        {
+            Bitcoin_CBlockIndex* pindex = (*mi).second;
+            if (bitcoin_chainActive.Contains(pindex))
+            {
+                entry.push_back(Pair("confirmations", 1 + bitcoin_chainActive.Height() - pindex->nHeight));
+                entry.push_back(Pair("time", (int64_t)pindex->nTime));
+                entry.push_back(Pair("blocktime", (int64_t)pindex->nTime));
+            }
+            else
+                entry.push_back(Pair("confirmations", 0));
+        }
+    }
+}
+
+Value credits_getrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
@@ -192,7 +250,93 @@ Value getrawtransaction(const Array& params, bool fHelp)
 
     Object result;
     result.push_back(Pair("hex", strHex));
-    TxToJSON(tx, hashBlock, result);
+    Credits_TxToJSON(tx, hashBlock, result);
+    return result;
+}
+Value bitcoin_getrawtransaction(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "bitcoin_getrawtransaction \"txid\" ( verbose )\n"
+            "\nReturn the raw transaction data.\n"
+            "\nIf verbose=0, returns a string that is serialized, hex-encoded data for 'txid'.\n"
+            "If verbose is non-zero, returns an Object with information about 'txid'.\n"
+
+            "\nArguments:\n"
+            "1. \"txid\"      (string, required) The transaction id\n"
+            "2. verbose       (numeric, optional, default=0) If 0, return a string, other return a json object\n"
+
+            "\nResult (if verbose is not set or set to 0):\n"
+            "\"data\"      (string) The serialized, hex-encoded data for 'txid'\n"
+
+            "\nResult (if verbose > 0):\n"
+            "{\n"
+            "  \"hex\" : \"data\",       (string) The serialized, hex-encoded data for 'txid'\n"
+            "  \"txid\" : \"id\",        (string) The transaction id (same as provided)\n"
+            "  \"version\" : n,          (numeric) The version\n"
+            "  \"locktime\" : ttt,       (numeric) The lock time\n"
+            "  \"vin\" : [               (array of json objects)\n"
+            "     {\n"
+            "       \"txid\": \"id\",    (string) The transaction id\n"
+            "       \"vout\": n,         (numeric) \n"
+            "       \"scriptSig\": {     (json object) The script\n"
+            "         \"asm\": \"asm\",  (string) asm\n"
+            "         \"hex\": \"hex\"   (string) hex\n"
+            "       },\n"
+            "       \"sequence\": n      (numeric) The script sequence number\n"
+            "     }\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"vout\" : [              (array of json objects)\n"
+            "     {\n"
+            "       \"value\" : x.xxx,            (numeric) The value in btc\n"
+            "       \"n\" : n,                    (numeric) index\n"
+            "       \"scriptPubKey\" : {          (json object)\n"
+            "         \"asm\" : \"asm\",          (string) the asm\n"
+            "         \"hex\" : \"hex\",          (string) the hex\n"
+            "         \"reqSigs\" : n,            (numeric) The required sigs\n"
+            "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
+            "         \"addresses\" : [           (json array of string)\n"
+            "           \"bitcoinaddress\"        (string) bitcoin address\n"
+            "           ,...\n"
+            "         ]\n"
+            "       }\n"
+            "     }\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"blockhash\" : \"hash\",   (string) the block hash\n"
+            "  \"confirmations\" : n,      (numeric) The confirmations\n"
+            "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("bitcoin_getrawtransaction", "\"mytxid\"")
+            + HelpExampleCli("bitcoin_getrawtransaction", "\"mytxid\" 1")
+            + HelpExampleRpc("bitcoin_getrawtransaction", "\"mytxid\", 1")
+        );
+
+    uint256 hash = ParseHashV(params[0], "parameter 1");
+
+    bool fVerbose = false;
+    if (params.size() > 1)
+        fVerbose = (params[1].get_int() != 0);
+
+    Bitcoin_CTransaction tx;
+    uint256 hashBlock = 0;
+    if (!Bitcoin_GetTransaction(hash, tx, hashBlock, true))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+
+    CDataStream ssTx(SER_NETWORK, BITCOIN_PROTOCOL_VERSION);
+    ssTx << tx;
+    string strHex = HexStr(ssTx.begin(), ssTx.end());
+
+    if (!fVerbose)
+        return strHex;
+
+    Object result;
+    result.push_back(Pair("hex", strHex));
+    Bitcoin_TxToJSON(tx, hashBlock, result);
     return result;
 }
 
@@ -459,7 +603,7 @@ Value decoderawtransaction(const Array& params, bool fHelp)
     }
 
     Object result;
-    TxToJSON(tx, 0, result);
+    Credits_TxToJSON(tx, 0, result);
 
     return result;
 }

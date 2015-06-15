@@ -932,7 +932,7 @@ void Credits_CWalletTx::RelayWalletTransaction()
     {
         if (GetDepthInMainChain() == 0) {
             uint256 hash = GetHash();
-            LogPrintf("Relaying wtx %s\n", hash.ToString());
+            LogPrintf("Credits: Relaying wtx %s\n", hash.ToString());
             Credits_RelayTransaction((Credits_CTransaction)*this, hash, Credits_NetParams());
         }
     }
@@ -967,7 +967,7 @@ void Credits_CWallet::ResendWalletTransactions()
     nLastResend = GetTime();
 
     // Rebroadcast any of our txes that aren't in a block yet
-    LogPrintf("ResendWalletTransactions()\n");
+    LogPrintf("Credits: ResendWalletTransactions()\n");
     {
         LOCK(cs_wallet);
         // Sort them in chronological order

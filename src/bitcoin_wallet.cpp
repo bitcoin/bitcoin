@@ -1036,7 +1036,7 @@ void Bitcoin_CWalletTx::RelayWalletTransaction()
     {
         if (GetDepthInMainChain() == 0) {
             uint256 hash = GetHash();
-            LogPrintf("Relaying wtx %s\n", hash.ToString());
+            LogPrintf("Bitcoin: Relaying wtx %s\n", hash.ToString());
             Bitcoin_RelayTransaction((Bitcoin_CTransaction)*this, hash, Bitcoin_NetParams());
         }
     }
@@ -1071,7 +1071,7 @@ void Bitcoin_CWallet::ResendWalletTransactions()
     nLastResend = GetTime();
 
     // Rebroadcast any of our txes that aren't in a block yet
-    LogPrintf("ResendWalletTransactions()\n");
+    LogPrintf("Bitcoin: ResendWalletTransactions()\n");
     {
         LOCK(cs_wallet);
         // Sort them in chronological order
