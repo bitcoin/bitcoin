@@ -206,7 +206,6 @@ bool CMasternodeMan::Add(CMasternode &mn)
         return false;
 
     CMasternode *pmn = Find(mn.vin);
-
     if (pmn == NULL)
     {
         if(fDebug) LogPrintf("CMasternodeMan: Adding new Masternode %s - %i now\n", mn.addr.ToString().c_str(), size() + 1);
@@ -365,7 +364,7 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
     return NULL;
 }
 
-CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment()
+CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight)
 {
     LOCK(cs);
 
@@ -377,7 +376,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment()
         if(!mn.IsEnabled()) continue;
 
         //it's in the list -- so let's skip it
-        if(masternodePayments.IsScheduled(mn)) continue;
+        if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //make sure it has as many confirmations as there are masternodes
         if(mn.GetMasternodeInputAge() < CountEnabled()) continue;
@@ -440,13 +439,11 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-
         if(mn.protocolVersion < minProtocol) continue;
         if(fOnlyActive) {
             mn.Check();
             if(!mn.IsEnabled()) continue;
         }
-
         uint256 n = mn.CalculateScore(1, nBlockHeight);
         unsigned int n2 = 0;
         memcpy(&n2, &n, sizeof(n2));
@@ -459,7 +456,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     int rank = 0;
     BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
         rank++;
-        if(s.second == vin) {
+        if(s.second.prevout == vin.prevout) {
             return rank;
         }
     }

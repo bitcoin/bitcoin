@@ -110,7 +110,7 @@ public:
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
     /// Find an entry in the masternode list that is next to be paid
-    CMasternode* GetNextMasternodeInQueueForPayment();
+    CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight);
 
     /// Find a random entry
     CMasternode* FindRandom();

@@ -230,7 +230,7 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
     return false;
 }
 
-bool CMasternodePayments::IsScheduled(CMasternode& mn)
+bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
@@ -240,6 +240,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn)
 
     CScript payee;
     for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+10; h++){
+        if(h == nNotBlockHeight) continue;
         if(mapMasternodeBlocks.count(h)){
             if(mapMasternodeBlocks[h].GetPayee(payee)){
                 if(mnpayee == payee || mn.donationAddress == payee) {
@@ -450,6 +451,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     } else {
         CScript payeeSource;
         uint256 hash;
+
         if(!GetBlockHash(hash, nBlockHeight-100)) return false;
         unsigned int nHash;
         memcpy(&nHash, &hash, 2);
@@ -457,7 +459,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         LogPrintf(" ProcessBlock Start nHeight %d. \n", nBlockHeight);
 
         // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
-        CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment();
+        CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight);
         if(pmn != NULL)
         {
             LogPrintf(" Found by FindOldestNotInVec \n");
