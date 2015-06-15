@@ -607,7 +607,6 @@ void set_wallet_totals()
     //zero balances
     global_balance_money.clear();
     global_balance_reserved.clear();
-    global_wallet_property_list.clear();
 
     // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
     for(std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
