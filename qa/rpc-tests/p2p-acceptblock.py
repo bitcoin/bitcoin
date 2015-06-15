@@ -64,6 +64,8 @@ class TestNode(NodeConnCB):
         NodeConnCB.__init__(self)
         self.create_callback_map()
         self.connection = None
+        self.ping_counter = 1
+        self.last_pong = msg_pong()
 
     def add_connection(self, conn):
         self.connection = conn
@@ -86,6 +88,24 @@ class TestNode(NodeConnCB):
     # Wrapper for the NodeConn's send_message function
     def send_message(self, message):
         self.connection.send_message(message)
+
+    def on_pong(self, conn, message):
+        self.last_pong = message
+
+    # Sync up with the node after delivery of a block
+    def sync_with_ping(self, timeout=30):
+        self.connection.send_message(msg_ping(nonce=self.ping_counter))
+        received_pong = False
+        sleep_time = 0.05
+        while not received_pong and timeout > 0:
+            time.sleep(sleep_time)
+            timeout -= sleep_time
+            with mininode_lock:
+                if self.last_pong.nonce == self.ping_counter:
+                    received_pong = True
+        self.ping_counter += 1
+        return received_pong
+
 
 class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -139,7 +159,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(blocks_h2[0]))
         white_node.send_message(msg_block(blocks_h2[1]))
 
-        time.sleep(0.5)
+        [ x.sync_with_ping() for x in [test_node, white_node] ]
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 2)
         print "First height 2 block accepted by both nodes"
@@ -152,7 +172,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(blocks_h2f[0]))
         white_node.send_message(msg_block(blocks_h2f[1]))
 
-        time.sleep(0.5)  # Give time to process the block
+        [ x.sync_with_ping() for x in [test_node, white_node] ]
         for x in self.nodes[0].getchaintips():
             if x['hash'] == blocks_h2f[0].hash:
                 assert_equal(x['status'], "headers-only")
@@ -171,7 +191,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.send_message(msg_block(blocks_h3[0]))
         white_node.send_message(msg_block(blocks_h3[1]))
 
-        time.sleep(0.5)
+        [ x.sync_with_ping() for x in [test_node, white_node] ]
         # Since the earlier block was not processed by node0, the new block
         # can't be fully validated.
         for x in self.nodes[0].getchaintips():
@@ -222,7 +242,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         white_node.send_message(headers_message) # Send headers leading to tip
         white_node.send_message(msg_block(tips[1]))  # Now deliver the tip
         try:
-            time.sleep(0.5)
+            white_node.sync_with_ping()
             self.nodes[1].getblock(tips[1].hash)
             print "Unrequested block far ahead of tip accepted from whitelisted peer"
         except:
@@ -238,7 +258,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # the node processes it and incorrectly advances the tip).
         # But this would be caught later on, when we verify that an inv triggers
         # a getdata request for this block.
-        time.sleep(1)
+        test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 2)
         print "Unrequested block that would complete more-work chain was ignored"
 
@@ -250,7 +270,7 @@ class AcceptBlockTest(BitcoinTestFramework):
             test_node.last_getdata = None
             test_node.send_message(msg_inv([CInv(2, blocks_h3[0].sha256)]))
 
-        time.sleep(0.5)
+        test_node.sync_with_ping()
         with mininode_lock:
             getdata = test_node.last_getdata
 
@@ -261,7 +281,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 7. Send the missing block for the third time (now it is requested)
         test_node.send_message(msg_block(blocks_h2f[0]))
 
-        time.sleep(2)
+        test_node.sync_with_ping()
         assert_equal(self.nodes[0].getblockcount(), 290)
         print "Successfully reorged to longer chain from non-whitelisted peer"
 
