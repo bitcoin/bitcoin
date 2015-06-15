@@ -408,6 +408,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  }\n"
             "  ,...\n"
             "  ]\n"
+            "  \"warnings\": \"...\"                    (string) any network warnings (such as alert messages) \n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getnetworkinfo", "")
@@ -439,5 +440,6 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         }
     }
     obj.push_back(Pair("localaddresses", localAddresses));
+    obj.push_back(Pair("warnings",       GetWarnings("statusbar")));
     return obj;
 }
