@@ -193,11 +193,13 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
 
         // iterate mp_tally_map looking for addresses that hold a balance in propertyId
         for(std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            string address = my_it->first.c_str();
-            my_it->second.init();
+            const std::string& address = my_it->first;
+            CMPTally& tally = my_it->second;
+            tally.init();
+
             uint32_t id;
             bool watchAddress = false, includeAddress = false;
-            while (0 != (id = (my_it->second).next())) {
+            while (0 != (id = (tally.next()))) {
                 if (id == propertyId) {
                     includeAddress = true;
                     break;
@@ -210,13 +212,12 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
             if (!addressIsMine) continue; // ignore this address, not in wallet
             if (addressIsMine != ISMINE_SPENDABLE) watchAddress = true;
 
-            // obtain the balances for the address
-            int64_t available = getUserAvailableMPbalance(address, propertyId);
-            int64_t reserved = getMPbalance(address, propertyId, METADEX_RESERVE);
-            if (propertyId<3) {
-                reserved += getMPbalance(address, propertyId, ACCEPT_RESERVE);
-                reserved += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-            }
+            // obtain the balances for the address directly form tally
+            int64_t available = tally.getMoney(propertyId, BALANCE);
+            available += tally.getMoney(propertyId, PENDING);
+            int64_t reserved = tally.getMoney(propertyId, SELLOFFER_RESERVE);
+            reserved += tally.getMoney(propertyId, ACCEPT_RESERVE);
+            reserved += tally.getMoney(propertyId, METADEX_RESERVE);
 
             // format the balances
             string reservedStr, availableStr;
