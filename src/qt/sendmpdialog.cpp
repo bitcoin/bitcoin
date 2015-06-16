@@ -94,6 +94,9 @@ void SendMPDialog::updatePropSelector()
     uint32_t nextPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     ui->propertyComboBox->clear();
+
+    LOCK(cs_tally);
+
     for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);

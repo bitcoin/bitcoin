@@ -288,6 +288,8 @@ void OverviewPage::updateOmni()
     // alert status when we're notified of an Omni state change
     updateAlerts();
 
+    LOCK(cs_tally);
+
     // always show MSC
     UpdatePropertyBalance(1,global_balance_money[1],global_balance_reserved[1]);
     // loop properties and update overview

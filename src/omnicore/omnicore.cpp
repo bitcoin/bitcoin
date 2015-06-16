@@ -95,15 +95,13 @@ using std::vector;
 
 using namespace mastercore;
 
-
-// comment out MY_HACK & others here - used for Unit Testing only !
-// #define MY_HACK
+CCriticalSection cs_tally;
 
 static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
-static int nWaterlineBlock = 0;  //
+static int nWaterlineBlock = 0;
 
 //! Available balances of wallet properties
 std::map<uint32_t, int64_t> global_balance_money;
@@ -279,8 +277,6 @@ std::string FormatMP(unsigned int property, int64_t n, bool fSign)
 }
 
 string const CMPSPInfo::watermarkKey("watermark");
-
-CCriticalSection cs_tally;
 
 OfferMap mastercore::my_offers;
 AcceptMap mastercore::my_accepts;
