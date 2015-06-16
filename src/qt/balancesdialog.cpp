@@ -130,6 +130,10 @@ void BalancesDialog::setWalletModel(WalletModel *model)
 
 void BalancesDialog::UpdatePropSelector()
 {
+    // don't waste time updating if there are no new properties
+    if ((uint32_t)ui->propSelectorWidget->count() > global_wallet_property_list.size()) return;
+
+    // a new property has been added to the wallet, update the property selector
     QString spId = ui->propSelectorWidget->itemData(ui->propSelectorWidget->currentIndex()).toString();
     ui->propSelectorWidget->clear();
     ui->propSelectorWidget->addItem("Wallet Totals (Summary)","2147483646"); //use last possible ID for summary for now
