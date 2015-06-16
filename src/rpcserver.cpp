@@ -273,6 +273,7 @@ static const CRPCCommand vRPCCommands[] =
     /* P2P networking */
     { "network",            "getnetworkinfo",         &getnetworkinfo,         true  },
     { "network",            "addnode",                &addnode,                true  },
+    { "network",            "disconnectnode",         &disconnectnode,         true  },
     { "network",            "getaddednodeinfo",       &getaddednodeinfo,       true  },
     { "network",            "getconnectioncount",     &getconnectioncount,     true  },
     { "network",            "getnettotals",           &getnettotals,           true  },
