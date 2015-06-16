@@ -50,11 +50,10 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExDialog),
     clientModel(0),
-    walletModel(0)
+    walletModel(0),
+    global_metadex_market(3)
 {
     ui->setupUi(this);
-    //open
-    global_metadex_market = 3;
 
     //prep lists
     ui->buyList->setColumnCount(3);

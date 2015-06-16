@@ -104,7 +104,6 @@ static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
 static int nWaterlineBlock = 0;  //
 
-uint64_t global_metadex_market;
 //! Available balances of wallet properties
 std::map<uint32_t, int64_t> global_balance_money;
 //! Reserved balances of wallet propertiess

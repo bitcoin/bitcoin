@@ -55,6 +55,7 @@ private:
     Ui::MetaDExDialog *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
+    uint32_t global_metadex_market;
 
 private slots:
     void buyTrade();

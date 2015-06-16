@@ -382,7 +382,6 @@ public:
     bool isMPinBlockRange(int, int, bool);
 };
 
-extern uint64_t global_metadex_market;
 //! Available balances of wallet properties
 extern std::map<uint32_t, int64_t> global_balance_money;
 //! Reserved balances of wallet propertiess
