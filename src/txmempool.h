@@ -52,7 +52,14 @@ public:
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return this->tx; }
-    double GetPriority(unsigned int currentHeight) const;
+    /** This function will return the correct priority of the
+     *  transaction if it's called on a transaction whose inputs were
+     *  all in the blockchain at the time the transaction entered the
+     *  mempool.  Otherwise if currentHeight is greater than the height
+     *  of the transaction it will overestimate priority by assuming
+     *  all inputs have aged.
+     */
+    double GetPriorityUpperBound(unsigned int currentHeight) const;
     CAmount GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }

@@ -166,7 +166,7 @@ UniValue getrawmempool(const UniValue& params, bool fHelp)
             "    \"time\" : n,             (numeric) local time transaction entered pool in seconds since 1 Jan 1970 GMT\n"
             "    \"height\" : n,           (numeric) block height when transaction entered pool\n"
             "    \"startingpriority\" : n, (numeric) priority when transaction entered pool\n"
-            "    \"currentpriority\" : n,  (numeric) transaction priority now\n"
+            "    \"currentpriority\" : n,  (numeric) upper bound of transaction priority now\n"
             "    \"depends\" : [           (array) unconfirmed transactions used as inputs for this transaction\n"
             "        \"transactionid\",    (string) parent transaction id\n"
             "       ... ]\n"
@@ -196,8 +196,8 @@ UniValue getrawmempool(const UniValue& params, bool fHelp)
             info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
             info.push_back(Pair("time", e.GetTime()));
             info.push_back(Pair("height", (int)e.GetHeight()));
-            info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
-            info.push_back(Pair("currentpriority", e.GetPriority(chainActive.Height())));
+            info.push_back(Pair("startingpriority", e.GetPriorityUpperBound(e.GetHeight())));
+            info.push_back(Pair("currentpriority", e.GetPriorityUpperBound(chainActive.Height())));
             const CTransaction& tx = e.GetTx();
             set<string> setDepends;
             BOOST_FOREACH(const CTxIn& txin, tx.vin)

@@ -39,7 +39,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
 }
 
 double
-CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
+CTxMemPoolEntry::GetPriorityUpperBound(unsigned int currentHeight) const
 {
     CAmount nValueIn = tx.GetValueOut()+nFee;
     double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
