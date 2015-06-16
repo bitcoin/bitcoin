@@ -1,3 +1,7 @@
+*.sublime-project
+*.sublime-workspace
+todo.txt
+
 *.tar.gz
 
 *.exe
