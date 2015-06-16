@@ -26,7 +26,7 @@ bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue){
     //while syncing take the longest chain
     if (fImporting || fReindex || pindexPrev->nHeight+1 < Checkpoints::GetTotalBlocksEstimate()) {
         //super blocks will always be on these blocks, max 100 per budgeting
-        if(pindexPrev->nHeight+1 % GetBudgetPaymentCycleBlocks() < 100){
+        if((pindexPrev->nHeight+1) % GetBudgetPaymentCycleBlocks() < 100){
             return true;
         } else {
             if(nBlockValue > nExpectedValue) return false;
