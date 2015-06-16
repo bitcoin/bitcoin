@@ -699,3 +699,21 @@ void RPCConsole::clearSelectedNode()
     ui->detailWidget->hide();
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 }
+
+void RPCConsole::showNormalIfMinimized()
+{
+    if(!clientModel)
+        return;
+
+    // activateWindow() (sometimes) helps with keyboard focus on Windows
+    if (isHidden()) {
+        show();
+        activateWindow();
+    } else if (isMinimized()) {
+        showNormal();
+        activateWindow();
+    } else if (GUIUtil::isObscured(this)) {
+        raise();
+        activateWindow();
+    }
+}

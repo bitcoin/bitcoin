@@ -60,6 +60,8 @@ private slots:
     void hideEvent(QHideEvent *event);
     /** Show custom context menu on Peers tab */
     void showMenu(const QPoint& point);
+    /** Show window if hidden, unminimize when minimized, rise when obscured */
+    void showNormalIfMinimized();
 
 public slots:
     void clear();
