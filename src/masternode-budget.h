@@ -351,6 +351,7 @@ public:
     int nBlockEnd;
     int64_t nAmount;
     CScript address;
+    int64_t nTime;
 
     map<uint256, CBudgetVote> mapVotes;
     //cache object
@@ -366,7 +367,7 @@ public:
     bool HasMinimumRequiredSupport();
     std::pair<std::string, std::string> GetVotes();
 
-    bool IsValid();
+    bool IsValid(std::string& strError);
 
     std::string GetName() {return strProposalName; }
     std::string GetURL() {return strURL; }
@@ -419,6 +420,7 @@ public:
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
         READWRITE(address);
+        READWRITE(nTime);
 
         //for saving to the serialized db
         READWRITE(mapVotes);
