@@ -65,8 +65,18 @@ Value mnbudget(const Array& params, bool fHelp)
         if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()*(nPaymentCount+1);
 
         int nBlockStart = params[4].get_int();
+        if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
+            int nNext = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
+            return "Invalid block start - must be a budget cycle block. Next Valid Block: " + boost::lexical_cast<std::string>(nNext);
+        }
+
+        int nBlockEnd = nBlockStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount);
+
         if(nBlockStart < nBlockMin)
             return "Invalid payment count, must be more than current height.";
+
+        if(nBlockEnd < pindexPrev->nHeight)
+            return "Invalid ending block, starting block + (payment_cycle*payments) must be more than current height.";
 
         CBitcoinAddress address(params[5].get_str());
         if (!address.IsValid())
@@ -161,8 +171,18 @@ Value mnbudget(const Array& params, bool fHelp)
         if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()*(nPaymentCount+1);
 
         int nBlockStart = params[4].get_int();
+        if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
+            int nNext = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
+            return "Invalid block start - must be a budget cycle block. Next valid block: " + boost::lexical_cast<std::string>(nNext);
+        }
+
+        int nBlockEnd = nBlockStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount);
+
         if(nBlockStart < nBlockMin)
             return "Invalid payment count, must be more than current height.";
+
+        if(nBlockEnd < pindexPrev->nHeight)
+            return "Invalid ending block, starting block + (payment_cycle*payments) must be more than current height.";
 
         CBitcoinAddress address(params[5].get_str());
         if (!address.IsValid())

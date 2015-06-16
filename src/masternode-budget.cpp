@@ -49,7 +49,10 @@ void SubmitFinalBudget()
         vecPayments.push_back(out);
     }
 
-    if(vecPayments.size() < 1) return;
+    if(vecPayments.size() < 1) {
+        LogPrintf("SubmitFinalBudget - Found No Proposals For Period\n");
+        return;
+    }
     nSubmittedFinalBudget = nBlockStart;
 
     CPubKey pubKeyMasternode;
@@ -57,17 +60,17 @@ void SubmitFinalBudget()
     std::string errorMessage;
 
     if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
-        LogPrintf("SubmitFinalBudget - Error upon calling SetKey");
+        LogPrintf("SubmitFinalBudget - Error upon calling SetKey\n");
     }
 
     //create the proposal incase we're the first to make it
     CFinalizedBudgetBroadcast prop(activeMasternode.vin, strBudgetName, nBlockStart, vecPayments);
     if(!prop.Sign(keyMasternode, pubKeyMasternode)){
-        LogPrintf("SubmitFinalBudget - Failure to sign.");
+        LogPrintf("SubmitFinalBudget - Failure to sign.\n");
     }
 
     if(!prop.IsValid()){
-        LogPrintf("SubmitFinalBudget - Invalid prop (are all the hashes correct?)");
+        LogPrintf("SubmitFinalBudget - Invalid prop (are all the hashes correct?)\n");
     }
 
     mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
@@ -77,7 +80,7 @@ void SubmitFinalBudget()
 
     CFinalizedBudgetVote vote(activeMasternode.vin, prop.GetHash());
     if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-        LogPrintf("SubmitFinalBudget - Failure to sign.");
+        LogPrintf("SubmitFinalBudget - Failure to sign.\n");
     }
 
     mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
@@ -262,6 +265,7 @@ void CBudgetManager::AddProposal(CBudgetProposal& prop)
 
 void CBudgetManager::CheckAndRemove()
 {
+    std::string strError = "";
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
@@ -278,7 +282,7 @@ void CBudgetManager::CheckAndRemove()
     while(it2 != mapProposals.end())
     {
         CBudgetProposal* prop = &((*it2).second);
-        if(!prop->IsValid()){
+        if(!prop->IsValid(strError)){
             mapProposals.erase(it2++);
         } else {
             ++it2;
@@ -455,6 +459,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     if(pindexPrev == NULL) return ret;
 
     int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
+    int nBlockEnd  =  nBlockStart + GetBudgetPaymentCycleBlocks() -1;
     int64_t nTotalBudget = GetTotalBudget(nBlockStart);
 
 
@@ -463,18 +468,24 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     {
         CBudgetProposal* prop = &((*it2).second);
 
-        if(nTotalBudget == nBudgetAllocated){
-            prop->SetAllotted(0);
-        } else if(prop->GetAmount() + nBudgetAllocated <= nTotalBudget) {
-            prop->SetAllotted(prop->GetAmount());
-            nBudgetAllocated += prop->GetAmount();
-        } else {
-            //couldn't pay for the entire budget, so it'll be partially paid.
-            prop->SetAllotted(nTotalBudget - nBudgetAllocated);
-            nBudgetAllocated = nTotalBudget;
+        //prop start/end should be inside this period
+        if(prop->nBlockStart <= nBlockStart && prop->nBlockEnd >= nBlockEnd) 
+        {
+
+            if(nTotalBudget == nBudgetAllocated){
+                prop->SetAllotted(0);
+            } else if(prop->GetAmount() + nBudgetAllocated <= nTotalBudget) {
+                prop->SetAllotted(prop->GetAmount());
+                nBudgetAllocated += prop->GetAmount();
+            } else {
+                //couldn't pay for the entire budget, so it'll be partially paid.
+                prop->SetAllotted(nTotalBudget - nBudgetAllocated);
+                nBudgetAllocated = nTotalBudget;
+            }
+        
+            ret.push_back(prop);
         }
 
-        ret.push_back(prop);
         it2++;
     }
 
@@ -584,14 +595,18 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        //set time we first saw this prop
+        prop.nTime = GetAdjustedTime();
+
         if(!prop.SignatureValid()){
             LogPrintf("mprop - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
-        if(!prop.IsValid()) {
-            LogPrintf("mprop - invalid prop\n");
+        std::string strError = "";
+        if(!prop.IsValid(strError)) {
+            LogPrintf("mprop - invalid prop - %s\n", strError.c_str());
             return;
         }
 
@@ -607,7 +622,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             budget.AddProposal(p);
             prop.Relay();
 
-            if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
+            //can only do this four times a day on the network
+            if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes+=25;
         } else {
             LogPrintf("mvote - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
             return;
@@ -762,6 +778,7 @@ CBudgetProposal::CBudgetProposal()
     nBlockStart = 0;
     nBlockEnd = 0;
     nAmount = 0;
+    nTime = 0;
 }
 
 CBudgetProposal::CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn)
@@ -773,6 +790,7 @@ CBudgetProposal::CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std
 	nBlockEnd = nBlockEndIn;
 	address = addressIn;
 	nAmount = nAmountIn;
+    nTime = 0;
 }
 
 CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
@@ -784,21 +802,26 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
     nBlockEnd = other.nBlockEnd;
     address = other.address;
     nAmount = other.nAmount;
+    nTime = other.nTime;
 }
 
-bool CBudgetProposal::IsValid()
+bool CBudgetProposal::IsValid(std::string& strError)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return true;
+    if(pindexPrev == NULL) {strError = "Tip is NULL"; return true;}
 
-    //TODO: if < 20 votes and 2+ weeks old, invalid
-
-    if(pindexPrev->nHeight < nBlockStart || pindexPrev->nHeight > nBlockEnd) return false;
-
-    if(nBlockEnd - nBlockStart <= GetBudgetPaymentCycleBlocks()) return false;
+    //if proposal doesn't gain traction within 2 weeks, remove it
+    // nTime not being saved correctly
+    // if(nTime + (60*60*24*2) < GetAdjustedTime()) {
+    //     if(GetYeas() < 10) {
+    //         strError = "Not enough support";
+    //         return false;
+    //     }
+    // }
 
     //can only pay out 10% of the possible coins (min value of coins)
     if(nAmount > budget.GetTotalBudget(nBlockStart)) {
+        strError = "Payment more than max";
         return false;
     }
 
@@ -923,6 +946,7 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast()
     nBlockStart = 0;
     nBlockEnd = 0;
     nAmount = 0;
+    nTime = 0;
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
@@ -992,7 +1016,7 @@ bool CBudgetProposalBroadcast::SignatureValid()
 
     if(pmn == NULL)
     {
-        LogPrintf("CBudgetProposalBroadcast::SignatureValid() - Unknown Masternode\n");
+        LogPrintf("CBudgetProposalBroadcast::SignatureValid() - Unknown Masternode - %s\n", vin.ToString().c_str());
         return false;
     }
 
@@ -1058,7 +1082,7 @@ bool CBudgetVote::SignatureValid()
 
     if(pmn == NULL)
     {
-        LogPrintf("CBudgetVote::SignatureValid() - Unknown Masternode\n");
+        LogPrintf("CBudgetProposalBroadcast::SignatureValid() - Unknown Masternode - %s\n", vin.ToString().c_str());
         return false;
     }
 
