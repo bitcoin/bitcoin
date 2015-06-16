@@ -605,6 +605,8 @@ void CheckWalletUpdate()
         global_balance_money.clear();
         global_balance_reserved.clear();
 
+        LOCK(cs_tally);
+
         // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
         for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
             // check if the address is a wallet address (including watched addresses)
