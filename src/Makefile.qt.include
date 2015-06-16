@@ -303,6 +303,7 @@ RES_ICONS = \
   qt/res/icons/mp_sp.png \
   qt/res/icons/mp_toolbox.png \
   qt/res/icons/omni_hourglass.png \
+  qt/res/icons/omni_recent.png \
   qt/res/icons/transaction_invalid.png
 
 BITCOIN_QT_CPP = \

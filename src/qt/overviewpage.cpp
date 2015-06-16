@@ -17,6 +17,8 @@
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/tx.h"
+#include "omnicore/pending.h"
 
 #include "main.h"
 
@@ -61,6 +63,12 @@ public:
     {
         painter->save();
 
+        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
+        QString address = index.data(Qt::DisplayRole).toString();
+        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
+        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
+        QVariant value = index.data(Qt::ForegroundRole);
+
         QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
         QRect mainRect = option.rect;
         QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
@@ -69,13 +77,98 @@ public:
         int halfheight = (mainRect.height() - 2*ypad)/2;
         QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace, halfheight);
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
+
+        // Rather ugly way to provide recent transaction display support - each time we paint a transaction we will check if
+        // it's Omni and override the values if so.  This will not scale at all, but since we're only ever doing 6 txns via the occasional
+        // repaint performance should be a non-issue and it'll provide the functionality short term while a better approach is devised.
+        uint256 hash = 0;
+        hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
+        bool omniOverride = false;
+        bool omniOutbound = true;
+        bool valid = false;
+        std::string omniAmountStr;
+
+        // check pending
+        for(PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
+            uint256 txid = it->first;
+            if (txid != hash) continue;
+            omniOverride = true;
+            // grab pending object & extract details
+            CMPPending *p_pending = &(it->second);
+            address = QString::fromStdString(p_pending->src);
+            uint64_t omniPropertyId = p_pending->prop;
+            int64_t omniAmount = p_pending->amount;
+            valid = true;
+            if (isPropertyDivisible(omniPropertyId)) {
+                omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
+            } else {
+                omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
+            }
+            break;
+        }
+
+        // check wallet
+        if (p_txlistdb->exists(hash)) {
+            omniOverride = true;
+            amount = 0;
+            CTransaction wtx;
+            uint256 blockHash = 0;
+            if (GetTransaction(hash, wtx, blockHash, true)) {
+                if ((0 != blockHash) || (NULL != GetBlockIndex(blockHash))) {
+                    CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+                    if (NULL != pBlockIndex) {
+                        int blockHeight = pBlockIndex->nHeight;
+                        CMPTransaction mp_obj;
+                        int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
+                        if (0 < parseRC) { //positive RC means DEx payment
+                            std::string tmpBuyer, tmpSeller;
+                            uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
+                            p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                            bool bIsBuy = IsMyAddress(tmpBuyer);
+                            int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
+                            if (0<numberOfPurchases) { // calculate total bought/sold
+                                for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
+                                    p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                    total += tmpNValue;
+                                }
+                                if (!bIsBuy) {
+                                      address = QString::fromStdString(tmpSeller);
+                                } else {
+                                      address = QString::fromStdString(tmpBuyer);
+                                      omniOutbound = false;
+                                }
+                                omniAmountStr = FormatDivisibleMP(total);
+                            }
+                        } else if (0 == parseRC) {
+                            if (0<=mp_obj.step1()) {
+                                valid = getValidMPTX(hash);
+                                if (!mp_obj.getReceiver().empty()) {
+                                    if (IsMyAddress(mp_obj.getReceiver())) omniOutbound = false;
+                                    address = QString::fromStdString(mp_obj.getReceiver());
+                                } else {
+                                    address = QString::fromStdString(mp_obj.getSender());
+                                }
+                                if (0 == mp_obj.step2_Value()) {
+                                    uint32_t omniPropertyId = mp_obj.getProperty();
+                                    int64_t omniAmount = mp_obj.getAmount();
+                                    if (isPropertyDivisible(omniPropertyId)) {
+                                        omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                    } else {
+                                        omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (omniOverride) {
+            if (valid) { icon = QIcon(":/icons/omnirecent"); } else { icon = QIcon(":/icons/transaction_invalid"); }
+        }
         icon.paint(painter, decorationRect);
 
-        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
-        QString address = index.data(Qt::DisplayRole).toString();
-        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
-        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
-        QVariant value = index.data(Qt::ForegroundRole);
         QColor foreground = option.palette.color(QPalette::Text);
         if(value.canConvert<QBrush>())
         {
@@ -94,7 +187,7 @@ public:
             iconWatchonly.paint(painter, watchonlyRect);
         }
 
-        if(amount < 0)
+        if(amount < 0 || omniOutbound)
         {
             foreground = COLOR_NEGATIVE;
         }
@@ -107,7 +200,12 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
+        QString amountText;
+        if (!omniOverride) {
+            amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
+        } else {
+            amountText = QString::fromStdString(omniAmountStr);
+        }
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");

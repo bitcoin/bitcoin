@@ -60,6 +60,7 @@
         <file alias="token_btc">res/icons/token_btc.png</file>
         <file alias="transaction_invalid">res/icons/transaction_invalid.png</file>
         <file alias="hourglass">res/icons/omni_hourglass.png</file>
+        <file alias="omnirecent">res/icons/omni_recent.png</file>
         <!-- /Omni Core QT -->
     </qresource>
     <qresource prefix="/images">
