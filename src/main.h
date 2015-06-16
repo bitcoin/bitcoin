@@ -59,11 +59,11 @@ static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
 static const unsigned int MAX_P2SH_SIGOPS = 15;
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
-static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
+static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_STANDARD_TX_SIZE/25; // one sigop per 25 bytes
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
-/** The maximum size of a blk?????.dat file (since 0.8) */
-static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
+/** Minimum number of max-sized blocks in blk?????.dat files */
+static const unsigned int MIN_BLOCKFILE_BLOCKS = 128;
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
@@ -323,7 +323,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, uint64_t nMaxTransactionSize);
 
 /** Check for standard transaction types
  * @return True if all outputs (scriptPubKeys) use only standard transaction forms
@@ -498,5 +498,21 @@ extern CBlockTreeDB *pblocktree;
  * This is also true for mempool checks.
  */
 int GetSpendHeight(const CCoinsViewCache& inputs);
+
+// Time when bigger-than-1MB-blocks are allowed
+class SizeForkTime {
+public:
+    SizeForkTime(uint64_t _t);
+
+    // Same interface as std::atomic -- when c++11 is supported,
+    // this class can go away and sizeForkTime can just be type
+    // std::atomic<uint64_t>
+    uint64_t load() const;
+    void store(uint64_t _t);
+private:
+    mutable CCriticalSection cs;
+    uint64_t t;
+};
+extern SizeForkTime sizeForkTime;
 
 #endif // BITCOIN_MAIN_H

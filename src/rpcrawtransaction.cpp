@@ -296,7 +296,8 @@ UniValue verifytxoutproof(const UniValue& params, bool fHelp)
     UniValue res(UniValue::VARR);
 
     vector<uint256> vMatch;
-    if (merkleBlock.txn.ExtractMatches(vMatch) != merkleBlock.header.hashMerkleRoot)
+    uint64_t nMaxTransactions = Params().MaxBlockSize(merkleBlock.GetBlockTime(), sizeForkTime.load())/60; // 60 bytes == min tx size
+    if (merkleBlock.txn.ExtractMatches(nMaxTransactions, vMatch) != merkleBlock.header.hashMerkleRoot)
         return res;
 
     LOCK(cs_main);

@@ -35,10 +35,10 @@ This test is meant to exercise BIP66 (DER SIG).
 Connect to a single node.
 Mine 2 (version 2) blocks (save the coinbases for later).
 Generate 98 more version 2 blocks, verify the node accepts.
-Mine 749 version 3 blocks, verify the node accepts.
-Check that the new DERSIG rules are not enforced on the 750th version 3 block.
-Check that the new DERSIG rules are enforced on the 751st version 3 block.
-Mine 199 new version blocks.
+Mine 74 version 3 blocks, verify the node accepts.
+Check that the new DERSIG rules are not enforced on the 75th version 3 block.
+Check that the new DERSIG rules are enforced on the 76th version 3 block.
+Mine 19 new version blocks.
 Mine 1 old-version block.
 Mine 1 new version block.
 Mine 1 old version block, see that the node rejects.
@@ -91,9 +91,9 @@ class BIP66Test(ComparisonTestFramework):
             self.tip = block.sha256
         yield TestInstance(test_blocks, sync_every_block=False)
 
-        ''' Mine 749 version 3 blocks '''
+        ''' Mine 74 version 3 blocks '''
         test_blocks = []
-        for i in xrange(749):
+        for i in xrange(74):
             block = create_block(self.tip, create_coinbase(2), self.last_block_time + 1)
             block.nVersion = 3
             block.rehash()
@@ -104,7 +104,7 @@ class BIP66Test(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         ''' 
-        Check that the new DERSIG rules are not enforced in the 750th
+        Check that the new DERSIG rules are not enforced in the 75th
         version 3 block.
         '''
         spendtx = self.create_transaction(self.nodes[0],
@@ -124,7 +124,7 @@ class BIP66Test(ComparisonTestFramework):
         yield TestInstance([[block, True]])
 
         ''' 
-        Check that the new DERSIG rules are enforced in the 751st version 3
+        Check that the new DERSIG rules are enforced in the 76th version 3
         block.
         '''
         spendtx = self.create_transaction(self.nodes[0],
@@ -141,9 +141,9 @@ class BIP66Test(ComparisonTestFramework):
         self.last_block_time += 1
         yield TestInstance([[block, False]])
 
-        ''' Mine 199 new version blocks on last valid tip '''
+        ''' Mine 19 new version blocks on last valid tip '''
         test_blocks = []
-        for i in xrange(199):
+        for i in xrange(19):
             block = create_block(self.tip, create_coinbase(1), self.last_block_time + 1)
             block.nVersion = 3
             block.rehash()

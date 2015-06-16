@@ -53,6 +53,17 @@ public:
         nMinerThreads = 0;
         nPruneAfterHeight = 100000;
 
+        // Timestamps for forking consensus rule changes:
+        //  Allow bigger blocks
+        //  Limit transactions to 100,000 bytes
+        nEarliestSizeForkTime = 1452470400; // 11 Jan 2016 00:00:00 UTC
+        // 1MB max blocks before 11 Jan 2016
+        // Then, if miner consensus: 8MB max, doubling every two years
+        nMaxSizePreFork = 1000*1000; // 1MB max pre-fork
+        nSizeDoubleEpoch = 60*60*24*365*2; // two years
+        nMaxSizeBase = 8*1000*1000; // 8MB
+        nMaxSizeDoublings = 10;
+
         /**
          * Build the genesis block. Note that the output of its generation
          * transaction cannot be spent since it did not originally exist in the
@@ -150,6 +161,14 @@ public:
         nMinerThreads = 0;
         nPruneAfterHeight = 1000;
 
+        // 1MB max blocks before 1 Aug 2015
+        // Then, if miner consensus: 8MB max, doubling every two years
+        nMaxSizePreFork = 1000*1000; // 1MB max pre-fork
+        nEarliestSizeForkTime = 1438387200; // 1 Aug 2015 00:00:00 UTC
+        nSizeDoubleEpoch = 60*60*24*365*2; // two years
+        nMaxSizeBase = 8*1000*1000; // 8MB
+        nMaxSizeDoublings = 10;
+
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1296688602;
         genesis.nNonce = 414098458;
@@ -198,9 +217,10 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMajorityEnforceBlockUpgrade = 750;
-        consensus.nMajorityRejectBlockOutdated = 950;
-        consensus.nMajorityWindow = 1000;
+        // Make forks on regtest the same as mainnet but 10x easier, to speed up the regression tests.
+        consensus.nMajorityEnforceBlockUpgrade = 75;
+        consensus.nMajorityRejectBlockOutdated = 95;
+        consensus.nMajorityWindow = 100;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

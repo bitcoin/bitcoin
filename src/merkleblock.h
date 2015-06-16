@@ -113,7 +113,7 @@ public:
      * extract the matching txid's represented by this partial merkle tree.
      * returns the merkle root, or 0 in case of failure
      */
-    uint256 ExtractMatches(std::vector<uint256> &vMatch);
+    uint256 ExtractMatches(uint64_t nMaxTransactions, std::vector<uint256> &vMatch);
 };
 
 
@@ -143,6 +143,8 @@ public:
     CMerkleBlock(const CBlock& block, const std::set<uint256>& txids);
 
     CMerkleBlock() {}
+
+    int64_t GetBlockTime() { return header.GetBlockTime(); }
 
     ADD_SERIALIZE_METHODS;
 
