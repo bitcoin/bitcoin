@@ -91,7 +91,6 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
         CheckWalletUpdate();
         uiInterface.OmniPendingChanged(true);
-        uiInterface.OmniStateChanged();
     } else {
         PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(),
             sendingAddress, refAddress, type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
