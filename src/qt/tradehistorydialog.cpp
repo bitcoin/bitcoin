@@ -510,7 +510,7 @@ void TradeHistoryDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(UpdateTradeHistoryTable()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateTradeHistoryTable()));
     }
 }
 

@@ -74,7 +74,7 @@ CClientUIInterface uiInterface;
 // Omni Core initialization and shutdown handlers
 int mastercore_init();
 int mastercore_shutdown();
-void set_wallet_totals();
+void CheckWalletUpdate();
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1289,8 +1289,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
         }
 
-    // Omni Core code should be initialized and wallet should now be loaded, perform an initial populate of Omni balances
-    set_wallet_totals();
+    // Omni Core code should be initialized and wallet should now be loaded, perform an initial populate of Omni balances and cache
+    CheckWalletUpdate();
 
     } // (!fDisableWallet)
 #else // ENABLE_WALLET

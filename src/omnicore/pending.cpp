@@ -90,7 +90,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     }
 
     // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
-    set_wallet_totals();
+    CheckWalletUpdate();
     uiInterface.OmniPendingChanged(true); // after adding it is a safe assumption that pending map now contains txn(s)
     uiInterface.OmniStateChanged();
 }

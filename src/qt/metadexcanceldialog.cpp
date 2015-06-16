@@ -64,7 +64,7 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(RefreshUI()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(RefreshUI()));
     }
 }
 

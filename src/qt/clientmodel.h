@@ -90,6 +90,7 @@ signals:
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
     void refreshOmniState();
+    void refreshOmniBalance();
     void refreshOmniPending(bool pending);
 
     //! Fired when a message should be reported to the user
@@ -103,6 +104,7 @@ public slots:
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
     void updateOmniState();
+    void updateOmniBalance();
     void updateOmniPending(bool pending);
 };
 

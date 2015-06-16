@@ -5,6 +5,7 @@
 #ifndef METADEXDIALOG_H
 #define METADEXDIALOG_H
 
+#include <stdint.h>
 #include <string>
 
 #include <QDialog>

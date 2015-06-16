@@ -365,7 +365,7 @@ void OverviewPage::setClientModel(ClientModel *model)
         updateAlerts();
 
         // Refresh Omni info if there have been Omni layer transactions
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(updateOmni()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(updateOmni()));
     }
 }
 

@@ -29,6 +29,7 @@
 #include "omnicore/tx.h"
 #include "omnicore/utils.h"
 #include "omnicore/version.h"
+#include "omnicore/walletcache.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -598,38 +599,43 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
   }
 }
 
-// TODO: optimize efficiency -- iterate only over wallet's addresses in the future
-// NOTE: if we loop over wallet addresses we miss tokens that may be in change addresses (since mapAddressBook does not
-//       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
-void set_wallet_totals()
+void CheckWalletUpdate()
 {
-    //zero balances
-    global_balance_money.clear();
-    global_balance_reserved.clear();
+    if (!WalletCacheUpdate()) {
+        // no balance changes were detected that affect wallet addresses, signal a generic change to overall Omni state
+        uiInterface.OmniStateChanged();
+    } else {
+        // balance changes were found in the wallet, update the global totals and signal a Omni balance change
+        global_balance_money.clear();
+        global_balance_reserved.clear();
 
-    // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
-    for(std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-        // check if the address is a wallet address (including watched addresses)
-        std::string address = my_it->first;
-        int addressIsMine = IsMyAddress(address);
-        if (!addressIsMine) continue;
+        // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
+        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            // check if the address is a wallet address (including watched addresses)
+            std::string address = my_it->first;
+            int addressIsMine = IsMyAddress(address);
+            if (!addressIsMine) continue;
 
-        // iterate only those properties in the TokenMap for this address
-        my_it->second.init();
-        uint32_t propertyId;
-        while (0 != (propertyId = (my_it->second).next())) {
-            // add to the global wallet property list
-            global_wallet_property_list.insert(propertyId);
+            // iterate only those properties in the TokenMap for this address
+            my_it->second.init();
+            uint32_t propertyId;
+            while (0 != (propertyId = (my_it->second).next())) {
+                // add to the global wallet property list
+                global_wallet_property_list.insert(propertyId);
 
-            // check if the address is spendable (only spendable balances are included in totals)
-            if (addressIsMine != ISMINE_SPENDABLE) continue;
+                // check if the address is spendable (only spendable balances are included in totals)
+                if (addressIsMine != ISMINE_SPENDABLE) continue;
 
-            // work out the balances and add to globals
-            global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
-            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
-            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+                // work out the balances and add to globals
+                global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
+                global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+                global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
+                global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+            }
         }
+
+        // signal an Omni balance change
+        uiInterface.OmniBalanceChanged();
     }
 }
 
@@ -3299,11 +3305,8 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     // check the alert status, do we need to do anything else here?
     CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
-    // force an update of the UI once per processed block containing Omni transactions
-    if (countMP > 0) { // there were Omni transactions in this block
-        set_wallet_totals();
-        uiInterface.OmniStateChanged();
-    }
+    // transactions were found in the block, signal the UI accordingly
+    if (countMP > 0) CheckWalletUpdate();
 
     // save out the state after this block
     if (writePersistence(nBlockNow)) {

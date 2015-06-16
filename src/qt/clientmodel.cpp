@@ -132,6 +132,11 @@ void ClientModel::updateOmniState()
     emit refreshOmniState();
 }
 
+void ClientModel::updateOmniBalance()
+{
+    emit refreshOmniBalance();
+}
+
 void ClientModel::updateOmniPending(bool pending)
 {
     emit refreshOmniPending(pending);
@@ -218,6 +223,12 @@ static void OmniStateChanged(ClientModel *clientmodel)
     QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
 }
 
+static void OmniBalanceChanged(ClientModel *clientmodel)
+{
+    // Triggered when a balance for a wallet address changes
+    QMetaObject::invokeMethod(clientmodel, "updateOmniBalance", Qt::QueuedConnection);
+}
+
 static void OmniPendingChanged(ClientModel *clientmodel, bool pending)
 {
     // Triggered when Omni pending map adds/removes transactions
@@ -255,6 +266,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.OmniStateChanged.connect(boost::bind(OmniStateChanged, this));
     uiInterface.OmniPendingChanged.connect(boost::bind(OmniPendingChanged, this, _1));
+    uiInterface.OmniBalanceChanged.connect(boost::bind(OmniBalanceChanged, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -265,4 +277,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.OmniStateChanged.disconnect(boost::bind(OmniStateChanged, this));
     uiInterface.OmniPendingChanged.disconnect(boost::bind(OmniPendingChanged, this, _1));
+    uiInterface.OmniBalanceChanged.disconnect(boost::bind(OmniBalanceChanged, this));
 }

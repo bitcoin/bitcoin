@@ -403,7 +403,7 @@ int mastercore_init();
 int mastercore_shutdown();
 
 /** Global handler to total wallet balances. */
-void set_wallet_totals();
+void CheckWalletUpdate();
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
