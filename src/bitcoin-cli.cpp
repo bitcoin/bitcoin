@@ -128,7 +128,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     boost::split(vMethodParts, strMethod, boost::is_any_of("/"));
     std::string pathToAccess = "/";
 
-    Array paramsToUse = params;
+    UniValue paramsToUse = params;
     std::string strMethodToUse = strMethod;
     if (vMethodParts.size() == 2)
     {
@@ -140,10 +140,10 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     if (pathToAccess != "/")
     {
         //convert key=value arguments to ["key":"value"] json object property list
-        paramsToUse = Array();
-        Object argObj;
-        BOOST_FOREACH(const Value &val, params)
-        {
+        paramsToUse = UniValue(UniValue::VARR);
+        UniValue argObj(UniValue::VOBJ);
+        for (unsigned int idx = 0; idx < params.size(); idx++) {
+            const UniValue& val = params[idx];
             std::vector<std::string> strs;
             std::string strVal = val.get_str();
             size_t pos = strVal.find("=");
@@ -153,7 +153,8 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
                 paramsToUse.push_back(val);
         }
 
-        paramsToUse.push_back(argObj);
+        if (!argObj.empty())
+            paramsToUse.push_back(argObj);
     }
 
     // Send request

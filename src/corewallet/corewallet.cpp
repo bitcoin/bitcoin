@@ -8,6 +8,7 @@
 #include "corewallet/corewallet_wallet.h"
 #include "rpcserver.h"
 #include "ui_interface.h"
+#include "univalue/univalue.h"
 #include "util.h"
 #include "validationinterface.h"
 
@@ -21,7 +22,7 @@ const static std::string DEFAULT_WALLETS_METADATA_FILE = "multiwallet.dat";
 static Manager *managerSharedInstance;
 
 //implemented in corewallet_rpc.cpp
-extern void ExecuteRPC(const std::string& strMethod, const json_spirit::Array& params, json_spirit::Value& result, bool& accept);
+extern void ExecuteRPC(const std::string& strMethod, const UniValue& params, UniValue& result, bool& accept);
 
 
 bool CheckFilenameString(const std::string& str)
