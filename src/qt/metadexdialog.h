@@ -51,6 +51,7 @@ public slots:
     void buyClicked(int row, int col);
     void sendTrade(bool sell);
     void OrderRefresh();
+    void UpdateBalances();
 
 private:
     Ui::MetaDExDialog *ui;

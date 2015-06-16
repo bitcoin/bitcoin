@@ -107,7 +107,7 @@ void MetaDExDialog::setClientModel(ClientModel *model)
     this->clientModel = model;
     if (NULL != model) {
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateBalances()));
     }
 }
 
@@ -273,6 +273,13 @@ void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price
     }
 }
 
+void MetaDExDialog::UpdateBalances()
+{
+    // update the balances for the buy and sell addreses
+    UpdateBuyAddressBalance();
+    UpdateSellAddressBalance();
+}
+
 // This function loops through the MetaDEx and updates the list of buy/sell offers
 void MetaDExDialog::UpdateOffers()
 {
@@ -313,9 +320,6 @@ void MetaDExDialog::UpdateOffers()
             }
         }
     }
-    // update the balances for the buy and sell addreses
-    UpdateBuyAddressBalance();
-    UpdateSellAddressBalance();
 }
 
 // This function updates the balance for the currently selected sell address
