@@ -100,6 +100,7 @@ extern bool bitcoin_fBenchmark;
 extern int bitcoin_nScriptCheckThreads;
 extern bool bitcoin_fTxIndex;
 extern bool bitcoin_fTrimBlockFiles;
+extern bool bitcoin_fSimplifiedBlockValidation;
 extern unsigned int bitcoin_nCoinCacheSize;
 
 // Minimum disk space required - used in CheckDiskSpace()
