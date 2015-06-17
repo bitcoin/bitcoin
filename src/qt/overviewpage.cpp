@@ -85,6 +85,7 @@ public:
         hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
         bool omniOverride = false;
         bool omniOutbound = true;
+        bool omniSendToSelf = false;
         bool valid = false;
         std::string omniAmountStr;
 
@@ -143,7 +144,10 @@ public:
                             if (0<=mp_obj.step1()) {
                                 valid = getValidMPTX(hash);
                                 if (!mp_obj.getReceiver().empty()) {
-                                    if (IsMyAddress(mp_obj.getReceiver())) omniOutbound = false;
+                                    if (IsMyAddress(mp_obj.getReceiver())) {
+                                        omniOutbound = false;
+                                        if (IsMyAddress(mp_obj.getSender())) omniSendToSelf = true;
+                                    }
                                     address = QString::fromStdString(mp_obj.getReceiver());
                                 } else {
                                     address = QString::fromStdString(mp_obj.getSender());
@@ -165,7 +169,13 @@ public:
         }
 
         if (omniOverride) {
-            if (valid) { icon = QIcon(":/icons/omnirecent"); } else { icon = QIcon(":/icons/transaction_invalid"); }
+            if (!valid) {
+                icon = QIcon(":/icons/transaction_invalid");
+            } else {
+                icon = QIcon(":/icons/omnitxout");
+                if (!omniOutbound) icon = QIcon(":/icons/omnitxin");
+                if (omniSendToSelf) icon = QIcon(":/icons/omnitxinout");
+            }
         }
         icon.paint(painter, decorationRect);
 
