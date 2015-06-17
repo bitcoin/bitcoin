@@ -275,7 +275,6 @@ public:
         READWRITE(protocolVersion);
         READWRITE(donationAddress);
         READWRITE(donationPercentage);
-        READWRITE(nLastPaid);
     }
     
     uint256 GetHash(){
