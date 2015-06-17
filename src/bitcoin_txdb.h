@@ -14,7 +14,6 @@
 #include <utility>
 #include <vector>
 
-class Bitcoin_CCoins;
 class uint256;
 
 // -dbcache default (MiB)
@@ -63,7 +62,7 @@ public:
     bool Bitcoin_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock);
     bool Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
     bool All_BatchWrite(const std::map<uint256, Claim_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
-    bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
+    bool Bitcoin_GetStats(Claim_CCoinsStats &stats);
     bool Claim_GetStats(Claim_CCoinsStats &stats);
 };
 

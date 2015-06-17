@@ -164,7 +164,7 @@ bool Bitcoin_CCoinsViewDB::All_BatchWrite(const std::map<uint256, Claim_CCoins> 
     return db.WriteBatch(batch);
 }
 
-bool Bitcoin_CCoinsViewDB::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) {
+bool Bitcoin_CCoinsViewDB::Bitcoin_GetStats(Claim_CCoinsStats &stats) {
     leveldb::Iterator *pcursor = db.NewIterator();
     pcursor->SeekToFirst();
 
@@ -194,7 +194,7 @@ bool Bitcoin_CCoinsViewDB::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) {
                 for (unsigned int i=0; i<coins.vout.size(); i++) {
                     const Bitcoin_CTxOut &out = coins.vout[i];
                     if (!out.IsNull()) {
-                        stats.nTransactionOutputs++;
+                        stats.nTransactionOutputsOriginal++;
                         ss << VARINT(i+1);
                         ss << out;
                         nTotalAmount += out.nValueOriginal;
@@ -211,7 +211,7 @@ bool Bitcoin_CCoinsViewDB::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) {
     delete pcursor;
     stats.nHeight = bitcoin_mapBlockIndex.find(Bitcoin_GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
-    stats.nTotalAmount = nTotalAmount;
+    stats.nTotalAmountOriginal = nTotalAmount;
     return true;
 }
 bool Bitcoin_CCoinsViewDB::Claim_GetStats(Claim_CCoinsStats &stats) {

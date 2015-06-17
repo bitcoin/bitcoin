@@ -101,7 +101,7 @@ bool Bitcoin_CCoinsView::Claim_SetTotalClaimedCoins(const int64_t &totalClaimedC
 bool Bitcoin_CCoinsView::Bitcoin_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock) { return false; }
 bool Bitcoin_CCoinsView::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return false; }
 bool Bitcoin_CCoinsView::All_BatchWrite(const std::map<uint256, Claim_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins) { return false; }
-bool Bitcoin_CCoinsView::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) { return false; }
+bool Bitcoin_CCoinsView::Bitcoin_GetStats(Claim_CCoinsStats &stats) { return false; }
 bool Bitcoin_CCoinsView::Claim_GetStats(Claim_CCoinsStats &stats) { return false; }
 
 Bitcoin_CCoinsViewBacked::Bitcoin_CCoinsViewBacked(Bitcoin_CCoinsView &viewIn) : base(&viewIn) { }
@@ -124,7 +124,7 @@ Bitcoin_CCoinsView *Bitcoin_CCoinsViewBacked::Bitcoin_GetBackend() { return base
 bool Bitcoin_CCoinsViewBacked::Bitcoin_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock) { return base->Bitcoin_BatchWrite(mapCoins, hashBlock); }
 bool Bitcoin_CCoinsViewBacked::Claim_BatchWrite(const std::map<uint256, Claim_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) { return base->Claim_BatchWrite(mapCoins, hashBlock, hashBitcreditClaimTip, totalClaimedCoins); }
 bool Bitcoin_CCoinsViewBacked::All_BatchWrite(const std::map<uint256, Claim_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Claim_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins) { return base->All_BatchWrite(bitcoin_mapCoins, bitcoin_hashBlock, claim_mapCoins, claim_hashBlock, claim_hashBitcreditClaimTip, claim_totalClaimedCoins); }
-bool Bitcoin_CCoinsViewBacked::Bitcoin_GetStats(Bitcoin_CCoinsStats &stats) { return base->Bitcoin_GetStats(stats); }
+bool Bitcoin_CCoinsViewBacked::Bitcoin_GetStats(Claim_CCoinsStats &stats) { return base->Bitcoin_GetStats(stats); }
 bool Bitcoin_CCoinsViewBacked::Claim_GetStats(Claim_CCoinsStats &stats) { return base->Claim_GetStats(stats); }
 
 Bitcoin_CCoinsViewCache::Bitcoin_CCoinsViewCache(Bitcoin_CCoinsView &baseIn, bool fDummy) : Bitcoin_CCoinsViewBacked(baseIn), bitcoin_hashBlock(0), claim_hashBlock(0), claim_hashBitcreditClaimTip(0), claim_totalClaimedCoins(0){ }
