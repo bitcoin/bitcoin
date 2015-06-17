@@ -170,7 +170,7 @@ public:
 
         if (omniOverride) {
             if (!valid) {
-                icon = QIcon(":/icons/transaction_invalid");
+                icon = QIcon(":/icons/omnitxinvalid");
             } else {
                 icon = QIcon(":/icons/omnitxout");
                 if (!omniOutbound) icon = QIcon(":/icons/omnitxin");

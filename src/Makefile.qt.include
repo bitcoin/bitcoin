@@ -306,6 +306,7 @@ RES_ICONS = \
   qt/res/icons/omni_txin.png \
   qt/res/icons/omni_txout.png \
   qt/res/icons/omni_txinout.png \
+  qt/res/icons/omni_txinvalid.png \
   qt/res/icons/transaction_invalid.png
 
 BITCOIN_QT_CPP = \
