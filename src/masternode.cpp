@@ -162,7 +162,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     donationPercentage = mnb.donationPercentage;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = mnb.nLastPaid;
+    nLastPaid = 0;
     nVotedTimes = 0;
 }
 
@@ -178,7 +178,6 @@ void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     addr = mnb.addr;
     donationAddress = mnb.donationAddress;
     donationPercentage = mnb.donationPercentage;
-    nLastPaid = mnb.nLastPaid;
 }
 
 //
