@@ -205,6 +205,7 @@ git merge commit are mentioned.
 - #5911 `b6ea3bc` privacy: Stream isolation for Tor (on by default, use `-proxyrandomize=0` to disable)
 - #5863 `c271304` Add autoprune functionality (`-prune=<size>`)
 - #6153 `0bcf04f` Parameter interaction: disable upnp if -proxy set
+- #6274 `4d9c7fe` Add option `-alerts` to opt out of alert system
 
 ### Block and transaction handling
 - #5367 `dcc1304` Do all block index writes in a batch
@@ -226,6 +227,9 @@ git merge commit are mentioned.
 - #6129 `2a82298` Bug fix for clearing fCheckForPruning
 - #5947 `e9af4e6` Alert if it is very likely we are getting a bad chain
 - #6203 `c00ae64` Remove P2SH coinbase flag, no longer interesting
+- #5985 `37b4e42` Fix removing of orphan transactions
+- #6221 `6cb70ca` Prune: Support noncontiguous block files
+- #6256 `fce474c` Use best header chain timestamps to detect partitioning
 
 ### P2P protocol and network code
 - #5507 `844ace9` Prevent DOS attacks on in-flight data structures
@@ -259,6 +263,10 @@ git merge commit are mentioned.
 - #5510 `7c3fbc3` Big endian support
 - #5149 `c7abfa5` Add script to verify all merge commits are signed
 - #6082 `7abbb7e` qt: disable qt tests when one of the checks for the gui fails
+- #6244 `0401aa2` configure: Detect (and reject) LibreSSL
+- #6269 `95aca44` gitian: Use the new bitcoin-detached-sigs git repo for OSX signatures
+- #6285 `ef1d506` Fix scheduler build with some boost versions.
+- #6280 `25c2216` depends: fix Boost 1.55 build on GCC 5
 
 ### Wallet
 - #2340 `811c71d` Discourage fee sniping with nLockTime
@@ -271,6 +279,7 @@ git merge commit are mentioned.
 - #5511 `23c998d` Sort pending wallet transactions before reaccepting
 - #6126 `26e08a1` Change default nTxConfirmTarget to 2
 - #6183 `75a4d51` Fix off-by-one error w/ nLockTime in the wallet
+- #6276 `c9fd907` Fix getbalance * 0
 
 ### GUI
 - #5219 `f3af0c8` New icons
@@ -353,6 +362,8 @@ git merge commit are mentioned.
 - #6186 `182686c` Fix two problems in CSubnet parsing
 - #6174 `df992b9` doc: add translation strings policy
 - #6210 `dfdb6dd` build: disable optional use of gmp in internal secp256k1 build
+- #6264 `94cd705` Remove translation for -help-debug options
+- #6286 `3902c15` Remove berkeley-db4 workaround in MacOSX build docs
 
 Credits
 =======
@@ -391,6 +402,7 @@ Thanks to everyone who directly contributed to this release:
 - Gregory Maxwell
 - Heath
 - Ivan Pustogarov
+- Jacob Welsh
 - Jameson Lopp
 - Jason Lewicki
 - Jeff Garzik
@@ -419,6 +431,7 @@ Thanks to everyone who directly contributed to this release:
 - Pieter Wuille
 - pstratem
 - randy-waterhouse
+- rion
 - Rob Van Mieghem
 - Ross Nicoll
 - Ruben de Vries
@@ -429,6 +442,7 @@ Thanks to everyone who directly contributed to this release:
 - Suhas Daftuar
 - svost
 - Thomas Zander
+- Tom Harding
 - UdjinM6
 - Vitalii Demianets
 - Wladimir J. van der Laan
