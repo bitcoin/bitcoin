@@ -384,10 +384,6 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
 
 void OverviewPage::updateOmni()
 {
-    // Omni alerts come as block transactions and do not trip bitcoin alertsChanged() signal so let's check the
-    // alert status when we're notified of an Omni state change
-    updateAlerts();
-
     LOCK(cs_tally);
 
     // always show MSC
@@ -466,8 +462,11 @@ void OverviewPage::setClientModel(ClientModel *model)
         connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts()));
         updateAlerts();
 
-        // Refresh Omni info if there have been Omni layer transactions
+        // Refresh Omni info if there have been Omni layer transactions with balances affecting wallet
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(updateOmni()));
+
+        // Refresh alerts when there has been a change to the Omni State
+        connect(model, SIGNAL(refreshOmniState()), this, SLOT(updateAlerts()));
     }
 }
 
