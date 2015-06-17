@@ -1558,7 +1558,7 @@ void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &sta
     	if(tx.IsClaim()) {
             BOOST_FOREACH(const Credits_CTxIn &txin, tx.vin) {
             	Credits_CTxInUndo undo;
-    			Claim_CCoins &coins = claim_inputs.Claim_GetCoins(txin.prevout.hash);
+    			Bitcoin_CCoins &coins = claim_inputs.Claim_GetCoins(txin.prevout.hash);
     			ret = coins.SpendByClaiming(txin.prevout, undo);
     			assert(ret);
     			txundo.vprevout.push_back(undo);
@@ -1658,7 +1658,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
             	const COutPoint &prevout = tx.vin[i].prevout;
 
-				const Claim_CCoins &coins = claim_inputs.Claim_GetCoins(prevout.hash);
+				const Bitcoin_CCoins &coins = claim_inputs.Claim_GetCoins(prevout.hash);
 
 				if (coins.IsCoinBase()) {
 					if (bitcoin_nSpendHeight - coins.nHeight < BITCOIN_COINBASE_MATURITY)
@@ -1752,7 +1752,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
               for (unsigned int i = 0; i < tx.vin.size(); i++) {
               	const COutPoint &prevout = tx.vin[i].prevout;
 
-				const Claim_CCoins &coins = claim_inputs.Claim_GetCoins(prevout.hash);
+				const Bitcoin_CCoins &coins = claim_inputs.Claim_GetCoins(prevout.hash);
 
 				// Verify signature
 				Bitcredit_CScriptCheck check(coins, tx, i, flags, 0);
@@ -1880,7 +1880,7 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
                 for (unsigned int j = tx.vin.size(); j-- > 0;) {
 					const COutPoint &out = tx.vin[j].prevout;
 					const Credits_CTxInUndo &undo = txundo.vprevout[j];
-					Claim_CCoins coins;
+					Bitcoin_CCoins coins;
 					claim_view.Claim_GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
 					if (coins.IsPruned())
 						fClean = fClean && error("Credits: DisconnectBlock() : undo claim data adding output to missing transaction");

@@ -665,7 +665,7 @@ int64_t Bitcoin_CWallet::GetDebit(const Bitcoin_CTxIn &txin, Bitcoin_CCoinsViewC
                 		return prev.vout[txin.prevout.n].nValue;
                 	} else {
 						if(claim_view->Claim_HaveCoins(txin.prevout.hash)) {
-							const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(txin.prevout.hash);
+							const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(txin.prevout.hash);
 
 							if(claimCoins.HasClaimable(txin.prevout.n)) {
 								return claimCoins.vout[txin.prevout.n].nValueClaimable;
@@ -691,7 +691,7 @@ int64_t Bitcoin_CWallet::GetDebit(const Credits_CTxIn &txin, Bitcoin_CCoinsViewC
                 		return prev.vout[txin.prevout.n].nValue;
                 	} else {
 						if(claim_view->Claim_HaveCoins(txin.prevout.hash)) {
-							const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(txin.prevout.hash);
+							const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(txin.prevout.hash);
 
 							if(claimCoins.HasClaimable(txin.prevout.n)) {
 								return claimCoins.vout[txin.prevout.n].nValueClaimable;
@@ -787,7 +787,7 @@ void Bitcoin_CWalletTx::Claim_GetAmounts(Bitcoin_CCoinsViewCache* claim_view, li
     }
 
     if(claim_view->Claim_HaveCoins(GetHash())) {
-		const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(GetHash());
+		const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(GetHash());
 
 		// Sent/received.
 		for(unsigned int i = 0; i < vout.size(); i++) {
@@ -1218,7 +1218,7 @@ void Bitcoin_CWallet::AvailableCoins(vector<Bitcoin_COutput>& vCoins, Bitcoin_CC
         		nClaimBestBlockDepth = GetBestBlockClaimDepth(claim_view);
 
 				if(claim_view->Claim_HaveCoins(wtxid)) {
-					Claim_CCoins & claimCoin = claim_view->Claim_GetCoins(wtxid);
+					Bitcoin_CCoins & claimCoin = claim_view->Claim_GetCoins(wtxid);
 
 					for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
 						if (!(IsSpent(wtxid, i, nClaimBestBlockDepth)) && IsMine(pcoin->vout[i]) && !IsLockedCoin((*it).first, i) &&
@@ -1964,7 +1964,7 @@ std::map<CTxDestination, int64_t> Bitcoin_CWallet::GetAddressBalances(Bitcoin_CC
                     n = IsSpent(walletEntry.first, i, 0) ? 0 : pcoin->vout[i].nValue;
                 } else {
 					if(claim_view->Claim_HaveCoins(pcoin->GetHash())) {
-						const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(pcoin->GetHash());
+						const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(pcoin->GetHash());
 
 						if(!IsSpent(walletEntry.first, i, nClaimBestBlockDepth)) {
 							if(claimCoins.HasClaimable(i)) {

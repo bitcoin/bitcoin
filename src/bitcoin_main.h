@@ -183,7 +183,7 @@ uint64_t Bitcoin_GetTotalMonetaryBase(int nHeight);
 void Bitcoin_UpdateTime(Bitcoin_CBlockHeader& block, const Bitcoin_CBlockIndex* pindexPrev);
 
 /** Verify a signature */
-bool Bitcoin_VerifySignature(const Claim_CCoins& txFrom, const Bitcoin_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+bool Bitcoin_VerifySignature(const Bitcoin_CCoins& txFrom, const Bitcoin_CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
 /** Abort with a message */
 bool AbortNode(const std::string &msg);
 /** Get statistics from node state */
@@ -344,7 +344,7 @@ private:
 
 public:
     Bitcoin_CScriptCheck() {}
-    Bitcoin_CScriptCheck(const Claim_CCoins& txFromIn, const Bitcoin_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
+    Bitcoin_CScriptCheck(const Bitcoin_CCoins& txFromIn, const Bitcoin_CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, int nHashTypeIn) :
         scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), nHashType(nHashTypeIn) { }
 

@@ -378,7 +378,7 @@ public:
             }
     	} else {
     		if(claim_view->Claim_HaveCoins(hashTx)) {
-    			const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
+    			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
@@ -412,7 +412,7 @@ public:
             }
     	} else {
     		if(claim_view->Claim_HaveCoins(hashTx)) {
-    			const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
+    			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(claimCoins.HasClaimable(i)) {
@@ -779,7 +779,7 @@ public:
         const uint256 &hashTx = GetHash();
 		if(claim_view->Claim_HaveCoins(hashTx)) {
 			const int nClaimBestBlockDepth = pwallet->GetBestBlockClaimDepth(claim_view);
-			const Claim_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
+			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
 
 			for(unsigned int i = 0; i < vout.size(); i++) {
 				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {

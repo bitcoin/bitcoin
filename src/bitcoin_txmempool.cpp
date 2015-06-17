@@ -43,7 +43,7 @@ Bitcoin_CTxMemPool::Bitcoin_CTxMemPool()
     fSanityCheck = false;
 }
 
-void Bitcoin_CTxMemPool::pruneSpent(const uint256 &hashTx, Claim_CCoins &coins)
+void Bitcoin_CTxMemPool::pruneSpent(const uint256 &hashTx, Bitcoin_CCoins &coins)
 {
     LOCK(cs);
 
@@ -155,7 +155,7 @@ void Bitcoin_CTxMemPool::check(Bitcoin_CCoinsViewCache *pcoins) const
                 const Bitcoin_CTransaction& tx2 = it2->second.GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
-            	Claim_CCoins &coins = pcoins->Bitcoin_GetCoins(txin.prevout.hash);
+            	Bitcoin_CCoins &coins = pcoins->Bitcoin_GetCoins(txin.prevout.hash);
                 assert(coins.IsAvailable(txin.prevout.n));
             }
             // Check whether its inputs are marked in mapNextTx.
@@ -198,13 +198,13 @@ bool Bitcoin_CTxMemPool::lookup(uint256 hash, Bitcoin_CTransaction& result) cons
 
 Bitcoin_CCoinsViewMemPool::Bitcoin_CCoinsViewMemPool(Bitcoin_CCoinsView &baseIn, Bitcoin_CTxMemPool &mempoolIn) : Bitcoin_CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool Bitcoin_CCoinsViewMemPool::GetCoins(const uint256 &txid, Claim_CCoins &coins) {
+bool Bitcoin_CCoinsViewMemPool::GetCoins(const uint256 &txid, Bitcoin_CCoins &coins) {
     if (base->Bitcoin_GetCoins(txid, coins))
         return true;
     Bitcoin_CTransaction tx;
     if (mempool.lookup(txid, tx)) {
     	//TODO - Validate that this is the correct constructor
-        coins = Claim_CCoins(tx, BITCOIN_MEMPOOL_HEIGHT);
+        coins = Bitcoin_CCoins(tx, BITCOIN_MEMPOOL_HEIGHT);
         return true;
     }
     return false;

@@ -155,7 +155,7 @@ void Bitcredit_CTxMemPool::check(Credits_CCoinsViewCache *credits_pcoins, Bitcoi
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
             	if(tx.IsClaim()) {
-            		Claim_CCoins &coins = bitcoin_pcoins->Claim_GetCoins(txin.prevout.hash);
+            		Bitcoin_CCoins &coins = bitcoin_pcoins->Claim_GetCoins(txin.prevout.hash);
             		assert(coins.HasClaimable(txin.prevout.n));
             	} else {
             		Credits_CCoins &coins = credits_pcoins->Credits_GetCoins(txin.prevout.hash);

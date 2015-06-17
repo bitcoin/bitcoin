@@ -621,7 +621,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 //						continue;
 					}
 
-					const Claim_CCoins &coins = bitcoin_view.Claim_GetCoins(txin.prevout.hash);
+					const Bitcoin_CCoins &coins = bitcoin_view.Claim_GetCoins(txin.prevout.hash);
 
 					if(!coins.HasClaimable(txin.prevout.n)) {
 						LogPrintf("ERROR: transaction missing input\n");
