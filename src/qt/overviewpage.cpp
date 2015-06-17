@@ -83,32 +83,24 @@ public:
         // repaint performance should be a non-issue and it'll provide the functionality short term while a better approach is devised.
         uint256 hash = 0;
         hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
-        bool omniOverride = false;
-        bool omniOutbound = true;
-        bool omniSendToSelf = false;
-        bool valid = false;
+        bool omniOverride = false, omniSendToSelf = false, valid = false, omniOutbound = true;
         std::string omniAmountStr;
 
         // check pending
-        for(PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
-            uint256 txid = it->first;
-            if (txid != hash) continue;
+        PendingMap::iterator it = my_pending.find(hash);
+        if (it != my_pending.end()) {
             omniOverride = true;
-            // grab pending object & extract details
+            valid = true; // assume all outbound pending are valid prior to confirmation
             CMPPending *p_pending = &(it->second);
             address = QString::fromStdString(p_pending->src);
-            uint64_t omniPropertyId = p_pending->prop;
-            int64_t omniAmount = p_pending->amount;
-            valid = true;
-            if (isPropertyDivisible(omniPropertyId)) {
-                omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
+            if (isPropertyDivisible(p_pending->prop)) {
+                omniAmountStr = FormatDivisibleShortMP(p_pending->amount) + getTokenLabel(p_pending->prop);
             } else {
-                omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
+                omniAmountStr = FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop);
             }
-            break;
         }
 
-        // check wallet
+        // check database
         if (p_txlistdb->exists(hash)) {
             omniOverride = true;
             amount = 0;
