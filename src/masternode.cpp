@@ -245,6 +245,19 @@ void CMasternode::Check()
     activeState = MASTERNODE_ENABLED; // OK
 }
 
+int64_t CMasternode::SecondsSincePayment() {
+    int64_t sec = (GetAdjustedTime() - nLastPaid);
+    int64_t month = 60*60*24*30;
+    if(sec < month) return sec; //if it's less than 30 days, give seconds
+
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << vin;
+    ss << sigTime;
+    uint256 hash =  ss.GetHash();
+
+    // return some deterministic value for unknown/unpaid but force it to be more than 30 days old
+    return month + hash.GetCompact(false);
+}
 
 CMasternodeBroadcast::CMasternodeBroadcast()
 {
