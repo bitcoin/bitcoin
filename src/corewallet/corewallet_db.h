@@ -9,7 +9,7 @@
 #include "corewallet/corewallet_basics.h"
 #include "corewallet/logdb.h"
 #include "key.h"
-#include "keystore.h"
+#include "hdkeystore.h"
 
 namespace CoreWallet
 {
@@ -25,6 +25,12 @@ public:
     bool LoadWallet(Wallet* pCoreWallet);
     
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CoreWallet::CKeyMetadata &keyMeta);
+    bool WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed);
+    bool WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret);
+    bool EraseHDMasterSeed(const uint256& hash);
+    bool WriteHDChain(const CHDChain& chain);
+    bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
+    bool WriteHDAchiveChain(const uint256& hash);
 };
     
 }; // end namespace CoreWallet

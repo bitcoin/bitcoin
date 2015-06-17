@@ -101,9 +101,9 @@ BITCOIN_CORE_H = \
   corewallet/corewallet.h \
   corewallet/corewallet_basics.h \
   corewallet/corewallet_db.h \
-  corewallet/derivingkeystore.h \
   corewallet/corewallet_wallet.h \
   corewallet/crypter.h \
+  corewallet/hdkeystore.h \
   corewallet/logdb.h \
   eccryptoverify.h \
   ecwrapper.h \
@@ -226,10 +226,10 @@ libbitcoin_corewallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_corewallet_a_SOURCES = \
   corewallet/corewallet.cpp \
   corewallet/corewallet_db.cpp \
-  corewallet/derivingkeystore.cpp \
   corewallet/corewallet_rpc.cpp \
   corewallet/corewallet_wallet.cpp \
   corewallet/crypter.cpp \
+  corewallet/hdkeystore.cpp \
   corewallet/logdb.cpp \
   $(BITCOIN_CORE_H)
 

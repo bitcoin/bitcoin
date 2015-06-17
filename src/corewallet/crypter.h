@@ -112,7 +112,7 @@ public:
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
  */
-class CCryptoKeyStore : public CDerivingKeyStore
+class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
     CryptedKeyMap mapCryptedKeys;
@@ -193,6 +193,9 @@ public:
      * Note: Called without locks held.
      */
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+
+    bool EncryptSeed(const CKeyingMaterial& seedIn, const uint256& seedPubHash, std::vector<unsigned char> &vchCiphertext) const;
+    bool DecryptSeed(const std::vector<unsigned char>& vchCiphertextIn, const uint256& seedPubHash, CKeyingMaterial& seedOut) const;
 };
 }; //end namespace
 #endif // BITCOIN_WALLET_CRYPTER_H

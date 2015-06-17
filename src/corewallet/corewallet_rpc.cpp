@@ -43,6 +43,10 @@ struct RPCDispatchEntry
 };
 
 //dispatch compatible rpc function definitions
+UniValue hdaddchain(const UniValue& params, bool fHelp);
+UniValue hdsetchain(const UniValue& params, bool fHelp);
+UniValue hdgetinfo(const UniValue& params, bool fHelp);
+UniValue hdgetaddress(const UniValue& params, bool fHelp);
 UniValue getaddress(const UniValue& params, bool fHelp);
 UniValue listaddresses(const UniValue& params, bool fHelp);
 UniValue addwallet(const UniValue& params, bool fHelp);
@@ -50,8 +54,13 @@ UniValue listwallets(const UniValue& params, bool fHelp);
 UniValue help(const UniValue& params, bool fHelp);
     
 static const RPCDispatchEntry vDispatchEntries[] = {
-    { "getaddress",                  &getaddress },
+    { "getaddress",                     &getaddress },
     { "listaddresses",                  &listaddresses },
+
+    { "hdaddchain",                       &hdaddchain },
+    { "hdsetchain",                       &hdsetchain },
+    { "hdgetinfo",                        &hdgetinfo },
+    { "hdgetaddress",                     &hdgetaddress },
     
     // Multiwallet
     { "addwallet",                      &addwallet },
@@ -259,7 +268,7 @@ UniValue listwallets(const UniValue& params, bool fHelp)
 ///////////////////////////
 UniValue help(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() == 1)
         throw RPCHelpException(
                             "help ( \"command\" )\n"
                             "\nList all commands, or get help for a specified command.\n"
@@ -298,6 +307,198 @@ UniValue help(const UniValue& params, bool fHelp)
     
     return helpString;
 }
+
+/*
+ 
+******* HDSTACK ********
+
+default chainpath after bip44
+m = master key
+<num>' or <num>h = hardened key
+c stands for internal/external chain switch
+c=0 for external addresses
+c=1 for internal addresses
+
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/0 for the first external key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/0 for the first internal key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/1 for the second external key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/1 for the second internal key
+*/
+const std::string hd_default_chainpath = "m/44'/0'/0'/c";
+
+UniValue hdaddchain(const UniValue& params, bool fHelp)
+{
+    if (fHelp)
+        throw std::runtime_error(
+                            "hdaddchain (<chainpath>|default) (<masterseed_hex>)\n"
+                            "\nAdds a HD/Bip32 chain \n"
+                            "\nArguments:\n"
+                            "1. chainpath        (string, optional, default="+hd_default_chainpath+") chainpath for hd wallet structure\n"
+                            "   m stands for master, c for internal/external key-switch, k stands for upcounting child key index"
+                            "2. masterseed_hex   (string/hex, optional) use this seed for master key generation\n"
+                            "\nResult\n"
+                            "{\n"
+                            "  \"seed_hex\" : \"<hexstr>\",  (string) seed used during master key generation (only if no masterseed hex was provided\n"
+                            "}\n"
+
+                            "\nExamples\n"
+                            + HelpExampleCli("hdaddchain", "set")
+                            + HelpExampleCli("hdaddchain", "set m/44'/0'/0'/c/k")
+                            + HelpExampleRpc("hdaddchain", "set m/44'/0'/0'/c/k")
+                            );
+
+    UniValue result(UniValue::VOBJ);
+
+    Wallet *wallet = WalletFromParams(params);
+    UniValue chainpathParam = ValueFromParams(params, "chainpath");
+    UniValue seedParam = ValueFromParams(params, "seed");
+
+    //EnsureWalletIsUnlocked();
+
+    const unsigned int bip32MasterSeedLength = 32;
+    CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
+    bool fGenerateMasterSeed = true;
+    HDChainID chainId;
+    std::string chainPath = hd_default_chainpath;
+    if (!chainpathParam.isNull() && chainpathParam.isStr() && chainpathParam.get_str() != "default")
+        chainPath = chainpathParam.get_str(); //todo bip32 chainpath sanity
+
+    if (!seedParam.isNull() && seedParam.isStr())
+    {
+        if (!IsHex(seedParam.get_str()))
+            throw std::runtime_error("HD master seed must encoded in hex");
+
+        std::vector<unsigned char> seed = ParseHex(seedParam.get_str());
+        if (seed.size() != bip32MasterSeedLength)
+            throw std::runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
+
+        memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
+        memory_cleanse(&seed[0], bip32MasterSeedLength);
+        fGenerateMasterSeed = false;
+    }
+    
+    wallet->HDSetChainPath(chainPath, fGenerateMasterSeed, vSeed, chainId);
+    if (fGenerateMasterSeed)
+        result.push_back(Pair("seed_hex", HexStr(vSeed)));
+    result.push_back(Pair("chainid", chainId.GetHex()));
+    return result;
+}
+
+UniValue hdsetchain(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw std::runtime_error(
+                            "hdsetchain <chainid>\n"
+                            "\nReturns some hd relevant information.\n"
+                            "\nArguments:\n"
+                            "1. \"chainid\"        (string|hex, required) chainid is a bitcoin hash of the master public key of the corresponding chain.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdsetchain", "")
+                            + HelpExampleCli("hdgetinfo", "True")
+                            + HelpExampleRpc("hdgetinfo", "")
+                            );
+
+    Wallet *wallet = WalletFromParams(params);
+
+    HDChainID chainId;
+    if (!IsHex(params[0].get_str()))
+        throw std::runtime_error("Chain id format is invalid");
+
+    chainId.SetHex(params[0].get_str());
+
+    if (!wallet->HDSetActiveChainID(chainId))
+        throw std::runtime_error("Could not set active chain");
+
+    return NullUniValue;
+}
+
+UniValue hdgetinfo(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw std::runtime_error(
+                            "hdgetinfo\n"
+                            "\nReturns some hd relevant information.\n"
+                            "\nArguments:\n"
+                            "{\n"
+                            "  \"chainid\" : \"<chainid>\",  string) A bitcoinhash of the master public key\n"
+                            "  \"creationtime\" : The creation time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+                            "  \"chainpath\" : \"<keyschainpath>\",  string) The chainpath (like m/44'/0'/0'/c)\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdgetinfo", "")
+                            + HelpExampleCli("hdgetinfo", "True")
+                            + HelpExampleRpc("hdgetinfo", "")
+                            );
+
+    Wallet *wallet = WalletFromParams(params);
+
+    std::vector<HDChainID> chainIDs;
+    if (!wallet->GetAvailableChainIDs(chainIDs))
+        throw std::runtime_error("Could not load chain ids");
+
+    UniValue result(UniValue::VARR);
+    BOOST_FOREACH(const HDChainID& chainId, chainIDs)
+    {
+        CHDChain chain;
+        if (!wallet->GetChain(chainId, chain))
+            throw std::runtime_error("Could not load chain");
+
+        UniValue chainObject(UniValue::VOBJ);
+        chainObject.push_back(Pair("chainid", chainId.GetHex()));
+        chainObject.push_back(Pair("creationtime", chain.nCreateTime));
+        chainObject.push_back(Pair("chainpath", chain.chainPath));
+
+        result.push_back(chainObject);
+    }
+
+    return result;
+}
+
+UniValue hdgetaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw std::runtime_error(
+                            "hdgetaddress (<childindex>)\n"
+                            "\nReturns a Bitcoin address for receiving payments.\n"
+                            "\nAutomatically uses the next available childindex if no index is given"
+                            "\nArguments:\n"
+                            "1. \"childindex\"        (numeric, optional) child key index. ATTENTION: automatic index counting will start at the highes available child key index\n"
+                            "{\n"
+                            "  \"address\" : \"<address>\",  string) The new bitcoin address\n"
+                            "  \"chainpath\" : \"<keyschainpath>\",  string) The used chainpath\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdgetaddress", "")
+                            + HelpExampleCli("hdgetaddress", "100")
+                            + HelpExampleRpc("hdgetaddress", "")
+                            );
+
+    Wallet *wallet = WalletFromParams(params);
+
+    CPubKey newKey;
+    std::string keyChainPath;
+    if (params.size() == 1 && params[0].isNum())
+    {
+        HDChainID emptyId;
+        if (!wallet->HDGetChildPubKeyAtIndex(emptyId, newKey, params[0].get_int()))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
+    }
+    else
+    {
+        HDChainID emptyId;
+        if (!wallet->HDGetNextChildPubKey(emptyId, newKey, keyChainPath))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
+    }
+    CKeyID keyID = newKey.GetID();
+    
+    wallet->SetAddressBook(keyID, "receive");
+    
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("address", CBitcoinAddress(keyID).ToString()));
+    result.push_back(Pair("chainpath", keyChainPath));
+    return result;
+}
+
     
 ///////////////////////////
 // Dispatching/signaling stack

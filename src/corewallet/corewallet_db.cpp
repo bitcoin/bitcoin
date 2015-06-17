@@ -27,6 +27,46 @@ bool FileDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, cons
     return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
 }
 
+bool FileDB::WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed)
+{
+    return Write(std::make_pair(std::string("hdmasterseed"), hash), masterSeed);
+}
+
+bool FileDB::WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret)
+{
+    if (!Write(std::make_pair(std::string("hdcryptedmasterseed"), hash), vchCryptedSecret))
+        return false;
+
+    Erase(std::make_pair(std::string("hdmasterseed"), hash));
+    Erase(std::make_pair(std::string("hdmasterseed"), hash));
+
+    return true;
+}
+
+bool FileDB::EraseHDMasterSeed(const uint256& hash)
+{
+    return Erase(std::make_pair(std::string("hdmasterseed"), hash));
+}
+
+bool FileDB::WriteHDChain(const CHDChain &chain)
+{
+    return Write(std::make_pair(std::string("hdchain"), chain.chainHash), chain);
+}
+
+bool FileDB::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta)
+{
+    if (!Write(std::make_pair(std::string("keymeta"), hdPubKey.pubkey),
+               keyMeta))
+        return false;
+
+    return Write(std::make_pair(std::string("hdpubkey"), hdPubKey.pubkey), hdPubKey);
+}
+
+bool FileDB::WriteHDAchiveChain(const uint256& hash)
+{
+    return Write(std::string("hdactivechain"), hash);
+}
+
 bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr)
 {
     try {

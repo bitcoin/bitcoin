@@ -8,14 +8,14 @@
 
 #include "corewallet/corewallet_basics.h"
 #include "corewallet/corewallet_db.h"
-#include "corewallet/crypter.h"
+#include "corewallet/hdkeystore.h"
 #include "key.h"
 #include "keystore.h"
 #include "validationinterface.h"
 
 namespace CoreWallet {
     
-class Wallet : public CCryptoKeyStore, public CValidationInterface{
+class Wallet : public CHDKeyStore, public CValidationInterface{
 public:
     mutable CCriticalSection cs_coreWallet;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
@@ -23,6 +23,9 @@ public:
     int64_t nTimeFirstKey;
     FileDB *walletPrivateDB;
     FileDB *walletCacheDB;
+
+    //! state: current active hd chain
+    HDChainID activeHDChain;
 
     std::string strChainPath;
     std::string strMasterseedHex;
@@ -44,6 +47,24 @@ public:
         walletCacheDB = new FileDB(strWalletFileIn+".cache.logdb");
         walletCacheDB->LoadWallet(this);
     }
+
+    //!adds a hd chain of keys to the wallet
+    bool HDSetChainPath(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, bool overwrite = false);
+
+    //!gets a child key from the internal or external chain at given index
+    bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, unsigned int nIndex, bool internal = false);
+
+    //!get next free child key
+    bool HDGetNextChildPubKey(const HDChainID& chainId, CPubKey &pubKeyOut, std::string& newKeysChainpathOut, bool internal = false);
+
+    //!encrypt your master seeds
+    bool EncryptHDSeeds(CKeyingMaterial& vMasterKeyIn);
+
+    //!set the active chain of keys
+    bool HDSetActiveChainID(const HDChainID& chainID, bool check = true);
+
+    //!set the active chain of keys
+    bool HDGetActiveChainID(HDChainID& chainID);
     
     bool GenerateBip32Structure(const std::string& chainpath, unsigned char (&vchOut)[32], bool useSeed=false);
     CPubKey GenerateNewKey(int index=-1);
@@ -100,6 +121,51 @@ public:
         READWRITE(nCreateTime);
         READWRITE(strWalletFilename);
     }
+};
+
+/** A key allocated from the key pool. */
+class CReserveKey
+{
+protected:
+    Wallet* pwallet;
+    int64_t nIndex;
+    CPubKey vchPubKey;
+public:
+    CReserveKey(Wallet* pwalletIn)
+    {
+        nIndex = -1;
+        pwallet = pwalletIn;
+    }
+
+    ~CReserveKey()
+    {
+        ReturnKey();
+    }
+
+    void ReturnKey();
+    virtual bool GetReservedKey(CPubKey &pubkey);
+    void KeepKey();
+};
+
+class CHDReserveKey : public CReserveKey
+{
+protected:
+    CPubKey vchPubKey;
+    HDChainID chainID;
+public:
+    CHDReserveKey(Wallet* pwalletIn) : CReserveKey(pwalletIn)
+    {
+        pwalletIn->HDGetActiveChainID(chainID);
+    }
+
+    ~CHDReserveKey()
+    {
+        ReturnKey();
+    }
+
+    void ReturnKey();
+    bool GetReservedKey(CPubKey &pubkey);
+    void KeepKey();
 };
 
 }
