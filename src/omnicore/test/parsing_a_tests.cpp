@@ -70,7 +70,7 @@ static CTxOut createTxOut(int64_t amount, const std::string& dest)
 BOOST_AUTO_TEST_CASE(valid_class_a)
 {
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1765000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(907500, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(87000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = P2SH_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "34xhWktMFEGRTRmWf1hdNn1SyDDWiXa18H"));
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(70000, "1e1jLtDvEetgwJ6jB3DuCf27sXcjA8qQ2"));
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "00000000000000010000000777777700000000");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = P2SH_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1815000, "3Kpeeo8MVoYnx7PeNb5FUus8bkJsZFPbw7"));
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(invalid_class_a)
 {
     // More than one data packet
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(invalid_class_a)
     }
     // Not MSC or TMSC
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(invalid_class_a)
     }
     // Seq collision
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = 0;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));
