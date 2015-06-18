@@ -32,6 +32,7 @@ testScripts=(
     'merkle_blocks.py'
     'signrawtransactions.py'
     'walletbackup.py'
+    'reindex.py'
 );
 testScriptsExt=(
     'bipdersig-p2p.py'
@@ -43,7 +44,6 @@ testScriptsExt=(
     'invalidateblock.py'
     'keypool.py'
     'receivedby.py'
-    'reindex.py'
     'rpcbind_test.py'
 #   'script_test.py'
     'smartfees.py'
