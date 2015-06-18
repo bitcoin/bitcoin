@@ -802,6 +802,42 @@ CCoinsViewCache mastercore::view(&viewDummy);
 static unsigned int nCacheHits = 0;
 static unsigned int nCacheMiss = 0;
 
+/**
+ * Fetches transaction inputs and adds them to the coins view cache.
+ *
+ * @param tx[in]  The transaction to fetch inputs for
+ * @return True, if all inputs were successfully added to the cache
+ */
+static bool FillTxInputCache(const CTransaction& tx)
+{
+    for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); ++it) {
+        const CTxIn& txIn = *it;
+        unsigned int nOut = txIn.prevout.n;
+        CCoinsModifier coins = view.ModifyCoins(txIn.prevout.hash);
+
+        if (coins->IsAvailable(nOut)) {
+            ++nCacheHits;
+            continue;
+        } else {
+            ++nCacheMiss;
+        }
+
+        CTransaction txPrev;
+        uint256 hashBlock;
+        if (!GetTransaction(txIn.prevout.hash, txPrev, hashBlock, true)) {
+            return false;
+        }
+
+        if (nOut >= coins->vout.size()) {
+            coins->vout.resize(nOut+1);
+        }
+        coins->vout[nOut].scriptPubKey = txPrev.vout[nOut].scriptPubKey;
+        coins->vout[nOut].nValue = txPrev.vout[nOut].nValue;
+    }
+
+    return true;
+}
+
 namespace legacy {
 
 /**
@@ -924,30 +960,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     // now go through inputs & identify the sender, collect input amounts
     // go through inputs, find the largest per Mastercoin protocol, the Sender
 
-    // Fetch previous transactions (inputs)
-    BOOST_FOREACH(const CTxIn& txIn, wtx.vin) {
-        unsigned int nOut = txIn.prevout.n;
-        CCoinsModifier coins = view.ModifyCoins(txIn.prevout.hash);
-
-        if (coins->IsAvailable(nOut)) {
-            ++nCacheHits;
-            continue;
-        } else {
-            ++nCacheMiss;
-        }
-
-        CTransaction txPrev;
-        uint256 hashBlock;
-        if (!GetTransaction(txIn.prevout.hash, txPrev, hashBlock, true)) {
-            PrintToConsole("%s() ERROR: failed to get transaction %s\n", __func__, txIn.prevout.hash.GetHex());
-            return -101;
-        }
-
-        if (nOut >= coins->vout.size()) {
-            coins->vout.resize(nOut+1);
-        }
-        coins->vout[nOut].scriptPubKey = txPrev.vout[nOut].scriptPubKey;
-        coins->vout[nOut].nValue = txPrev.vout[nOut].nValue;
+    // Add previous transaction inputs to the cache
+    if (!FillTxInputCache(wtx)) {
+        PrintToLog("%s() ERROR: failed to get inputs for %s\n", __func__, wtx.GetHash().GetHex());
+        return -101;
     }
 
     assert(view.HaveInputs(wtx));
@@ -1350,30 +1366,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     PrintToLog("____________________________________________________________________________________________________________________________________\n");
     PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
 
-    // Fetch previous transactions (inputs)
-    BOOST_FOREACH(const CTxIn& txIn, wtx.vin) {
-        unsigned int nOut = txIn.prevout.n;
-        CCoinsModifier coins = view.ModifyCoins(txIn.prevout.hash);
-
-        if (coins->IsAvailable(nOut)) {
-            ++nCacheHits;
-            continue;
-        } else {
-            ++nCacheMiss;
-        }
-
-        CTransaction txPrev;
-        uint256 hashBlock;
-        if (!GetTransaction(txIn.prevout.hash, txPrev, hashBlock, true)) {
-            PrintToConsole("%s() ERROR: failed to get transaction %s\n", __func__, txIn.prevout.hash.GetHex());
-            return -101;
-        }
-
-        if (nOut >= coins->vout.size()) {
-            coins->vout.resize(nOut+1);
-        }
-        coins->vout[nOut].scriptPubKey = txPrev.vout[nOut].scriptPubKey;
-        coins->vout[nOut].nValue = txPrev.vout[nOut].nValue;
+    // Add previous transaction inputs to the cache
+    if (!FillTxInputCache(wtx)) {
+        PrintToLog("%s() ERROR: failed to get inputs for %s\n", __func__, wtx.GetHash().GetHex());
+        return -101;
     }
 
     assert(view.HaveInputs(wtx));
