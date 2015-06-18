@@ -563,8 +563,8 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
     if(pmn != NULL && pmn->protocolVersion >= nMasternodeMinProtocol)
     {
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
-        // take this only if it's newer and was last updated more then MASTERNODE_MIN_MNP_SECONDS ago
-        if(pmn->lastMnping < sigTime && !pmn->UpdatedWithin(MASTERNODE_MIN_MNP_SECONDS))
+        // take this only if it's newer and last ping was more then MASTERNODE_MIN_MNP_SECONDS ago
+        if(sigTime - pmn->lastMnping > MASTERNODE_MIN_MNP_SECONDS)
         {
             std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
@@ -584,7 +584,8 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
                 if((*mi).second->nHeight < chainActive.Height() - 24)
                 {
                     LogPrintf("mnping - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
-                    nDos = 33;
+                    // Do nothing here (no Masternode update, no mnping relay)
+                    // Let this node to be visible but fail to accept mnping
                     return false;
                 }
             } else {
