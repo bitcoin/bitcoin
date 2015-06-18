@@ -25,6 +25,9 @@
 #include <sstream>
 #include <string>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <QAbstractItemDelegate>
 #include <QBrush>
 #include <QColor>
@@ -45,6 +48,8 @@ using std::ostringstream;
 using std::string;
 
 using namespace mastercore;
+
+std::map<uint256, std::string> recentCache;
 
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 6 // 3 - number of recent transactions to display
@@ -100,58 +105,81 @@ public:
             }
         }
 
-        // check database
-        if (p_txlistdb->exists(hash)) {
-            omniOverride = true;
-            amount = 0;
-            CTransaction wtx;
-            uint256 blockHash = 0;
-            if (GetTransaction(hash, wtx, blockHash, true)) {
-                if ((0 != blockHash) || (NULL != GetBlockIndex(blockHash))) {
-                    CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-                    if (NULL != pBlockIndex) {
-                        int blockHeight = pBlockIndex->nHeight;
-                        CMPTransaction mp_obj;
-                        int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
-                        if (0 < parseRC) { //positive RC means DEx payment
-                            std::string tmpBuyer, tmpSeller;
-                            uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
-                            p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
-                            bool bIsBuy = IsMyAddress(tmpBuyer);
-                            int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
-                            if (0<numberOfPurchases) { // calculate total bought/sold
-                                for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
-                                    p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
-                                    total += tmpNValue;
-                                }
-                                if (!bIsBuy) {
-                                      address = QString::fromStdString(tmpSeller);
-                                } else {
-                                      address = QString::fromStdString(tmpBuyer);
-                                      omniOutbound = false;
-                                }
-                                omniAmountStr = FormatDivisibleMP(total);
-                            }
-                        } else if (0 == parseRC) {
-                            if (mp_obj.interpret_Transaction()) {
-                                valid = getValidMPTX(hash);
-                                uint32_t omniPropertyId = mp_obj.getProperty();
-                                int64_t omniAmount = mp_obj.getAmount();
-                                if (isPropertyDivisible(omniPropertyId)) {
-                                    omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
-                                } else {
-                                    omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
-                                }
-                                if (!mp_obj.getReceiver().empty()) {
-                                    if (IsMyAddress(mp_obj.getReceiver())) {
-                                        omniOutbound = false;
-                                        if (IsMyAddress(mp_obj.getSender())) omniSendToSelf = true;
+        // check cache (avoid reparsing the same transactions repeatedly over and over on repaint)
+        std::map<uint256, std::string>::iterator cacheIt = recentCache.find(hash);
+        if (cacheIt != recentCache.end()) {
+            std::string txData = cacheIt->second;
+            std::vector<std::string> vecData;
+            boost::split(vecData, txData, boost::is_any_of(":"), boost::token_compress_on);
+            if (vecData.size() == 5) {
+                address = QString::fromStdString(vecData[0]);
+                valid = boost::lexical_cast<bool>(vecData[1]);
+                omniSendToSelf = boost::lexical_cast<bool>(vecData[2]);
+                omniOutbound = boost::lexical_cast<bool>(vecData[3]);
+                omniAmountStr = vecData[4];
+                omniOverride = true;
+                amount = 0;
+            } else {
+                PrintToLog("ERROR: Recent transactions cache has an invalid number of tokens for entry %s\n", hash.GetHex());
+            }
+        } else { // cache miss, check database
+            if (p_txlistdb->exists(hash)) {
+                omniOverride = true;
+                amount = 0;
+                CTransaction wtx;
+                uint256 blockHash = 0;
+                if (GetTransaction(hash, wtx, blockHash, true)) {
+                    if ((0 != blockHash) || (NULL != GetBlockIndex(blockHash))) {
+                        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+                        if (NULL != pBlockIndex) {
+                            int blockHeight = pBlockIndex->nHeight;
+                            CMPTransaction mp_obj;
+                            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
+                            if (0 < parseRC) { //positive RC means DEx payment
+                                std::string tmpBuyer, tmpSeller;
+                                uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
+                                p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                bool bIsBuy = IsMyAddress(tmpBuyer);
+                                int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
+                                if (0<numberOfPurchases) { // calculate total bought/sold
+                                    for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
+                                        p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                        total += tmpNValue;
                                     }
-                                    address = QString::fromStdString(mp_obj.getReceiver());
-                                } else {
-                                    address = QString::fromStdString(mp_obj.getSender());
+                                    if (!bIsBuy) {
+                                          address = QString::fromStdString(tmpSeller);
+                                    } else {
+                                          address = QString::fromStdString(tmpBuyer);
+                                          omniOutbound = false;
+                                    }
+                                    omniAmountStr = FormatDivisibleMP(total);
+                                }
+                            } else if (0 == parseRC) {
+                                if (mp_obj.interpret_Transaction()) {
+                                    valid = getValidMPTX(hash);
+                                    uint32_t omniPropertyId = mp_obj.getProperty();
+                                    int64_t omniAmount = mp_obj.getAmount();
+                                    if (isPropertyDivisible(omniPropertyId)) {
+                                        omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                    } else {
+                                        omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                    }
+                                    if (!mp_obj.getReceiver().empty()) {
+                                        if (IsMyAddress(mp_obj.getReceiver())) {
+                                            omniOutbound = false;
+                                            if (IsMyAddress(mp_obj.getSender())) omniSendToSelf = true;
+                                        }
+                                        address = QString::fromStdString(mp_obj.getReceiver());
+                                    } else {
+                                        address = QString::fromStdString(mp_obj.getSender());
+                                    }
                                 }
                             }
+                            std::string validStr = valid ? "1":"0";
+                            std::string omniSendToSelfStr = omniSendToSelf ? "1":"0";
+                            std::string omniOutboundStr = omniOutbound ? "1":"0";
+                            std::string entry = address.toStdString() + ":" + validStr + ":" + omniSendToSelfStr + ":" + omniOutboundStr + ":" + omniAmountStr;
+                            recentCache.insert(std::make_pair(hash, entry));
                         }
                     }
                 }
