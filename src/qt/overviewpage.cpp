@@ -133,8 +133,15 @@ public:
                                 omniAmountStr = FormatDivisibleMP(total);
                             }
                         } else if (0 == parseRC) {
-                            if (0<=mp_obj.step1()) {
+                            if (mp_obj.interpret_Transaction()) {
                                 valid = getValidMPTX(hash);
+                                uint32_t omniPropertyId = mp_obj.getProperty();
+                                int64_t omniAmount = mp_obj.getAmount();
+                                if (isPropertyDivisible(omniPropertyId)) {
+                                    omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                } else {
+                                    omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                }
                                 if (!mp_obj.getReceiver().empty()) {
                                     if (IsMyAddress(mp_obj.getReceiver())) {
                                         omniOutbound = false;
@@ -143,15 +150,6 @@ public:
                                     address = QString::fromStdString(mp_obj.getReceiver());
                                 } else {
                                     address = QString::fromStdString(mp_obj.getSender());
-                                }
-                                if (0 == mp_obj.step2_Value()) {
-                                    uint32_t omniPropertyId = mp_obj.getProperty();
-                                    int64_t omniAmount = mp_obj.getAmount();
-                                    if (isPropertyDivisible(omniPropertyId)) {
-                                        omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
-                                    } else {
-                                        omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
-                                    }
                                 }
                             }
                         }
