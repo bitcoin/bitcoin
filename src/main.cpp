@@ -1825,7 +1825,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
 
 
 
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean)
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == credits_view.Credits_GetBestBlock());
 
@@ -2018,7 +2018,7 @@ void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_C
     }
 }
 
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool fJustCheck)
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims, bool fJustCheck)
 {
     AssertLockHeld(credits_mainState.cs_main);
     // Check it again in case a previous version let a bad block in
@@ -2397,7 +2397,7 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
 			LogPrintf("Credits: DisconnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
 		}
     }
-	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
+	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
 	if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, credits_view, claim_view, true, vBlockUndoClaims))
 		return error("Credits: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
 
@@ -2469,7 +2469,7 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
 			LogPrintf("Credits: ConnectTip() : Moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
 		}
     }
-	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
+	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
 	CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
 	if (!Bitcredit_ConnectBlock(block, state, pindexNew, credits_view, claim_view, true, vBlockUndoClaims, false)) {
 		if (state.IsInvalid())
@@ -3470,7 +3470,7 @@ bool Credits_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 	//This is a throw away chainstate db + undo vector
 	Credits_CCoinsViewCache bitcredit_coins(*credits_pcoinsTip, true);
 	Bitcoin_CCoinsViewCache bitcoin_coins(*bitcoin_pcoinsTip, true);
-	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
+	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
 	Credits_CBlockIndex* pindexState = (Credits_CBlockIndex*)credits_chainActive.Tip();
 	Credits_CBlockIndex* pindexFailure = NULL;
 	int nGoodTransactions = 0;

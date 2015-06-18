@@ -1663,7 +1663,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
 
     bool fClean = true;
 
-    Bitcoin_CBlockUndoClaim blockUndo;
+    Bitcoin_CBlockUndo blockUndo;
     CDiskBlockPos pos = pindex->GetUndoPos();
     if (pos.IsNull())
         return error("Bitcoin: DisconnectBlock() : no undo data available");
@@ -1735,7 +1735,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
     view.Bitcoin_SetBestBlock(pindex->pprev->GetBlockHash());
 
     if(fastForwardClaimState) {
-        Bitcoin_CBlockUndoClaim claim_blockUndo;
+        Bitcoin_CBlockUndo claim_blockUndo;
         CDiskBlockPos claim_pos = pindex->GetUndoPosClaim();
         if (claim_pos.IsNull())
             return error("Bitcoin: DisconnectBlock() : no claim undo data available");
@@ -1863,7 +1863,7 @@ void RevertCoin(const Bitcoin_CTransaction &tx, Bitcoin_CBlockIndex* pindex, Bit
     outs = Bitcoin_CCoins();
 }
 
-bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
+bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims) {
 	std::vector<Bitcoin_CDiskBlockIndex> vblockindexes;
 
 	for (unsigned int i = 0; i < vBlockUndoClaims.size(); i++)
@@ -1888,7 +1888,7 @@ bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<
     return true;
 }
 
-bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& view, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean)
+bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& view, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == view.Claim_GetBestBlock());
 
@@ -1897,7 +1897,7 @@ bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& st
 
     bool fClean = true;
 
-    Bitcoin_CBlockUndoClaim blockUndo;
+    Bitcoin_CBlockUndo blockUndo;
     CDiskBlockPos pos = pindex->GetUndoPosClaim();
     if (pos.IsNull())
         return error("Bitcoin: DisconnectBlockForClaim() : no undo data available");
@@ -1958,7 +1958,7 @@ bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& st
     }
 
     if(updateUndo) {
-    	Bitcoin_CBlockUndoClaim empty;
+    	Bitcoin_CBlockUndo empty;
 		vBlockUndoClaims.push_back(make_pair(pindex, empty));
     }
 
@@ -2094,8 +2094,8 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
                          (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
 
     //TODO - No need for two separate undos?
-    Bitcoin_CBlockUndoClaim blockundo;
-    Bitcoin_CBlockUndoClaim claim_blockundo;
+    Bitcoin_CBlockUndo blockundo;
+    Bitcoin_CBlockUndo claim_blockundo;
 
     CCheckQueueControl<Bitcoin_CScriptCheck> control(fScriptChecks && bitcoin_nScriptCheckThreads ? &bitcoin_scriptcheckqueue : NULL);
 
@@ -2238,13 +2238,13 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
     return true;
 }
 
-bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
+bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims) {
 	std::vector<Bitcoin_CDiskBlockIndex> vblockindexes;
 
 	for (unsigned int i = 0; i < vBlockUndoClaims.size(); i++)
     {
         Bitcoin_CBlockIndex *pindex = vBlockUndoClaims[i].first;
-        Bitcoin_CBlockUndoClaim &blockUndoClaim = vBlockUndoClaims[i].second;
+        Bitcoin_CBlockUndo &blockUndoClaim = vBlockUndoClaims[i].second;
 
 		if (pindex->GetUndoPosClaim().IsNull() || !pindex->IsValid(BLOCK_VALID_SCRIPTS))
 		{
@@ -2275,7 +2275,7 @@ bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pai
  * This function should only be used for blocks in the main chain, it assumes that the blocks are
  * valid in many respects, therefore most block validation checks are skipped.
  */
-bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& view, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims)
+bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& view, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims)
 {
     AssertLockHeld(bitcoin_mainState.cs_main);
 
@@ -2290,7 +2290,7 @@ bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state
         return true;
     }
 
-    Bitcoin_CBlockUndoClaim blockundo;
+    Bitcoin_CBlockUndo blockundo;
     int64_t nStart = GetTimeMicros();
 
     int nInputs = 0;
@@ -2450,7 +2450,7 @@ bool static Bitcoin_DisconnectTip(CValidationState &state) {
     return true;
 }
 
-bool static Bitcoin_DisconnectTipForClaim(CValidationState &state, Bitcoin_CCoinsViewCache& view, Bitcoin_CBlockIndex *pindex, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
+bool static Bitcoin_DisconnectTipForClaim(CValidationState &state, Bitcoin_CCoinsViewCache& view, Bitcoin_CBlockIndex *pindex, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims) {
     // Read block from disk.
     Bitcoin_CBlock block;
     if (!Bitcoin_ReadBlockFromDisk(block, pindex))
@@ -2649,7 +2649,7 @@ bool static Bitcoin_ConnectTip(CValidationState &state, Bitcoin_CBlockIndex *pin
 }
 
 // Everything is finalized from Bitcredit_Connect/DisconnectBlock
-bool static Bitcoin_ConnectTipForClaim(CValidationState &state, Bitcoin_CCoinsViewCache& view, Bitcoin_CBlockIndex *pindex, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
+bool static Bitcoin_ConnectTipForClaim(CValidationState &state, Bitcoin_CCoinsViewCache& view, Bitcoin_CBlockIndex *pindex, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims) {
     // Read block from disk.
     Bitcoin_CBlock block;
     if (!Bitcoin_ReadBlockFromDisk(block, pindex))
@@ -2792,7 +2792,7 @@ void PrintClaimMovement(std::string prefix, Bitcoin_CBlockIndex* pCurrentIndex, 
 }
 
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
-bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditBlockIndex, const Credits_CBlockIndex *palignToBitcreditBlockIndex, Bitcoin_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims) {
+bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditBlockIndex, const Credits_CBlockIndex *palignToBitcreditBlockIndex, Bitcoin_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims) {
 	LOCK(bitcoin_mainState.cs_main);
 
 	const uint256 moveToBitcoinHash = palignToBitcreditBlockIndex->hashLinkedBitcoinBlock;
@@ -3675,7 +3675,7 @@ bool Bitcoin_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
         if (nCheckLevel >= 2 && pindex) {
         	//TODO - Do we need two separate checks?
         	//Check the normal undo for the block
-            Bitcoin_CBlockUndoClaim undo;
+            Bitcoin_CBlockUndo undo;
             CDiskBlockPos pos = pindex->GetUndoPos();
             if (!pos.IsNull()) {
                 if (!undo.ReadFromDisk(Bitcoin_OpenUndoFile(pos, true), pos, pindex->pprev->GetBlockHash(), Bitcoin_NetParams()))
@@ -3683,7 +3683,7 @@ bool Bitcoin_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
             }
 
             //Check the claim undo for the block
-            Bitcoin_CBlockUndoClaim undoClaim;
+            Bitcoin_CBlockUndo undoClaim;
             CDiskBlockPos posClaim = pindex->GetUndoPosClaim();
             if (!posClaim.IsNull()) {
                 if (!undoClaim.ReadFromDisk(Bitcoin_OpenUndoFileClaim(posClaim, true), posClaim, pindex->pprev->GetBlockHash(), Bitcoin_NetParams()))

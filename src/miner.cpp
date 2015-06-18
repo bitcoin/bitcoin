@@ -495,7 +495,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 		//This is a throw away chainstate db + undo vector
         Credits_CCoinsViewCache credits_view(*credits_pcoinsTip, true);
         Bitcoin_CCoinsViewCache bitcoin_view(*bitcoin_pcoinsTip, true);
-		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
 
 		//Pre-setup hashLinkedBitcoinBlock to be able to use it with indexDummy
 		pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
@@ -992,7 +992,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 		//This is a throw away chainstate db + undo vector
         Credits_CCoinsViewCache credits_viewNew(*credits_pcoinsTip, true);
         Bitcoin_CCoinsViewCache bitcoin_viewNew(*bitcoin_pcoinsTip, true);
-		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > vBlockUndoClaims;
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
 
 		CValidationState state;
 		if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, credits_viewNew, bitcoin_viewNew, false, vBlockUndoClaims, true)) {

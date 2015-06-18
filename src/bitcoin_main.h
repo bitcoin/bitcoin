@@ -33,7 +33,7 @@
 #include <vector>
 
 class Bitcoin_CBlockIndex;
-class Bitcoin_CBlockUndoClaim;
+class Bitcoin_CBlockUndo;
 class CBloomFilter;
 class CInv;
 
@@ -173,7 +173,7 @@ bool Bitcoin_ActivateBestChain(CValidationState &state);
 /** Trim all old block files + undo files up to this block */
 bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo);
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
-bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
+bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims);
 int64_t Bitcoin_GetBlockValue(int nHeight, int64_t nFees);
 unsigned int Bitcoin_GetNextWorkRequired(const Bitcoin_CBlockIndex* pindexLast, const Bitcoin_CBlockHeader *pblock);
 
@@ -261,7 +261,7 @@ bool Bitcoin_IsStandardTx(const Bitcoin_CTransaction& tx, std::string& reason);
 bool Bitcoin_IsFinalTx(const Bitcoin_CTransaction &tx, int nBlockHeight = 0, int64_t nBlockTime = 0);
 
 /** Undo information for a CBlock */
-class Bitcoin_CBlockUndoClaim
+class Bitcoin_CBlockUndo
 {
 public:
     std::vector<Bitcoin_CTxUndo> vtxundo; // for all but the coinbase
@@ -432,16 +432,16 @@ bool Bitcoin_ReadBlockFromDisk(Bitcoin_CBlock& block, const Bitcoin_CBlockIndex*
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
 /** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
-bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
+bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims);
 bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins,  bool updateUndo, bool* pfClean = NULL);
-bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
+bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
 /** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
-bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
+bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims);
 bool Bitcoin_WriteChainState(CValidationState &state, bool writeBitcoin, bool writeClaim);
 bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, bool fJustCheck);
-bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
+bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcoin_AddToBlockIndex(Bitcoin_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
