@@ -93,9 +93,9 @@ static void secp256k1_ecmult_odd_multiples_table_globalz_windowa(secp256k1_ge_t 
 }
 
 static void secp256k1_ecmult_odd_multiples_table_storage_var(int n, secp256k1_ge_storage_t *pre, const secp256k1_gej_t *a) {
-    secp256k1_gej_t *prej = checked_malloc(sizeof(secp256k1_gej_t) * n);
-    secp256k1_ge_t *prea = checked_malloc(sizeof(secp256k1_ge_t) * n);
-    secp256k1_fe_t *zr = checked_malloc(sizeof(secp256k1_fe_t) * n);
+    secp256k1_gej_t *prej = (secp256k1_gej_t*)checked_malloc(sizeof(secp256k1_gej_t) * n);
+    secp256k1_ge_t *prea = (secp256k1_ge_t*)checked_malloc(sizeof(secp256k1_ge_t) * n);
+    secp256k1_fe_t *zr = (secp256k1_fe_t*)checked_malloc(sizeof(secp256k1_fe_t) * n);
     int i;
 
     /* Compute the odd multiples in Jacobian form. */
