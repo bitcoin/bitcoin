@@ -248,8 +248,10 @@ UniValue getblockhash(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 
     int nHeight = params[0].get_int();
-    if (nHeight < 0 || nHeight > chainActive.Height())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+    if (nHeight < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height");
+    if (nHeight > chainActive.Height())
+        throw JSONRPCError(RPC_NOT_FOUND, "Block height out of range");
 
     CBlockIndex* pblockindex = chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
