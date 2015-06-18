@@ -372,7 +372,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
     BOOST_FOREACH(const string& name_, addrList) {
         CBitcoinAddress address(name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_NOT_FOUND, string("Invalid Bitcoin address: ")+name_);
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid Bitcoin address: ")+name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
@@ -623,10 +623,10 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             CBitcoinSecret vchSecret;
             bool fGood = vchSecret.SetString(k.get_str());
             if (!fGood)
-                throw JSONRPCError(RPC_NOT_FOUND, "Invalid private key");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid private key");
             CKey key = vchSecret.GetKey();
             if (!key.IsValid())
-                throw JSONRPCError(RPC_NOT_FOUND, "Private key outside allowed range");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Private key outside allowed range");
             tempKeystore.AddKey(key);
         }
     }

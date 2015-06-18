@@ -360,7 +360,7 @@ UniValue verifymessage(const UniValue& params, bool fHelp)
     vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
     if (fInvalid)
-        throw JSONRPCError(RPC_NOT_FOUND, "Malformed base64 encoding");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Malformed base64 encoding");
 
     CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
