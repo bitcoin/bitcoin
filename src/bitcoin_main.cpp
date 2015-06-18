@@ -1655,7 +1655,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
     assert(pindex->GetBlockHash() == view.Bitcoin_GetBestBlock());
     if(fastForwardClaimState) {
         assert(view.Claim_GetBestBlock() == pindex->GetBlockHash());
-        assert(view.Claim_GetBitcreditClaimTip() == uint256(1));
+        assert(view.Claim_GetCreditsClaimTip() == uint256(1));
     }
 
     if (pfClean)
@@ -1819,7 +1819,7 @@ bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bit
 
 		view.Claim_SetBestBlock(pindex->pprev->GetBlockHash());
         //Claim tip set to 1 to indicate credits non-aligned chainstate. Only happens on bitcoin initial download
-		view.Claim_SetBitcreditClaimTip(uint256(1));
+		view.Claim_SetCreditsClaimTip(uint256(1));
     }
 
     if (pfClean) {
@@ -2030,9 +2030,9 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
     if(fastForwardClaimState) {
         assert(view.Claim_GetBestBlock() == hashPrevBlock);
         if(pindex->pprev == NULL) {
-        	assert(view.Claim_GetBitcreditClaimTip() == uint256(0));
+        	assert(view.Claim_GetCreditsClaimTip() == uint256(0));
         } else {
-        	assert(view.Claim_GetBitcreditClaimTip() == uint256(1));
+        	assert(view.Claim_GetCreditsClaimTip() == uint256(1));
         }
     }
 
@@ -2043,7 +2043,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
         if(fastForwardClaimState) {
             view.Claim_SetBestBlock(pindex->GetBlockHash());
             //Claim tip set to 1 to indicate credits non-aligned chainstate. Only happens on bitcoin initial download
-            view.Claim_SetBitcreditClaimTip(uint256(1));
+            view.Claim_SetCreditsClaimTip(uint256(1));
         }
         return true;
     }
@@ -2227,7 +2227,7 @@ bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoi
     	ret = view.Claim_SetBestBlock(pindex->GetBlockHash());
     	assert(ret);
         //Claim tip set to 1 to indicate credits non-aligned chainstate. Only happens on bitcoin initial download
-    	ret = view.Claim_SetBitcreditClaimTip(uint256(1));
+    	ret = view.Claim_SetCreditsClaimTip(uint256(1));
     	assert(ret);
     }
 
@@ -2808,13 +2808,13 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 	    	return true;
 	    }
 		//This section changes from fast forward claim update to standard claim update
-	    if(view.Claim_GetBestBlock() == Credits_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetBitcreditClaimTip() == uint256(1))) {
-	    	view.Claim_SetBitcreditClaimTip(expectedCurrentBitcreditBlockIndex->GetBlockHash());
+	    if(view.Claim_GetBestBlock() == Credits_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetCreditsClaimTip() == uint256(1))) {
+	    	view.Claim_SetCreditsClaimTip(expectedCurrentBitcreditBlockIndex->GetBlockHash());
 	    }
 	} else {
 		//This section changes from standard claim update to fast forward claim update
-	    if(view.Claim_GetBestBlock() == Credits_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetBitcreditClaimTip() != uint256(1))) {
-	    	view.Claim_SetBitcreditClaimTip(uint256(1));
+	    if(view.Claim_GetBestBlock() == Credits_Params().FastForwardClaimBitcoinBlockHash() && (view.Claim_GetCreditsClaimTip() != uint256(1))) {
+	    	view.Claim_SetCreditsClaimTip(uint256(1));
 	    }
 
 		//Disconnecting credits block
@@ -2833,8 +2833,8 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 
 	// verify that the view's current state corresponds to the previous block
     uint256 hashExpected = expectedCurrentBitcreditBlockIndex->GetBlockHash() == Credits_Params().GenesisBlock().GetHash() ? uint256(0) : expectedCurrentBitcreditBlockIndex->GetBlockHash();
-    if(hashExpected != view.Claim_GetBitcreditClaimTip()) {
-		return state.Abort(strprintf(_("Error moving claim tip. Expected active credits block: %s, was: %s"), hashExpected.GetHex(), view.Claim_GetBitcreditClaimTip().GetHex()));
+    if(hashExpected != view.Claim_GetCreditsClaimTip()) {
+		return state.Abort(strprintf(_("Error moving claim tip. Expected active credits block: %s, was: %s"), hashExpected.GetHex(), view.Claim_GetCreditsClaimTip().GetHex()));
     }
 
 	if (!bitcoin_chainActive.Contains(pmoveToBitcoinIndex)) {
@@ -2861,7 +2861,7 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 	pCurrentIndex = (*mi2).second;
 
 	//Marker for dirty state
-	view.Claim_SetBitcreditClaimTip(uint256(1));
+	view.Claim_SetCreditsClaimTip(uint256(1));
 	//Move up or down depending on the state of the claim chain
 	if (pCurrentIndex->nHeight < pmoveToBitcoinIndex->nHeight) {
 	    if (bitcredit_fBenchmark) {
@@ -2906,7 +2906,7 @@ bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex * expectedCurrentBitcreditB
 		return state.Abort(_("Claim tip not in correct position."));
 	}
 
-	if(!view.Claim_SetBitcreditClaimTip(palignToBitcreditBlockIndex->GetBlockHeader().GetHash())) {
+	if(!view.Claim_SetCreditsClaimTip(palignToBitcreditBlockIndex->GetBlockHeader().GetHash())) {
 		return state.Abort(_("Credits claim tip could not be set."));
 	}
 

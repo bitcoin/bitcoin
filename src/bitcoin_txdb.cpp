@@ -37,7 +37,7 @@ void Bitcoin_CCoinsViewDB::Bitcoin_BatchWriteHashBestChain(CLevelDBBatch &batch,
 void Bitcoin_CCoinsViewDB::Claim_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
     batch.Write(CLAIM_BEST_CHAIN_KEY, hash);
 }
-void Bitcoin_CCoinsViewDB::Claim_BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash) {
+void Bitcoin_CCoinsViewDB::Claim_BatchWriteHashCreditsClaimTip(CLevelDBBatch &batch, const uint256 &hash) {
     batch.Write(CLAIM_BITCREDIT_CLAIM_TIP_KEY, hash);
 }
 void Bitcoin_CCoinsViewDB::Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins) {
@@ -93,15 +93,15 @@ bool Bitcoin_CCoinsViewDB::Claim_SetBestBlock(const uint256 &hashBlock) {
     return db.WriteBatch(batch);
 }
 
-uint256 Bitcoin_CCoinsViewDB::Claim_GetBitcreditClaimTip() {
+uint256 Bitcoin_CCoinsViewDB::Claim_GetCreditsClaimTip() {
     uint256 hash;
     if (!db.Read(CLAIM_BITCREDIT_CLAIM_TIP_KEY, hash))
         return uint256(0);
     return hash;
 }
-bool Bitcoin_CCoinsViewDB::Claim_SetBitcreditClaimTip(const uint256 &hashBlock) {
+bool Bitcoin_CCoinsViewDB::Claim_SetCreditsClaimTip(const uint256 &hashBlock) {
     CLevelDBBatch batch;
-    Claim_BatchWriteHashBitcreditClaimTip(batch, hashBlock);
+    Claim_BatchWriteHashCreditsClaimTip(batch, hashBlock);
     return db.WriteBatch(batch);
 }
 
@@ -128,7 +128,7 @@ bool Bitcoin_CCoinsViewDB::Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CC
 
     return db.WriteBatch(batch);
 }
-bool Bitcoin_CCoinsViewDB::Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins) {
+bool Bitcoin_CCoinsViewDB::Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins) {
     LogPrint("coindb", "(Claim batch write) Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
@@ -136,14 +136,14 @@ bool Bitcoin_CCoinsViewDB::Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoi
     	Claim_BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
     	Claim_BatchWriteHashBestChain(batch, hashBlock);
-    if (hashBitcreditClaimTip != uint256(0))
-    	Claim_BatchWriteHashBitcreditClaimTip(batch, hashBitcreditClaimTip);
+    if (hashCreditsClaimTip != uint256(0))
+    	Claim_BatchWriteHashCreditsClaimTip(batch, hashCreditsClaimTip);
     if (totalClaimedCoins != int64_t(0))
     	Claim_BatchWriteTotalClaimedCoins(batch, totalClaimedCoins);
 
     return db.WriteBatch(batch);
 }
-bool Bitcoin_CCoinsViewDB::All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins) {
+bool Bitcoin_CCoinsViewDB::All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins) {
     LogPrint("coindb", "(All batch write) Committing %u changed transactions to coin database...\n", (unsigned int)bitcoin_mapCoins.size());
 
     CLevelDBBatch batch;
@@ -156,8 +156,8 @@ bool Bitcoin_CCoinsViewDB::All_BatchWrite(const std::map<uint256, Bitcoin_CCoins
     	Claim_BatchWriteCoins(batch, it->first, it->second);
     if (claim_hashBlock != uint256(0))
     	Claim_BatchWriteHashBestChain(batch, claim_hashBlock);
-    if (claim_hashBitcreditClaimTip != uint256(0))
-    	Claim_BatchWriteHashBitcreditClaimTip(batch, claim_hashBitcreditClaimTip);
+    if (claim_hashCreditsClaimTip != uint256(0))
+    	Claim_BatchWriteHashCreditsClaimTip(batch, claim_hashCreditsClaimTip);
     if (claim_totalClaimedCoins != int64_t(0))
     	Claim_BatchWriteTotalClaimedCoins(batch, claim_totalClaimedCoins);
 
@@ -221,8 +221,8 @@ bool Bitcoin_CCoinsViewDB::Claim_GetStats(Bitcoin_CCoinsStats &stats) {
     CHashWriter ss(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
     stats.hashBlock = Claim_GetBestBlock();
     ss << stats.hashBlock;
-    stats.hashBitcreditClaimTip = Claim_GetBitcreditClaimTip();
-    ss << stats.hashBitcreditClaimTip;
+    stats.hashCreditsClaimTip = Claim_GetCreditsClaimTip();
+    ss << stats.hashCreditsClaimTip;
     stats.totalClaimedCoins = Claim_GetTotalClaimedCoins();
     ss << stats.totalClaimedCoins;
     int64_t nTotalAmountOriginal = 0;

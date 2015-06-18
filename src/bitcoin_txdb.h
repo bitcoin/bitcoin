@@ -28,7 +28,7 @@ class Bitcoin_CCoinsViewDB : public Bitcoin_CCoinsView {
 private:
     void Bitcoin_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
     void Claim_BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash);
-    void Claim_BatchWriteHashBitcreditClaimTip(CLevelDBBatch &batch, const uint256 &hash);
+    void Claim_BatchWriteHashCreditsClaimTip(CLevelDBBatch &batch, const uint256 &hash);
     void Claim_BatchWriteTotalClaimedCoins(CLevelDBBatch &batch, const int64_t &totalClaimedCoins);
     void Bitcoin_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins);
     void Claim_BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const Bitcoin_CCoins &coins);
@@ -55,13 +55,13 @@ public:
     uint256 Claim_GetBestBlock();
     bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
     bool Claim_SetBestBlock(const uint256 &hashBlock);
-    uint256 Claim_GetBitcreditClaimTip();
-    bool Claim_SetBitcreditClaimTip(const uint256 &hashBlock);
+    uint256 Claim_GetCreditsClaimTip();
+    bool Claim_SetCreditsClaimTip(const uint256 &hashBlock);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
     bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
+    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
+    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
     bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
     bool Claim_GetStats(Bitcoin_CCoinsStats &stats);
 };

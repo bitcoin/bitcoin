@@ -324,7 +324,7 @@ struct Bitcoin_CCoinsStats
 {
     int nHeight;
     uint256 hashBlock;
-    uint256 hashBitcreditClaimTip;
+    uint256 hashCreditsClaimTip;
     int64_t totalClaimedCoins;
     uint64_t nTransactions;
     uint64_t nTransactionOutputsOriginal;
@@ -334,7 +334,7 @@ struct Bitcoin_CCoinsStats
     int64_t nTotalAmountOriginal;
     int64_t nTotalAmountClaimable;
 
-    Bitcoin_CCoinsStats() : nHeight(0), hashBlock(0), hashBitcreditClaimTip(0), totalClaimedCoins(0), nTransactions(0), nTransactionOutputsOriginal(0), nTransactionOutputsClaimable(0), nSerializedSize(0), hashSerialized(0), nTotalAmountOriginal(0), nTotalAmountClaimable(0){}
+    Bitcoin_CCoinsStats() : nHeight(0), hashBlock(0), hashCreditsClaimTip(0), totalClaimedCoins(0), nTransactions(0), nTransactionOutputsOriginal(0), nTransactionOutputsClaimable(0), nSerializedSize(0), hashSerialized(0), nTotalAmountOriginal(0), nTotalAmountClaimable(0){}
 };
 
 /** Abstract view on the open txout dataset. */
@@ -363,9 +363,9 @@ public:
     virtual bool Claim_SetBestBlock(const uint256 &hashBlock);
 
     // Retrieve the block hash whose state this view currently represents
-    virtual uint256 Claim_GetBitcreditClaimTip();
+    virtual uint256 Claim_GetCreditsClaimTip();
     // Modify the currently active block hash
-    virtual bool Claim_SetBitcreditClaimTip(const uint256 &hashBitcreditClaimTip);
+    virtual bool Claim_SetCreditsClaimTip(const uint256 &hashCreditsClaimTip);
 
     // Get the total (sum) number of bitcoins that have been claimed
     virtual int64_t Claim_GetTotalClaimedCoins();
@@ -374,8 +374,8 @@ public:
 
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
     virtual bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    virtual bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    virtual bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
+    virtual bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
+    virtual bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
 
     // Calculate statistics about the unspent transaction output set
     virtual bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
@@ -404,15 +404,15 @@ public:
     uint256 Claim_GetBestBlock();
     bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
     bool Claim_SetBestBlock(const uint256 &hashBlock);
-    uint256 Claim_GetBitcreditClaimTip();
-    bool Claim_SetBitcreditClaimTip(const uint256 &hashBitcreditClaimTip);
+    uint256 Claim_GetCreditsClaimTip();
+    bool Claim_SetCreditsClaimTip(const uint256 &hashCreditsClaimTip);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
     void Bitcoin_SetBackend(Bitcoin_CCoinsView &viewIn);
     Bitcoin_CCoinsView *Bitcoin_GetBackend();
     bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
+    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
+    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
     bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
     bool Claim_GetStats(Bitcoin_CCoinsStats &stats);
 };
@@ -426,7 +426,7 @@ protected:
     std::map<uint256,Bitcoin_CCoins> bitcoin_cacheCoins;
 
     uint256 claim_hashBlock;
-    uint256 claim_hashBitcreditClaimTip;
+    uint256 claim_hashCreditsClaimTip;
     int64_t claim_totalClaimedCoins;
     std::map<uint256,Bitcoin_CCoins> claim_cacheCoins;
 
@@ -444,13 +444,13 @@ public:
     uint256 Claim_GetBestBlock();
     bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
     bool Claim_SetBestBlock(const uint256 &hashBlock);
-    uint256 Claim_GetBitcreditClaimTip();
-    bool Claim_SetBitcreditClaimTip(const uint256 &hashBitcreditClaimTip);
+    uint256 Claim_GetCreditsClaimTip();
+    bool Claim_SetCreditsClaimTip(const uint256 &hashCreditsClaimTip);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
     bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashBitcreditClaimTip, const int64_t &totalClaimedCoins);
-    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashBitcreditClaimTip, const int64_t &claim_totalClaimedCoins);
+    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
+    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
 
     // Return a modifiable reference to a Bitcoin_CCoins. Check HaveCoins first.
     // Many methods explicitly require a Bitcoin_CCoinsViewCache because of this method, to reduce
