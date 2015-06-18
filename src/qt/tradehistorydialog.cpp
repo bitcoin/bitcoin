@@ -471,8 +471,9 @@ void TradeHistoryDialog::UpdateData()
         QTableWidgetItem *amountOutCell = new QTableWidgetItem(QString::fromStdString(displayOut));
         QTableWidgetItem *amountInCell = new QTableWidgetItem(QString::fromStdString(displayIn));
         QTableWidgetItem *iconCell = new QTableWidgetItem;
-        QTableWidgetItem *dateCell = ui->tradeHistoryTable->item(row, 3); // values don't change so can be copied
-        QTableWidgetItem *infoCell = ui->tradeHistoryTable->item(row, 5); // as above
+        QTableWidgetItem *dateCell = new QTableWidgetItem;
+        dateCell->setData(Qt::DisplayRole, ui->tradeHistoryTable->item(row, 3)->data(Qt::DisplayRole)); // values don't change so can be copied
+        QTableWidgetItem *infoCell = new QTableWidgetItem(ui->tradeHistoryTable->item(row, 5)->text()); // as above
         iconCell->setIcon(ic);
         amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
         amountOutCell->setForeground(QColor("#EE0000"));
