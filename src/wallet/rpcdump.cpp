@@ -114,10 +114,10 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     CBitcoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
-    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+    if (!fGood) throw JSONRPCError(RPC_NOT_FOUND, "Invalid private key encoding");
 
     CKey key = vchSecret.GetKey();
-    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+    if (!key.IsValid()) throw JSONRPCError(RPC_NOT_FOUND, "Private key outside allowed range");
 
     CPubKey pubkey = key.GetPubKey();
     assert(key.VerifyPubKey(pubkey));
@@ -183,7 +183,7 @@ UniValue importaddress(const UniValue& params, bool fHelp)
         std::vector<unsigned char> data(ParseHex(params[0].get_str()));
         script = CScript(data.begin(), data.end());
     } else {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+        throw JSONRPCError(RPC_NOT_FOUND, "Invalid Bitcoin address or script");
     }
 
     string strLabel = "";
@@ -356,7 +356,7 @@ UniValue dumpprivkey(const UniValue& params, bool fHelp)
     string strAddress = params[0].get_str();
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_NOT_FOUND, "Invalid Bitcoin address");
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");

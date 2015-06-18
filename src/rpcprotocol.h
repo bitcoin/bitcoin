@@ -43,7 +43,7 @@ enum RPCErrorCode
     RPC_MISC_ERROR                  = -1,  //! std::exception thrown in command handling
     RPC_FORBIDDEN_BY_SAFE_MODE      = -2,  //! Server is in safe mode, and command is not allowed in safe mode
     RPC_TYPE_ERROR                  = -3,  //! Unexpected type was passed as parameter
-    RPC_INVALID_ADDRESS_OR_KEY      = -5,  //! Invalid address or key
+    RPC_NOT_FOUND                   = -5,  //! Invalid address or key
     RPC_OUT_OF_MEMORY               = -7,  //! Ran out of memory during operation
     RPC_INVALID_PARAMETER           = -8,  //! Invalid, missing or duplicate parameter
     RPC_DATABASE_ERROR              = -20, //! Database error
@@ -54,6 +54,7 @@ enum RPCErrorCode
     RPC_IN_WARMUP                   = -28, //! Client still warming up
 
     //! Aliases for backward compatibility
+    RPC_INVALID_ADDRESS_OR_KEY      = RPC_NOT_FOUND,
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,
     RPC_TRANSACTION_REJECTED        = RPC_VERIFY_REJECTED,
     RPC_TRANSACTION_ALREADY_IN_CHAIN= RPC_VERIFY_ALREADY_IN_CHAIN,
