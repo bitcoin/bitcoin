@@ -107,7 +107,7 @@ void MetaDExDialog::setClientModel(ClientModel *model)
     this->clientModel = model;
     if (NULL != model) {
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateBalances()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(OrderRefresh()));
     }
 }
 
@@ -120,6 +120,7 @@ void MetaDExDialog::setWalletModel(WalletModel *model)
 void MetaDExDialog::OrderRefresh()
 {
     UpdateOffers();
+    UpdateBalances();
 }
 
 // Executed when the switch market button is clicked
