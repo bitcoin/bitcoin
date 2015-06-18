@@ -182,7 +182,7 @@ void TradeHistoryDialog::UpdateTradeHistoryTable()
             amountOutCell->setForeground(QColor("#EE0000"));
             amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
             amountInCell->setForeground(QColor("#00AA00"));
-            if (objTH.status == "Cancelled" || objTH.status == "Filled") {
+            if (objTH.status == "Cancelled" || objTH.status == "Filled" || objTH.status == "Part Cancel") {
                 // dull the colors for non-active trades
                 dateCell->setForeground(QColor("#707070"));
                 statusCell->setForeground(QColor("#707070"));
@@ -479,7 +479,7 @@ void TradeHistoryDialog::UpdateData()
         amountOutCell->setForeground(QColor("#EE0000"));
         amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
         amountInCell->setForeground(QColor("#00AA00"));
-        if (statusText == "Cancelled" || statusText == "Filled") {
+        if (statusText == "Cancelled" || statusText == "Filled" || statusText == "Part Cancel") {
             // dull the colors for non-active trades
             dateCell->setForeground(QColor("#707070"));
             statusCell->setForeground(QColor("#707070"));
