@@ -150,6 +150,8 @@ BITCOIN_CORE_H = \
   version.h \
   wallet/crypter.h \
   wallet/db.h \
+  wallet/legacywallet.h \
+  wallet/walletdb.h \
   wallet/wallet.h \
   wallet/wallet_ismine.h \
   wallet/walletdb.h
@@ -197,6 +199,7 @@ libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
+  wallet/legacywallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \

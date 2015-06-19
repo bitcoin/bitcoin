@@ -348,7 +348,7 @@ void CWallet::Flush(bool shutdown)
     bitdb.Flush(shutdown);
 }
 
-bool CWallet::Verify(const string& walletFile, string& warningString, string& errorString)
+bool CWallet::Verify(const std::string& walletFile, std::string& warningString, std::string& errorString)
 {
     if (!bitdb.Open(GetDataDir()))
     {
@@ -367,7 +367,7 @@ bool CWallet::Verify(const string& walletFile, string& warningString, string& er
             // if it still fails, it probably means we can't even create the database env
             string msg = strprintf(_("Error initializing wallet database environment %s!"), GetDataDir());
             errorString += msg;
-            return true;
+            return false;
         }
     }
     
@@ -375,9 +375,9 @@ bool CWallet::Verify(const string& walletFile, string& warningString, string& er
     {
         // Recover readable keypairs:
         if (!CWalletDB::Recover(bitdb, walletFile, true))
-            return false;
+            return true;
     }
-    
+
     if (boost::filesystem::exists(GetDataDir() / walletFile))
     {
         CDBEnv::VerifyResult r = bitdb.Verify(walletFile, CWalletDB::Recover);
@@ -2021,16 +2021,33 @@ CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarge
     return nFeeNeeded;
 }
 
-
-
-
-DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
+bool CWallet::LoadWallet(std::string& warningString, std::string& errorString)
 {
+    // needed to restore wallet transaction meta data after -zapwallettxes
+    std::vector<CWalletTx> vWtx;
+
+    if (GetBoolArg("-zapwallettxes", false)) {
+        uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
+
+        CWallet *tmpWallet = new CWallet(strWalletFile);
+        DBErrors nZapWalletRet = tmpWallet->ZapWalletTx(vWtx);
+        if (nZapWalletRet != DB_LOAD_OK) {
+            uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
+            return false;
+        }
+
+        delete tmpWallet;
+        tmpWallet = NULL;
+    }
+
+    int64_t nStart = GetTimeMillis();
+    DBErrors nLoadWallet;
+
     if (!fFileBacked)
-        return DB_LOAD_OK;
-    fFirstRunRet = false;
-    DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
-    if (nLoadWalletRet == DB_NEED_REWRITE)
+        nLoadWallet = DB_LOAD_OK;
+    bool fFirstRun = false;
+    nLoadWallet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
+    if (nLoadWallet == DB_NEED_REWRITE)
     {
         if (CDB::Rewrite(strWalletFile, "\x04pool"))
         {
@@ -2042,13 +2059,131 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         }
     }
 
-    if (nLoadWalletRet != DB_LOAD_OK)
-        return nLoadWalletRet;
-    fFirstRunRet = !vchDefaultKey.IsValid();
-
+    if (nLoadWallet != DB_LOAD_OK)
+    {
+        if (nLoadWallet == DB_CORRUPT)
+            errorString += _("Error loading wallet.dat: Wallet corrupted") + "\n";
+        else if (nLoadWallet == DB_NONCRITICAL_ERROR)
+        {
+            warningString += _("Warning: error reading wallet.dat! All keys read correctly, but transaction data"
+                                   " or address book entries might be missing or incorrect."); return true;
+        }
+        else if (nLoadWallet == DB_TOO_NEW)
+            errorString += _("Error loading wallet.dat: Wallet requires newer version of Bitcoin Core") + "\n";
+        else if (nLoadWallet == DB_NEED_REWRITE)
+        {
+            errorString += _("Wallet needed to be rewritten: restart Bitcoin Core to complete") + "\n";
+            LogPrintf("%s", errorString);
+            return true;
+        }
+        else
+            errorString += _("Error loading wallet.dat") + "\n";
+    }
+    fFirstRun = !vchDefaultKey.IsValid();
     uiInterface.LoadWallet(this);
 
-    return DB_LOAD_OK;
+    if (GetBoolArg("-upgradewallet", fFirstRun))
+    {
+        int nMaxVersion = GetArg("-upgradewallet", 0);
+        if (nMaxVersion == 0) // the -upgradewallet without argument case
+        {
+            LogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
+            nMaxVersion = CLIENT_VERSION;
+            this->SetMinVersion(FEATURE_LATEST); // permanently upgrade the wallet immediately
+        }
+        else
+            LogPrintf("Allowing wallet upgrade up to %i\n", nMaxVersion);
+        if (nMaxVersion < this->GetVersion())
+            errorString += _("Cannot downgrade wallet") + "\n";
+        this->SetMaxVersion(nMaxVersion);
+    }
+
+    if (fFirstRun)
+    {
+        // Create new keyUser and set as default key
+        RandAddSeedPerfmon();
+
+        CPubKey newDefaultKey;
+        if (this->GetKeyFromPool(newDefaultKey)) {
+            this->SetDefaultKey(newDefaultKey);
+            if (!this->SetAddressBook(this->vchDefaultKey.GetID(), "", "receive"))
+                errorString += _("Cannot write default address") + "\n";
+        }
+
+        this->SetBestChain(chainActive.GetLocator());
+    }
+
+    LogPrintf("%s", errorString);
+    LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
+
+    RegisterValidationInterface(this);
+
+    CBlockIndex *pindexRescan = chainActive.Tip();
+    if (GetBoolArg("-rescan", false))
+        pindexRescan = chainActive.Genesis();
+    else
+    {
+        CWalletDB walletdb(strWalletFile);
+        CBlockLocator locator;
+        if (walletdb.ReadBestBlock(locator))
+            pindexRescan = FindForkInGlobalIndex(chainActive, locator);
+        else
+            pindexRescan = chainActive.Genesis();
+    }
+    if (chainActive.Tip() && chainActive.Tip() != pindexRescan)
+    {
+        //We can't rescan beyond non-pruned blocks, stop and throw an error
+        //this might happen if a user uses a old wallet within a pruned node
+        // or if he ran -disablewallet for a longer time, then decided to re-enable
+        if (fPruneMode)
+        {
+            CBlockIndex *block = chainActive.Tip();
+            while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA) && block->pprev->nTx > 0 && pindexRescan != block)
+                block = block->pprev;
+
+            if (pindexRescan != block)
+            {
+                errorString += _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)");
+                return true;
+            }
+        }
+
+        uiInterface.InitMessage(_("Rescanning..."));
+        LogPrintf("Rescanning last %i blocks (from block %i)...\n", chainActive.Height() - pindexRescan->nHeight, pindexRescan->nHeight);
+        nStart = GetTimeMillis();
+        this->ScanForWalletTransactions(pindexRescan, true);
+        LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
+        this->SetBestChain(chainActive.GetLocator());
+        nWalletDBUpdated++;
+
+        // Restore wallet transaction metadata after -zapwallettxes=1
+        if (GetBoolArg("-zapwallettxes", false) && GetArg("-zapwallettxes", "1") != "2")
+        {
+            CWalletDB walletdb(strWalletFile);
+
+            BOOST_FOREACH(const CWalletTx& wtxOld, vWtx)
+            {
+                uint256 hash = wtxOld.GetHash();
+                std::map<uint256, CWalletTx>::iterator mi = this->mapWallet.find(hash);
+                if (mi != this->mapWallet.end())
+                {
+                    const CWalletTx* copyFrom = &wtxOld;
+                    CWalletTx* copyTo = &mi->second;
+                    copyTo->mapValue = copyFrom->mapValue;
+                    copyTo->vOrderForm = copyFrom->vOrderForm;
+                    copyTo->nTimeReceived = copyFrom->nTimeReceived;
+                    copyTo->nTimeSmart = copyFrom->nTimeSmart;
+                    copyTo->fFromMe = copyFrom->fFromMe;
+                    copyTo->strFromAccount = copyFrom->strFromAccount;
+                    copyTo->nOrderPos = copyFrom->nOrderPos;
+                    copyTo->WriteToDisk(&walletdb);
+                }
+            }
+        }
+    }
+    this->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", true));
+
+    return true;
 }
 
 

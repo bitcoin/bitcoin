@@ -14,6 +14,7 @@
 #include "util.h"
 #ifdef ENABLE_WALLET
 #include "wallet/db.h"
+#include "wallet/legacywallet.h"
 #include "wallet/wallet.h"
 #endif
 
@@ -22,7 +23,7 @@
 #include <boost/thread.hpp>
 
 CClientUIInterface uiInterface; // Declared but not defined in ui_interface.h
-CWallet* pwalletMain;
+extern CWallet* pwalletMain;
 
 extern bool fPrintToConsole;
 extern void noui_connect();
@@ -54,10 +55,9 @@ TestingSetup::TestingSetup()
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex();
 #ifdef ENABLE_WALLET
-        bool fFirstRun;
-        pwalletMain = new CWallet("wallet.dat");
-        pwalletMain->LoadWallet(fFirstRun);
-        RegisterValidationInterface(pwalletMain);
+        std::string warningString, errorString;
+        pwalletMain = new CWallet(CLegacyWalletModule::GetWalletFile());
+        pwalletMain->LoadWallet(warningString, errorString);
 #endif
         nScriptCheckThreads = 3;
         for (int i=0; i < nScriptCheckThreads-1; i++)
