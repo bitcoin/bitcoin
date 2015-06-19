@@ -1854,17 +1854,15 @@ void CNode::Fuzz(int nChance)
 // CAddrDB
 //
 
-CAddrDB::CAddrDB()
-{
-    pathAddr = GetDataDir() / "peers.dat";
-}
-
 bool CAddrDB::Write(const CAddrMan& addr)
 {
     // Generate random temporary filename
     unsigned short randv = 0;
     GetRandBytes((unsigned char*)&randv, sizeof(randv));
     std::string tmpfn = strprintf("peers.dat.%04x", randv);
+
+    boost::filesystem::path pathAddr = GetDataDir() / "peers.dat";
+    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
 
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
@@ -1874,7 +1872,6 @@ bool CAddrDB::Write(const CAddrMan& addr)
     ssPeers << hash;
 
     // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
@@ -1899,6 +1896,8 @@ bool CAddrDB::Write(const CAddrMan& addr)
 
 bool CAddrDB::Read(CAddrMan& addr)
 {
+    boost::filesystem::path pathAddr = GetDataDir() / "peers.dat";
+	
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathAddr.string().c_str(), "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
