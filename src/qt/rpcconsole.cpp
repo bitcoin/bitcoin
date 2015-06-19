@@ -352,15 +352,36 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
 
         // create context menu actions
-        QAction* disconnectAction = new QAction(tr("&Disconnect Node"), this);
+        QAction* disconnectAction   = new QAction(tr("&Disconnect Node"), this);
+        QAction* banAction1h        = new QAction(tr("&Ban Node for 1 hour"), this);
+        QAction* banAction24h       = new QAction(tr("&Ban Node for 24 hours"), this);
+        QAction* banAction7d        = new QAction(tr("&Ban Node for 7 days"), this);
+        QAction* banAction365d      = new QAction(tr("&Ban Node for 1 year"), this);
 
         // create context menu
         contextMenu = new QMenu();
         contextMenu->addAction(disconnectAction);
+        contextMenu->addAction(banAction1h);
+        contextMenu->addAction(banAction24h);
+        contextMenu->addAction(banAction7d);
+        contextMenu->addAction(banAction365d);
 
         // context menu signals
         connect(ui->peerWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showMenu(const QPoint&)));
         connect(disconnectAction, SIGNAL(triggered()), this, SLOT(disconnectSelectedNode()));
+
+        //add a signal mapping, use int instead of int64_t for bantime because signalmapper only supports int or objects
+        //int is sufficient for our case
+        QSignalMapper* signalMapper = new QSignalMapper(this);
+        signalMapper->setMapping(banAction1h, 60*60);
+        signalMapper->setMapping(banAction24h, 60*60*24);
+        signalMapper->setMapping(banAction7d, 60*60*24*7);
+        signalMapper->setMapping(banAction365d, 60*60*24*365);
+        connect(banAction1h, SIGNAL(triggered()), signalMapper, SLOT(map()));
+        connect(banAction24h, SIGNAL(triggered()), signalMapper, SLOT(map()));
+        connect(banAction7d, SIGNAL(triggered()), signalMapper, SLOT(map()));
+        connect(banAction365d, SIGNAL(triggered()), signalMapper, SLOT(map()));
+        connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(banSelectedNode(int))) ;
 
         // connect the peerWidget selection model to our peerSelected() handler
         connect(ui->peerWidget->selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
@@ -727,6 +748,23 @@ void RPCConsole::disconnectSelectedNode()
     // Find the node, disconnect it and clear the selected node
     if (CNode *bannedNode = FindNode(strNode.toStdString())) {
         bannedNode->fDisconnect = true;
+        clearSelectedNode();
+    }
+}
+
+void RPCConsole::banSelectedNode(int bantime)
+{
+    // Get currently selected peer address
+    QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
+    // Find possible nodes, ban it and clear the selected node
+    if (CNode *bannedNode = FindNode(strNode.toStdString())) {
+        std::string nStr = strNode.toStdString();
+        std::string addr;
+        int port = 0;
+        SplitHostPort(nStr, port, addr);
+
+        CNode::Ban(CNetAddr(addr), bantime);
+        bannedNode->CloseSocketDisconnect();
         clearSelectedNode();
     }
 }

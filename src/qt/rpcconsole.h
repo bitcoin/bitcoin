@@ -80,6 +80,8 @@ public Q_SLOTS:
     void peerLayoutChanged();
     /** Disconnect a selected node on the Peers tab */
     void disconnectSelectedNode();
+    /** Ban a selected node on the Peers tab */
+    void banSelectedNode(int bantime);
 
 Q_SIGNALS:
     // For RPC command executor
