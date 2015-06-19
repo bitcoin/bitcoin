@@ -105,18 +105,22 @@ class AcceptBlockTest(BitcoinTestFramework):
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
         test_node = TestNode()   # connects to node0 (not whitelisted)
+        test_node_aux = TestNode()   # connects to node0 (clean remote inventory for test 6)
         white_node = TestNode()  # connects to node1 (whitelisted)
 
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
+        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node_aux))
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], white_node))
         test_node.add_connection(connections[0])
-        white_node.add_connection(connections[1])
+        test_node_aux.add_connection(connections[1])
+        white_node.add_connection(connections[2])
 
         NetworkThread().start() # Start up network handling in another thread
 
         # Test logic begins here
         test_node.wait_for_verack()
+        test_node_aux.wait_for_verack()
         white_node.wait_for_verack()
 
         # 1. Have both nodes mine a block (leave IBD)
@@ -201,12 +205,12 @@ class AcceptBlockTest(BitcoinTestFramework):
         # triggers a getdata on block 2 (it should if block 2 is missing).
         with mininode_lock:
             # Clear state so we can check the getdata request
-            test_node.last_getdata = None
-            test_node.send_message(msg_inv([CInv(2, blocks_h3[0].sha256)]))
+            test_node_aux.last_getdata = None
+            test_node_aux.send_message(msg_inv([CInv(2, blocks_h3[0].sha256)]))
 
         time.sleep(1)
         with mininode_lock:
-            getdata = test_node.last_getdata
+            getdata = test_node_aux.last_getdata
 
         # Check that the getdata is for the right block
         assert_equal(len(getdata.inv), 1)
