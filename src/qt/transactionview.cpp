@@ -176,8 +176,7 @@ TransactionView::TransactionView(QWidget *parent) :
 void TransactionView::setModel(WalletModel *model)
 {
     this->model = model;
-    if(model)
-    {
+    if (model && model->getOptionsModel()) {
         transactionProxyModel = new TransactionFilterProxy(this);
         transactionProxyModel->setSourceModel(model->getTransactionTableModel());
         transactionProxyModel->setDynamicSortFilter(true);
@@ -203,22 +202,20 @@ void TransactionView::setModel(WalletModel *model)
 
         columnResizingFixer = new GUIUtil::TableViewLastColumnResizingFixer(transactionView, AMOUNT_MINIMUM_COLUMN_WIDTH, MINIMUM_COLUMN_WIDTH);
 
-        if (model->getOptionsModel())
-        {
-            // Add third party transaction URLs to context menu
-            QStringList listUrls = model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
-            for (int i = 0; i < listUrls.size(); ++i)
-            {
-                QString host = QUrl(listUrls[i].trimmed(), QUrl::StrictMode).host();
-                if (!host.isEmpty())
-                {
-                    QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
-                    if (i == 0)
-                        contextMenu->addSeparator();
-                    contextMenu->addAction(thirdPartyTxUrlAction);
-                    connect(thirdPartyTxUrlAction, SIGNAL(triggered()), mapperThirdPartyTxUrls, SLOT(map()));
-                    mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, listUrls[i].trimmed());
+        // Add third party transaction URLs to context menu
+        bool fFirst = true;
+        foreach (const QString& strUrl, model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts)) {
+            QString strUrlTrimmed = strUrl.trimmed();
+            QString host = QUrl(strUrlTrimmed, QUrl::StrictMode).host();
+            if (!host.isEmpty()) {
+                QAction *thirdPartyTxUrlAction = new QAction(host, this); // use host as menu item label
+                if (fFirst) {
+                    contextMenu->addSeparator();
+                    fFirst = false;
                 }
+                contextMenu->addAction(thirdPartyTxUrlAction);
+                connect(thirdPartyTxUrlAction, SIGNAL(triggered()), mapperThirdPartyTxUrls, SLOT(map()));
+                mapperThirdPartyTxUrls->setMapping(thirdPartyTxUrlAction, strUrlTrimmed);
             }
         }
 
@@ -439,11 +436,9 @@ void TransactionView::showDetails()
 
 void TransactionView::openThirdPartyTxUrl(QString url)
 {
-    if(!transactionView || !transactionView->selectionModel())
-        return;
-    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
-    if(!selection.isEmpty())
-         QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", selection.at(0).data(TransactionTableModel::TxHashRole).toString())));
+    QString strTxHash = GUIUtil::getEntryData(transactionView, 0, TransactionTableModel::TxHashRole);
+    if (!strTxHash.isEmpty())
+        QDesktopServices::openUrl(QUrl::fromUserInput(url.replace("%s", strTxHash)));
 }
 
 QWidget *TransactionView::createDateRangeWidget()
