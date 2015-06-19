@@ -483,7 +483,7 @@ public:
     bool GetLastValidBlockHash(uint256& hash, int mod=1, int nBlockHeight=0);
     /// Process a new block
     void NewBlock();
-    void CompletedTransaction(bool error, std::string lastMessageNew);
+    void CompletedTransaction(bool error, int errorID);
     void ClearLastMessage();
     /// Used for liquidity providers
     bool SendRandomPaymentToSelf();
