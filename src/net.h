@@ -287,6 +287,7 @@ protected:
     // Key is IP address, value is banned-until-time
     static std::map<CSubNet, int64_t> setBanned;
     static CCriticalSection cs_setBanned;
+    static bool setBannedIsDirty;
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
@@ -613,6 +614,14 @@ public:
     static bool Unban(const CNetAddr &ip);
     static bool Unban(const CSubNet &ip);
     static void GetBanned(std::map<CSubNet, int64_t> &banmap);
+    static void SetBanned(const std::map<CSubNet, int64_t> &banmap);
+
+    //!check is the banlist has unwritten changes
+    static bool BannedSetIsDirty();
+    //!set the "dirty" flag for the banlist
+    static void SetBannedSetDirty(bool dirty=true);
+    //!clean unused entires (if bantime has expired)
+    static void SweepBanned();
 
     void copyStats(CNodeStats &stats);
 
@@ -643,5 +652,18 @@ public:
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
 };
+
+/** Access to the banlist database (banlist.dat) */
+class CBanDB
+{
+private:
+    boost::filesystem::path pathBanlist;
+public:
+    CBanDB();
+    bool Write(const std::map<CSubNet, int64_t>& banSet);
+    bool Read(std::map<CSubNet, int64_t>& banSet);
+};
+
+void DumpBanlist();
 
 #endif // BITCOIN_NET_H
