@@ -86,7 +86,7 @@ UniValue getnetworkhashps(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("getnetworkhashps", "")
             + HelpExampleRpc("getnetworkhashps", "")
-       );
+        );
 
     LOCK(cs_main);
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);

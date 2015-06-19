@@ -227,8 +227,8 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
         uint256 hash(uint256S(txid.get_str()));
         if (setTxids.count(hash))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated txid: ")+txid.get_str());
-       setTxids.insert(hash);
-       oneTxid = hash;
+        setTxids.insert(hash);
+        oneTxid = hash;
     }
 
     LOCK(cs_main);
@@ -374,8 +374,6 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+name_);
 
-        if (setAddress.count(address))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
         setAddress.insert(address);
 
         CScript scriptPubKey = GetScriptForDestination(address.Get());
