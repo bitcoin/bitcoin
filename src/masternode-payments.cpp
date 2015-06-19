@@ -386,8 +386,8 @@ bool IsReferenceNode(CTxIn& vin)
 {
     //reference node - hybrid mode
     if(vin.prevout.ToStringShort() == "099c01bea63abd1692f60806bb646fa1d288e2d049281225f17e499024084e28-0") return true; // mainnet
-    if(vin.prevout.ToStringShort() == "testnet-0") return true; // testnet
-    if(vin.prevout.ToStringShort() == "regtest-0") return true; // regtest
+    if(vin.prevout.ToStringShort() == "fbc16ae5229d6d99181802fd76a4feee5e7640164dcebc7f8feb04a7bea026f8-0") return true; // testnet
+    if(vin.prevout.ToStringShort() == "e466f5d8beb4c2d22a314310dc58e0ea89505c95409754d0d68fb874952608cc-1") return true; // regtest
 
     return false;
 }
