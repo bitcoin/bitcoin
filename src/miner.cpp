@@ -322,7 +322,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         FillBlockPayee(txNew, nFees);
 
         // Make payee
-	pblock->payee = txNew.vout[1].scriptPubKey;
+	    if(txNew.vout.size() > 1){
+            pblock->payee = txNew.vout[1].scriptPubKey;
+        }
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
