@@ -27,6 +27,7 @@ static const char DB_FLAG = 'F';
 static const char DB_REINDEX_FLAG = 'R';
 static const char DB_LAST_BLOCK = 'l';
 
+static const char DB_FORK_ACTIVATION = 'a';
 
 void static BatchWriteCoins(CLevelDBBatch &batch, const uint256 &hash, const CCoins &coins) {
     if (coins.IsPruned())
@@ -240,5 +241,64 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
         }
     }
 
+    // Load fork activation info
+    ssKeySet.clear();
+    ssKeySet << make_pair(DB_FORK_ACTIVATION, 0);
+    pcursor->Seek(ssKeySet.str());
+    while (pcursor->Valid()) {
+        try {
+            leveldb::Slice slKey = pcursor->key();
+            CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
+            char chType;
+            ssKey >> chType;
+            if (chType == DB_FORK_ACTIVATION) {
+                uint32_t nVersion;
+                ssKey >> nVersion;
+                leveldb::Slice slValue = pcursor->value();
+                CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
+                uint256 blockHash;
+                ssValue >> blockHash;
+                forkActivationMap[nVersion] = blockHash;
+
+                pcursor->Next();
+            } else {
+                break; // finished loading block index
+            }
+        }
+        catch (std::exception &e) {
+            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
+        }
+    }
+
     return true;
+}
+
+uint256 CBlockTreeDB::ForkActivated(int32_t nForkVersion) const
+{
+    // Returns block at which a supermajority was reached for given
+    // fork version.
+    // NOTE! The  max blocksize fork adds a grace period
+    // during which no bigger blocks are allowed; this routine
+    // just keeps track of the hash of the block that
+    // triggers the fork condition
+
+    std::map<int32_t, uint256>::const_iterator it = forkActivationMap.find(nForkVersion);
+    if (it != forkActivationMap.end())
+        return it->second;
+
+    return uint256();
+}
+
+bool CBlockTreeDB::ActivateFork(int32_t nForkVersion, const uint256& blockHash)
+{
+    // Called when a supermajority of blocks (ending with blockHash)
+    // support a rule change
+    // OR if a chain re-org happens around the activation block,
+    // called with uint256(0) to reset the flag in the database.
+
+    forkActivationMap[nForkVersion] = blockHash;
+    if (blockHash == uint256())
+        return Erase(make_pair(DB_FORK_ACTIVATION, nForkVersion));
+    else
+        return Write(make_pair(DB_FORK_ACTIVATION, nForkVersion), blockHash);
 }

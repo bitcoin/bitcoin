@@ -82,10 +82,16 @@ void EraseOrphansFor(NodeId peer);
 static bool SanityCheckMessage(CNode* peer, const CNetMessage& msg);
 
 /**
- * Returns true if there are nRequired or more blocks of minVersion or above
- * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
+ * Returns true if there are nRequired or more blocks with a version that matches
+ * versionOrBitmask in the last Consensus::Params::nMajorityWindow blocks,
+ * starting at pstart and going backwards.
+ *
+ * A bitmask is used to be compatible with Pieter Wuille's "Version bits"
+ * proposal, so it is possible for multiple forks to be in-progress
+ * at the same time. A simple >= version field is used for forks that
+ * predate this proposal.
  */
-static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
+static bool IsSuperMajority(int versionOrBitmask, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams, bool useBitMask = true);
 static void CheckBlockIndex();
 
 /** Constant stuff for coinbase transactions we create: */
@@ -1843,6 +1849,12 @@ static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 
+static bool DidBlockTriggerSizeFork(const CBlock &block, const CBlockIndex *pindex, const CChainParams &chainparams) {
+    return (block.nVersion & SIZE_FORK_VERSION) &&
+           (pblocktree->ForkActivated(SIZE_FORK_VERSION) == uint256()) &&
+           IsSuperMajority(SIZE_FORK_VERSION, pindex, chainparams.ActivateSizeForkMajority(), chainparams.GetConsensus(), true /* use bitmask */);
+}
+
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
     const CChainParams& chainparams = Params();
@@ -2017,6 +2029,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     int64_t nTime4 = GetTimeMicros(); nTimeCallbacks += nTime4 - nTime3;
     LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeCallbacks * 0.000001);
+
+    if (DidBlockTriggerSizeFork(block, pindex, chainparams)) {
+        uint64_t tAllowBigger = block.nTime + chainparams.SizeForkGracePeriod();
+        LogPrintf("%s: Max block size fork activating at time %d, bigger blocks allowed at time %d\n",
+                  __func__, block.nTime, tAllowBigger);
+        pblocktree->ActivateFork(SIZE_FORK_VERSION, pindex->GetBlockHash());
+        sizeForkTime.store(tAllowBigger);
+    }
 
     return true;
 }
@@ -2212,6 +2232,14 @@ bool static DisconnectTip(CValidationState &state) {
     }
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
     mempool.check(pcoinsTip);
+
+    // Re-org past the size fork, reset activation condition:
+    if (pblocktree->ForkActivated(SIZE_FORK_VERSION) == pindexDelete->GetBlockHash()) {
+        LogPrintf("%s: re-org past size fork\n", __func__);
+        pblocktree->ActivateFork(SIZE_FORK_VERSION, uint256());
+        sizeForkTime.store(std::numeric_limits<uint64_t>::max());
+    }
+
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -2964,12 +2992,13 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
     return true;
 }
 
-static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams)
+static bool IsSuperMajority(int versionOrBitmask, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams, bool useBitMask)
 {
     unsigned int nFound = 0;
     for (int i = 0; i < consensusParams.nMajorityWindow && nFound < nRequired && pstart != NULL; i++)
     {
-        if (pstart->nVersion >= minVersion)
+        if ((useBitMask && ((pstart->nVersion & versionOrBitmask) == versionOrBitmask)) ||
+            (!useBitMask && (pstart->nVersion >= versionOrBitmask)))
             ++nFound;
         pstart = pstart->pprev;
     }
@@ -3211,6 +3240,15 @@ bool static LoadBlockIndexDB()
     const CChainParams& chainparams = Params();
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
+
+    // If the max-block-size fork threshold was reached, update
+    // chainparams so big blocks are allowed:
+    uint256 sizeForkHash = pblocktree->ForkActivated(SIZE_FORK_VERSION);
+    if (sizeForkHash != uint256()) {
+        BlockMap::iterator it = mapBlockIndex.find(sizeForkHash);
+        assert(it != mapBlockIndex.end());
+        sizeForkTime.store(it->second->GetBlockTime() + chainparams.SizeForkGracePeriod());
+    }
 
     boost::this_thread::interruption_point();
 
@@ -3853,7 +3891,14 @@ static std::map<std::string, size_t> maxMessageSizes = boost::assign::map_list_o
 bool static SanityCheckMessage(CNode* peer, const CNetMessage& msg)
 {
     const std::string& strCommand = msg.hdr.GetCommand();
-    if (msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH ||
+    if (strCommand == "block") {
+        uint64_t maxSize = Params().MaxBlockSize(GetAdjustedTime() + 2 * 60 * 60, sizeForkTime.load());
+        if (msg.hdr.nMessageSize > maxSize) {
+            LogPrint("net", "Oversized %s message from peer=%i\n", SanitizeString(strCommand), peer->GetId());
+            return false;
+        }
+    }
+    else if (msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH ||
         (maxMessageSizes.count(strCommand) && msg.hdr.nMessageSize > maxMessageSizes[strCommand])) {
         LogPrint("net", "Oversized %s message from peer=%i (%d bytes)\n",
                  SanitizeString(strCommand), peer->GetId(), msg.hdr.nMessageSize);

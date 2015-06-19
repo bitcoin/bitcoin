@@ -49,6 +49,8 @@ public:
 private:
     CBlockTreeDB(const CBlockTreeDB&);
     void operator=(const CBlockTreeDB&);
+    std::map<int32_t, uint256> forkActivationMap;
+
 public:
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
@@ -60,6 +62,8 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();
+    uint256 ForkActivated(int32_t nForkVersion) const;
+    bool ActivateFork(int32_t nForkVersion, const uint256& blockHash);
 };
 
 #endif // BITCOIN_TXDB_H
