@@ -345,8 +345,6 @@ UniValue gettxoutsetinfo(const UniValue& params, bool fHelp)
             + HelpExampleRpc("gettxoutsetinfo", "")
         );
 
-    LOCK(cs_main);
-
     UniValue ret(UniValue::VOBJ);
 
     CCoinsStats stats;
