@@ -231,6 +231,33 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
     ar = r.get_array();
     BOOST_CHECK_EQUAL(ar.size(), 0);
+
+
+    BOOST_CHECK_THROW(r = CallRPC(string("setban test add")), runtime_error); //invalid IP
+
+    //IPv6 tests
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("setban FE80:0000:0000:0000:0202:B3FF:FE1E:8329 add")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    BOOST_CHECK_EQUAL(adr.get_str(), "fe80::202:b3ff:fe1e:8329/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+
+    BOOST_CHECK_NO_THROW(CallRPC(string("clearbanned")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 2001:db8::/30 add")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    BOOST_CHECK_EQUAL(adr.get_str(), "2001:db8::/ffff:fffc:0:0:0:0:0:0");
+
+    BOOST_CHECK_NO_THROW(CallRPC(string("clearbanned")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("setban 2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128 add")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
