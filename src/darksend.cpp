@@ -370,15 +370,15 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         int sessionIDMessage;
         bool error;
-        std::string lastMessage;
-        vRecv >> sessionIDMessage >> error >> lastMessage;
+        int errorID;
+        vRecv >> sessionIDMessage >> error >> errorID;
 
         if(sessionID != sessionIDMessage){
             if (fDebug) LogPrintf("dsc - message doesn't match current Darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
             return;
         }
 
-        darkSendPool.CompletedTransaction(error, lastMessage);
+        darkSendPool.CompletedTransaction(error, errorID);
     }
 
 }
@@ -1355,7 +1355,7 @@ void CDarksendPool::NewBlock()
 }
 
 // Darksend transaction was completed (failed or successful)
-void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
+void CDarksendPool::CompletedTransaction(bool error, int errorID)
 {
     if(fMasterNode) return;
 
@@ -1376,7 +1376,7 @@ void CDarksendPool::CompletedTransaction(bool error, std::string lastMessageNew)
         // To avoid race conditions, we'll only let DS run once per block
         cachedLastSuccess = chainActive.Tip()->nHeight;
     }
-    lastMessage = lastMessageNew;
+    lastMessage = GetMessageByID(errorID);
     completedTransaction = true;
 }
 
