@@ -243,12 +243,19 @@ static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, Ch
                               Q_ARG(int, status));
 }
 
+static void BannedListChanged(ClientModel *clientmodel)
+{
+    qDebug() << "BannedListChanged";
+    QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
     uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -257,4 +264,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
+    uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
 }
