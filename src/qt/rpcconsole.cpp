@@ -8,6 +8,7 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "platformstyle.h"
+#include "bantablemodel.h"
 
 #include "chainparams.h"
 #include "rpcserver.h"
@@ -351,6 +352,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
 
+        // set up ban table
+        ui->banlistWidget->setModel(model->getBanTableModel());
+
         // create context menu actions
         QAction* disconnectAction   = new QAction(tr("&Disconnect Node"), this);
         QAction* banAction1h        = new QAction(tr("&Ban Node for 1 hour"), this);
@@ -395,6 +399,12 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->buildDate->setText(model->formatBuildDate());
         ui->startupTime->setText(model->formatClientStartupTime());
         ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
+
+        if (!clientModel->getBanTableModel()->shouldShow())
+        {
+            ui->banlistWidget->hide();
+            ui->banHeading->hide();
+        }
     }
 }
 
@@ -766,6 +776,9 @@ void RPCConsole::banSelectedNode(int bantime)
         CNode::Ban(CNetAddr(addr), bantime);
         bannedNode->CloseSocketDisconnect();
         clearSelectedNode();
+        ui->banlistWidget->setVisible(true);
+        ui->banHeading->setVisible(true);
+        clientModel->updateBanlist();
     }
 }
 
