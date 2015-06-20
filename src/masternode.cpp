@@ -388,17 +388,21 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
 
     //search existing Masternode list, this is where we update existing Masternodes with new dsee broadcasts
     CMasternode* pmn = mnodeman.Find(vin);
+
     // if we are masternode but with undefined vin and this dsee is ours (matches our Masternode privkey) then just skip this part
     if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
     {
+        // if Requested, we don't want to update this info
+        if(fRequested) { Relay(false); return true;}
+
         // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
         //   after that they just need to match
-        if(!fRequested && pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
+        if(pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
             pmn->UpdateLastSeen();
 
             if(pmn->sigTime < sigTime){ //take the newest entry
                 LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
-                
+                                
                 pmn->UpdateFromNewBroadcast((*this));
                 
                 pmn->Check();
@@ -407,7 +411,6 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
                 }
             }
         }
-        return false;
     }
 
     return true;
@@ -564,7 +567,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
     {
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
         // take this only if it's newer and last ping was more then MASTERNODE_MIN_MNP_SECONDS ago
-        if(sigTime - pmn->lastMnping > MASTERNODE_MIN_MNP_SECONDS)
+        if(sigTime - pmn->lastMnping > MASTERNODE_MIN_MNP_SECONDS-60)
         {
             std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
@@ -586,12 +589,14 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
                     LogPrintf("mnping - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
                     // Do nothing here (no Masternode update, no mnping relay)
                     // Let this node to be visible but fail to accept mnping
+
                     return false;
                 }
             } else {
                 if (fDebug) LogPrintf("mnping - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
                 // maybe we stuck so we shouldn't ban this node, just fail to accept it
                 // TODO: or should we also request this block?
+
                 return false;
             }
 

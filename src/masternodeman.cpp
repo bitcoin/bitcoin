@@ -611,7 +611,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         mapSeenMasternodePing[mnp.GetHash()] = mnp;
 
         int nDoS = 0;
-        if(!mnp.CheckAndUpdate(nDoS))
+        if(mnp.CheckAndUpdate(nDoS))
         {
             if(nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
