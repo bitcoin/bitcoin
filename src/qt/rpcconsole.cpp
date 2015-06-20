@@ -352,7 +352,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
-        ui->peerWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+        ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
 
         // create context menu actions
         QAction* disconnectAction   = new QAction(tr("&Disconnect Node"), this);
@@ -373,8 +373,9 @@ void RPCConsole::setClientModel(ClientModel *model)
         connect(ui->peerWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showPeersTableContextMenu(const QPoint&)));
         connect(disconnectAction, SIGNAL(triggered()), this, SLOT(disconnectSelectedNode()));
 
-        //add a signal mapping, use int instead of int64_t for bantime because signalmapper only supports int or objects
-        //int is sufficient for our case
+        //add a signal mapping to allow a dynamic argument
+        //we need to use int (instead of int64_t) because signal mapper only supports int or objects
+        //this is okay because max bantime (1 Year) is smaler then int_max
         QSignalMapper* signalMapper = new QSignalMapper(this);
         signalMapper->setMapping(banAction1h, 60*60);
         signalMapper->setMapping(banAction24h, 60*60*24);
@@ -395,14 +396,14 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->banlistWidget->setModel(model->getBanTableModel());
         ui->banlistWidget->verticalHeader()->hide();
         ui->banlistWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        ui->banlistWidget->setColumnWidth(BanTableModel::Address, ADDRESS_COLUMN_WIDTH);
-        ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, PING_COLUMN_WIDTH);
+        ui->banlistWidget->setColumnWidth(BanTableModel::Address, BANSUBNET_COLUMN_WIDTH);
+        ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         ui->banlistWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->banlistWidget->setSelectionMode(QAbstractItemView::SingleSelection);
         ui->banlistWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-        ui->banlistWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+        ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
-        // create context menu actions
+        // create banlist context menu actions
         QAction* unbanAction   = new QAction(tr("&Unban Node"), this);
         banTableContextMenu = new QMenu();
         banTableContextMenu->addAction(unbanAction);
@@ -419,11 +420,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->startupTime->setText(model->formatClientStartupTime());
         ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
 
-        if (!clientModel->getBanTableModel()->shouldShow())
-        {
-            ui->banlistWidget->hide();
-            ui->banHeading->hide();
-        }
+        connect(model, SIGNAL(banListChanged()), this, SLOT(showOrHideBanTableIfRequired()));
+        showOrHideBanTableIfRequired();
     }
 }
 
@@ -810,7 +808,7 @@ void RPCConsole::banSelectedNode(int bantime)
 
 void RPCConsole::unbanSelectedNode()
 {
-    // Get currently selected peer address
+    // Get currently selected ban address
     QString strNode = GUIUtil::getEntryData(ui->banlistWidget, 0, BanTableModel::Address);
     CSubNet possibleSubnet(strNode.toStdString());
 
@@ -818,6 +816,7 @@ void RPCConsole::unbanSelectedNode()
     {
         CNode::Unban(possibleSubnet);
         clientModel->updateBanlist();
+        showOrHideBanTableIfRequired();
     }
 }
 
@@ -827,4 +826,11 @@ void RPCConsole::clearSelectedNode()
     cachedNodeid = -1;
     ui->detailWidget->hide();
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
+}
+
+void RPCConsole::showOrHideBanTableIfRequired()
+{
+    bool visible = clientModel->getBanTableModel()->shouldShow();
+    ui->banlistWidget->setVisible(visible);
+    ui->banHeading->setVisible(visible);
 }

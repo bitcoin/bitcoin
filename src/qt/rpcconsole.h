@@ -64,6 +64,8 @@ private Q_SLOTS:
     void showPeersTableContextMenu(const QPoint& point);
     /** Show custom context menu on Bans tab */
     void showBanTableContextMenu(const QPoint& point);
+    /** Hides ban table if no bans are present */
+    void showOrHideBanTableIfRequired();
 
 public Q_SLOTS:
     void clear();
@@ -105,7 +107,10 @@ private:
     {
         ADDRESS_COLUMN_WIDTH = 200,
         SUBVERSION_COLUMN_WIDTH = 100,
-        PING_COLUMN_WIDTH = 80
+        PING_COLUMN_WIDTH = 80,
+        BANSUBNET_COLUMN_WIDTH = 300,
+        BANTIME_COLUMN_WIDTH = 150
+
     };
 
     Ui::RPCConsole *ui;
