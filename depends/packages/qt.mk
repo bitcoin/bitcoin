@@ -8,7 +8,7 @@ $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
-$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch
+$(package)_patches=mac-qmake.conf fix-xcb-include-order.patch mingw-uuidof.patch
 qtbase_file_name=qtbase-$(qt_suffix)
 qtbase_sha256_hash=93a6ce12f2020da7b8b81b5fb42d7804fcdf3194fbd2cae156e3d01e3669c18a
 qttranslations_file_name=qttranslations-$(qt_suffix)
@@ -117,6 +117,7 @@ define $(package)_preprocess_cmds
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
   patch -p1 < $($(package)_patch_dir)/fix-xcb-include-order.patch && \
+  patch -p1 < $($(package)_patch_dir)/mingw-uuidof.patch && \
   echo "QMAKE_CFLAGS     += $($(package)_cflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_CXXFLAGS   += $($(package)_cxxflags) $($(package)_cppflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
   echo "QMAKE_LFLAGS     += $($(package)_ldflags)" >> qtbase/mkspecs/common/gcc-base.conf && \
