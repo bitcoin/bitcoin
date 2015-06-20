@@ -61,6 +61,7 @@ $(package)_config_opts += -opensource -confirm-license \
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin = -xplatform macx-clang-linux \
     -device-option MAC_SDK_PATH=$(OSX_SDK) \
+    -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION) \
     -device-option CROSS_COMPILE="$(host)-" \
     -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION) \
     -device-option MAC_TARGET=$(host) \
