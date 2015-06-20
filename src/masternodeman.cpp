@@ -613,11 +613,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int nDoS = 0;
         if(mnp.CheckAndUpdate(nDoS))
         {
-            if(nDoS > 0)
-                Misbehaving(pfrom->GetId(), nDoS);
-
             //successful, we're done
             return;
+        } else { 
+            //failure
+            if(nDoS > 0)
+                Misbehaving(pfrom->GetId(), nDoS);
         }
 
         if(fDebug) LogPrintf("mnp - Couldn't find Masternode entry %s\n", mnp.vin.ToString().c_str());
