@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(filled_tally)
 
     BOOST_CHECK(tally.updateMoney(0, 1, BALANCE));
     BOOST_CHECK(tally.updateMoney(0, 100, SELLOFFER_RESERVE));
-    BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807), ACCEPT_RESERVE));
-    BOOST_CHECK(tally.updateMoney(2, (-int64_t(9223372036854775807)-1), PENDING));
-    BOOST_CHECK(tally.updateMoney(5, int64_t(4294967296), METADEX_RESERVE));
+    BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807LL), ACCEPT_RESERVE));
+    BOOST_CHECK(tally.updateMoney(2, (-int64_t(9223372036854775807LL)-1), PENDING));
+    BOOST_CHECK(tally.updateMoney(5, int64_t(4294967296L), METADEX_RESERVE));
 
     BOOST_CHECK_EQUAL(tally.getMoney(0, BALANCE), 1);
     BOOST_CHECK_EQUAL(tally.getMoney(0, SELLOFFER_RESERVE), 100);
@@ -67,30 +67,30 @@ BOOST_AUTO_TEST_CASE(filled_tally)
     
     BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(1, SELLOFFER_RESERVE), 0);
-    BOOST_CHECK_EQUAL(tally.getMoney(1, ACCEPT_RESERVE), int64_t(9223372036854775807));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, ACCEPT_RESERVE), int64_t(9223372036854775807LL));
     BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(1, METADEX_RESERVE), 0);
 
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), 0);
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(1), int64_t(9223372036854775807));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(1), int64_t(9223372036854775807LL));
 
     BOOST_CHECK_EQUAL(tally.getMoney(2, BALANCE), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(2, SELLOFFER_RESERVE), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(2, ACCEPT_RESERVE), 0);
-    BOOST_CHECK_EQUAL(tally.getMoney(2, PENDING), (-int64_t(9223372036854775807)-1));
+    BOOST_CHECK_EQUAL(tally.getMoney(2, PENDING), (-int64_t(9223372036854775807LL)-1));
     BOOST_CHECK_EQUAL(tally.getMoney(2, METADEX_RESERVE), 0);
 
-    BOOST_CHECK_EQUAL(tally.getMoneyAvailable(2), (-int64_t(9223372036854775807)-1));
+    BOOST_CHECK_EQUAL(tally.getMoneyAvailable(2), (-int64_t(9223372036854775807LL)-1));
     BOOST_CHECK_EQUAL(tally.getMoneyReserved(2), 0);
 
     BOOST_CHECK_EQUAL(tally.getMoney(5, BALANCE), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(5, SELLOFFER_RESERVE), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(5, ACCEPT_RESERVE), 0);
     BOOST_CHECK_EQUAL(tally.getMoney(5, PENDING), 0);
-    BOOST_CHECK_EQUAL(tally.getMoney(5, METADEX_RESERVE), int64_t(4294967296));
+    BOOST_CHECK_EQUAL(tally.getMoney(5, METADEX_RESERVE), int64_t(4294967296L));
 
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(5), 0);
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(5), int64_t(4294967296));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(5), int64_t(4294967296L));
 
     /**
      * Note:
@@ -269,37 +269,37 @@ BOOST_AUTO_TEST_CASE(tally_overflow)
 
     BOOST_CHECK(!tally.updateMoney(1, -1, BALANCE));
     BOOST_CHECK(!tally.updateMoney(2, -34242, SELLOFFER_RESERVE));
-    BOOST_CHECK(!tally.updateMoney(2, (-int64_t(9223372036854775807)-1), ACCEPT_RESERVE));
-    BOOST_CHECK(!tally.updateMoney(3, -int64_t(1099511627777), METADEX_RESERVE));
+    BOOST_CHECK(!tally.updateMoney(2, (-int64_t(9223372036854775807LL)-1), ACCEPT_RESERVE));
+    BOOST_CHECK(!tally.updateMoney(3, -int64_t(1099511627777L), METADEX_RESERVE));
 
-    BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807), BALANCE));
-    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), int64_t(9223372036854775807));
+    BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807LL), BALANCE));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), int64_t(9223372036854775807LL));
 
     BOOST_CHECK(!tally.updateMoney(1, 1, BALANCE));
-    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), int64_t(9223372036854775807));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), int64_t(9223372036854775807LL));
 
-    BOOST_CHECK(tally.updateMoney(1, (-int64_t(9223372036854775807)-1), PENDING));
-    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), (-int64_t(9223372036854775807)-1));
+    BOOST_CHECK(tally.updateMoney(1, (-int64_t(9223372036854775807LL)-1), PENDING));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), (-int64_t(9223372036854775807LL)-1));
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), -1);
 /*  Not yet specified:
     BOOST_CHECK(!tally.updateMoney(1, -1, PENDING));
-    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), (-int64_t(9223372036854775807)-1));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), (-int64_t(9223372036854775807LL)-1));
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), -1);
 */
-    BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807), ACCEPT_RESERVE));
-    BOOST_CHECK(tally.updateMoney(2, int64_t(9223372036854775807), SELLOFFER_RESERVE));
-    BOOST_CHECK(tally.updateMoney(3, int64_t(9223372036854775807), SELLOFFER_RESERVE));
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(1), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(2), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(3), int64_t(9223372036854775807));
+    BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807LL), ACCEPT_RESERVE));
+    BOOST_CHECK(tally.updateMoney(2, int64_t(9223372036854775807LL), SELLOFFER_RESERVE));
+    BOOST_CHECK(tally.updateMoney(3, int64_t(9223372036854775807LL), SELLOFFER_RESERVE));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(1), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(2), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(3), int64_t(9223372036854775807LL));
 
-    BOOST_CHECK(!tally.updateMoney(3, int64_t(9223372036854775807), SELLOFFER_RESERVE));
-    BOOST_CHECK(!tally.updateMoney(3, (-int64_t(9223372036854775807)-1), SELLOFFER_RESERVE));
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(3), int64_t(9223372036854775807));
+    BOOST_CHECK(!tally.updateMoney(3, int64_t(9223372036854775807LL), SELLOFFER_RESERVE));
+    BOOST_CHECK(!tally.updateMoney(3, (-int64_t(9223372036854775807LL)-1), SELLOFFER_RESERVE));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(3), int64_t(9223372036854775807LL));
 
     BOOST_CHECK(tally.updateMoney(1, -int64_t(9223372036854775807), ACCEPT_RESERVE));
     BOOST_CHECK(tally.updateMoney(1, 10000001, ACCEPT_RESERVE));
@@ -314,8 +314,8 @@ BOOST_AUTO_TEST_CASE(tally_overflow)
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(2), 0);
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(3), 0);
     BOOST_CHECK_EQUAL(tally.getMoneyReserved(1), 150000005);
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(2), int64_t(9223372036854775807));
-    BOOST_CHECK_EQUAL(tally.getMoneyReserved(3), int64_t(9223372036854775807));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(2), int64_t(9223372036854775807LL));
+    BOOST_CHECK_EQUAL(tally.getMoneyReserved(3), int64_t(9223372036854775807LL));
 }
 
 

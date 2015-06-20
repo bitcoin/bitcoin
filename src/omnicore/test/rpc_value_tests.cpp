@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(rpcvalues_property_id)
     // Valid input
     BOOST_CHECK_EQUAL(ParsePropertyId(ValueFromString("1")), uint32_t(1));
     BOOST_CHECK_EQUAL(ParsePropertyId(ValueFromString("31")), uint32_t(31));
-    BOOST_CHECK_EQUAL(ParsePropertyId(ValueFromString("2147483651")), uint32_t(2147483651));
-    BOOST_CHECK_EQUAL(ParsePropertyId(ValueFromString("4294967295")), uint32_t(4294967295));
+    BOOST_CHECK_EQUAL(ParsePropertyId(ValueFromString("2147483651")), uint32_t(2147483651U));
+    BOOST_CHECK_EQUAL(ParsePropertyId(ValueFromString("4294967295")), uint32_t(4294967295U));
     // Out of range
     BOOST_CHECK_THROW(ParsePropertyId(ValueFromString("0")), Object);
     BOOST_CHECK_THROW(ParsePropertyId(ValueFromString("4294967296")), Object);
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(rpcvalues_indivisible_amounts)
     // Valid input
     BOOST_CHECK_EQUAL(ParseAmount(Value("1"), false), int64_t(1));
     BOOST_CHECK_EQUAL(ParseAmount(Value("100000000"), false), int64_t(100000000));
-    BOOST_CHECK_EQUAL(ParseAmount(Value("2147483651"), false), int64_t(2147483651));
-    BOOST_CHECK_EQUAL(ParseAmount(Value("9223372036854775807"), false), int64_t(9223372036854775807));
+    BOOST_CHECK_EQUAL(ParseAmount(Value("2147483651"), false), int64_t(2147483651LL));
+    BOOST_CHECK_EQUAL(ParseAmount(Value("9223372036854775807"), false), int64_t(9223372036854775807LL));
     // Out of range
     BOOST_CHECK_THROW(ParseAmount(Value("0"), false), Object);
     BOOST_CHECK_THROW(ParseAmount(Value("-2"), false), Object);
@@ -89,10 +89,10 @@ BOOST_AUTO_TEST_CASE(rpcvalues_divisible_amounts)
     // Valid input
     BOOST_CHECK_EQUAL(ParseAmount(Value("0.00000001"), true), int64_t(1));
     BOOST_CHECK_EQUAL(ParseAmount(Value("1"), true), int64_t(100000000));
-    BOOST_CHECK_EQUAL(ParseAmount(Value("55555.555555"), true), int64_t(5555555555500));
-    BOOST_CHECK_EQUAL(ParseAmount(Value("21000000.0"), true), int64_t(2100000000000000));
-    BOOST_CHECK_EQUAL(ParseAmount(Value("21000000.00000009"), true), int64_t(2100000000000009));
-    BOOST_CHECK_EQUAL(ParseAmount(Value("92233720368.54775807"), true), int64_t(9223372036854775807));
+    BOOST_CHECK_EQUAL(ParseAmount(Value("55555.555555"), true), int64_t(5555555555500L));
+    BOOST_CHECK_EQUAL(ParseAmount(Value("21000000.0"), true), int64_t(2100000000000000L));
+    BOOST_CHECK_EQUAL(ParseAmount(Value("21000000.00000009"), true), int64_t(2100000000000009L));
+    BOOST_CHECK_EQUAL(ParseAmount(Value("92233720368.54775807"), true), int64_t(9223372036854775807LL));
     // Out of range
     BOOST_CHECK_THROW(ParseAmount(Value("0"), true), Object);
     BOOST_CHECK_THROW(ParseAmount(Value("0.000000001"), true), Object);
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(rpcvalues_dex_fee)
     BOOST_CHECK_EQUAL(ParseDExFee(Value("0")), int64_t(0));
     BOOST_CHECK_EQUAL(ParseDExFee(Value("0.00000")), int64_t(0));
     BOOST_CHECK_EQUAL(ParseDExFee(Value("0.00000001")), int64_t(1));
-    BOOST_CHECK_EQUAL(ParseDExFee(Value("777")), int64_t(77700000000));
-    BOOST_CHECK_EQUAL(ParseDExFee(Value("92233720368.54772323")), int64_t(9223372036854772323));
+    BOOST_CHECK_EQUAL(ParseDExFee(Value("777")), int64_t(77700000000L));
+    BOOST_CHECK_EQUAL(ParseDExFee(Value("92233720368.54772323")), int64_t(9223372036854772323L));
     // Invalid types
     BOOST_CHECK_THROW(ParseDExFee(Value()), std::runtime_error);
     BOOST_CHECK_THROW(ParseDExFee(ValueFromString("3")), std::runtime_error);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(rpcvalues_deadline)
 {
     // Valid input
     BOOST_CHECK_EQUAL(ParseDeadline(ValueFromString("1231006505")), int64_t(1231006505));
-    BOOST_CHECK_EQUAL(ParseDeadline(ValueFromString("2147483648")), int64_t(2147483648));
+    BOOST_CHECK_EQUAL(ParseDeadline(ValueFromString("2147483648")), int64_t(2147483648LL));
     // Out of range
     BOOST_CHECK_THROW(ParseDeadline(ValueFromString("-1")), Object);
     BOOST_CHECK_THROW(ParseDeadline(ValueFromString("-2342342342434562345")), Object);
