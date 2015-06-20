@@ -4663,7 +4663,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
-        if (AcceptToMemoryPool(mempool, state, tx, !allowFree, &fMissingInputs))
+        if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs, false, allowFree))
         {
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
