@@ -1,13 +1,21 @@
 PACKAGE=qt
 $(package)_version=5.4.2
-$(package)_download_path=http://download.qt-project.org/official_releases/qt/5.4/$($(package)_version)/single
-$(package)_file_name=$(package)-everywhere-opensource-src-$($(package)_version).tar.gz
-$(package)_sha256_hash=cfc768c55f0a0cd232bed914a9022528f8f2e50cb010bf0e4f3f62db3dfa17bd
+$(package)_download_path=http://download.qt.io/official_releases/qt/5.4/$($(package)_version)/submodules
+qt_suffix=opensource-src-$($(package)_version).tar.gz
+$(package)_file_name=qt5-$(qt_suffix)
+$(package)_sha256_hash=165840bcb69f670070cc71247179b696a839917b0758f332b88b6aab45fac400
 $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=mac-qmake.conf fix-xcb-include-order.patch
+qtbase_file_name=qtbase-$(qt_suffix)
+qtbase_sha256_hash=93a6ce12f2020da7b8b81b5fb42d7804fcdf3194fbd2cae156e3d01e3669c18a
+qttranslations_file_name=qttranslations-$(qt_suffix)
+qttranslations_sha256_hash=e1929c49bc1877406d0905f3bfaef720a458d8d63df0ce5e44883c17bbe36ba6
+qttools_file_name=qttools-$(qt_suffix)
+qttools_sha256_hash=8e8c8a9f46afd6b78f464bd25e4ef09f290208e99a2a90c0c173602be9adfd2d
+$(package)_extra_sources=$(qtbase_file_name) $(qttranslations_file_name) $(qttools_file_name)
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
@@ -36,25 +44,6 @@ $(package)_config_opts += -opensource -confirm-license \
     -no-sql-psql \
     -no-sql-sqlite \
     -no-sql-sqlite2 \
-    -skip qtsvg \
-    -skip qtwebkit \
-    -skip qtwebkit-examples \
-    -skip qtserialport \
-    -skip qtdeclarative \
-    -skip qtmultimedia \
-    -skip qtimageformats \
-    -skip qtx11extras \
-    -skip qtlocation \
-    -skip qtsensors \
-    -skip qtquick1 \
-    -skip qtquickcontrols \
-    -skip qtactiveqt \
-    -skip qtconnectivity \
-    -skip qtmacextras \
-    -skip qtwinextras \
-    -skip qtxmlpatterns \
-    -skip qtscript \
-    -skip qtdoc \
     -prefix $(host_prefix) \
     -bindir $(build_prefix)/bin \
     -no-c++11 \
@@ -93,6 +82,28 @@ $(package)_config_opts_arm_linux  = -platform linux-g++ -xplatform $(host)
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 $(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
 $(package)_build_env  = QT_RCC_TEST=1
+endef
+
+define $(package)_fetch_cmds
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$(qtbase_file_name),$(qtbase_file_name),$(qtbase_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$(qttranslations_file_name),$(qttranslations_file_name),$(qttranslations_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$(qttools_file_name),$(qttools_file_name),$(qttools_sha256_hash))
+endef
+
+define $(package)_extract_cmds
+  mkdir -p $($(package)_extract_dir) && \
+  echo "$($(package)_sha256_hash)  $($(package)_source)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$(qttranslations_sha256_hash)  $($(package)_source_dir)/$(qttranslations_file_name)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$(qttools_sha256_hash)  $($(package)_source_dir)/$(qttools_file_name)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  tar --strip-components=1 -xf $($(package)_source) && \
+  mkdir qtbase && \
+  tar --strip-components=1 -xf $($(package)_source_dir)/$(qtbase_file_name) -C qtbase && \
+  mkdir qttranslations && \
+  tar --strip-components=1 -xf $($(package)_source_dir)/$(qttranslations_file_name) -C qttranslations && \
+  mkdir qttools && \
+  tar --strip-components=1 -xf $($(package)_source_dir)/$(qttools_file_name) -C qttools
 endef
 
 define $(package)_preprocess_cmds
