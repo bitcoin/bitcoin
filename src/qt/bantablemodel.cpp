@@ -118,13 +118,9 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
         case Address:
             return QString::fromStdString(rec->subnet.ToString());
         case Bantime:
-            //show time in users local timezone, not 64bit compatible!
-            //TODO find a way to support 64bit timestamps
-            boost::posix_time::ptime pt1 = boost::posix_time::from_time_t(rec->bantil);
-            boost::posix_time::ptime pt2 = boost::date_time::c_local_adjustor<boost::posix_time::ptime>::utc_to_local(pt1);
-            std::stringstream ss;
-            ss << pt2;
-            return QString::fromStdString(ss.str());
+            QDateTime date = QDateTime::fromMSecsSinceEpoch(0);
+            date = date.addSecs(rec->bantil);
+            return date.toString(Qt::SystemLocaleShortDate);
         }
     } else if (role == Qt::TextAlignmentRole) {
         if (index.column() == Bantime)
