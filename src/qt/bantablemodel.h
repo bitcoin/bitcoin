@@ -5,7 +5,6 @@
 #ifndef BITCOIN_QT_BANTABLEMODEL_H
 #define BITCOIN_QT_BANTABLEMODEL_H
 
-#include "main.h"
 #include "net.h"
 
 #include <QAbstractTableModel>
