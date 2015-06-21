@@ -23,7 +23,7 @@ extern std::map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
 static const int MIN_MNPAYMENTS_PROTO_VERSION = 70066;
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
-#define MNPAYMENTS_SIGNATURES_TOTAL              20
+#define MNPAYMENTS_SIGNATURES_TOTAL              10
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool IsReferenceNode(CTxIn& vin);

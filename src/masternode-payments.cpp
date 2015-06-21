@@ -288,9 +288,9 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
         if(payee.nVotes >= nMaxSignatures && payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED)
             nMaxSignatures = payee.nVotes;
-
+    
     // if we don't have at least 6 signatures on a payee, approve whichever is the longest chain
-    if(nMaxSignatures == 0) return true;
+    if(nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
     {
@@ -299,11 +299,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
             if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue) 
                 found = true;
 
-        //if 2 contenders are within +/- 20%, take either 
-        // If nMaxSignatures == 6, the min signatures = 2
-        // If nMaxSignatures == 10, the min signatures = 6
-        // If nMaxSignatures == 15, the min signatures = 11
-        if(payee.nVotes >= nMaxSignatures-(MNPAYMENTS_SIGNATURES_TOTAL/5)){            
+        if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED){            
             if(found) return true;
 
             CTxDestination address1;
