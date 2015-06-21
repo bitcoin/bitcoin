@@ -8,7 +8,6 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
-#include "net.h"
 #include "sync.h"
 #include "utiltime.h"
 
@@ -41,15 +40,16 @@ public:
         cachedBanlist.reserve(banMap.size());
 #endif
         std::map<CSubNet, int64_t>::iterator iter;
-        for (iter = banMap.begin(); iter != banMap.end(); ++iter) {
+        foreach (const PAIRTYPE(CSubNet, int64_t)& banentry, banMap)
+        {
             CCombinedBan banEntry;
-            banEntry.subnet = iter->first;
-            banEntry.bantil = iter->second;
+            banEntry.subnet = banentry.first;
+            banEntry.bantil = banentry.second;
             cachedBanlist.append(banEntry);
         }
     }
 
-    int size()
+    int size() const
     {
         return cachedBanlist.size();
     }
@@ -120,7 +120,7 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
         case Bantime:
             QDateTime date = QDateTime::fromMSecsSinceEpoch(0);
             date = date.addSecs(rec->bantil);
-            return date.toString(Qt::SystemLocaleShortDate);
+            return date.toString(Qt::SystemLocaleLongDate);
         }
     } else if (role == Qt::TextAlignmentRole) {
         if (index.column() == Bantime)
