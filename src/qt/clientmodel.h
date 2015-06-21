@@ -69,6 +69,9 @@ public:
     QString clientName() const;
     QString formatClientStartupTime() const;
 
+    bool tryLockOmniStateChanged();
+    bool tryLockOmniBalanceChanged();
+
 private:
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
@@ -83,6 +86,9 @@ private:
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
+
+    bool lockedOmniStateChanged;
+    bool lockedOmniBalanceChanged;
 
 signals:
     void numConnectionsChanged(int count);
