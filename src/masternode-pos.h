@@ -22,7 +22,7 @@ class CMasternodeScanningError;
 extern map<uint256, CMasternodeScanningError> mapMasternodeScanningErrors;
 extern CMasternodeScanning mnscan;
 
-static const int MIN_MASTERNODE_POS_PROTO_VERSION = 70078;
+static const int MIN_MASTERNODE_POS_PROTO_VERSION = 70079;
 
 /*
 	1% of the network is scanned every 2.5 minutes, making a full
