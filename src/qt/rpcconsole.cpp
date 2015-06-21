@@ -7,7 +7,6 @@
 
 #include "clientmodel.h"
 #include "guiutil.h"
-#include "peertablemodel.h"
 #include "platformstyle.h"
 
 #include "chainparams.h"
