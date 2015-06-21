@@ -21,6 +21,7 @@ namespace CoreWallet {
         Wallet* AddNewWallet(const std::string& walletID);
         void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
     protected:
+        CCriticalSection cs_mapWallets;
         std::map<std::string, WalletModel> mapWallets;
         void WriteWalletList();
         void ReadWalletLists();

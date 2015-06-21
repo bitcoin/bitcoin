@@ -57,6 +57,7 @@ void Manager::ReadWalletLists()
     if (!multiwalletFile.IsNull())
     {
         try {
+            LOCK(cs_mapWallets);
             multiwalletFile >> mapWallets;
         } catch (const std::exception&) {
             LogPrintf("CoreWallet: could not read multiwallet metadata file (non-fatal)");
@@ -68,7 +69,10 @@ void Manager::WriteWalletList()
 {
     CAutoFile multiwalletFile(fopen((GetDataDir() / DEFAULT_WALLETS_METADATA_FILE).string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
     if (!multiwalletFile.IsNull())
+    {
+        LOCK(cs_mapWallets);
         multiwalletFile << mapWallets;
+    }
 }
 
 void LoadAsModule(std::string& warningString, std::string& errorString, bool& stopInit)
@@ -78,15 +82,19 @@ void LoadAsModule(std::string& warningString, std::string& errorString, bool& st
 
 Wallet* Manager::AddNewWallet(const std::string& walletID)
 {
-    if (mapWallets.find(walletID) != mapWallets.end())
-        throw std::runtime_error(_("walletid already exists"));
-    
-    if (!CheckFilenameString(walletID))
-        throw std::runtime_error(_("wallet ids can only contain A-Za-z0-9._- chars"));
-    
-    Wallet *newWallet = new Wallet(walletID);
-    mapWallets[walletID] = WalletModel(walletID, newWallet);
-    
+    Wallet *newWallet = NULL;
+    LOCK(cs_mapWallets);
+    {
+        if (mapWallets.find(walletID) != mapWallets.end())
+            throw std::runtime_error(_("walletid already exists"));
+        
+        if (!CheckFilenameString(walletID))
+            throw std::runtime_error(_("wallet ids can only contain A-Za-z0-9._- chars"));
+        
+        newWallet = new Wallet(walletID);
+        mapWallets[walletID] = WalletModel(walletID, newWallet);
+    }
+
     WriteWalletList();
     return newWallet;
 }
@@ -95,15 +103,18 @@ Wallet* Manager::GetWalletWithID(const std::string& walletIDIn)
 {
     std::string walletID = walletIDIn;
 
-    if (walletID == "" && mapWallets.size() == 1)
-        walletID = mapWallets.begin()->first;
-
-    if (mapWallets.find(walletID) != mapWallets.end())
+    LOCK(cs_mapWallets);
     {
-        if (!mapWallets[walletID].pWallet) //is it closed?
-            mapWallets[walletID].pWallet = new Wallet(walletID);
+        if (walletID == "" && mapWallets.size() == 1)
+            walletID = mapWallets.begin()->first;
 
-        return mapWallets[walletID].pWallet;
+        if (mapWallets.find(walletID) != mapWallets.end())
+        {
+            if (!mapWallets[walletID].pWallet) //is it closed?
+                mapWallets[walletID].pWallet = new Wallet(walletID);
+
+            return mapWallets[walletID].pWallet;
+        }
     }
     
     return NULL;
@@ -113,8 +124,12 @@ std::vector<std::string> Manager::GetWalletIDs()
 {
     std::vector<std::string> vIDs;
     std::pair<std::string, WalletModel> walletAndMetadata; // what a map<int, int> is made of
-    BOOST_FOREACH(walletAndMetadata, mapWallets) {
-        vIDs.push_back(walletAndMetadata.first);
+
+    LOCK(cs_mapWallets);
+    {
+        BOOST_FOREACH(walletAndMetadata, mapWallets) {
+            vIDs.push_back(walletAndMetadata.first);
+        }
     }
     return vIDs;
 }
