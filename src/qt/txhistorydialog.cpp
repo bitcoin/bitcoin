@@ -16,6 +16,7 @@
 #include "omnicore/rpc.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/walletcache.h"
 
 #include "init.h"
 #include "main.h"
@@ -211,16 +212,16 @@ int TXHistoryDialog::PopulateHistoryMap()
     int64_t lastTXBlock = 999999; // set artificially high initially until first wallet tx is processed
     // iterate through wallet entries backwards, limiting to most recent n (default 500) transactions (override with --omniuiwalletscope=n)
     int walletTxCount = 0, walletTxMax = GetArg("-omniuiwalletscope", 500);
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        CWalletTx *const pwtx = (*it).second.first;
+    for (std::vector<uint256>::iterator it = walletTXIDCache.begin(); it != walletTXIDCache.end(); ++it) {
+        if (!pwalletMain->mapWallet.count(*it)) {
+            PrintToLog("ERROR: Transaction %s in wallet cache could not be found in the wallet\n", (*it).GetHex());
+            continue;
+        }
+        CWalletTx *const pwtx = &pwalletMain->mapWallet[*it];
         if (walletTxCount >= walletTxMax) break;
         ++walletTxCount;
         if (pwtx != 0) {
             uint256 hash = pwtx->GetHash();
-            // check txlistdb, if not there it's not a confirmed Omni transaction so move to next transaction
-            if (!p_txlistdb->exists(hash)) continue;
             // check historyMap, if this tx exists don't waste resources doing anymore work on it
             HistoryMap::iterator hIter = txHistoryMap.find(hash);
             if (hIter != txHistoryMap.end()) { // the tx is in historyMap, check if it has a blockheight of 0 (means a pending has confirmed)
@@ -240,6 +241,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                     continue; // the tx is in historyMap with a blockheight > 0, move on to next transaction
                 }
             }
+
             // tx not in historyMap, retrieve the transaction object
             CTransaction wtx;
             uint256 blockHash = 0;
@@ -371,6 +373,20 @@ int TXHistoryDialog::PopulateHistoryMap()
                 if (divisible) { displayAmount = FormatDivisibleShortMP(amount)+getTokenLabel(propertyId); } else { displayAmount = FormatIndivisibleMP(amount)+getTokenLabel(propertyId); }
                 if ((displayType == "Send") && (!IsMyAddress(senderAddress))) { displayType = "Receive"; } // still a send transaction, but avoid confusion for end users
                 if (!valid) fundsMoved = false; // funds never move in invalid txs
+
+                // override amount display for STO receipts
+                if (mp_obj.getType() == MSC_TYPE_SEND_TO_OWNERS) {
+                    Array receiveArray;
+                    uint64_t total = 0, stoFee = 0;
+                    s_stolistdb->getRecipients(hash, "", &receiveArray, &total, &stoFee);
+                    if (receiveArray.size()>1) displayAddress = "Multiple addresses"; // override display address if more than one address in the wallet received a cut of this STO
+                    if (isPropertyDivisible(propertyId)) {
+                        displayAmount = FormatDivisibleShortMP(total) + getTokenLabel(propertyId);
+                    } else {
+                        displayAmount = FormatIndivisibleMP(total) + getTokenLabel(propertyId);
+                    }
+                }
+
                 // override/hide display amount for invalid creates and unknown transactions as we can't display amount/property as no prop exists
                 if ((mp_obj.getType() == MSC_TYPE_CREATE_PROPERTY_FIXED) ||
                     (mp_obj.getType() == MSC_TYPE_CREATE_PROPERTY_VARIABLE) ||
@@ -397,7 +413,6 @@ int TXHistoryDialog::PopulateHistoryMap()
                 // ### END HANDLE OMNI TRANSACTION ###
             }
         }
-        // display cap has been removed
     }
 
     // ### END WALLET TRANSACTIONS PROCESSING ###
