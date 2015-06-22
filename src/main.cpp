@@ -3987,6 +3987,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             vRecv >> pfrom->fRelayTxes; // set to true after we get the first filter* message
         else
             pfrom->fRelayTxes = true;
+        
+        if (pfrom->cleanSubVer.find("Bitcoin XT") != string::npos)
+        {
+            LogPrintf("peer=%d using broken client, disconnecting\n", pfrom->id);
+            pfrom->fDisconnect = true;
+            return false;
+        }
 
         // Disconnect if we connected to ourself
         if (nNonce == nLocalHostNonce && nNonce > 1)
