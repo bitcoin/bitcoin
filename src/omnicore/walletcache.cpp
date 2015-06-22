@@ -45,48 +45,16 @@ void WalletTXIDCacheInit()
     LOCK(wallet->cs_wallet);
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
-
-    // STO has no inbound transaction, use STO receipts to insert an STO into the wallet txid cache
-    string mySTOReceipts = s_stolistdb->getMySTOReceipts("");
-    std::vector<std::string> vecReceipts;
-    boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
-    int64_t lastTXBlock = 999999;
-
     // Iterate through the wallet, checking if each transaction is Omni (via levelDB)
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0) {
-            uint256 blockHash = pwtx->hashBlock;
-            if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
-            CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-            if (NULL == pBlockIndex) continue;
-            int blockHeight = pBlockIndex->nHeight;
-
-            // look for an STO receipt to see if we need to insert it into txid cache
-            for(uint32_t i = 0; i<vecReceipts.size(); i++) {
-                if (!vecReceipts[i].empty()) {
-                    std::vector<std::string> svstr;
-                    boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), token_compress_on);
-                    if (svstr.size() != 4) {
-                        PrintToLog("ERROR: Unexpected number of tokens enumerating STO receipt %s\n", vecReceipts[i]);
-                        continue;
-                    }
-                    if ((atoi(svstr[1]) < lastTXBlock) && (atoi(svstr[1]) > blockHeight)) {
-                        uint256 hash;
-                        hash.SetHex(svstr[0]);
-                        if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding STO to txid cache : %s\n",hash.GetHex());
-                        walletTXIDCache.push_back(hash);
-                    }
-                }
-            }
-
             // get the hash of the transaction and check leveldb to see if this is an Omni tx, if so add to cache
             uint256 hash = pwtx->GetHash();
             if (p_txlistdb->exists(hash)) {
                 walletTXIDCache.push_back(hash);
                 if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n",hash.GetHex());
             }
-            lastTXBlock = blockHeight;
         }
     }
 }
