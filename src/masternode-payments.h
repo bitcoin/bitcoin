@@ -43,10 +43,10 @@ public:
         nVotes = 0;
     } 
 
-    CMasternodePayee(CAmount nValueIn, CScript payee) {
+    CMasternodePayee(CAmount nValueIn, CScript payee, int nVotesIn) {
         scriptPubKey = payee;
         nValue = nValueIn;
-        nVotes = 0;
+        nVotes = nVotesIn;
     }
 };
 
@@ -74,7 +74,7 @@ public:
             }
         }
 
-        CMasternodePayee c((CAmount)nAmount, payeeIn);
+        CMasternodePayee c((CAmount)nAmount, payeeIn, nIncrement);
         vecPayments.push_back(c);
     }
 
