@@ -427,7 +427,7 @@ void TradeHistoryDialog::UpdateData()
             continue;
         }
         TradeHistoryObject *tmpObjTH = &(hIter->second);
-        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled") continue; // once a trade hits this status the details should never change
+        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled" || tmpObjTH->status == "Part Cancel") continue; // once a trade hits this status the details should never change
         if (tmpObjTH->blockHeight == 0) continue; // do not attempt to refresh details for a trade that's still pending
         if (lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
 
