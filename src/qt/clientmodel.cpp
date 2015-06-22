@@ -30,7 +30,9 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     peerTableModel(0),
     cachedNumBlocks(0),
     cachedReindexing(0), cachedImporting(0),
-    numBlocksAtStartup(-1), pollTimer(0)
+    numBlocksAtStartup(-1), pollTimer(0),
+    lockedOmniStateChanged(false),
+    lockedOmniBalanceChanged(false)
 {
     peerTableModel = new PeerTableModel(this);
     pollTimer = new QTimer(this);
@@ -129,12 +131,32 @@ void ClientModel::updateNumConnections(int numConnections)
 
 void ClientModel::updateOmniState()
 {
+    lockedOmniStateChanged = false;
     emit refreshOmniState();
+}
+
+bool ClientModel::tryLockOmniStateChanged()
+{
+    if (lockedOmniStateChanged) {
+        return false;
+    }
+    lockedOmniStateChanged = true;
+    return true;
 }
 
 void ClientModel::updateOmniBalance()
 {
+    lockedOmniBalanceChanged = false;
     emit refreshOmniBalance();
+}
+
+bool ClientModel::tryLockOmniBalanceChanged()
+{
+    if (lockedOmniBalanceChanged) {
+        return false;
+    }
+    lockedOmniBalanceChanged = true;
+    return true;
 }
 
 void ClientModel::updateOmniPending(bool pending)
@@ -220,13 +242,17 @@ QString ClientModel::formatClientStartupTime() const
 static void OmniStateChanged(ClientModel *clientmodel)
 {
     // This will be triggered for each block that contains Omni layer transactions
-    QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
+    if (clientmodel->tryLockOmniStateChanged()) {
+        QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
+    }
 }
 
 static void OmniBalanceChanged(ClientModel *clientmodel)
 {
     // Triggered when a balance for a wallet address changes
-    QMetaObject::invokeMethod(clientmodel, "updateOmniBalance", Qt::QueuedConnection);
+    if (clientmodel->tryLockOmniBalanceChanged()) {
+        QMetaObject::invokeMethod(clientmodel, "updateOmniBalance", Qt::QueuedConnection);
+    }
 }
 
 static void OmniPendingChanged(ClientModel *clientmodel, bool pending)
