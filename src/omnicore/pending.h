@@ -2,7 +2,7 @@
 #define OMNICORE_PENDING_H
 
 class uint256;
-class CMPPending;
+struct CMPPending;
 
 #include <stdint.h>
 #include <map>

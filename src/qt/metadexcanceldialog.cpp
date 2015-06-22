@@ -18,7 +18,6 @@
 #include "omnicore/sp.h"
 
 #include <stdint.h>
-#include <stdio.h> // printf!
 #include <map>
 #include <sstream>
 #include <string>
@@ -274,9 +273,6 @@ void MetaDExCancelDialog::SendCancelTransaction()
             if (matched) break;
         }
     }
-
-    // TODO: print to log (?)
-    printf("ForSale \"%s\"=%u  Desired \"%s\"=%u  Price \"%s\"  Action %d  AmountForSale %lu  AmountDesired %lu\n", propertyIdForSaleStr.c_str(), propertyIdForSale, propertyIdDesiredStr.c_str(), propertyIdDesired, priceStr.c_str(), (int)action, amountForSale, amountDesired);
 
     // confirmation dialog
     string strMsgText = "You are about to send the following MetaDEx trade cancellation transaction, please check the details thoroughly:\n\n";

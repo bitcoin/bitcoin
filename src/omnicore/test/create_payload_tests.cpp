@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(payload_create_crowdsale)
         std::string(""),                     // additional information
         static_cast<uint32_t>(1),            // property desired: MSC
         static_cast<int64_t>(100),           // tokens per unit vested
-        static_cast<uint64_t>(7731414000),   // deadline: 31 Dec 2214 23:00:00 UTC
+        static_cast<uint64_t>(7731414000L),  // deadline: 31 Dec 2214 23:00:00 UTC
         static_cast<uint8_t>(10),            // early bird bonus: 10 % per week
         static_cast<uint8_t>(12));           // issuer bonus: 12 %
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(payload_create_crowdsale_empty)
         std::string(""),                    // additional information
         static_cast<uint32_t>(1),           // property desired: MSC
         static_cast<int64_t>(100),          // tokens per unit vested
-        static_cast<uint64_t>(7731414000),  // deadline: 31 Dec 2214 23:00:00 UTC
+        static_cast<uint64_t>(7731414000L), // deadline: 31 Dec 2214 23:00:00 UTC
         static_cast<uint8_t>(10),           // early bird bonus: 10 % per week
         static_cast<uint8_t>(12));          // issuer bonus: 12 %
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(payload_create_crowdsale_full)
         std::string(700, 'x'),              // additional information
         static_cast<uint32_t>(1),           // property desired: MSC
         static_cast<int64_t>(100),          // tokens per unit vested
-        static_cast<uint64_t>(7731414000),  // deadline: 31 Dec 2214 23:00:00 UTC
+        static_cast<uint64_t>(7731414000L), // deadline: 31 Dec 2214 23:00:00 UTC
         static_cast<uint8_t>(10),           // early bird bonus: 10 % per week
         static_cast<uint8_t>(12));          // issuer bonus: 12 %
 

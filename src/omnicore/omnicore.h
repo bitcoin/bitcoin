@@ -164,132 +164,218 @@ int64_t feeCheck(const string &address);
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
 
-/** Used to indicate, whether to automatically commit created transactions. */
+//! Used to indicate, whether to automatically commit created transactions
 extern bool autoCommit;
 
+//! Global lock for state objects
 extern CCriticalSection cs_tally;
 
+//! Balance record types
 enum TallyType { BALANCE = 0, SELLOFFER_RESERVE = 1, ACCEPT_RESERVE = 2, PENDING = 3, METADEX_RESERVE = 4, TALLY_TYPE_COUNT };
 
+/** Balance records of a single entity.
+ */
 class CMPTally
 {
 private:
-typedef struct
-{
-  int64_t balance[TALLY_TYPE_COUNT];
-} BalanceRecord;
+    typedef struct {
+        int64_t balance[TALLY_TYPE_COUNT];
+    } BalanceRecord;
 
-  typedef std::map<unsigned int, BalanceRecord> TokenMap;
-  TokenMap mp_token;
-  TokenMap::iterator my_it;
+    //! Map of balance records
+    typedef std::map<uint32_t, BalanceRecord> TokenMap;
+    //! Balance records for different tokens
+    TokenMap mp_token;
+    //! Internal iterator pointing to a balance record
+    TokenMap::iterator my_it;
 
-  bool propertyExists(unsigned int which_property) const
-  {
-  const TokenMap::const_iterator it = mp_token.find(which_property);
-
-    return (it != mp_token.end());
-  }
+    // TODO: lock outside of CMPTally
+    //
+    // There are usually many tally operations, and the
+    // global tally map must be locked anyway, so locking
+    // here is redundant and might be costly.
 
 public:
-
-  unsigned int init()
-  {
-  unsigned int ret = 0;
-
-    my_it = mp_token.begin();
-    if (my_it != mp_token.end()) ret = my_it->first;
-
-    return ret;
-  }
-
-  unsigned int next()
-  {
-  unsigned int ret;
-
-    if (my_it == mp_token.end()) return 0;
-
-    ret = my_it->first;
-
-    ++my_it;
-
-    return ret;
-  }
-
-  bool updateMoney(unsigned int which_property, int64_t amount, TallyType ttype)
-  {
-  bool bRet = false;
-  int64_t now64;
-
-    if (TALLY_TYPE_COUNT <= ttype) return false;
-
-    LOCK(cs_tally);
-
-    now64 = mp_token[which_property].balance[ttype];
-
-    if ((PENDING != ttype) && (0>(now64 + amount)))
+    /** Resets the internal iterator. */
+    uint32_t init()
     {
+        uint32_t ret = 0;
+        my_it = mp_token.begin();
+        if (my_it != mp_token.end()) {
+            ret = my_it->first;
+        }
+        return ret;
     }
-    else
+
+    /** Advances the internal iterator. */
+    uint32_t next()
     {
-      now64 += amount;
-      mp_token[which_property].balance[ttype] = now64;
-
-      bRet = true;
+        uint32_t ret = 0;
+        if (my_it != mp_token.end()) {
+            ret = my_it->first;
+            ++my_it;
+        }
+        return ret;
     }
 
-    return bRet;
-  }
-
-  // the constructor -- create an empty tally for an address
-  CMPTally()
-  {
-    my_it = mp_token.begin();
-  }
-
-  int64_t print(int which_property = OMNI_PROPERTY_MSC, bool bDivisible = true)
-  {
-  int64_t money = 0;
-  int64_t so_r = 0;
-  int64_t a_r = 0;
-  int64_t pending = 0;
-
-    if (propertyExists(which_property))
+    /** Updates the number of tokens for the given tally type. */
+    bool updateMoney(uint32_t propertyId, int64_t amount, TallyType ttype)
     {
-      money = mp_token[which_property].balance[BALANCE];
-      so_r = mp_token[which_property].balance[SELLOFFER_RESERVE];
-      a_r = mp_token[which_property].balance[ACCEPT_RESERVE];
-      pending = mp_token[which_property].balance[PENDING];
+        if (TALLY_TYPE_COUNT <= ttype || amount == 0) {
+            return false;
+        }
+        bool bRet = false;
+        int64_t now64 = 0;
+
+        LOCK(cs_tally);
+
+        now64 = mp_token[propertyId].balance[ttype];
+
+        if (PENDING != ttype && (now64 + amount) < 0) {
+            // NOTE:
+            // This check also serves as overflow protection!
+        } else {
+            now64 += amount;
+            mp_token[propertyId].balance[ttype] = now64;
+
+            bRet = true;
+        }
+
+        return bRet;
     }
 
-    if (bDivisible)
+    /** Creates an empty tally. */
+    CMPTally()
     {
-      PrintToConsole("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
-       FormatDivisibleMP(money, true), FormatDivisibleMP(so_r, true), FormatDivisibleMP(a_r, true), FormatDivisibleMP(pending, true));
+        my_it = mp_token.begin();
     }
-    else
+
+    /** Returns the number of tokens for the given tally type. */
+    int64_t getMoney(uint32_t propertyId, TallyType ttype) const
     {
-      PrintToConsole("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
+        if (TALLY_TYPE_COUNT <= ttype) {
+            return 0;
+        }
+        int64_t money = 0;
+
+        LOCK(cs_tally);
+        TokenMap::const_iterator it = mp_token.find(propertyId);
+
+        if (it != mp_token.end()) {
+            const BalanceRecord& record = it->second;
+            money = record.balance[ttype];
+        }
+
+        return money;
     }
 
-    return (money + so_r + a_r);
-  }
+    /** Returns the number of available tokens. */
+    int64_t getMoneyAvailable(uint32_t propertyId) const
+    {
+        LOCK(cs_tally);
+        TokenMap::const_iterator it = mp_token.find(propertyId);
 
-  int64_t getMoney(unsigned int which_property, TallyType ttype) const
-  {
-    if (TALLY_TYPE_COUNT <= ttype) return 0;
+        if (it != mp_token.end()) {
+            const BalanceRecord& record = it->second;
+            if (record.balance[PENDING] < 0) {
+                return record.balance[BALANCE] + record.balance[PENDING];
+            } else {
+                return record.balance[BALANCE];
+            }
+        }
 
-    int64_t money = 0;
-
-    LOCK(cs_tally);
-    TokenMap::const_iterator it = mp_token.find(which_property);
-
-    if (it != mp_token.end()) {
-        const BalanceRecord& record = it->second;
-        money = record.balance[ttype];
+        return 0;
     }
 
-    return money;
-  }
+    /** Returns the number of reserved tokens. */
+    int64_t getMoneyReserved(uint32_t propertyId) const
+    {
+        int64_t money = 0;
+
+        LOCK(cs_tally);
+        TokenMap::const_iterator it = mp_token.find(propertyId);
+
+        if (it != mp_token.end()) {
+            const BalanceRecord& record = it->second;
+            money += record.balance[SELLOFFER_RESERVE];
+            money += record.balance[ACCEPT_RESERVE];
+            money += record.balance[METADEX_RESERVE];
+        }
+
+        return money;
+    }
+
+    /** Compares the tally with another tally and returns true, if they are equal. */
+    bool operator==(const CMPTally& rhs) const
+    {
+        LOCK(cs_tally);
+
+        if (mp_token.size() != rhs.mp_token.size()) {
+            return false;
+        }
+        TokenMap::const_iterator pc1 = mp_token.begin();
+        TokenMap::const_iterator pc2 = rhs.mp_token.begin();
+
+        for (unsigned int i = 0; i < mp_token.size(); ++i) {
+            if (pc1->first != pc2->first) {
+                return false;
+            }
+            const BalanceRecord& record1 = pc1->second;
+            const BalanceRecord& record2 = pc2->second;
+
+            for (int ttype = 0; ttype < TALLY_TYPE_COUNT; ++ttype) {
+                if (record1.balance[ttype] != record2.balance[ttype]) {
+                    return false;
+                }
+            }
+            ++pc1;
+            ++pc2;
+        }
+
+        assert(pc1 == mp_token.end());
+        assert(pc2 == rhs.mp_token.end());
+
+        return true;
+    }
+
+    /** Compares the tally with another tally and returns true, if they are not equal. */
+    bool operator!=(const CMPTally& rhs) const
+    {
+        return !operator==(rhs);
+    }
+
+    /** Prints a balance record to the console. */
+    int64_t print(uint32_t propertyId = OMNI_PROPERTY_MSC, bool bDivisible = true) const
+    {
+        int64_t balance = 0;
+        int64_t selloffer_reserve = 0;
+        int64_t accept_reserve = 0;
+        int64_t pending = 0;
+        int64_t metadex_reserve = 0;
+
+        TokenMap::const_iterator it = mp_token.find(propertyId);
+
+        if (it != mp_token.end()) {
+            const BalanceRecord& record = it->second;
+            balance = record.balance[BALANCE];
+            selloffer_reserve = record.balance[SELLOFFER_RESERVE];
+            accept_reserve = record.balance[ACCEPT_RESERVE];
+            pending = record.balance[PENDING];
+            metadex_reserve = record.balance[METADEX_RESERVE];
+        }
+
+        if (bDivisible) {
+            PrintToConsole("%22s [ SO_RESERVE= %22s, ACCEPT_RESERVE= %22s, METADEX_RESERVE= %22s ] %22s\n",
+                    FormatDivisibleMP(balance, true), FormatDivisibleMP(selloffer_reserve, true),
+                    FormatDivisibleMP(accept_reserve, true), FormatDivisibleMP(metadex_reserve, true),
+                    FormatDivisibleMP(pending, true));
+        } else {
+            PrintToConsole("%14d [ SO_RESERVE= %14d, ACCEPT_RESERVE= %14d, METADEX_RESERVE= %14d ] %14d\n",
+                    balance, selloffer_reserve, accept_reserve, metadex_reserve, pending);
+        }
+
+        return (balance + selloffer_reserve + accept_reserve + metadex_reserve);
+    }
 };
 
 /** LevelDB based storage for STO recipients.
