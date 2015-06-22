@@ -35,11 +35,11 @@ BOOST_AUTO_TEST_CASE(empty_tally)
 BOOST_AUTO_TEST_CASE(filled_tally)
 {
     CMPTally tally;
-    BOOST_CHECK(tally.updateMoney(0, 0, BALANCE));
-    BOOST_CHECK(tally.updateMoney(0, 0, SELLOFFER_RESERVE));
-    BOOST_CHECK(tally.updateMoney(0, 0, ACCEPT_RESERVE));
-    BOOST_CHECK(tally.updateMoney(0, 0, PENDING));
-    BOOST_CHECK(tally.updateMoney(0, 0, METADEX_RESERVE));
+    BOOST_CHECK(!tally.updateMoney(0, 0, BALANCE));
+    BOOST_CHECK(!tally.updateMoney(0, 0, SELLOFFER_RESERVE));
+    BOOST_CHECK(!tally.updateMoney(0, 0, ACCEPT_RESERVE));
+    BOOST_CHECK(!tally.updateMoney(0, 0, PENDING));
+    BOOST_CHECK(!tally.updateMoney(0, 0, METADEX_RESERVE));
 
     BOOST_CHECK_EQUAL(0, tally.getMoney(0, BALANCE));
     BOOST_CHECK_EQUAL(0, tally.getMoney(0, SELLOFFER_RESERVE));

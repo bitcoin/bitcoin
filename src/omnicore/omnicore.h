@@ -221,7 +221,7 @@ public:
     /** Updates the number of tokens for the given tally type. */
     bool updateMoney(uint32_t propertyId, int64_t amount, TallyType ttype)
     {
-        if (TALLY_TYPE_COUNT <= ttype) {
+        if (TALLY_TYPE_COUNT <= ttype || amount == 0) {
             return false;
         }
         bool bRet = false;
