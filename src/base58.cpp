@@ -93,7 +93,7 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
     // Translate the result into a string.
     std::string str;
     str.reserve(zeroes + (b58.end() - it));
-    str.assign(zeroes, '1');
+    str.assign(zeroes, pszBase58[0]);
     while (it != b58.end())
         str += pszBase58[*(it++)];
     return str;
