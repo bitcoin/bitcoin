@@ -255,11 +255,13 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
+    LogPrintf("CMasternodePayments::AddWinningMasternode - getblockhash\n");
     uint256 blockHash = 0;
     if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
         return false;
     }
 
+    LogPrintf("CMasternodePayments::AddWinningMasternode - checkhash\n");
     if(mapMasternodePayeeVotes.count(winnerIn.GetHash())){
        return false; 
     }
@@ -267,12 +269,14 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     mapMasternodePayeeVotes[winnerIn.GetHash()] = winnerIn;
 
     if(!mapMasternodeBlocks.count(winnerIn.nBlockHeight)){
+       LogPrintf("CMasternodePayments::AddWinningMasternode - create new blockpayee obj\n");
        CMasternodeBlockPayees blockPayees(winnerIn.nBlockHeight);
        mapMasternodeBlocks[winnerIn.nBlockHeight] = blockPayees;
     }
 
     int n = 1;
     if(IsReferenceNode(winnerIn.vinMasternode)) n = 100;
+    LogPrintf("CMasternodePayments::AddWinningMasternode - AddPayee - %d\n", n);
     mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee.scriptPubKey, winnerIn.payee.nValue, n);
 
     return true;
@@ -452,13 +456,13 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         unsigned int nHash;
         memcpy(&nHash, &hash, 2);
 
-        LogPrintf(" ProcessBlock Start nHeight %d. \n", nBlockHeight);
+        LogPrintf("CMasternodePayments::ProcessBlock() Start nHeight %d. \n", nBlockHeight);
 
         // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
         CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight);
         if(pmn != NULL)
         {
-            LogPrintf(" Found by FindOldestNotInVec \n");
+            LogPrintf("CMasternodePayments::ProcessBlock() Found by FindOldestNotInVec \n");
 
             newWinner.nBlockHeight = nBlockHeight;
 
@@ -480,9 +484,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
             ExtractDestination(payeeSource, address3);
             CBitcoinAddress address4(address3);
 
-            LogPrintf("Winner payee %s nHeight %d vin source %s. \n", address2.ToString().c_str(), newWinner.nBlockHeight, address4.ToString().c_str());
+            LogPrintf("CMasternodePayments::ProcessBlock() Winner payee %s nHeight %d vin source %s. \n", address2.ToString().c_str(), newWinner.nBlockHeight, address4.ToString().c_str());
         } else {
-            LogPrintf(" Failed to find masternode to pay\n");
+            LogPrintf("CMasternodePayments::ProcessBlock() Failed to find masternode to pay\n");
         }
 
     }
@@ -497,8 +501,11 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         return false;
     }
 
+    LogPrintf("CMasternodePayments::ProcessBlock() - Signing Winner\n");
     if(newWinner.Sign(keyMasternode, pubKeyMasternode))
     {
+        LogPrintf("CMasternodePayments::ProcessBlock() - AddWinningMasternode\n");
+
         if(AddWinningMasternode(newWinner))
         {
             newWinner.Relay();
