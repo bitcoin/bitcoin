@@ -1720,38 +1720,43 @@ bool CDarksendPool::SendRandomPaymentToSelf()
 // Split up large inputs or create fee sized inputs
 bool CDarksendPool::MakeCollateralAmounts()
 {
-    // make our change address
-    CReserveKey reservekey(pwalletMain);
-
-    CScript scriptChange;
-    CPubKey vchPubKey;
-    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange = GetScriptForDestination(vchPubKey.GetID());
-
     CWalletTx wtx;
     int64_t nFeeRet = 0;
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
+    CCoinControl *coinControl = NULL;
 
-    vecSend.push_back(make_pair(scriptChange, DARKSEND_COLLATERAL*4));
+    // make our collateral address
+    CReserveKey reservekeyCollateral(pwalletMain);
+    // make our change address
+    CReserveKey reservekeyChange(pwalletMain);
 
-    CCoinControl *coinControl=NULL;
+    CScript scriptCollateral;
+    CPubKey vchPubKey;
+    assert(reservekeyCollateral.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+    scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
+
+    vecSend.push_back(make_pair(scriptCollateral, DARKSEND_COLLATERAL*4));
+
     // try to use non-denominated and not mn-like funds
-    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
+    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
             nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOTMN);
     if(!success){
         // if we failed (most likeky not enough funds), try to use denominated instead -
         // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
-        success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
+        success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
                 nFeeRet, strFail, coinControl, ONLY_DENOMINATED);
         if(!success){
-            LogPrintf("MakeCollateralAmounts: Error - %s\n", strFail.c_str());
+            LogPrintf("MakeCollateralAmounts: ONLY_DENOMINATED Error - %s\n", strFail);
+            reservekeyCollateral.ReturnKey();
             return false;
         }
     }
 
+    reservekeyCollateral.KeepKey();
+
     // use the same cachedLastSuccess as for DS mixinx to prevent race
-    if(pwalletMain->CommitTransaction(wtx, reservekey))
+    if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
         cachedLastSuccess = chainActive.Tip()->nHeight;
 
     LogPrintf("MakeCollateralAmounts Success: tx %s\n", wtx.GetHash().GetHex().c_str());
@@ -1762,23 +1767,27 @@ bool CDarksendPool::MakeCollateralAmounts()
 // Create denominations
 bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 {
-    // make our change address
-    CReserveKey reservekey(pwalletMain);
-
-    CScript scriptChange;
-    CPubKey vchPubKey;
-    assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-    scriptChange = GetScriptForDestination(vchPubKey.GetID());
-
     CWalletTx wtx;
     int64_t nFeeRet = 0;
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
     int64_t nValueLeft = nTotalValue;
 
+    // make our collateral address
+    CReserveKey reservekeyCollateral(pwalletMain);
+    // make our change address
+    CReserveKey reservekeyChange(pwalletMain);
+    // make our denom addresses
+    CReserveKey reservekeyDenom(pwalletMain);
+
+    CScript scriptCollateral;
+    CPubKey vchPubKey;
+    assert(reservekeyCollateral.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+    scriptCollateral = GetScriptForDestination(vchPubKey.GetID());
+
     // ****** Add collateral outputs ************ /
     if(!pwalletMain->HasCollateralInputs()) {
-        vecSend.push_back(make_pair(scriptChange, DARKSEND_COLLATERAL*4));
+        vecSend.push_back(make_pair(scriptCollateral, DARKSEND_COLLATERAL*4));
         nValueLeft -= DARKSEND_COLLATERAL*4;
     }
 
@@ -1788,14 +1797,15 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
 
         // add each output up to 10 times until it can't be added again
         while(nValueLeft - v >= DARKSEND_COLLATERAL && nOutputs <= 10) {
-            CScript scriptChange;
+            CScript scriptDenom;
             CPubKey vchPubKey;
             //use a unique change address
-            assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-            scriptChange = GetScriptForDestination(vchPubKey.GetID());
-            reservekey.KeepKey();
+            assert(reservekeyDenom.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+            scriptDenom = GetScriptForDestination(vchPubKey.GetID());
+            // TODO: do not keep reservekeyDenom here
+            reservekeyDenom.KeepKey();
 
-            vecSend.push_back(make_pair(scriptChange, v));
+            vecSend.push_back(make_pair(scriptDenom, v));
 
             //increment outputs and subtract denomination amount
             nOutputs++;
@@ -1810,18 +1820,25 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
     // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 
     CCoinControl *coinControl=NULL;
-    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekey,
+    bool success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
             nFeeRet, strFail, coinControl, ONLY_NONDENOMINATED_NOTMN);
     if(!success){
         LogPrintf("CreateDenominated: Error - %s\n", strFail.c_str());
+        // TODO: return reservekeyDenom here
+        reservekeyCollateral.ReturnKey();
         return false;
     }
 
-    // use the same cachedLastSuccess as for DS mixinx to prevent race
-    if(pwalletMain->CommitTransaction(wtx, reservekey))
-        cachedLastSuccess = chainActive.Tip()->nHeight;
+    // TODO: keep reservekeyDenom here
+    reservekeyCollateral.KeepKey();
 
-    LogPrintf("CreateDenominated Success: tx %s\n", wtx.GetHash().GetHex().c_str());
+    // use the same cachedLastSuccess as for DS mixinx to prevent race
+    if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
+        cachedLastSuccess = chainActive.Tip()->nHeight;
+    else
+        LogPrintf("CreateDenominated: CommitTransaction failed!\n");
+
+    LogPrintf("CreateDenominated: tx %s\n", wtx.GetHash().GetHex().c_str());
 
     return true;
 }
