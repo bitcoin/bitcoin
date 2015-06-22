@@ -1,84 +1,90 @@
 PACKAGE=qt
 $(package)_version=5.4.2
 $(package)_download_path=http://download.qt.io/official_releases/qt/5.4/$($(package)_version)/submodules
-qt_suffix=opensource-src-$($(package)_version).tar.gz
-$(package)_file_name=qt5-$(qt_suffix)
+$(package)_suffix=opensource-src-$($(package)_version).tar.gz
+$(package)_file_name=qt5-$($(package)_suffix)
 $(package)_sha256_hash=165840bcb69f670070cc71247179b696a839917b0758f332b88b6aab45fac400
 $(package)_dependencies=openssl
 $(package)_linux_dependencies=freetype fontconfig dbus libxcb libX11 xproto libXext
 $(package)_build_subdir=qtbase
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=mac-qmake.conf fix-xcb-include-order.patch mingw-uuidof.patch
-qtbase_file_name=qtbase-$(qt_suffix)
-qtbase_sha256_hash=93a6ce12f2020da7b8b81b5fb42d7804fcdf3194fbd2cae156e3d01e3669c18a
-qttranslations_file_name=qttranslations-$(qt_suffix)
-qttranslations_sha256_hash=e1929c49bc1877406d0905f3bfaef720a458d8d63df0ce5e44883c17bbe36ba6
-qttools_file_name=qttools-$(qt_suffix)
-qttools_sha256_hash=8e8c8a9f46afd6b78f464bd25e4ef09f290208e99a2a90c0c173602be9adfd2d
-$(package)_extra_sources=$(qtbase_file_name) $(qttranslations_file_name) $(qttools_file_name)
+
+$(package)_qtbase_file_name=qtbase-$($(package)_suffix)
+$(package)_qtbase_sha256_hash=93a6ce12f2020da7b8b81b5fb42d7804fcdf3194fbd2cae156e3d01e3669c18a
+
+$(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
+$(package)_qttranslations_sha256_hash=e1929c49bc1877406d0905f3bfaef720a458d8d63df0ce5e44883c17bbe36ba6
+
+$(package)_qttools_file_name=qttools-$($(package)_suffix)
+$(package)_qttools_sha256_hash=8e8c8a9f46afd6b78f464bd25e4ef09f290208e99a2a90c0c173602be9adfd2d
+
+$(package)_extra_sources  = $($(package)_qtbase_file_name)
+$(package)_extra_sources += $($(package)_qttranslations_file_name)
+$(package)_extra_sources += $($(package)_qttools_file_name)
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
 $(package)_config_opts_debug   = -debug
-$(package)_config_opts += -opensource -confirm-license \
-    -no-audio-backend \
-    -no-glib \
-    -no-icu \
-    -no-cups \
-    -no-iconv \
-    -no-gif \
-    -no-freetype \
-    -no-nis \
-    -no-pch \
-    -no-qml-debug \
-    -nomake examples \
-    -nomake tests \
-    -no-feature-style-windowsmobile \
-    -no-feature-style-windowsce \
-    -no-sql-db2 \
-    -no-sql-ibase \
-    -no-sql-oci \
-    -no-sql-tds \
-    -no-sql-mysql \
-    -no-sql-odbc \
-    -no-sql-psql \
-    -no-sql-sqlite \
-    -no-sql-sqlite2 \
-    -prefix $(host_prefix) \
-    -bindir $(build_prefix)/bin \
-    -no-c++11 \
-    -no-reduce-relocations \
-    -openssl-linked \
-    -v \
-    -static \
-    -silent \
-    -pkg-config \
-    -qt-libpng \
-    -qt-libjpeg \
-    -qt-zlib \
-    -qt-pcre
+$(package)_config_opts += -opensource -confirm-license
+$(package)_config_opts += -no-audio-backend
+$(package)_config_opts += -no-glib
+$(package)_config_opts += -no-icu
+$(package)_config_opts += -no-cups
+$(package)_config_opts += -no-iconv
+$(package)_config_opts += -no-gif
+$(package)_config_opts += -no-freetype
+$(package)_config_opts += -no-nis
+$(package)_config_opts += -no-pch
+$(package)_config_opts += -no-qml-debug
+$(package)_config_opts += -nomake examples
+$(package)_config_opts += -nomake tests
+$(package)_config_opts += -no-feature-style-windowsmobile
+$(package)_config_opts += -no-feature-style-windowsce
+$(package)_config_opts += -no-sql-db2
+$(package)_config_opts += -no-sql-ibase
+$(package)_config_opts += -no-sql-oci
+$(package)_config_opts += -no-sql-tds
+$(package)_config_opts += -no-sql-mysql
+$(package)_config_opts += -no-sql-odbc
+$(package)_config_opts += -no-sql-psql
+$(package)_config_opts += -no-sql-sqlite
+$(package)_config_opts += -no-sql-sqlite2
+$(package)_config_opts += -prefix $(host_prefix)
+$(package)_config_opts += -bindir $(build_prefix)/bin
+$(package)_config_opts += -no-c++11
+$(package)_config_opts += -no-reduce-relocations
+$(package)_config_opts += -openssl-linked
+$(package)_config_opts += -v
+$(package)_config_opts += -static
+$(package)_config_opts += -silent
+$(package)_config_opts += -pkg-config
+$(package)_config_opts += -qt-libpng
+$(package)_config_opts += -qt-libjpeg
+$(package)_config_opts += -qt-zlib
+$(package)_config_opts += -qt-pcre
 
 ifneq ($(build_os),darwin)
-$(package)_config_opts_darwin = -xplatform macx-clang-linux \
-    -device-option MAC_SDK_PATH=$(OSX_SDK) \
-    -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION) \
-    -device-option CROSS_COMPILE="$(host)-" \
-    -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION) \
-    -device-option MAC_TARGET=$(host) \
-    -device-option MAC_LD64_VERSION=$(LD64_VERSION)
+$(package)_config_opts_darwin  = -xplatform macx-clang-linux
+$(package)_config_opts_darwin += -device-option MAC_SDK_PATH=$(OSX_SDK)
+$(package)_config_opts_darwin += -device-option MAC_SDK_VERSION=$(OSX_SDK_VERSION)
+$(package)_config_opts_darwin += -device-option CROSS_COMPILE="$(host)-"
+$(package)_config_opts_darwin += -device-option MAC_MIN_VERSION=$(OSX_MIN_VERSION)
+$(package)_config_opts_darwin += -device-option MAC_TARGET=$(host)
+$(package)_config_opts_darwin += -device-option MAC_LD64_VERSION=$(LD64_VERSION)
 endif
 
-$(package)_config_opts_linux  = -qt-xkbcommon \
-    -qt-xcb \
-    -no-eglfs \
-    -no-linuxfb \
-    -system-freetype \
-    -no-sm \
-    -fontconfig \
-    -no-xinput2 \
-    -no-libudev \
-    -no-egl \
-    -no-opengl
+$(package)_config_opts_linux  = -qt-xkbcommon
+$(package)_config_opts_linux += -qt-xcb
+$(package)_config_opts_linux += -no-eglfs
+$(package)_config_opts_linux += -no-linuxfb
+$(package)_config_opts_linux += -system-freetype
+$(package)_config_opts_linux += -no-sm
+$(package)_config_opts_linux += -fontconfig
+$(package)_config_opts_linux += -no-xinput2
+$(package)_config_opts_linux += -no-libudev
+$(package)_config_opts_linux += -no-egl
+$(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_arm_linux  = -platform linux-g++ -xplatform $(host)
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
 $(package)_config_opts_mingw32  = -no-opengl -xplatform win32-g++ -device-option CROSS_COMPILE="$(host)-"
@@ -87,24 +93,24 @@ endef
 
 define $(package)_fetch_cmds
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path),$(qtbase_file_name),$(qtbase_file_name),$(qtbase_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path),$(qttranslations_file_name),$(qttranslations_file_name),$(qttranslations_sha256_hash)) && \
-$(call fetch_file,$(package),$($(package)_download_path),$(qttools_file_name),$(qttools_file_name),$(qttools_sha256_hash))
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_qtbase_file_name),$($(package)_qtbase_file_name),$($(package)_qtbase_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_qttranslations_file_name),$($(package)_qttranslations_file_name),$($(package)_qttranslations_sha256_hash)) && \
+$(call fetch_file,$(package),$($(package)_download_path),$($(package)_qttools_file_name),$($(package)_qttools_file_name),$($(package)_qttools_sha256_hash))
 endef
 
 define $(package)_extract_cmds
   mkdir -p $($(package)_extract_dir) && \
   echo "$($(package)_sha256_hash)  $($(package)_source)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
-  echo "$(qttranslations_sha256_hash)  $($(package)_source_dir)/$(qttranslations_file_name)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
-  echo "$(qttools_sha256_hash)  $($(package)_source_dir)/$(qttools_file_name)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$($(package)_qttranslations_sha256_hash)  $($(package)_source_dir)/$($(package)_qttranslations_file_name)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$($(package)_qttools_sha256_hash)  $($(package)_source_dir)/$($(package)_qttools_file_name)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   tar --strip-components=1 -xf $($(package)_source) && \
   mkdir qtbase && \
-  tar --strip-components=1 -xf $($(package)_source_dir)/$(qtbase_file_name) -C qtbase && \
+  tar --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qtbase_file_name) -C qtbase && \
   mkdir qttranslations && \
-  tar --strip-components=1 -xf $($(package)_source_dir)/$(qttranslations_file_name) -C qttranslations && \
+  tar --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttranslations_file_name) -C qttranslations && \
   mkdir qttools && \
-  tar --strip-components=1 -xf $($(package)_source_dir)/$(qttools_file_name) -C qttools
+  tar --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttools_file_name) -C qttools
 endef
 
 define $(package)_preprocess_cmds
