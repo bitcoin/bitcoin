@@ -3,6 +3,7 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/walletcache.h"
 
 #include "uint256.h"
 #include "ui_interface.h"
@@ -89,6 +90,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         my_pending.insert(std::make_pair(txid, pending));
 
         // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
+        WalletTXIDCacheAdd(txid);
         CheckWalletUpdate();
         uiInterface.OmniPendingChanged(true);
     } else {
