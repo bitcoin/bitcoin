@@ -374,19 +374,6 @@ int TXHistoryDialog::PopulateHistoryMap()
                 if ((displayType == "Send") && (!IsMyAddress(senderAddress))) { displayType = "Receive"; } // still a send transaction, but avoid confusion for end users
                 if (!valid) fundsMoved = false; // funds never move in invalid txs
 
-                // override amount display for STO receipts
-                if (mp_obj.getType() == MSC_TYPE_SEND_TO_OWNERS) {
-                    Array receiveArray;
-                    uint64_t total = 0, stoFee = 0;
-                    s_stolistdb->getRecipients(hash, "", &receiveArray, &total, &stoFee);
-                    if (receiveArray.size()>1) displayAddress = "Multiple addresses"; // override display address if more than one address in the wallet received a cut of this STO
-                    if (isPropertyDivisible(propertyId)) {
-                        displayAmount = FormatDivisibleShortMP(total) + getTokenLabel(propertyId);
-                    } else {
-                        displayAmount = FormatIndivisibleMP(total) + getTokenLabel(propertyId);
-                    }
-                }
-
                 // override/hide display amount for invalid creates and unknown transactions as we can't display amount/property as no prop exists
                 if ((mp_obj.getType() == MSC_TYPE_CREATE_PROPERTY_FIXED) ||
                     (mp_obj.getType() == MSC_TYPE_CREATE_PROPERTY_VARIABLE) ||
