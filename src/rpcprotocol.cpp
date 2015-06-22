@@ -251,7 +251,6 @@ int ReadHTTPMessage(std::basic_istream<char>& stream, map<string,
  * 
  * 1.0 spec: http://json-rpc.org/wiki/specification
  * 1.2 spec: http://jsonrpc.org/historical/json-rpc-over-http.html
- * http://www.codeproject.com/KB/recipes/JSON_Spirit.aspx
  */
 
 string JSONRPCRequest(const string& strMethod, const UniValue& params, const UniValue& id)
