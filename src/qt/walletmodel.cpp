@@ -305,8 +305,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return TransactionCreationFailed;
         }
 
-        // reject insane fee > 0.1 DASH
-        if (nFeeRequired > 10000000)
+        // reject insane fee
+        if (nFeeRequired > ::minRelayTxFee.GetFee(transaction.getTransactionSize()) * 10000)
             return InsaneFee;
     }
 
