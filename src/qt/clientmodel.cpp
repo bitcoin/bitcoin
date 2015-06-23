@@ -246,7 +246,7 @@ static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, Ch
 
 static void BannedListChanged(ClientModel *clientmodel)
 {
-    qDebug() << "BannedListChanged";
+    qDebug() << QString("%1: Requesting update for peer banlist").arg(__func__);
     QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
 }
 
