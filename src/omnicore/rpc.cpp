@@ -572,7 +572,7 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
 
     Object response;
     bool active = isCrowdsaleActive(propertyId);
-    std::map<std::string, std::vector<uint64_t> > database;
+    std::map<std::string, std::vector<int64_t> > database;
 
     if (active) {
         bool crowdFound = false;
@@ -600,7 +600,7 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     }
 
     Array participanttxs;
-    std::map<std::string, std::vector<uint64_t> >::const_iterator it;
+    std::map<std::string, std::vector<int64_t> >::const_iterator it;
     for (it = database.begin(); it != database.end(); it++) {
         Object participanttx;
 
@@ -753,7 +753,7 @@ Value getgrants_MP(const Array& params, bool fHelp)
     int64_t totalTokens = getTotalTokens(propertyId);
 
     Array issuancetxs;
-    std::map<std::string, std::vector<uint64_t> >::const_iterator it;
+    std::map<std::string, std::vector<int64_t> >::const_iterator it;
     for (it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
         const std::string& txid = it->first;
         int64_t grantedTokens = it->second.at(0);

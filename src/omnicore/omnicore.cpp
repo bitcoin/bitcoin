@@ -437,9 +437,9 @@ int64_t before, after;
 
 // calculateFundraiser does token calculations per transaction
 // calcluateFractional does calculations for missed tokens
-void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
-        uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens,
-        std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale)
+static void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
+        int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
+        std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale)
 {
     // Weeks in seconds
     int128_t weeks_sec_ = 604800L;
@@ -496,7 +496,7 @@ void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
     // The tokens to credit
     assert(createdTokens_int <= std::numeric_limits<int64_t>::max());
     assert(issuerTokens_int <= std::numeric_limits<int64_t>::max());
-    tokens = std::make_pair(createdTokens_int.convert_to<uint64_t>(), issuerTokens_int.convert_to<uint64_t>());
+    tokens = std::make_pair(createdTokens_int.convert_to<int64_t>(), issuerTokens_int.convert_to<int64_t>());
 }
 
 // certain transaction types are not live on the network until some specific block height
@@ -1342,10 +1342,10 @@ int input_mp_crowdsale_string(const string &s)
     std::vector<std::string> valueData;
     boost::split(valueData, entryData[1], boost::is_any_of(";"), token_compress_on);
 
-    std::vector<uint64_t> vals;
+    std::vector<int64_t> vals;
     std::vector<std::string>::const_iterator iter;
     for (iter = valueData.begin(); iter != valueData.end(); ++iter) {
-      vals.push_back(boost::lexical_cast<uint64_t>(*iter));
+      vals.push_back(boost::lexical_cast<int64_t>(*iter));
     }
 
     newCrowdsale.insertDatabase(entryData[0], vals);
@@ -3487,7 +3487,7 @@ int CMPTransaction::logicMath_SimpleSend()
 
             if (spFound) {
                 // Holds the tokens to be credited to the sender and receiver
-                std::pair<uint64_t, uint64_t> tokens;
+                std::pair<int64_t, int64_t> tokens;
 
                 // Passed by reference to determine, if max_tokens has been reached
                 bool close_crowdsale = false;
@@ -3505,7 +3505,7 @@ int CMPTransaction::logicMath_SimpleSend()
                 }
 
                 // Calculate the amounts to credit for this fundraiser
-                calculateFundraiser(nValue, sp.early_bird, sp.deadline, (uint64_t) blockTime,
+                calculateFundraiser(nValue, sp.early_bird, sp.deadline, blockTime,
                         sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
                         tokens, close_crowdsale);
 
@@ -3514,8 +3514,8 @@ int CMPTransaction::logicMath_SimpleSend()
                 pcrowdsale->incTokensIssuerCreated(tokens.second);
 
                 // Data to pass to txFundraiserData
-                uint64_t txdata[] = {(uint64_t) nValue, (uint64_t) blockTime, (uint64_t) tokens.first, (uint64_t) tokens.second};
-                std::vector<uint64_t> txDataVec(txdata, txdata + sizeof (txdata) / sizeof (txdata[0]));
+                int64_t txdata[] = {(int64_t) nValue, blockTime, tokens.first, tokens.second};
+                std::vector<int64_t> txDataVec(txdata, txdata + sizeof(txdata) / sizeof(txdata[0]));
 
                 // Insert data about crowdsale participation
                 pcrowdsale->insertDatabase(txid.GetHex(), txDataVec);

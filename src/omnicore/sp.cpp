@@ -47,7 +47,7 @@ Object CMPSPInfo::Entry::toJSON() const
 {
     Object spInfo;
     spInfo.push_back(Pair("issuer", issuer));
-    spInfo.push_back(Pair("prop_type", prop_type));
+    spInfo.push_back(Pair("prop_type", (uint64_t) prop_type));
     spInfo.push_back(Pair("prev_prop_id", (uint64_t) prev_prop_id));
     spInfo.push_back(Pair("category", category));
     spInfo.push_back(Pair("subcategory", subcategory));
@@ -57,22 +57,22 @@ Object CMPSPInfo::Entry::toJSON() const
     spInfo.push_back(Pair("fixed", fixed));
     spInfo.push_back(Pair("manual", manual));
 
-    spInfo.push_back(Pair("num_tokens", strprintf("%d", num_tokens)));
+    spInfo.push_back(Pair("num_tokens", num_tokens));
     if (false == fixed && false == manual) {
         spInfo.push_back(Pair("property_desired", (uint64_t) property_desired));
-        spInfo.push_back(Pair("deadline", strprintf("%d", deadline)));
-        spInfo.push_back(Pair("early_bird", (int) early_bird));
-        spInfo.push_back(Pair("percentage", (int) percentage));
+        spInfo.push_back(Pair("deadline", deadline));
+        spInfo.push_back(Pair("early_bird", (uint64_t) early_bird));
+        spInfo.push_back(Pair("percentage", (uint64_t) percentage));
 
-        spInfo.push_back(Pair("close_early", (int) close_early));
-        spInfo.push_back(Pair("max_tokens", (int) max_tokens));
+        spInfo.push_back(Pair("close_early", close_early));
+        spInfo.push_back(Pair("max_tokens", max_tokens));
         spInfo.push_back(Pair("missedTokens", missedTokens));
-        spInfo.push_back(Pair("timeclosed", strprintf("%d", timeclosed)));
+        spInfo.push_back(Pair("timeclosed", timeclosed));
         spInfo.push_back(Pair("txid_close", txid_close.ToString()));
     }
 
     // Initialize values
-    std::map<std::string, std::vector<uint64_t> >::const_iterator it;
+    std::map<std::string, std::vector<int64_t> >::const_iterator it;
 
     std::string values_long;
     std::string values;
@@ -106,8 +106,8 @@ void CMPSPInfo::Entry::fromJSON(const Object& json)
 {
     unsigned int idx = 0;
     issuer = json[idx++].value_.get_str();
-    prop_type = (unsigned short)json[idx++].value_.get_int();
-    prev_prop_id = (unsigned int)json[idx++].value_.get_uint64();
+    prop_type = (uint16_t) json[idx++].value_.get_uint64();
+    prev_prop_id = (uint32_t) json[idx++].value_.get_uint64();
     category = json[idx++].value_.get_str();
     subcategory = json[idx++].value_.get_str();
     name = json[idx++].value_.get_str();
@@ -116,17 +116,17 @@ void CMPSPInfo::Entry::fromJSON(const Object& json)
     fixed = json[idx++].value_.get_bool();
     manual = json[idx++].value_.get_bool();
 
-    num_tokens = boost::lexical_cast<uint64_t>(json[idx++].value_.get_str());
+    num_tokens = json[idx++].value_.get_int64();
     if (false == fixed && false == manual) {
-        property_desired = (unsigned int)json[idx++].value_.get_uint64();
-        deadline = boost::lexical_cast<uint64_t>(json[idx++].value_.get_str());
-        early_bird = (unsigned char)json[idx++].value_.get_int();
-        percentage = (unsigned char)json[idx++].value_.get_int();
+        property_desired = (uint32_t) json[idx++].value_.get_uint64();
+        deadline = json[idx++].value_.get_int64();
+        early_bird = (uint8_t) json[idx++].value_.get_uint64();
+        percentage = (uint8_t) json[idx++].value_.get_uint64();
 
-        close_early = (unsigned char)json[idx++].value_.get_int();
-        max_tokens = (unsigned char)json[idx++].value_.get_int();
-        missedTokens = (unsigned char)json[idx++].value_.get_int();
-        timeclosed = boost::lexical_cast<uint64_t>(json[idx++].value_.get_str());
+        close_early = json[idx++].value_.get_bool();
+        max_tokens = json[idx++].value_.get_bool();
+        missedTokens = json[idx++].value_.get_int64();
+        timeclosed = json[idx++].value_.get_int64();
         txid_close = uint256(json[idx++].value_.get_str());
     }
 
@@ -147,16 +147,16 @@ void CMPSPInfo::Entry::fromJSON(const Object& json)
         std::vector<std::string> str_split_vec;
         boost::split(str_split_vec, strngs_vec[i], boost::is_any_of(":"));
 
-        std::vector<uint64_t> txDataVec;
+        std::vector<int64_t> txDataVec;
 
         if (crowdsale && str_split_vec.size() == 5) {
-            txDataVec.push_back(boost::lexical_cast<uint64_t>(str_split_vec.at(1)));
-            txDataVec.push_back(boost::lexical_cast<uint64_t>(str_split_vec.at(2)));
-            txDataVec.push_back(boost::lexical_cast<uint64_t>(str_split_vec.at(3)));
-            txDataVec.push_back(boost::lexical_cast<uint64_t>(str_split_vec.at(4)));
+            txDataVec.push_back(boost::lexical_cast<int64_t>(str_split_vec.at(1)));
+            txDataVec.push_back(boost::lexical_cast<int64_t>(str_split_vec.at(2)));
+            txDataVec.push_back(boost::lexical_cast<int64_t>(str_split_vec.at(3)));
+            txDataVec.push_back(boost::lexical_cast<int64_t>(str_split_vec.at(4)));
         } else if (manual && str_split_vec.size() == 3) {
-            txDataVec.push_back(boost::lexical_cast<uint64_t>(str_split_vec.at(1)));
-            txDataVec.push_back(boost::lexical_cast<uint64_t>(str_split_vec.at(2)));
+            txDataVec.push_back(boost::lexical_cast<int64_t>(str_split_vec.at(1)));
+            txDataVec.push_back(boost::lexical_cast<int64_t>(str_split_vec.at(2)));
         }
 
         historicalData.insert(std::make_pair(str_split_vec.at(0), txDataVec));
@@ -179,7 +179,7 @@ bool CMPSPInfo::Entry::isDivisible() const
 
 void CMPSPInfo::Entry::print() const
 {
-    PrintToConsole("%s:%s(Fixed=%s,Divisible=%s):%lu:%s/%s, %s %s\n",
+    PrintToConsole("%s:%s(Fixed=%s,Divisible=%s):%d:%s/%s, %s %s\n",
             issuer,
             name,
             fixed ? "Yes" : "No",
@@ -219,15 +219,15 @@ CMPSPInfo::~CMPSPInfo()
     if (msc_debug_persistence) PrintToLog("CMPSPInfo closed\n");
 }
 
-void CMPSPInfo::init(unsigned int nextSPID, unsigned int nextTestSPID)
+void CMPSPInfo::init(uint32_t nextSPID, uint32_t nextTestSPID)
 {
     next_spid = nextSPID;
     next_test_spid = nextTestSPID;
 }
 
-unsigned int CMPSPInfo::peekNextSPID(unsigned char ecosystem) const
+uint32_t CMPSPInfo::peekNextSPID(uint8_t ecosystem) const
 {
-    unsigned int nextId = 0;
+    uint32_t nextId = 0;
 
     switch (ecosystem) {
         case OMNI_PROPERTY_MSC: // Main ecosystem, MSC: 1, TMSC: 2, First available SP = 3
@@ -243,14 +243,14 @@ unsigned int CMPSPInfo::peekNextSPID(unsigned char ecosystem) const
     return nextId;
 }
 
-unsigned int CMPSPInfo::updateSP(unsigned int propertyID, const Entry& info)
+uint32_t CMPSPInfo::updateSP(uint32_t propertyID, const Entry& info)
 {
     // cannot update implied SP
     if (OMNI_PROPERTY_MSC == propertyID || OMNI_PROPERTY_TMSC == propertyID) {
         return propertyID;
     }
 
-    unsigned int res = propertyID;
+    uint32_t res = propertyID;
     Object spInfo = info.toJSON();
 
     // generate the SP id
@@ -272,9 +272,9 @@ unsigned int CMPSPInfo::updateSP(unsigned int propertyID, const Entry& info)
     return res;
 }
 
-unsigned int CMPSPInfo::putSP(unsigned char ecosystem, const Entry& info)
+uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
 {
-    unsigned int res = 0;
+    uint32_t res = 0;
     switch (ecosystem) {
         case OMNI_PROPERTY_MSC: // Main ecosystem, MSC: 1, TMSC: 2, First available SP = 3
             res = next_spid++;
@@ -311,7 +311,7 @@ unsigned int CMPSPInfo::putSP(unsigned char ecosystem, const Entry& info)
     return res;
 }
 
-bool CMPSPInfo::getSP(unsigned int spid, Entry& info) const
+bool CMPSPInfo::getSP(uint32_t spid, Entry& info) const
 {
     // special cases for constant SPs MSC and TMSC
     if (OMNI_PROPERTY_MSC == spid) {
@@ -340,7 +340,7 @@ bool CMPSPInfo::getSP(unsigned int spid, Entry& info) const
     return true;
 }
 
-bool CMPSPInfo::hasSP(unsigned int spid) const
+bool CMPSPInfo::hasSP(uint32_t spid) const
 {
     // special cases for constant SPs MSC and TMSC
     if (OMNI_PROPERTY_MSC == spid || OMNI_PROPERTY_TMSC == spid) {
@@ -357,14 +357,14 @@ bool CMPSPInfo::hasSP(unsigned int spid) const
     return res;
 }
 
-unsigned int CMPSPInfo::findSPByTX(const uint256& txid) const
+uint32_t CMPSPInfo::findSPByTX(const uint256& txid) const
 {
-    unsigned int res = 0;
+    uint32_t res = 0;
 
     std::string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, txid.ToString());
     std::string spidStr;
     if (pdb->Get(readoptions, txIndexKey, &spidStr).ok()) {
-        res = boost::lexical_cast<unsigned int>(spidStr);
+        res = boost::lexical_cast<uint32_t>(spidStr);
     }
 
     return res;
@@ -394,7 +394,7 @@ int CMPSPInfo::popBlock(const uint256& block_hash)
                     std::vector<std::string> vstr;
                     std::string key = iter->key().ToString();
                     boost::split(vstr, key, boost::is_any_of("-"), boost::token_compress_on);
-                    unsigned int propertyID = boost::lexical_cast<unsigned int>(vstr[1]);
+                    uint32_t propertyID = boost::lexical_cast<uint32_t>(vstr[1]);
 
                     std::string spPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyID);
                     std::string spPrevValue;
@@ -452,7 +452,7 @@ int CMPSPInfo::getWatermark(uint256& watermark) const // TODO: return bool
 void CMPSPInfo::printAll() const
 {
     // print off the hard coded MSC and TMSC entries
-    for (unsigned int idx = OMNI_PROPERTY_MSC; idx <= OMNI_PROPERTY_TMSC; idx++) {
+    for (uint32_t idx = OMNI_PROPERTY_MSC; idx <= OMNI_PROPERTY_TMSC; idx++) {
         Entry info;
         PrintToConsole("%10d => ", idx);
         if (getSP(idx, info)) {
@@ -493,20 +493,20 @@ CMPCrowd::CMPCrowd()
 {
 }
 
-CMPCrowd::CMPCrowd(unsigned int pid, uint64_t nv, unsigned int cd, uint64_t dl, unsigned char eb, unsigned char per, uint64_t uct, uint64_t ict)
+CMPCrowd::CMPCrowd(uint32_t pid, int64_t nv, uint32_t cd, int64_t dl, uint8_t eb, uint8_t per, int64_t uct, int64_t ict)
   : propertyId(pid), nValue(nv), property_desired(cd), deadline(dl),
     early_bird(eb), percentage(per), u_created(uct), i_created(ict)
 {
 }
 
-void CMPCrowd::insertDatabase(const std::string& txhash, const std::vector<uint64_t>& txdata)
+void CMPCrowd::insertDatabase(const std::string& txhash, const std::vector<int64_t>& txdata)
 {
     txFundraiserData.insert(std::make_pair(txhash, txdata));
 }
 
 void CMPCrowd::print(const std::string& address, FILE* fp) const
 {
-    fprintf(fp, "%34s : id=%u=%X; prop=%u, value= %lu, deadline: %s (%lX)\n", address.c_str(), propertyId, propertyId,
+    fprintf(fp, "%34s : id=%u=%X; prop=%u, value= %li, deadline: %s (%lX)\n", address.c_str(), propertyId, propertyId,
         property_desired, nValue, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline).c_str(), deadline);
 }
 
@@ -520,18 +520,18 @@ void CMPCrowd::saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std:
             nValue,
             property_desired,
             deadline,
-            (int) early_bird,
-            (int) percentage,
+            early_bird,
+            percentage,
             u_created,
             i_created);
 
     // append N pairs of address=nValue;blockTime for the database
-    std::map<std::string, std::vector<uint64_t> >::const_iterator iter;
+    std::map<std::string, std::vector<int64_t> >::const_iterator iter;
     for (iter = txFundraiserData.begin(); iter != txFundraiserData.end(); ++iter) {
         lineOut.append(strprintf(",%s=", (*iter).first));
-        std::vector<uint64_t> const &vals = (*iter).second;
+        std::vector<int64_t> const &vals = (*iter).second;
 
-        std::vector<uint64_t>::const_iterator valIter;
+        std::vector<int64_t>::const_iterator valIter;
         for (valIter = vals.begin(); valIter != vals.end(); ++valIter) {
             if (valIter != vals.begin()) {
                 lineOut.append(";");
@@ -557,7 +557,7 @@ CMPCrowd* mastercore::getCrowd(const std::string& address)
     return (CMPCrowd *)NULL;
 }
 
-bool mastercore::isPropertyDivisible(unsigned int propertyId)
+bool mastercore::isPropertyDivisible(uint32_t propertyId)
 {
     // TODO: is a lock here needed
     CMPSPInfo::Entry sp;
@@ -567,18 +567,18 @@ bool mastercore::isPropertyDivisible(unsigned int propertyId)
     return true;
 }
 
-std::string mastercore::getPropertyName(unsigned int propertyId)
+std::string mastercore::getPropertyName(uint32_t propertyId)
 {
     CMPSPInfo::Entry sp;
     if (_my_sps->getSP(propertyId, sp)) return sp.name;
     return "Property Name Not Found";
 }
 
-bool mastercore::isCrowdsaleActive(unsigned int propertyId)
+bool mastercore::isCrowdsaleActive(uint32_t propertyId)
 {
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
-        unsigned int foundPropertyId = crowd.getPropertyId();
+        uint32_t foundPropertyId = crowd.getPropertyId();
         if (foundPropertyId == propertyId) return true;
     }
     return false;
@@ -610,25 +610,25 @@ void mastercore::dumpCrowdsaleInfo(const std::string& address, const CMPCrowd& c
 // currentSecs: number of seconds of current tx
 // numProps: number of properties
 // issuerPerc: percentage of tokens to issuer
-int mastercore::calculateFractional(unsigned short int propType, unsigned char bonusPerc, uint64_t fundraiserSecs,
-        uint64_t numProps, unsigned char issuerPerc, const std::map<std::string, std::vector<uint64_t> >& txFundraiserData,
-        const uint64_t amountPremined)
+int64_t mastercore::calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundraiserSecs,
+        int64_t numProps, uint8_t issuerPerc, const std::map<std::string, std::vector<int64_t> >& txFundraiserData,
+        const int64_t amountPremined)
 {
     // initialize variables
     double totalCreated = 0;
     double issuerPercentage = (double) (issuerPerc * 0.01);
 
-    std::map<std::string, std::vector<uint64_t> >::const_iterator it;
+    std::map<std::string, std::vector<int64_t> >::const_iterator it;
 
     // iterate through fundraiser data
     for (it = txFundraiserData.begin(); it != txFundraiserData.end(); it++) {
 
         // grab the seconds and amt transferred from this tx
-        uint64_t currentSecs = it->second.at(1);
+        int64_t currentSecs = it->second.at(1);
         double amtTransfer = it->second.at(0);
 
         // make calc for bonus given in sec
-        uint64_t bonusSeconds = fundraiserSecs - currentSecs;
+        int64_t bonusSeconds = fundraiserSecs - currentSecs;
 
         // turn it into weeks
         double weeks = bonusSeconds / (double) 604800;
@@ -649,7 +649,7 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
             totalCreated += createdTokens;
         } else {
             // same here
-            createdTokens = (uint64_t) ((amtTransfer / 1e8) * (double) numProps * bonusPercentage);
+            createdTokens = (int64_t) ((amtTransfer / 1e8) * (double) numProps * bonusPercentage);
 
             totalCreated += createdTokens;
         }
@@ -663,7 +663,7 @@ int mastercore::calculateFractional(unsigned short int propType, unsigned char b
     if (2 == propType) {
         missedTokens = totalPremined - amountPremined;
     } else {
-        missedTokens = (uint64_t) (totalPremined - amountPremined);
+        missedTokens = (int64_t) (totalPremined - amountPremined);
     }
 
     return missedTokens;
@@ -679,8 +679,8 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
     // check for an active crowdsale to this address
     CMPCrowd* pcrowdsale = getCrowd(address);
     if (pcrowdsale) {
-        std::map<std::string, std::vector<uint64_t> >::const_iterator it;
-        const std::map<std::string, std::vector<uint64_t> >& database = pcrowdsale->getDatabase();
+        std::map<std::string, std::vector<int64_t> >::const_iterator it;
+        const std::map<std::string, std::vector<int64_t> >& database = pcrowdsale->getDatabase();
         for (it = database.begin(); it != database.end(); it++) {
             uint256 tmpTxid(it->first); // construct from string
             if (tmpTxid == txid) {
@@ -693,16 +693,16 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
     }
 
     // if we still haven't found txid, check non active crowdsales to this address
-    unsigned int nextSPID = _my_sps->peekNextSPID(1);
-    unsigned int nextTestSPID = _my_sps->peekNextSPID(2);
+    uint32_t nextSPID = _my_sps->peekNextSPID(1);
+    uint32_t nextTestSPID = _my_sps->peekNextSPID(2);
 
-    for (int64_t tmpPropertyId = 1; tmpPropertyId < nextSPID; tmpPropertyId++) {
+    for (uint32_t tmpPropertyId = 1; tmpPropertyId < nextSPID; tmpPropertyId++) {
         CMPSPInfo::Entry sp;
         if (!_my_sps->getSP(tmpPropertyId, sp)) continue;
         if (sp.issuer != address) continue;
 
-        std::map<std::string, std::vector<uint64_t> >::const_iterator it;
-        const std::map<std::string, std::vector<uint64_t> >& database = sp.historicalData;
+        std::map<std::string, std::vector<int64_t> >::const_iterator it;
+        const std::map<std::string, std::vector<int64_t> >& database = sp.historicalData;
         for (it = database.begin(); it != database.end(); it++) {
             uint256 tmpTxid(it->first); // construct from string
             if (tmpTxid == txid) {
@@ -714,13 +714,13 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
         }
     }
 
-    for (int64_t tmpPropertyId = TEST_ECO_PROPERTY_1; tmpPropertyId < nextTestSPID; tmpPropertyId++) {
+    for (uint32_t tmpPropertyId = TEST_ECO_PROPERTY_1; tmpPropertyId < nextTestSPID; tmpPropertyId++) {
         CMPSPInfo::Entry sp;
         if (!_my_sps->getSP(tmpPropertyId, sp)) continue;
         if (sp.issuer == address) continue;
 
-        std::map<std::string, std::vector<uint64_t> >::const_iterator it;
-        const std::map<std::string, std::vector<uint64_t> >& database = sp.historicalData;
+        std::map<std::string, std::vector<int64_t> >::const_iterator it;
+        const std::map<std::string, std::vector<int64_t> >& database = sp.historicalData;
         for (it = database.begin(); it != database.end(); it++) {
             uint256 tmpTxid(it->first); // construct from string
             if (tmpTxid == txid) {
@@ -736,7 +736,7 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
     return false;
 }
 
-void mastercore::eraseMaxedCrowdsale(const std::string& address, uint64_t blockTime, int block)
+void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTime, int block)
 {
     CrowdMap::iterator it = my_crowds.find(address);
 
@@ -752,8 +752,8 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, uint64_t blockT
 
         // get txdata
         sp.historicalData = crowdsale.getDatabase();
-        sp.close_early = 1;
-        sp.max_tokens = 1;
+        sp.close_early = true;
+        sp.max_tokens = true;
         sp.timeclosed = blockTime;
 
         // update SP with this data
@@ -777,7 +777,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
         const std::string& address = my_it->first;
         const CMPCrowd& crowdsale = my_it->second;
 
-        if (blockTime > (int64_t) crowdsale.getDeadline()) {
+        if (blockTime > crowdsale.getDeadline()) {
             PrintToLog("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
 
             // TODO: dump the info about this crowdsale being delete into a TXT file (JSON perhaps)
@@ -817,7 +817,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
     return how_many_erased;
 }
 
-const char* mastercore::c_strPropertyType(int propertyType)
+const char* mastercore::c_strPropertyType(uint16_t propertyType)
 {
     switch (propertyType) {
         case MSC_PROPERTY_TYPE_DIVISIBLE: return "divisible";
