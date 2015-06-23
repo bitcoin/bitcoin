@@ -600,7 +600,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
             tr("Error: The wallet was unlocked only to anonymize coins."),
             QMessageBox::Ok, QMessageBox::Ok);
     case WalletModel::InsaneFee:
-        msgParams.first = tr("A fee higher than %1 is considered an insanely high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), 10000000));
+        msgParams.first = tr("A fee %1 times higher than %2 per kB is considered an insanely high fee.").arg(10000).arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), ::minRelayTxFee.GetFeePerK()));
         break;
     // included to prevent a compiler warning.
     case WalletModel::OK:
