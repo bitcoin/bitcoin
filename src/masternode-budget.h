@@ -12,7 +12,6 @@
 #include "util.h"
 #include "base58.h"
 #include "masternode.h"
-#include "masternode-pos.h"
 //#include "timedata.h"
 
 using namespace std;
@@ -80,7 +79,7 @@ public:
     // keep track of the scanning errors I've seen
     map<uint256, CBudgetProposal> mapProposals;
     map<uint256, CFinalizedBudget> mapFinalizedBudgets;
-    
+
     CBudgetManager() {
         mapProposals.clear();
         mapFinalizedBudgets.clear();
@@ -96,7 +95,7 @@ public:
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
 
-    
+
     void CleanUp();
 
     int64_t GetTotalBudget(int nHeight);
@@ -179,7 +178,7 @@ public:
     std::vector<CTxBudgetPayment> vecProposals;
     map<uint256, CFinalizedBudgetVote> mapVotes;
 
-    CFinalizedBudget();  
+    CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
 
     void Sync(CNode* node);
@@ -227,19 +226,19 @@ public:
     string GetStatus();
 
     uint256 GetHash(){
-        /* 
+        /*
             vin is not included on purpose
-                - Any masternode can make a proposal and the hashes should match regardless of who made it. 
-                - Someone could hyjack a new proposal by changing the vin and the signature check will fail. 
-                  However, the network will still propagate the correct version and the incorrect one will be rejected. 
+                - Any masternode can make a proposal and the hashes should match regardless of who made it.
+                - Someone could hyjack a new proposal by changing the vin and the signature check will fail.
+                  However, the network will still propagate the correct version and the incorrect one will be rejected.
         */
-                
+
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strBudgetName;
         ss << nBlockStart;
         ss << vecProposals;
 
-        uint256 h1 = ss.GetHash();        
+        uint256 h1 = ss.GetHash();
         return h1;
     }
 
@@ -262,7 +261,7 @@ class CFinalizedBudgetBroadcast : public CFinalizedBudget
 {
 private:
     std::vector<unsigned char> vchSig;
-    
+
 public:
     CFinalizedBudgetBroadcast();
     CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
@@ -283,7 +282,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(vecProposals);
         READWRITE(vchSig);
-    }  
+    }
 };
 
 //
@@ -323,7 +322,7 @@ public:
         READWRITE(vchSig);
     }
 
-    
+
 
 };
 
@@ -340,12 +339,12 @@ private:
 
 public:
     std::string strProposalName;
-    
-    /* 
+
+    /*
         json object with name, short-description, long-description, pdf-url and any other info
         This allows the proposal website to stay 100% decentralized
     */
-    std::string strURL; 
+    std::string strURL;
     CTxIn vin;
     int nBlockStart;
     int nBlockEnd;
@@ -356,7 +355,7 @@ public:
     map<uint256, CBudgetVote> mapVotes;
     //cache object
 
-    CBudgetProposal();  
+    CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
     CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn);
 
@@ -389,13 +388,13 @@ public:
     int64_t GetAllotted() {return nAlloted;}
 
     uint256 GetHash(){
-        /* 
+        /*
             vin is not included on purpose
-                - Any masternode can make a proposal and the hashes should match regardless of who made it. 
-                - Someone could hyjack a new proposal by changing the vin and the signature check will fail. 
-                  However, the network will still propagate the correct version and the incorrect one will be rejected. 
+                - Any masternode can make a proposal and the hashes should match regardless of who made it.
+                - Someone could hyjack a new proposal by changing the vin and the signature check will fail.
+                  However, the network will still propagate the correct version and the incorrect one will be rejected.
         */
-                
+
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strProposalName;
         ss << strURL;
@@ -404,7 +403,7 @@ public:
         ss << nAmount;
         ss << address;
         uint256 h1 = ss.GetHash();
-        
+
         return h1;
     }
 
@@ -432,7 +431,7 @@ class CBudgetProposalBroadcast : public CBudgetProposal
 {
 private:
     std::vector<unsigned char> vchSig;
-    
+
 public:
     CBudgetProposalBroadcast();
     CBudgetProposalBroadcast(const CBudgetProposal& other);
@@ -456,7 +455,7 @@ public:
         READWRITE(nAmount);
         READWRITE(address);
         READWRITE(vchSig);
-    }  
+    }
 };
 
 //
@@ -506,7 +505,7 @@ public:
         READWRITE(vchSig);
     }
 
-    
+
 
 };
 

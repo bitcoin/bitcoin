@@ -109,7 +109,6 @@ BITCOIN_CORE_H = \
   main.h \
   masternode.h \
   masternode-payments.h \
-  masternode-pos.h \
   masternode-budget.h \
   masternodeman.h \
   masternodeconfig.h \
@@ -286,7 +285,6 @@ libbitcoin_common_a_SOURCES = \
   masternode.cpp \
   masternode-budget.cpp \
   masternode-payments.cpp \
-  masternode-pos.cpp \
   masternodeman.cpp \
   masternodeconfig.cpp \
   instantx.cpp \

@@ -195,12 +195,6 @@ void CMasternode::Check()
     TRY_LOCK(cs_main, lockRecv);
     if(!lockRecv) return;
 
-    if(nScanningErrorCount >= MASTERNODE_SCANNING_ERROR_THESHOLD)
-    {
-        activeState = MASTERNODE_POS_ERROR;
-        return;
-    }
-
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
 
@@ -384,9 +378,9 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
 
             if(pmn->sigTime < sigTime){ //take the newest entry
                 LogPrintf("mnb - Got updated entry for %s\n", addr.ToString().c_str());
-                                
+
                 pmn->UpdateFromNewBroadcast((*this));
-                
+
                 pmn->Check();
                 if(pmn->IsEnabled()) {
                     Relay(fRequested);
@@ -468,7 +462,7 @@ void CMasternodeBroadcast::Relay(bool fRequested)
 }
 
 bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
-{   
+{
     std::string errorMessage;
 
     std::string vchPubKey(pubkey.begin(), pubkey.end());

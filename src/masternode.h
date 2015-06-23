@@ -12,7 +12,6 @@
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
-#include "masternode-pos.h"
 #include "timedata.h"
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
@@ -205,22 +204,6 @@ public:
         return cacheInputAge+(chainActive.Tip()->nHeight-cacheInputAgeBlock);
     }
 
-    void ApplyScanningError(CMasternodeScanningError& mnse)
-    {
-        if(!mnse.IsValid()) return;
-
-        if(mnse.nBlockHeight == nLastScanningErrorBlockHeight) return;
-        nLastScanningErrorBlockHeight = mnse.nBlockHeight;
-
-        if(mnse.nErrorType == SCANNING_SUCCESS){
-            nScanningErrorCount--;
-            if(nScanningErrorCount < 0) nScanningErrorCount = 0;
-        } else { //all other codes are equally as bad
-            nScanningErrorCount++;
-            if(nScanningErrorCount > MASTERNODE_SCANNING_ERROR_THESHOLD*2) nScanningErrorCount = MASTERNODE_SCANNING_ERROR_THESHOLD*2;
-        }
-    }
-
     std::string Status() {
         std::string strStatus = "ACTIVE";
 
@@ -267,7 +250,7 @@ public:
         READWRITE(lastTimeSeen);
         READWRITE(protocolVersion);
     }
-    
+
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << sigTime;
@@ -307,7 +290,7 @@ public:
 
     bool CheckAndUpdate(int& nDos);
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    void Relay();    
+    void Relay();
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);

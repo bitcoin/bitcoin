@@ -463,12 +463,6 @@ void CleanTransactionLocksList()
                         fFound = true;
                     }
                 }
-
-                if(!fFound){
-                    //increment a scanning error
-                    CMasternodeScanningError mnse(pmn->vin, SCANNING_ERROR_IX_NO_RESPONSE, it->second.nBlockHeight);
-                    pmn->ApplyScanningError(mnse);
-                }
             }
 
             if(mapTxLockReq.count(it->second.txHash)){

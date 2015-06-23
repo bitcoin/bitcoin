@@ -129,7 +129,7 @@ Value masternode(const Array& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" &&
          strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
-        strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" && 
+        strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
         strCommand != "outputs"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
@@ -466,7 +466,7 @@ Value masternodelist(const Array& params, bool fHelp)
 
     if (fHelp ||
             (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank" && strMode != "addr"
-                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "pose" && strMode != "lastpaid"))
+                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "lastpaid"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -480,7 +480,6 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
-                "  pose           - Print Proof-of-Service score\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match))\n"
                 "  pubkey         - Print public key associated with a masternode (can be additionally filtered,\n"
                 "                   partial match)\n"
@@ -548,10 +547,6 @@ Value masternodelist(const Array& params, bool fHelp)
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       address2.ToString().c_str()));
-            } else if (strMode == "pose") {
-                if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
-                std::string strOut = boost::lexical_cast<std::string>(mn.nScanningErrorCount);
-                obj.push_back(Pair(strVin,       strOut.c_str()));
             } else if(strMode == "status") {
                 std::string strStatus = mn.Status();
                 if(strFilter !="" && strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;

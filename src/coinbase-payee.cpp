@@ -187,7 +187,6 @@ void CCoinbasePayee::BuildIndex()
 
         CBlock block;
         if (ReadBlockFromDisk(block, pindexPrev)) {
-            printf("scan block\n");
             ProcessBlockCoinbaseTX(block.vtx[0], block.nTime);
         }
 
