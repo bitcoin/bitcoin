@@ -416,7 +416,6 @@ void TradeHistoryDialog::UpdateData()
 {
     int chainHeight = chainActive.Height();
     int rowCount = ui->tradeHistoryTable->rowCount();
-printf("rowCount is %d\n",rowCount);
     ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
     for (int row = 0; row < rowCount; row++) {
         // check if we need to refresh the details for this row
@@ -429,8 +428,7 @@ printf("rowCount is %d\n",rowCount);
             continue;
         }
         TradeHistoryObject *tmpObjTH = &(hIter->second);
-        printf("working row %d tx %s lastupdate %d status %s prop1 %d prop2 %d amount %d\n", row, txid.GetHex().c_str(), lastUpdateBlock, tmpObjTH->status.c_str(), tmpObjTH->propertyIdForSale, tmpObjTH->propertyIdDesired, tmpObjTH->amountForSale);
-        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled") continue; // || tmpObjTH->status == "Part Cancel") continue; // once a trade hits this status the details should never change
+        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled" || tmpObjTH->status == "Part Cancel") continue; // once a trade hits this status the details should never change
         if (tmpObjTH->blockHeight == 0) continue; // do not attempt to refresh details for a trade that's still pending
         if (lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
 
@@ -492,7 +490,6 @@ printf("rowCount is %d\n",rowCount);
         }
         if(displayIn.substr(0,2) == "0 ") amountInCell->setForeground(QColor("#000000"));
         if(displayOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
-printf("about to setitems for row %d tablesize is %d\n", row, ui->tradeHistoryTable->rowCount());
         // replace cells in row accordingly
         ui->tradeHistoryTable->setItem(row, 1, lastUpdateBlockCell);
         ui->tradeHistoryTable->setItem(row, 2, iconCell);
