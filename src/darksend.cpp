@@ -607,7 +607,7 @@ void CDarksendPool::CheckFinalTransaction()
             if(fDebug) LogPrintf("Transaction 2: %s\n", txNew.ToString().c_str());
 
             // See if the transaction is valid
-            if (!txNew.AcceptToMemoryPool(false, true, true));
+            if (!txNew.AcceptToMemoryPool(false, true, true))
             {
                 LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
                 SetNull();
@@ -1758,8 +1758,10 @@ bool CDarksendPool::MakeCollateralAmounts()
     // use the same cachedLastSuccess as for DS mixinx to prevent race
     if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
         cachedLastSuccess = chainActive.Tip()->nHeight;
+    else
+        LogPrintf("MakeCollateralAmounts: CommitTransaction failed!\n");
 
-    LogPrintf("MakeCollateralAmounts Success: tx %s\n", wtx.GetHash().GetHex().c_str());
+    LogPrintf("MakeCollateralAmounts: tx %s\n", wtx.GetHash().GetHex());
 
     return true;
 }
