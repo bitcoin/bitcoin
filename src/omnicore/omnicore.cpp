@@ -192,25 +192,27 @@ static bool writePersistence(int block_now)
   return true;
 }
 
-string mastercore::strMPProperty(unsigned int i)
+std::string mastercore::strMPProperty(uint32_t propertyId)
 {
-string str = "*unknown*";
+    std::string str = "*unknown*";
 
-  // test user-token
-  if (0x80000000 & i)
-  {
-    str = strprintf("Test token: %d : 0x%08X", 0x7FFFFFFF & i, i);
-  }
-  else
-  switch (i)
-  {
-    case OMNI_PROPERTY_BTC: str = "BTC"; break;
-    case OMNI_PROPERTY_MSC: str = "MSC"; break;
-    case OMNI_PROPERTY_TMSC: str = "TMSC"; break;
-    default: str = strprintf("SP token: %d", i);
-  }
+    // test user-token
+    if (0x80000000 & propertyId) {
+        str = strprintf("Test token: %d : 0x%08X", 0x7FFFFFFF & propertyId, propertyId);
+    } else {
+        switch (propertyId) {
+            case OMNI_PROPERTY_BTC: str = "BTC";
+                break;
+            case OMNI_PROPERTY_MSC: str = "MSC";
+                break;
+            case OMNI_PROPERTY_TMSC: str = "TMSC";
+                break;
+            default:
+                str = strprintf("SP token: %d", propertyId);
+        }
+    }
 
-  return str;
+    return str;
 }
 
 inline bool isNonMainNet()
@@ -233,47 +235,53 @@ inline bool UnitTest()
     return Params().NetworkIDString() == "unittest";
 }
 
-string FormatDivisibleShortMP(int64_t n)
+std::string FormatDivisibleShortMP(int64_t n)
 {
-int64_t n_abs = (n > 0 ? n : -n);
-int64_t quotient = n_abs/COIN;
-int64_t remainder = n_abs%COIN;
-string str = strprintf("%d.%08d", quotient, remainder);
-// clean up trailing zeros - good for RPC not so much for UI
-str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-if (str.length() > 0) { std::string::iterator it = str.end() - 1; if (*it == '.') { str.erase(it); } } //get rid of trailing dot if non decimal
-return str;
+    int64_t n_abs = (n > 0 ? n : -n);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    std::string str = strprintf("%d.%08d", quotient, remainder);
+    // clean up trailing zeros - good for RPC not so much for UI
+    str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+    if (str.length() > 0) {
+        std::string::iterator it = str.end() - 1;
+        if (*it == '.') {
+            str.erase(it);
+        }
+    } //get rid of trailing dot if non decimal
+    return str;
 }
 
-// mostly taken from Bitcoin's FormatMoney()
-string FormatDivisibleMP(int64_t n, bool fSign)
+std::string FormatDivisibleMP(int64_t n, bool fSign)
 {
-// Note: not using straight sprintf here because we do NOT want
-// localized number formatting.
-int64_t n_abs = (n > 0 ? n : -n);
-int64_t quotient = n_abs/COIN;
-int64_t remainder = n_abs%COIN;
-string str = strprintf("%d.%08d", quotient, remainder);
+    // Note: not using straight sprintf here because we do NOT want
+    // localized number formatting.
+    int64_t n_abs = (n > 0 ? n : -n);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    std::string str = strprintf("%d.%08d", quotient, remainder);
 
-  if (!fSign) return str;
+    if (!fSign) return str;
 
-  if (n < 0)
-      str.insert((unsigned int)0, 1, '-');
-  else
-      str.insert((unsigned int)0, 1, '+');
-  return str;
+    if (n < 0)
+        str.insert((unsigned int) 0, 1, '-');
+    else
+        str.insert((unsigned int) 0, 1, '+');
+    return str;
 }
 
 std::string mastercore::FormatIndivisibleMP(int64_t n)
 {
-  string str = strprintf("%ld", n);
-  return str;
+    return strprintf("%d", n);
 }
 
-std::string FormatMP(unsigned int property, int64_t n, bool fSign)
+std::string FormatMP(uint32_t property, int64_t n, bool fSign)
 {
-  if (isPropertyDivisible(property)) return FormatDivisibleMP(n, fSign);
-  else return FormatIndivisibleMP(n);
+    if (isPropertyDivisible(property)) {
+        return FormatDivisibleMP(n, fSign);
+    } else {
+        return FormatIndivisibleMP(n);
+    }
 }
 
 string const CMPSPInfo::watermarkKey("watermark");
@@ -287,152 +295,158 @@ CrowdMap mastercore::my_crowds;
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
 std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
-CMPTally *mastercore::getTally(const string & address)
+CMPTally* mastercore::getTally(const std::string& address)
 {
-  LOCK (cs_tally);
+    LOCK(cs_tally);
 
-  map<string, CMPTally>::iterator it = mp_tally_map.find(address);
+    std::map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
 
-  if (it != mp_tally_map.end()) return &(it->second);
+    if (it != mp_tally_map.end()) return &(it->second);
 
-  return (CMPTally *) NULL;
+    return (CMPTally *) NULL;
 }
 
 // look at balance for an address
-int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype)
+int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype)
 {
     int64_t balance = 0;
-    if (TALLY_TYPE_COUNT <= ttype) return 0;
-    if (ttype == ACCEPT_RESERVE && property > OMNI_PROPERTY_TMSC) return 0; // ACCEPT_RESERVE is always empty except for props 1 & 2
+    if (TALLY_TYPE_COUNT <= ttype) {
+        return 0;
+    }
+    if (ttype == ACCEPT_RESERVE && propertyId > OMNI_PROPERTY_TMSC) {
+        // ACCEPT_RESERVE is always empty, except for MSC and TMSC
+        return 0; 
+    }
 
     LOCK(cs_tally);
-    const map<string, CMPTally>::iterator my_it = mp_tally_map.find(Address);
+    const std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(address);
     if (my_it != mp_tally_map.end()) {
-        balance = (my_it->second).getMoney(property, ttype);
+        balance = (my_it->second).getMoney(propertyId, ttype);
     }
+
     return balance;
 }
 
-int64_t getUserAvailableMPbalance(const string &Address, unsigned int property)
+int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId)
 {
-int64_t money = getMPbalance(Address, property, BALANCE);
-int64_t pending = getMPbalance(Address, property, PENDING);
+    int64_t money = getMPbalance(address, propertyId, BALANCE);
+    int64_t pending = getMPbalance(address, propertyId, PENDING);
 
-  if (0 > pending)
-  {
-    return (money + pending); // show the decrease in money available
-  }
+    if (0 > pending) {
+        return (money + pending); // show the decrease in available money
+    }
 
-  return money;
+    return money;
 }
 
-bool mastercore::isTestEcosystemProperty(unsigned int property)
+bool mastercore::isTestEcosystemProperty(uint32_t propertyId)
 {
-  if ((OMNI_PROPERTY_TMSC == property) || (TEST_ECO_PROPERTY_1 <= property)) return true;
+    if ((OMNI_PROPERTY_TMSC == propertyId) || (TEST_ECO_PROPERTY_1 <= propertyId)) return true;
 
-  return false;
+    return false;
 }
 
-bool mastercore::isMainEcosystemProperty(unsigned int property)
+bool mastercore::isMainEcosystemProperty(uint32_t propertyId)
 {
-  if ((OMNI_PROPERTY_BTC != property) && !isTestEcosystemProperty(property)) return true;
+    if ((OMNI_PROPERTY_BTC != propertyId) && !isTestEcosystemProperty(propertyId)) return true;
 
-  return false;
+    return false;
 }
 
-std::string mastercore::getTokenLabel(unsigned int propertyId)
+std::string mastercore::getTokenLabel(uint32_t propertyId)
 {
     std::string tokenStr;
     if (propertyId < 3) {
-        if(propertyId == 1) { tokenStr = " MSC"; } else { tokenStr = " TMSC"; }
+        if (propertyId == 1) {
+            tokenStr = " MSC";
+        } else {
+            tokenStr = " TMSC";
+        }
     } else {
-        tokenStr = " SPT#" + to_string(propertyId);
+        tokenStr = strprintf(" SPT#%d", propertyId);
     }
     return tokenStr;
 }
 
 // get total tokens for a property
 // optionally counts the number of addresses who own that property: n_owners_total
-int64_t mastercore::getTotalTokens(unsigned int propertyId, int64_t *n_owners_total)
+int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
 {
-int64_t prev = 0, owners = 0;
+    int64_t prev = 0;
+    int64_t owners = 0;
+    int64_t totalTokens = 0;
 
-  LOCK(cs_tally);
+    LOCK(cs_tally);
 
-  CMPSPInfo::Entry property;
-  if (false == _my_sps->getSP(propertyId, property)) return 0; // property ID does not exist
+    CMPSPInfo::Entry property;
+    if (false == _my_sps->getSP(propertyId, property)) {
+        return 0; // property ID does not exist
+    }
 
-  int64_t totalTokens = 0;
-  bool fixedIssuance = property.fixed;
+    if (!property.fixed || n_owners_total) {
+        for (std::map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+            const CMPTally& tally = it->second;
 
-  if (!fixedIssuance || n_owners_total)
-  {
-      for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-      {
-          string address = my_it->first;
-          totalTokens += getMPbalance(address, propertyId, BALANCE);
-          totalTokens += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-          totalTokens += getMPbalance(address, propertyId, METADEX_RESERVE);
-          if (propertyId<3) totalTokens += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+            totalTokens += tally.getMoney(propertyId, BALANCE);
+            totalTokens += tally.getMoney(propertyId, SELLOFFER_RESERVE);
+            totalTokens += tally.getMoney(propertyId, ACCEPT_RESERVE);
+            totalTokens += tally.getMoney(propertyId, METADEX_RESERVE);
 
-          if (prev != totalTokens)
-          {
-            prev = totalTokens;
-            owners++;
-          }
-      }
-  }
+            if (prev != totalTokens) {
+                prev = totalTokens;
+                owners++;
+            }
+        }
+    }
 
-  if (fixedIssuance)
-  {
-      totalTokens = property.num_tokens; //only valid for TX50
-  }
+    if (property.fixed) {
+        totalTokens = property.num_tokens; // only valid for TX50
+    }
 
-  if (n_owners_total) *n_owners_total = owners;
+    if (n_owners_total) *n_owners_total = owners;
 
-  return totalTokens;
+    return totalTokens;
 }
 
 // return true if everything is ok
-bool mastercore::update_tally_map(string who, unsigned int which_property, int64_t amount, TallyType ttype)
+bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype)
 {
-bool bRet = false;
-int64_t before, after;
-
-  if (0 == amount)
-  {
-    PrintToLog("%s(%s, %u=0x%X, %+ld, ttype= %d) 0 FUNDS !\n", __FUNCTION__, who, which_property, which_property, amount, ttype);
-    return false;
-  }
-
-  LOCK(cs_tally);
-
-  before = getMPbalance(who, which_property, ttype);
-
-  map<string, CMPTally>::iterator my_it = mp_tally_map.find(who);
-  if (my_it == mp_tally_map.end())
-  {
-    // insert an empty element
-    my_it = (mp_tally_map.insert(std::make_pair(who,CMPTally()))).first;
-  }
-
-  CMPTally &tally = my_it->second;
-
-  bRet = tally.updateMoney(which_property, amount, ttype);
-
-  after = getMPbalance(who, which_property, ttype);
-  if (!bRet) PrintToLog("%s(%s, %u=0x%X, %+ld, ttype=%d) INSUFFICIENT FUNDS\n", __FUNCTION__, who, which_property, which_property, amount, ttype);
-
-  if (msc_debug_tally)
-  {
-    if ((exodus_address != who) || (exodus_address == who && msc_debug_exo))
-    {
-      PrintToLog("%s(%s, %u=0x%X, %+ld, ttype=%d); before=%ld, after=%ld\n",
-       __FUNCTION__, who, which_property, which_property, amount, ttype, before, after);
+    if (0 == amount) {
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: amount to credit or debit is zero\n", __func__, who, propertyId, propertyId, amount, ttype);
+        return false;
     }
-  }
+    if (ttype >= TALLY_TYPE_COUNT) {
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: invalid tally type\n", __func__, who, propertyId, propertyId, amount, ttype);
+        return false;
+    }
+    
+    bool bRet = false;
+    int64_t before = 0;
+    int64_t after = 0;
 
-  return bRet;
+    LOCK(cs_tally);
+
+    before = getMPbalance(who, propertyId, ttype);
+
+    std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
+    if (my_it == mp_tally_map.end()) {
+        // insert an empty element
+        my_it = (mp_tally_map.insert(std::make_pair(who, CMPTally()))).first;
+    }
+
+    CMPTally& tally = my_it->second;
+    bRet = tally.updateMoney(propertyId, amount, ttype);
+
+    after = getMPbalance(who, propertyId, ttype);
+    if (!bRet) {
+        assert(before == after);
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: insufficient balance (=%d)\n", __func__, who, propertyId, propertyId, amount, ttype, before);
+    }
+    if (msc_debug_tally && (exodus_address != who || msc_debug_exo)) {
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d): before=%d, after=%d\n", __func__, who, propertyId, propertyId, amount, ttype, before, after);
+    }
+
+    return bRet;
 }
 
 // calculateFundraiser does token calculations per transaction
@@ -588,11 +602,11 @@ const double available_reward=all_reward * part_available;
 
 uint32_t mastercore::GetNextPropertyId(bool maineco)
 {
-  if(maineco) {
-      return _my_sps->peekNextSPID(1);
-  } else {
-      return _my_sps->peekNextSPID(2);
-  }
+    if (maineco) {
+        return _my_sps->peekNextSPID(1);
+    } else {
+        return _my_sps->peekNextSPID(2);
+    }
 }
 
 void CheckWalletUpdate(bool forceUpdate)
@@ -1303,62 +1317,49 @@ int input_globals_state_string(const string &s)
 }
 
 // addr,propertyId,nValue,property_desired,deadline,early_bird,percentage,txid
-int input_mp_crowdsale_string(const string &s)
+int input_mp_crowdsale_string(const std::string& s)
 {
-  string sellerAddr;
-  unsigned int propertyId;
-  uint64_t nValue;
-  unsigned int property_desired;
-  uint64_t deadline;
-  unsigned char early_bird;
-  unsigned char percentage;
-  uint64_t u_created;
-  uint64_t i_created;
+    std::vector<std::string> vstr;
+    boost::split(vstr, s, boost::is_any_of(" ,"), boost::token_compress_on);
 
-  std::vector<std::string> vstr;
-  boost::split(vstr, s, boost::is_any_of(" ,"), token_compress_on);
-  unsigned int i = 0;
+    if (9 > vstr.size()) return -1;
 
-  if (9 > vstr.size()) return -1;
+    unsigned int i = 0;
 
-  sellerAddr = vstr[i++];
-  propertyId = atoi(vstr[i++]);
-  nValue = boost::lexical_cast<uint64_t>(vstr[i++]);
-  property_desired = atoi(vstr[i++]);
-  deadline = boost::lexical_cast<uint64_t>(vstr[i++]);
-  early_bird = (unsigned char)atoi(vstr[i++]);
-  percentage = (unsigned char)atoi(vstr[i++]);
-  u_created = boost::lexical_cast<uint64_t>(vstr[i++]);
-  i_created = boost::lexical_cast<uint64_t>(vstr[i++]);
+    std::string sellerAddr = vstr[i++];
+    uint32_t propertyId = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t nValue = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint32_t property_desired = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t deadline = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint8_t early_bird = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
+    uint8_t percentage = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
+    int64_t u_created = boost::lexical_cast<int64_t>(vstr[i++]);
+    int64_t i_created = boost::lexical_cast<int64_t>(vstr[i++]);
 
-  CMPCrowd newCrowdsale(propertyId,nValue,property_desired,deadline,early_bird,percentage,u_created,i_created);
+    CMPCrowd newCrowdsale(propertyId, nValue, property_desired, deadline, early_bird, percentage, u_created, i_created);
 
-  // load the remaining as database pairs
-  while (i < vstr.size()) {
-    std::vector<std::string> entryData;
-    boost::split(entryData, vstr[i++], boost::is_any_of("="), token_compress_on);
-    if ( 2 != entryData.size()) return -1;
+    // load the remaining as database pairs
+    while (i < vstr.size()) {
+        std::vector<std::string> entryData;
+        boost::split(entryData, vstr[i++], boost::is_any_of("="), boost::token_compress_on);
+        if (2 != entryData.size()) return -1;
 
-    std::vector<std::string> valueData;
-    boost::split(valueData, entryData[1], boost::is_any_of(";"), token_compress_on);
+        std::vector<std::string> valueData;
+        boost::split(valueData, entryData[1], boost::is_any_of(";"), boost::token_compress_on);
 
-    std::vector<int64_t> vals;
-    std::vector<std::string>::const_iterator iter;
-    for (iter = valueData.begin(); iter != valueData.end(); ++iter) {
-      vals.push_back(boost::lexical_cast<int64_t>(*iter));
+        std::vector<int64_t> vals;
+        for (std::vector<std::string>::const_iterator it = valueData.begin(); it != valueData.end(); ++it) {
+            vals.push_back(boost::lexical_cast<int64_t>(*it));
+        }
+
+        newCrowdsale.insertDatabase(entryData[0], vals);
     }
 
-    newCrowdsale.insertDatabase(entryData[0], vals);
-  }
+    if (!my_crowds.insert(std::make_pair(sellerAddr, newCrowdsale)).second) {
+        return -1;
+    }
 
-
-  if (my_crowds.insert(std::make_pair(sellerAddr, newCrowdsale)).second) {
     return 0;
-  } else {
-    return -1;
-  }
-
-  return 0;
 }
 
 // address, block, amount for sale, property, amount desired, property desired, subaction, idx, txid, amount remaining
@@ -1735,16 +1736,15 @@ static int write_globals_state(ofstream &file, SHA256_CTX *shaCtx)
   return 0;
 }
 
-static int write_mp_crowdsales(ofstream &file, SHA256_CTX *shaCtx)
+static int write_mp_crowdsales(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-  CrowdMap::const_iterator iter;
-  for (iter = my_crowds.begin(); iter != my_crowds.end(); ++iter) {
-    // decompose the key for address
-    CMPCrowd const &crowd = (*iter).second;
-    crowd.saveCrowdSale(file, shaCtx, (*iter).first);
-  }
+    for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
+        // decompose the key for address
+        const CMPCrowd& crowd = it->second;
+        crowd.saveCrowdSale(file, shaCtx, it->first);
+    }
 
-  return 0;
+    return 0;
 }
 
 static int write_state_file( CBlockIndex const *pBlockIndex, int what )
@@ -2229,8 +2229,8 @@ bool feeCheck(const string &address, size_t nDataSize)
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
-int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
-                          int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit)
+int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+                          int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
 {
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;

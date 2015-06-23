@@ -159,8 +159,8 @@ enum FILETYPES {
 // forward declarations
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
-std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
-bool feeCheck(const string &address, size_t nDataSize);
+std::string FormatMP(uint32_t, int64_t n, bool fSign = false);
+bool feeCheck(const std::string& address, size_t nDataSize);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
@@ -475,12 +475,11 @@ extern std::map<uint32_t, int64_t> global_balance_reserved;
 //! Vector containing a list of properties relative to the wallet
 extern std::set<uint32_t> global_wallet_property_list;
 
+int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype);
+int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId);
+int IsMyAddress(const std::string& address);
 
-int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype);
-int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
-int IsMyAddress(const std::string &address);
-
-string getLabel(const string &address);
+std::string getLabel(const std::string& address);
 
 /** Global handler to initialize Omni Core. */
 int mastercore_init();
@@ -500,31 +499,31 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex );
 
 namespace mastercore
 {
-extern std::map<string, CMPTally> mp_tally_map;
+extern std::map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
 
-string strMPProperty(unsigned int i);
+std::string strMPProperty(uint32_t propertyId);
 
-int GetHeight(void);
-uint32_t GetLatestBlockTime(void);
+int GetHeight();
+uint32_t GetLatestBlockTime();
 CBlockIndex* GetBlockIndex(const uint256& hash);
 
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 
 std::string FormatIndivisibleMP(int64_t n);
 
-int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
-                 int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit);
+int ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+                 int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit);
 
-bool isTestEcosystemProperty(unsigned int property);
-bool isMainEcosystemProperty(unsigned int property);
+bool isTestEcosystemProperty(uint32_t propertyId);
+bool isMainEcosystemProperty(uint32_t propertyId);
 uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
-CMPTally *getTally(const string & address);
+CMPTally* getTally(const std::string& address);
 
-int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
+int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
 
 char *c_strMasterProtocolTXType(int i);
 
@@ -532,9 +531,9 @@ bool isTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int
 
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 
-bool update_tally_map(string who, unsigned int which_currency, int64_t amount, TallyType ttype);
+bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
 
-std::string getTokenLabel(unsigned int propertyId);
+std::string getTokenLabel(uint32_t propertyId);
 }
 
 
