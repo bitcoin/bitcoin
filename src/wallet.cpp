@@ -1648,7 +1648,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
             {
                 setCoinsRet.insert(vValue[i].second);
                 nValueRet += vValue[i].first;
-                s += FormatMoney(vValue[i].first);
+                s += FormatMoney(vValue[i].first) + " ";
             }
         }
         LogPrintf("%s - total %s\n", s, FormatMoney(nBest));
