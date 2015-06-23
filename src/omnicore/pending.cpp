@@ -80,23 +80,29 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     std::string txDesc = write_string(Value(txobj), true);
     if (msc_debug_pending) PrintToLog("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
                                         type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
-    if (update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
-        CMPPending pending;
-        pending.src = sendingAddress;
-        pending.amount = amount;
-        pending.prop = propertyId;
-        pending.desc = txDesc;
-        pending.type = type;
-        my_pending.insert(std::make_pair(txid, pending));
 
-        // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
-        WalletTXIDCacheAdd(txid);
-        CheckWalletUpdate();
-        uiInterface.OmniPendingChanged(true);
-    } else {
-        PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(),
-            sendingAddress, refAddress, type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
+    // bypass tally update for pending cancel as there is no balance change
+    if (type != MSC_TYPE_METADEX_CANCEL_PRICE && type != MSC_TYPE_METADEX_CANCEL_PAIR && type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+        if (!update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
+            PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(),
+                sendingAddress, refAddress, type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
+            return;
+        }
     }
+
+    // add pending object
+    CMPPending pending;
+    pending.src = sendingAddress;
+    pending.amount = amount;
+    pending.prop = propertyId;
+    pending.desc = txDesc;
+    pending.type = type;
+    my_pending.insert(std::make_pair(txid, pending));
+
+    // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
+    WalletTXIDCacheAdd(txid);
+    CheckWalletUpdate();
+    uiInterface.OmniPendingChanged(true);
 }
 
 /**
