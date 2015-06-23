@@ -151,6 +151,8 @@ transaction (re)broadcast:
 One such application is selective Tor usage, where the node runs on the normal
 internet but transactions are broadcasted over Tor.
 
+For an example script see [bitcoin-submittx](https://github.com/laanwj/bitcoin-submittx).
+
 Privacy: Stream isolation for Tor
 ----------------------------------
 
