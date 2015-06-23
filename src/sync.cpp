@@ -63,11 +63,11 @@ static boost::thread_specific_ptr<LockStack> lockstack;
 // Deadlock Detect function
 static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
-    // Log detection
+    // Log detection in the console
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
-    // Display when the last order was
+    // Log this in the console
     LogPrintf("Previous lock order was:\n");
-    // For each deadlock pair, log it
+    // For each deadlock pair, log it in the console
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2) {
         // If the first mismatch
         if (i.first == mismatch.first)
