@@ -39,10 +39,12 @@ bool fSendFreeTransactions = false;
 bool fPayAtLeastCustomFee = true;
 
 /** 
- * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) 
+ * Fees smaller than this (in duffs) are considered zero fee (for transaction creation)
+ * We are ~100 times smaller then bitcoin now (2015-06-23), set minTxFee 10 times higher
+ * so it's still 10 times lower comparing to bitcoin.
  * Override with -mintxfee
  */
-CFeeRate CWallet::minTxFee = CFeeRate(1000);
+CFeeRate CWallet::minTxFee = CFeeRate(10000);
 
 /** @defgroup mapWallet
  *
@@ -1662,8 +1664,29 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl, coin_type, useIX);
 
+    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+    if (coinControl && coinControl->HasSelected())
+    {
+        BOOST_FOREACH(const COutput& out, vCoins)
+        {
+            if(!out.fSpendable)
+                continue;
+
+            if(coin_type == ONLY_DENOMINATED) {
+                CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
+                int rounds = GetInputDarksendRounds(vin);
+                // make sure it's actually anonymized
+                if(rounds < nDarksendRounds) continue;
+            }
+
+            nValueRet += out.tx->vout[out.i].nValue;
+            setCoinsRet.insert(make_pair(out.tx, out.i));
+        }
+        return (nValueRet >= nTargetValue);
+    }
+
     //if we're doing only denominated, we need to round up to the nearest .1DRK
-    if(coin_type == ONLY_DENOMINATED){
+    if(coin_type == ONLY_DENOMINATED) {
         // Make outputs by looping through denominations, from large to small
         BOOST_FOREACH(int64_t v, darkSendDenominations)
         {
@@ -1680,19 +1703,6 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                     setCoinsRet.insert(make_pair(out.tx, out.i));
                 }
             }
-        }
-        return (nValueRet >= nTargetValue);
-    }
-
-    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coinControl && coinControl->HasSelected())
-    {
-        BOOST_FOREACH(const COutput& out, vCoins)
-        {
-            if(!out.fSpendable)
-                continue;
-            nValueRet += out.tx->vout[out.i].nValue;
-            setCoinsRet.insert(make_pair(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
     }
@@ -1991,6 +2001,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                                 CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
 {
     CAmount nValue = 0;
+    CAmount nFeeDelta = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
     {
         if (nValue < 0)
@@ -2021,7 +2032,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 txNew.vout.clear();
                 wtxNew.fFromMe = true;
 
-                CAmount nTotalValue = nValue + nFeeRet;
+                CAmount nTotalValue = nValue + nFeeRet + nFeeDelta;
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
@@ -2119,6 +2130,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     if (newTxOut.IsDust(::minRelayTxFee))
                     {
                         nFeeRet += nChange;
+                        nChange = 0;
                         reservekey.ReturnKey();
                     }
                     else
@@ -2180,8 +2192,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     return false;
                 }
 
-                if (nFeeRet >= nFeeNeeded)
+                if (nFeeRet == nFeeNeeded || (nFeeRet > nFeeNeeded && (nFeeDelta > 0 || useIX || coin_type == ONLY_DENOMINATED)))
                     break; // Done, enough fee included.
+
+                if (nFeeRet > nFeeNeeded)
+                    nFeeDelta = nFeeRet - nFeeNeeded + 1; // Try to lower fee
 
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
@@ -3179,10 +3194,10 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectInsaneFee)
+bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectInsaneFee, bool ignoreFees)
 {
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectInsaneFee);
+    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectInsaneFee, ignoreFees);
 }
 
 int CMerkleTx::GetTransactionLockSignatures() const

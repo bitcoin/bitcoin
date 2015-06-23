@@ -321,7 +321,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
 {
     // make sure signature isn't in the future (past is OK)
     if (sigTime > GetAdjustedTime() + 60 * 60) {
-        LogPrintf("dsee - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
+        LogPrintf("mnb - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
         return false;
     }
 
@@ -329,8 +329,13 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
     std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
+    if(donationPercentage < 0 || donationPercentage > 100){
+        LogPrintf("mnb - donation percentage out of range %d\n", donationPercentage);
+        return false;
+    }
+
     if(protocolVersion < nMasternodeMinProtocol) {
-        LogPrintf("dsee - ignoring outdated Masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
+        LogPrintf("mnb - ignoring outdated Masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
         return false;
     }
 
@@ -338,7 +343,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
     pubkeyScript = GetScriptForDestination(pubkey.GetID());
 
     if(pubkeyScript.size() != 25) {
-        LogPrintf("dsee - pubkey the wrong size\n");
+        LogPrintf("mnb - pubkey the wrong size\n");
         nDos = 100;
         return false;
     }
@@ -347,19 +352,19 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
     pubkeyScript2 = GetScriptForDestination(pubkey2.GetID());
 
     if(pubkeyScript2.size() != 25) {
-        LogPrintf("dsee - pubkey2 the wrong size\n");
+        LogPrintf("mnb - pubkey2 the wrong size\n");
         nDos = 100;
         return false;
     }
 
     if(!vin.scriptSig.empty()) {
-        LogPrintf("dsee - Ignore Not Empty ScriptSig %s\n",vin.ToString().c_str());
+        LogPrintf("mnb - Ignore Not Empty ScriptSig %s\n",vin.ToString().c_str());
         return false;
     }
 
     std::string errorMessage = "";
     if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
-        LogPrintf("dsee - Got bad Masternode address signature\n");
+        LogPrintf("mnb - Got bad Masternode address signature\n");
         nDos = 100;
         return false;
     }
@@ -368,10 +373,10 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
         if(addr.GetPort() != 9999) return false;
     } else if(addr.GetPort() == 9999) return false;
 
-    //search existing Masternode list, this is where we update existing Masternodes with new dsee broadcasts
+    //search existing Masternode list, this is where we update existing Masternodes with new mnb broadcasts
     CMasternode* pmn = mnodeman.Find(vin);
 
-    // if we are masternode but with undefined vin and this dsee is ours (matches our Masternode privkey) then just skip this part
+    // if we are masternode but with undefined vin and this mnb is ours (matches our Masternode privkey) then just skip this part
     if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
     {
         // if Requested, we don't want to update this info
@@ -379,11 +384,11 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
 
         // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
         //   after that they just need to match
-        if(pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_DSEE_SECONDS)){
+        if(pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_MNB_SECONDS)){
             pmn->UpdateLastSeen();
 
             if(pmn->sigTime < sigTime){ //take the newest entry
-                LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
+                LogPrintf("mnb - Got updated entry for %s\n", addr.ToString().c_str());
                                 
                 pmn->UpdateFromNewBroadcast((*this));
                 
@@ -406,10 +411,10 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
     if(AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
-        if(fDebug) LogPrintf("dsee - Accepted Masternode entry\n");
+        if(fDebug) LogPrintf("mnb - Accepted Masternode entry\n");
 
         if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-            LogPrintf("dsee - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+            LogPrintf("mnb - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
             return false;
         }
 
@@ -425,7 +430,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
             CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
             if(pConfIndex->GetBlockTime() > sigTime)
             {
-                LogPrintf("dsee - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
+                LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
                           sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
                 return false;
             }
