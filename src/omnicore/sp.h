@@ -8,11 +8,11 @@
 class CBlockIndex;
 class uint256;
 
+#include "serialize.h"
+
 #include <boost/filesystem.hpp>
 
 #include <openssl/sha.h>
-
-#include "json/json_spirit_value.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -65,8 +65,36 @@ public:
 
         Entry();
 
-        json_spirit::Object toJSON() const;
-        void fromJSON(const json_spirit::Object& json);
+        ADD_SERIALIZE_METHODS;
+
+        template <typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            READWRITE(issuer);
+            READWRITE(prop_type);
+            READWRITE(prev_prop_id);
+            READWRITE(category);
+            READWRITE(subcategory);
+            READWRITE(name);
+            READWRITE(url);
+            READWRITE(data);
+            READWRITE(num_tokens);
+            READWRITE(property_desired);
+            READWRITE(deadline);
+            READWRITE(early_bird);
+            READWRITE(percentage);
+            READWRITE(close_early);
+            READWRITE(max_tokens);
+            READWRITE(missedTokens);
+            READWRITE(timeclosed);
+            READWRITE(txid_close);
+            READWRITE(txid);
+            READWRITE(creation_block);
+            READWRITE(update_block);
+            READWRITE(fixed);
+            READWRITE(manual);
+            READWRITE(historicalData);
+        }
+
         bool isDivisible() const;
         void print() const;
     };
@@ -92,7 +120,7 @@ public:
     bool hasSP(uint32_t spid) const;
     uint32_t findSPByTX(const uint256& txid) const;
 
-    int popBlock(const uint256& block_hash);
+    int64_t popBlock(const uint256& block_hash);
 
     static std::string const watermarkKey;
     void setWatermark(const uint256& watermark);
