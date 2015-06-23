@@ -12,6 +12,7 @@
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
+// Print the lockcontention on screen
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 {
@@ -39,7 +40,7 @@ struct CLockLocation {
         sourceFile = pszFile;
         sourceLine = nLine;
     }
-
+    // convert to a string
     std::string ToString() const
     {
         return mutexName + "  " + sourceFile + ":" + itostr(sourceLine);
@@ -59,22 +60,32 @@ static boost::mutex dd_mutex;
 static std::map<std::pair<void*, void*>, LockStack> lockorders;
 static boost::thread_specific_ptr<LockStack> lockstack;
 
-
+// Deadlock Detect function
 static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch, const LockStack& s1, const LockStack& s2)
 {
+    // Log detection
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
+    // Display when the last order was
     LogPrintf("Previous lock order was:\n");
+    // For each deadlock pair, log it
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2) {
+        // If the first mismatch
         if (i.first == mismatch.first)
             LogPrintf(" (1)");
+        // If the second mismatch
         if (i.first == mismatch.second)
             LogPrintf(" (2)");
         LogPrintf(" %s\n", i.second.ToString());
     }
+    
+    // Log the lock order
     LogPrintf("Current lock order is:\n");
+    // For each lock, log it
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s1) {
+        // If the first mismatch
         if (i.first == mismatch.first)
             LogPrintf(" (1)");
+        // If the second mismatch
         if (i.first == mismatch.second)
             LogPrintf(" (2)");
         LogPrintf(" %s\n", i.second.ToString());
