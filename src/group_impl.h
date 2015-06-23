@@ -464,7 +464,8 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     /* Operations: 7 mul, 5 sqr, 5 normalize, 17 mul_int/add/negate/cmov */
     static const secp256k1_fe_t fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_fe_t zz, u1, u2, s1, s2, z, t, tt, m, n, q, rr;
-    int infinity;
+    secp256k1_fe_t m_alt, rr_alt;
+    int infinity, degenerate;
     VERIFY_CHECK(!b->infinity);
     VERIFY_CHECK(a->infinity == 0 || a->infinity == 1);
 
@@ -488,6 +489,34 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      *    Y3 = 4*(R*(3*Q-2*R^2)-M^4)
      *    Z3 = 2*M*Z
      *  (Note that the paper uses xi = Xi / Zi and yi = Yi / Zi instead.)
+     *
+     *  This formula has the benefit of being the same for both addition
+     *  of distinct points and doubling. However, it breaks down in the
+     *  case that either point is infinity, or that y1 = -y2. We handle
+     *  these cases in the following ways:
+     *
+     *    - If b is infinity we simply bail by means of a VERIFY_CHECK.
+     *
+     *    - If a is infinity, we detect this, and at the end of the
+     *      computation replace the result (which will be meaningless,
+     *      but we compute to be constant-time) with b.x : b.y : 1.
+     *
+     *    - If a = -b, we have y1 = -y2, which is a degenerate case.
+     *      But here the answer is infinity, so we simply set the
+     *      infinity flag of the result, overriding the computed values
+     *      without even needing to cmov.
+     *
+     *    - If y1 = -y2 but x1 != x2, which does occur thanks to certain
+     *      properties of our curve (specifically, 1 has nontrivial cube
+     *      roots in our field, and the curve equation has no x coefficient)
+     *      then the answer is not infinity but also not given by the above
+     *      equation. In this case, we cmov in place an alternate expression
+     *      for lambda. Specifically (y1 - y2)/(x1 - x2). Where both these
+     *      expressions for lambda are defined, they are equal, and can be
+     *      obtained from each other by multiplication by (y1 + y2)/(y1 + y2)
+     *      then substitution of x^3 + 7 for y^2 (using the curve equation).
+     *      For all pairs of nonzero points (a, b) at least one is defined,
+     *      so this covers everything.
      */
 
     secp256k1_fe_sqr(&zz, &a->z);                       /* z = Z1^2 */
@@ -500,28 +529,54 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     t = u1; secp256k1_fe_add(&t, &u2);                  /* t = T = U1+U2 (2) */
     m = s1; secp256k1_fe_add(&m, &s2);                  /* m = M = S1+S2 (2) */
     secp256k1_fe_sqr(&rr, &t);                          /* rr = T^2 (1) */
-    secp256k1_fe_mul(&tt, &u1, &u2); secp256k1_fe_negate(&tt, &tt, 1); /* t = -U1*U2 (2) */
+    secp256k1_fe_mul(&tt, &u1, &u2); secp256k1_fe_negate(&tt, &tt, 1); /* tt = -U1*U2 (2) */
     secp256k1_fe_add(&rr, &tt);                                        /* rr = R = T^2-U1*U2 (3) */
-    secp256k1_fe_sqr(&n, &m);                           /* n = M^2 (1) */
-    secp256k1_fe_mul(&q, &n, &t);                       /* q = Q = T*M^2 (1) */
-    secp256k1_fe_sqr(&n, &n);                           /* n = M^4 (1) */
-    secp256k1_fe_sqr(&t, &rr);                                      /* t = R^2 (1) */
-    secp256k1_fe_mul(&r->z, &m, &z);                                /* r->z = M*Z (1) */
+    /** If lambda = R/M = 0/0 we have a problem (except in the "trivial"
+     *  case that Z = z1z2 = 0, and this is special-cased later on). */
+    degenerate = secp256k1_fe_normalizes_to_zero(&m) &
+                 secp256k1_fe_normalizes_to_zero(&rr);
+    /* This only occurs when y1 == -y2 and x1^3 == x2^3, but x1 != x2.
+     * This means either x1 == beta*x2 or beta*x1 == x2, where beta is
+     * a nontrivial cube root of one. In either case, an alternate
+     * non-indeterminate expression for lambda is (y1 - y2)/(x1 - x2),
+     * so we set R/M equal to this. */
+    secp256k1_fe_negate(&rr_alt, &s2, 1);   /* rr = -Y2*Z1^3  */
+    secp256k1_fe_add(&rr_alt, &s1);         /* rr = Y1*Z2^3 - Y2*Z1^3 */
+    secp256k1_fe_negate(&m_alt, &u2, 1);    /* m = -X2*Z1^2 */
+    secp256k1_fe_add(&m_alt, &u1);          /* m = X1*Z2^2 - X2*Z1^2 */
+
+    secp256k1_fe_cmov(&rr_alt, &rr, !degenerate);
+    secp256k1_fe_cmov(&m_alt, &m, !degenerate);
+    /* Now Ralt / Malt = lambda and is guaranteed not to be 0/0.
+     * From here on out Ralt and Malt represent the numerator
+     * and denominator of lambda; R and M represent the explicit
+     * expressions x1^2 + x2^2 + x1x2 and y1 + y2. */
+    secp256k1_fe_sqr(&n, &m_alt);                       /* n = Malt^2 (1) */
+    secp256k1_fe_mul(&q, &n, &t);                       /* q = Q = T*Malt^2 (1) */
+    /* These two lines use the observation that either M == Malt or M == 0,
+     * so M^3 * Malt is either Malt^4 (which is computed by squaring), or
+     * zero (which is "computed" by cmov). So the cost is one squaring
+     * versus two multiplications. */
+    secp256k1_fe_sqr(&n, &n);                           /* n = M^3 * Malt (1) */
+    secp256k1_fe_cmov(&n, &m, degenerate);
+    secp256k1_fe_normalize_weak(&n);
+    secp256k1_fe_sqr(&t, &rr_alt);                      /* t = Ralt^2 (1) */
+    secp256k1_fe_mul(&r->z, &m_alt, &z);                /* r->z = Malt*Z (1) */
     infinity = secp256k1_fe_normalizes_to_zero(&r->z) * (1 - a->infinity);
-    secp256k1_fe_mul_int(&r->z, 2);                     /* r->z = Z3 = 2*M*Z (2) */
-    r->x = t;                                           /* r->x = R^2 (1) */
+    secp256k1_fe_mul_int(&r->z, 2);                     /* r->z = Z3 = 2*Malt*Z (2) */
+    r->x = t;                                           /* r->x = Ralt^2 (1) */
     secp256k1_fe_negate(&q, &q, 1);                     /* q = -Q (2) */
-    secp256k1_fe_add(&r->x, &q);                        /* r->x = R^2-Q (3) */
+    secp256k1_fe_add(&r->x, &q);                        /* r->x = Ralt^2-Q (3) */
     secp256k1_fe_normalize(&r->x);
     t = r->x;
     secp256k1_fe_mul_int(&t, 2);                        /* t = 2*x3 (2) */
     secp256k1_fe_add(&t, &q);                           /* t = 2*x3 - Q: (8) */
-    secp256k1_fe_mul(&t, &t, &rr);                      /* t = R*(2*x3 - Q) (1) */
-    secp256k1_fe_add(&t, &n);                           /* t = R*(2*R^2-3*Q)+M^4 (2) */
-    secp256k1_fe_negate(&r->y, &t, 2);                  /* r->y = R*(3*Q-2*R^2)-M^4 (3) */
+    secp256k1_fe_mul(&t, &t, &rr_alt);                  /* t = Ralt*(2*x3 - Q) (1) */
+    secp256k1_fe_add(&t, &n);                           /* t = Ralt*(2*x3 - Q) + M^3*Malt (2) */
+    secp256k1_fe_negate(&r->y, &t, 2);                  /* r->y = Ralt*(Q - 2x3) - M^3*Malt (3) */
     secp256k1_fe_normalize_weak(&r->y);
-    secp256k1_fe_mul_int(&r->x, 4);                     /* r->x = X3 = 4*(R^2-Q) */
-    secp256k1_fe_mul_int(&r->y, 4);                     /* r->y = Y3 = 4*R*(3*Q-2*R^2)-4*M^4 (4) */
+    secp256k1_fe_mul_int(&r->x, 4);                     /* r->x = X3 = 4*(Ralt^2-Q) */
+    secp256k1_fe_mul_int(&r->y, 4);                     /* r->y = Y3 = 4*Ralt*(Q - 2x3) - 4*M^3*Malt (4) */
 
     /** In case a->infinity == 1, replace r with (b->x, b->y, 1). */
     secp256k1_fe_cmov(&r->x, &b->x, a->infinity);
