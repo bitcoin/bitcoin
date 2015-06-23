@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "clientversion.h"
 #include "key.h"
+#include "main.h"
 #include "merkleblock.h"
 #include "random.h"
 #include "serialize.h"
@@ -23,7 +24,7 @@
 
 using namespace std;
 
-static const int maxTxn = 1000*1000/60; // upper limit, number txns in 1MB block
+static const int maxTxn = 1000*1000/MIN_TRANSACTION_SIZE; // upper limit, number txns in 1MB block
 
 BOOST_FIXTURE_TEST_SUITE(bloom_tests, BasicTestingSetup)
 

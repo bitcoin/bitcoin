@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "main.h"
 #include "merkleblock.h"
 #include "serialize.h"
 #include "streams.h"
@@ -18,7 +19,7 @@
 
 using namespace std;
 
-static const int maxTxn = 1000*1000/60; // upper limit, number txns in 1MB block
+static const int maxTxn = 1000*1000/MIN_TRANSACTION_SIZE; // upper limit, number txns in 1MB block
 
 class CPartialMerkleTreeTester : public CPartialMerkleTree
 {

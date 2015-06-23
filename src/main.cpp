@@ -2792,7 +2792,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // Size limits
     uint64_t nMaxBlockSize = Params().MaxBlockSize(block.GetBlockTime(), sizeForkTime.load());
     uint64_t nMaxTxSize = Params().MaxTransactionSize(block.GetBlockTime(), sizeForkTime.load());
-    if (block.vtx.empty() || block.vtx.size() > nMaxBlockSize || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
+    if (block.vtx.empty() ||
+        block.vtx.size()*MIN_TRANSACTION_SIZE > nMaxBlockSize ||
+        ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
