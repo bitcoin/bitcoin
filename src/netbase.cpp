@@ -1314,15 +1314,17 @@ bool CSubNet::Match(const CNetAddr &addr) const
 std::string CSubNet::ToString() const
 {
     std::string strNetmask;
-    if (network.IsIPv4())
-        strNetmask = strprintf("%u.%u.%u.%u", netmask[12], netmask[13], netmask[14], netmask[15]);
-    else
-        strNetmask = strprintf("%x:%x:%x:%x:%x:%x:%x:%x",
-                         netmask[0] << 8 | netmask[1], netmask[2] << 8 | netmask[3],
-                         netmask[4] << 8 | netmask[5], netmask[6] << 8 | netmask[7],
-                         netmask[8] << 8 | netmask[9], netmask[10] << 8 | netmask[11],
-                         netmask[12] << 8 | netmask[13], netmask[14] << 8 | netmask[15]);
-    return network.ToString() + "/" + strNetmask;
+    int cidr = 0;
+    for (int n = network.IsIPv4() ? 12 : 0 ; n < 16; ++n)
+    {
+        uint8_t netmaskpart = netmask[n];
+        while (netmaskpart)
+        {
+            cidr += ( netmaskpart & 0x01 );
+            netmaskpart >>= 1;
+        }
+    }
+    return network.ToString() + strprintf("/%u", cidr);
 }
 
 bool CSubNet::IsValid() const
