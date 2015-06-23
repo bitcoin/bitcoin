@@ -4,7 +4,9 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 #include "omnicore/walletcache.h"
+#include "omnicore/mdex.h"
 
+#include "amount.h"
 #include "uint256.h"
 #include "ui_interface.h"
 
@@ -32,6 +34,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     std::string amountStr, amountDStr;
     bool divisible;
     bool divisibleDesired;
+    rational_t tempUnitPrice(int128_t(0));
     txobj.push_back(Pair("txid", txid.GetHex()));
     txobj.push_back(Pair("sendingaddress", sendingAddress));
     if (!refAddress.empty()) txobj.push_back(Pair("referenceaddress", refAddress));
@@ -62,8 +65,6 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         break;
         case MSC_TYPE_METADEX_TRADE:
         case MSC_TYPE_METADEX_CANCEL_PRICE:
-        case MSC_TYPE_METADEX_CANCEL_PAIR:
-        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
             divisible = isPropertyDivisible(propertyId);
             divisibleDesired = isPropertyDivisible(propertyIdDesired);
             if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
@@ -74,7 +75,25 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
             txobj.push_back(Pair("amountdesired", amountDStr));
             txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
             txobj.push_back(Pair("propertyiddesiredisdivisible", divisibleDesired));
-            txobj.push_back(Pair("action", action));
+            if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
+                tempUnitPrice = rational_t(amount, amountDesired);
+                if (!divisibleDesired) tempUnitPrice = tempUnitPrice/COIN;
+            } else {
+                tempUnitPrice = rational_t(amountDesired, amount);
+                if (!divisible) tempUnitPrice = tempUnitPrice/COIN;
+            }
+            txobj.push_back(Pair("unitprice", xToString(tempUnitPrice)));
+        break;
+        case MSC_TYPE_METADEX_CANCEL_PAIR:
+            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
+            txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
+        break;
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
+            if (isMainEcosystemProperty(propertyId) && isMainEcosystemProperty(propertyIdDesired)) {
+                txobj.push_back(Pair("ecosystem", "Main"));
+            } else {
+                txobj.push_back(Pair("ecosystem", "Test"));
+            }
         break;
     }
     std::string txDesc = write_string(Value(txobj), true);
