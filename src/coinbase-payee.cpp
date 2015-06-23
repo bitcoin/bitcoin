@@ -98,7 +98,7 @@ CCoinbasePayeeDB::ReadResult CCoinbasePayeeDB::Read(CCoinbasePayee& objToLoad)
         return IncorrectHash;
     }
 
-   
+
     unsigned char pchMsgTmp[4];
     std::string strMagicMessageTmp;
     try {
@@ -176,7 +176,26 @@ void CCoinbasePayee::BuildIndex()
         return;
     }
 
-    //scan last 30 days worth of blocks (from oldest to newest in that order), run processBlockCoinbaseTX for each
+    //scan last 30 days worth of blocks, run processBlockCoinbaseTX for each
+
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    int count = 0;
+
+    for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
+        count++;
+        if(count > 18000) return;
+
+        CBlock block;
+        if (ReadBlockFromDisk(block, pindexPrev)) {
+            printf("scan block\n");
+            ProcessBlockCoinbaseTX(block.vtx[0], block.nTime);
+        }
+
+        if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
+        pindexPrev = pindexPrev->pprev;
+    }
+
+    return;
 }
 
 void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nTime)
@@ -188,11 +207,17 @@ void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nT
 
     BOOST_FOREACH(CTxOut out, txCoinbase.vout){
         uint256 h = GetScriptHash(out.scriptPubKey);
-        mapPaidTime[h] = nTime;
+        if(mapPaidTime.count(h)){
+            if(mapPaidTime[h] < nTime) {
+                mapPaidTime[h] = nTime;
+            }
+        } else {
+            mapPaidTime[h] = nTime;
+        }
     }
 }
 
-int64_t CCoinbasePayee::GetLastPaid(CScript& pubkey) 
+int64_t CCoinbasePayee::GetLastPaid(CScript& pubkey)
 {
     uint256 h = GetScriptHash(pubkey);
 
