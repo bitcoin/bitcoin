@@ -329,11 +329,6 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
     std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(donationPercentage < 0 || donationPercentage > 100){
-        LogPrintf("mnb - donation percentage out of range %d\n", donationPercentage);
-        return false;
-    }
-
     if(protocolVersion < nMasternodeMinProtocol) {
         LogPrintf("mnb - ignoring outdated Masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
         return false;
