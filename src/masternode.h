@@ -27,7 +27,7 @@
 
 #define MASTERNODE_MIN_CONFIRMATIONS           15
 #define MASTERNODE_MIN_MNP_SECONDS             (30*60)
-#define MASTERNODE_MIN_DSEE_SECONDS            (5*60)
+#define MASTERNODE_MIN_MNB_SECONDS             (5*60)
 #define MASTERNODE_PING_SECONDS                (15*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (24*60*60)
@@ -66,7 +66,7 @@ public:
     CPubKey pubkey2;
     std::vector<unsigned char> sig;
     int activeState;
-    int64_t sigTime; //dsee message times
+    int64_t sigTime; //mnb message times
     int64_t lastMnping;
     int64_t lastTimeSeen;
     int cacheInputAge;
@@ -298,7 +298,7 @@ public:
     CTxIn vin;
     uint256 blockHash;
     std::vector<unsigned char> vchSig;
-    int64_t sigTime; //dsee message times
+    int64_t sigTime; //mnb message times
     //removed stop
 
     CMasternodePing();
