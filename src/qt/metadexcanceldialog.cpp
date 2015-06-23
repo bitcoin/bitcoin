@@ -16,6 +16,7 @@
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/pending.h"
 
 #include <stdint.h>
 #include <stdio.h> // printf!
@@ -359,8 +360,10 @@ void MetaDExCancelDialog::SendCancelTransaction()
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
+            if (action == 2) PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_PRICE, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, 0);
+            if (action == 3) PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_PAIR, propertyIdForSale, 0, propertyIdDesired, 0, 0);
+            if (action == 4) PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_ECOSYSTEM, propertyIdForSale, 0, propertyIdDesired, 0, 0);
             PopulateTXSentDialog(txid.GetHex());
-            // no need for a pending object for now, no available balances will be affected until confirmation
         }
     }
 }
