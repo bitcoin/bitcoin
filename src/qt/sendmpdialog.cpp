@@ -191,7 +191,7 @@ void SendMPDialog::updateProperty()
 
     // populate balance for global wallet
     int64_t globalAvailable = 0;
-    if (propertyId<2147483648) { globalAvailable = global_balance_money[propertyId]; } else { globalAvailable = global_balance_money[propertyId]; }
+    if (propertyId<2147483648U) { globalAvailable = global_balance_money_maineco[propertyId]; } else { globalAvailable = global_balance_money_testeco[propertyId-2147483647]; }
     ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, globalAvailable) + getTokenLabel(propertyId)));
 
 #if QT_VERSION >= 0x040700

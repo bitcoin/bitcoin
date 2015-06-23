@@ -356,7 +356,7 @@ rational_t CMPMetaDEx::inversePrice() const
     return inversePrice;
 }
 
-uint64_t CMPMetaDEx::getBlockTime() const
+int64_t CMPMetaDEx::getBlockTime() const
 {
     CBlockIndex* pblockindex = chainActive[block];
     return pblockindex->GetBlockTime();

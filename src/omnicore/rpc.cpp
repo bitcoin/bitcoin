@@ -787,7 +787,7 @@ Value getgrants_MP(const Array& params, bool fHelp)
 int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
   CMPSPInfo::Entry sp;
 
-  if ((1 > tmpPropId) || (4294967295 < tmpPropId)) 
+  if ((1 > tmpPropId) || (4294967295LL < tmpPropId))
     throw JSONRPCError(RPC_INVALID_PARAMETER, error);
   if (false == _my_sps->getSP(tmpPropId, sp)) 
     throw JSONRPCError(RPC_INVALID_PARAMETER, exist_error);
@@ -862,7 +862,7 @@ Value gettradessince_MP(const Array& params, bool fHelp)
 
   unsigned int propertyIdSaleFilter = 0, propertyIdWantFilter = 0;
 
-  uint64_t timestamp = (params.size() > 0) ? params[0].get_int64() : GetLatestBlockTime() - 1209600; //2 weeks 
+  int64_t timestamp = (params.size() > 0) ? params[0].get_int64() : GetLatestBlockTime() - 1209600; // 2 weeks
 
   bool filter_by_one = (params.size() > 1) ? true : false;
   bool filter_by_both = (params.size() > 2) ? true : false;

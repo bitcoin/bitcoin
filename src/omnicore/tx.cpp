@@ -1427,11 +1427,11 @@ int CMPTransaction::logicMath_GrantTokens()
 
     // overflow tokens check
     if (MAX_INT_8_BYTES - sp.num_tokens < nValue) {
-      char prettyTokens[256];
+      std::string prettyTokens;
       if (sp.isDivisible()) {
-        snprintf(prettyTokens, 256, "%lu.%08lu", nValue / COIN, nValue % COIN);
+        prettyTokens = FormatDivisibleMP(nValue);
       } else {
-        snprintf(prettyTokens, 256, "%lu", nValue);
+        prettyTokens = FormatIndivisibleMP(nValue);
       }
       PrintToLog("\tRejecting Grant: granting %s tokens on SP id:%u would overflow the maximum limit for tokens in a smart property\n", prettyTokens, property);
       return (PKT_ERROR_TOKENS - 27);

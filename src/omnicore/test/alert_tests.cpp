@@ -139,11 +139,11 @@ BOOST_AUTO_TEST_CASE(alert_expiration_by_timestamp)
     BOOST_CHECK_EQUAL(GetOmniCoreAlertString(), testAlertRaw);
     BOOST_CHECK_EQUAL(GetOmniCoreAlertTextOnly(), testAlertMessage);
     BOOST_CHECK(!CheckExpiredAlerts(0, 0));
-    BOOST_CHECK(!CheckExpiredAlerts(2147483648, 0));
-    BOOST_CHECK(!CheckExpiredAlerts(350000, 2147483648));
+    BOOST_CHECK(!CheckExpiredAlerts(2147483648U, 0));
+    BOOST_CHECK(!CheckExpiredAlerts(350000, 2147483648U));
 
     // Expire the the alert
-    BOOST_CHECK(CheckExpiredAlerts(350001, 2147483649));
+    BOOST_CHECK(CheckExpiredAlerts(350001, 2147483649U));
     BOOST_CHECK(GetOmniCoreAlertString().empty());
     BOOST_CHECK(GetOmniCoreAlertTextOnly().empty());
 }
