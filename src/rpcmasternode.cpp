@@ -477,7 +477,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds'\n"
+                "  full           - Print info in format 'status protocol pubkey IP lastseen activeseconds lastpaid'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  pose           - Print Proof-of-Service score\n"

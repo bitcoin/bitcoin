@@ -54,7 +54,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
             if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
                 return false;
             } else {
-                LogPrintf("Budget enforcement is disabled, accepting block");
+                LogPrintf("Budget enforcement is disabled, accepting block\n");
                 return true;
             }
         }
@@ -69,7 +69,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
         if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)){
             return false;
         } else {
-            LogPrintf("Masternode payment enforcement is disabled, accepting block");
+            LogPrintf("Masternode payment enforcement is disabled, accepting block\n");
             return true;
         }
     }
