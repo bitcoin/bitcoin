@@ -120,7 +120,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
 
     // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
     WalletTXIDCacheAdd(txid);
-    CheckWalletUpdate();
+    CheckWalletUpdate(true); // force an update since some outbound pending (eg MetaDEx cancel) may not change balances
     uiInterface.OmniPendingChanged(true);
 }
 

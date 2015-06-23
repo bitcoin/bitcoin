@@ -595,46 +595,44 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
   }
 }
 
-void CheckWalletUpdate()
+void CheckWalletUpdate(bool forceUpdate)
 {
     if (!WalletCacheUpdate()) {
         // no balance changes were detected that affect wallet addresses, signal a generic change to overall Omni state
-        uiInterface.OmniStateChanged();
-    } else {
-        // balance changes were found in the wallet, update the global totals and signal a Omni balance change
-        global_balance_money.clear();
-        global_balance_reserved.clear();
-
-        LOCK(cs_tally);
-
-        // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
-        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            // check if the address is a wallet address (including watched addresses)
-            std::string address = my_it->first;
-            int addressIsMine = IsMyAddress(address);
-            if (!addressIsMine) continue;
-
-            // iterate only those properties in the TokenMap for this address
-            my_it->second.init();
-            uint32_t propertyId;
-            while (0 != (propertyId = (my_it->second).next())) {
-                // add to the global wallet property list
-                global_wallet_property_list.insert(propertyId);
-
-                // check if the address is spendable (only spendable balances are included in totals)
-                if (addressIsMine != ISMINE_SPENDABLE) continue;
-
-                // work out the balances and add to globals
-                global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
-                global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-                global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
-                global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
-            }
+        if (!forceUpdate) {
+            uiInterface.OmniStateChanged();
+            return;
         }
-
-        // signal an Omni balance change
-        uiInterface.OmniBalanceChanged();
     }
+
+    // balance changes were found in the wallet, update the global totals and signal a Omni balance change
+    global_balance_money.clear();
+    global_balance_reserved.clear();
+    LOCK(cs_tally);
+
+    // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
+    for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        // check if the address is a wallet address (including watched addresses)
+        std::string address = my_it->first;
+        int addressIsMine = IsMyAddress(address);
+        if (!addressIsMine) continue;
+        // iterate only those properties in the TokenMap for this address
+        my_it->second.init();
+        uint32_t propertyId;
+        while (0 != (propertyId = (my_it->second).next())) {
+            // add to the global wallet property list
+            global_wallet_property_list.insert(propertyId);
+            // check if the address is spendable (only spendable balances are included in totals)
+            if (addressIsMine != ISMINE_SPENDABLE) continue;
+            // work out the balances and add to globals
+            global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+        }
+    }
+    // signal an Omni balance change
+    uiInterface.OmniBalanceChanged();
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)

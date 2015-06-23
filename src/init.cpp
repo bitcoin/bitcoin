@@ -74,7 +74,7 @@ CClientUIInterface uiInterface;
 // Omni Core initialization and shutdown handlers
 int mastercore_init();
 int mastercore_shutdown();
-int CheckWalletUpdate();
+int CheckWalletUpdate(bool forceUpdate = false);
 void WalletTXIDCacheInit();
 
 //////////////////////////////////////////////////////////////////////////////
