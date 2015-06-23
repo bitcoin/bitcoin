@@ -630,7 +630,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if (GetTime() < t) return; // we've asked recently
         }
 
-        // ask for the dsee info once from the node that sent mnp
+        // ask for the mnb info once from the node that sent mnp
 
         LogPrintf("mnp - Asking source node for missing entry %s\n", mnp.vin.ToString().c_str());
         pfrom->PushMessage("dseg", mnp.vin);
