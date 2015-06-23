@@ -101,9 +101,9 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     prevBlocks(0),
     spinnerFrame(0)
 {
-    // The window size
+    // Define the windows size
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
-    // The window title
+    // Define the windows title
     QString windowTitle = tr("Bitcoin Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
@@ -117,7 +117,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     } else {
         windowTitle += tr("Node");
     }
-    // Window title
+    // Add the network name to the window title
     windowTitle += " " + networkStyle->getTitleAddText();
 // The window icon
 #ifndef Q_OS_MAC
