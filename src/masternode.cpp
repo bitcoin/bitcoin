@@ -4,6 +4,7 @@
 
 #include "masternode.h"
 #include "masternodeman.h"
+#include "coinbase-payee.h"
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
@@ -80,12 +81,9 @@ CMasternode::CMasternode()
     allowFreeTx = true;
     protocolVersion = MIN_PEER_PROTO_VERSION;
     nLastDsq = 0;
-    donationAddress = CScript();
-    donationPercentage = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
     nVotedTimes = 0;
-    nLastPaid = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -106,15 +104,12 @@ CMasternode::CMasternode(const CMasternode& other)
     allowFreeTx = other.allowFreeTx;
     protocolVersion = other.protocolVersion;
     nLastDsq = other.nLastDsq;
-    donationAddress = other.donationAddress;
-    donationPercentage = other.donationPercentage;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
-    nLastPaid = other.nLastPaid;
     nVotedTimes = other.nVotedTimes;
 }
 
-CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
+CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn)
 {
     LOCK(cs);
     vin = newVin;
@@ -132,11 +127,8 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     allowFreeTx = true;
     protocolVersion = protocolVersionIn;
     nLastDsq = 0;
-    donationAddress = newDonationAddress;
-    donationPercentage = newDonationPercentage;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = 0;    
     nVotedTimes = 0;
 }
 
@@ -158,11 +150,8 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     allowFreeTx = true;
     protocolVersion = mnb.protocolVersion;
     nLastDsq = 0;
-    donationAddress = mnb.donationAddress;
-    donationPercentage = mnb.donationPercentage;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = 0;
     nVotedTimes = 0;
 }
 
@@ -176,8 +165,6 @@ void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     sig = mnb.sig;
     protocolVersion = mnb.protocolVersion;
     addr = mnb.addr;
-    donationAddress = mnb.donationAddress;
-    donationPercentage = mnb.donationPercentage;
 }
 
 //
@@ -245,7 +232,10 @@ void CMasternode::Check()
 }
 
 int64_t CMasternode::SecondsSincePayment() {
-    int64_t sec = (GetAdjustedTime() - nLastPaid);
+    CScript pubkeyScript;
+    pubkeyScript = GetScriptForDestination(pubkey.GetID());
+
+    int64_t sec = (GetAdjustedTime() - coinbasePayee.GetLastPaid(pubkeyScript));
     int64_t month = 60*60*24*30;
     if(sec < month) return sec; //if it's less than 30 days, give seconds
 
@@ -256,6 +246,13 @@ int64_t CMasternode::SecondsSincePayment() {
 
     // return some deterministic value for unknown/unpaid but force it to be more than 30 days old
     return month + hash.GetCompact(false);
+}
+
+int64_t CMasternode::GetLastPaid() {
+    CScript pubkeyScript;
+    pubkeyScript = GetScriptForDestination(pubkey.GetID());
+
+    return coinbasePayee.GetLastPaid(pubkeyScript);
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast()
@@ -274,15 +271,11 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = MIN_PEER_PROTO_VERSION;
-    nLastDsq = 0;
-    donationAddress = CScript();
-    donationPercentage = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = 0;
 }
 
-CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage)
+CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn)
 {
     vin = newVin;
     addr = newAddr;
@@ -299,11 +292,8 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     allowFreeTx = true;
     protocolVersion = protocolVersionIn;
     nLastDsq = 0;
-    donationAddress = newDonationAddress;
-    donationPercentage = newDonationPercentage;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nLastPaid = 0;  
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& other)
@@ -323,11 +313,8 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& other)
     allowFreeTx = other.allowFreeTx;
     protocolVersion = other.protocolVersion;
     nLastDsq = other.nLastDsq;
-    donationAddress = other.donationAddress;
-    donationPercentage = other.donationPercentage;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
-    nLastPaid = other.nLastPaid;
 }
 
 bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
@@ -340,12 +327,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
 
     std::string vchPubKey(pubkey.begin(), pubkey.end());
     std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
-    std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion)  + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
-
-    if(donationPercentage < 0 || donationPercentage > 100){
-        LogPrintf("dsee - donation percentage out of range %d\n", donationPercentage);
-        return false;
-    }
+    std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
     if(protocolVersion < nMasternodeMinProtocol) {
         LogPrintf("dsee - ignoring outdated Masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
@@ -449,12 +431,6 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
             }
         }
 
-        //doesn't support multisig addresses
-        if(donationAddress.IsPayToScriptHash()){
-            donationAddress = CScript();
-            donationPercentage = 0;
-        }
-
         // add our Masternode
         CMasternode mn((*this));
         mn.UpdateLastSeen(lastTimeSeen);
@@ -500,7 +476,7 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 
     sigTime = GetAdjustedTime();
 
-    std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion) + donationAddress.ToString() + boost::lexical_cast<std::string>(donationPercentage);
+    std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
         LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage.c_str());

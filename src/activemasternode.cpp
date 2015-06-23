@@ -105,11 +105,7 @@ void CActiveMasternode::ManageStatus()
                 return;
             }
 
-            /* donations are not supported in dash.conf */
-            CScript donationAddress = CScript();
-            int donationPercentage = 0;
-
-            if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage)) {
+            if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage)) {
                 LogPrintf("CActiveMasternode::ManageStatus() - Error on Register: %s\n", errorMessage.c_str());
             }
 
@@ -177,14 +173,12 @@ bool CActiveMasternode::Mnping(CTxIn vin, CService service, CKey keyMasternode, 
     return true;
 }
 
-bool CActiveMasternode::Register(std::string strService, std::string strKeyMasternode, std::string txHash, std::string strOutputIndex, std::string strDonationAddress, std::string strDonationPercentage, std::string& errorMessage) {
+bool CActiveMasternode::Register(std::string strService, std::string strKeyMasternode, std::string txHash, std::string strOutputIndex, std::string& errorMessage) {
     CTxIn vin;
     CPubKey pubKeyCollateralAddress;
     CKey keyCollateralAddress;
     CPubKey pubKeyMasternode;
     CKey keyMasternode;
-    CScript donationAddress = CScript();
-    int donationPercentage = 0;
 
     if(!darkSendSigner.SetKey(strKeyMasternode, errorMessage, keyMasternode, pubKeyMasternode))
     {
@@ -198,39 +192,15 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
         return false;
     }
 
-    CBitcoinAddress address;
-    if (strDonationAddress != "")
-    {
-        if(!address.SetString(strDonationAddress))
-        {
-            LogPrintf("CActiveMasternode::Register - Invalid Donation Address\n");
-            return false;
-        }
-        donationAddress = GetScriptForDestination(address.Get());
-
-        try {
-            donationPercentage = boost::lexical_cast<int>( strDonationPercentage );
-        } catch( boost::bad_lexical_cast const& ) {
-            LogPrintf("CActiveMasternode::Register - Invalid Donation Percentage (Couldn't cast)\n");
-            return false;
-        }
-
-        if(donationPercentage < 0 || donationPercentage > 100)
-        {
-            LogPrintf("CActiveMasternode::Register - Donation Percentage Out Of Range\n");
-            return false;
-        }
-    }
-
-    return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, donationAddress, donationPercentage, errorMessage);
+    return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage);
 }
 
-bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, CScript donationAddress, int donationPercentage, std::string &retErrorMessage) {
+bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &retErrorMessage) {
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
     {
         LogPrintf("CActiveMasternode::Register() - Adding to Masternode list service: %s - vin: %s\n", service.ToString().c_str(), vin.ToString().c_str());
-        CMasternodeBroadcast mnb(service, vin, pubKeyCollateralAddress, pubKeyMasternode, PROTOCOL_VERSION, donationAddress, donationPercentage);
+        CMasternodeBroadcast mnb(service, vin, pubKeyCollateralAddress, pubKeyMasternode, PROTOCOL_VERSION);
         if(!mnb.Sign(keyCollateralAddress)){
             //send to all peers
             LogPrintf("CActiveMasternode::Register() -  Failed to sign %s\n", vin.ToString().c_str());

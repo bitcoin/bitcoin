@@ -11,6 +11,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "coinbase-payee.h"
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
@@ -3235,16 +3236,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
             CScript payee;
             CTxIn vin;
-
-            if(masternodePayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee)){
-                //UPDATE MASTERNODE LAST PAID TIME
-                CMasternode* pmn = mnodeman.Find(payee);
-                if(pmn != NULL) {
-                    pmn->nLastPaid = chainActive.Tip()->nTime; 
-                }
-                LogPrintf("%s : Update Masternode Last Paid Time - %d\n", __func__, chainActive.Tip()->nHeight);
-            }
-
+            coinbasePayee.ProcessBlockCoinbaseTX(pblock->vtx[0], pblock->nTime);
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             mnscan.DoMasternodePOSChecks();
