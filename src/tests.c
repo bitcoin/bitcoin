@@ -958,11 +958,17 @@ void ge_equals_gej(const secp256k1_ge_t *a, const secp256k1_gej_t *b) {
 
 void test_ge(void) {
     int i, i1;
+#ifdef USE_ENDOMORPHISM
+    int runs = 6;
+#else
     int runs = 4;
+#endif
     /* Points: (infinity, p1, p1, -p1, -p1, p2, p2, -p2, -p2, p3, p3, -p3, -p3, p4, p4, -p4, -p4).
      * The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
      * All magnitudes are randomized.
      * All 17*17 combinations of points are added to eachother, using all applicable methods.
+     *
+     * When the endomorphism code is compiled in, p5 = lambda*p1 and p6 = lambda^2*p1 are added as well.
      */
     secp256k1_ge_t *ge = (secp256k1_ge_t *)malloc(sizeof(secp256k1_ge_t) * (1 + 4 * runs));
     secp256k1_gej_t *gej = (secp256k1_gej_t *)malloc(sizeof(secp256k1_gej_t) * (1 + 4 * runs));
@@ -977,6 +983,14 @@ void test_ge(void) {
         int j;
         secp256k1_ge_t g;
         random_group_element_test(&g);
+#ifdef USE_ENDOMORPHISM
+        if (i >= runs - 2) {
+            secp256k1_ge_mul_lambda(&g, &ge[1]);
+        }
+        if (i >= runs - 1) {
+            secp256k1_ge_mul_lambda(&g, &g);
+        }
+#endif
         ge[1 + 4 * i] = g;
         ge[2 + 4 * i] = g;
         secp256k1_ge_neg(&ge[3 + 4 * i], &g);
