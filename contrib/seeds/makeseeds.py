@@ -24,24 +24,42 @@ import sys
 import dns.resolver
 
 PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):8333$")
-PATTERN_AGENT = re.compile(r"^(\/Satoshi:0.8.6\/|\/Satoshi:0.9.(2|3)\/|\/Satoshi:0.10.\d{1,2}\/)$")
+PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:8333$")
+PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):8333$")
+PATTERN_AGENT = re.compile(r"^(\/Satoshi:0\.8\.6\/|\/Satoshi:0\.9\.(2|3|4|5)\/|\/Satoshi:0\.10\.\d{1,2}\/|\/Satoshi:0\.11\.\d{1,2}\/)$")
 
 def parseline(line):
     sline = line.split()
     if len(sline) < 11:
        return None
-    # Match only IPv4
     m = PATTERN_IPV4.match(sline[0])
+    sortkey = None
+    ip = None
     if m is None:
-        return None
-    # Do IPv4 sanity check
-    ip = 0
-    for i in range(0,4):
-        if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
+        m = PATTERN_IPV6.match(sline[0])
+        if m is None:
+            m = PATTERN_ONION.match(sline[0])
+            if m is None:
+                return None
+            else:
+                net = 'onion'
+                sortkey = m.group(1)
+        else:
+            net = 'ipv6'
+            if m.group(1) in ['::']: # Not interested in localhost
+                return None
+            sortkey = m.group(1) # XXX parse IPv6 into number, could use name_to_ipv6 from generate-seeds
+    else:
+        # Do IPv4 sanity check
+        ip = 0
+        for i in range(0,4):
+            if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
+                return None
+            ip = ip + (int(m.group(i+2)) << (8*(3-i)))
+        if ip == 0:
             return None
-        ip = ip + (int(m.group(i+2)) << (8*(3-i)))
-    if ip == 0:
-        return None
+        net = 'ipv4'
+        sortkey = ip
     # Skip bad results.
     if sline[1] == 0:
         return None
@@ -59,6 +77,7 @@ def parseline(line):
     blocks = int(sline[8])
     # Construct result.
     return {
+        'net': net,
         'ip': m.group(1),
         'ipnum': ip,
         'uptime': uptime30,
@@ -67,13 +86,20 @@ def parseline(line):
         'agent': agent,
         'service': service,
         'blocks': blocks,
+        'sortkey': sortkey,
     }
 
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_total):
+    # Sift out ips by type
+    ips_ipv4 = [ip for ip in ips if ip['net'] == 'ipv4']
+    ips_ipv6 = [ip for ip in ips if ip['net'] == 'ipv6']
+    ips_onion = [ip for ip in ips if ip['net'] == 'onion']
+
+    # Filter IPv4 by ASN
     result = []
     asn_count = {}
-    for ip in ips:
+    for ip in ips_ipv4:
         if len(result) == max_total:
             break
         try:
@@ -86,13 +112,19 @@ def filterbyasn(ips, max_per_asn, max_total):
             result.append(ip)
         except:
             sys.stderr.write('ERR: Could not resolve ASN for "' + ip['ip'] + '"\n')
+
+    # TODO: filter IPv6 by ASN
+
+    # Add back non-IPv4
+    result.extend(ips_ipv6)
+    result.extend(ips_onion)
     return result
 
 def main():
     lines = sys.stdin.readlines()
     ips = [parseline(line) for line in lines]
 
-    # Skip entries with valid IPv4 address.
+    # Skip entries with valid address.
     ips = [ip for ip in ips if ip is not None]
     # Skip entries from suspicious hosts.
     ips = [ip for ip in ips if ip['ip'] not in SUSPICIOUS_HOSTS]
@@ -109,7 +141,7 @@ def main():
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
     # Sort the results by IP address (for deterministic output).
-    ips.sort(key=lambda x: (x['ipnum']))
+    ips.sort(key=lambda x: (x['net'], x['sortkey']))
 
     for ip in ips:
         print ip['ip']
