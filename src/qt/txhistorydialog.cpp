@@ -186,19 +186,23 @@ int TXHistoryDialog::PopulateHistoryMap()
             htxo.blockByteOffset = pendingWTx->nOrderPos;
         }
         htxo.valid = true; // all pending transactions are assumed to be valid while awaiting confirmation since all pending are outbound and we wouldn't let them be sent if invalid
+        htxo.address = senderAddress; // always sender, all pending are outbound
+        if (isPropertyDivisible(propertyId)) {
+            htxo.amount = "-" + FormatDivisibleShortMP(amount) + getTokenLabel(propertyId);
+        } else {
+            htxo.amount = "-" + FormatIndivisibleMP(amount) + getTokenLabel(propertyId);
+        } // pending always outbound
         if (p_pending->type == MSC_TYPE_SIMPLE_SEND) {
             htxo.txType = "Send";
             htxo.fundsMoved = true;
-        } // we don't have a CMPTransaction class here so manually set the type for now
-        if (p_pending->type == MSC_TYPE_METADEX_TRADE
-                || p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE
-                || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR
-                || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+        } else if (p_pending->type == MSC_TYPE_METADEX_TRADE) {
             htxo.txType = "MetaDEx Trade";
             htxo.fundsMoved = false;
+        } else if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+            htxo.txType = "MetaDEx Cancel";
+            htxo.fundsMoved = false;
+            htxo.amount = "N/A";
         } // send and metadex trades are the only supported outbound txs (thus only possible pending) for now
-        htxo.address = senderAddress; // always sender, all pending are outbound
-        if(isPropertyDivisible(propertyId)) {htxo.amount = "-"+FormatDivisibleShortMP(amount)+getTokenLabel(propertyId);} else {htxo.amount="-"+FormatIndivisibleMP(amount)+getTokenLabel(propertyId);} // pending always outbound
         txHistoryMap.insert(std::make_pair(txid, htxo));
         nProcessed += 1; // increase our counter so we don't go crazy on a wallet with too many transactions and lock up UI
     }
@@ -382,6 +386,11 @@ int TXHistoryDialog::PopulateHistoryMap()
                         // alerts are valid and thus display a wacky value attempting to decode amount - whilst no users should ever see this, be clean and N/A the wacky value
                         if ((!valid) || (displayType == "Unknown")) { displayAmount = "N/A"; }
                 } else { if ((fundsMoved) && (IsMyAddress(senderAddress))) { displayAmount = "-" + displayAmount; } }
+                // override amount on MetaDEx cancels, they don't carry an explicit amount
+                if (mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PRICE || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PAIR || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                    displayAmount = "N/A";
+                }
+
                 // create a HistoryTXObject and add to map
                 HistoryTXObject htxo;
                 htxo.blockHeight = blockHeight;
@@ -592,11 +601,11 @@ std::string TXHistoryDialog::shrinkTxType(int txType, bool *fundsMoved)
         case MSC_TYPE_AUTOMATIC_DISPENSARY: displayType = "Auto Dispense"; break;
         case MSC_TYPE_TRADE_OFFER: displayType = "DEx Trade"; *fundsMoved = false; break;
         case MSC_TYPE_ACCEPT_OFFER_BTC: displayType = "DEx Accept"; *fundsMoved = false; break;
-        case MSC_TYPE_METADEX_TRADE:
+        case MSC_TYPE_METADEX_TRADE: displayType = "MetaDEx Trade"; *fundsMoved = false; break;
         case MSC_TYPE_METADEX_CANCEL_PRICE:
         case MSC_TYPE_METADEX_CANCEL_PAIR:
         case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
-            displayType = "MetaDEx Trade"; *fundsMoved = false; break;
+            displayType = "MetaDEx Cancel"; *fundsMoved = false; break;
         case MSC_TYPE_CREATE_PROPERTY_FIXED: displayType = "Create Property"; break;
         case MSC_TYPE_CREATE_PROPERTY_VARIABLE: displayType = "Create Property"; break;
         case MSC_TYPE_PROMOTE_PROPERTY: displayType = "Promo Property"; break;
