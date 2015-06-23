@@ -1991,6 +1991,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                                 CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
 {
     CAmount nValue = 0;
+    CAmount nFeeDelta = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
     {
         if (nValue < 0)
@@ -2021,7 +2022,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 txNew.vout.clear();
                 wtxNew.fFromMe = true;
 
-                CAmount nTotalValue = nValue + nFeeRet;
+                CAmount nTotalValue = nValue + nFeeRet + nFeeDelta;
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
@@ -2119,6 +2120,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     if (newTxOut.IsDust(::minRelayTxFee))
                     {
                         nFeeRet += nChange;
+                        nChange = 0;
                         reservekey.ReturnKey();
                     }
                     else
@@ -2180,8 +2182,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     return false;
                 }
 
-                if (nFeeRet >= nFeeNeeded)
+                if (nFeeRet == nFeeNeeded || (nFeeRet > nFeeNeeded && (nFeeDelta > 0 || useIX || coin_type == ONLY_DENOMINATED)))
                     break; // Done, enough fee included.
+
+                if (nFeeRet > nFeeNeeded)
+                    nFeeDelta = nFeeRet - nFeeNeeded + 1; // Try to lower fee
 
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
