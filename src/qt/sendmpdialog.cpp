@@ -190,9 +190,7 @@ void SendMPDialog::updateProperty()
     if (fromIdx != -1) { ui->sendFromComboBox->setCurrentIndex(fromIdx); } // -1 means the cached from address doesn't have a balance in the newly selected property
 
     // populate balance for global wallet
-    int64_t globalAvailable = 0;
-    if (propertyId<2147483648U) { globalAvailable = global_balance_money_maineco[propertyId]; } else { globalAvailable = global_balance_money_testeco[propertyId-2147483647]; }
-    ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, globalAvailable) + getTokenLabel(propertyId)));
+    ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, global_balance_money[propertyId])));
 
 #if QT_VERSION >= 0x040700
     // update placeholder text
