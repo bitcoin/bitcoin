@@ -377,12 +377,12 @@ public:
     			}
             }
     	} else {
-    		if(claim_view->Claim_HaveCoins(hashTx)) {
-    			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
+    		if(claim_view->HaveCoins(hashTx)) {
+    			const Bitcoin_CCoins & claimCoins = claim_view->GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
     				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
-    					if(claimCoins.HasClaimable(i)) {
+    					if(claimCoins.Claim_IsAvailable(i)) {
     						const CTxOut& txout = tx.vout[i];
     						const Bitcoin_CTxOut &txoutClaim = claimCoins.vout[i];
 
@@ -411,11 +411,11 @@ public:
                 assert_with_stacktrace(Credits_MoneyRange(nChange), "Credits: CWallet::GetChange() : value out of range");
             }
     	} else {
-    		if(claim_view->Claim_HaveCoins(hashTx)) {
-    			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
+    		if(claim_view->HaveCoins(hashTx)) {
+    			const Bitcoin_CCoins & claimCoins = claim_view->GetCoins(hashTx);
 
     			for(unsigned int i = 0; i < tx.vout.size(); i++) {
-    				if(claimCoins.HasClaimable(i)) {
+    				if(claimCoins.Claim_IsAvailable(i)) {
     					const CTxOut& txout = tx.vout[i];
 
     					nChange += GetChange(txout, claimCoins.vout[i].nValueClaimable);
@@ -777,13 +777,13 @@ public:
 
         int64_t nCredit = 0;
         const uint256 &hashTx = GetHash();
-		if(claim_view->Claim_HaveCoins(hashTx)) {
+		if(claim_view->HaveCoins(hashTx)) {
 			const int nClaimBestBlockDepth = pwallet->GetBestBlockClaimDepth(claim_view);
-			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hashTx);
+			const Bitcoin_CCoins & claimCoins = claim_view->GetCoins(hashTx);
 
 			for(unsigned int i = 0; i < vout.size(); i++) {
 				if(!IsInFilterPoints(hashTx, i, mapFilterTxInPoints)) {
-					if(claimCoins.HasClaimable(i)) {
+					if(claimCoins.Claim_IsAvailable(i)) {
 						if (!pwallet->IsSpent(hashTx, i, nClaimBestBlockDepth))
 						{
 							const CTxOut &txout = vout[i];

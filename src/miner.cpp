@@ -495,7 +495,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 		//This is a throw away chainstate db + undo vector
         Credits_CCoinsViewCache credits_view(*credits_pcoinsTip, true);
         Bitcoin_CCoinsViewCache bitcoin_view(*bitcoin_pcoinsTip, true);
-		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndos;
 
 		//Pre-setup hashLinkedBitcoinBlock to be able to use it with indexDummy
 		pblock->hashLinkedBitcoinBlock  = *hashLinkedBitcoinBlockIndex->phashBlock;
@@ -504,7 +504,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 		indexDummy.nHeight = pindexPrev->nHeight + 1;
 
 		CValidationState state;
-		if(!Bitcoin_AlignClaimTip(pindexPrev, &indexDummy, bitcoin_view, state, false, vBlockUndoClaims)) {
+		if(!Bitcoin_AlignClaimTip(pindexPrev, &indexDummy, bitcoin_view, state, false, vBlockUndos)) {
 			LogPrintf("\n\nERROR: Miner: Bitcoin_AlignClaimTip: Failed to move claim tip to %s\n", hashLinkedBitcoinBlockIndex->GetBlockHash().GetHex());
 			return NULL;
 		}
@@ -593,7 +593,7 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 				BOOST_FOREACH(const Credits_CTxIn& txin, tx.vin)
 				{
 					// Read prev transaction
-					if (!bitcoin_view.Claim_HaveCoins(txin.prevout.hash))
+					if (!bitcoin_view.HaveCoins(txin.prevout.hash))
 					{
 						// This should never happen; all transactions in the memory
 						// pool should connect to either transactions in the chain
@@ -621,9 +621,9 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 //						continue;
 					}
 
-					const Bitcoin_CCoins &coins = bitcoin_view.Claim_GetCoins(txin.prevout.hash);
+					const Bitcoin_CCoins &coins = bitcoin_view.GetCoins(txin.prevout.hash);
 
-					if(!coins.HasClaimable(txin.prevout.n)) {
+					if(!coins.Claim_IsAvailable(txin.prevout.n)) {
 						LogPrintf("ERROR: transaction missing input\n");
 						if (fDebug) assert("transaction missing input" == 0);
 						fMissingInputs = true;
@@ -992,10 +992,10 @@ Credits_CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyCoinbase, cons
 		//This is a throw away chainstate db + undo vector
         Credits_CCoinsViewCache credits_viewNew(*credits_pcoinsTip, true);
         Bitcoin_CCoinsViewCache bitcoin_viewNew(*bitcoin_pcoinsTip, true);
-		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
+		std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndos;
 
 		CValidationState state;
-		if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, credits_viewNew, bitcoin_viewNew, false, vBlockUndoClaims, true)) {
+		if (!Bitcredit_ConnectBlock(*pblock, state, &indexDummy, credits_viewNew, bitcoin_viewNew, false, vBlockUndos, true)) {
 			LogPrintf("\n\nERROR! CreateNewBlock() : ConnectBlock failed when validating new block template. No mining can be done. Miner exiting. \n\n");
 			return NULL;
 		}

@@ -555,9 +555,9 @@ void Bitcoin_WalletModel::getOutputs(const std::vector<COutPoint>& vOutpoints, s
 			Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, wallet->mapWallet[hash].vout[n].nValue);
 			vOutputs.push_back(out);
         } else {
-            if(claim_view->Claim_HaveCoins(hash)) {
-    			const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hash);
-    			if(claimCoins.HasClaimable(n)) {
+            if(claim_view->HaveCoins(hash)) {
+    			const Bitcoin_CCoins & claimCoins = claim_view->GetCoins(hash);
+    			if(claimCoins.Claim_IsAvailable(n)) {
     				Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, claimCoins.vout[n].nValueClaimable);
     				vOutputs.push_back(out);
     			}
@@ -602,9 +602,9 @@ void Bitcoin_WalletModel::listCoins(std::map<QString, std::vector<Bitcoin_COutpu
 			Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, wallet->mapWallet[hash].vout[n].nValue);
 			vCoins.push_back(out);
         } else {
-			if(claim_view->Claim_HaveCoins(hash)) {
-				const Bitcoin_CCoins & claimCoins = claim_view->Claim_GetCoins(hash);
-				if(claimCoins.HasClaimable(n)) {
+			if(claim_view->HaveCoins(hash)) {
+				const Bitcoin_CCoins & claimCoins = claim_view->GetCoins(hash);
+				if(claimCoins.Claim_IsAvailable(n)) {
 					Bitcoin_COutput out(&wallet->mapWallet[hash], n, nDepth, claimCoins.vout[n].nValueClaimable);
 					vCoins.push_back(out);
 				}

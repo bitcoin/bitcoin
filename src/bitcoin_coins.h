@@ -81,52 +81,9 @@ public:
     // as new tx version will probably only be introduced at certain heights
     int nVersion;
 
-    //TODO - test this fractional calculation.
-    // construct a Bitcoin_CCoins from a CTransaction, at a given height
-    Bitcoin_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn, const ClaimSum& claimSum, int nValueOriginalHasBeenSpentIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
-
-		if(fCoinBase) {
-			const int64_t nTotalReduceFees = claimSum.nValueOriginalSum - claimSum.nValueClaimableSum;
-			const int64_t nTotalValueOut = tx.GetValueOut();
-			BOOST_FOREACH(const CTxOut & txout, tx.vout) {
-				const int64_t nValue = txout.nValue;
-				const int64_t nFractionReducedFee = ReduceByFraction(nTotalReduceFees, nValue, nTotalValueOut);
-				int64_t nValueClaimable = 0;
-				if(nValue > nFractionReducedFee) {
-					nValueClaimable = nValue - nFractionReducedFee;
-				}
-				assert(nValueClaimable >= 0 && nValueClaimable <= nValue);
-
-				vout.push_back(Bitcoin_CTxOut(nValue, nValueClaimable, txout.scriptPubKey, nValueOriginalHasBeenSpentIn));
-			}
-		} else {
-			BOOST_FOREACH(const CTxOut & txout, tx.vout) {
-				const int64_t nValue = txout.nValue;
-				const int64_t nValueClaimable = ReduceByFraction(nValue, claimSum.nValueClaimableSum, claimSum.nValueOriginalSum);
-				assert(nValueClaimable >= 0 && nValueClaimable <= nValue);
-
-				vout.push_back(Bitcoin_CTxOut(nValue, nValueClaimable, txout.scriptPubKey, nValueOriginalHasBeenSpentIn));
-			}
-		}
-
-    	ClearUnspendable();
-    }
-
-    //NOTE! Only use this constructor with caution and make sure that you understand what it is doing.
-    //The copying of nValueOriginal to nValueClaimable could cause trouble.
-    //There are only two use cases for this constructor:
-    //1. To create an object that can be compared with equalsForBlockAttributes
-    //2. In Bitcoin block connect and disconnect when fast forwarding the claim chainstate
-    Bitcoin_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn, int nValueOriginalHasBeenSpentIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
-    	BOOST_FOREACH(const CTxOut & txout, tx.vout) {
-    		vout.push_back(Bitcoin_CTxOut(txout.nValue, txout.nValue, txout.scriptPubKey, nValueOriginalHasBeenSpentIn));
-    	}
-
-    	ClearUnspendable();
-    }
-
-    //TODO - We set claimable to 0 here. Need some other indicator to show the claimable value
-    //This constructor must be used when we initially create the coin object. It can and must only be done by the Bitcoin coin tip, not the claim coin tip
+    //This constructor has two usages
+    //1. It can and must only be done by the Bitcoin coin tip, not the claim coin tip
+    //2. To create an object that can be compared with equalsForBlockAttributes
     Bitcoin_CCoins(const Bitcoin_CTransaction &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
     	BOOST_FOREACH(const CTxOut & txout, tx.vout) {
     		vout.push_back(Bitcoin_CTxOut(txout.nValue, 0, txout.scriptPubKey, 0));
@@ -165,6 +122,51 @@ public:
     // empty constructor
     Bitcoin_CCoins() : fCoinBase(false), vout(0), nHeight(0), nVersion(0) { }
 
+    //TODO - test these three fractional calculation.
+    // different types of claim activating methods
+    void ActivateClaimable(const Bitcoin_CTransaction& tx) {
+     	for (unsigned int i = 0; i < vout.size(); i++) {
+     		Bitcoin_CTxOut &txout = vout[i];
+			assert(txout.nValueOriginal >= 0 || tx.vout[i].scriptPubKey.IsUnspendable());
+     		txout.nValueClaimable = txout.nValueOriginal;
+     	}
+
+    	ClearUnspendable();
+    }
+    void ActivateClaimable(const Bitcoin_CTransaction& tx, const ClaimSum& claimSum) {
+		for (unsigned int i = 0; i < vout.size(); i++) {
+			Bitcoin_CTxOut & txout = vout[i];
+
+			const int64_t nValue = txout.nValueOriginal;
+			const int64_t nValueClaimable = ReduceByFraction(nValue, claimSum.nValueClaimableSum, claimSum.nValueOriginalSum);
+			assert((nValueClaimable >= 0 && nValueClaimable <= nValue) || tx.vout[i].scriptPubKey.IsUnspendable());
+
+			txout.nValueClaimable = nValueClaimable;
+		}
+
+    	ClearUnspendable();
+    }
+    void ActivateClaimableCoinbase(const Bitcoin_CTransaction& tx, const int64_t nTotalReduceFees, const int64_t& nTotalValueOut) {
+		for (unsigned int i = 0; i < vout.size(); i++) {
+			Bitcoin_CTxOut & txout = vout[i];
+
+			const int64_t nValue = txout.nValueOriginal;
+			const int64_t nFractionReducedFee = ReduceByFraction(nTotalReduceFees, nValue, nTotalValueOut);
+			int64_t nValueClaimable = 0;
+			if(nValue > nFractionReducedFee) {
+				nValueClaimable = nValue - nFractionReducedFee;
+			}
+			assert((nValueClaimable >= 0 && nValueClaimable <= nValue) || tx.vout[i].scriptPubKey.IsUnspendable());
+
+			txout.nValueClaimable = nValueClaimable;
+		}
+
+    	ClearUnspendable();
+    }
+
+    //Used when reverting a coin from claim* functions
+    void DeactivateClaimable();
+
     // remove spent outputs at the end of vout
     void Cleanup() {
         while (vout.size() > 0 && vout.back().IsNull())
@@ -178,7 +180,6 @@ public:
     		Bitcoin_CTxOut &txout = vout[i];
             if (txout.scriptPubKey.IsUnspendable()) {
                 txout.SetNull();
-                vout[i].SetNull();
             }
     	}
         Cleanup();
@@ -293,17 +294,22 @@ public:
     }
 
     // mark an outpoint spent, and construct undo information
-    //TODO - These three functions are the key to integrating claim and bitcoin coins into one structure.
-    bool Spend(int nPos);
-    bool Spend(const COutPoint &out, Bitcoin_CTxInUndo &undo);
-    bool SpendByClaiming(const COutPoint &out, Credits_CTxInUndo &undo);
+    bool Bitcoin_Spend(const COutPoint &out);
+    //This function is NOT the claim spending function, it merely moves the txout set forward
+    bool Claim_Spend(const COutPoint &out, Bitcoin_CTxInUndo &undo);
+    //This is the claim spending function
+    bool Credits_Spend(const COutPoint &out, Credits_CTxInUndo &undo);
 
     // check whether a particular output is still available
     bool IsAvailable(unsigned int nPos) const {
-        return (nPos < vout.size() && !vout[nPos].IsNull());
+        return nPos < vout.size() && !vout[nPos].IsNull();
+    }
+    // check whether the original bitcoin is available for spending
+    bool Original_IsAvailable(unsigned int nPos) const {
+        return IsAvailable(nPos) && !vout[nPos].IsOriginalSpent();
     }
     // check whether there are any bitcoins left to claim
-    bool HasClaimable(unsigned int nPos) const {
+    bool Claim_IsAvailable(unsigned int nPos) const {
         return IsAvailable(nPos) && vout[nPos].nValueClaimable > 0;
     }
 
@@ -323,7 +329,8 @@ public:
 struct Bitcoin_CCoinsStats
 {
     int nHeight;
-    uint256 hashBlock;
+    uint256 bitcoin_hashBlock;
+    uint256 claim_hashBlock;
     uint256 hashCreditsClaimTip;
     int64_t totalClaimedCoins;
     uint64_t nTransactions;
@@ -334,7 +341,7 @@ struct Bitcoin_CCoinsStats
     int64_t nTotalAmountOriginal;
     int64_t nTotalAmountClaimable;
 
-    Bitcoin_CCoinsStats() : nHeight(0), hashBlock(0), hashCreditsClaimTip(0), totalClaimedCoins(0), nTransactions(0), nTransactionOutputsOriginal(0), nTransactionOutputsClaimable(0), nSerializedSize(0), hashSerialized(0), nTotalAmountOriginal(0), nTotalAmountClaimable(0){}
+    Bitcoin_CCoinsStats() : nHeight(0), bitcoin_hashBlock(0), claim_hashBlock(0), hashCreditsClaimTip(0), totalClaimedCoins(0), nTransactions(0), nTransactionOutputsOriginal(0), nTransactionOutputsClaimable(0), nSerializedSize(0), hashSerialized(0), nTotalAmountOriginal(0), nTotalAmountClaimable(0){}
 };
 
 /** Abstract view on the open txout dataset. */
@@ -342,17 +349,14 @@ class Bitcoin_CCoinsView
 {
 public:
     // Retrieve the Bitcoin_CCoins (unspent transaction outputs) for a given txid
-    virtual bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    virtual bool Claim_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    virtual bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
 
     // Modify the Bitcoin_CCoins for a given txid
-    virtual bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    virtual bool Claim_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    virtual bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
 
     // Just check whether we have data for a given txid.
     // This may (but cannot always) return true for fully spent transactions
-    virtual bool Bitcoin_HaveCoins(const uint256 &txid);
-    virtual bool Claim_HaveCoins(const uint256 &txid);
+    virtual bool HaveCoins(const uint256 &txid);
 
     // Retrieve the block hash whose state this Bitcoin_CCoinsView currently represents
     virtual uint256 Bitcoin_GetBestBlock();
@@ -373,13 +377,10 @@ public:
     virtual bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
 
     // Do a bulk modification (multiple SetCoins + one SetBestBlock)
-    virtual bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    virtual bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
-    virtual bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
+    virtual bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &bitcoin_hashBlock, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
 
     // Calculate statistics about the unspent transaction output set
-    virtual bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
-    virtual bool Claim_GetStats(Bitcoin_CCoinsStats &stats);
+    virtual bool GetStats(Bitcoin_CCoinsStats &stats);
 
     // As we use Bitcoin_CCoinsViews polymorphically, have a virtual destructor
     virtual ~Bitcoin_CCoinsView() {}
@@ -394,12 +395,9 @@ protected:
 
 public:
     Bitcoin_CCoinsViewBacked(Bitcoin_CCoinsView &viewIn);
-    bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool Claim_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool Claim_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool Bitcoin_HaveCoins(const uint256 &txid);
-    bool Claim_HaveCoins(const uint256 &txid);
+    bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
     uint256 Bitcoin_GetBestBlock();
     uint256 Claim_GetBestBlock();
     bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
@@ -408,13 +406,10 @@ public:
     bool Claim_SetCreditsClaimTip(const uint256 &hashCreditsClaimTip);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
-    void Bitcoin_SetBackend(Bitcoin_CCoinsView &viewIn);
-    Bitcoin_CCoinsView *Bitcoin_GetBackend();
-    bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
-    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
-    bool Bitcoin_GetStats(Bitcoin_CCoinsStats &stats);
-    bool Claim_GetStats(Bitcoin_CCoinsStats &stats);
+    void SetBackend(Bitcoin_CCoinsView &viewIn);
+    Bitcoin_CCoinsView *GetBackend();
+    bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &bitcoin_hashBlock, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
+    bool GetStats(Bitcoin_CCoinsStats &stats);
 };
 
 
@@ -422,24 +417,21 @@ public:
 class Bitcoin_CCoinsViewCache : public Bitcoin_CCoinsViewBacked
 {
 protected:
+    std::map<uint256,Bitcoin_CCoins> cacheCoins;
+
     uint256 bitcoin_hashBlock;
-    std::map<uint256,Bitcoin_CCoins> bitcoin_cacheCoins;
 
     uint256 claim_hashBlock;
     uint256 claim_hashCreditsClaimTip;
     int64_t claim_totalClaimedCoins;
-    std::map<uint256,Bitcoin_CCoins> claim_cacheCoins;
 
 public:
     Bitcoin_CCoinsViewCache(Bitcoin_CCoinsView &baseIn, bool fDummy = false);
 
     // Standard Bitcoin_CCoinsView methods
-    bool Bitcoin_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool Bitcoin_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool Bitcoin_HaveCoins(const uint256 &txid);
-    bool Claim_GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
-    bool Claim_SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
-    bool Claim_HaveCoins(const uint256 &txid);
+    bool GetCoins(const uint256 &txid, Bitcoin_CCoins &coins);
+    bool SetCoins(const uint256 &txid, const Bitcoin_CCoins &coins);
+    bool HaveCoins(const uint256 &txid);
     uint256 Bitcoin_GetBestBlock();
     uint256 Claim_GetBestBlock();
     bool Bitcoin_SetBestBlock(const uint256 &hashBlock);
@@ -448,21 +440,16 @@ public:
     bool Claim_SetCreditsClaimTip(const uint256 &hashCreditsClaimTip);
     int64_t Claim_GetTotalClaimedCoins();
     bool Claim_SetTotalClaimedCoins(const int64_t &totalClaimedCoins);
-    bool Bitcoin_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock);
-    bool Claim_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &hashBlock, const uint256 &hashCreditsClaimTip, const int64_t &totalClaimedCoins);
-    bool All_BatchWrite(const std::map<uint256, Bitcoin_CCoins> &bitcoin_mapCoins, const uint256 &bitcoin_hashBlock, const std::map<uint256, Bitcoin_CCoins> &claim_mapCoins, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
+    bool BatchWrite(const std::map<uint256, Bitcoin_CCoins> &mapCoins, const uint256 &bitcoin_hashBlock, const uint256 &claim_hashBlock, const uint256 &claim_hashCreditsClaimTip, const int64_t &claim_totalClaimedCoins);
 
     // Return a modifiable reference to a Bitcoin_CCoins. Check HaveCoins first.
     // Many methods explicitly require a Bitcoin_CCoinsViewCache because of this method, to reduce
     // copying.
-    Bitcoin_CCoins &Bitcoin_GetCoins(const uint256 &txid);
-    Bitcoin_CCoins &Claim_GetCoins(const uint256 &txid);
+    Bitcoin_CCoins &GetCoins(const uint256 &txid);
 
     // Push the modifications applied to this cache to its base.
     // Failure to call this method before destruction will cause the changes to be forgotten.
-    bool Bitcoin_Flush();
-    bool Claim_Flush();
-    bool All_Flush();
+    bool Flush();
 
     // Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize();
@@ -486,13 +473,9 @@ public:
     double Bitcoin_GetPriority(const Bitcoin_CTransaction &tx, int nHeight);
     double Claim_GetPriority(const Credits_CTransaction &tx, int nHeight);
 
-    const Bitcoin_CTxOut &Bitcoin_GetOutputFor(const Bitcoin_CTxIn& input);
-    const CScript &Claim_GetOutputScriptFor(const Credits_CTxIn& input);
-
+    const Bitcoin_CTxOut &GetOutputFor(const COutPoint& outPoint, int validationType);
 private:
-    std::map<uint256,Bitcoin_CCoins>::iterator Bitcoin_FetchCoins(const uint256 &txid);
-    std::map<uint256,Bitcoin_CCoins>::iterator Claim_FetchCoins(const uint256 &txid);
-    const Bitcoin_CTxOut& Claim_GetOut(const COutPoint &outpoint);
+    std::map<uint256,Bitcoin_CCoins>::iterator FetchCoins(const uint256 &txid);
 };
 
 #endif

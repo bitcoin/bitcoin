@@ -213,7 +213,7 @@ void Shutdown()
         delete bitcoin_pblocktree; bitcoin_pblocktree = NULL;
 
         if (bitcoin_pcoinsTip)
-            bitcoin_pcoinsTip->All_Flush();
+            bitcoin_pcoinsTip->Flush();
         delete bitcoin_pcoinsTip; bitcoin_pcoinsTip = NULL;
         delete bitcoin_pcoinsdbview; bitcoin_pcoinsdbview = NULL;
     }

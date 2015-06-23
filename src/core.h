@@ -170,107 +170,6 @@ public:
     void print() const;
 };
 
-/** An output of a transaction.  It contains the public key that the next input
- * must be able to sign with to claim it.
- */
-class Bitcoin_CTxOut
-{
-public:
-    int64_t nValueOriginal;
-    int64_t nValueClaimable;
-    CScript scriptPubKey;
-    int nValueOriginalHasBeenSpent;
-
-    Bitcoin_CTxOut()
-    {
-        SetNull();
-    }
-
-    Bitcoin_CTxOut(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn);
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(nValueOriginal);
-        READWRITE(nValueClaimable);
-        READWRITE(scriptPubKey);
-        READWRITE(nValueOriginalHasBeenSpent);
-
-        assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("Bitcoin_CTxOut() : valueOriginal out of range: %d", nValueOriginal));
-        assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("Bitcoin_CTxOut() : valueClaimable out of range: %d", nValueClaimable));
-        assert_with_stacktrace(nValueOriginal >= nValueClaimable, strprintf("Bitcoin_CTxOut() : valueOriginal less than valueClaimable: %d:%d", nValueOriginal, nValueClaimable));
-    )
-
-    void SetNull()
-    {
-        nValueOriginal = -1;
-        nValueClaimable = -1;
-        scriptPubKey.clear();
-        nValueOriginalHasBeenSpent = 0;
-    }
-
-    bool IsNull() const
-    {
-        return (nValueOriginal == -1);
-    }
-
-    uint256 GetHash() const;
-
-    bool IsDust(int64_t nMinRelayTxFee) const
-    {
-        // "Dust" is defined in terms of Credits_CTransaction::nMinRelayTxFee,
-        // which has units satoshis-per-kilobyte.
-        // If you'd pay more than 1/3 in fees
-        // to spend something, then we consider it dust.
-        // A typical txout is 34 bytes big, and will
-        // need a CTxIn of at least 148 bytes to spend,
-        // so dust is a txout less than 546 satoshis
-        // with default nMinRelayTxFee.
-        return ((nValueOriginal*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
-    }
-
-    friend bool operator==(const Bitcoin_CTxOut& a, const Bitcoin_CTxOut& b)
-    {
-        return (a.nValueOriginal       == b.nValueOriginal &&
-        		a.nValueClaimable       == b.nValueClaimable &&
-                a.scriptPubKey == b.scriptPubKey &&
-                a.nValueOriginalHasBeenSpent == b.nValueOriginalHasBeenSpent);
-    }
-
-    friend bool operator!=(const Bitcoin_CTxOut& a, const Bitcoin_CTxOut& b)
-    {
-        return !(a == b);
-    }
-
-    std::string ToString() const;
-    void print() const;
-};
-
-/*
- * Stores the two different levels of values before spending.
- * These two are used to calculate the difference between the
- * original and the claimable state
- */
-class ClaimSum
-{
-public:
-    int64_t nValueOriginalSum;
-    int64_t nValueClaimableSum;
-
-    ClaimSum()
-    {
-        nValueOriginalSum = 0;
-        nValueClaimableSum = 0;
-    }
-
-    void Validate() {
-    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalSum), strprintf("ClaimSum() : nOriginal out of range: %d", nValueOriginalSum));
-    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableSum), strprintf("ClaimSum() : nClaimable out of range: %d", nValueClaimableSum));
-
-    	assert(nValueOriginalSum >= nValueClaimableSum);
-    }
-};
-
-
 /** Tx types */
 enum
 {
@@ -416,38 +315,6 @@ public:
         }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
-    });)
-};
-
-/** wrapper for CTxOut that provides a more compact serialization */
-class Bitcoin_CTxOutCompressor
-{
-private:
-    Bitcoin_CTxOut &txout;
-
-public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
-
-    Bitcoin_CTxOutCompressor(Bitcoin_CTxOut &txoutIn) : txout(txoutIn) { }
-
-    IMPLEMENT_SERIALIZE(({
-        if (!fRead) {
-            uint64_t nValOriginal = CompressAmount(txout.nValueOriginal);
-            READWRITE(VARINT(nValOriginal));
-            uint64_t nValClaimable = CompressAmount(txout.nValueClaimable);
-            READWRITE(VARINT(nValClaimable));
-        } else {
-            uint64_t nValOriginal = 0;
-            READWRITE(VARINT(nValOriginal));
-            txout.nValueOriginal = DecompressAmount(nValOriginal);
-            uint64_t nValClaimable = 0;
-            READWRITE(VARINT(nValClaimable));
-            txout.nValueClaimable = DecompressAmount(nValClaimable);
-        }
-        CScriptCompressor cscript(REF(txout.scriptPubKey));
-        READWRITE(cscript);
-        READWRITE(VARINT(txout.nValueOriginalHasBeenSpent));
     });)
 };
 
@@ -728,9 +595,6 @@ public:
 
     // Byte offset within rev?????.dat where this block's undo data is stored
     unsigned int nUndoPos;
-
-    // Byte offset within cla?????.dat where this block's undo claim data is stored
-    unsigned int nUndoPosClaim;
 
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     uint256 nChainWork;

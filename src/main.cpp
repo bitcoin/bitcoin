@@ -540,7 +540,7 @@ bool Bitcredit_AreInputsStandard(const Credits_CTransaction& tx, Credits_CCoinsV
         return true; // Coinbases don't use vin normally
 
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
-		const CScript& prevScript = tx.IsClaim() ? claim_view.Claim_GetOutputScriptFor(tx.vin[i]): credits_view.Credits_GetOutputFor(tx.vin[i]).scriptPubKey;
+		const CScript& prevScript = tx.IsClaim() ? claim_view.GetOutputFor(tx.vin[i].prevout, 0).scriptPubKey : credits_view.Credits_GetOutputFor(tx.vin[i]).scriptPubKey;
 
 		vector<vector<unsigned char> > vSolutions;
 		txnouttype whichType;
@@ -607,7 +607,7 @@ unsigned int Bitcredit_GetP2SHSigOpCount(const Credits_CTransaction& tx, Credits
     unsigned int nSigOps = 0;
 	if(tx.IsClaim()) {
 	    for (unsigned int i = 0; i < tx.vin.size(); i++) {
-			const CScript &prevoutScript = claim_inputs.Claim_GetOutputScriptFor(tx.vin[i]);
+			const CScript &prevoutScript = claim_inputs.GetOutputFor(tx.vin[i].prevout, 0).scriptPubKey;
 			if (prevoutScript.IsPayToScriptHash())
 				nSigOps += prevoutScript.GetSigOpCount(tx.vin[i].scriptSig);
 	    }
@@ -869,14 +869,14 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
         Bitcoin_CCoinsView claim_dummy;
         Bitcoin_CCoinsViewCache claim_view(claim_dummy, bitcoin_nCoinCacheSize);
         {
-        claim_view.Bitcoin_SetBackend(*bitcoin_pcoinsTip);
+        claim_view.SetBackend(*bitcoin_pcoinsTip);
 
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
         // only helps filling in pfMissingInputs (to determine missing vs spent).
         if(tx.IsClaim()) {
         	BOOST_FOREACH(const Credits_CTxIn txin, tx.vin) {
-				if (!claim_view.Claim_HaveCoins(txin.prevout.hash)) {
+				if (!claim_view.HaveCoins(txin.prevout.hash)) {
 					if (pfMissingInputs)
 						*pfMissingInputs = true;
 					return false;
@@ -893,7 +893,7 @@ bool Bitcredit_AcceptToMemoryPool(Bitcredit_CTxMemPool& pool, CValidationState &
         bestBlockHash = claim_view.Claim_GetBestBlock();
 
         // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-        claim_view.Bitcoin_SetBackend(claim_dummy);
+        claim_view.SetBackend(claim_dummy);
         }
 
         // Check for non-standard pay-to-script-hash in inputs
@@ -1558,8 +1558,8 @@ void Bitcredit_UpdateCoins(const Credits_CTransaction& tx, CValidationState &sta
     	if(tx.IsClaim()) {
             BOOST_FOREACH(const Credits_CTxIn &txin, tx.vin) {
             	Credits_CTxInUndo undo;
-    			Bitcoin_CCoins &coins = claim_inputs.Claim_GetCoins(txin.prevout.hash);
-    			ret = coins.SpendByClaiming(txin.prevout, undo);
+    			Bitcoin_CCoins &coins = claim_inputs.GetCoins(txin.prevout.hash);
+    			ret = coins.Credits_Spend(txin.prevout, undo);
     			assert(ret);
     			txundo.vprevout.push_back(undo);
             }
@@ -1658,7 +1658,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
 			for (unsigned int i = 0; i < tx.vin.size(); i++) {
             	const COutPoint &prevout = tx.vin[i].prevout;
 
-				const Bitcoin_CCoins &coins = claim_inputs.Claim_GetCoins(prevout.hash);
+				const Bitcoin_CCoins &coins = claim_inputs.GetCoins(prevout.hash);
 
 				if (coins.IsCoinBase()) {
 					if (bitcoin_nSpendHeight - coins.nHeight < BITCOIN_COINBASE_MATURITY)
@@ -1752,7 +1752,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
               for (unsigned int i = 0; i < tx.vin.size(); i++) {
               	const COutPoint &prevout = tx.vin[i].prevout;
 
-				const Bitcoin_CCoins &coins = claim_inputs.Claim_GetCoins(prevout.hash);
+				const Bitcoin_CCoins &coins = claim_inputs.GetCoins(prevout.hash);
 
 				// Verify signature
 				Bitcredit_CScriptCheck check(coins, tx, i, flags, 0);
@@ -1825,7 +1825,7 @@ bool Credits_CheckInputs(const Credits_CTransaction& tx, CValidationState &state
 
 
 
-bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims, bool* pfClean)
+bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == credits_view.Credits_GetBestBlock());
 
@@ -1881,16 +1881,16 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
 					const COutPoint &out = tx.vin[j].prevout;
 					const Credits_CTxInUndo &undo = txundo.vprevout[j];
 					Bitcoin_CCoins coins;
-					claim_view.Claim_GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
+					claim_view.GetCoins(out.hash, coins); // this can fail if the prevout was already entirely spent
 					if (coins.IsPruned())
 						fClean = fClean && error("Credits: DisconnectBlock() : undo claim data adding output to missing transaction");
 
-					if (coins.HasClaimable(out.n))
+					if (coins.Claim_IsAvailable(out.n))
 						fClean = fClean && error("Credits: DisconnectBlock() : undo claim data overwriting existing output");
 
 					assert (coins.vout.size() >= out.n+1);
 					coins.vout[out.n].nValueClaimable = undo.txout.nValue;
-					if (!claim_view.Claim_SetCoins(out.hash, coins))
+					if (!claim_view.SetCoins(out.hash, coins))
 						return error("Credits: DisconnectBlock() : cannot restore claim coin inputs");
 
 					nTotalClaimedCoinsForBlock += undo.txout.nValue;
@@ -1937,7 +1937,7 @@ bool Bitcredit_DisconnectBlock(Credits_CBlock& block, CValidationState& state, C
     assert(pindex->pprev != NULL);
     //Moving claim pointer here. Note that this invokes the bitcoin *Claim methods,
     //a separate chain of methods to just update the claim state
-    if(!Bitcoin_AlignClaimTip(pindex, (Credits_CBlockIndex*)pindex->pprev, claim_view, state, updateBitcoinUndo, vBlockUndoClaims)) {
+    if(!Bitcoin_AlignClaimTip(pindex, (Credits_CBlockIndex*)pindex->pprev, claim_view, state, updateBitcoinUndo, vBlockUndos)) {
         return state.Abort(strprintf(_("ERROR: Credits: DisconnectBlock: Failed to move claim tip from bitcoin block %s"), block.hashLinkedBitcoinBlock.GetHex()));
     }
 
@@ -2018,7 +2018,7 @@ void UpdateTrimmedDepositBase(const Credits_CBlockIndex* pBlockToTrim, Credits_C
     }
 }
 
-bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndoClaims, bool fJustCheck)
+bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Credits_CBlockIndex* pindex, Credits_CCoinsViewCache& credits_view, Bitcoin_CCoinsViewCache &claim_view, bool updateBitcoinUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos, bool fJustCheck)
 {
     AssertLockHeld(credits_mainState.cs_main);
     // Check it again in case a previous version let a bad block in
@@ -2038,7 +2038,7 @@ bool Bitcredit_ConnectBlock(Credits_CBlock& block, CValidationState& state, Cred
 
     //Moving claim pointer here. Note that this invokes the bitcoin *Claim functions,
     //a separate chain of methods to just update the claim state
-    if(!Bitcoin_AlignClaimTip((Credits_CBlockIndex*)pindex->pprev, pindex, claim_view, state, updateBitcoinUndo, vBlockUndoClaims)) {
+    if(!Bitcoin_AlignClaimTip((Credits_CBlockIndex*)pindex->pprev, pindex, claim_view, state, updateBitcoinUndo, vBlockUndos)) {
         return state.Abort(strprintf(_("ERROR: Credits: ConnectBlock: Failed to move claim tip to %s\n"), block.hashLinkedBitcoinBlock.GetHex()));
     }
 
@@ -2397,14 +2397,14 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
 			LogPrintf("Credits: DisconnectTip() : No tmp db created, only moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
 		}
     }
-	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
-	if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, credits_view, claim_view, true, vBlockUndoClaims))
+	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndos;
+	if (!Bitcredit_DisconnectBlock(block, state, pindexDelete, credits_view, claim_view, true, vBlockUndos))
 		return error("Credits: DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
 
 	assert(credits_view.Credits_Flush());
 	if(!fastForwardClaimState) {
-		assert(Bitcoin_DeleteBlockUndoClaimsFromDisk(state, vBlockUndoClaims));
-		assert(claim_view.Claim_Flush());
+		assert(Bitcoin_DeleteBlockUndoFromDisk(state, vBlockUndos));
+		assert(claim_view.Flush());
 	}
 
     if (bitcredit_fBenchmark)
@@ -2413,7 +2413,7 @@ bool static Bitcredit_DisconnectTip(CValidationState &state) {
     if (!Bitcredit_WriteChainState(state))
         return false;
     if(!fastForwardClaimState) {
-		if (!Bitcoin_WriteChainState(state, false, true))
+		if (!Bitcoin_WriteChainState(state))
 			return false;
     }
     // Resurrect mempool transactions from the disconnected block.
@@ -2469,9 +2469,9 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
 			LogPrintf("Credits: ConnectTip() : Moving claim tip %d bitcoin blocks\n", bitcoinBlockSteps);
 		}
     }
-	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
+	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndos;
 	CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
-	if (!Bitcredit_ConnectBlock(block, state, pindexNew, credits_view, claim_view, true, vBlockUndoClaims, false)) {
+	if (!Bitcredit_ConnectBlock(block, state, pindexNew, credits_view, claim_view, true, vBlockUndos, false)) {
 		if (state.IsInvalid())
 			Bitcredit_InvalidBlockFound(pindexNew, state);
 		return error("Credits: ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
@@ -2479,8 +2479,8 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
 	bitcredit_mapBlockSource.erase(inv.hash);
 	assert(credits_view.Credits_Flush());
 	if(!fastForwardClaimState) {
-		assert(Bitcoin_WriteBlockUndoClaimsToDisk(state, vBlockUndoClaims));
-		assert(claim_view.Claim_Flush());
+		assert(Bitcoin_WriteBlockUndosToDisk(state, vBlockUndos));
+		assert(claim_view.Flush());
 	}
 
     if (bitcredit_fBenchmark)
@@ -2489,7 +2489,7 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     if (!Bitcredit_WriteChainState(state))
         return false;
     if(!fastForwardClaimState) {
-		if (!Bitcoin_WriteChainState(state, false, true))
+		if (!Bitcoin_WriteChainState(state))
 			return false;
     }
 
@@ -2590,7 +2590,7 @@ void static Bitcredit_FindMostWorkChain() {
 
 // Try to activate to the most-work chain (thereby connecting it).
 bool Bitcredit_ActivateBestChain(CValidationState &state) {
-    LOCK(credits_mainState.cs_main);
+    LOCK2(credits_mainState.cs_main, bitcoin_mainState.cs_main);
     Credits_CBlockIndex *pindexOldTip = (Credits_CBlockIndex*)credits_chainActive.Tip();
     bool fComplete = false;
     while (!fComplete) {
@@ -3470,7 +3470,7 @@ bool Credits_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 	//This is a throw away chainstate db + undo vector
 	Credits_CCoinsViewCache bitcredit_coins(*credits_pcoinsTip, true);
 	Bitcoin_CCoinsViewCache bitcoin_coins(*bitcoin_pcoinsTip, true);
-	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndoClaims;
+	std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > vBlockUndos;
 	Credits_CBlockIndex* pindexState = (Credits_CBlockIndex*)credits_chainActive.Tip();
 	Credits_CBlockIndex* pindexFailure = NULL;
 	int nGoodTransactions = 0;
@@ -3502,7 +3502,7 @@ bool Credits_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 				pindex == pindexState &&
 				((bitcredit_coins.GetCacheSize() + credits_pcoinsTip->GetCacheSize()) <= 2*bitcredit_nCoinCacheSize + 32000)) {
 			bool fClean = true;
-			if (!Bitcredit_DisconnectBlock(block, state, pindex, bitcredit_coins, bitcoin_coins, false, vBlockUndoClaims, &fClean))
+			if (!Bitcredit_DisconnectBlock(block, state, pindex, bitcredit_coins, bitcoin_coins, false, vBlockUndos, &fClean))
 				return error("Credits: VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
 			pindexState = (Credits_CBlockIndex*)pindex->pprev;
 			if (!fClean) {
@@ -3525,7 +3525,7 @@ bool Credits_CVerifyDB::VerifyDB(int nCheckLevel, int nCheckDepth)
 			Credits_CBlock block;
 			if (!Credits_ReadBlockFromDisk(block, pindex))
 				return error("Credits: VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-			if (!Bitcredit_ConnectBlock(block, state, pindex, bitcredit_coins, bitcoin_coins, false, vBlockUndoClaims, false))
+			if (!Bitcredit_ConnectBlock(block, state, pindex, bitcredit_coins, bitcoin_coins, false, vBlockUndos, false))
 				return error("Credits: VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
 		}
 	}

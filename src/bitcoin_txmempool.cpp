@@ -51,8 +51,7 @@ void Bitcoin_CTxMemPool::pruneSpent(const uint256 &hashTx, Bitcoin_CCoins &coins
 
     // iterate over all COutPoints in mapNextTx whose hash equals the provided hashTx
     while (it != mapNextTx.end() && it->first.hash == hashTx) {
-    	//TODO - Verify that this spend is correct
-        coins.Spend(it->first.n); // and remove those outputs from coins
+        coins.Bitcoin_Spend(it->first); // and remove those outputs from coins
         it++;
     }
 }
@@ -155,8 +154,8 @@ void Bitcoin_CTxMemPool::check(Bitcoin_CCoinsViewCache *pcoins) const
                 const Bitcoin_CTransaction& tx2 = it2->second.GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
             } else {
-            	Bitcoin_CCoins &coins = pcoins->Bitcoin_GetCoins(txin.prevout.hash);
-                assert(coins.IsAvailable(txin.prevout.n));
+            	Bitcoin_CCoins &coins = pcoins->GetCoins(txin.prevout.hash);
+                assert(coins.Original_IsAvailable(txin.prevout.n));
             }
             // Check whether its inputs are marked in mapNextTx.
             std::map<COutPoint, Bitcoin_CInPoint>::const_iterator it3 = mapNextTx.find(txin.prevout);
@@ -199,11 +198,10 @@ bool Bitcoin_CTxMemPool::lookup(uint256 hash, Bitcoin_CTransaction& result) cons
 Bitcoin_CCoinsViewMemPool::Bitcoin_CCoinsViewMemPool(Bitcoin_CCoinsView &baseIn, Bitcoin_CTxMemPool &mempoolIn) : Bitcoin_CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
 bool Bitcoin_CCoinsViewMemPool::GetCoins(const uint256 &txid, Bitcoin_CCoins &coins) {
-    if (base->Bitcoin_GetCoins(txid, coins))
+    if (base->GetCoins(txid, coins))
         return true;
     Bitcoin_CTransaction tx;
     if (mempool.lookup(txid, tx)) {
-    	//TODO - Validate that this is the correct constructor
         coins = Bitcoin_CCoins(tx, BITCOIN_MEMPOOL_HEIGHT);
         return true;
     }
@@ -211,6 +209,6 @@ bool Bitcoin_CCoinsViewMemPool::GetCoins(const uint256 &txid, Bitcoin_CCoins &co
 }
 
 bool Bitcoin_CCoinsViewMemPool::HaveCoins(const uint256 &txid) {
-    return mempool.exists(txid) || base->Bitcoin_HaveCoins(txid);
+    return mempool.exists(txid) || base->HaveCoins(txid);
 }
 

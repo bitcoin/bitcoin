@@ -41,6 +41,28 @@ void Bitcoin_CTxIn::print() const
     LogPrintf("%s\n", ToString());
 }
 
+Bitcoin_CTxOut::Bitcoin_CTxOut(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn)
+{
+	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalIn), strprintf("Bitcoin_CTxOut() : valueOriginal out of range: %d", nValueOriginalIn));
+	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableIn), strprintf("Bitcoin_CTxOut() : valueClaimable out of range: %d", nValueClaimableIn));
+	assert_with_stacktrace(nValueOriginalIn >= nValueClaimableIn, strprintf("Bitcoin_CTxOut() : valueOriginal less than valueClaimable: %d:%d", nValueOriginalIn, nValueClaimableIn));
+
+	nValueOriginal = nValueOriginalIn;
+	nValueClaimable = nValueClaimableIn;
+    scriptPubKey = scriptPubKeyIn;
+    nValueOriginalHasBeenSpent = nValueOriginalHasBeenSpentIn;
+}
+
+std::string Bitcoin_CTxOut::ToString() const
+{
+    return strprintf("Bitcoin_CTxOut(nValueOriginal=%d.%08d, nValueClaimable=%d.%08d, scriptPubKey=%s(%s), nValueOriginalHasBeenSpent=%d)", nValueOriginal / COIN, nValueOriginal % COIN, nValueClaimable / COIN, nValueClaimable % COIN, scriptPubKey.ToString().substr(0,30), HexStr(scriptPubKey.begin(), scriptPubKey.end(), false), nValueOriginalHasBeenSpent);
+}
+
+void Bitcoin_CTxOut::print() const
+{
+    LogPrintf("%s\n", ToString());
+}
+
 uint256 Bitcoin_CTransaction::GetHash() const
 {
     return SerializeHash(*this, SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
@@ -56,6 +78,16 @@ int64_t Bitcoin_CTransaction::GetValueOut() const
             throw std::runtime_error("Bitcoin_CTransaction::GetValueOut() : value out of range");
     }
     return nValueOut;
+}
+bool Bitcoin_CTransaction::HasSpendable() const
+{
+    BOOST_FOREACH(const CTxOut& txout, vout)
+    {
+    	if(!txout.scriptPubKey.IsUnspendable()) {
+    		return true;
+    	}
+    }
+    return false;
 }
 
 double Bitcoin_CTransaction::ComputePriority(double dPriorityInputs, unsigned int nTxSize) const
@@ -96,6 +128,60 @@ std::string Bitcoin_CTransaction::ToString() const
 void Bitcoin_CTransaction::print() const
 {
     LogPrintf("%s", ToString());
+}
+
+// Amount compression:
+// * If the amount is 0, output 0
+// * first, divide the amount (in base units) by the largest power of 10 possible; call the exponent e (e is max 9)
+// * if e<9, the last digit of the resulting number cannot be 0; store it as d, and drop it (divide by 10)
+//   * call the result n
+//   * output 1 + 10*(9*n + d - 1) + e
+// * if e==9, we only know the resulting number is not zero, so output 1 + 10*(n - 1) + 9
+// (this is decodable, as d is in [1-9] and e is in [0-9])
+
+uint64_t Bitcoin_CTxOutCompressor::CompressAmount(uint64_t n)
+{
+    if (n == 0)
+        return 0;
+    int e = 0;
+    while (((n % 10) == 0) && e < 9) {
+        n /= 10;
+        e++;
+    }
+    if (e < 9) {
+        int d = (n % 10);
+        assert(d >= 1 && d <= 9);
+        n /= 10;
+        return 1 + (n*9 + d - 1)*10 + e;
+    } else {
+        return 1 + (n - 1)*10 + 9;
+    }
+}
+
+uint64_t Bitcoin_CTxOutCompressor::DecompressAmount(uint64_t x)
+{
+    // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
+    if (x == 0)
+        return 0;
+    x--;
+    // x = 10*(9*n + d - 1) + e
+    int e = x % 10;
+    x /= 10;
+    uint64_t n = 0;
+    if (e < 9) {
+        // x = 9*n + d - 1
+        int d = (x % 9) + 1;
+        x /= 9;
+        // x = n
+        n = x*10 + d;
+    } else {
+        n = x+1;
+    }
+    while (e) {
+        n *= 10;
+        e--;
+    }
+    return n;
 }
 
 uint256 Bitcoin_CBlockHeader::GetHash() const
