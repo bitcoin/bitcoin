@@ -233,12 +233,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // grab pending object, extract details and skip if not a metadex trade
         CMPPending *p_pending = &(it->second);
-        if (p_pending->type != MSC_TYPE_METADEX_TRADE
-                && p_pending->type != MSC_TYPE_METADEX_CANCEL_PRICE
-                && p_pending->type != MSC_TYPE_METADEX_CANCEL_PAIR
-                && p_pending->type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-            continue;
-        }
+        if (p_pending->type != MSC_TYPE_METADEX_TRADE) continue;
         uint32_t propertyId = p_pending->prop;
         int64_t amount = p_pending->amount;
 
@@ -283,12 +278,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         std::vector<std::string> vstr;
         boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
         if (vstr.size() > 2) {
-            if (atoi(vstr[2]) != MSC_TYPE_METADEX_TRADE
-                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_PRICE
-                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_PAIR
-                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-                continue;
-            }
+            if (atoi(vstr[2]) != MSC_TYPE_METADEX_TRADE) continue;
         }
 
         // check historyMap, if this tx exists don't waste resources doing anymore work on it
@@ -339,26 +329,18 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool valid = false;
 
         // parse the transaction
-        int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
-        if (0 != parseRC) continue;
-        if (0<=mp_obj.step1()) {
-            int tmpblock=0;
-            uint32_t tmptype=0;
-            uint64_t amountNew=0;
-            valid = getValidMPTX(hash, &tmpblock, &tmptype, &amountNew);
-            if (0 == mp_obj.step2_Value()) {
-                propertyIdForSale = mp_obj.getProperty();
-                amountForSale = mp_obj.getAmount();
-                divisibleForSale = isPropertyDivisible(propertyIdForSale);
-                if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
-                    uint8_t mdex_action = temp_metadexoffer.getAction();
-                    if (mdex_action != 1) continue; // cancels aren't trades
-                    propertyIdDesired = temp_metadexoffer.getDesProperty();
-                    divisibleDesired = isPropertyDivisible(propertyIdDesired);
-                    amountDesired = temp_metadexoffer.getAmountDesired();
-                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
-                    orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
-                }
+        if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
+        if (0 <= mp_obj.interpret_Transaction()) {
+            valid = getValidMPTX(hash);
+            propertyIdForSale = mp_obj.getProperty();
+            amountForSale = mp_obj.getAmount();
+            divisibleForSale = isPropertyDivisible(propertyIdForSale);
+            if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
+                propertyIdDesired = temp_metadexoffer.getDesProperty();
+                divisibleDesired = isPropertyDivisible(propertyIdDesired);
+                amountDesired = temp_metadexoffer.getAmountDesired();
+                t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+                orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
             }
         }
 
@@ -561,35 +543,10 @@ void TradeHistoryDialog::showDetails()
             }
             int64_t amountForSale = mp_obj.getAmount();
 
-            // obtain action byte
-            int actionByte = 0;
-            if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
-
-            // obtain an array of matched trades (action 1) or array of cancelled trades (action 2/3/4)
+            // obtain an array of matched trades
             Array tradeArray, cancelArray;
             int64_t totalBought = 0, totalSold = 0;
-            if (actionByte == 1) {
-                t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
-            } else {
-                int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
-                if (numberOfCancels > 0) {
-                    for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
-                        Object cancelTx;
-                        string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + static_cast<ostringstream*>( &(ostringstream() << refNumber) )->str() );
-                        if (!strValue.empty()) {
-                            std::vector<std::string> vstr;
-                            boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
-                            if (3 <= vstr.size()) {
-                                uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
-                                cancelTx.push_back(Pair("txid", vstr[0]));
-                                cancelTx.push_back(Pair("propertyid", propId));
-                                cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, boost::lexical_cast<uint64_t>(vstr[2]))));
-                                cancelArray.push_back(cancelTx);
-                            }
-                        }
-                    }
-                }
-            }
+            t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
 
             // obtain the status of the trade
             bool orderOpen = MetaDEx_isOpen(txid, propertyId);
@@ -603,16 +560,11 @@ void TradeHistoryDialog::showDetails()
                 if (!partialFilled) { statusText = "cancelled"; } else { statusText = "cancelled part filled"; }
                 if (filled) statusText = "filled";
             }
-            if (actionByte == 1) { txobj.push_back(Pair("status", statusText)); } else { txobj.push_back(Pair("status", "N/A")); }
+            txobj.push_back(Pair("status", statusText));
 
-            // add the appropriate array based on action byte
-            if(actionByte == 1) {
-                txobj.push_back(Pair("matches", tradeArray));
-                if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
-            } else {
-                txobj.push_back(Pair("cancelledtransactions", cancelArray));
-            }
-
+            // add the array
+            txobj.push_back(Pair("matches", tradeArray));
+            if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
             strTXText = write_string(Value(txobj), true);
         }
     }
