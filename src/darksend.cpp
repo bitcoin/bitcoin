@@ -266,7 +266,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
+            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)) {
                 LogPrintf("dsi -- transaction not valid! \n");
                 errorID = ERR_INVALID_TX;
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
@@ -607,7 +607,7 @@ void CDarksendPool::CheckFinalTransaction()
             if(fDebug) LogPrintf("Transaction 2: %s\n", txNew.ToString().c_str());
 
             // See if the transaction is valid
-            if (!txNew.AcceptToMemoryPool(false))
+            if (!txNew.AcceptToMemoryPool(false, true, true));
             {
                 LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
                 SetNull();
@@ -1190,7 +1190,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
+        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)){
             LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
             UnlockCoins();
             SetNull(true);
