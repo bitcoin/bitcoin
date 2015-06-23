@@ -1664,8 +1664,29 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
     vector<COutput> vCoins;
     AvailableCoins(vCoins, true, coinControl, coin_type, useIX);
 
+    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
+    if (coinControl && coinControl->HasSelected())
+    {
+        BOOST_FOREACH(const COutput& out, vCoins)
+        {
+            if(!out.fSpendable)
+                continue;
+
+            if(coin_type == ONLY_DENOMINATED) {
+                CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
+                int rounds = GetInputDarksendRounds(vin);
+                // make sure it's actually anonymized
+                if(rounds < nDarksendRounds) continue;
+            }
+
+            nValueRet += out.tx->vout[out.i].nValue;
+            setCoinsRet.insert(make_pair(out.tx, out.i));
+        }
+        return (nValueRet >= nTargetValue);
+    }
+
     //if we're doing only denominated, we need to round up to the nearest .1DRK
-    if(coin_type == ONLY_DENOMINATED){
+    if(coin_type == ONLY_DENOMINATED) {
         // Make outputs by looping through denominations, from large to small
         BOOST_FOREACH(int64_t v, darkSendDenominations)
         {
@@ -1682,19 +1703,6 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                     setCoinsRet.insert(make_pair(out.tx, out.i));
                 }
             }
-        }
-        return (nValueRet >= nTargetValue);
-    }
-
-    // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
-    if (coinControl && coinControl->HasSelected())
-    {
-        BOOST_FOREACH(const COutput& out, vCoins)
-        {
-            if(!out.fSpendable)
-                continue;
-            nValueRet += out.tx->vout[out.i].nValue;
-            setCoinsRet.insert(make_pair(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
     }
