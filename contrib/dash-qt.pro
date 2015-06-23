@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = 
+TARGET =
 DEPENDPATH += . \
               src \
               src/compat \
@@ -89,7 +89,6 @@ HEADERS += src/activemasternode.h \
            src/limitedmap.h \
            src/main.h \
            src/masternode-payments.h \
-           src/masternode-pos.h \
            src/masternode.h \
            src/masternodeconfig.h \
            src/masternodeman.h \
@@ -385,7 +384,6 @@ SOURCES += src/activemasternode.cpp \
            src/leveldbwrapper.cpp \
            src/main.cpp \
            src/masternode-payments.cpp \
-           src/masternode-pos.cpp \
            src/masternode.cpp \
            src/masternodeconfig.cpp \
            src/masternodeman.cpp \

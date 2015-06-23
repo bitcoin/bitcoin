@@ -755,7 +755,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 /**
  * Check transaction inputs to mitigate two
  * potential denial-of-service attacks:
- * 
+ *
  * 1. scriptSigs with extra data stuffed into them,
  *    not consumed by scriptPubKey (or P2SH script)
  * 2. P2SH scripts with a crazy number of expensive
@@ -2304,7 +2304,7 @@ static int64_t nTimeFlush = 0;
 static int64_t nTimeChainState = 0;
 static int64_t nTimePostConnect = 0;
 
-/** 
+/**
  * Connect a new block to chainActive. pblock is either NULL or a pointer to a CBlock
  * corresponding to pindexNew, to bypass loading it again from disk.
  */
@@ -2940,7 +2940,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         if(!IsBlockPayeeValid(block.vtx[0], pindexPrev->nHeight+1))
         {
-            if(Params().NetworkID() != CBaseChainParams::REGTEST) 
+            if(Params().NetworkID() != CBaseChainParams::REGTEST)
                 return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
 
         }
@@ -3017,7 +3017,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(100, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && 
+    if (block.nVersion < 2 &&
         CBlockIndex::IsSuperMajority(2, pindexPrev, Params().RejectBlockOutdatedMajority()))
     {
         return state.Invalid(error("%s : rejected nVersion=1 block", __func__),
@@ -3046,7 +3046,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
-    if (block.nVersion >= 2 && 
+    if (block.nVersion >= 2 &&
         CBlockIndex::IsSuperMajority(2, pindexPrev, Params().EnforceBlockUpgradeMajority()))
     {
         CScript expect = CScript() << nHeight;
@@ -3242,7 +3242,6 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
             coinbasePayee.ProcessBlockCoinbaseTX(pblock->vtx[0], pblock->nTime);
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
-            mnscan.DoMasternodePOSChecks();
             budget.NewBlock();
         }
     }
@@ -3265,9 +3264,9 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
-        return false;    
+        return false;
     if (!ContextualCheckBlock(block, state, pindexPrev))
-        return false;    
+        return false;
     if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
         return false;
     assert(state.IsValid());
@@ -3943,8 +3942,6 @@ bool static AlreadyHave(const CInv& inv)
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
         return mapMasternodePayeeVotes.count(inv.hash);
-    case MSG_MASTERNODE_SCANNING_ERROR:
-        return mapMasternodeScanningErrors.count(inv.hash);
     case MSG_BUDGET_VOTE:
         return mapSeenMasternodeBudgetVotes.count(inv.hash);
     case MSG_BUDGET_PROPOSAL:
@@ -4116,16 +4113,6 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_MASTERNODE_SCANNING_ERROR) {
-                    if(mapMasternodeScanningErrors.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << mapMasternodeScanningErrors[inv.hash];
-                        pfrom->PushMessage("mnse", ss);
-                        pushed = true;
-                    }
-                }
-                
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
                     if(mapSeenMasternodeBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -4145,7 +4132,7 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
-                
+
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
                     if(mapSeenFinalizedBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
@@ -4830,8 +4817,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     // This asymmetric behavior for inbound and outbound connections was introduced
     // to prevent a fingerprinting attack: an attacker can send specific fake addresses
-    // to users' AddrMan and later request them by sending getaddr messages. 
-    // Making users (which are behind NAT and can only make outgoing connections) ignore 
+    // to users' AddrMan and later request them by sending getaddr messages.
+    // Making users (which are behind NAT and can only make outgoing connections) ignore
     // getaddr message mitigates the attack.
     else if ((strCommand == "getaddr") && (pfrom->fInbound))
     {
@@ -5057,7 +5044,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         masternodePayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
         ProcessMessageInstantX(pfrom, strCommand, vRecv);
         ProcessSpork(pfrom, strCommand, vRecv);
-        ProcessMessageMasternodePOS(pfrom, strCommand, vRecv);
     }
 
 
