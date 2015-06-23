@@ -96,7 +96,7 @@ public:
 
     static std::string const watermarkKey;
     void setWatermark(const uint256& watermark);
-    int getWatermark(uint256& watermark) const;
+    bool getWatermark(uint256& watermark) const;
 
     void printAll() const;
 };

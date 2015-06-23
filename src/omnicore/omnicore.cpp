@@ -1522,7 +1522,7 @@ static int load_most_relevant_state()
   // check the SP database and roll it back to its latest valid state
   // according to the active chain
   uint256 spWatermark;
-  if (0 > _my_sps->getWatermark(spWatermark)) {
+  if (!_my_sps->getWatermark(spWatermark)) {
     //trigger a full reparse, if the SP database has no watermark
     return -1;
   }

@@ -6,7 +6,10 @@
 #include "omnicore/omnicore.h"
 
 #include "base58.h"
+#include "clientversion.h"
 #include "main.h"
+#include "serialize.h"
+#include "streams.h"
 #include "tinyformat.h"
 #include "uint256.h"
 #include "utiltime.h"
@@ -432,21 +435,43 @@ int CMPSPInfo::popBlock(const uint256& block_hash)
 
 void CMPSPInfo::setWatermark(const uint256& watermark)
 {
-    leveldb::WriteBatch commitBatch;
-    commitBatch.Delete(watermarkKey);
-    commitBatch.Put(watermarkKey, watermark.ToString());
-    pdb->Write(syncoptions, &commitBatch);
+    leveldb::WriteBatch batch;
+    leveldb::Slice slKey(watermarkKey);
+
+    CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+    ssValue.reserve(ssValue.GetSerializeSize(watermark));
+    ssValue << watermark;
+    leveldb::Slice slValue(&ssValue[0], ssValue.size());
+
+    batch.Delete(slKey);
+    batch.Put(slKey, slValue);
+
+    leveldb::Status status = pdb->Write(syncoptions, &batch);
+    if (!status.ok()) {
+        PrintToLog("%s(): ERROR: failed to write watermark: %s\n", __func__, status.ToString());
+    }
 }
 
-int CMPSPInfo::getWatermark(uint256& watermark) const // TODO: return bool
+bool CMPSPInfo::getWatermark(uint256& watermark) const
 {
-    std::string watermarkVal;
-    if (pdb->Get(readoptions, watermarkKey, &watermarkVal).ok()) {
-        watermark.SetHex(watermarkVal);
-        return 0;
-    } else {
-        return -1;
+    leveldb::Slice slKey(watermarkKey);
+
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
+    if (!status.ok()) {
+        PrintToLog("%s(): ERROR: failed to retrieve watermark: %s\n", __func__, status.ToString());
+        return false;
     }
+
+    try {
+        CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> watermark;
+    } catch (const std::exception& e) {
+        PrintToLog("%s(): ERROR: failed to deserialize watermark: %s\n", __func__, e.what());
+        return false;
+    }
+
+    return true;
 }
 
 void CMPSPInfo::printAll() const
