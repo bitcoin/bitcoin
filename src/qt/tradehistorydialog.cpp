@@ -176,13 +176,16 @@ void TradeHistoryDialog::UpdateTradeHistoryTable()
             if (objTH.status == "Filled") ic = QIcon(":/icons/meta_filled");
             if (objTH.status == "Open") ic = QIcon(":/icons/meta_open");
             if (objTH.status == "Part Filled") ic = QIcon(":/icons/meta_partial");
-            if (!objTH.valid) ic = QIcon(":/icons/transaction_invalid");
+            if (!objTH.valid) {
+                ic = QIcon(":/icons/transaction_invalid");
+                objTH.status == "Invalid";
+            }
             iconCell->setIcon(ic);
             amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
             amountOutCell->setForeground(QColor("#EE0000"));
             amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
             amountInCell->setForeground(QColor("#00AA00"));
-            if (objTH.status == "Cancelled" || objTH.status == "Filled" || objTH.status == "Part Cancel") {
+            if (objTH.status == "Cancelled" || objTH.status == "Filled" || objTH.status == "Part Cancel" || !objTH.valid) {
                 // dull the colors for non-active trades
                 dateCell->setForeground(QColor("#707070"));
                 statusCell->setForeground(QColor("#707070"));
@@ -355,6 +358,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         if (!orderOpen && filled) statusText = "Filled";
         if (orderOpen && !partialFilled) statusText = "Open";
         if (orderOpen && partialFilled) statusText = "Part Filled";
+        if (!valid) statusText = "Invalid";
 
         // prepare display values
         std::string displayText = "Sell ";
@@ -410,7 +414,7 @@ void TradeHistoryDialog::UpdateData()
             continue;
         }
         TradeHistoryObject *tmpObjTH = &(hIter->second);
-        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled" || tmpObjTH->status == "Part Cancel") continue; // once a trade hits this status the details should never change
+        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled" || tmpObjTH->status == "Part Cancel" || tmpObjTH->status == "Invalid") continue; // once a trade hits this status the details should never change
         if (tmpObjTH->blockHeight == 0) continue; // do not attempt to refresh details for a trade that's still pending
         if (lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
 
@@ -437,6 +441,7 @@ void TradeHistoryDialog::UpdateData()
         if (!orderOpen && filled) { statusText = "Filled"; ic = QIcon(":/icons/meta_filled"); }
         if (orderOpen && !partialFilled) { statusText = "Open"; ic = QIcon(":/icons/meta_open"); }
         if (orderOpen && partialFilled) { statusText = "Part Filled"; ic = QIcon(":/icons/meta_partial"); }
+        if (tmpObjTH->valid) { statusText = "Invalid"; ic = QIcon(":/icons/transaction_invalid"); }
 
         // format new amounts
         std::string displayIn = "";
@@ -462,7 +467,7 @@ void TradeHistoryDialog::UpdateData()
         amountOutCell->setForeground(QColor("#EE0000"));
         amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
         amountInCell->setForeground(QColor("#00AA00"));
-        if (statusText == "Cancelled" || statusText == "Filled" || statusText == "Part Cancel") {
+        if (statusText == "Cancelled" || statusText == "Filled" || statusText == "Part Cancel" || statusText == "Invalid") {
             // dull the colors for non-active trades
             dateCell->setForeground(QColor("#707070"));
             statusCell->setForeground(QColor("#707070"));
