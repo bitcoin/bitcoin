@@ -75,17 +75,14 @@ public:
     bool allowFreeTx;
     int protocolVersion;
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
-    CScript donationAddress;
-    int donationPercentage;
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
-    int64_t nLastPaid;
     int nVotedTimes;
 
     CMasternode();
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage);
+    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
 
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
@@ -110,11 +107,8 @@ public:
         swap(first.allowFreeTx, second.allowFreeTx);
         swap(first.protocolVersion, second.protocolVersion);
         swap(first.nLastDsq, second.nLastDsq);
-        swap(first.donationAddress, second.donationAddress);
-        swap(first.donationPercentage, second.donationPercentage);
         swap(first.nScanningErrorCount, second.nScanningErrorCount);
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
-        swap(first.nLastPaid, second.nLastPaid);
         swap(first.nVotedTimes, second.nVotedTimes);
     }
 
@@ -148,9 +142,6 @@ public:
             READWRITE(sigTime);
             READWRITE(lastTimeSeen);
             READWRITE(protocolVersion);
-            READWRITE(donationAddress);
-            READWRITE(donationPercentage);
-            READWRITE(nLastPaid);
             READWRITE(activeState);
             READWRITE(lastMnping);
             READWRITE(cacheInputAge);
@@ -242,6 +233,8 @@ public:
         return strStatus;
     }
 
+    int64_t GetLastPaid();
+
 };
 
 
@@ -253,7 +246,7 @@ class CMasternodeBroadcast : public CMasternode
 {
 public:
     CMasternodeBroadcast();
-    CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn, CScript newDonationAddress, int newDonationPercentage);
+    CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
     CMasternodeBroadcast(const CMasternode& other);
 
     bool CheckAndUpdate(int& nDoS, bool fRequested);
@@ -273,8 +266,6 @@ public:
         READWRITE(sigTime);
         READWRITE(lastTimeSeen);
         READWRITE(protocolVersion);
-        READWRITE(donationAddress);
-        READWRITE(donationPercentage);
     }
     
     uint256 GetHash(){

@@ -62,8 +62,8 @@ public:
     };
 
     CBudgetDB();
-    bool Write(const CBudgetManager &budgetToSave);
-    ReadResult Read(CBudgetManager& budgetToLoad);
+    bool Write(const CBudgetManager &objToSave);
+    ReadResult Read(CBudgetManager& objToLoad);
 };
 
 

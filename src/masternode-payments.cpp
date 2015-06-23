@@ -243,7 +243,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
         if(h == nNotBlockHeight) continue;
         if(mapMasternodeBlocks.count(h)){
             if(mapMasternodeBlocks[h].GetPayee(payee)){
-                if(mnpayee == payee || mn.donationAddress == payee) {
+                if(mnpayee == payee) {
                     return true;
                 }
             }
@@ -449,7 +449,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
         //is budget payment block -- handled by the budgeting software
     } else {
-        CScript payeeSource;
         uint256 hash;
 
         if(!GetBlockHash(hash, nBlockHeight-100)) return false;
@@ -466,25 +465,14 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
             newWinner.nBlockHeight = nBlockHeight;
 
-            CScript payee;
-            if(pmn->donationPercentage > 0 && (nHash % 100) <= (unsigned int)pmn->donationPercentage) {
-                payee = pmn->donationAddress;
-            } else {
-                payee = GetScriptForDestination(pmn->pubkey.GetID());
-            }
-            
-            payeeSource = GetScriptForDestination(pmn->pubkey.GetID());
+            CScript payee = GetScriptForDestination(pmn->pubkey.GetID());
             newWinner.AddPayee(payee, masternodePayment);
             
             CTxDestination address1;
             ExtractDestination(payee, address1);
             CBitcoinAddress address2(address1);
 
-            CTxDestination address3;
-            ExtractDestination(payeeSource, address3);
-            CBitcoinAddress address4(address3);
-
-            LogPrintf("CMasternodePayments::ProcessBlock() Winner payee %s nHeight %d vin source %s. \n", address2.ToString().c_str(), newWinner.nBlockHeight, address4.ToString().c_str());
+            LogPrintf("CMasternodePayments::ProcessBlock() Winner payee %s nHeight %d. \n", address2.ToString().c_str(), newWinner.nBlockHeight);
         } else {
             LogPrintf("CMasternodePayments::ProcessBlock() Failed to find masternode to pay\n");
         }

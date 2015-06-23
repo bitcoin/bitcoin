@@ -98,17 +98,17 @@ CBudgetDB::CBudgetDB()
     strMagicMessage = "MasternodeBudget";
 }
 
-bool CBudgetDB::Write(const CBudgetManager& budgetToSave)
+bool CBudgetDB::Write(const CBudgetManager& objToSave)
 {
     int64_t nStart = GetTimeMillis();
 
     // serialize, checksum data up to that point, then append checksum
-    CDataStream ssBudget(SER_DISK, CLIENT_VERSION);
-    ssBudget << strMagicMessage; // masternode cache file specific magic message
-    ssBudget << FLATDATA(Params().MessageStart()); // network specific magic number
-    ssBudget << budgetToSave;
-    uint256 hash = Hash(ssBudget.begin(), ssBudget.end());
-    ssBudget << hash;
+    CDataStream ssObj(SER_DISK, CLIENT_VERSION);
+    ssObj << strMagicMessage; // masternode cache file specific magic message
+    ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
+    ssObj << objToSave;
+    uint256 hash = Hash(ssObj.begin(), ssObj.end());
+    ssObj << hash;
 
     // open output file, and associate with CAutoFile
     FILE *file = fopen(pathDB.string().c_str(), "wb");
@@ -118,21 +118,19 @@ bool CBudgetDB::Write(const CBudgetManager& budgetToSave)
 
     // Write and commit header, data
     try {
-        fileout << ssBudget;
+        fileout << ssObj;
     }
     catch (std::exception &e) {
         return error("%s : Serialize or I/O error - %s", __func__, e.what());
     }
-//    FileCommit(fileout);
     fileout.fclose();
 
     LogPrintf("Written info to budget.dat  %dms\n", GetTimeMillis() - nStart);
-    //LogPrintf("  %s\n", budgetToSave.ToString().c_str());
 
     return true;
 }
 
-CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& budgetToLoad)
+CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& objToLoad)
 {
 
     int64_t nStart = GetTimeMillis();
@@ -166,10 +164,10 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& budgetToLoad)
     }
     filein.fclose();
 
-    CDataStream ssBudget(vchData, SER_DISK, CLIENT_VERSION);
+    CDataStream ssObj(vchData, SER_DISK, CLIENT_VERSION);
 
     // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssBudget.begin(), ssBudget.end());
+    uint256 hashTmp = Hash(ssObj.begin(), ssObj.end());
     if (hashIn != hashTmp)
     {
         error("%s : Checksum mismatch, data corrupted", __func__);
@@ -181,7 +179,7 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& budgetToLoad)
     std::string strMagicMessageTmp;
     try {
         // de-serialize file header (masternode cache file specific magic message) and ..
-        ssBudget >> strMagicMessageTmp;
+        ssObj >> strMagicMessageTmp;
 
         // ... verify the message matches predefined one
         if (strMagicMessage != strMagicMessageTmp)
@@ -192,7 +190,7 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& budgetToLoad)
 
 
         // de-serialize file header (network specific magic number) and ..
-        ssBudget >> FLATDATA(pchMsgTmp);
+        ssObj >> FLATDATA(pchMsgTmp);
 
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
@@ -202,18 +200,18 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& budgetToLoad)
         }
 
         // de-serialize data into CBudgetManager object
-        ssBudget >> budgetToLoad;
+        ssObj >> objToLoad;
     }
     catch (std::exception &e) {
-        budgetToLoad.Clear();
+        objToLoad.Clear();
         error("%s : Deserialize or I/O error - %s", __func__, e.what());
         return IncorrectFormat;
     }
 
 
-    budgetToLoad.CheckAndRemove(); // clean out expired
+    objToLoad.CheckAndRemove(); // clean out expired
     LogPrintf("Loaded info from budget.dat  %dms\n", GetTimeMillis() - nStart);
-    LogPrintf("  %s\n", budgetToLoad.ToString());
+    LogPrintf("  %s\n", objToLoad.ToString());
 
     return Ok;
 }
@@ -244,7 +242,7 @@ void DumpBudgets()
     LogPrintf("Writting info to budget.dat...\n");
     mndb.Write(budget);
 
-    LogPrintf("Masternode dump finished  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
 void CBudgetManager::AddFinalizedBudget(CFinalizedBudget& prop)

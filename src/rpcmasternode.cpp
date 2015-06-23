@@ -250,10 +250,7 @@ Value masternode(const Array& params, bool fHelp)
     			found = true;
     			std::string errorMessage;
 
-                std::string strDonateAddress = mne.getDonationAddress();
-                std::string strDonationPercentage = mne.getDonationPercentage();
-
-    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+    			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
     			statusObj.push_back(Pair("result", result ? "successful" : "failed"));
     			if(!result) {
@@ -305,10 +302,7 @@ Value masternode(const Array& params, bool fHelp)
 
 			std::string errorMessage;
 
-            std::string strDonateAddress = mne.getDonationAddress();
-            std::string strDonationPercentage = mne.getDonationPercentage();
-
-			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strDonateAddress, strDonationPercentage, errorMessage);
+			bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
 			Object statusObj;
 			statusObj.push_back(Pair("alias", mne.getAlias()));
@@ -440,8 +434,6 @@ Value masternode(const Array& params, bool fHelp)
             mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
             mnObj.push_back(Pair("txHash", mne.getTxHash()));
             mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
-            mnObj.push_back(Pair("donationAddress", mne.getDonationAddress()));
-            mnObj.push_back(Pair("donationPercent", mne.getDonationPercentage()));
             resultObj.push_back(Pair("masternode", mnObj));
         }
 
@@ -474,7 +466,7 @@ Value masternodelist(const Array& params, bool fHelp)
 
     if (fHelp ||
             (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank" && strMode != "addr"
-                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "donation" && strMode != "pose" && strMode != "lastpaid"))
+                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "pose" && strMode != "lastpaid"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -485,7 +477,6 @@ Value masternodelist(const Array& params, bool fHelp)
                 "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "  donation       - Show donation settings\n"
                 "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
@@ -516,22 +507,6 @@ Value masternodelist(const Array& params, bool fHelp)
             if (strMode == "activeseconds") {
                 if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
-            } else if (strMode == "donation") {
-                CTxDestination address1;
-                ExtractDestination(mn.donationAddress, address1);
-                CBitcoinAddress address2(address1);
-
-                if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
-                    strVin.find(strFilter) == string::npos) continue;
-
-                std::string strOut = "";
-
-                if(mn.donationPercentage != 0){
-                    strOut = address2.ToString().c_str();
-                    strOut += ":";
-                    strOut += boost::lexical_cast<std::string>(mn.donationPercentage);
-                }
-                obj.push_back(Pair(strVin,       strOut.c_str()));
             } else if (strMode == "full") {
                 CScript pubkey;
                 pubkey = GetScriptForDestination(mn.pubkey.GetID());
@@ -550,7 +525,7 @@ Value masternodelist(const Array& params, bool fHelp)
                                mn.addr.ToString() << " " <<
                                mn.lastTimeSeen << " " << setw(8) <<
                                (mn.lastTimeSeen - mn.sigTime) << " " <<
-                               mn.nLastPaid;
+                               mn.GetLastPaid();
                 std::string output = stringStream.str();
                 stringStream << " " << strVin;
                 if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
@@ -588,7 +563,7 @@ Value masternodelist(const Array& params, bool fHelp)
             } else if(strMode == "lastpaid"){
                 if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,      (int64_t)mn.nLastPaid));
+                obj.push_back(Pair(strVin,      (int64_t)mn.GetLastPaid()));
             }
         }
     }
