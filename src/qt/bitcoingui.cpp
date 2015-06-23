@@ -60,6 +60,7 @@
 
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 
+// A list of GUI labels
 BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
     clientModel(0),
@@ -100,8 +101,9 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     prevBlocks(0),
     spinnerFrame(0)
 {
+    // The window size
     GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
-
+    // The window title
     QString windowTitle = tr("Bitcoin Core") + " - ";
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
@@ -115,7 +117,9 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     } else {
         windowTitle += tr("Node");
     }
+    // Window title
     windowTitle += " " + networkStyle->getTitleAddText();
+// The window icon
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(networkStyle->getTrayAndWindowIcon());
     setWindowIcon(networkStyle->getTrayAndWindowIcon());
@@ -644,6 +648,7 @@ void BitcoinGUI::setNumConnections(int count)
     QString icon;
     switch(count)
     {
+    // different icons for different connections
     case 0: icon = ":/icons/connect_0"; break;
     case 1: case 2: case 3: icon = ":/icons/connect_1"; break;
     case 4: case 5: case 6: icon = ":/icons/connect_2"; break;
@@ -665,6 +670,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
     // Acquire current block source
     enum BlockSource blockSource = clientModel->getBlockSource();
     switch (blockSource) {
+        // Text to display
         case BLOCK_SOURCE_NETWORK:
             progressBarLabel->setText(tr("Synchronizing with network..."));
             break;
