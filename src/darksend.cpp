@@ -128,7 +128,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
 
             if(state == POOL_STATUS_QUEUE){
-                if (fDebug)  LogPrintf("Darksend queue is ready - %s\n", addr.ToString().c_str());
+                LogPrint("darksend", "Darksend queue is ready - %s\n", addr.ToString().c_str());
                 PrepareDarksendDenominate();
             }
         } else {
@@ -136,18 +136,18 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 if(q.vin == dsq.vin) return;
             }
 
-            if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, mnodeman.nDsqCount);
+            LogPrint("darksend", "dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(pmn->nLastDsq != 0 &&
                 pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
-                if(fDebug) LogPrintf("dsq -- Masternode sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
+                LogPrint("darksend", "dsq -- Masternode sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
                 return;
             }
             mnodeman.nDsqCount++;
             pmn->nLastDsq = mnodeman.nDsqCount;
             pmn->allowFreeTx = true;
 
-            if(fDebug) LogPrintf("dsq - new Darksend queue object - %s\n", addr.ToString().c_str());
+            LogPrint("darksend", "dsq - new Darksend queue object - %s\n", addr.ToString().c_str());
             vecDarksendQueue.push_back(dsq);
             dsq.Relay();
             dsq.time = GetTime();
@@ -225,7 +225,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             BOOST_FOREACH(const CTxIn i, in){
                 tx.vin.push_back(i);
 
-                if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
+                LogPrint("darksend", "dsi -- tx in %s\n", i.ToString().c_str());
 
                 CTransaction tx2;
                 uint256 hash;
@@ -297,7 +297,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         int errorID;
         vRecv >> sessionIDMessage >> state >> entriesCount >> accepted >> errorID;
 
-        if(fDebug) LogPrintf("dssu - state: %i entriesCount: %i accepted: %i error: %s \n", state, entriesCount, accepted, GetMessageByID(errorID).c_str());
+        LogPrint("darksend", "dssu - state: %i entriesCount: %i accepted: %i error: %s \n", state, entriesCount, accepted, GetMessageByID(errorID).c_str());
 
         if((accepted != 1 && accepted != 0) && sessionID != sessionIDMessage){
             LogPrintf("dssu - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
@@ -321,7 +321,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         BOOST_FOREACH(const CTxIn item, sigs)
         {
             if(AddScriptSig(item)) success = true;
-            if(fDebug) LogPrintf(" -- sigs count %d %d\n", (int)sigs.size(), count);
+            LogPrint("darksend", " -- sigs count %d %d\n", (int)sigs.size(), count);
             count++;
         }
 
@@ -345,7 +345,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> txNew;
 
         if(sessionID != sessionIDMessage){
-            if (fDebug) LogPrintf("dsf - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
+            LogPrint("darksend", "dsf - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
             return;
         }
 
@@ -370,7 +370,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> error >> errorID;
 
         if(sessionID != sessionIDMessage){
-            if (fDebug) LogPrintf("dsc - message doesn't match current Darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
+            LogPrint("darksend", "dsc - message doesn't match current Darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
             return;
         }
 
@@ -498,6 +498,7 @@ std::string CDarksendPool::GetStatus()
 //
 void CDarksendPool::Check()
 {
+    if(fMasterNode) LogPrintf("darksend", "CDarksendPool::Check() - entries count %lu\n", entries.size());
     //printf("CDarksendPool::Check() %d - %d - %d\n", state, anonTx.CountEntries(), GetTimeMillis()-lastTimeChanged);
 
     if(fMasterNode) {
@@ -513,7 +514,7 @@ void CDarksendPool::Check()
 
     // create the finalized transaction for distribution to the clients
     if(state == POOL_STATUS_FINALIZE_TRANSACTION) {
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- FINALIZE TRANSACTIONS\n");
+        LogPrint("darksend", "CDarksendPool::Check() -- FINALIZE TRANSACTIONS\n");
         UpdateState(POOL_STATUS_SIGNING);
 
         if (fMasterNode) {
@@ -533,7 +534,7 @@ void CDarksendPool::Check()
             std::random_shuffle ( txNew.vout.begin(), txNew.vout.end(), randomizeList);
 
 
-            if(fDebug) LogPrintf("Transaction 1: %s\n", txNew.ToString().c_str());
+            LogPrint("darksend", "Transaction 1: %s\n", txNew.ToString().c_str());
             finalTransaction = txNew;
 
             // request signatures from clients
@@ -543,7 +544,7 @@ void CDarksendPool::Check()
 
     // If we have all of the signatures, try to compile the transaction
     if(fMasterNode && state == POOL_STATUS_SIGNING && SignaturesComplete()) {
-        if(fDebug) LogPrintf("CDarksendPool::Check() -- SIGNING\n");
+        LogPrint("darksend", "CDarksendPool::Check() -- SIGNING\n");
         UpdateState(POOL_STATUS_TRANSMISSION);
 
         CheckFinalTransaction();
@@ -793,15 +794,15 @@ void CDarksendPool::CheckTimeout(){
     if(!fMasterNode) {
         switch(state) {
             case POOL_STATUS_TRANSMISSION:
-                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session complete -- Running Check()\n");
+                LogPrint("darksend", "CDarksendPool::CheckTimeout() -- Session complete -- Running Check()\n");
                 Check();
                 break;
             case POOL_STATUS_ERROR:
-                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Pool error -- Running Check()\n");
+                LogPrint("darksend", "CDarksendPool::CheckTimeout() -- Pool error -- Running Check()\n");
                 Check();
                 break;
             case POOL_STATUS_SUCCESS:
-                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Pool success -- Running Check()\n");
+                LogPrint("darksend", "CDarksendPool::CheckTimeout() -- Pool success -- Running Check()\n");
                 Check();
                 break;
         }
@@ -812,7 +813,7 @@ void CDarksendPool::CheckTimeout(){
     vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
     while(it != vecDarksendQueue.end()){
         if((*it).IsExpired()){
-            if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() : Removing expired queue entry - %d\n", c);
+            LogPrint("darksend", "CDarksendPool::CheckTimeout() : Removing expired queue entry - %d\n", c);
             it = vecDarksendQueue.erase(it);
         } else ++it;
         c++;
@@ -828,7 +829,7 @@ void CDarksendPool::CheckTimeout(){
         vector<CDarkSendEntry>::iterator it2 = entries.begin();
         while(it2 != entries.end()){
             if((*it2).IsExpired()){
-                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() : Removing expired entry - %d\n", c);
+                LogPrint("darksend", "CDarksendPool::CheckTimeout() : Removing expired entry - %d\n", c);
                 it2 = entries.erase(it2);
                 if(entries.size() == 0){
                     UnlockCoins();
@@ -917,14 +918,14 @@ bool CDarksendPool::SignatureValid(const CScript& newSig, const CTxIn& newVin){
     if(found >= 0){ //might have to do this one input at a time?
         int n = found;
         txNew.vin[n].scriptSig = newSig;
-        if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Sign with sig %s\n", newSig.ToString().substr(0,24).c_str());
+        LogPrint("darksend", "CDarksendPool::SignatureValid() - Sign with sig %s\n", newSig.ToString().substr(0,24).c_str());
         if (!VerifyScript(txNew.vin[n].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, n))){
-            if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Signing - Error signing input %u\n", n);
+            LogPrint("darksend", "CDarksendPool::SignatureValid() - Signing - Error signing input %u\n", n);
             return false;
         }
     }
 
-    if(fDebug) LogPrintf("CDarksendPool::SignatureValid() - Signing - Successfully validated input\n");
+    LogPrint("darksend", "CDarksendPool::SignatureValid() - Signing - Successfully validated input\n");
     return true;
 }
 
@@ -959,17 +960,17 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     }
 
     if(missingTx){
-        if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString().c_str());
+        LogPrint("darksend", "CDarksendPool::IsCollateralValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString().c_str());
         return false;
     }
 
     //collateral transactions are required to pay out DARKSEND_COLLATERAL as a fee to the miners
     if(nValueIn - nValueOut < DARKSEND_COLLATERAL) {
-        if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
+        LogPrint("darksend", "CDarksendPool::IsCollateralValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
         return false;
     }
 
-    if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
+    LogPrint("darksend", "CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
     {
         LOCK(cs_main);
@@ -992,7 +993,7 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
 
     BOOST_FOREACH(CTxIn in, newInput) {
         if (in.prevout.IsNull() || nAmount < 0) {
-            if(fDebug) LogPrintf ("CDarksendPool::AddEntry - input not valid!\n");
+            LogPrint("darksend", "CDarksendPool::AddEntry - input not valid!\n");
             errorID = ERR_INVALID_INPUT;
             sessionUsers--;
             return false;
@@ -1000,25 +1001,25 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
     }
 
     if (!IsCollateralValid(txCollateral)){
-        if(fDebug) LogPrintf ("CDarksendPool::AddEntry - collateral not valid!\n");
+        LogPrint("darksend", "CDarksendPool::AddEntry - collateral not valid!\n");
         errorID = ERR_INVALID_COLLATERAL;
         sessionUsers--;
         return false;
     }
 
     if((int)entries.size() >= GetMaxPoolTransactions()){
-        if(fDebug) LogPrintf ("CDarksendPool::AddEntry - entries is full!\n");
+        LogPrint("darksend", "CDarksendPool::AddEntry - entries is full!\n");
         errorID = ERR_ENTRIES_FULL;
         sessionUsers--;
         return false;
     }
 
     BOOST_FOREACH(CTxIn in, newInput) {
-        if(fDebug) LogPrintf("looking for vin -- %s\n", in.ToString().c_str());
+        LogPrint("darksend", "looking for vin -- %s\n", in.ToString().c_str());
         BOOST_FOREACH(const CDarkSendEntry& v, entries) {
             BOOST_FOREACH(const CTxDSIn& s, v.sev){
                 if((CTxIn)s == in) {
-                    if(fDebug) LogPrintf ("CDarksendPool::AddEntry - found in vin\n");
+                    LogPrint("darksend", "CDarksendPool::AddEntry - found in vin\n");
                     errorID = ERR_ALREADY_HAVE;
                     sessionUsers--;
                     return false;
@@ -1031,14 +1032,14 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
     v.Add(newInput, nAmount, txCollateral, newOutput);
     entries.push_back(v);
 
-    if(fDebug) LogPrintf("CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString().c_str());
+    LogPrint("darksend", "CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString().c_str());
     errorID = MSG_ENTRIES_ADDED;
 
     return true;
 }
 
 bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
-    if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- new sig  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
+    LogPrint("darksend", "CDarksendPool::AddScriptSig -- new sig  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
 
 
     BOOST_FOREACH(const CDarkSendEntry& v, entries) {
@@ -1051,22 +1052,22 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
     }
 
     if(!SignatureValid(newVin.scriptSig, newVin)){
-        if(fDebug) LogPrintf("CDarksendPool::AddScriptSig - Invalid Sig\n");
+        LogPrint("darksend", "CDarksendPool::AddScriptSig - Invalid Sig\n");
         return false;
     }
 
-    if(fDebug) LogPrintf("CDarksendPool::AddScriptSig -- sig %s\n", newVin.ToString().c_str());
+    LogPrint("darksend", "CDarksendPool::AddScriptSig -- sig %s\n", newVin.ToString().c_str());
 
     BOOST_FOREACH(CTxIn& vin, finalTransaction.vin){
         if(newVin.prevout == vin.prevout && vin.nSequence == newVin.nSequence){
             vin.scriptSig = newVin.scriptSig;
             vin.prevPubKey = newVin.prevPubKey;
-            if(fDebug) LogPrintf("CDarkSendPool::AddScriptSig -- adding to finalTransaction  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
+            LogPrint("darksend", "CDarkSendPool::AddScriptSig -- adding to finalTransaction  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
         }
     }
     for(unsigned int i = 0; i < entries.size(); i++){
         if(entries[i].AddSig(newVin)){
-            if(fDebug) LogPrintf("CDarkSendPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
+            LogPrint("darksend", "CDarkSendPool::AddScriptSig -- adding  %s\n", newVin.scriptSig.ToString().substr(0,24).c_str());
             return true;
         }
     }
@@ -1149,7 +1150,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         BOOST_FOREACH(const CTxIn& i, vin){
             tx.vin.push_back(i);
 
-            if(fDebug) LogPrintf("dsi -- tx in %s\n", i.ToString().c_str());
+            LogPrint("darksend", "dsi -- tx in %s\n", i.ToString().c_str());
         }
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
@@ -1280,19 +1281,19 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
 
                 const CKeyStore& keystore = *pwalletMain;
 
-                if(fDebug) LogPrintf("CDarksendPool::Sign - Signing my input %i\n", mine);
+                LogPrint("darksend", "CDarksendPool::Sign - Signing my input %i\n", mine);
                 if(!SignSignature(keystore, prevPubKey, finalTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
-                    if(fDebug) LogPrintf("CDarksendPool::Sign - Unable to sign my own transaction! \n");
+                    LogPrint("darksend", "CDarksendPool::Sign - Unable to sign my own transaction! \n");
                     // not sure what to do here, it will timeout...?
                 }
 
                 sigs.push_back(finalTransaction.vin[mine]);
-                if(fDebug) LogPrintf(" -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString().c_str());
+                LogPrint("darksend", " -- dss %d %d %s\n", mine, (int)sigs.size(), finalTransaction.vin[mine].scriptSig.ToString().c_str());
             }
 
         }
 
-        if(fDebug) LogPrintf("CDarksendPool::Sign - txNew:\n%s", finalTransaction.ToString().c_str());
+        LogPrint("darksend", "CDarksendPool::Sign - txNew:\n%s", finalTransaction.ToString().c_str());
     }
 
 	// push all of our signatures to the Masternode
@@ -1305,7 +1306,7 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
 
 void CDarksendPool::NewBlock()
 {
-    if(fDebug) LogPrintf("CDarksendPool::NewBlock \n");
+    LogPrint("darksend", "CDarksendPool::NewBlock \n");
 
     //we we're processing lots of blocks, we'll just leave
     if(GetTime() - lastNewBlock < 10) return;
@@ -1377,7 +1378,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     }
 
     if(mnodeman.size() == 0){
-        if(fDebug) LogPrintf("CDarksendPool::DoAutomaticDenominating - No Masternodes detected\n");
+        LogPrint("darksend", "CDarksendPool::DoAutomaticDenominating - No Masternodes detected\n");
         strAutoDenomResult = _("No Masternodes detected.");
         return false;
     }
@@ -1414,7 +1415,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-    if (fDebug) LogPrintf("DoAutomaticDenominating : nLowestDenom=%d, nBalanceNeedsAnonymized=%d\n", nLowestDenom, nBalanceNeedsAnonymized);
+    LogPrint("darksend", "DoAutomaticDenominating : nLowestDenom=%d, nBalanceNeedsAnonymized=%d\n", nLowestDenom, nBalanceNeedsAnonymized);
 
     // select coins that should be given to the pool
     if (!pwalletMain->SelectCoinsDark(nValueMin, nBalanceNeedsAnonymized, vCoins, nValueIn, 0, nDarksendRounds))
@@ -1687,6 +1688,7 @@ bool CDarksendPool::MakeCollateralAmounts()
     if(!success){
         // if we failed (most likeky not enough funds), try to use denominated instead -
         // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
+        LogPrintf("darksend", "MakeCollateralAmounts: ONLY_NONDENOMINATED_NOTMN Error - %s\n", strFail);
         success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
                 nFeeRet, strFail, coinControl, ONLY_DENOMINATED);
         if(!success){
@@ -1816,7 +1818,7 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
     LogPrintf("CDarksendPool::IsCompatibleWithSession - sessionDenom %d sessionUsers %d\n", sessionDenom, sessionUsers);
 
     if (!unitTest && !IsCollateralValid(txCollateral)){
-        if(fDebug) LogPrintf ("CDarksendPool::IsCompatibleWithSession - collateral not valid!\n");
+        LogPrint("darksend", "GetInputDarksendRoundsCDarksendPool::IsCompatibleWithSession - collateral not valid!\n");
         errorID = ERR_INVALID_COLLATERAL;
         return false;
     }
