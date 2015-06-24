@@ -354,7 +354,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // parse the transaction
         if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
-        if (0 <= mp_obj.interpret_Transaction()) {
+        if (mp_obj.interpret_Transaction()) {
             valid = getValidMPTX(hash);
             propertyIdForSale = mp_obj.getProperty();
             amountForSale = mp_obj.getAmount();
