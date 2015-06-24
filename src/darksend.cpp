@@ -1485,18 +1485,16 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     }
 
+    if(fDryRun) return true;
+
     nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true, false, false);
     nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
 
-    if(!fDryRun && nBalanceNeedsDenominated > nOnlyDenominatedBalance) return CreateDenominated(nBalanceNeedsDenominated);
+    //check if we have should create more denominated inputs
+    if(nBalanceNeedsDenominated > nOnlyDenominatedBalance) return CreateDenominated(nBalanceNeedsDenominated);
 
-    //check to see if we have the collateral sized inputs, it requires these
-    if(!pwalletMain->HasCollateralInputs()){
-        if(!fDryRun) MakeCollateralAmounts();
-        return true;
-    }
-
-    if(fDryRun) return true;
+    //check if we have the collateral sized inputs
+    if(!pwalletMain->HasCollateralInputs()) return MakeCollateralAmounts();
 
     std::vector<CTxOut> vOut;
 
@@ -1755,13 +1753,15 @@ bool CDarksendPool::MakeCollateralAmounts()
 
     reservekeyCollateral.KeepKey();
 
-    // use the same cachedLastSuccess as for DS mixinx to prevent race
-    if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
-        cachedLastSuccess = chainActive.Tip()->nHeight;
-    else
-        LogPrintf("MakeCollateralAmounts: CommitTransaction failed!\n");
-
     LogPrintf("MakeCollateralAmounts: tx %s\n", wtx.GetHash().GetHex());
+
+    // use the same cachedLastSuccess as for DS mixinx to prevent race
+    if(!pwalletMain->CommitTransaction(wtx, reservekeyChange)) {
+        LogPrintf("MakeCollateralAmounts: CommitTransaction failed!\n");
+        return false;
+    }
+
+    cachedLastSuccess = chainActive.Tip()->nHeight;
 
     return true;
 }
