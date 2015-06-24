@@ -284,8 +284,6 @@ std::string FormatMP(uint32_t property, int64_t n, bool fSign)
     }
 }
 
-string const CMPSPInfo::watermarkKey("watermark");
-
 OfferMap mastercore::my_offers;
 AcceptMap mastercore::my_accepts;
 

@@ -27,7 +27,7 @@ class uint256;
  * DB Schema:
  *
  *  Key:
- *      std::string "watermark"
+ *      char 'B'
  *  Value:
  *      uint256 hashBlock
  *
@@ -145,7 +145,6 @@ public:
 
     int64_t popBlock(const uint256& block_hash);
 
-    static std::string const watermarkKey;
     void setWatermark(const uint256& watermark);
     bool getWatermark(uint256& watermark) const;
 

@@ -369,7 +369,10 @@ int64_t CMPSPInfo::popBlock(const uint256& block_hash)
 void CMPSPInfo::setWatermark(const uint256& watermark)
 {
     leveldb::WriteBatch batch;
-    leveldb::Slice slKey(watermarkKey);
+
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey << 'B';
+    leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
     CDataStream ssValue(SER_DISK, CLIENT_VERSION);
     ssValue.reserve(ssValue.GetSerializeSize(watermark));
@@ -387,7 +390,9 @@ void CMPSPInfo::setWatermark(const uint256& watermark)
 
 bool CMPSPInfo::getWatermark(uint256& watermark) const
 {
-    leveldb::Slice slKey(watermarkKey);
+    CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    ssKey << 'B';
+    leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
     std::string strValue;
     leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
