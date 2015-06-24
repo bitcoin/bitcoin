@@ -529,7 +529,7 @@ bool CConsensusVote::Sign()
 
     if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
+        LogPrintf("CConsensusVote::Sign() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
 
@@ -541,12 +541,12 @@ bool CConsensusVote::Sign()
     //LogPrintf("signing pubkey2 %s \n", address2.ToString().c_str());
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, key2)) {
-        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - Sign message failed");
+        LogPrintf("CConsensusVote::Sign() - Sign message failed");
         return false;
     }
 
     if(!darkSendSigner.VerifyMessage(pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
-        LogPrintf("CActiveMasternode::RegisterAsMasterNode() - Verify message failed");
+        LogPrintf("CConsensusVote::Sign() - Verify message failed");
         return false;
     }
 
@@ -563,18 +563,18 @@ bool CTransactionLock::SignaturesValid()
 
         if(n == -1)
         {
-            LogPrintf("InstantX::DoConsensusVote - Unknown Masternode\n");
+            LogPrintf("CTransactionLock::SignaturesValid() - Unknown Masternode\n");
             return false;
         }
 
         if(n > INSTANTX_SIGNATURES_TOTAL)
         {
-            LogPrintf("InstantX::DoConsensusVote - Masternode not in the top %s\n", INSTANTX_SIGNATURES_TOTAL);
+            LogPrintf("CTransactionLock::SignaturesValid() - Masternode not in the top %s\n", INSTANTX_SIGNATURES_TOTAL);
             return false;
         }
 
         if(!vote.SignatureValid()){
-            LogPrintf("InstantX::CTransactionLock::SignaturesValid - Signature not valid\n");
+            LogPrintf("CTransactionLock::SignaturesValid() - Signature not valid\n");
             return false;
         }
     }
