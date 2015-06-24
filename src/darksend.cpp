@@ -592,7 +592,7 @@ void CDarksendPool::Check()
     if((state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) && GetTimeMillis()-lastTimeChanged >= 10000) {
         if(fDebug) LogPrintf("CDarksendPool::Check() -- RESETTING MESSAGE \n");
         SetNull(true);
-        if(fMasterNode) RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+        if(fMasterNode) RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
         UnlockCoins();
     }
 }
@@ -670,7 +670,7 @@ void CDarksendPool::CheckFinalTransaction()
             if(fDebug) LogPrintf("CDarksendPool::Check() -- COMPLETED -- RESETTING \n");
             SetNull(true);
             UnlockCoins();
-            if(fMasterNode) RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+            if(fMasterNode) RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
             pwalletMain->Lock();
         }
     }
@@ -873,7 +873,7 @@ void CDarksendPool::CheckTimeout(){
                     UnlockCoins();
                 }
                 if(fMasterNode){
-                    RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+                    RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
                 }
                 break;
             }
@@ -1128,7 +1128,7 @@ bool CDarksendPool::SignaturesComplete(){
 // This is only ran from clients
 //
 void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount){
-    if(darkSendPool.txCollateral == CMutableTransaction()){
+    if(txCollateral == CMutableTransaction()){
         LogPrintf ("CDarksendPool:SendDarksendDenominate() - Darksend collateral not set");
         return;
     }
@@ -1415,8 +1415,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-    if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS){
-        if(darkSendPool.GetMyTransactionCount() > 0){
+    if(GetState() != POOL_STATUS_ERROR && GetState() != POOL_STATUS_SUCCESS){
+        if(GetMyTransactionCount() > 0){
             return true;
         }
     }
@@ -2229,7 +2229,7 @@ void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmo
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         if(!pSubmittedToMasternode) return;
-        if((CNetAddr)darkSendPool.pSubmittedToMasternode->addr != (CNetAddr)pnode->addr) continue;
+        if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pnode->addr) continue;
         LogPrintf("RelayIn - found master, relaying message - %s \n", pnode->addr.ToString().c_str());
         pnode->PushMessage("dsi", vin2, nAmount, txCollateral, vout2);
     }
