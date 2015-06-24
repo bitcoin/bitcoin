@@ -49,10 +49,27 @@ using std::string;
 
 using namespace mastercore;
 
-std::map<uint256, std::string> recentCache;
-
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 6 // 3 - number of recent transactions to display
+
+struct OverviewCacheEntry
+{
+    OverviewCacheEntry()
+      : address("unknown"), amount("0.0000000"), valid(false), sendToSelf(false), outbound(false)
+    {}
+
+    OverviewCacheEntry(const QString& addressIn, const QString& amountIn, bool validIn, bool sendToSelfIn, bool outboundIn)
+      : address(addressIn), amount(amountIn), valid(validIn), sendToSelf(sendToSelfIn), outbound(outboundIn)
+    {}
+
+    QString address;
+    QString amount;
+    bool valid;
+    bool sendToSelf;
+    bool outbound;
+};
+
+std::map<uint256, OverviewCacheEntry> recentCache;
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -89,7 +106,7 @@ public:
         uint256 hash = 0;
         hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
         bool omniOverride = false, omniSendToSelf = false, valid = false, omniOutbound = true;
-        std::string omniAmountStr;
+        QString omniAmountStr;
 
         // check pending
         PendingMap::iterator it = my_pending.find(hash);
@@ -99,29 +116,23 @@ public:
             CMPPending *p_pending = &(it->second);
             address = QString::fromStdString(p_pending->src);
             if (isPropertyDivisible(p_pending->prop)) {
-                omniAmountStr = FormatDivisibleShortMP(p_pending->amount) + getTokenLabel(p_pending->prop);
+                omniAmountStr = QString::fromStdString(FormatDivisibleShortMP(p_pending->amount) + getTokenLabel(p_pending->prop));
             } else {
-                omniAmountStr = FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop);
+                omniAmountStr = QString::fromStdString(FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop));
             }
         }
 
         // check cache (avoid reparsing the same transactions repeatedly over and over on repaint)
-        std::map<uint256, std::string>::iterator cacheIt = recentCache.find(hash);
+        std::map<uint256, OverviewCacheEntry>::iterator cacheIt = recentCache.find(hash);
         if (cacheIt != recentCache.end()) {
-            std::string txData = cacheIt->second;
-            std::vector<std::string> vecData;
-            boost::split(vecData, txData, boost::is_any_of(":"), boost::token_compress_on);
-            if (vecData.size() == 5) {
-                address = QString::fromStdString(vecData[0]);
-                valid = boost::lexical_cast<bool>(vecData[1]);
-                omniSendToSelf = boost::lexical_cast<bool>(vecData[2]);
-                omniOutbound = boost::lexical_cast<bool>(vecData[3]);
-                omniAmountStr = vecData[4];
-                omniOverride = true;
-                amount = 0;
-            } else {
-                PrintToLog("ERROR: Recent transactions cache has an invalid number of tokens for entry %s\n", hash.GetHex());
-            }
+            OverviewCacheEntry txEntry = cacheIt->second;
+            address = txEntry.address;
+            valid = txEntry.valid;
+            omniSendToSelf = txEntry.sendToSelf;
+            omniOutbound = txEntry.outbound;
+            omniAmountStr = txEntry.amount;
+            omniOverride = true;
+            amount = 0;
         } else { // cache miss, check database
             if (p_txlistdb->exists(hash)) {
                 omniOverride = true;
@@ -152,7 +163,7 @@ public:
                                           address = QString::fromStdString(tmpBuyer);
                                           omniOutbound = false;
                                     }
-                                    omniAmountStr = FormatDivisibleMP(total);
+                                    omniAmountStr = QString::fromStdString(FormatDivisibleMP(total));
                                 }
                             } else if (0 == parseRC) {
                                 if (mp_obj.interpret_Transaction()) {
@@ -160,9 +171,9 @@ public:
                                     uint32_t omniPropertyId = mp_obj.getProperty();
                                     int64_t omniAmount = mp_obj.getAmount();
                                     if (isPropertyDivisible(omniPropertyId)) {
-                                        omniAmountStr = FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                        omniAmountStr = QString::fromStdString(FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId));
                                     } else {
-                                        omniAmountStr = FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId);
+                                        omniAmountStr = QString::fromStdString(FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId));
                                     }
                                     if (!mp_obj.getReceiver().empty()) {
                                         if (IsMyAddress(mp_obj.getReceiver())) {
@@ -175,11 +186,14 @@ public:
                                     }
                                 }
                             }
-                            std::string validStr = valid ? "1":"0";
-                            std::string omniSendToSelfStr = omniSendToSelf ? "1":"0";
-                            std::string omniOutboundStr = omniOutbound ? "1":"0";
-                            std::string entry = address.toStdString() + ":" + validStr + ":" + omniSendToSelfStr + ":" + omniOutboundStr + ":" + omniAmountStr;
-                            recentCache.insert(std::make_pair(hash, entry));
+                            // insert into cache
+                            OverviewCacheEntry newEntry;
+                            newEntry.valid = valid;
+                            newEntry.sendToSelf = omniSendToSelf;
+                            newEntry.outbound = omniOutbound;
+                            newEntry.address = address;
+                            newEntry.amount = omniAmountStr;
+                            recentCache.insert(std::make_pair(hash, newEntry));
                         }
                     }
                 }
@@ -232,7 +246,7 @@ public:
         if (!omniOverride) {
             amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
         } else {
-            amountText = QString::fromStdString(omniAmountStr);
+            amountText = omniAmountStr;
         }
         if(!confirmed)
         {
