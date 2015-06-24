@@ -162,7 +162,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
     } else if (strCommand == "dsi") { //DarkSend vIn
-        int errorID = MSG_NOERR;
+
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             LogPrintf("dsi -- incompatible version! \n");
             errorID = ERR_VERSION;
@@ -1070,7 +1070,7 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
     entries.push_back(v);
 
     if(fDebug) LogPrintf("CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString().c_str());
-    errorID = MSG_NOERR;
+    errorID = MSG_ENTRIES_ADDED;
 
     return true;
 }
@@ -2072,6 +2072,7 @@ std::string CDarksendPool::GetMessageByID(int messageID) {
     case ERR_MISSING_TX: return _("Missing input transaction information.");
     case ERR_VERSION: return _("Incompatible version.");
     case MSG_SUCCESS: return _("Transaction created successfully.");
+    case MSG_ENTRIES_ADDED: return _("Your entries added successfully.");
     case MSG_NOERR:
     default:
         return "";

@@ -287,7 +287,8 @@ public:
         ERR_MISSING_TX,
         ERR_VERSION,
         MSG_NOERR,
-        MSG_SUCCESS
+        MSG_SUCCESS,
+        MSG_ENTRIES_ADDED
     };
 
     std::vector<CDarkSendEntry> myEntries; // clients entries
