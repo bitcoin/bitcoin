@@ -28,6 +28,8 @@
 #include <utility>
 #include <vector>
 
+#include "univalue/univalue.h"
+
 /**
  * Settings
  */
@@ -525,18 +527,15 @@ public:
     }
 
     std::map<uint256, CWalletTx> mapWallet;
-
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
-
     std::map<CTxDestination, CAddressBookData> mapAddressBook;
-
     CPubKey vchDefaultKey;
-
     std::set<COutPoint> setLockedCoins;
-
     int64_t nTimeFirstKey;
 
+    static void RegisterRPCCommands();
+    
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     //! check whether we are allowed to upgrade (or already support) to the named feature
@@ -871,4 +870,46 @@ private:
     std::vector<char> _ssExtra;
 };
 
-#endif // BITCOIN_WALLET_WALLET_H
+//Wallet RPC Commands
+extern UniValue addmultisigaddress(const UniValue& params, bool fHelp);
+extern UniValue backupwallet(const UniValue& params, bool fHelp);
+extern UniValue dumpprivkey(const UniValue& params, bool fHelp); // in rpcdump.cpp
+extern UniValue dumpwallet(const UniValue& params, bool fHelp);
+extern UniValue encryptwallet(const UniValue& params, bool fHelp);
+extern UniValue getaccountaddress(const UniValue& params, bool fHelp);
+extern UniValue getaccount(const UniValue& params, bool fHelp);
+extern UniValue getaddressesbyaccount(const UniValue& params, bool fHelp);
+extern UniValue getbalance(const UniValue& params, bool fHelp);
+extern UniValue getnewaddress(const UniValue& params, bool fHelp); // in rpcwallet.cpp
+extern UniValue getrawchangeaddress(const UniValue& params, bool fHelp);
+extern UniValue getreceivedbyaddress(const UniValue& params, bool fHelp);
+extern UniValue getreceivedbyaccount(const UniValue& params, bool fHelp);
+extern UniValue gettransaction(const UniValue& params, bool fHelp);
+extern UniValue getunconfirmedbalance(const UniValue& params, bool fHelp);
+extern UniValue getwalletinfo(const UniValue& params, bool fHelp);
+extern UniValue importaddress(const UniValue& params, bool fHelp);
+extern UniValue importprivkey(const UniValue& params, bool fHelp);
+extern UniValue importwallet(const UniValue& params, bool fHelp);
+extern UniValue keypoolrefill(const UniValue& params, bool fHelp);
+extern UniValue listaccounts(const UniValue& params, bool fHelp);
+extern UniValue listaddressgroupings(const UniValue& params, bool fHelp);
+extern UniValue listlockunspent(const UniValue& params, bool fHelp);
+extern UniValue listreceivedbyaccount(const UniValue& params, bool fHelp);
+extern UniValue listreceivedbyaddress(const UniValue& params, bool fHelp);
+extern UniValue listsinceblock(const UniValue& params, bool fHelp);
+extern UniValue listtransactions(const UniValue& params, bool fHelp);
+extern UniValue listunspent(const UniValue& params, bool fHelp);
+extern UniValue lockunspent(const UniValue& params, bool fHelp);
+extern UniValue movecmd(const UniValue& params, bool fHelp);
+extern UniValue sendfrom(const UniValue& params, bool fHelp);
+extern UniValue sendmany(const UniValue& params, bool fHelp);
+extern UniValue sendtoaddress(const UniValue& params, bool fHelp);
+extern UniValue setaccount(const UniValue& params, bool fHelp);
+extern UniValue settxfee(const UniValue& params, bool fHelp);
+extern UniValue signmessage(const UniValue& params, bool fHelp);
+extern UniValue walletlock(const UniValue& params, bool fHelp);
+extern UniValue walletpassphrasechange(const UniValue& params, bool fHelp);
+extern UniValue walletpassphrase(const UniValue& params, bool fHelp);
+extern UniValue resendwallettransactions(const UniValue& params, bool fHelp);
+
+#endif // BITCOIN_WALLET_H

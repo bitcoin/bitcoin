@@ -17,8 +17,14 @@
 
 using namespace std;
 
-UniValue
-createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
+UniValue ping_overwrite_tests(const UniValue& params, bool fHelp)
+{
+    Object obj;
+    obj.push_back(Pair("Test", "123"));
+    return obj;
+}
+
+UniValue createArgs(int nRequired, const char* address1=NULL, const char* address2=NULL)
 {
     UniValue result(UniValue::VARR);
     result.push_back(nRequired);
@@ -258,6 +264,48 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_flex_table)
+{
+    UniValue r = CallRPC(string("ping"));
+    BOOST_CHECK(r.is_null());
+
+    const CRPCCommand newCmd = { "network", "testcmd", &ping_overwrite_tests, true, false };
+    tableRPC.AddOrReplaceCommand(&newCmd);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("testcmd")));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
+
+    const CRPCCommand newPingCmd = { "network", "ping", &ping_overwrite_tests, true, false };
+    tableRPC.AddOrReplaceCommand(&newPingCmd);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC(string("ping")));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "Test").get_str(), "123");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_add_conversion)
+{
+    RPCAddConversion("testcommand", 1);
+    RPCAddConversion("testcommand", 2);
+
+    std::vector<std::string> vstrParams;
+
+    vstrParams.push_back("1234");
+    vstrParams.push_back("false");
+    vstrParams.push_back("481516");
+
+    Array params = RPCConvertValues("testcommand", vstrParams);
+
+    BOOST_CHECK_NO_THROW(params[0].get_str());
+    BOOST_CHECK_NO_THROW(params[1].get_bool());
+    BOOST_CHECK_NO_THROW(params[2].get_int());
+
+    BOOST_CHECK_THROW(params[0].get_int(), std::runtime_error);
+
+    BOOST_CHECK_EQUAL(params[0].get_str(), "1234");
+    BOOST_CHECK_EQUAL(params[1].get_bool(), false);
+    BOOST_CHECK_EQUAL(params[2].get_int(), 481516);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
