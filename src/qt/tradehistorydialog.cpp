@@ -60,6 +60,8 @@ using std::string;
 using namespace json_spirit;
 using namespace mastercore;
 
+bool hideInactiveTrades = false;
+
 TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::tradeHistoryDialog),
@@ -118,6 +120,7 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     contextMenu->addAction(showDetailsAction);
     connect(ui->tradeHistoryTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     connect(ui->tradeHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
+    connect(ui->hideInactiveTrades, SIGNAL(stateChanged(int)), this, SLOT(RepopulateTradeHistoryTable(int)));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
@@ -127,14 +130,26 @@ TradeHistoryDialog::~TradeHistoryDialog()
     delete ui;
 }
 
+// Repopulate tradeHistoryTable (eg in the case that we are hiding or revealing trades)
+void TradeHistoryDialog::RepopulateTradeHistoryTable(int hide)
+{
+    ui->tradeHistoryTable->setRowCount(0);
+    if (hide) {
+        hideInactiveTrades = true;
+    } else {
+        hideInactiveTrades = false;
+    }
+    UpdateTradeHistoryTable(true);
+}
+
 // The main function to update the UI tradeHistoryTable
-void TradeHistoryDialog::UpdateTradeHistoryTable()
+void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
 {
     // Populate tradeHistoryMap
     int newTXCount = PopulateTradeHistoryMap();
 
     // Process any new transactions that were added to the map
-    if (newTXCount > 0) {
+    if (forceUpdate || newTXCount > 0) {
         ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
         QAbstractItemModel* tradeHistoryAbstractModel = ui->tradeHistoryTable->model();
         int chainHeight = chainActive.Height();
@@ -142,16 +157,22 @@ void TradeHistoryDialog::UpdateTradeHistoryTable()
         // Loop through tradeHistoryMap and search tradeHistoryTable for the transaction, adding it if not already there
         for (TradeHistoryMap::iterator it = tradeHistoryMap.begin(); it != tradeHistoryMap.end(); ++it) {
             uint256 txid = it->first;
+            TradeHistoryObject objTH = it->second;
+
+            // ignore this trade if it's not active and we've elected to hide inactive trades
+            if (hideInactiveTrades && (objTH.status == "Cancelled" || objTH.status == "Filled" || objTH.status == "Part Cancel" || !objTH.valid)) continue;
+
+            // search tradeHistoryTable for an existing row & skip if already there
             QSortFilterProxyModel tradeHistoryProxy;
             tradeHistoryProxy.setSourceModel(tradeHistoryAbstractModel);
             tradeHistoryProxy.setFilterKeyColumn(0);
             tradeHistoryProxy.setFilterFixedString(QString::fromStdString(txid.GetHex()));
             QModelIndex rowIndex = tradeHistoryProxy.mapToSource(tradeHistoryProxy.index(0,0));
-            if (rowIndex.isValid()) continue; // Found tx in tradeHistoryTable already, do nothing
+            if (rowIndex.isValid()) continue;
 
-            TradeHistoryObject objTH = it->second;
+            // new entry is required, append a new row (sorting will take care of ordering)
             int newRow = ui->tradeHistoryTable->rowCount();
-            ui->tradeHistoryTable->insertRow(newRow); // append a new row (sorting will take care of ordering)
+            ui->tradeHistoryTable->insertRow(newRow);
 
             // Create the cells to be added to the new row and setup their formatting
             QTableWidgetItem *dateCell = new QTableWidgetItem;

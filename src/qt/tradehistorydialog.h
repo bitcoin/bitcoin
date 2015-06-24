@@ -71,7 +71,8 @@ public slots:
 private slots:
     int PopulateTradeHistoryMap();
     void UpdateData();
-    void UpdateTradeHistoryTable();
+    void UpdateTradeHistoryTable(bool forceUpdate = false);
+    void RepopulateTradeHistoryTable(int hide);
 
 signals:
     // Fired when a message should be reported to the user
