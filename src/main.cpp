@@ -51,6 +51,7 @@ int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
+bool fSkipTxValidation = false;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = false;
@@ -1892,10 +1893,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
+	  if (!fSkipTxValidation) { // if enables, our node complete trust to miners in order to speed up synchronization on poor machine 
             std::vector<CScriptCheck> vChecks;
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
                 return false;
             control.Add(vChecks);
+	  }
         }
 
         CTxUndo undoDummy;
@@ -2685,6 +2688,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     if (!CheckBlockHeader(block, state, fCheckPOW))
         return false;
 
+
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         bool mutated;
@@ -2701,6 +2705,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                              REJECT_INVALID, "bad-txns-duplicate", true);
     }
 
+    
     // All potential-corruption validation must be done before we do any
     // transaction validation, as otherwise we may mark the header as invalid
     // because we receive the wrong transactions for it.

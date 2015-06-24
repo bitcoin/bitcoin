@@ -294,6 +294,8 @@ std::string HelpMessage(HelpMessageMode mode)
 #if !defined(WIN32)
     strUsage += HelpMessageOpt("-sysperms", _("Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)"));
 #endif
+    strUsage += HelpMessageOpt("-skiptxcheck", _("Do not verify each transaction. This makes initial synchronization faster on a poor machine. "
+                                                 "Note that this makes your node complete reliant to miners. Block hash and merkle tree are still verified."));
     strUsage += HelpMessageOpt("-txindex", strprintf(_("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)"), 0));
 
     strUsage += HelpMessageGroup(_("Connection options:"));
@@ -779,6 +781,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         nScriptCheckThreads = 0;
     else if (nScriptCheckThreads > MAX_SCRIPTCHECK_THREADS)
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
+
+    fSkipTxValidation = GetBoolArg("-skiptxcheck", false);
 
     fServer = GetBoolArg("-server", false);
 
