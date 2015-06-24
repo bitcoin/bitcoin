@@ -106,7 +106,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   dnl results to QT_LIBS.
   BITCOIN_QT_CHECK([
   TEMP_CPPFLAGS=$CPPFLAGS
-  CPPFLAGS=$QT_INCLUDES
+  CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
   if test x$bitcoin_qt_got_major_vers = x5; then
     _BITCOIN_QT_IS_STATIC
     if test x$bitcoin_cv_static_qt = xyes; then
@@ -127,6 +127,10 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       elif test x$TARGET_OS = xdarwin; then
         if test x$use_pkgconfig = xyes; then
           PKG_CHECK_MODULES([QTPRINT], [Qt5PrintSupport], [QT_LIBS="$QTPRINT_LIBS $QT_LIBS"])
+          if ${PKG_CONFIG} --exists "Qt5Core < 5.4" 2>/dev/null; then
+              QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
+              _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(AccessibleFactory)], [-lqtaccessiblewidgets])
+          fi
         fi
         AX_CHECK_LINK_FLAG([[-framework IOKit]],[QT_LIBS="$QT_LIBS -framework IOKit"],[AC_MSG_ERROR(could not iokit framework)])
         _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)],[-lqcocoa])
