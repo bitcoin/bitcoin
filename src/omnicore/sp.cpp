@@ -125,21 +125,25 @@ bool CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
     ssSpKey << std::make_pair('s', propertyId);
     leveldb::Slice slSpKey(&ssSpKey[0], ssSpKey.size());
 
-    CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-    ssValue.reserve(ssValue.GetSerializeSize(info));
-    ssValue << info;
-    leveldb::Slice spValue(&ssValue[0], ssValue.size());
+    CDataStream ssSpValue(SER_DISK, CLIENT_VERSION);
+    ssSpValue.reserve(ssSpValue.GetSerializeSize(info));
+    ssSpValue << info;
+    leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
-    std::string spPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyId);
-    std::string spPrevValue;
+    CDataStream ssSpPrevKey(SER_DISK, CLIENT_VERSION);
+    ssSpPrevKey << 'b';
+    ssSpPrevKey << info.update_block;
+    ssSpPrevKey << propertyId;
+    leveldb::Slice slSpPrevKey(&ssSpPrevKey[0], ssSpPrevKey.size());
 
     leveldb::WriteBatch batch;
+    std::string strSpPrevValue;
 
     // if a value exists move it to the old key
-    if (!pdb->Get(readoptions, slSpKey, &spPrevValue).IsNotFound()) {
-        batch.Put(spPrevKey, spPrevValue);
+    if (!pdb->Get(readoptions, slSpKey, &strSpPrevValue).IsNotFound()) {
+        batch.Put(slSpPrevKey, strSpPrevValue);
     }
-    batch.Put(slSpKey, spValue);
+    batch.Put(slSpKey, slSpValue);
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
     if (!status.ok()) {
@@ -336,8 +340,11 @@ int64_t CMPSPInfo::popBlock(const uint256& block_hash)
                     return -2;
                 }
 
-                std::string strSpPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyId);
-                leveldb::Slice slSpPrevKey(strSpPrevKey);
+                CDataStream ssSpPrevKey(SER_DISK, CLIENT_VERSION);
+                ssSpPrevKey << 'b';
+                ssSpPrevKey << info.update_block;
+                ssSpPrevKey << propertyId;
+                leveldb::Slice slSpPrevKey(&ssSpPrevKey[0], ssSpPrevKey.size());
 
                 std::string strSpPrevValue;
                 if (!pdb->Get(readoptions, slSpPrevKey, &strSpPrevValue).IsNotFound()) {

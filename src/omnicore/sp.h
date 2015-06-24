@@ -44,7 +44,9 @@ class uint256;
  *      uint32_t propertyId
  *
  *  Key:
- *      std::string "blk-[hashBlock]:sp-[propertyId]"
+ *      char 'b'
+ *      uint256 hashBlock
+ *      uint32_t propertyId
  *  Value:
  *      CMPSPInfo::Entry info
  */
