@@ -100,4 +100,56 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     removed.clear();
 }
 
+BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
+{
+    CTxMemPool pool(CFeeRate(0));
+
+    /* 3rd highest fee */
+    CMutableTransaction tx1 = CMutableTransaction();
+    tx1.vout.resize(1);
+    tx1.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx1.vout[0].nValue = 10 * COIN;
+    pool.addUnchecked(tx1.GetHash(), CTxMemPoolEntry(tx1, 10000LL, 0, 10.0, 1, true));
+
+    /* highest fee */
+    CMutableTransaction tx2 = CMutableTransaction();
+    tx2.vout.resize(1);
+    tx2.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx2.vout[0].nValue = 2 * COIN;
+    pool.addUnchecked(tx2.GetHash(), CTxMemPoolEntry(tx2, 20000LL, 0, 9.0, 1, true));
+
+    /* lowest fee */
+    CMutableTransaction tx3 = CMutableTransaction();
+    tx3.vout.resize(1);
+    tx3.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx3.vout[0].nValue = 5 * COIN;
+    pool.addUnchecked(tx3.GetHash(), CTxMemPoolEntry(tx3, 0LL, 0, 100.0, 1, true));
+
+    /* 2nd highest fee */
+    CMutableTransaction tx4 = CMutableTransaction();
+    tx4.vout.resize(1);
+    tx4.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx4.vout[0].nValue = 6 * COIN;
+    pool.addUnchecked(tx4.GetHash(), CTxMemPoolEntry(tx4, 15000LL, 0, 1.0, 1, true));
+
+    /* equal fee rate to tx1, but newer */
+    CMutableTransaction tx5 = CMutableTransaction();
+    tx5.vout.resize(1);
+    tx5.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx5.vout[0].nValue = 11 * COIN;
+    pool.addUnchecked(tx5.GetHash(), CTxMemPoolEntry(tx5, 10000LL, 1, 10.0, 1, true));
+
+    // there should be 4 transactions in the mempool
+    BOOST_CHECK_EQUAL(pool.size(), 5);
+
+    // Check the fee-rate index is in order, should be tx2, tx4, tx1, tx5, tx3
+    CTxMemPool::indexed_transaction_set::nth_index<1>::type::iterator it = pool.mapTx.get<1>().begin();
+    BOOST_CHECK_EQUAL(it++->GetTx().GetHash().ToString(), tx2.GetHash().ToString());
+    BOOST_CHECK_EQUAL(it++->GetTx().GetHash().ToString(), tx4.GetHash().ToString());
+    BOOST_CHECK_EQUAL(it++->GetTx().GetHash().ToString(), tx1.GetHash().ToString());
+    BOOST_CHECK_EQUAL(it++->GetTx().GetHash().ToString(), tx5.GetHash().ToString());
+    BOOST_CHECK_EQUAL(it++->GetTx().GetHash().ToString(), tx3.GetHash().ToString());
+    BOOST_CHECK(it == pool.mapTx.get<1>().end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
