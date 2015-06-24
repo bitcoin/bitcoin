@@ -95,7 +95,6 @@ script: |
   # Extract the release tarball into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    export CPATH=${BASEPREFIX}/${i}/include
     mkdir -p distsrc-${i}
     cd distsrc-${i}
     INSTALLPATH=`pwd`/installed/${DISTNAME}
