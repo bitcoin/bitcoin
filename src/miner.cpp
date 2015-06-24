@@ -12,6 +12,7 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
+#include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
 #include "timedata.h"
