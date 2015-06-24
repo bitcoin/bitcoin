@@ -1945,8 +1945,8 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     // How likely is it to find that many by chance?
     double p = boost::math::pdf(poisson, nBlocks);
 
-    LogPrint("partitioncheck", "%s : Found %d blocks in the last %d hours\n", __func__, nBlocks, SPAN_HOURS);
-    LogPrint("partitioncheck", "%s : likelihood: %g\n", __func__, p);
+    LogPrint("partitioncheck", "%s: Found %d blocks in the last %d hours\n", __func__, nBlocks, SPAN_HOURS);
+    LogPrint("partitioncheck", "%s: likelihood: %g\n", __func__, p);
 
     // Aim for one false-positive about every fifty years of normal running:
     const int FIFTY_YEARS = 50*365*24*60*60;
@@ -3047,7 +3047,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
     if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s : rejected nVersion=2 block", __func__),
+        return state.Invalid(error("%s: rejected nVersion=2 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
 
     // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
