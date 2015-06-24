@@ -400,7 +400,7 @@ bool CMasternodePaymentWinner::IsValid()
 
     if(n == -1)
     {
-        LogPrintf("CMasternodePaymentWinner::IsValid - Unknown Masternode\n");
+        LogPrintf("CMasternodePaymentWinner::IsValid - Unknown Masternode - %s\n", vinMasternode.ToString().c_str());
         return false;
     }
 
@@ -455,7 +455,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         unsigned int nHash;
         memcpy(&nHash, &hash, 2);
 
-        LogPrintf("CMasternodePayments::ProcessBlock() Start nHeight %d. \n", nBlockHeight);
+        LogPrintf("CMasternodePayments::ProcessBlock() Start nHeight %d - vin %s. \n", nBlockHeight, activeMasternode.vin.ToString().c_str());
 
         // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
         CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight);
