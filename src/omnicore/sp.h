@@ -85,9 +85,11 @@ public:
         bool fixed;
         bool manual;
 
-        // for crowdsale properties, schema is 'txid:amtSent:deadlineUnix:userIssuedTokens:IssuerIssuedTokens;'
-        // for manual properties, schema is 'txid:grantAmount:revokeAmount;'
-        std::map<std::string, std::vector<int64_t> > historicalData;
+        // For crowdsale properties:
+        //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens
+        // For managed properties:
+        //   txid -> granted amount, revoked amount
+        std::map<uint256, std::vector<int64_t> > historicalData;
 
         Entry();
 
@@ -172,7 +174,9 @@ private:
 
     uint256 txid; // NOTE: not persisted as it doesnt seem used
 
-    std::map<std::string, std::vector<int64_t> > txFundraiserData; // schema is 'txid:amtSent:deadlineUnix:userIssuedTokens:IssuerIssuedTokens;'
+    // Schema:
+    //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens
+    std::map<uint256, std::vector<int64_t> > txFundraiserData;
 
 public:
     CMPCrowd();
@@ -189,8 +193,8 @@ public:
     int64_t getUserCreated() const { return u_created; }
     int64_t getIssuerCreated() const { return i_created; }
 
-    void insertDatabase(const std::string& txhash, const std::vector<int64_t>& txdata);
-    std::map<std::string, std::vector<int64_t> > getDatabase() const { return txFundraiserData; }
+    void insertDatabase(const uint256& txHash, const std::vector<int64_t>& txData);
+    std::map<uint256, std::vector<int64_t> > getDatabase() const { return txFundraiserData; }
 
     void print(const std::string& address, FILE* fp = stdout) const;
     void saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& addr) const;
@@ -215,7 +219,7 @@ bool isCrowdsalePurchase(const uint256& txid, const std::string& address, int64_
 
 // TODO: check, if this could be combined with the other calculate* functions
 int64_t calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundraiserSecs,
-        int64_t numProps, uint8_t issuerPerc, const std::map<std::string, std::vector<int64_t> >& txFundraiserData,
+        int64_t numProps, uint8_t issuerPerc, const std::map<uint256, std::vector<int64_t> >& txFundraiserData,
         const int64_t amountPremined);
 
 void eraseMaxedCrowdsale(const std::string& address, int64_t blockTime, int block);

@@ -484,9 +484,9 @@ CMPCrowd::CMPCrowd(uint32_t pid, int64_t nv, uint32_t cd, int64_t dl, uint8_t eb
 {
 }
 
-void CMPCrowd::insertDatabase(const std::string& txhash, const std::vector<int64_t>& txdata)
+void CMPCrowd::insertDatabase(const uint256& txHash, const std::vector<int64_t>& txData)
 {
-    txFundraiserData.insert(std::make_pair(txhash, txdata));
+    txFundraiserData.insert(std::make_pair(txHash, txData));
 }
 
 void CMPCrowd::print(const std::string& address, FILE* fp) const
@@ -511,9 +511,9 @@ void CMPCrowd::saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std:
             i_created);
 
     // append N pairs of address=nValue;blockTime for the database
-    std::map<std::string, std::vector<int64_t> >::const_iterator iter;
+    std::map<uint256, std::vector<int64_t> >::const_iterator iter;
     for (iter = txFundraiserData.begin(); iter != txFundraiserData.end(); ++iter) {
-        lineOut.append(strprintf(",%s=", (*iter).first));
+        lineOut.append(strprintf(",%s=", (*iter).first.GetHex()));
         std::vector<int64_t> const &vals = (*iter).second;
 
         std::vector<int64_t>::const_iterator valIter;
@@ -596,14 +596,14 @@ void mastercore::dumpCrowdsaleInfo(const std::string& address, const CMPCrowd& c
 // numProps: number of properties
 // issuerPerc: percentage of tokens to issuer
 int64_t mastercore::calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundraiserSecs,
-        int64_t numProps, uint8_t issuerPerc, const std::map<std::string, std::vector<int64_t> >& txFundraiserData,
+        int64_t numProps, uint8_t issuerPerc, const std::map<uint256, std::vector<int64_t> >& txFundraiserData,
         const int64_t amountPremined)
 {
     // initialize variables
     double totalCreated = 0;
     double issuerPercentage = (double) (issuerPerc * 0.01);
 
-    std::map<std::string, std::vector<int64_t> >::const_iterator it;
+    std::map<uint256, std::vector<int64_t> >::const_iterator it;
 
     // iterate through fundraiser data
     for (it = txFundraiserData.begin(); it != txFundraiserData.end(); it++) {
@@ -664,10 +664,10 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
     // check for an active crowdsale to this address
     CMPCrowd* pcrowdsale = getCrowd(address);
     if (pcrowdsale) {
-        std::map<std::string, std::vector<int64_t> >::const_iterator it;
-        const std::map<std::string, std::vector<int64_t> >& database = pcrowdsale->getDatabase();
+        std::map<uint256, std::vector<int64_t> >::const_iterator it;
+        const std::map<uint256, std::vector<int64_t> >& database = pcrowdsale->getDatabase();
         for (it = database.begin(); it != database.end(); it++) {
-            uint256 tmpTxid(it->first); // construct from string
+            const uint256& tmpTxid = it->first;
             if (tmpTxid == txid) {
                 *propertyId = pcrowdsale->getPropertyId();
                 *userTokens = it->second.at(2);
@@ -686,10 +686,10 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
         if (!_my_sps->getSP(tmpPropertyId, sp)) continue;
         if (sp.issuer != address) continue;
 
-        std::map<std::string, std::vector<int64_t> >::const_iterator it;
-        const std::map<std::string, std::vector<int64_t> >& database = sp.historicalData;
+        std::map<uint256, std::vector<int64_t> >::const_iterator it;
+        const std::map<uint256, std::vector<int64_t> >& database = sp.historicalData;
         for (it = database.begin(); it != database.end(); it++) {
-            uint256 tmpTxid(it->first); // construct from string
+            const uint256& tmpTxid = it->first;
             if (tmpTxid == txid) {
                 *propertyId = tmpPropertyId;
                 *userTokens = it->second.at(2);
@@ -704,10 +704,10 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
         if (!_my_sps->getSP(tmpPropertyId, sp)) continue;
         if (sp.issuer == address) continue;
 
-        std::map<std::string, std::vector<int64_t> >::const_iterator it;
-        const std::map<std::string, std::vector<int64_t> >& database = sp.historicalData;
+        std::map<uint256, std::vector<int64_t> >::const_iterator it;
+        const std::map<uint256, std::vector<int64_t> >& database = sp.historicalData;
         for (it = database.begin(); it != database.end(); it++) {
-            uint256 tmpTxid(it->first); // construct from string
+            const uint256& tmpTxid = it->first;
             if (tmpTxid == txid) {
                 *propertyId = tmpPropertyId;
                 *userTokens = it->second.at(2);

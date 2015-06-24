@@ -1350,7 +1350,8 @@ int input_mp_crowdsale_string(const std::string& s)
             vals.push_back(boost::lexical_cast<int64_t>(*it));
         }
 
-        newCrowdsale.insertDatabase(entryData[0], vals);
+        uint256 txHash(entryData[0]);
+        newCrowdsale.insertDatabase(txHash, vals);
     }
 
     if (!my_crowds.insert(std::make_pair(sellerAddr, newCrowdsale)).second) {
@@ -3516,7 +3517,7 @@ int CMPTransaction::logicMath_SimpleSend()
                 std::vector<int64_t> txDataVec(txdata, txdata + sizeof(txdata) / sizeof(txdata[0]));
 
                 // Insert data about crowdsale participation
-                pcrowdsale->insertDatabase(txid.GetHex(), txDataVec);
+                pcrowdsale->insertDatabase(txid, txDataVec);
 
                 // Credit tokens for this fundraiser
                 update_tally_map(sender, pcrowdsale->getPropertyId(), tokens.first, BALANCE);

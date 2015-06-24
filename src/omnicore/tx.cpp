@@ -1447,8 +1447,7 @@ int CMPTransaction::logicMath_GrantTokens()
     std::vector<int64_t> dataPt;
     dataPt.push_back(nValue);
     dataPt.push_back(0);
-    std::string txidStr = txid.ToString();
-    sp.historicalData.insert(std::make_pair(txidStr, dataPt));
+    sp.historicalData.insert(std::make_pair(txid, dataPt));
     sp.update_block = chainActive[block]->GetBlockHash();
     _my_sps->updateSP(property, sp);
 
@@ -1498,8 +1497,7 @@ int CMPTransaction::logicMath_RevokeTokens()
     std::vector<int64_t> dataPt;
     dataPt.push_back(0);
     dataPt.push_back(nValue);
-    std::string txidStr = txid.ToString();
-    sp.historicalData.insert(std::make_pair(txidStr, dataPt));
+    sp.historicalData.insert(std::make_pair(txid, dataPt));
     sp.update_block = chainActive[block]->GetBlockHash();
     _my_sps->updateSP(property, sp);
 
