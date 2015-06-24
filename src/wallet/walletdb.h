@@ -73,12 +73,21 @@ class CKeyMetadata
 {
 public:
     static const int VERSION_BASIC=1;
+    static const int VERSION_SUPPORT_FLAGS=2;
     static const int VERSION_WITH_HDDATA=10;
     static const int CURRENT_VERSION=VERSION_WITH_HDDATA;
+
+    static const uint8_t KEY_ORIGIN_UNSET         = 0x0000;
+    static const uint8_t KEY_ORIGIN_UNKNOWN       = 0x0001;
+    static const uint8_t KEY_ORIGIN_IMPORTED      = 0x0002;
+    static const uint8_t KEY_ORIGIN_UNENC_WALLET  = 0x0004;
+    static const uint8_t KEY_ORIGIN_ENC_WALLET    = 0x0008;
+
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     std::string hdKeypath; //optional HD/bip32 keypath
     CKeyID hdMasterKeyID; //id of the HD masterkey used to derive this key
+    uint8_t keyFlags;
 
     CKeyMetadata()
     {
@@ -88,6 +97,7 @@ public:
     {
         SetNull();
         nCreateTime = nCreateTime_;
+        keyFlags = KEY_ORIGIN_UNSET;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -101,6 +111,9 @@ public:
             READWRITE(hdKeypath);
             READWRITE(hdMasterKeyID);
         }
+        else
+        if (nVersion >= VERSION_SUPPORT_FLAGS)
+            READWRITE(keyFlags);
     }
 
     void SetNull()
@@ -109,6 +122,7 @@ public:
         nCreateTime = 0;
         hdKeypath.clear();
         hdMasterKeyID.SetNull();
+        keyFlags = KEY_ORIGIN_UNSET;
     }
 };
 
