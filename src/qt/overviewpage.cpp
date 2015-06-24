@@ -120,6 +120,11 @@ public:
             } else {
                 omniAmountStr = QString::fromStdString(FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop));
             }
+            // override amount for cancels
+            if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                omniAmountStr = QString::fromStdString("N/A");
+            }
+
         }
 
         // check cache (avoid reparsing the same transactions repeatedly over and over on repaint)
@@ -186,6 +191,12 @@ public:
                                     }
                                 }
                             }
+
+                            // override amount for cancels
+                            if (mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PRICE || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PAIR || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                                omniAmountStr = QString::fromStdString("N/A");
+                            }
+
                             // insert into cache
                             OverviewCacheEntry newEntry;
                             newEntry.valid = valid;
