@@ -199,7 +199,7 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
             if (objTH.status == "Part Filled") ic = QIcon(":/icons/meta_partial");
             if (!objTH.valid) {
                 ic = QIcon(":/icons/transaction_invalid");
-                objTH.status == "Invalid";
+                objTH.status = "Invalid";
             }
             iconCell->setIcon(ic);
             amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
