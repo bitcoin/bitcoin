@@ -94,11 +94,16 @@ CPubKey CWallet::GenerateNewKey()
 
     // Create new metadata
     int64_t nCreationTime = GetTime();
-    
+
     CKeyMetadata metadata = CKeyMetadata(nCreationTime);
-    metadata.keyFlags |= IsCrypted() ? CKeyMetadata::KEY_GENERATION_TYPE_ENC_WALLET : CKeyMetadata::KEY_GENERATION_TYPE_UNENC_WALLET;
+    //check if the wallet supports keyflags
+    if (CanSupportFeature(FEATURE_KEYFLAGS))
+    {
+        metadata.nVersion = CKeyMetadata::VERSION_SUPPORT_FLAGS;
+        metadata.keyFlags |= IsCrypted() ? CKeyMetadata::KEY_ORIGIN_ENC_WALLET : CKeyMetadata::KEY_ORIGIN_UNENC_WALLET;
+    }
     mapKeyMetadata[pubkey.GetID()] = metadata;
-    
+
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
 
