@@ -36,27 +36,164 @@ using namespace std;
 // transactions in the memory pool. When we select transactions from the
 // pool, we select by highest priority or fee rate, so we might consider
 // transactions that depend on transactions that aren't yet in the block.
-// The COrphan class keeps track of these 'temporary orphans' while
-// CreateBlock is figuring out which transactions to include.
+// CTxInfo represents a logical transaction to potentially be included in blocks
+// It stores extra metadata such as the subjective priority of a transaction at
+// the time of building the block. When there are unconfirmed transactions that
+// depend on other unconfirmed transactions, these "child" transactions' CTxInfo
+// object factors in its "parents" to its priority and effective size; this way,
+// the "child" can cover the "cost" of its "parents", and the "parents" are
+// included into the block as part of the "child".
 //
-class COrphan
+class CTxInfo;
+typedef std::map<uint256, CTxInfo> mapInfo_t;
+
+class CTxInfo
 {
 public:
+    mapInfo_t *pmapInfoById;
     const CTransaction* ptx;
+    uint256 hash;
+private:
     set<uint256> setDependsOn;
-    CFeeRate feeRate;
+public:
+    set<uint256> setDependents;
     double dPriority;
+    CAmount nTxFee;
+    int nTxSigOpsP2SHOnly;
+    bool fInvalid;
+    unsigned int nSize;
+    unsigned int nEffectiveSizeCached;
 
-    COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0), dPriority(0)
+    CTxInfo() : pmapInfoById(NULL), ptx(NULL), hash(), dPriority(0), nTxFee(0), fInvalid(false), nSize(0), nEffectiveSizeCached(0)
     {
+    }
+
+    void addDependsOn(const uint256& hashPrev)
+    {
+        setDependsOn.insert(hashPrev);
+        nEffectiveSizeCached = 0;
+    }
+
+    void rmDependsOn(const uint256& hashPrev)
+    {
+        setDependsOn.erase(hashPrev);
+        nEffectiveSizeCached = 0;
+    }
+
+    // effectiveSize handles inheriting the fInvalid flag as a side effect
+    unsigned int effectiveSize()
+    {
+        if (fInvalid)
+            return -1;
+
+        if (nEffectiveSizeCached)
+            return nEffectiveSizeCached;
+
+        assert(pmapInfoById);
+
+        if (!nSize)
+            nSize = ::GetSerializeSize(*ptx, SER_NETWORK, PROTOCOL_VERSION);
+        unsigned int nEffectiveSize = nSize;
+        BOOST_FOREACH(const uint256& dephash, setDependsOn)
+        {
+            CTxInfo& depinfo = (*pmapInfoById)[dephash];
+            nEffectiveSize += depinfo.effectiveSize();
+
+            if (depinfo.fInvalid)
+            {
+                fInvalid = true;
+                return -1;
+            }
+        }
+        nEffectiveSizeCached = nEffectiveSize;
+        return nEffectiveSize;
+    }
+
+    unsigned int effectiveSizeMod()
+    {
+        unsigned int nTxSizeMod = effectiveSize();
+        const CTransaction &tx = *ptx;
+        // In order to avoid disincentivizing cleaning up the UTXO set we don't count
+        // the constant overhead for each txin and up to 110 bytes of scriptSig (which
+        // is enough to cover a compressed pubkey p2sh redemption) for priority.
+        // Providing any more cleanup incentive than making additional inputs free would
+        // risk encouraging people to create junk outputs to redeem later.
+        BOOST_FOREACH(const CTxIn& txin, tx.vin)
+        {
+            unsigned int offset = 41U + min(110U, (unsigned int)txin.scriptSig.size());
+            if (nTxSizeMod > offset)
+                nTxSizeMod -= offset;
+        }
+        return nTxSizeMod;
+    }
+
+    double getPriority()
+    {
+        // Priority is sum(valuein * age) / modified_txsize
+        return dPriority / effectiveSizeMod();
+    }
+
+    CFeeRate getFeeRate()
+    {
+        return CFeeRate(nTxFee, effectiveSize());
+    }
+
+    unsigned int GetLegacySigOpCount()
+    {
+        assert(pmapInfoById);
+
+        unsigned int n = ::GetLegacySigOpCount(*ptx);
+        BOOST_FOREACH(const uint256& dephash, setDependsOn)
+        {
+            CTxInfo& depinfo = (*pmapInfoById)[dephash];
+            n += depinfo.GetLegacySigOpCount();
+        }
+        return n;
+    }
+
+    bool DoInputs(CCoinsViewCache& view, const int nHeight, std::vector<CTxInfo*>& vAdded, unsigned int& nSigOpCounter)
+    {
+        const CTransaction& tx = *ptx;
+
+        if (view.HaveCoins(hash))
+            // Already included in block template
+            return true;
+
+        assert(pmapInfoById);
+
+        BOOST_FOREACH(const uint256& dephash, setDependsOn)
+        {
+            CTxInfo& depinfo = (*pmapInfoById)[dephash];
+            if (!depinfo.DoInputs(view, nHeight, vAdded, nSigOpCounter))
+                return false;
+        }
+
+        if (!view.HaveInputs(tx))
+            return false;
+
+        nTxSigOpsP2SHOnly = GetP2SHSigOpCount(tx, view);
+        nSigOpCounter += nTxSigOpsP2SHOnly;
+
+        // Note that flags: we don't want to set mempool/IsStandard()
+        // policy here, but we still have to ensure that the block we
+        // create only contains transactions that are valid in new blocks.
+        CValidationState state;
+        if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+            return false;
+
+        UpdateCoins(tx, state, view, nHeight);
+
+        vAdded.push_back(this);
+
+        return true;
     }
 };
 
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
-// We want to sort transactions by priority and fee rate, so:
-typedef boost::tuple<double, CFeeRate, const CTransaction*> TxPriority;
+// We want to sort transactions by priority and fee, so:
+typedef CTxInfo* TxPriority;
 class TxPriorityCompare
 {
     bool byFee;
@@ -68,15 +205,15 @@ public:
     {
         if (byFee)
         {
-            if (a.get<1>() == b.get<1>())
-                return a.get<0>() < b.get<0>();
-            return a.get<1>() < b.get<1>();
+            if (a->getFeeRate() == b->getFeeRate())
+                return a->getPriority() < b->getPriority();
+            return a->getFeeRate() < b->getFeeRate();
         }
         else
         {
-            if (a.get<0>() == b.get<0>())
-                return a.get<1>() < b.get<1>();
-            return a.get<0>() < b.get<0>();
+            if (a->getPriority() == b->getPriority())
+                return a->getFeeRate() < b->getFeeRate();
+            return a->getPriority() < b->getPriority();
         }
     }
 };
@@ -141,82 +278,76 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
-        list<COrphan> vOrphan; // list memory doesn't move
-        map<uint256, vector<COrphan*> > mapDependers;
+        mapInfo_t mapInfoById;
         bool fPrintPriority = GetBoolArg("-printpriority", false);
 
         // This vector will be sorted into a priority queue:
         vector<TxPriority> vecPriority;
         vecPriority.reserve(mempool.mapTx.size());
+
         for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
             const CTransaction& tx = mi->second.GetTx();
-            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight))
-                continue;
 
-            COrphan* porphan = NULL;
-            double dPriority = 0;
+            const uint256& hash = tx.GetHash();
+            CTxInfo& txinfo = mapInfoById[hash];
+            txinfo.hash = hash;
+            txinfo.pmapInfoById = &mapInfoById;
+            txinfo.ptx = &tx;
+
+            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight))
+            {
+                txinfo.fInvalid = true;
+                continue;
+            }
+
+            double& dPriority = txinfo.dPriority;
+            CAmount& nTxFee = txinfo.nTxFee;
             CAmount nTotalIn = 0;
-            bool fMissingInputs = false;
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
             {
                 // Read prev transaction
-                if (!view.HaveCoins(txin.prevout.hash))
+                CAmount nValueIn;
+                int nConf;
+                if (view.HaveCoins(txin.prevout.hash))
                 {
-                    // This should never happen; all transactions in the memory
-                    // pool should connect to either transactions in the chain
-                    // or other transactions in the memory pool.
-                    if (!mempool.mapTx.count(txin.prevout.hash))
-                    {
-                        LogPrintf("ERROR: mempool transaction missing input\n");
-                        if (fDebug) assert("mempool transaction missing input" == 0);
-                        fMissingInputs = true;
-                        if (porphan)
-                            vOrphan.pop_back();
-                        break;
-                    }
-
-                    // Has to wait for dependencies
-                    if (!porphan)
-                    {
-                        // Use list for automatic deletion
-                        vOrphan.push_back(COrphan(&tx));
-                        porphan = &vOrphan.back();
-                    }
-                    mapDependers[txin.prevout.hash].push_back(porphan);
-                    porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
-                    continue;
+                    const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+                    assert(coins);
+                    // Input is confirmed
+                    nConf = nHeight - coins->nHeight;
+                    nValueIn = coins->vout[txin.prevout.n].nValue;
+                    dPriority += (double)nValueIn * nConf;
                 }
-                const CCoins* coins = view.AccessCoins(txin.prevout.hash);
-                assert(coins);
+                else
+                if (mempool.mapTx.count(txin.prevout.hash))
+                {
+                    // Input is still unconfirmed
+                    const uint256& hashPrev = txin.prevout.hash;
+                    nValueIn = mempool.mapTx[hashPrev].GetTx().vout[txin.prevout.n].nValue;
+                    txinfo.addDependsOn(hashPrev);
+                    mapInfoById[hashPrev].setDependents.insert(hash);
+                    nConf = 0;
+                }
+                else
+                {
+                    // We don't know where the input is
+                    // In this case, it's impossible to include this transaction in a block, so mark it invalid and move on
+                    txinfo.fInvalid = true;
+                    LogPrintf("priority %s invalid input %s\n", txinfo.hash.ToString().substr(0,10).c_str(), txin.prevout.hash.ToString().substr(0,10).c_str());
+                    goto nexttxn;
+                }
 
-                CAmount nValueIn = coins->vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
-
-                int nConf = nHeight - coins->nHeight;
-
-                dPriority += (double)nValueIn * nConf;
             }
-            if (fMissingInputs) continue;
 
-            // Priority is sum(valuein * age) / modified_txsize
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
-            dPriority = tx.ComputePriority(dPriority, nTxSize);
+            nTxFee = nTotalIn - tx.GetValueOut();
 
-            uint256 hash = tx.GetHash();
             mempool.ApplyDeltas(hash, dPriority, nTotalIn);
 
-            CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+            vecPriority.push_back(&txinfo);
 
-            if (porphan)
-            {
-                porphan->dPriority = dPriority;
-                porphan->feeRate = feeRate;
-            }
-            else
-                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
+nexttxn:    (void)1;
         }
 
         // Collect transactions into block
@@ -231,20 +362,24 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         while (!vecPriority.empty())
         {
             // Take highest priority transaction off the priority queue:
-            double dPriority = vecPriority.front().get<0>();
-            CFeeRate feeRate = vecPriority.front().get<1>();
-            const CTransaction& tx = *(vecPriority.front().get<2>());
-
+            CTxInfo& txinfo = *(vecPriority.front());
             std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
             vecPriority.pop_back();
 
+            if (txinfo.fInvalid)
+                continue;
+
+            const CTransaction& tx = *txinfo.ptx;
+            double dPriority = txinfo.getPriority();
+            CFeeRate feeRate = txinfo.getFeeRate();
+
             // Size limits
-            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            unsigned int nTxSize = txinfo.effectiveSize();
             if (nBlockSize + nTxSize >= nBlockMaxSize)
                 continue;
 
             // Legacy limits on sigOps:
-            unsigned int nTxSigOps = GetLegacySigOpCount(tx);
+            unsigned int nTxSigOps = txinfo.GetLegacySigOpCount();
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
@@ -266,32 +401,23 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
             }
 
-            if (!view.HaveInputs(tx))
+            // second layer cached modifications just for this transaction
+            CCoinsViewCache viewTemp(&view);
+
+            std::vector<CTxInfo*> vAdded;
+            if (!txinfo.DoInputs(viewTemp, nHeight, vAdded, nTxSigOps))
                 continue;
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
-
-            nTxSigOps += GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            // Note that flags: we don't want to set mempool/IsStandard()
-            // policy here, but we still have to ensure that the block we
-            // create only contains transactions that are valid in new blocks.
-            CValidationState state;
-            if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
-                continue;
-
-            UpdateCoins(tx, state, view, nHeight);
+            // push changes from the second layer cache to the first one
+            viewTemp.Flush();
 
             // Added
-            pblock->vtx.push_back(tx);
-            pblocktemplate->vTxFees.push_back(nTxFees);
-            pblocktemplate->vTxSigOps.push_back(nTxSigOps);
             nBlockSize += nTxSize;
-            ++nBlockTx;
+            nBlockTx += vAdded.size();
             nBlockSigOps += nTxSigOps;
-            nFees += nTxFees;
 
             if (fPrintPriority)
             {
@@ -299,22 +425,28 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     dPriority, feeRate.ToString(), tx.GetHash().ToString());
             }
 
-            // Add transactions that depend on this one to the priority queue
-            if (mapDependers.count(hash))
+            bool fResort = false;
+            BOOST_FOREACH(CTxInfo* ptxinfo, vAdded)
             {
-                BOOST_FOREACH(COrphan* porphan, mapDependers[hash])
+                pblock->vtx.push_back(*ptxinfo->ptx);
+                pblocktemplate->vTxFees.push_back(ptxinfo->nTxFee);
+                pblocktemplate->vTxSigOps.push_back(GetLegacySigOpCount(*ptxinfo->ptx) + ptxinfo->nTxSigOpsP2SHOnly);
+                nFees += ptxinfo->nTxFee;
+
+                ptxinfo->fInvalid = true;
+                if (!ptxinfo->setDependents.empty())
                 {
-                    if (!porphan->setDependsOn.empty())
+                    fResort = true;
+                    BOOST_FOREACH(const uint256& dhash, ptxinfo->setDependents)
                     {
-                        porphan->setDependsOn.erase(hash);
-                        if (porphan->setDependsOn.empty())
-                        {
-                            vecPriority.push_back(TxPriority(porphan->dPriority, porphan->feeRate, porphan->ptx));
-                            std::push_heap(vecPriority.begin(), vecPriority.end(), comparer);
-                        }
+                        CTxInfo& dtxinfo = mapInfoById[dhash];
+                        dtxinfo.rmDependsOn(ptxinfo->hash);
                     }
                 }
             }
+            if (fResort)
+                // Re-sort the priority queue to pick up on improved standing
+                std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
         }
 
         nLastBlockTx = nBlockTx;
