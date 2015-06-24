@@ -23,6 +23,29 @@ class uint256;
 #include <vector>
 
 /** LevelDB based storage for currencies, smart properties and tokens.
+ *
+ * DB Schema:
+ *
+ *  Key:
+ *      std::string "watermark"
+ *  Value:
+ *      uint256 hashBlock
+ *
+ *  Key:
+ *      char 's'
+ *      uint32_t propertyId
+ *  Value:
+ *      CMPSPInfo::Entry info
+ *
+ *  Key:
+ *      std::string "index-tx-[hashTxid]"
+ *  Value:
+ *      uint32_t propertyId
+ *
+ *  Key:
+ *      std::string "blk-[hashBlock]:sp-[propertyId]"
+ *  Value:
+ *      CMPSPInfo::Entry info
  */
 class CMPSPInfo : public CDBBase
 {
