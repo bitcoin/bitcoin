@@ -1876,29 +1876,30 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         if (!tx.IsCoinBase())
         {
-            if (!view.HaveInputs(tx))
-                return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
-                                 REJECT_INVALID, "bad-txns-inputs-missingorspent");
+		if (!fSkipTxValidation) {
+	            if (!view.HaveInputs(tx))
+        	        return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
+        	                         REJECT_INVALID, "bad-txns-inputs-missingorspent");
+		
+        	    if (fStrictPayToScriptHash)
+	            {
+        	        // Add in sigops done by pay-to-script-hash inputs;
+        	        // this is to prevent a "rogue miner" from creating
+        	        // an incredibly-expensive-to-validate block.
+        	        nSigOps += GetP2SHSigOpCount(tx, view);
+        	        if (nSigOps > MAX_BLOCK_SIGOPS)
+        	            return state.DoS(100, error("ConnectBlock(): too many sigops"),
+        	                            REJECT_INVALID, "bad-blk-sigops");
+	            }
 
-            if (fStrictPayToScriptHash)
-            {
-                // Add in sigops done by pay-to-script-hash inputs;
-                // this is to prevent a "rogue miner" from creating
-                // an incredibly-expensive-to-validate block.
-                nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
-                    return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                                     REJECT_INVALID, "bad-blk-sigops");
-            }
+
+        	    std::vector<CScriptCheck> vChecks;
+	            if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
+        	    return false;
+	            control.Add(vChecks);
+		}
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
-
-	  if (!fSkipTxValidation) { // if enables, our node complete trust to miners in order to speed up synchronization on poor machine 
-            std::vector<CScriptCheck> vChecks;
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, false, nScriptCheckThreads ? &vChecks : NULL))
-                return false;
-            control.Add(vChecks);
-	  }
         }
 
         CTxUndo undoDummy;
@@ -2106,7 +2107,8 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
     static bool fWarned = false;
-    if (!IsInitialBlockDownload() && !fWarned)
+    bool isInitialBlockDownload = IsInitialBlockDownload();
+    if (!isInitialBlockDownload && !fWarned)
     {
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
@@ -2124,8 +2126,13 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
             fWarned = true;
-        }
+        }	
     }
+    if (!isInitialBlockDownload && fSkipTxValidation) {
+        LogPrintf("skiptxtcheck disabled because blockchain is synced");
+        fSkipTxValidation = false;
+    }
+
 }
 
 /** Disconnect chainActive's tip. */

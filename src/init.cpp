@@ -1235,6 +1235,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             PruneAndFlush();
         }
     }
+    // if prune mode, unset NODE_NETWORK and prune block files
+    if (fSkipTxValidation) {
+        LogPrintf("Unsetting NODE_NETWORK on skiptxcheck mode\n");
+        nLocalServices &= ~NODE_NETWORK;
+    }
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
