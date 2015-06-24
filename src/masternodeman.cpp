@@ -220,8 +220,14 @@ void CMasternodeMan::Check()
 {
     LOCK(cs);
 
-    BOOST_FOREACH(CMasternode& mn, vMasternodes)
+    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
+        
+        // // if it matches our Masternode privkey, then we've been remotely activated
+        // if(mn.pubkey2 == activeMasternode.pubKeyMasternode && mn.protocolVersion == PROTOCOL_VERSION){
+        //     activeMasternode.EnableHotColdMasterNode(mn.vin, mn.addr);
+        // }
+    }
 }
 
 void CMasternodeMan::CheckAndRemove()
