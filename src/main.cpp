@@ -2126,13 +2126,12 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
             fWarned = true;
-        }	
+        }
     }
     if (!isInitialBlockDownload && fSkipTxValidation) {
         LogPrintf("skiptxtcheck disabled because blockchain is synced");
         fSkipTxValidation = false;
     }
-
 }
 
 /** Disconnect chainActive's tip. */
@@ -2695,7 +2694,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     if (!CheckBlockHeader(block, state, fCheckPOW))
         return false;
 
-
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         bool mutated;
@@ -2712,7 +2710,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                              REJECT_INVALID, "bad-txns-duplicate", true);
     }
 
-    
     // All potential-corruption validation must be done before we do any
     // transaction validation, as otherwise we may mark the header as invalid
     // because we receive the wrong transactions for it.
