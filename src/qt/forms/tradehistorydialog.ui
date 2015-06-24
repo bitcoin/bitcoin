@@ -20,6 +20,16 @@
       <number>0</number>
      </property>
      <item>
+      <widget class="QCheckBox" name="hideInactiveTrades">
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>Hide inactive trades</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QTableWidget" name="tradeHistoryTable"/>
      </item>
     </layout>
