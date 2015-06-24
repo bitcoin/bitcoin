@@ -140,6 +140,7 @@ void AppendHelpMessages(std::string& strUsage, const std::string& selectedPolicy
 
 /** Supported policies */
 static const std::string STANDARD = "standard";
+static const std::string TEST = "test";
 
 } // namespace Policy
 
