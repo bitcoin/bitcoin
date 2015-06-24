@@ -2258,7 +2258,6 @@ void ThreadCheckDarkSendPool()
     RenameThread("dash-darksend");
 
     unsigned int c = 0;
-    std::string errorMessage;
 
     while (true)
     {
