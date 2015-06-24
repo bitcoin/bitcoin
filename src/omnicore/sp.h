@@ -114,10 +114,10 @@ public:
     void init(uint32_t nextSPID = 0x3UL, uint32_t nextTestSPID = TEST_ECO_PROPERTY_1);
 
     uint32_t peekNextSPID(uint8_t ecosystem) const;
-    uint32_t updateSP(uint32_t propertyID, const Entry& info);
+    bool updateSP(uint32_t propertyId, const Entry& info);
     uint32_t putSP(uint8_t ecosystem, const Entry& info);
-    bool getSP(uint32_t spid, Entry& info) const;
-    bool hasSP(uint32_t spid) const;
+    bool getSP(uint32_t propertyId, Entry& info) const;
+    bool hasSP(uint32_t propertyId) const;
     uint32_t findSPByTX(const uint256& txid) const;
 
     int64_t popBlock(const uint256& block_hash);

@@ -113,17 +113,16 @@ uint32_t CMPSPInfo::peekNextSPID(uint8_t ecosystem) const
     return nextId;
 }
 
-uint32_t CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
+bool CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
 {
     // cannot update implied SP
     if (OMNI_PROPERTY_MSC == propertyId || OMNI_PROPERTY_TMSC == propertyId) {
-        return propertyId;
+        return false;
     }
-
-    uint32_t res = propertyId;
 
     // generate the DB key: "sp-%d"
     std::string spKey = strprintf(FORMAT_BOOST_SPKEY, propertyId);
+    leveldb::Slice slSpKey(spKey);
 
     CDataStream ssValue(SER_DISK, CLIENT_VERSION);
     ssValue.reserve(ssValue.GetSerializeSize(info));
@@ -136,123 +135,159 @@ uint32_t CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
     leveldb::WriteBatch batch;
 
     // if a value exists move it to the old key
-    if (!pdb->Get(readoptions, spKey, &spPrevValue).IsNotFound()) {
+    if (!pdb->Get(readoptions, slSpKey, &spPrevValue).IsNotFound()) {
         batch.Put(spPrevKey, spPrevValue);
     }
-    batch.Put(spKey, spValue);
+    batch.Put(slSpKey, spValue);
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
     if (!status.ok()) {
         PrintToConsole("%s(): ERROR for SP %d: %s\n", __func__, propertyId, status.ToString());
-    } else {
-        PrintToConsole("%s(): updated entry for SP %d successfully\n", __func__, propertyId);
+        return false;
     }
-    return res;
+
+    PrintToConsole("%s(): updated entry for SP %d successfully\n", __func__, propertyId);
+    return true;
 }
 
 uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
 {
-    uint32_t res = 0;
+    uint32_t propertyId = 0;
     switch (ecosystem) {
         case OMNI_PROPERTY_MSC: // Main ecosystem, MSC: 1, TMSC: 2, First available SP = 3
-            res = next_spid++;
+            propertyId = next_spid++;
             break;
         case OMNI_PROPERTY_TMSC: // Test ecosystem, same as above with high bit set
-            res = next_test_spid++;
+            propertyId = next_test_spid++;
             break;
         default: // Non-standard ecosystem, ID's start at 0
-            res = 0;
+            propertyId = 0;
     }
 
-    // generate the DB key: "sp-%d"
-    std::string spKey = strprintf(FORMAT_BOOST_SPKEY, res);
+    // DB key for property entry: "sp-%d"
+    std::string spKey = strprintf(FORMAT_BOOST_SPKEY, propertyId);
+    leveldb::Slice slSpKey(spKey);
 
-    CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-    ssValue.reserve(ssValue.GetSerializeSize(info));
-    ssValue << info;
-    leveldb::Slice spValue(&ssValue[0], ssValue.size());
+    // DB value for property entry
+    CDataStream ssSpValue(SER_DISK, CLIENT_VERSION);
+    ssSpValue.reserve(ssSpValue.GetSerializeSize(info));
+    ssSpValue << info;
+    leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
+    // DB key for identifier lookup entry: "index-tx-%s"
     std::string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
-    std::string txValue = strprintf("%d", res);
+    leveldb::Slice slTxIndexKey(txIndexKey);
 
-    // sanity checking
+    // DB value for identifier
+    CDataStream ssTxValue(SER_DISK, CLIENT_VERSION);
+    ssTxValue.reserve(ssSpValue.GetSerializeSize(propertyId));
+    ssTxValue << propertyId;
+    leveldb::Slice slTxValue(&ssTxValue[0], ssTxValue.size());
+
+    // Sanity checking
+    // TODO: use Slice::compare
     std::string existingEntry;
-    if (!pdb->Get(readoptions, spKey, &existingEntry).IsNotFound() && !boost::equals(spValue.ToString(), existingEntry)) {
-        std::string strError = strprintf("WRITING SP %d TO LEVELDB WHEN A DIFFERENT SP ALREADY EXISTS FOR THAT ID!!!", res);
+    if (!pdb->Get(readoptions, slSpKey, &existingEntry).IsNotFound()
+            && !boost::equals(slSpValue.ToString(), existingEntry)) {
+        std::string strError = strprintf("writing SP %d to DB, when a different SP already exists for that identifier", propertyId);
         PrintToConsole("%s() ERROR: %s\n", __func__, strError);
-    } else if (!pdb->Get(readoptions, txIndexKey, &existingEntry).IsNotFound() && !boost::equals(txValue, existingEntry)) {
-        std::string strError = strprintf("WRITING INDEX TXID %s : SP %d IS OVERWRITING A DIFFERENT VALUE!!!", info.txid.ToString(), res);
+    } else if (!pdb->Get(readoptions, slTxIndexKey, &existingEntry).IsNotFound()
+            && !boost::equals(slTxValue.ToString(), existingEntry)) {
+        std::string strError = strprintf("writing index txid %s : SP %d is overwriting a different value", info.txid.ToString(), propertyId);
         PrintToConsole("%s() ERROR: %s\n", __func__, strError);
     }
 
-    // atomically write both the the SP and the index to the database
+    // Atomically write both the the SP and the index to the database
     leveldb::WriteBatch batch;
-    batch.Put(spKey, spValue);
-    batch.Put(txIndexKey, txValue);
+    batch.Put(slSpKey, slSpValue);
+    batch.Put(slTxIndexKey, slTxValue);
 
     leveldb::Status status = pdb->Write(syncoptions, &batch);
 
     if (!status.ok()) {
-        PrintToConsole("%s(): ERROR for SP %d: %s\n", __func__, res, status.ToString());
+        PrintToConsole("%s(): ERROR for SP %d: %s\n", __func__, propertyId, status.ToString());
     }
 
-    return res;
+    return propertyId;
 }
 
-bool CMPSPInfo::getSP(uint32_t spid, Entry& info) const
+bool CMPSPInfo::getSP(uint32_t propertyId, Entry& info) const
 {
     // special cases for constant SPs MSC and TMSC
-    if (OMNI_PROPERTY_MSC == spid) {
+    if (OMNI_PROPERTY_MSC == propertyId) {
         info = implied_msc;
         return true;
-    } else if (OMNI_PROPERTY_TMSC == spid) {
+    } else if (OMNI_PROPERTY_TMSC == propertyId) {
         info = implied_tmsc;
         return true;
     }
 
-    std::string spKey = strprintf(FORMAT_BOOST_SPKEY, spid);
-    std::string spInfoStr;
-    if (!pdb->Get(readoptions, spKey, &spInfoStr).ok()) {
+    // DB key for property entry: "sp-%d"
+    std::string strSpKey = strprintf(FORMAT_BOOST_SPKEY, propertyId);
+    leveldb::Slice slSpKey(strSpKey);
+
+    // DB value for property entry
+    std::string strSpValue;
+    if (!pdb->Get(readoptions, slSpKey, &strSpValue).ok()) {
         return false;
     }
 
+    // Deserialize value
     try {
-        CDataStream ssValue(spInfoStr.data(), spInfoStr.data() + spInfoStr.size(), SER_DISK, CLIENT_VERSION);
-        ssValue >> info;
+        CDataStream ssSpValue(strSpValue.data(), strSpValue.data() + strSpValue.size(), SER_DISK, CLIENT_VERSION);
+        ssSpValue >> info;
     } catch (const std::exception& e) {
-        PrintToConsole("%s(): ERROR for SP %d: %s\n", __func__, spid, e.what());
+        PrintToConsole("%s(): ERROR for SP %d: %s\n", __func__, propertyId, e.what());
         return false;
     }
 
     return true;
 }
 
-bool CMPSPInfo::hasSP(uint32_t spid) const
+bool CMPSPInfo::hasSP(uint32_t propertyId) const
 {
-    // special cases for constant SPs MSC and TMSC
-    if (OMNI_PROPERTY_MSC == spid || OMNI_PROPERTY_TMSC == spid) {
+    // Special cases for constant SPs MSC and TMSC
+    if (OMNI_PROPERTY_MSC == propertyId || OMNI_PROPERTY_TMSC == propertyId) {
         return true;
     }
 
-    std::string spKey = strprintf(FORMAT_BOOST_SPKEY, spid);
+    // DB key for property entry: "sp-%d"
+    std::string strSpKey = strprintf(FORMAT_BOOST_SPKEY, propertyId);
+    leveldb::Slice slSpKey(strSpKey);
 
-    std::string strValue;
-    leveldb::Status status = pdb->Get(readoptions, spKey, &strValue);
+    // DB value for property entry
+    std::string strSpValue;
+    leveldb::Status status = pdb->Get(readoptions, slSpKey, &strSpValue);
 
     return status.ok();
 }
 
 uint32_t CMPSPInfo::findSPByTX(const uint256& txid) const
 {
-    uint32_t res = 0;
+    uint32_t propertyId = 0;
 
-    std::string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, txid.ToString());
-    std::string spidStr;
-    if (pdb->Get(readoptions, txIndexKey, &spidStr).ok()) {
-        res = boost::lexical_cast<uint32_t>(spidStr);
+    // DB key for identifier lookup entry: "index-tx-%s"
+    std::string strTxIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, txid.ToString());
+    leveldb::Slice slTxIndexKey(strTxIndexKey);
+
+    // DB value for identifier
+    std::string strTxIndexValue;
+    if (!pdb->Get(readoptions, slTxIndexKey, &strTxIndexValue).ok()) {
+        std::string strError = strprintf("failed to find property created with %s", txid.GetHex());
+        PrintToConsole("%s(): ERROR: %s", __func__, strError);
+        return 0;
     }
 
-    return res;
+    // Deserialize value
+    try {
+        CDataStream ssValue(strTxIndexValue.data(), strTxIndexValue.data() + strTxIndexValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValue >> propertyId;
+    } catch (const std::exception& e) {
+        PrintToConsole("%s(): ERROR: %s\n", __func__, e.what());
+        return 0;
+    }
+
+    return propertyId;
 }
 
 int64_t CMPSPInfo::popBlock(const uint256& block_hash)
@@ -279,23 +314,27 @@ int64_t CMPSPInfo::popBlock(const uint256& block_hash)
                 // need to roll this SP back
                 if (info.update_block == info.creation_block) {
                     // this is the block that created this SP, so delete the SP and the tx index entry
-                    std::string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
+                    std::string strTxIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
+                    leveldb::Slice slTxIndexKey(strTxIndexKey);
                     commitBatch.Delete(iter->key());
-                    commitBatch.Delete(txIndexKey);
+                    commitBatch.Delete(slTxIndexKey);
                 } else {
                     std::vector<std::string> vstr;
-                    std::string key = iter->key().ToString();
-                    boost::split(vstr, key, boost::is_any_of("-"), boost::token_compress_on);
-                    uint32_t propertyID = boost::lexical_cast<uint32_t>(vstr[1]);
+                    std::string spKey = iter->key().ToString();
+                    boost::split(vstr, spKey, boost::is_any_of("-"), boost::token_compress_on);
+                    uint32_t propertyId = boost::lexical_cast<uint32_t>(vstr[1]);
 
-                    std::string spPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyID);
-                    std::string spPrevValue;
+                    std::string strSpPrevKey = strprintf("blk-%s:sp-%d", info.update_block.ToString(), propertyId);
+                    leveldb::Slice slSpPrevKey(strSpPrevKey);
 
-                    if (!pdb->Get(readoptions, spPrevKey, &spPrevValue).IsNotFound()) {
+                    PrintToConsole("%s(): key=%s, strSpPrevKey=%s\n", __func__, spKey, strSpPrevKey);
+
+                    std::string strSpPrevValue;
+                    if (!pdb->Get(readoptions, slSpPrevKey, &strSpPrevValue).IsNotFound()) {
                         // copy the prev state to the current state and delete the old state
-                        commitBatch.Put(iter->key(), spPrevValue);
-                        commitBatch.Delete(spPrevKey);
-                        remainingSPs++;
+                        commitBatch.Put(iter->key(), strSpPrevValue);
+                        commitBatch.Delete(slSpPrevKey);
+                        ++remainingSPs;
                     } else {
                         // failed to find a previous SP entry, trigger reparse
                         std::string strError("failed to retrieve previous SP entry");
@@ -304,7 +343,7 @@ int64_t CMPSPInfo::popBlock(const uint256& block_hash)
                     }
                 }
             } else {
-                remainingSPs++;
+                ++remainingSPs;
             }
         } else {
             // failed to deserialize the entry, trigger reparse
