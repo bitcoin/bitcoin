@@ -534,6 +534,60 @@ void CDarksendPool::UnlockCoins(){
     lockedCoins.clear();
 }
 
+std::string CDarksendPool::GetStatus()
+{
+    static int showingDarkSendMessage = 0;
+    showingDarkSendMessage+=3;
+    std::string suffix = "";
+
+    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+        return strAutoDenomResult;
+    }
+    switch(state) {
+        case POOL_STATUS_IDLE:
+            return _("Darksend is idle.");
+        case POOL_STATUS_ACCEPTING_ENTRIES:
+            if(entriesCount == 0) {
+                showingDarkSendMessage = 0;
+                return strAutoDenomResult;
+            } else if (lastEntryAccepted == 1) {
+                if(showingDarkSendMessage % 10 > 8) {
+                    lastEntryAccepted = 0;
+                    showingDarkSendMessage = 0;
+                }
+                return _("Darksend request complete:") + " " + _("Your transaction was accepted into the pool!");
+            } else {
+                std::string suffix = "";
+                if(     showingDarkSendMessage % 70 <= 40) return strprintf(_("Submitted following entries to masternode: %u / %d"), entriesCount, GetMaxPoolTransactions());
+                else if(showingDarkSendMessage % 70 <= 50) suffix = ".";
+                else if(showingDarkSendMessage % 70 <= 60) suffix = "..";
+                else if(showingDarkSendMessage % 70 <= 70) suffix = "...";
+                return strprintf(_("Submitted to masternode, waiting for more entries ( %u / %d ) %s"), entriesCount, GetMaxPoolTransactions(), suffix);
+            }
+        case POOL_STATUS_SIGNING:
+            if(     showingDarkSendMessage % 70 <= 40) return _("Found enough users, signing ...");
+            else if(showingDarkSendMessage % 70 <= 50) suffix = ".";
+            else if(showingDarkSendMessage % 70 <= 60) suffix = "..";
+            else if(showingDarkSendMessage % 70 <= 70) suffix = "...";
+            return strprintf(_("Found enough users, signing ( waiting %s )"), suffix);
+        case POOL_STATUS_TRANSMISSION:
+            return _("Transmitting final transaction.");
+        case POOL_STATUS_FINALIZE_TRANSACTION:
+            return _("Finalizing transaction.");
+        case POOL_STATUS_ERROR:
+            return _("Darksend request incomplete:") + " " + lastMessage + " " + _("Will retry...");
+        case POOL_STATUS_SUCCESS:
+            return _("Darksend request complete:") + " " + lastMessage;
+        case POOL_STATUS_QUEUE:
+            if(     showingDarkSendMessage % 70 <= 30) suffix = ".";
+            else if(showingDarkSendMessage % 70 <= 50) suffix = "..";
+            else if(showingDarkSendMessage % 70 <= 70) suffix = "...";
+            return strprintf(_("Submitted to masternode, waiting in queue %s"), suffix);;
+       default:
+            return strprintf(_("Unknown state: id = %u"), state);
+    }
+}
+
 //
 // Check the Darksend progress and send client updates if a Masternode
 //
@@ -834,9 +888,19 @@ void CDarksendPool::CheckTimeout(){
 
     // catching hanging sessions
     if(!fMasterNode) {
-        if(state == POOL_STATUS_TRANSMISSION) {
-            if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session complete -- Running Check()\n");
-            Check();
+        switch(state) {
+            case POOL_STATUS_TRANSMISSION:
+                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Session complete -- Running Check()\n");
+                Check();
+                break;
+            case POOL_STATUS_ERROR:
+                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Pool error -- Running Check()\n");
+                Check();
+                break;
+            case POOL_STATUS_SUCCESS:
+                if(fDebug) LogPrintf("CDarksendPool::CheckTimeout() -- Pool success -- Running Check()\n");
+                Check();
+                break;
         }
     }
 
@@ -1583,7 +1647,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                         pnode->PushMessage("dsa", sessionDenom, txCollateral);
                         LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d - %s\n", sessionDenom, pnode->addr.ToString().c_str());
-                        strAutoDenomResult = "";
+                        strAutoDenomResult = _("Mixing in progress...");
                         dsq.time = 0; //remove node
                         return true;
                     }
@@ -1645,7 +1709,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                     pnode->PushMessage("dsa", sessionDenom, txCollateral);
                     LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d\n", sessionDenom);
-                    strAutoDenomResult = "";
+                    strAutoDenomResult = _("Mixing in progress...");
                     return true;
                 }
             } else {
@@ -1658,7 +1722,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
 
-    strAutoDenomResult = "";
+    strAutoDenomResult = _("Mixing in progress...");
     if(!ready) return true;
 
     if(sessionDenom == 0) return true;
