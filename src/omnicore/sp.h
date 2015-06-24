@@ -38,7 +38,8 @@ class uint256;
  *      CMPSPInfo::Entry info
  *
  *  Key:
- *      std::string "index-tx-[hashTxid]"
+ *      char 't'
+ *      uint256 hashTxid
  *  Value:
  *      uint32_t propertyId
  *

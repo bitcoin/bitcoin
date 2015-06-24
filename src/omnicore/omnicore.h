@@ -47,10 +47,6 @@ int const MAX_STATE_HISTORY = 50;
 
 #define SP_STRING_FIELD_LEN 256
 
-// some boost formats
-#define FORMAT_BOOST_TXINDEXKEY "index-tx-%s"
-#define FORMAT_BOOST_SPKEY      "sp-%d"
-
 // Omni Layer Transaction Class
 #define OMNI_CLASS_A 1
 #define OMNI_CLASS_B 2

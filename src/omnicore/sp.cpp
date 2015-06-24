@@ -176,9 +176,10 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
     ssSpValue << info;
     leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
-    // DB key for identifier lookup entry: "index-tx-%s"
-    std::string txIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
-    leveldb::Slice slTxIndexKey(txIndexKey);
+    // DB key for identifier lookup entry
+    CDataStream ssTxIndexKey(SER_DISK, CLIENT_VERSION);
+    ssTxIndexKey << std::make_pair('t', info.txid);
+    leveldb::Slice slTxIndexKey(&ssTxIndexKey[0], ssTxIndexKey.size());
 
     // DB value for identifier
     CDataStream ssTxValue(SER_DISK, CLIENT_VERSION);
@@ -267,9 +268,10 @@ uint32_t CMPSPInfo::findSPByTX(const uint256& txid) const
 {
     uint32_t propertyId = 0;
 
-    // DB key for identifier lookup entry: "index-tx-%s"
-    std::string strTxIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, txid.ToString());
-    leveldb::Slice slTxIndexKey(strTxIndexKey);
+    // DB key for identifier lookup entry
+    CDataStream ssTxIndexKey(SER_DISK, CLIENT_VERSION);
+    ssTxIndexKey << std::make_pair('t', txid);
+    leveldb::Slice slTxIndexKey(&ssTxIndexKey[0], ssTxIndexKey.size());
 
     // DB value for identifier
     std::string strTxIndexValue;
@@ -319,8 +321,9 @@ int64_t CMPSPInfo::popBlock(const uint256& block_hash)
             // need to roll this SP back
             if (info.update_block == info.creation_block) {
                 // this is the block that created this SP, so delete the SP and the tx index entry
-                std::string strTxIndexKey = strprintf(FORMAT_BOOST_TXINDEXKEY, info.txid.ToString());
-                leveldb::Slice slTxIndexKey(strTxIndexKey);
+                CDataStream ssTxIndexKey(SER_DISK, CLIENT_VERSION);
+                ssTxIndexKey << std::make_pair('t', info.txid);
+                leveldb::Slice slTxIndexKey(&ssTxIndexKey[0], ssTxIndexKey.size());
                 commitBatch.Delete(slSpKey);
                 commitBatch.Delete(slTxIndexKey);
             } else {
