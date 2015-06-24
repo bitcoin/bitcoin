@@ -137,6 +137,21 @@ TXHistoryDialog::~TXHistoryDialog()
     delete ui;
 }
 
+void TXHistoryDialog::focusTransaction(const uint256& txid)
+{
+    QAbstractItemModel* historyAbstractModel = ui->txHistoryTable->model();
+    QSortFilterProxyModel historyProxy;
+    historyProxy.setSourceModel(historyAbstractModel);
+    historyProxy.setFilterKeyColumn(0);
+    historyProxy.setFilterFixedString(QString::fromStdString(txid.GetHex()));
+    QModelIndex rowIndex = historyProxy.mapToSource(historyProxy.index(0,0));
+    if(rowIndex.isValid()) {
+        ui->txHistoryTable->scrollTo(rowIndex);
+        ui->txHistoryTable->setCurrentIndex(rowIndex);
+        ui->txHistoryTable->setFocus();
+    }
+}
+
 void TXHistoryDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;

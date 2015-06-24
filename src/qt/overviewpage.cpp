@@ -310,8 +310,21 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
-    if(filter)
-        emit transactionClicked(filter->mapToSource(index));
+    // is this an Omni transaction that has been clicked?  Use pending & cache to find out quickly
+    uint256 hash = 0;
+    hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
+    bool omniTx = false;
+    PendingMap::iterator it = my_pending.find(hash);
+    if (it != my_pending.end()) omniTx = true;
+    std::map<uint256, OverviewCacheEntry>::iterator cacheIt = recentCache.find(hash);
+    if (cacheIt != recentCache.end()) omniTx = true;
+
+    // override if it's an Omni transaction
+    if (omniTx) {
+        emit omniTransactionClicked(hash);
+    } else {
+        if (filter) emit transactionClicked(filter->mapToSource(index));
+    }
 }
 
 OverviewPage::~OverviewPage()

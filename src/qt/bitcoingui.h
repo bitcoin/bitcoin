@@ -178,6 +178,8 @@ private slots:
     void gotoBalancesPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch directly to Omni history tab */
+    void gotoOmniHistoryTab();
     /** Switch directly to bitcoin history tab */
     void gotoBitcoinHistoryTab();
     /** Switch to utility page */

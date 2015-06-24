@@ -6,6 +6,7 @@
 #define BITCOIN_QT_OVERVIEWPAGE_H
 
 #include "amount.h"
+#include "uint256.h"
 
 #include <QWidget>
 
@@ -43,6 +44,7 @@ public slots:
 
 signals:
     void transactionClicked(const QModelIndex &index);
+    void omniTransactionClicked(const uint256& txid);
 
 private:
     Ui::OverviewPage *ui;

@@ -78,6 +78,9 @@ private slots:
     void UpdateConfirmations();
     void checkSort(int column);
 
+public slots:
+    void focusTransaction(const uint256& txid);
+
 signals:
     void doubleClicked(const QModelIndex& idx);
     // Fired when a message should be reported to the user

@@ -645,6 +645,12 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
+void BitcoinGUI::gotoOmniHistoryTab()
+{
+    historyAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoOmniHistoryTab();
+}
+
 void BitcoinGUI::gotoBitcoinHistoryTab()
 {
     historyAction->setChecked(true);
