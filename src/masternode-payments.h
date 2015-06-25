@@ -32,22 +32,29 @@ std::string GetRequiredPaymentsString(int64_t nBlockHeight);
 bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue);
 void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
-class CMasternodePayee : public CTxOut
+class CMasternodePayee
 {
 public:
+    CScript scriptPubKey;
     int nVotes;
 
     CMasternodePayee() {
         scriptPubKey = CScript();
-        nValue = 0;
         nVotes = 0;
-    } 
+    }
 
-    CMasternodePayee(CAmount nValueIn, CScript payee, int nVotesIn) {
+    CMasternodePayee(CScript payee, int nVotesIn) {
         scriptPubKey = payee;
-        nValue = nValueIn;
         nVotes = nVotesIn;
     }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(scriptPubKey);
+        READWRITE(nVotes);
+     }
 };
 
 // Keep track of votes for payees from masternodes
@@ -66,15 +73,15 @@ public:
         vecPayments.clear();
     }
 
-    void AddPayee(CScript payeeIn, int64_t nAmount, int nIncrement){
+    void AddPayee(CScript payeeIn, int nIncrement){
         BOOST_FOREACH(CMasternodePayee& payee, vecPayments){
-            if(payee.scriptPubKey == payeeIn && payee.nValue == nAmount) {
+            if(payee.scriptPubKey == payeeIn) {
                 payee.nVotes += nIncrement;
                 return;
             }
         }
 
-        CMasternodePayee c((CAmount)nAmount, payeeIn, nIncrement);
+        CMasternodePayee c(payeeIn, nIncrement);
         vecPayments.push_back(c);
     }
 
@@ -83,10 +90,10 @@ public:
         int nVotes = -1;
         BOOST_FOREACH(CMasternodePayee& p, vecPayments){
             if(p.nVotes > nVotes){
-                payee = p.scriptPubKey; 
+                payee = p.scriptPubKey;
                 nVotes = p.nVotes;
             }
-        }        
+        }
 
         return (nVotes > -1);
     }
@@ -110,19 +117,19 @@ public:
     CTxIn vinMasternode;
 
     int nBlockHeight;
-    CTxOut payee;
+    CScript payee;
     std::vector<unsigned char> vchSig;
 
     CMasternodePaymentWinner() {
         nBlockHeight = 0;
         vinMasternode = CTxIn();
-        payee = CTxOut();
+        payee = CScript();
     }
 
     CMasternodePaymentWinner(CTxIn vinIn) {
         nBlockHeight = 0;
         vinMasternode = vinIn;
-        payee = CTxOut();
+        payee = CScript();
     }
 
     uint256 GetHash(){
@@ -131,7 +138,7 @@ public:
         ss << nBlockHeight;
         ss << vinMasternode.prevout;
 
-        return ss.GetHash();        
+        return ss.GetHash();
     }
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
@@ -139,9 +146,8 @@ public:
     bool SignatureValid();
     void Relay();
 
-    void AddPayee(CScript payeeIn, int64_t nAmount){
-        payee.scriptPubKey = payeeIn;
-        payee.nValue = nAmount;
+    void AddPayee(CScript payeeIn){
+        payee = payeeIn;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -185,7 +191,7 @@ public:
 
     bool AddWinningMasternode(CMasternodePaymentWinner& winner);
     bool ProcessBlock(int nBlockHeight);
-    
+
     void Sync(CNode* node);
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);

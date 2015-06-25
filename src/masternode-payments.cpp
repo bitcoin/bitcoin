@@ -188,7 +188,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         CTxDestination address1;
-        ExtractDestination(winner.payee.scriptPubKey, address1);
+        ExtractDestination(winner.payee, address1);
         CBitcoinAddress address2(address1);
 
         if(fDebug) LogPrintf("mnw - winning vote - Addr %s Height %d bestHeight %d\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
@@ -277,7 +277,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     int n = 1;
     if(IsReferenceNode(winnerIn.vinMasternode)) n = 100;
     LogPrintf("CMasternodePayments::AddWinningMasternode - AddPayee - %d\n", n);
-    mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee.scriptPubKey, winnerIn.payee.nValue, n);
+    mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee, n);
 
     return true;
 }
@@ -286,6 +286,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 {
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
+
+    CAmount masternodePayment = GetMasternodePayment(nBlockHeight, txNew.GetValueOut());
 
     //require at least 6 signatures
 
@@ -300,7 +302,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     {
         bool found = false;
         BOOST_FOREACH(CTxOut out, txNew.vout){
-            if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue){
+            if(payee.scriptPubKey == out.scriptPubKey && masternodePayment == out.nValue){
                 found = true;
             }
         }
@@ -313,9 +315,9 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
             CBitcoinAddress address2(address1);
 
             if(strPayeesPossible == ""){
-                strPayeesPossible += address2.ToString()  + ":" + boost::lexical_cast<std::string>(payee.nValue);
+                strPayeesPossible += address2.ToString();
             } else {
-                strPayeesPossible += "," + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue);
+                strPayeesPossible += "," + address2.ToString();
             }
         }
     }
@@ -336,9 +338,9 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
         CBitcoinAddress address2(address1);
 
         if(ret != "Unknown"){
-            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue) + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+            ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         } else {
-            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nValue) + ":" + boost::lexical_cast<std::string>(payee.nVotes);
+            ret = address2.ToString() + boost::lexical_cast<std::string>(payee.nVotes);
         }
     }
 
@@ -441,11 +443,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     if(nBlockHeight <= nLastBlockHeight) return false;
 
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return false;
-    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, 0);
-    CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
-
     CMasternodePaymentWinner newWinner(activeMasternode.vin);
 
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
@@ -468,7 +465,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
             newWinner.nBlockHeight = nBlockHeight;
 
             CScript payee = GetScriptForDestination(pmn->pubkey.GetID());
-            newWinner.AddPayee(payee, masternodePayment);
+            newWinner.AddPayee(payee);
 
             CTxDestination address1;
             ExtractDestination(payee, address1);
