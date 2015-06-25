@@ -161,23 +161,17 @@ public:
 Value spork(const Array& params, bool fHelp)
 {
     if(params.size() == 1 && params[0].get_str() == "show"){
-        std::map<int, CSporkMessage>::iterator it = mapSporksActive.begin();
-
         Object ret;
-        while(it != mapSporksActive.end()) {
-            if(sporkManager.GetSporkNameByID(it->second.nSporkID) != "Unknown")
-                ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), it->second.nValue));
-            it++;
+        for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
+            if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
+                ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), GetSporkValue(nSporkID)));
         }
         return ret;
     } else if(params.size() == 1 && params[0].get_str() == "active"){
-        std::map<int, CSporkMessage>::iterator it = mapSporksActive.begin();
-
         Object ret;
-        while(it != mapSporksActive.end()) {
-            if(sporkManager.GetSporkNameByID(it->second.nSporkID) != "Unknown")
-                ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), IsSporkActive(it->second.nSporkID)));
-            it++;
+        for(int nSporkID = SPORK_START; nSporkID <= SPORK_END; nSporkID++){
+            if(sporkManager.GetSporkNameByID(nSporkID) != "Unknown")
+                ret.push_back(Pair(sporkManager.GetSporkNameByID(nSporkID), IsSporkActive(nSporkID)));
         }
         return ret;
     } else if (params.size() == 2){

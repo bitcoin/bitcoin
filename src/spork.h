@@ -23,19 +23,24 @@ using namespace boost;
     Don't ever reuse these IDs for other sporks
     - This would result in old clients getting confused about which spork is for what
 */
+#define SPORK_START                                           10001
+#define SPORK_END                                             10009
+
 #define SPORK_2_INSTANTX                                      10001
 #define SPORK_3_INSTANTX_BLOCK_FILTERING                      10002
 #define SPORK_5_MAX_VALUE                                     10004
 #define SPORK_7_MASTERNODE_SCANNING                           10006
 #define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT                10007
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT                 10008
+#define SPORK_10_MASTERNODE_PAY_NEWEST_NODES                  10009
 
 #define SPORK_2_INSTANTX_DEFAULT                              978307200   //2001-1-1
 #define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              1424217600  //2015-2-18
 #define SPORK_5_MAX_VALUE_DEFAULT                             1000        //1000 DASH
 #define SPORK_7_MASTERNODE_SCANNING_DEFAULT                   978307200   //2001-1-1
-#define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT        1434326400   //2015-6-15
-#define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT         1434326400   //2015-6-15
+#define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT        1444217600   //OFF
+#define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT         1444217600   //OFF
+#define SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT          1444217600   //OFF
 
 class CSporkMessage;
 class CSporkManager;
