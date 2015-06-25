@@ -17,7 +17,6 @@
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/version.h"
-#include "omnicore/walletcache.h"
 
 #include "amount.h"
 #include "init.h"
@@ -1634,12 +1633,12 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     int64_t lastTXBlock = 999999;
 
     LOCK(wallet->cs_wallet);
-    for (std::vector<uint256>::iterator it = walletTXIDCache.begin(); it != walletTXIDCache.end(); ++it) {
-        if (!pwalletMain->mapWallet.count(*it)) {
-            PrintToLog("ERROR: Transaction %s in wallet cache could not be found in the wallet\n", (*it).GetHex());
-            continue;
-        }
-        CWalletTx *const pwtx = &pwalletMain->mapWallet[*it];
+    std::list<CAccountingEntry> acentries;
+    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+
+    // iterate backwards until we have nCount items to return:
+    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0) {
             // get the height of the transaction and check it's within the chosen parameters
             uint256 blockHash = pwtx->hashBlock;
@@ -1679,6 +1678,8 @@ Value listtransactions_MP(const Array& params, bool fHelp)
 
             uint256 hash = pwtx->GetHash();
             Object txobj;
+
+            // make a request to new RPC populator function to populate a transaction object (if it is a MP transaction)
             int populateResult = -1;
             if (addressFilter) {
                 populateResult = populateRPCTransactionObject(hash, &txobj, addressParam); // pass in an address filter
@@ -1692,7 +1693,6 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             if ((int)response.size() >= (nCount+nFrom)) break;
         }
     }
-
     // sort array here and cut on nFrom and nCount
     if (nFrom > (int)response.size())
         nFrom = response.size();
