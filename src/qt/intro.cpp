@@ -216,10 +216,10 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
     {
         ui->freeSpace->setText("");
     } else {
-        QString freeString = tr("%n GB of free space available", "", bytesAvailable/GB_BYTES);
+        QString freeString = tr("%1 GB of free space available").arg(bytesAvailable/GB_BYTES);
         if(bytesAvailable < BLOCK_CHAIN_SIZE)
         {
-            freeString += " " + tr("(of %n GB needed)", "", BLOCK_CHAIN_SIZE/GB_BYTES);
+            freeString += " " + tr("(of %1 GB needed)").arg(BLOCK_CHAIN_SIZE/GB_BYTES);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
         } else {
             ui->freeSpace->setStyleSheet("");
