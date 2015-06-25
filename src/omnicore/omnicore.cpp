@@ -2214,6 +2214,8 @@ bool feeCheck(const string &address, size_t nDataSize)
     bool ClassC = UseEncodingClassC(nDataSize);
     int64_t minFee = 0;
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
     if (ClassC) {
         // estimated minimum fee calculation for Class C with payload of nDataSize
@@ -3242,6 +3244,8 @@ int validity = 0;
 int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex)
 {
     if (reorgRecoveryMode > 0) {
+        LOCK(cs_tally);
+
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
