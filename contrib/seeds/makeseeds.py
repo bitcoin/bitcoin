@@ -22,10 +22,11 @@ SUSPICIOUS_HOSTS = set([
 import re
 import sys
 import dns.resolver
+import collections
 
-PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):8333$")
-PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:8333$")
-PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):8333$")
+PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
+PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
+PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\d+)$")
 PATTERN_AGENT = re.compile(r"^(\/Satoshi:0\.8\.6\/|\/Satoshi:0\.9\.(2|3|4|5)\/|\/Satoshi:0\.10\.\d{1,2}\/|\/Satoshi:0\.11\.\d{1,2}\/)$")
 
 def parseline(line):
@@ -43,12 +44,15 @@ def parseline(line):
                 return None
             else:
                 net = 'onion'
-                sortkey = m.group(1)
+                ipstr = sortkey = m.group(1)
+                port = int(m.group(2))
         else:
             net = 'ipv6'
             if m.group(1) in ['::']: # Not interested in localhost
                 return None
-            sortkey = m.group(1) # XXX parse IPv6 into number, could use name_to_ipv6 from generate-seeds
+            ipstr = m.group(1)
+            sortkey = ipstr # XXX parse IPv6 into number, could use name_to_ipv6 from generate-seeds
+            port = int(m.group(2))
     else:
         # Do IPv4 sanity check
         ip = 0
@@ -60,6 +64,8 @@ def parseline(line):
             return None
         net = 'ipv4'
         sortkey = ip
+        ipstr = m.group(1)
+        port = int(m.group(6))
     # Skip bad results.
     if sline[1] == 0:
         return None
@@ -78,7 +84,8 @@ def parseline(line):
     # Construct result.
     return {
         'net': net,
-        'ip': m.group(1),
+        'ip': ipstr,
+        'port': port,
         'ipnum': ip,
         'uptime': uptime30,
         'lastsuccess': lastsuccess,
@@ -88,6 +95,13 @@ def parseline(line):
         'blocks': blocks,
         'sortkey': sortkey,
     }
+
+def filtermultiport(ips):
+    '''Filter out hosts with more nodes per IP'''
+    hist = collections.defaultdict(list)
+    for ip in ips:
+        hist[ip['sortkey']].append(ip)
+    return [value[0] for (key,value) in hist.items() if len(value)==1]
 
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_total):
@@ -138,13 +152,18 @@ def main():
     ips = [ip for ip in ips if PATTERN_AGENT.match(ip['agent'])]
     # Sort by availability (and use last success as tie breaker)
     ips.sort(key=lambda x: (x['uptime'], x['lastsuccess'], x['ip']), reverse=True)
+    # Filter out hosts with multiple bitcoin ports, these are likely abusive
+    ips = filtermultiport(ips)
     # Look up ASNs and limit results, both per ASN and globally.
     ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
     # Sort the results by IP address (for deterministic output).
     ips.sort(key=lambda x: (x['net'], x['sortkey']))
 
     for ip in ips:
-        print ip['ip']
+        if ip['net'] == 'ipv6':
+            print '[%s]:%i' % (ip['ip'], ip['port'])
+        else:
+            print '%s:%i' % (ip['ip'], ip['port'])
 
 if __name__ == '__main__':
     main()
