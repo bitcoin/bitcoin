@@ -7,6 +7,10 @@ src/bitcoin-cli
 src/bitcoin-tx
 src/test/test_bitcoin
 src/qt/test/test_bitcoin-qt
+src/omnicored
+src/omnicore-cli
+src/test/test_omnicore
+src/qt/test/test_omnicore-qt
 
 # autoreconf
 Makefile.in
@@ -76,10 +80,13 @@ src/qt/test/moc*.cpp
 Makefile
 bitcoin-qt
 Bitcoin-Qt.app
+omnicore-qt
+OmniCore-Qt.app
 
 # Unit-tests
 Makefile.test
 bitcoin-qt_test
+omnicore-qt_test
 src/test/buildenv.py
 
 # Resources cpp
