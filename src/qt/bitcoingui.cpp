@@ -314,8 +314,8 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(networkStyle->getAppIcon(), tr("&About Bitcoin Core"), this);
-    aboutAction->setStatusTip(tr("Show information about Bitcoin Core"));
+    aboutAction = new QAction(networkStyle->getAppIcon(), tr("&About Omni Core"), this);
+    aboutAction->setStatusTip(tr("Show information about Omni Core"));
     aboutAction->setMenuRole(QAction::AboutRole);
 #if QT_VERSION < 0x050000
     aboutQtAction = new QAction(QIcon(":/trolltech/qmessagebox/images/qtlogo-64.png"), tr("About &Qt"), this);
@@ -354,7 +354,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
     showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
-    showHelpMessageAction->setStatusTip(tr("Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options"));
+    showHelpMessageAction->setStatusTip(tr("Show the Omni Core help message to get a list with possible command-line options"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -528,7 +528,7 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("Bitcoin Core client") + " " + networkStyle->getTitleAddText();
+    QString toolTip = tr("Omni Core client") + " " + networkStyle->getTitleAddText();
     trayIcon->setToolTip(toolTip);
     trayIcon->setIcon(networkStyle->getAppIcon());
     trayIcon->show();
@@ -806,7 +806,7 @@ void BitcoinGUI::setNumBlocks(int count)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Bitcoin"); // default title
+    QString strTitle = tr("Omni Core"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;

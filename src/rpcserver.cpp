@@ -228,10 +228,10 @@ Value stop(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Bitcoin server.");
+            "\nStop Omni Core server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
-    return "Bitcoin server stopping";
+    return "Omni Core server stopping";
 }
 
 
@@ -618,7 +618,7 @@ void StartRPCThreads()
         unsigned char rand_pwd[32];
         GetRandBytes(rand_pwd, 32);
         uiInterface.ThreadSafeMessageBox(strprintf(
-            _("To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:\n"
+            _("To use omnicored, or the -server option to omnicore-qt, you must set an rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
               "rpcuser=bitcoinrpc\n"
