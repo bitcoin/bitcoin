@@ -165,7 +165,18 @@ Value spork(const Array& params, bool fHelp)
 
         Object ret;
         while(it != mapSporksActive.end()) {
-            ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), it->second.nValue));
+            if(sporkManager.GetSporkNameByID(it->second.nSporkID) != "Unknown")
+                ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), it->second.nValue));
+            it++;
+        }
+        return ret;
+    } else if(params.size() == 1 && params[0].get_str() == "active"){
+        std::map<int, CSporkMessage>::iterator it = mapSporksActive.begin();
+
+        Object ret;
+        while(it != mapSporksActive.end()) {
+            if(sporkManager.GetSporkNameByID(it->second.nSporkID) != "Unknown")
+                ret.push_back(Pair(sporkManager.GetSporkNameByID(it->second.nSporkID), IsSporkActive(it->second.nSporkID)));
             it++;
         }
         return ret;
@@ -189,7 +200,7 @@ Value spork(const Array& params, bool fHelp)
 
     throw runtime_error(
         "spork <name> [<value>]\n"
-        "<name> is the corresponding spork name, or 'show' to show all current spork settings"
+        "<name> is the corresponding spork name, or 'show' to show all current spork settings, active to show which sporks are active"
         "<value> is a epoch datetime to enable or disable spork"
         + HelpRequiringPassphrase());
 }

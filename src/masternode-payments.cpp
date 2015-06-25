@@ -82,7 +82,7 @@ void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
-    
+
     if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
         budget.FillBlockPayee(txNew, nFees);
     } else {
@@ -106,7 +106,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
     bool hasPayment = true;
     CScript payee;
-    
+
     //spork
     if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
         //no masternode detected
@@ -121,7 +121,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
     CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
     CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
-    
+
     txNew.vout[0].nValue = blockValue;
 
     if(hasPayment){
@@ -168,7 +168,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(mapMasternodePayeeVotes.count(winner.GetHash())){
            if(fDebug) LogPrintf("mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), chainActive.Tip()->nHeight);
-           return; 
+           return;
         }
 
         if(winner.nBlockHeight < chainActive.Tip()->nHeight - 10 || winner.nBlockHeight > chainActive.Tip()->nHeight+20){
@@ -205,9 +205,9 @@ bool CMasternodePaymentWinner::Sign(CKey& keyMasternode, CPubKey& pubKeyMasterno
     std::string strMasterNodeSignMessage;
 
     std::string strMessage =  vinMasternode.prevout.ToStringShort() +
-                boost::lexical_cast<std::string>(nBlockHeight) + 
+                boost::lexical_cast<std::string>(nBlockHeight) +
                 payee.ToString();
-                
+
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
         LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage.c_str());
         return false;
@@ -263,7 +263,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
 
     LogPrintf("CMasternodePayments::AddWinningMasternode - checkhash\n");
     if(mapMasternodePayeeVotes.count(winnerIn.GetHash())){
-       return false; 
+       return false;
     }
 
     mapMasternodePayeeVotes[winnerIn.GetHash()] = winnerIn;
@@ -292,18 +292,20 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
         if(payee.nVotes >= nMaxSignatures && payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED)
             nMaxSignatures = payee.nVotes;
-    
+
     // if we don't have at least 6 signatures on a payee, approve whichever is the longest chain
     if(nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
     {
         bool found = false;
-        BOOST_FOREACH(CTxOut out, txNew.vout)
-            if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue) 
+        BOOST_FOREACH(CTxOut out, txNew.vout){
+            if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue){
                 found = true;
+            }
+        }
 
-        if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED){            
+        if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED){
             if(found) return true;
 
             CTxDestination address1;
@@ -372,7 +374,7 @@ void CMasternodePayments::CleanPaymentList()
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
         CMasternodePaymentWinner winner = (*it).second;
-   
+
         if(chainActive.Tip()->nHeight - winner.nBlockHeight > nLimit){
             if(fDebug) LogPrintf("CMasternodePayments::CleanPaymentList - Removing old Masternode payment - block %d\n", winner.nBlockHeight);
             mapMasternodePayeeVotes.erase(it++);
@@ -438,7 +440,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     }
 
     if(nBlockHeight <= nLastBlockHeight) return false;
-    
+
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
     CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, 0);
@@ -467,7 +469,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
             CScript payee = GetScriptForDestination(pmn->pubkey.GetID());
             newWinner.AddPayee(payee, masternodePayment);
-            
+
             CTxDestination address1;
             ExtractDestination(payee, address1);
             CBitcoinAddress address2(address1);
@@ -525,7 +527,7 @@ bool CMasternodePaymentWinner::SignatureValid()
     if(pmn != NULL)
     {
         std::string strMessage =  vinMasternode.prevout.ToStringShort() +
-                    boost::lexical_cast<std::string>(nBlockHeight) + 
+                    boost::lexical_cast<std::string>(nBlockHeight) +
                     payee.ToString();
 
 
