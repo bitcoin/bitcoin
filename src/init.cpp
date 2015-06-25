@@ -417,7 +417,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), 0) + "\n";
     strUsage += "  -darksendrounds=<n>          " + strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), 2) + "\n";
-    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N dash anonymized (default: %u)"), 0) + "\n";
+    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N DASH anonymized (default: %u)"), 0) + "\n";
     strUsage += "  -liquidityprovider=<n>       " + strprintf(_("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), 0) + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
