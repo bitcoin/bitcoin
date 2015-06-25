@@ -229,18 +229,19 @@ int TXHistoryDialog::PopulateHistoryMap()
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), boost::token_compress_on);
     int64_t lastTXBlock = 999999; // set artificially high initially until first wallet tx is processed
+
     // iterate through wallet entries backwards, limiting to most recent n (default 500) transactions (override with --omniuiwalletscope=n)
+    std::list<CAccountingEntry> acentries;
+    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
     int walletTxCount = 0, walletTxMax = GetArg("-omniuiwalletscope", 500);
-    for (std::vector<uint256>::iterator it = walletTXIDCache.begin(); it != walletTXIDCache.end(); ++it) {
-        if (!pwalletMain->mapWallet.count(*it)) {
-            PrintToLog("ERROR: Transaction %s in wallet cache could not be found in the wallet\n", (*it).GetHex());
-            continue;
-        }
-        CWalletTx *const pwtx = &pwalletMain->mapWallet[*it];
+    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
         if (walletTxCount >= walletTxMax) break;
         ++walletTxCount;
+        CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0) {
             uint256 hash = pwtx->GetHash();
+            // check txlistdb, if not there it's not a confirmed Omni transaction so move to next transaction
+            if (!p_txlistdb->exists(hash)) continue;
             // check historyMap, if this tx exists don't waste resources doing anymore work on it
             HistoryMap::iterator hIter = txHistoryMap.find(hash);
             if (hIter != txHistoryMap.end()) { // the tx is in historyMap, check if it has a blockheight of 0 (means a pending has confirmed)
