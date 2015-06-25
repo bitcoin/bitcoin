@@ -3261,7 +3261,9 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
             nWaterlineBlock = best_state_block;
         }
 
-        // tell the UI that state is no longer valid, and UI views need to be reinit
+        // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
+        global_wallet_property_list.clear();
+        CheckWalletUpdate(true);
         uiInterface.OmniStateInvalidated();
 
         if (nWaterlineBlock < nBlockPrev) {

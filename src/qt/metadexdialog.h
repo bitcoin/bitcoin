@@ -31,7 +31,6 @@ public:
     explicit MetaDExDialog(QWidget *parent = 0);
     ~MetaDExDialog();
 
-    void FullRefresh();
     void SwitchMarket();
     void AddRow(bool useBuyList, bool includesMe, const std::string& price, const std::string& available, const std::string& total);
     void UpdateSellAddressBalance();
@@ -52,6 +51,7 @@ public slots:
     void sendTrade(bool sell);
     void OrderRefresh();
     void UpdateBalances();
+    void FullRefresh();
 
 private:
     Ui::MetaDExDialog *ui;

@@ -183,6 +183,7 @@ void SendMPDialog::updateProperty()
         }
         if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
         if (IsMyAddress(address) != ISMINE_SPENDABLE) continue; // ignore this address, it's not spendable
+        if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
         ui->sendFromComboBox->addItem(QString::fromStdString(address + " \t" + FormatMP(propertyId, getUserAvailableMPbalance(address, propertyId)) + getTokenLabel(propertyId)));
     }
 

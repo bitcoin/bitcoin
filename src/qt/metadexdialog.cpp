@@ -419,10 +419,16 @@ void MetaDExDialog::FullRefresh()
         unsigned int id;
         (my_it->second).init();
         while (0 != (id = (my_it->second).next())) {
-            if(id==propertyId) {
+            if (id == propertyId) {
+                if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
                 if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
             }
-            if (((id==OMNI_PROPERTY_MSC) && (!testeco)) || ((id==OMNI_PROPERTY_TMSC) && (testeco))) {
+            if (id == OMNI_PROPERTY_MSC && !testeco) {
+                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_MSC)) continue; // ignore this address, has no available balance to spend
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
+            }
+            if (id == OMNI_PROPERTY_TMSC && testeco) {
+                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_TMSC)) continue; // ignore this address, has no available balance to spend
                 if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
             }
         }
