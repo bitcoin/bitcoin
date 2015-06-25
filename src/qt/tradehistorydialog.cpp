@@ -130,6 +130,13 @@ TradeHistoryDialog::~TradeHistoryDialog()
     delete ui;
 }
 
+void TradeHistoryDialog::ReinitTradeHistoryTable()
+{
+    ui->tradeHistoryTable->setRowCount(0);
+    tradeHistoryMap.clear();
+    UpdateTradeHistoryTable();
+}
+
 // Repopulate tradeHistoryTable (eg in the case that we are hiding or revealing trades)
 void TradeHistoryDialog::RepopulateTradeHistoryTable(int hide)
 {
@@ -521,6 +528,7 @@ void TradeHistoryDialog::setClientModel(ClientModel *model)
     this->clientModel = model;
     if (model != NULL) {
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateTradeHistoryTable()));
+        connect(model, SIGNAL(reinitOmniBalance()), this, SLOT(ReinitTradeHistoryTable()));
     }
 }
 

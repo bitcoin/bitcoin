@@ -95,6 +95,7 @@ signals:
     void numBlocksChanged(int count);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
+    void reinitOmniState();
     void refreshOmniState();
     void refreshOmniBalance();
     void refreshOmniPending(bool pending);
@@ -109,6 +110,7 @@ public slots:
     void updateTimer();
     void updateNumConnections(int numConnections);
     void updateAlert(const QString &hash, int status);
+    void invalidateOmniState();
     void updateOmniState();
     void updateOmniBalance();
     void updateOmniPending(bool pending);

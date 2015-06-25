@@ -80,6 +80,7 @@ private slots:
 
 public slots:
     void focusTransaction(const uint256& txid);
+    void ReinitTXHistoryTable();
 
 signals:
     void doubleClicked(const QModelIndex& idx);

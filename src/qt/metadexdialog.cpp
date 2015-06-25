@@ -108,6 +108,7 @@ void MetaDExDialog::setClientModel(ClientModel *model)
     if (NULL != model) {
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(FullRefresh()));
     }
 }
 

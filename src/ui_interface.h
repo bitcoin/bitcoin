@@ -108,6 +108,8 @@ public:
     /** Omni pending status has been changed */
     boost::signals2::signal<void (bool pending)> OmniPendingChanged;
 
+    /** Omni state has been invalidated due to a reorg */
+    boost::signals2::signal<void ()> OmniStateInvalidated;
 };
 
 extern CClientUIInterface uiInterface;

@@ -3261,6 +3261,9 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
             nWaterlineBlock = best_state_block;
         }
 
+        // tell the UI that state is no longer valid, and UI views need to be reinit
+        uiInterface.OmniStateInvalidated();
+
         if (nWaterlineBlock < nBlockPrev) {
             // scan from the block after the best active block to catch up to the active chain
             msc_initial_scan(nWaterlineBlock + 1);

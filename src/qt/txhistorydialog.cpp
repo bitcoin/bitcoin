@@ -137,6 +137,13 @@ TXHistoryDialog::~TXHistoryDialog()
     delete ui;
 }
 
+void TXHistoryDialog::ReinitTXHistoryTable()
+{
+    ui->txHistoryTable->setRowCount(0);
+    txHistoryMap.clear();
+    UpdateHistory();
+}
+
 void TXHistoryDialog::focusTransaction(const uint256& txid)
 {
     QAbstractItemModel* historyAbstractModel = ui->txHistoryTable->model();
@@ -158,6 +165,7 @@ void TXHistoryDialog::setClientModel(ClientModel *model)
     if (model != NULL) {
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateHistory()));
         connect(model, SIGNAL(numBlocksChanged(int)), this, SLOT(UpdateConfirmations()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(ReinitTXHistoryTable()));
     }
 }
 

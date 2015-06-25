@@ -129,6 +129,11 @@ void ClientModel::updateNumConnections(int numConnections)
     emit numConnectionsChanged(numConnections);
 }
 
+void ClientModel::invalidateOmniState()
+{
+    emit reinitOmniState();
+}
+
 void ClientModel::updateOmniState()
 {
     lockedOmniStateChanged = false;
@@ -239,6 +244,12 @@ QString ClientModel::formatClientStartupTime() const
 }
 
 // Handlers for core signals
+static void OmniStateInvalidated(ClientModel *clientmodel)
+{
+    // This will be triggered for if a reorg invalidates the state
+    QMetaObject::invokeMethod(clientmodel, "invalidateOmniState", Qt::QueuedConnection);
+}
+
 static void OmniStateChanged(ClientModel *clientmodel)
 {
     // This will be triggered for each block that contains Omni layer transactions
@@ -293,6 +304,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.OmniStateChanged.connect(boost::bind(OmniStateChanged, this));
     uiInterface.OmniPendingChanged.connect(boost::bind(OmniPendingChanged, this, _1));
     uiInterface.OmniBalanceChanged.connect(boost::bind(OmniBalanceChanged, this));
+    uiInterface.OmniStateInvalidated.connect(boost::bind(OmniStateInvalidated, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -304,4 +316,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.OmniStateChanged.disconnect(boost::bind(OmniStateChanged, this));
     uiInterface.OmniPendingChanged.disconnect(boost::bind(OmniPendingChanged, this, _1));
     uiInterface.OmniBalanceChanged.disconnect(boost::bind(OmniBalanceChanged, this));
+    uiInterface.OmniStateInvalidated.disconnect(boost::bind(OmniStateInvalidated, this));
 }

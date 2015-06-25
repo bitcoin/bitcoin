@@ -114,11 +114,20 @@ BalancesDialog::~BalancesDialog()
     delete ui;
 }
 
+void BalancesDialog::reinitOmni()
+{
+    ui->propSelectorWidget->clear();
+    ui->balancesTable->setRowCount(0);
+    UpdatePropSelector();
+    PopulateBalances(2147483646); // 2147483646 = summary (last possible ID for test eco props)
+}
+
 void BalancesDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(reinitOmni()));
     }
 }
 

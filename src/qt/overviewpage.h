@@ -41,6 +41,7 @@ public slots:
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
     void updateOmni();
+    void reinitOmni();
 
 signals:
     void transactionClicked(const QModelIndex &index);

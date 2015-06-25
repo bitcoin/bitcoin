@@ -65,6 +65,7 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
     this->clientModel = model;
     if (model != NULL) {
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(RefreshUI()));
+        connect(model, SIGNAL(reinitOmniBalance()), this, SLOT(ReinitUI()));
     }
 }
 
@@ -74,6 +75,12 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
 void MetaDExCancelDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
+}
+
+void MetaDExCancelDialog::ReinitUI()
+{
+    ui->fromCombo->clear();
+    UpdateAddressSelector();
 }
 
 /**

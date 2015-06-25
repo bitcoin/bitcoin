@@ -446,6 +446,15 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
     }
 }
 
+void OverviewPage::reinitOmni()
+{
+    recentCache.clear();
+    ui->overviewLW->clear();
+    UpdatePropertyBalance(0,0,0);
+    UpdatePropertyBalance(1,0,0);
+    updateOmni();
+}
+
 void OverviewPage::updateOmni()
 {
     LOCK(cs_tally);
@@ -528,6 +537,9 @@ void OverviewPage::setClientModel(ClientModel *model)
 
         // Refresh Omni info if there have been Omni layer transactions with balances affecting wallet
         connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(updateOmni()));
+
+        // Reinit Omni info if there has been a chain reorg
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(reinitOmni()));
 
         // Refresh alerts when there has been a change to the Omni State
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(updateAlerts()));
