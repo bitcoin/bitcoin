@@ -5,6 +5,8 @@
 
 #include "chainparams.h"
 
+#include "templates.hpp"
+#include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -30,7 +32,7 @@ using namespace std;
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        strNetworkID = CBaseChainParams::MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -128,7 +130,6 @@ public:
         };
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -136,7 +137,7 @@ static CMainParams mainParams;
 class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        strNetworkID = CBaseChainParams::TESTNET;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 100;
@@ -188,7 +189,6 @@ public:
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -196,7 +196,7 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
-        strNetworkID = "regtest";
+        strNetworkID = CBaseChainParams::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -234,40 +234,43 @@ public:
         };
     }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
+static Container<CChainParams> currentParams;
+static Container<CChainParams> switchingParams;
 
 const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+    return currentParams.Get();
 }
 
-CChainParams &Params(CBaseChainParams::Network network) {
-    switch (network) {
-        case CBaseChainParams::MAIN:
-            return mainParams;
-        case CBaseChainParams::TESTNET:
-            return testNetParams;
-        case CBaseChainParams::REGTEST:
-            return regTestParams;
-        default:
-            assert(false && "Unimplemented network");
-            return mainParams;
-    }
+CChainParams* ParamsFactory(std::string chain)
+{
+    if (chain == CBaseChainParams::MAIN)
+        return new CMainParams();
+    else if (chain == CBaseChainParams::TESTNET)
+        return new CTestNetParams();
+    else if (chain == CBaseChainParams::REGTEST)
+        return new CRegTestParams();
+    throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
 }
 
-void SelectParams(CBaseChainParams::Network network) {
-    SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+const CChainParams& Params(std::string chain)
+{
+    switchingParams.Set(ParamsFactory(chain));
+    return switchingParams.Get();
+}
+
+void SelectParams(std::string chain)
+{
+    SelectBaseParams(chain);
+    currentParams.Set(ParamsFactory(chain));
 }
 
 bool SelectParamsFromCommandLine()
 {
-    CBaseChainParams::Network network = NetworkIdFromCommandLine();
-    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
+    std::string chain = ChainNameFromCommandLine();
+    if (chain == CBaseChainParams::MAX_NETWORK_TYPES)
         return false;
 
-    SelectParams(network);
+    SelectParams(chain);
     return true;
 }
