@@ -2940,9 +2940,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         if(!IsBlockPayeeValid(block.vtx[0], pindexPrev->nHeight+1))
         {
-            if(Params().NetworkID() != CBaseChainParams::REGTEST)
-                return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
-
+            return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
         }
     }
 

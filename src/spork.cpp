@@ -76,7 +76,7 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 // grab the spork, otherwise say it's off
 bool IsSporkActive(int nSporkID)
 {
-    int64_t r = 0;
+    int64_t r = -1;
 
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
@@ -87,10 +87,11 @@ bool IsSporkActive(int nSporkID)
         if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING_DEFAULT;
         if(nSporkID == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) r = SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
 
-        if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
+        if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
-    if(r == 0) r = 4070908800; //return 2099-1-1 by default
+    if(r == -1) r = 4070908800; //return 2099-1-1 by default
 
     return r < GetTime();
 }
@@ -109,6 +110,7 @@ int GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_7_MASTERNODE_SCANNING) r = SPORK_7_MASTERNODE_SCANNING_DEFAULT;
         if(nSporkID == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) r = SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
+        if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
 
         if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -217,6 +219,7 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if(strName == "SPORK_7_MASTERNODE_SCANNING") return SPORK_7_MASTERNODE_SCANNING;
     if(strName == "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT") return SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT;
     if(strName == "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT") return SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT;
+    if(strName == "SPORK_10_MASTERNODE_PAY_NEWEST_NODES") return SPORK_10_MASTERNODE_PAY_NEWEST_NODES;
 
     return -1;
 }
@@ -229,6 +232,7 @@ std::string CSporkManager::GetSporkNameByID(int id)
     if(id == SPORK_7_MASTERNODE_SCANNING) return "SPORK_7_MASTERNODE_SCANNING";
     if(id == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) return "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT";
     if(id == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) return "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT";
+    if(id == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) return "SPORK_10_MASTERNODE_PAY_NEWEST_NODES";
 
     return "Unknown";
 }
