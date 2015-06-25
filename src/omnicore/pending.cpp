@@ -3,8 +3,12 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/walletcache.h"
+#include "omnicore/mdex.h"
 
+#include "amount.h"
 #include "uint256.h"
+#include "ui_interface.h"
 
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
@@ -30,6 +34,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     std::string amountStr, amountDStr;
     bool divisible;
     bool divisibleDesired;
+    rational_t tempUnitPrice(int128_t(0));
     txobj.push_back(Pair("txid", txid.GetHex()));
     txobj.push_back(Pair("sendingaddress", sendingAddress));
     if (!refAddress.empty()) txobj.push_back(Pair("referenceaddress", refAddress));
@@ -60,8 +65,6 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         break;
         case MSC_TYPE_METADEX_TRADE:
         case MSC_TYPE_METADEX_CANCEL_PRICE:
-        case MSC_TYPE_METADEX_CANCEL_PAIR:
-        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
             divisible = isPropertyDivisible(propertyId);
             divisibleDesired = isPropertyDivisible(propertyIdDesired);
             if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
@@ -72,21 +75,52 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
             txobj.push_back(Pair("amountdesired", amountDStr));
             txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
             txobj.push_back(Pair("propertyiddesiredisdivisible", divisibleDesired));
-            txobj.push_back(Pair("action", action));
+            if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
+                tempUnitPrice = rational_t(amount, amountDesired);
+                if (!divisibleDesired) tempUnitPrice = tempUnitPrice/COIN;
+            } else {
+                tempUnitPrice = rational_t(amountDesired, amount);
+                if (!divisible) tempUnitPrice = tempUnitPrice/COIN;
+            }
+            txobj.push_back(Pair("unitprice", xToString(tempUnitPrice)));
+        break;
+        case MSC_TYPE_METADEX_CANCEL_PAIR:
+            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
+            txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
+        break;
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
+            if (isMainEcosystemProperty(propertyId) && isMainEcosystemProperty(propertyIdDesired)) {
+                txobj.push_back(Pair("ecosystem", "Main"));
+            } else {
+                txobj.push_back(Pair("ecosystem", "Test"));
+            }
         break;
     }
     std::string txDesc = write_string(Value(txobj), true);
     if (msc_debug_pending) PrintToLog("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
                                         type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
-    if (update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
-        CMPPending pending;
-        pending.src = sendingAddress;
-        pending.amount = amount;
-        pending.prop = propertyId;
-        pending.desc = txDesc;
-        pending.type = type;
-        my_pending.insert(std::make_pair(txid, pending));
+
+    // bypass tally update for pending cancel as there is no balance change
+    if (type != MSC_TYPE_METADEX_CANCEL_PRICE && type != MSC_TYPE_METADEX_CANCEL_PAIR && type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+        if (!update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
+            PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(),
+                sendingAddress, refAddress, type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
+            return;
+        }
     }
+
+    // add pending object
+    CMPPending pending;
+    pending.src = sendingAddress;
+    pending.amount = amount;
+    pending.prop = propertyId;
+    pending.desc = txDesc;
+    pending.type = type;
+    my_pending.insert(std::make_pair(txid, pending));
+
+    // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
+    CheckWalletUpdate(true); // force an update since some outbound pending (eg MetaDEx cancel) may not change balances
+    uiInterface.OmniPendingChanged(true);
 }
 
 /**
@@ -103,9 +137,11 @@ void PendingDelete(const uint256& txid)
         if (msc_debug_pending) PrintToLog("%s(%s): amount=%d\n", __FUNCTION__, txid.GetHex(), src_amount);
         if (src_amount) update_tally_map(pending.src, pending.prop, pending.amount, PENDING);
         my_pending.erase(it);
+
+        // if pending map is now empty following deletion, trigger a status change
+        if (my_pending.empty()) uiInterface.OmniPendingChanged(false);
     }
 }
-
 
 } // namespace mastercore
 

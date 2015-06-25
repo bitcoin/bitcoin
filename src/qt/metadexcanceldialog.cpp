@@ -16,6 +16,7 @@
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/pending.h"
 
 #include <stdint.h>
 #include <map>
@@ -63,7 +64,8 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(RefreshUI()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(RefreshUI()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(ReinitUI()));
     }
 }
 
@@ -73,6 +75,12 @@ void MetaDExCancelDialog::setClientModel(ClientModel *model)
 void MetaDExCancelDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
+}
+
+void MetaDExCancelDialog::ReinitUI()
+{
+    ui->fromCombo->clear();
+    UpdateAddressSelector();
 }
 
 /**
@@ -355,8 +363,10 @@ void MetaDExCancelDialog::SendCancelTransaction()
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
+            if (action == 2) PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_PRICE, propertyIdForSale, amountForSale, propertyIdDesired, amountDesired, 0);
+            if (action == 3) PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_PAIR, propertyIdForSale, 0, propertyIdDesired, 0, 0);
+            if (action == 4) PendingAdd(txid, fromAddress, "", MSC_TYPE_METADEX_CANCEL_ECOSYSTEM, propertyIdForSale, 0, propertyIdDesired, 0, 0);
             PopulateTXSentDialog(txid.GetHex());
-            // no need for a pending object for now, no available balances will be affected until confirmation
         }
     }
 }

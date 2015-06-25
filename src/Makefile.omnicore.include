@@ -20,7 +20,8 @@ OMNICORE_H = \
   omnicore/sto.h \
   omnicore/tx.h \
   omnicore/utils.h \
-  omnicore/version.h
+  omnicore/version.h \
+  omnicore/walletcache.h
 
 OMNICORE_CPP = \
   omnicore/convert.cpp \
@@ -43,7 +44,8 @@ OMNICORE_CPP = \
   omnicore/sto.cpp \
   omnicore/tx.cpp \
   omnicore/utils.cpp \
-  omnicore/version.cpp
+  omnicore/version.cpp \
+  omnicore/walletcache.cpp
 
 libbitcoin_server_a_SOURCES += \
   $(OMNICORE_CPP) \

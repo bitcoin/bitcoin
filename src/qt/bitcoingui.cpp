@@ -70,6 +70,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     labelEncryptionIcon(0),
     labelConnectionsIcon(0),
     labelBlocksIcon(0),
+    labelOmniPendingIcon(0),
     progressBarLabel(0),
     progressBar(0),
     progressDialog(0),
@@ -176,6 +177,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     labelEncryptionIcon = new QLabel();
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
+    labelOmniPendingIcon = new QLabel();
     if(enableWallet)
     {
         frameBlocksLayout->addStretch();
@@ -187,6 +189,8 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
+    frameBlocksLayout->addStretch();
+    frameBlocksLayout->addWidget(labelOmniPendingIcon);
     frameBlocksLayout->addStretch();
 
     // Progress bar and label for blocks download
@@ -461,6 +465,9 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         // Show progress dialog
         connect(clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
 
+        // Update Omni pending status
+        connect(clientModel, SIGNAL(refreshOmniPending(bool)), this, SLOT(setOmniPendingStatus(bool)));
+
         rpcConsole->setClientModel(clientModel);
 #ifdef ENABLE_WALLET
         if(walletFrame)
@@ -636,6 +643,12 @@ void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+}
+
+void BitcoinGUI::gotoOmniHistoryTab()
+{
+    historyAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoOmniHistoryTab();
 }
 
 void BitcoinGUI::gotoBitcoinHistoryTab()
@@ -955,6 +968,17 @@ bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
         return true;
     }
     return false;
+}
+
+void BitcoinGUI::setOmniPendingStatus(bool pending)
+{
+    if (!pending) {
+        labelOmniPendingIcon->hide();
+    } else {
+        labelOmniPendingIcon->show();
+        labelOmniPendingIcon->setPixmap(QIcon(":/icons/hourglass").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelOmniPendingIcon->setToolTip(tr("You have Omni transactions awaiting confirmation."));
+    }
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)

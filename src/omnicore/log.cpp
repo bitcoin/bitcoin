@@ -49,6 +49,7 @@ bool msc_debug_metadex2           = 0;
 bool msc_debug_metadex3           = 0;
 //! Print transaction fields, when interpreting packets
 bool msc_debug_packets            = 1;
+bool msc_debug_walletcache        = 0;
 
 /**
  * LogPrintf() has been broken a couple of times now
@@ -241,6 +242,7 @@ void InitDebugLogLevels()
         if (*it == "metadex2") msc_debug_metadex2 = true;
         if (*it == "metadex3") msc_debug_metadex3 = true;
         if (*it == "packets") msc_debug_packets = true;
+        if (*it == "walletcache") msc_debug_walletcache = true;
         if (*it == "none" || *it == "all") {
             bool allDebugState = false;
             if (*it == "all") allDebugState = true;
@@ -268,6 +270,7 @@ void InitDebugLogLevels()
             msc_debug_metadex2 = allDebugState;
             msc_debug_metadex3 = allDebugState;
             msc_debug_packets =  allDebugState;
+            msc_debug_walletcache = allDebugState;
         }
     }
 }

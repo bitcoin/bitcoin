@@ -51,6 +51,7 @@ private:
 public slots:
     void propSelectorChanged();
     void balancesUpdated();
+    void reinitOmni();
 
 private slots:
     void contextualMenu(const QPoint &point);

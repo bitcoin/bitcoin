@@ -29,6 +29,7 @@
 #include "omnicore/tx.h"
 #include "omnicore/utils.h"
 #include "omnicore/version.h"
+#include "omnicore/walletcache.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -94,25 +95,20 @@ using std::vector;
 
 using namespace mastercore;
 
-
-// comment out MY_HACK & others here - used for Unit Testing only !
-// #define MY_HACK
+CCriticalSection cs_tally;
 
 static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
-static int nWaterlineBlock = 0;  //
+static int nWaterlineBlock = 0;
 
-uint64_t global_metadex_market;
-//! Available balances of wallet properties in the main ecosystem
-std::map<uint32_t, int64_t> global_balance_money_maineco;
-//! Reserved balances of wallet properties in the main ecosystem
-std::map<uint32_t, int64_t> global_balance_reserved_maineco;
-//! Available balances of wallet properties in the test ecosystem
-std::map<uint32_t, int64_t> global_balance_money_testeco;
-//! Reserved balances of wallet properties in the test ecosystem
-std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Available balances of wallet properties
+std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+std::map<uint32_t, int64_t> global_balance_reserved;
+//! Vector containing a list of properties relative to the wallet
+std::set<uint32_t> global_wallet_property_list;
 
 /**
  * Used to indicate, whether to automatically commit created transactions.
@@ -282,8 +278,6 @@ std::string FormatMP(unsigned int property, int64_t n, bool fSign)
 
 string const CMPSPInfo::watermarkKey("watermark");
 
-CCriticalSection cs_tally;
-
 OfferMap mastercore::my_offers;
 AcceptMap mastercore::my_accepts;
 
@@ -305,22 +299,18 @@ CMPTally *mastercore::getTally(const string & address)
 }
 
 // look at balance for an address
-int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype)
+int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype)
 {
-uint64_t balance = 0;
+    int64_t balance = 0;
+    if (TALLY_TYPE_COUNT <= ttype) return 0;
+    if (ttype == ACCEPT_RESERVE && property > OMNI_PROPERTY_TMSC) return 0; // ACCEPT_RESERVE is always empty except for props 1 & 2
 
-  if (TALLY_TYPE_COUNT <= ttype) return 0;
-
-  LOCK(cs_tally);
-
-const map<string, CMPTally>::iterator my_it = mp_tally_map.find(Address);
-
-  if (my_it != mp_tally_map.end())
-  {
-    balance = (my_it->second).getMoney(property, ttype);
-  }
-
-  return balance;
+    LOCK(cs_tally);
+    const map<string, CMPTally>::iterator my_it = mp_tally_map.find(Address);
+    if (my_it != mp_tally_map.end()) {
+        balance = (my_it->second).getMoney(property, ttype);
+    }
+    return balance;
 }
 
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property)
@@ -605,52 +595,44 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
   }
 }
 
-// TODO: optimize efficiency -- iterate only over wallet's addresses in the future
-// NOTE: if we loop over wallet addresses we miss tokens that may be in change addresses (since mapAddressBook does not
-//       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
-int mastercore::set_wallet_totals()
+void CheckWalletUpdate(bool forceUpdate)
 {
-  //concerned about efficiency here, time how long this takes, averaging 0.02-0.04s on my system
-  //timer t;
-  int my_addresses_count = 0;
-  int64_t propertyId;
-  unsigned int nextSPID = _my_sps->peekNextSPID(1); // real eco
-  unsigned int nextTestSPID = _my_sps->peekNextSPID(2); // test eco
-
-  //zero bals
-  for (propertyId = 1; propertyId<nextSPID; propertyId++) //main eco
-  {
-    global_balance_money_maineco[propertyId] = 0;
-    global_balance_reserved_maineco[propertyId] = 0;
-  }
-  for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) //test eco
-  {
-    global_balance_money_testeco[propertyId-2147483647] = 0;
-    global_balance_reserved_testeco[propertyId-2147483647] = 0;
-  }
-
-  for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-  {
-    if (IsMyAddress(my_it->first))
-    {
-       for (propertyId = 1; propertyId<nextSPID; propertyId++) //main eco
-       {
-              //global_balance_money_maineco[propertyId] += getMPbalance(my_it->first, propertyId, BALANCE);
-              global_balance_money_maineco[propertyId] += getUserAvailableMPbalance(my_it->first, propertyId);
-              global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-              global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-              if (propertyId < 3) global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, ACCEPT_RESERVE);
-       }
-       for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) //test eco
-       {
-              //global_balance_money_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, BALANCE);
-              global_balance_money_testeco[propertyId-2147483647] += getUserAvailableMPbalance(my_it->first, propertyId);
-              global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-              global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-       }
+    if (!WalletCacheUpdate()) {
+        // no balance changes were detected that affect wallet addresses, signal a generic change to overall Omni state
+        if (!forceUpdate) {
+            uiInterface.OmniStateChanged();
+            return;
+        }
     }
-  }
-  return (my_addresses_count);
+
+    // balance changes were found in the wallet, update the global totals and signal a Omni balance change
+    global_balance_money.clear();
+    global_balance_reserved.clear();
+    LOCK(cs_tally);
+
+    // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
+    for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        // check if the address is a wallet address (including watched addresses)
+        std::string address = my_it->first;
+        int addressIsMine = IsMyAddress(address);
+        if (!addressIsMine) continue;
+        // iterate only those properties in the TokenMap for this address
+        my_it->second.init();
+        uint32_t propertyId;
+        while (0 != (propertyId = (my_it->second).next())) {
+            // add to the global wallet property list
+            global_wallet_property_list.insert(propertyId);
+            // check if the address is spendable (only spendable balances are included in totals)
+            if (addressIsMine != ISMINE_SPENDABLE) continue;
+            // work out the balances and add to globals
+            global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+        }
+    }
+    // signal an Omni balance change
+    uiInterface.OmniBalanceChanged();
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
@@ -2091,6 +2073,11 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
         interp_ret = mp_obj.interpretPacket();
         if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
 
+        // check if the transaction is in the wallet, if so add it to walletTXIDCache
+        if (pwalletMain->mapWallet.count(tx.GetHash())) {
+            WalletTXIDCacheAdd(tx.GetHash());
+        }
+
         // of course only MP-related TXs get recorded
         bool bValid = (0 <= interp_ret);
 
@@ -2101,15 +2088,12 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
 }
 
 // IsMine wrapper to determine whether the address is in our local wallet
-bool IsMyAddress(const std::string &address) 
+int IsMyAddress(const std::string &address)
 {
-  if (!pwalletMain) return false;
-
-  const CBitcoinAddress& mscaddress = address;
-
-  CTxDestination lookupaddress = mscaddress.Get(); 
-
-  return (IsMine(*pwalletMain, lookupaddress));
+    if (!pwalletMain) return ISMINE_NO;
+    const CBitcoinAddress& omniAddress = address;
+    CTxDestination omniDest = omniAddress.Get();
+    return IsMine(*pwalletMain, omniDest);
 }
 
 // gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
@@ -2210,13 +2194,6 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
 return n_total;
 }
 
-int64_t feeCheck(const string &address)
-{
-    // check the supplied address against selectCoins to determine if sufficient fees for send
-    CCoinControl coinControl;
-    return selectCoins(address, coinControl, 0);
-}
-
 // This function determines whether it is valid to use a Class C transaction for a given payload size
 static bool UseEncodingClassC(size_t nDataSize)
 {
@@ -2227,6 +2204,26 @@ static bool UseEncodingClassC(size_t nDataSize)
         fDataEnabled = false;
     }
     return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
+}
+
+bool feeCheck(const string &address, size_t nDataSize)
+{
+    // check the supplied address against selectCoins to determine if sufficient fees for send
+    CCoinControl coinControl;
+    int64_t inputTotal = selectCoins(address, coinControl, 0);
+    bool ClassC = UseEncodingClassC(nDataSize);
+    int64_t minFee = 0;
+
+    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
+    if (ClassC) {
+        // estimated minimum fee calculation for Class C with payload of nDataSize
+        minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+    } else {
+        // estimated minimum fee calculation for Class B with payload of nDataSize
+        minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+    }
+
+    return inputTotal >= minFee;
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
@@ -3264,6 +3261,11 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
             nWaterlineBlock = best_state_block;
         }
 
+        // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
+        global_wallet_property_list.clear();
+        CheckWalletUpdate(true);
+        uiInterface.OmniStateInvalidated();
+
         if (nWaterlineBlock < nBlockPrev) {
             // scan from the block after the best active block to catch up to the active chain
             msc_initial_scan(nWaterlineBlock + 1);
@@ -3306,16 +3308,11 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
             devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
     }
 
-    // get the total MSC for this wallet, for QT display
-    set_wallet_totals();
-
     // check the alert status, do we need to do anything else here?
     CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
-    // force an update of the UI once per processed block containing Omni transactions
-    if (countMP > 0) { // there were Omni transactions in this block
-        uiInterface.OmniStateChanged();
-    }
+    // transactions were found in the block, signal the UI accordingly
+    if (countMP > 0) CheckWalletUpdate();
 
     // save out the state after this block
     if (writePersistence(nBlockNow)) {

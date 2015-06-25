@@ -36,6 +36,7 @@ public slots:
     void UpdateAddressSelector();
     void UpdateCancelCombo();
     void RefreshUI();
+    void ReinitUI();
     void fromAddressComboBoxChanged(int);
 
 private:

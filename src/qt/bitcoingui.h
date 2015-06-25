@@ -81,6 +81,7 @@ private:
     QLabel *labelEncryptionIcon;
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
+    QLabel *labelOmniPendingIcon;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
     QProgressDialog *progressDialog;
@@ -162,7 +163,7 @@ public slots:
        @see WalletModel::EncryptionStatus
     */
     void setEncryptionStatus(int status);
-
+    void setOmniPendingStatus(bool pending);
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 
     /** Show incoming transaction notification for new transactions. */
@@ -177,6 +178,8 @@ private slots:
     void gotoBalancesPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    /** Switch directly to Omni history tab */
+    void gotoOmniHistoryTab();
     /** Switch directly to bitcoin history tab */
     void gotoBitcoinHistoryTab();
     /** Switch to utility page */

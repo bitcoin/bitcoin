@@ -10,6 +10,7 @@
 #include "guiutil.h"
 #include "ui_interface.h"
 #include "walletmodel.h"
+#include "clientmodel.h"
 
 #include "omnicore/mdex.h"
 #include "omnicore/omnicore.h"
@@ -59,10 +60,13 @@ using std::string;
 using namespace json_spirit;
 using namespace mastercore;
 
+bool hideInactiveTrades = false;
+
 TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::tradeHistoryDialog),
-    model(0)
+    clientModel(0),
+    walletModel(0)
 {
     // Setup the UI
     ui->setupUi(this);
@@ -116,6 +120,7 @@ TradeHistoryDialog::TradeHistoryDialog(QWidget *parent) :
     contextMenu->addAction(showDetailsAction);
     connect(ui->tradeHistoryTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
     connect(ui->tradeHistoryTable, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDetails()));
+    connect(ui->hideInactiveTrades, SIGNAL(stateChanged(int)), this, SLOT(RepopulateTradeHistoryTable(int)));
     connect(copyTxIDAction, SIGNAL(triggered()), this, SLOT(copyTxID()));
     connect(showDetailsAction, SIGNAL(triggered()), this, SLOT(showDetails()));
 }
@@ -125,14 +130,33 @@ TradeHistoryDialog::~TradeHistoryDialog()
     delete ui;
 }
 
+void TradeHistoryDialog::ReinitTradeHistoryTable()
+{
+    ui->tradeHistoryTable->setRowCount(0);
+    tradeHistoryMap.clear();
+    UpdateTradeHistoryTable();
+}
+
+// Repopulate tradeHistoryTable (eg in the case that we are hiding or revealing trades)
+void TradeHistoryDialog::RepopulateTradeHistoryTable(int hide)
+{
+    ui->tradeHistoryTable->setRowCount(0);
+    if (hide) {
+        hideInactiveTrades = true;
+    } else {
+        hideInactiveTrades = false;
+    }
+    UpdateTradeHistoryTable(true);
+}
+
 // The main function to update the UI tradeHistoryTable
-void TradeHistoryDialog::UpdateTradeHistoryTable()
+void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
 {
     // Populate tradeHistoryMap
     int newTXCount = PopulateTradeHistoryMap();
 
     // Process any new transactions that were added to the map
-    if (newTXCount > 0) {
+    if (forceUpdate || newTXCount > 0) {
         ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
         QAbstractItemModel* tradeHistoryAbstractModel = ui->tradeHistoryTable->model();
         int chainHeight = chainActive.Height();
@@ -140,16 +164,22 @@ void TradeHistoryDialog::UpdateTradeHistoryTable()
         // Loop through tradeHistoryMap and search tradeHistoryTable for the transaction, adding it if not already there
         for (TradeHistoryMap::iterator it = tradeHistoryMap.begin(); it != tradeHistoryMap.end(); ++it) {
             uint256 txid = it->first;
+            TradeHistoryObject objTH = it->second;
+
+            // ignore this trade if it's not active and we've elected to hide inactive trades
+            if (hideInactiveTrades && (objTH.status == "Cancelled" || objTH.status == "Filled" || objTH.status == "Part Cancel" || !objTH.valid)) continue;
+
+            // search tradeHistoryTable for an existing row & skip if already there
             QSortFilterProxyModel tradeHistoryProxy;
             tradeHistoryProxy.setSourceModel(tradeHistoryAbstractModel);
             tradeHistoryProxy.setFilterKeyColumn(0);
             tradeHistoryProxy.setFilterFixedString(QString::fromStdString(txid.GetHex()));
             QModelIndex rowIndex = tradeHistoryProxy.mapToSource(tradeHistoryProxy.index(0,0));
-            if (rowIndex.isValid()) continue; // Found tx in tradeHistoryTable already, do nothing
+            if (rowIndex.isValid()) continue;
 
-            TradeHistoryObject objTH = it->second;
+            // new entry is required, append a new row (sorting will take care of ordering)
             int newRow = ui->tradeHistoryTable->rowCount();
-            ui->tradeHistoryTable->insertRow(newRow); // append a new row (sorting will take care of ordering)
+            ui->tradeHistoryTable->insertRow(newRow);
 
             // Create the cells to be added to the new row and setup their formatting
             QTableWidgetItem *dateCell = new QTableWidgetItem;
@@ -174,13 +204,16 @@ void TradeHistoryDialog::UpdateTradeHistoryTable()
             if (objTH.status == "Filled") ic = QIcon(":/icons/meta_filled");
             if (objTH.status == "Open") ic = QIcon(":/icons/meta_open");
             if (objTH.status == "Part Filled") ic = QIcon(":/icons/meta_partial");
-            if (!objTH.valid) ic = QIcon(":/icons/transaction_invalid");
+            if (!objTH.valid) {
+                ic = QIcon(":/icons/transaction_invalid");
+                objTH.status = "Invalid";
+            }
             iconCell->setIcon(ic);
             amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
             amountOutCell->setForeground(QColor("#EE0000"));
             amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
             amountInCell->setForeground(QColor("#00AA00"));
-            if (objTH.status == "Cancelled" || objTH.status == "Filled") {
+            if (objTH.status == "Cancelled" || objTH.status == "Filled" || objTH.status == "Part Cancel" || !objTH.valid) {
                 // dull the colors for non-active trades
                 dateCell->setForeground(QColor("#707070"));
                 statusCell->setForeground(QColor("#707070"));
@@ -231,12 +264,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // grab pending object, extract details and skip if not a metadex trade
         CMPPending *p_pending = &(it->second);
-        if (p_pending->type != MSC_TYPE_METADEX_TRADE
-                && p_pending->type != MSC_TYPE_METADEX_CANCEL_PRICE
-                && p_pending->type != MSC_TYPE_METADEX_CANCEL_PAIR
-                && p_pending->type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-            continue;
-        }
+        if (p_pending->type != MSC_TYPE_METADEX_TRADE) continue;
         uint32_t propertyId = p_pending->prop;
         int64_t amount = p_pending->amount;
 
@@ -266,7 +294,11 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
     // ### START WALLET TRANSACTIONS PROCESSING ###
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    // iterate through wallet entries backwards, limiting to most recent n (default 500) transactions (override with --omniuiwalletscope=n)
+    int walletTxCount = 0, walletTxMax = GetArg("-omniuiwalletscope", 500);
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
+        if (walletTxCount >= walletTxMax) break;
+        ++walletTxCount;
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx == 0) continue;
         uint256 hash = pwtx->GetHash();
@@ -277,12 +309,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         std::vector<std::string> vstr;
         boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
         if (vstr.size() > 2) {
-            if (atoi(vstr[2]) != MSC_TYPE_METADEX_TRADE
-                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_PRICE
-                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_PAIR
-                    && atoi(vstr[2]) != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-                continue;
-            }
+            if (atoi(vstr[2]) != MSC_TYPE_METADEX_TRADE) continue;
         }
 
         // check historyMap, if this tx exists don't waste resources doing anymore work on it
@@ -333,26 +360,18 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool valid = false;
 
         // parse the transaction
-        int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
-        if (0 != parseRC) continue;
-        if (0<=mp_obj.step1()) {
-            int tmpblock=0;
-            uint32_t tmptype=0;
-            uint64_t amountNew=0;
-            valid = getValidMPTX(hash, &tmpblock, &tmptype, &amountNew);
-            if (0 == mp_obj.step2_Value()) {
-                propertyIdForSale = mp_obj.getProperty();
-                amountForSale = mp_obj.getAmount();
-                divisibleForSale = isPropertyDivisible(propertyIdForSale);
-                if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
-                    uint8_t mdex_action = temp_metadexoffer.getAction();
-                    if (mdex_action != 1) continue; // cancels aren't trades
-                    propertyIdDesired = temp_metadexoffer.getDesProperty();
-                    divisibleDesired = isPropertyDivisible(propertyIdDesired);
-                    amountDesired = temp_metadexoffer.getAmountDesired();
-                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
-                    orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
-                }
+        if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
+        if (mp_obj.interpret_Transaction()) {
+            valid = getValidMPTX(hash);
+            propertyIdForSale = mp_obj.getProperty();
+            amountForSale = mp_obj.getAmount();
+            divisibleForSale = isPropertyDivisible(propertyIdForSale);
+            if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
+                propertyIdDesired = temp_metadexoffer.getDesProperty();
+                divisibleDesired = isPropertyDivisible(propertyIdDesired);
+                amountDesired = temp_metadexoffer.getAmountDesired();
+                t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+                orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
             }
         }
 
@@ -367,6 +386,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         if (!orderOpen && filled) statusText = "Filled";
         if (orderOpen && !partialFilled) statusText = "Open";
         if (orderOpen && partialFilled) statusText = "Part Filled";
+        if (!valid) statusText = "Invalid";
 
         // prepare display values
         std::string displayText = "Sell ";
@@ -410,6 +430,7 @@ void TradeHistoryDialog::UpdateData()
 {
     int chainHeight = chainActive.Height();
     int rowCount = ui->tradeHistoryTable->rowCount();
+    ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
     for (int row = 0; row < rowCount; row++) {
         // check if we need to refresh the details for this row
         int lastUpdateBlock = ui->tradeHistoryTable->item(row,1)->text().toInt();
@@ -421,7 +442,7 @@ void TradeHistoryDialog::UpdateData()
             continue;
         }
         TradeHistoryObject *tmpObjTH = &(hIter->second);
-        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled") continue; // once a trade hits this status the details should never change
+        if (tmpObjTH->status == "Filled" || tmpObjTH->status == "Cancelled" || tmpObjTH->status == "Part Cancel" || tmpObjTH->status == "Invalid") continue; // once a trade hits this status the details should never change
         if (tmpObjTH->blockHeight == 0) continue; // do not attempt to refresh details for a trade that's still pending
         if (lastUpdateBlock == chainHeight) continue; // no new blocks since last update, don't waste compute looking for updates
 
@@ -448,6 +469,7 @@ void TradeHistoryDialog::UpdateData()
         if (!orderOpen && filled) { statusText = "Filled"; ic = QIcon(":/icons/meta_filled"); }
         if (orderOpen && !partialFilled) { statusText = "Open"; ic = QIcon(":/icons/meta_open"); }
         if (orderOpen && partialFilled) { statusText = "Part Filled"; ic = QIcon(":/icons/meta_partial"); }
+        if (tmpObjTH->valid) { statusText = "Invalid"; ic = QIcon(":/icons/transaction_invalid"); }
 
         // format new amounts
         std::string displayIn = "";
@@ -465,14 +487,15 @@ void TradeHistoryDialog::UpdateData()
         QTableWidgetItem *amountOutCell = new QTableWidgetItem(QString::fromStdString(displayOut));
         QTableWidgetItem *amountInCell = new QTableWidgetItem(QString::fromStdString(displayIn));
         QTableWidgetItem *iconCell = new QTableWidgetItem;
-        QTableWidgetItem *dateCell = ui->tradeHistoryTable->item(row, 3); // values don't change so can be copied
-        QTableWidgetItem *infoCell = ui->tradeHistoryTable->item(row, 5); // as above
+        QTableWidgetItem *dateCell = new QTableWidgetItem;
+        dateCell->setData(Qt::DisplayRole, ui->tradeHistoryTable->item(row, 3)->data(Qt::DisplayRole)); // values don't change so can be copied
+        QTableWidgetItem *infoCell = new QTableWidgetItem(ui->tradeHistoryTable->item(row, 5)->text()); // as above
         iconCell->setIcon(ic);
         amountOutCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
         amountOutCell->setForeground(QColor("#EE0000"));
         amountInCell->setTextAlignment(Qt::AlignRight + Qt::AlignVCenter);
         amountInCell->setForeground(QColor("#00AA00"));
-        if (statusText == "Cancelled" || statusText == "Filled") {
+        if (statusText == "Cancelled" || statusText == "Filled" || statusText == "Part Cancel" || statusText == "Invalid") {
             // dull the colors for non-active trades
             dateCell->setForeground(QColor("#707070"));
             statusCell->setForeground(QColor("#707070"));
@@ -482,7 +505,6 @@ void TradeHistoryDialog::UpdateData()
         }
         if(displayIn.substr(0,2) == "0 ") amountInCell->setForeground(QColor("#000000"));
         if(displayOut.substr(0,2) == "0 ") amountOutCell->setForeground(QColor("#000000"));
-
         // replace cells in row accordingly
         ui->tradeHistoryTable->setItem(row, 1, lastUpdateBlockCell);
         ui->tradeHistoryTable->setItem(row, 2, iconCell);
@@ -492,13 +514,21 @@ void TradeHistoryDialog::UpdateData()
         ui->tradeHistoryTable->setItem(row, 6, amountOutCell);
         ui->tradeHistoryTable->setItem(row, 7, amountInCell);
     }
+    ui->tradeHistoryTable->setSortingEnabled(true); // re-enable sorting
 }
 
-void TradeHistoryDialog::setModel(WalletModel *model)
+void TradeHistoryDialog::setWalletModel(WalletModel *model)
 {
-    this->model = model;
-    if (NULL != model) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateTradeHistoryTable()));
+    this->walletModel = model;
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
+}
+
+void TradeHistoryDialog::setClientModel(ClientModel *model)
+{
+    this->clientModel = model;
+    if (model != NULL) {
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(UpdateTradeHistoryTable()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(ReinitTradeHistoryTable()));
     }
 }
 
@@ -547,35 +577,10 @@ void TradeHistoryDialog::showDetails()
             }
             int64_t amountForSale = mp_obj.getAmount();
 
-            // obtain action byte
-            int actionByte = 0;
-            if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
-
-            // obtain an array of matched trades (action 1) or array of cancelled trades (action 2/3/4)
+            // obtain an array of matched trades
             Array tradeArray, cancelArray;
             int64_t totalBought = 0, totalSold = 0;
-            if (actionByte == 1) {
-                t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
-            } else {
-                int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
-                if (numberOfCancels > 0) {
-                    for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
-                        Object cancelTx;
-                        string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + static_cast<ostringstream*>( &(ostringstream() << refNumber) )->str() );
-                        if (!strValue.empty()) {
-                            std::vector<std::string> vstr;
-                            boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
-                            if (3 <= vstr.size()) {
-                                uint64_t propId = boost::lexical_cast<uint64_t>(vstr[1]);
-                                cancelTx.push_back(Pair("txid", vstr[0]));
-                                cancelTx.push_back(Pair("propertyid", propId));
-                                cancelTx.push_back(Pair("amountunreserved", FormatMP(propId, boost::lexical_cast<uint64_t>(vstr[2]))));
-                                cancelArray.push_back(cancelTx);
-                            }
-                        }
-                    }
-                }
-            }
+            t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
 
             // obtain the status of the trade
             bool orderOpen = MetaDEx_isOpen(txid, propertyId);
@@ -589,16 +594,11 @@ void TradeHistoryDialog::showDetails()
                 if (!partialFilled) { statusText = "cancelled"; } else { statusText = "cancelled part filled"; }
                 if (filled) statusText = "filled";
             }
-            if (actionByte == 1) { txobj.push_back(Pair("status", statusText)); } else { txobj.push_back(Pair("status", "N/A")); }
+            txobj.push_back(Pair("status", statusText));
 
-            // add the appropriate array based on action byte
-            if(actionByte == 1) {
-                txobj.push_back(Pair("matches", tradeArray));
-                if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
-            } else {
-                txobj.push_back(Pair("cancelledtransactions", cancelArray));
-            }
-
+            // add the array
+            txobj.push_back(Pair("matches", tradeArray));
+            if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
             strTXText = write_string(Value(txobj), true);
         }
     }

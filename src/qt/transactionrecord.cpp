@@ -3,12 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "transactionrecord.h"
+#include "omnicore/omnicore.h"
+#include "omnicore/pending.h"
 
 #include "base58.h"
 #include "timedata.h"
 #include "wallet.h"
 
 #include <stdint.h>
+
+using namespace mastercore;
 
 /* Return positive answer if transaction should be shown in list.
  */
@@ -37,6 +41,34 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
+
+    // Omni override - since we use multiple outputs these show up as multiple transaction records
+    // and cause duplicate entries to be displayed in bitcoin history and overview recent
+    bool omniOverride = false;
+    PendingMap::iterator it = my_pending.find(hash);
+    if (it != my_pending.end()) omniOverride = true;
+    if (p_txlistdb->exists(hash)) omniOverride = true;
+    if (omniOverride) {
+        TransactionRecord sub(hash, nTime);
+        sub.idx = parts.size();
+        sub.address = "Omni transaction";
+        sub.involvesWatchAddress = false; // watch only support for Omni is an ongoing WIP
+        if (nNet > 0) { // inbound
+            sub.type = TransactionRecord::RecvWithAddress;
+            BOOST_FOREACH(const CTxOut& txout, wtx.vout) {
+                isminetype mine = wallet->IsMine(txout);
+                if (mine) {
+                    sub.credit += txout.nValue;
+                    if (mine == ISMINE_WATCH_ONLY) sub.involvesWatchAddress = true;
+                }
+            }
+        } else { // outbound
+            sub.type = TransactionRecord::SendToAddress;
+            sub.debit = nNet;
+        }
+        parts.append(sub);
+        return parts;
+    }
 
     if (nNet > 0 || wtx.IsCoinBase())
     {

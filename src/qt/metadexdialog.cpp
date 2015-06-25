@@ -7,6 +7,7 @@
 
 #include "omnicore_qtutils.h"
 
+#include "clientmodel.h"
 #include "walletmodel.h"
 
 #include "omnicore/createpayload.h"
@@ -20,6 +21,7 @@
 #include "amount.h"
 #include "sync.h"
 #include "uint256.h"
+#include "wallet_ismine.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -47,11 +49,11 @@ using namespace mastercore;
 MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MetaDExDialog),
-    model(0)
+    clientModel(0),
+    walletModel(0),
+    global_metadex_market(3)
 {
     ui->setupUi(this);
-    //open
-    global_metadex_market = 3;
 
     //prep lists
     ui->buyList->setColumnCount(3);
@@ -79,8 +81,6 @@ MetaDExDialog::MetaDExDialog(QWidget *parent) :
     ui->sellList->setFocusPolicy(Qt::NoFocus);
     ui->sellList->setAlternatingRowColors(true);
 
-    ui->pendingLabel->setVisible(false);
-
     connect(ui->switchButton, SIGNAL(clicked()), this, SLOT(switchButtonClicked()));
     connect(ui->buyButton, SIGNAL(clicked()), this, SLOT(buyTrade()));
     connect(ui->sellButton, SIGNAL(clicked()), this, SLOT(sellTrade()));
@@ -102,25 +102,26 @@ MetaDExDialog::~MetaDExDialog()
     delete ui;
 }
 
-void MetaDExDialog::setModel(WalletModel *model)
+void MetaDExDialog::setClientModel(ClientModel *model)
 {
-    this->model = model;
+    this->clientModel = model;
     if (NULL != model) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(FullRefresh()));
     }
+}
+
+void MetaDExDialog::setWalletModel(WalletModel *model)
+{
+    this->walletModel = model;
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
 }
 
 void MetaDExDialog::OrderRefresh()
 {
     UpdateOffers();
-    // check for pending transactions, could be more filtered to just trades here
-    bool pending = false;
-    for(PendingMap::iterator my_it = my_pending.begin(); my_it != my_pending.end(); ++my_it)
-    {
-        // if we get here there are pending transactions in the wallet, flag warning to MetaDEx
-        pending = true;
-    }
-    if(pending) { ui->pendingLabel->setVisible(true); } else { ui->pendingLabel->setVisible(false); }
+    UpdateBalances();
 }
 
 // Executed when the switch market button is clicked
@@ -274,6 +275,13 @@ void MetaDExDialog::AddRow(bool useBuyList, bool includesMe, const string& price
     }
 }
 
+void MetaDExDialog::UpdateBalances()
+{
+    // update the balances for the buy and sell addreses
+    UpdateBuyAddressBalance();
+    UpdateSellAddressBalance();
+}
+
 // This function loops through the MetaDEx and updates the list of buy/sell offers
 void MetaDExDialog::UpdateOffers()
 {
@@ -314,31 +322,51 @@ void MetaDExDialog::UpdateOffers()
             }
         }
     }
-    // update the balances for the buy and sell addreses
-    UpdateBuyAddressBalance();
-    UpdateSellAddressBalance();
-
 }
 
 // This function updates the balance for the currently selected sell address
 void MetaDExDialog::UpdateSellAddressBalance()
 {
     QString currentSetSellAddress = ui->sellAddressCombo->currentText();
-    unsigned int propertyId = global_metadex_market;
-    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
-    string sellBalStr;
-    if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
-    ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
+    if (currentSetSellAddress.isEmpty()) {
+        ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: N/A"));
+        ui->sellAddressFeeWarningLabel->setVisible(false);
+    } else {
+        unsigned int propertyId = global_metadex_market;
+        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetSellAddress.toStdString(), propertyId);
+        string sellBalStr;
+        if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
+        ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
+        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
+        if (feeCheck(currentSetSellAddress.toStdString(), 28)) {
+            ui->sellAddressFeeWarningLabel->setVisible(false);
+        } else {
+            ui->sellAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
+            ui->sellAddressFeeWarningLabel->setVisible(true);
+        }
+    }
 }
 
 // This function updates the balance for the currently selected buy address
 void MetaDExDialog::UpdateBuyAddressBalance()
 {
     QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
-    unsigned int propertyId = OMNI_PROPERTY_MSC;
-    if (global_metadex_market >= TEST_ECO_PROPERTY_1) propertyId = OMNI_PROPERTY_TMSC;
-    int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
-    ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
+    if (currentSetBuyAddress.isEmpty()) {
+        ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: N/A"));
+        ui->buyAddressFeeWarningLabel->setVisible(false);
+    } else {
+        unsigned int propertyId = OMNI_PROPERTY_MSC;
+        if (global_metadex_market >= TEST_ECO_PROPERTY_1) propertyId = OMNI_PROPERTY_TMSC;
+        int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
+        ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
+        // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
+        if (feeCheck(currentSetBuyAddress.toStdString(), 28)) {
+            ui->buyAddressFeeWarningLabel->setVisible(false);
+        } else {
+            ui->buyAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
+            ui->buyAddressFeeWarningLabel->setVisible(true);
+        }
+    }
 }
 
 // This function performs a full refresh of all elements - for example when switching markets
@@ -391,11 +419,17 @@ void MetaDExDialog::FullRefresh()
         unsigned int id;
         (my_it->second).init();
         while (0 != (id = (my_it->second).next())) {
-            if(id==propertyId) {
-                if (IsMyAddress(address)) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
+            if (id == propertyId) {
+                if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
             }
-            if (((id==OMNI_PROPERTY_MSC) && (!testeco)) || ((id==OMNI_PROPERTY_TMSC) && (testeco))) {
-                if (IsMyAddress(address)) ui->buyAddressCombo->addItem((my_it->first).c_str());
+            if (id == OMNI_PROPERTY_MSC && !testeco) {
+                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_MSC)) continue; // ignore this address, has no available balance to spend
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
+            }
+            if (id == OMNI_PROPERTY_TMSC && testeco) {
+                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_TMSC)) continue; // ignore this address, has no available balance to spend
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
             }
         }
     }
@@ -597,7 +631,7 @@ void MetaDExDialog::sendTrade(bool sell)
     }
 
     // unlock the wallet
-    WalletModel::UnlockContext ctx(model->requestUnlock());
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid())
     {
         // Unlock wallet was cancelled/failed

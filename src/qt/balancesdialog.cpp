@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "sync.h"
 #include "ui_interface.h"
+#include "wallet_ismine.h"
 
 #include <stdint.h>
 #include <map>
@@ -113,50 +114,48 @@ BalancesDialog::~BalancesDialog()
     delete ui;
 }
 
+void BalancesDialog::reinitOmni()
+{
+    ui->propSelectorWidget->clear();
+    ui->balancesTable->setRowCount(0);
+    UpdatePropSelector();
+    PopulateBalances(2147483646); // 2147483646 = summary (last possible ID for test eco props)
+}
+
 void BalancesDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(reinitOmni()));
     }
 }
 
 void BalancesDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balancesUpdated()));
-    }
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
 }
 
 void BalancesDialog::UpdatePropSelector()
 {
-    set_wallet_totals();
+    // don't waste time updating if there are no new properties
+    if ((uint32_t)ui->propSelectorWidget->count() > global_wallet_property_list.size()) return;
+
+    LOCK(cs_tally);
+
+    // a new property has been added to the wallet, update the property selector
     QString spId = ui->propSelectorWidget->itemData(ui->propSelectorWidget->currentIndex()).toString();
     ui->propSelectorWidget->clear();
     ui->propSelectorWidget->addItem("Wallet Totals (Summary)","2147483646"); //use last possible ID for summary for now
     // populate property selector
-    unsigned int nextPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
-    unsigned int nextPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
-    for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
-        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
-            string spName;
-            spName = getPropertyName(propertyId).c_str();
-            if(spName.size()>20) spName=spName.substr(0,20)+"...";
-            string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
-            spName += " (#" + spId + ")";
-            ui->propSelectorWidget->addItem(spName.c_str(),spId.c_str());
-        }
-    }
-    for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
-        if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
-            string spName;
-            spName = getPropertyName(propertyId).c_str();
-            if(spName.size()>20) spName=spName.substr(0,20)+"...";
-            string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
-            spName += " (#" + spId + ")";
-            ui->propSelectorWidget->addItem(spName.c_str(),spId.c_str());
-        }
+    for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
+        uint32_t propertyId = *it;
+        std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+        std::string spName = getPropertyName(propertyId).c_str();
+        if(spName.size()>20) spName=spName.substr(0,20)+"...";
+        spName += " (#" + spId + ")";
+        ui->propSelectorWidget->addItem(spName.c_str(), spId.c_str());
     }
     int propIdx = ui->propSelectorWidget->findData(spId);
     if (propIdx != -1) { ui->propSelectorWidget->setCurrentIndex(propIdx); }
@@ -183,75 +182,71 @@ void BalancesDialog::AddRow(const std::string& label, const std::string& address
 void BalancesDialog::PopulateBalances(unsigned int propertyId)
 {
     ui->balancesTable->setRowCount(0); // fresh slate (note this will automatically cleanup all existing QWidgetItems in the table)
+
+    LOCK(cs_tally);
     //are we summary?
     if(propertyId==2147483646) {
         ui->balancesTable->setHorizontalHeaderItem(0, new QTableWidgetItem("Property ID"));
         ui->balancesTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Property Name"));
-        unsigned int nextPropIdMainEco = GetNextPropertyId(true);
-        unsigned int nextPropIdTestEco = GetNextPropertyId(false);
-        for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
-            if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
-                string spName = getPropertyName(propertyId).c_str();
-                string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
-                string reserved;
-                string available;
-                if(isPropertyDivisible(propertyId)) {
-                    reserved = FormatDivisibleMP(global_balance_reserved_maineco[propertyId]);
-                    available = FormatDivisibleMP(global_balance_money_maineco[propertyId]);
-                } else {
-                    reserved = FormatIndivisibleMP(global_balance_reserved_maineco[propertyId]);
-                    available = FormatIndivisibleMP(global_balance_money_maineco[propertyId]);
-                }
-                AddRow(spId,spName,reserved,available);
-            }
-        }
-        for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
-            if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
-                string spName = getPropertyName(propertyId).c_str();
-                string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
-                string reserved;
-                string available;
-                if(isPropertyDivisible(propertyId)) {
-                    reserved = FormatDivisibleMP(global_balance_reserved_testeco[propertyId-2147483647]);
-                    available = FormatDivisibleMP(global_balance_money_testeco[propertyId-2147483647]);
-                } else {
-                    reserved = FormatIndivisibleMP(global_balance_reserved_testeco[propertyId-2147483647]);
-                    available = FormatIndivisibleMP(global_balance_money_testeco[propertyId-2147483647]);
-                }
-                AddRow(spId,spName,reserved,available);
-            }
+
+        // loop over the wallet property list and add the wallet totals
+        for (std::set<uint32_t>::iterator it = global_wallet_property_list.begin() ; it != global_wallet_property_list.end(); ++it) {
+            uint32_t propertyId = *it;
+            std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
+            std::string spName = getPropertyName(propertyId).c_str();
+            std::string available = FormatMP(propertyId, global_balance_money[propertyId]);
+            std::string reserved = FormatMP(propertyId, global_balance_reserved[propertyId]);
+            AddRow(spId, spName, reserved, available);
         }
     } else {
         ui->balancesTable->setHorizontalHeaderItem(0, new QTableWidgetItem("Label"));
         ui->balancesTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Address"));
-        LOCK(cs_tally);
-        for(std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-        {
-            string address = (my_it->first).c_str();
-            unsigned int id;
-            bool includeAddress=false;
-            (my_it->second).init();
-            while (0 != (id = (my_it->second).next())) {
-                if(id==propertyId) { includeAddress=true; break; }
+        bool propertyIsDivisible = isPropertyDivisible(propertyId); // only fetch the SP once, not for every address
+
+        // iterate mp_tally_map looking for addresses that hold a balance in propertyId
+        for(std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            const std::string& address = my_it->first;
+            CMPTally& tally = my_it->second;
+            tally.init();
+
+            uint32_t id;
+            bool watchAddress = false, includeAddress = false;
+            while (0 != (id = (tally.next()))) {
+                if (id == propertyId) {
+                    includeAddress = true;
+                    break;
+                }
             }
             if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
-            if (!IsMyAddress(address)) continue; //ignore this address, it's not ours
-            int64_t available = getUserAvailableMPbalance(address, propertyId);
-            int64_t reserved = getMPbalance(address, propertyId, METADEX_RESERVE);
-            if (propertyId<3) {
-                reserved += getMPbalance(address, propertyId, ACCEPT_RESERVE);
-                reserved += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-            }
-            string reservedStr;
-            string availableStr;
-            if(isPropertyDivisible(propertyId)) {
+
+            // determine if this address is in the wallet
+            int addressIsMine = IsMyAddress(address);
+            if (!addressIsMine) continue; // ignore this address, not in wallet
+            if (addressIsMine != ISMINE_SPENDABLE) watchAddress = true;
+
+            // obtain the balances for the address directly form tally
+            int64_t available = tally.getMoney(propertyId, BALANCE);
+            available += tally.getMoney(propertyId, PENDING);
+            int64_t reserved = tally.getMoney(propertyId, SELLOFFER_RESERVE);
+            reserved += tally.getMoney(propertyId, ACCEPT_RESERVE);
+            reserved += tally.getMoney(propertyId, METADEX_RESERVE);
+
+            // format the balances
+            string reservedStr, availableStr;
+            if (propertyIsDivisible) {
                 reservedStr = FormatDivisibleMP(reserved);
                 availableStr = FormatDivisibleMP(available);
             } else {
                 reservedStr = FormatIndivisibleMP(reserved);
                 availableStr = FormatIndivisibleMP(available);
             }
-            AddRow(getLabel(my_it->first),my_it->first,reservedStr,availableStr);
+
+            // add the row
+            if (!watchAddress) {
+                AddRow(getLabel(my_it->first), address, reservedStr, availableStr);
+            } else {
+                AddRow(getLabel(my_it->first), address + " (watch-only)", reservedStr, availableStr);
+            }
         }
     }
 }

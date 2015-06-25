@@ -28,6 +28,7 @@ class CTransaction;
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 using json_spirit::Array;
 
@@ -159,7 +160,7 @@ enum FILETYPES {
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
 std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
-int64_t feeCheck(const string &address);
+bool feeCheck(const string &address, size_t nDataSize);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
@@ -467,19 +468,17 @@ public:
     bool isMPinBlockRange(int, int, bool);
 };
 
-extern uint64_t global_metadex_market;
-//! Available balances of wallet properties in the main ecosystem
-extern std::map<uint32_t, int64_t> global_balance_money_maineco;
-//! Reserved balances of wallet properties in the main ecosystem
-extern std::map<uint32_t, int64_t> global_balance_reserved_maineco;
-//! Available balances of wallet properties in the test ecosystem
-extern std::map<uint32_t, int64_t> global_balance_money_testeco;
-//! Reserved balances of wallet properties in the test ecosystem
-extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Available balances of wallet properties
+extern std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+extern std::map<uint32_t, int64_t> global_balance_reserved;
+//! Vector containing a list of properties relative to the wallet
+extern std::set<uint32_t> global_wallet_property_list;
 
-int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
+
+int64_t getMPbalance(const string &Address, uint32_t property, TallyType ttype);
 int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
-bool IsMyAddress(const std::string &address);
+int IsMyAddress(const std::string &address);
 
 string getLabel(const string &address);
 
@@ -488,6 +487,9 @@ int mastercore_init();
 
 /** Global handler to shut down Omni Core. */
 int mastercore_shutdown();
+
+/** Global handler to total wallet balances. */
+void CheckWalletUpdate(bool forceUpdate = false);
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
@@ -523,7 +525,6 @@ uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 CMPTally *getTally(const string & address);
 
 int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
-int set_wallet_totals();
 
 char *c_strMasterProtocolTXType(int i);
 

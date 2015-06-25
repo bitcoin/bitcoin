@@ -78,16 +78,15 @@ void SendMPDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(balancesUpdated()));
     }
 }
 
 void SendMPDialog::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
-    if (model != NULL) {
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(balancesUpdated()));
-    }
+    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
 }
 
 void SendMPDialog::updatePropSelector()
@@ -96,8 +95,11 @@ void SendMPDialog::updatePropSelector()
     uint32_t nextPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     ui->propertyComboBox->clear();
+
+    LOCK(cs_tally);
+
     for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
-        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);
             std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
             if(spName.size()>23) spName=spName.substr(0,23) + "...";
@@ -107,7 +109,7 @@ void SendMPDialog::updatePropSelector()
         }
     }
     for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
-        if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
             std::string spName = getPropertyName(propertyId);
             std::string spId = static_cast<ostringstream*>( &(ostringstream() << propertyId) )->str();
             if(spName.size()>23) spName=spName.substr(0,23)+"...";
@@ -141,21 +143,23 @@ void SendMPDialog::updateFrom()
         currentSetFromAddress = "";
     }
 
-    // warning label will be lit if insufficient fees for a typical simple send of 2KB or less
-    int64_t inputTotal = feeCheck(currentSetFromAddress);
-    int64_t minWarn = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(2000); // based on 3x <200 byte outputs (change/reference/data) & total tx size of <2KB
-    if (inputTotal >= minWarn) {
+    if (currentSetFromAddress.empty()) {
+        ui->balanceLabel->setText(QString::fromStdString("Address Balance: N/A"));
         ui->feeWarningLabel->setVisible(false);
     } else {
-        ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");
-        ui->feeWarningLabel->setVisible(true);
-    }
-
-    // update the balance for the selected address
-    QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
-    uint32_t propertyId = spId.toUInt();
-    if (propertyId > 0) {
-        ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
+        // update the balance for the selected address
+        QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
+        uint32_t propertyId = spId.toUInt();
+        if (propertyId > 0) {
+            ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
+        }
+        // warning label will be lit if insufficient fees for simple send (16 byte payload)
+        if (feeCheck(currentSetFromAddress, 16)) {
+            ui->feeWarningLabel->setVisible(false);
+        } else {
+            ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");
+            ui->feeWarningLabel->setVisible(true);
+        }
     }
 }
 
@@ -178,7 +182,8 @@ void SendMPDialog::updateProperty()
             if(id == propertyId) { includeAddress=true; break; }
         }
         if (!includeAddress) continue; //ignore this address, has never transacted in this propertyId
-        if (!IsMyAddress(address)) continue; //ignore this address, it's not ours
+        if (IsMyAddress(address) != ISMINE_SPENDABLE) continue; // ignore this address, it's not spendable
+        if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
         ui->sendFromComboBox->addItem(QString::fromStdString(address + " \t" + FormatMP(propertyId, getUserAvailableMPbalance(address, propertyId)) + getTokenLabel(propertyId)));
     }
 
@@ -187,9 +192,7 @@ void SendMPDialog::updateProperty()
     if (fromIdx != -1) { ui->sendFromComboBox->setCurrentIndex(fromIdx); } // -1 means the cached from address doesn't have a balance in the newly selected property
 
     // populate balance for global wallet
-    int64_t globalAvailable = 0;
-    if (propertyId<2147483648U) { globalAvailable = global_balance_money_maineco[propertyId]; } else { globalAvailable = global_balance_money_testeco[propertyId-2147483647]; }
-    ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, globalAvailable) + getTokenLabel(propertyId)));
+    ui->globalBalanceLabel->setText(QString::fromStdString("Wallet Balance (Available): " + FormatMP(propertyId, global_balance_money[propertyId])));
 
 #if QT_VERSION >= 0x040700
     // update placeholder text
@@ -301,6 +304,8 @@ void SendMPDialog::sendMPTransaction()
     // unlock the wallet
     WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if(!ctx.isValid()) {
+        QMessageBox::critical( this, "Send transaction failed",
+        "The send transaction has been cancelled.\n\nThe wallet unlock process must be completed to send a transaction." );
         return; // unlock wallet was cancelled/failed
     }
 
@@ -314,9 +319,8 @@ void SendMPDialog::sendMPTransaction()
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {
-        string strError = error_str(result);
         QMessageBox::critical( this, "Send transaction failed",
-        "The send transaction has been cancelled.\n\nThe wallet unlock process must be completed to send a transaction." );
+        "The send transaction has failed.\n\nThe error code was: " + QString::number(result) + "\nThe error message was:\n" + QString::fromStdString(error_str(result)));
         return;
     } else {
         if (!autoCommit) {
@@ -352,8 +356,6 @@ void SendMPDialog::sendButtonClicked()
 
 void SendMPDialog::balancesUpdated()
 {
-    set_wallet_totals();
-
     updatePropSelector();
     updateProperty();
     updateFrom();
