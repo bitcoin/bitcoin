@@ -340,7 +340,7 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
         if(ret != "Unknown"){
             ret += ", " + address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         } else {
-            ret = address2.ToString() + boost::lexical_cast<std::string>(payee.nVotes);
+            ret = address2.ToString() + ":" + boost::lexical_cast<std::string>(payee.nVotes);
         }
     }
 
