@@ -1892,7 +1892,10 @@ static void clear_all_state()
     my_accepts.clear();
     my_crowds.clear();
     metadex.clear();
-    my_pending.clear();
+    {
+        LOCK(cs_pending);
+        my_pending.clear();
+    }
 
     // LevelDB based storage
     _my_sps->Clear();

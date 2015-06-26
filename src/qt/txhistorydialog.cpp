@@ -187,47 +187,50 @@ int TXHistoryDialog::PopulateHistoryMap()
 
     int64_t nProcessed = 0; // counter for how many transactions we've added to history this time
     // ### START PENDING TRANSACTIONS PROCESSING ###
-    for(PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it)
     {
-        // grab txid
-        uint256 txid = it->first;
-        // check historyMap, if this tx exists don't waste resources doing anymore work on it
-        HistoryMap::iterator hIter = txHistoryMap.find(txid);
-        if (hIter != txHistoryMap.end()) continue;
-        // grab pending object & extract details
-        CMPPending *p_pending = &(it->second);
-        string senderAddress = p_pending->src;
-        uint64_t propertyId = p_pending->prop;
-        int64_t amount = p_pending->amount;
-        // create a HistoryTXObject and add to map
-        HistoryTXObject htxo;
-        htxo.blockHeight = 0; // how are we gonna order pending txs????
-        htxo.blockByteOffset = 0; // attempt to use the position of the transaction in the wallet to provide a sortkey for pending
-        std::map<uint256, CWalletTx>::const_iterator walletIt = wallet->mapWallet.find(txid);
-        if (walletIt != wallet->mapWallet.end()) {
-            const CWalletTx* pendingWTx = &(*walletIt).second;
-            htxo.blockByteOffset = pendingWTx->nOrderPos;
+        LOCK(cs_pending);
+
+        for (PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
+            // grab txid
+            uint256 txid = it->first;
+            // check historyMap, if this tx exists don't waste resources doing anymore work on it
+            HistoryMap::iterator hIter = txHistoryMap.find(txid);
+            if (hIter != txHistoryMap.end()) continue;
+            // grab pending object & extract details
+            CMPPending *p_pending = &(it->second);
+            string senderAddress = p_pending->src;
+            uint64_t propertyId = p_pending->prop;
+            int64_t amount = p_pending->amount;
+            // create a HistoryTXObject and add to map
+            HistoryTXObject htxo;
+            htxo.blockHeight = 0; // how are we gonna order pending txs????
+            htxo.blockByteOffset = 0; // attempt to use the position of the transaction in the wallet to provide a sortkey for pending
+            std::map<uint256, CWalletTx>::const_iterator walletIt = wallet->mapWallet.find(txid);
+            if (walletIt != wallet->mapWallet.end()) {
+                const CWalletTx* pendingWTx = &(*walletIt).second;
+                htxo.blockByteOffset = pendingWTx->nOrderPos;
+            }
+            htxo.valid = true; // all pending transactions are assumed to be valid while awaiting confirmation since all pending are outbound and we wouldn't let them be sent if invalid
+            htxo.address = senderAddress; // always sender, all pending are outbound
+            if (isPropertyDivisible(propertyId)) {
+                htxo.amount = "-" + FormatDivisibleShortMP(amount) + getTokenLabel(propertyId);
+            } else {
+                htxo.amount = "-" + FormatIndivisibleMP(amount) + getTokenLabel(propertyId);
+            } // pending always outbound
+            if (p_pending->type == MSC_TYPE_SIMPLE_SEND) {
+                htxo.txType = "Send";
+                htxo.fundsMoved = true;
+            } else if (p_pending->type == MSC_TYPE_METADEX_TRADE) {
+                htxo.txType = "MetaDEx Trade";
+                htxo.fundsMoved = false;
+            } else if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                htxo.txType = "MetaDEx Cancel";
+                htxo.fundsMoved = false;
+                htxo.amount = "N/A";
+            } // send and metadex trades are the only supported outbound txs (thus only possible pending) for now
+            txHistoryMap.insert(std::make_pair(txid, htxo));
+            nProcessed += 1; // increase our counter so we don't go crazy on a wallet with too many transactions and lock up UI
         }
-        htxo.valid = true; // all pending transactions are assumed to be valid while awaiting confirmation since all pending are outbound and we wouldn't let them be sent if invalid
-        htxo.address = senderAddress; // always sender, all pending are outbound
-        if (isPropertyDivisible(propertyId)) {
-            htxo.amount = "-" + FormatDivisibleShortMP(amount) + getTokenLabel(propertyId);
-        } else {
-            htxo.amount = "-" + FormatIndivisibleMP(amount) + getTokenLabel(propertyId);
-        } // pending always outbound
-        if (p_pending->type == MSC_TYPE_SIMPLE_SEND) {
-            htxo.txType = "Send";
-            htxo.fundsMoved = true;
-        } else if (p_pending->type == MSC_TYPE_METADEX_TRADE) {
-            htxo.txType = "MetaDEx Trade";
-            htxo.fundsMoved = false;
-        } else if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-            htxo.txType = "MetaDEx Cancel";
-            htxo.fundsMoved = false;
-            htxo.amount = "N/A";
-        } // send and metadex trades are the only supported outbound txs (thus only possible pending) for now
-        txHistoryMap.insert(std::make_pair(txid, htxo));
-        nProcessed += 1; // increase our counter so we don't go crazy on a wallet with too many transactions and lock up UI
     }
     // ### END PENDING TRANSACTIONS PROCESSING ###
 
@@ -579,11 +582,18 @@ void TXHistoryDialog::showDetails()
     std::string strTXText;
 
     // first of all check if the TX is a pending tx, if so grab details from pending map
-    PendingMap::iterator it = my_pending.find(txid);
-    if (it != my_pending.end()) {
-        CMPPending *p_pending = &(it->second);
-        strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
-    } else {
+    bool fPending = false;
+    {
+        LOCK(cs_pending);
+
+        PendingMap::iterator it = my_pending.find(txid);
+        if (it != my_pending.end()) {
+            CMPPending *p_pending = &(it->second);
+            strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
+            fPending = true;
+        }
+    }
+    if (!fPending) {
         // grab details usual way
         int pop = populateRPCTransactionObject(txid, &txobj, "");
         if (0<=pop) {

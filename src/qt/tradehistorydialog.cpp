@@ -255,39 +255,43 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
     int64_t nProcessed = 0; // number of new entries, forms return code
 
     // ### START PENDING TRANSACTIONS PROCESSING ###
-    for(PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
-        uint256 txid = it->first;
+    {
+        LOCK(cs_pending);
 
-        // check historyMap, if this tx exists don't waste resources doing anymore work on it
-        TradeHistoryMap::iterator hIter = tradeHistoryMap.find(txid);
-        if (hIter != tradeHistoryMap.end()) continue;
+        for (PendingMap::iterator it = my_pending.begin(); it != my_pending.end(); ++it) {
+            uint256 txid = it->first;
 
-        // grab pending object, extract details and skip if not a metadex trade
-        CMPPending *p_pending = &(it->second);
-        if (p_pending->type != MSC_TYPE_METADEX_TRADE) continue;
-        uint32_t propertyId = p_pending->prop;
-        int64_t amount = p_pending->amount;
+            // check historyMap, if this tx exists don't waste resources doing anymore work on it
+            TradeHistoryMap::iterator hIter = tradeHistoryMap.find(txid);
+            if (hIter != tradeHistoryMap.end()) continue;
 
-        // create a TradeHistoryObject and populate it
-        TradeHistoryObject objTH;
-        objTH.blockHeight = 0;
-        objTH.valid = true; // all pending transactions are assumed to be valid
-        objTH.propertyIdForSale = propertyId;
-        objTH.propertyIdDesired = 0; // unknown at this stage & not needed for pending
-        objTH.amountForSale = amount;
-        objTH.status = "Pending";
-        objTH.amountIn = "---";
-        objTH.amountOut = "---";
-        objTH.info = "Sell ";
-        if (isPropertyDivisible(propertyId)) {
-            objTH.info += FormatDivisibleShortMP(amount) + getTokenLabel(propertyId) + " (awaiting confirmation)";
-        } else {
-            objTH.info += FormatIndivisibleMP(amount) + getTokenLabel(propertyId) + " (awaiting confirmation)";
+            // grab pending object, extract details and skip if not a metadex trade
+            CMPPending *p_pending = &(it->second);
+            if (p_pending->type != MSC_TYPE_METADEX_TRADE) continue;
+            uint32_t propertyId = p_pending->prop;
+            int64_t amount = p_pending->amount;
+
+            // create a TradeHistoryObject and populate it
+            TradeHistoryObject objTH;
+            objTH.blockHeight = 0;
+            objTH.valid = true; // all pending transactions are assumed to be valid
+            objTH.propertyIdForSale = propertyId;
+            objTH.propertyIdDesired = 0; // unknown at this stage & not needed for pending
+            objTH.amountForSale = amount;
+            objTH.status = "Pending";
+            objTH.amountIn = "---";
+            objTH.amountOut = "---";
+            objTH.info = "Sell ";
+            if (isPropertyDivisible(propertyId)) {
+                objTH.info += FormatDivisibleShortMP(amount) + getTokenLabel(propertyId) + " (awaiting confirmation)";
+            } else {
+                objTH.info += FormatIndivisibleMP(amount) + getTokenLabel(propertyId) + " (awaiting confirmation)";
+            }
+
+            // add the new TradeHistoryObject to the map
+            tradeHistoryMap.insert(std::make_pair(txid, objTH));
+            nProcessed += 1;
         }
-
-        // add the new TradeHistoryObject to the map
-        tradeHistoryMap.insert(std::make_pair(txid, objTH));
-        nProcessed += 1;
     }
     // ### END PENDING TRANSACTIONS PROCESSING ###
 
@@ -553,11 +557,18 @@ void TradeHistoryDialog::showDetails()
     std::string strTXText;
 
     // first of all check if the TX is a pending tx, if so grab details from pending map
-    PendingMap::iterator it = my_pending.find(txid);
-    if (it != my_pending.end()) {
-        CMPPending *p_pending = &(it->second);
-        strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
-    } else {
+    bool fPending = false;
+    {
+        LOCK(cs_pending);
+
+        PendingMap::iterator it = my_pending.find(txid);
+        if (it != my_pending.end()) {
+            CMPPending *p_pending = &(it->second);
+            strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
+            fPending = true;
+        }
+    }
+    if (!fPending) {
         int pop = populateRPCTransactionObject(txid, &txobj, "");
         if (0<=pop) {
             Object tradeobj;
