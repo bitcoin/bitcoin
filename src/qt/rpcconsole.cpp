@@ -331,8 +331,7 @@ void RPCConsole::setClientModel(ClientModel *model)
 {
     clientModel = model;
     ui->trafficGraph->setClientModel(model);
-    if(model)
-    {
+    if (model && clientModel->getPeerTableModel() && clientModel->getBanTableModel()) {
         // Keep up to date with client
         setNumConnections(model->getNumConnections());
         connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
@@ -404,18 +403,22 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->banlistWidget->setContextMenuPolicy(Qt::CustomContextMenu);
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
-        // ensure ban table is shown or hidden (if empty)
-        connect(model, SIGNAL(banListChanged()), this, SLOT(showOrHideBanTableIfRequired()));
-        showOrHideBanTableIfRequired();
-
-        // create banlist context menu actions
+        // create ban table context menu action
         QAction* unbanAction = new QAction(tr("&Unban Node"), this);
+
+        // create ban table context menu
         banTableContextMenu = new QMenu();
         banTableContextMenu->addAction(unbanAction);
 
-        // context menu signals
+        // ban table context menu signals
         connect(ui->banlistWidget, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showBanTableContextMenu(const QPoint&)));
         connect(unbanAction, SIGNAL(triggered()), this, SLOT(unbanSelectedNode()));
+
+        // ban table signal handling - clear peer details when clicking a peer in the ban table
+        connect(ui->banlistWidget, SIGNAL(clicked(const QModelIndex&)), this, SLOT(clearSelectedNode()));
+        // ban table signal handling - ensure ban table is shown or hidden (if empty)
+        connect(model->getBanTableModel(), SIGNAL(layoutChanged()), this, SLOT(showOrHideBanTableIfRequired()));
+        showOrHideBanTableIfRequired();
 
         // Provide initial values
         ui->clientVersion->setText(model->formatFullVersion());
@@ -790,6 +793,9 @@ void RPCConsole::disconnectSelectedNode()
 
 void RPCConsole::banSelectedNode(int bantime)
 {
+    if (!clientModel)
+        return;
+
     // Get currently selected peer address
     QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
     // Find possible nodes, ban it and clear the selected node
@@ -803,14 +809,15 @@ void RPCConsole::banSelectedNode(int bantime)
         bannedNode->fDisconnect = true;
 
         clearSelectedNode();
-        ui->banlistWidget->setVisible(true);
-        ui->banHeading->setVisible(true);
-        clientModel->updateBanlist();
+        clientModel->getBanTableModel()->refresh();
     }
 }
 
 void RPCConsole::unbanSelectedNode()
 {
+    if (!clientModel)
+        return;
+
     // Get currently selected ban address
     QString strNode = GUIUtil::getEntryData(ui->banlistWidget, 0, BanTableModel::Address);
     CSubNet possibleSubnet(strNode.toStdString());
@@ -818,8 +825,7 @@ void RPCConsole::unbanSelectedNode()
     if (possibleSubnet.IsValid())
     {
         CNode::Unban(possibleSubnet);
-        clientModel->updateBanlist();
-        showOrHideBanTableIfRequired();
+        clientModel->getBanTableModel()->refresh();
     }
 }
 
