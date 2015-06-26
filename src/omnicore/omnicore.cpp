@@ -609,6 +609,8 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 
 void CheckWalletUpdate(bool forceUpdate)
 {
+    LOCK(cs_tally);
+
     if (!WalletCacheUpdate()) {
         // no balance changes were detected that affect wallet addresses, signal a generic change to overall Omni state
         if (!forceUpdate) {
@@ -620,7 +622,6 @@ void CheckWalletUpdate(bool forceUpdate)
     // balance changes were found in the wallet, update the global totals and signal a Omni balance change
     global_balance_money.clear();
     global_balance_reserved.clear();
-    LOCK(cs_tally);
 
     // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
     for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
