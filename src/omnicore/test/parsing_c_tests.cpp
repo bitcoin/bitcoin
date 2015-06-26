@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_short)
         std::vector<CTxOut> txOutputs;
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d0000111122223333");
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e690000111122223333");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
         }
@@ -219,13 +219,13 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_short)
         }
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d0001000200030004");
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e690001000200030004");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
         }
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d");
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e69");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
         }
@@ -249,19 +249,19 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
         std::vector<CTxOut> txOutputs;
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d1222222222222222222222222223");
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e691222222222222222222222222223");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
         }
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d4555555555555555555555555556");
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e694555555555555555555555555556");
             CTxOut txOut = CTxOut(5, scriptPubKey);
             txOutputs.push_back(txOut);
         }
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6d788888888889");
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e69788888888889");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
         }
@@ -273,10 +273,10 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
         }
         {
             CScript scriptPubKey;
-            scriptPubKey << OP_RETURN << ParseHex("6f6dffff111111111111111111111111"
+            scriptPubKey << OP_RETURN << ParseHex("6f6d6e69ffff11111111111111111111"
                     "11111111111111111111111111111111111111111111111111111111111111"
                     "11111111111111111111111111111111111111111111111111111111111111"
-                    "11111111111111111111111111111111111111111117");
+                    "111111111111111111111111111111111111111111111117");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
         }
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
         {
             CScript scriptPubKey;
             scriptPubKey << OP_RETURN;
-            scriptPubKey << ParseHex("6f6d00000000000000010000000006dac2c0");
+            scriptPubKey << ParseHex("6f6d6e6900000000000000010000000006dac2c0");
             scriptPubKey << ParseHex("00000000000000030000000000000d48");
             CTxOut txOut = CTxOut(0, scriptPubKey);
             txOutputs.push_back(txOut);
@@ -345,6 +345,33 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
         BOOST_CHECK_EQUAL(metaTx.getSender(), "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2");
         BOOST_CHECK_EQUAL(metaTx.getPayload(),
                 "00000000000000010000000006dac2c000000000000000030000000000000d48");
+    }
+
+    {
+        /**
+         * The following transaction is invalid, because the first pushed data
+         * doesn't contain the class C marker.
+         */
+        int nBlock = OP_RETURN_BLOCK;
+
+        std::vector<CTxOut> txInputs;
+        txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
+
+        std::vector<CTxOut> txOutputs;
+        {
+            CScript scriptPubKey;
+            scriptPubKey << OP_RETURN;
+            scriptPubKey << ParseHex("6f6d");
+            scriptPubKey << ParseHex("6e69");
+            scriptPubKey << ParseHex("00000000000000010000000006dac2c0");
+            CTxOut txOut = CTxOut(0, scriptPubKey);
+            txOutputs.push_back(txOut);
+        }
+
+        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
+
+        CMPTransaction metaTx;
+        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) != 0);
     }
 }
 

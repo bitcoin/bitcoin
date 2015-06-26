@@ -770,13 +770,15 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
         }
         if (outType == TX_NULL_DATA) {
             // Ensure there is a payload, and the first pushed element equals,
-            // or starts with the "om" marker
+            // or starts with the "omni" marker
             std::vector<std::string> scriptPushes;
             if (!GetScriptPushes(output.scriptPubKey, scriptPushes)) {
                 continue;
             }
             if (!scriptPushes.empty()) {
-                if ("6f6d" == scriptPushes[0].substr(0,4)) {
+                std::vector<unsigned char> vchMarker = GetOmMarker();
+                std::vector<unsigned char> vchPushes = ParseHex(scriptPushes[0]);
+                if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushes.begin())) {
                     hasOpReturn = true;
                 }
             }
@@ -1741,9 +1743,12 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                     }
                     // TODO: maybe encapsulate the following sort of messy code
                     if (!vstrPushes.empty()) {
-                        if ("6f6d" == vstrPushes[0].substr(0,4)) {
+                        std::vector<unsigned char> vchMarker = GetOmMarker();
+                        std::vector<unsigned char> vchPushed = ParseHex(vstrPushes[0]);
+                        if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushed.begin())) {
+                            size_t sizeHex = vchMarker.size() * 2;
                             // strip out the marker at the very beginning
-                            vstrPushes[0] = vstrPushes[0].substr(4);
+                            vstrPushes[0] = vstrPushes[0].substr(sizeHex);
                             // add the data to the rest
                             op_return_script_data.insert(op_return_script_data.end(), vstrPushes.begin(), vstrPushes.end());
 
@@ -2904,7 +2909,7 @@ return n_total;
 // This function determines whether it is valid to use a Class C transaction for a given payload size
 static bool UseEncodingClassC(size_t nDataSize)
 {
-    size_t nTotalSize = nDataSize + 2; // Marker "om"
+    size_t nTotalSize = nDataSize + GetOmMarker().size(); // Marker "omni"
     bool fDataEnabled = GetBoolArg("-datacarrier", true);
     int nBlockNow = GetHeight();
     if (!IsAllowedOutputType(TX_NULL_DATA, nBlockNow)) {
@@ -4099,6 +4104,16 @@ const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock)
     }
 
     return ExodusAddress();
+}
+
+/**
+ * @return The marker for class C transactions.
+ */
+const std::vector<unsigned char> GetOmMarker()
+{
+    static unsigned char pch[] = {0x6f, 0x6d, 0x6e, 0x69}; // Hex-encoded: "omni"
+
+    return std::vector<unsigned char>(pch, pch + sizeof(pch) / sizeof(pch[0]));
 }
 
  // the 31-byte packet & the packet #

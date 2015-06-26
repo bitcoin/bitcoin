@@ -152,7 +152,7 @@ CTxOut OpReturn_Unrelated()
 CTxOut OpReturn_PlainMarker()
 {
     CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("6f6d");
+    scriptPubKey << OP_RETURN << ParseHex("6f6d6e69");
 
     return CTxOut(0, scriptPubKey);
 }
@@ -160,7 +160,7 @@ CTxOut OpReturn_PlainMarker()
 CTxOut OpReturn_SimpleSend()
 {
     CScript scriptPubKey;
-    scriptPubKey << OP_RETURN << ParseHex("6f6d00000000000000070000000006dac2c0");
+    scriptPubKey << OP_RETURN << ParseHex("6f6d6e6900000000000000070000000006dac2c0");
 
     return CTxOut(0, scriptPubKey);
 }
@@ -170,7 +170,7 @@ CTxOut OpReturn_MultiSimpleSend()
 {
     CScript scriptPubKey;
     scriptPubKey << OP_RETURN;
-    scriptPubKey << ParseHex("6f6d");
+    scriptPubKey << ParseHex("6f6d6e69");
     scriptPubKey << ParseHex("00000000000000070000000000002329");
     scriptPubKey << ParseHex("0062e907b15cbf27d5425399ebf6f0fb50ebb88f18");
     scriptPubKey << ParseHex("000000000000001f0000000001406f40");

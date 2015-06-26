@@ -161,6 +161,9 @@ const CBitcoinAddress ExodusAddress();
 /** Returns the Exodus crowdsale address. */
 const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock = 0);
 
+/** Returns the marker for class C transactions. */
+const std::vector<unsigned char> GetOmMarker();
+
 //! Used to indicate, whether to automatically commit created transactions
 extern bool autoCommit;
 
