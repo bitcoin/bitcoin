@@ -107,7 +107,7 @@ void MetaDExDialog::setClientModel(ClientModel *model)
     this->clientModel = model;
     if (NULL != model) {
         connect(model, SIGNAL(refreshOmniState()), this, SLOT(OrderRefresh()));
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(OrderRefresh()));
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(BalanceOrderRefresh()));
         connect(model, SIGNAL(reinitOmniState()), this, SLOT(FullRefresh()));
     }
 }
@@ -121,10 +121,62 @@ void MetaDExDialog::setWalletModel(WalletModel *model)
     }
 }
 
+void MetaDExDialog::PopulateAddresses()
+{
+    uint32_t propertyId = global_metadex_market;
+    bool testeco = false;
+    if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
+
+    // get currently selected addresses
+    QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
+    QString currentSetSellAddress = ui->sellAddressCombo->currentText();
+
+    // clear address selectors
+    ui->buyAddressCombo->clear();
+    ui->sellAddressCombo->clear();
+
+    // populate buy and sell addresses
+    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        string address = (my_it->first).c_str();
+        unsigned int id;
+        (my_it->second).init();
+        while (0 != (id = (my_it->second).next())) {
+            if (id == propertyId) {
+                if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
+            }
+            if (id == OMNI_PROPERTY_MSC && !testeco) {
+                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_MSC)) continue;
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
+            }
+            if (id == OMNI_PROPERTY_TMSC && testeco) {
+                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_TMSC)) continue;
+                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
+            }
+        }
+    }
+
+    // attempt to set buy and sell addresses back to values before refresh - may not be possible if it's a new market
+    int sellIdx = ui->sellAddressCombo->findText(currentSetSellAddress);
+    if (sellIdx != -1) { ui->sellAddressCombo->setCurrentIndex(sellIdx); }
+    int buyIdx = ui->buyAddressCombo->findText(currentSetBuyAddress);
+    if (buyIdx != -1) { ui->buyAddressCombo->setCurrentIndex(buyIdx); }
+
+    // update balances
+    UpdateBalances();
+}
+
+void MetaDExDialog::BalanceOrderRefresh()
+{
+    // balances have been updated, there may be a new address
+    PopulateAddresses();
+    // refresh orders
+    OrderRefresh();
+}
+
 void MetaDExDialog::OrderRefresh()
 {
     UpdateOffers();
-    UpdateBalances();
 }
 
 // Executed when the switch market button is clicked
@@ -389,14 +441,6 @@ void MetaDExDialog::FullRefresh()
     // TODO: take a look at locks, what do we need here?
     LOCK(cs_tally);
 
-    // get currently selected addresses
-    QString currentSetBuyAddress = ui->buyAddressCombo->currentText();
-    QString currentSetSellAddress = ui->sellAddressCombo->currentText();
-
-    // clear address selectors
-    ui->buyAddressCombo->clear();
-    ui->sellAddressCombo->clear();
-
     // update form labels to reflect market
     string primaryToken;
     if (testeco) { primaryToken = "TMSC"; } else { primaryToken = "MSC"; }
@@ -417,35 +461,7 @@ void MetaDExDialog::FullRefresh()
     ui->buyButton->setText("Buy SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId)));
 
     // populate buy and sell addresses
-    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-        string address = (my_it->first).c_str();
-        unsigned int id;
-        (my_it->second).init();
-        while (0 != (id = (my_it->second).next())) {
-            if (id == propertyId) {
-                if (!getUserAvailableMPbalance(address, propertyId)) continue; // ignore this address, has no available balance to spend
-                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->sellAddressCombo->addItem((my_it->first).c_str()); // only include wallet addresses
-            }
-            if (id == OMNI_PROPERTY_MSC && !testeco) {
-                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_MSC)) continue; // ignore this address, has no available balance to spend
-                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
-            }
-            if (id == OMNI_PROPERTY_TMSC && testeco) {
-                if (!getUserAvailableMPbalance(address, OMNI_PROPERTY_TMSC)) continue; // ignore this address, has no available balance to spend
-                if (IsMyAddress(address) == ISMINE_SPENDABLE) ui->buyAddressCombo->addItem((my_it->first).c_str());
-            }
-        }
-    }
-
-    // attempt to set buy and sell addresses back to values before refresh - may not be possible if it's a new market
-    int sellIdx = ui->sellAddressCombo->findText(currentSetSellAddress);
-    if (sellIdx != -1) { ui->sellAddressCombo->setCurrentIndex(sellIdx); } // -1 means the new prop doesn't have the previously selected address
-    int buyIdx = ui->buyAddressCombo->findText(currentSetBuyAddress);
-    if (buyIdx != -1) { ui->buyAddressCombo->setCurrentIndex(buyIdx); }
-
-    // update the balances for the buy and sell addreses
-    UpdateBuyAddressBalance();
-    UpdateSellAddressBalance();
+    PopulateAddresses();
 
     // update the buy and sell offers
     UpdateOffers();

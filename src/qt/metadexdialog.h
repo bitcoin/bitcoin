@@ -41,6 +41,7 @@ public:
     void setWalletModel(WalletModel *model);
     void setClientModel(ClientModel *model);
     void recalcTotal(bool useBuyFields);
+    void PopulateAddresses();
 
 public slots:
     void switchButtonClicked();
@@ -51,6 +52,7 @@ public slots:
     void sendTrade(bool sell);
     void OrderRefresh();
     void UpdateBalances();
+    void BalanceOrderRefresh();
     void FullRefresh();
 
 private:
