@@ -85,8 +85,11 @@ void SendMPDialog::setClientModel(ClientModel *model)
 
 void SendMPDialog::setWalletModel(WalletModel *model)
 {
+    // use wallet model to get visibility into BTC balance changes for fees
     this->walletModel = model;
-    if (model != NULL) { } // do nothing, signals from walletModel no longer needed
+    if (model != NULL) {
+       connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(updateFrom()));
+    }
 }
 
 void SendMPDialog::updatePropSelector()
@@ -139,8 +142,6 @@ void SendMPDialog::updateFrom()
         QLineEdit *comboDisplay = ui->sendFromComboBox->lineEdit();
         comboDisplay->setText(QString::fromStdString(currentSetFromAddress));
         comboDisplay->setReadOnly(true);
-    } else {
-        currentSetFromAddress = "";
     }
 
     if (currentSetFromAddress.empty()) {

@@ -2218,10 +2218,12 @@ bool feeCheck(const string &address, size_t nDataSize)
     // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
     if (ClassC) {
         // estimated minimum fee calculation for Class C with payload of nDataSize
-        minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        minFee = 10000; // simply warn when below 10,000 satoshi for now
     } else {
         // estimated minimum fee calculation for Class B with payload of nDataSize
-        minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        minFee = 10000; // simply warn when below 10,000 satoshi for now
     }
 
     return inputTotal >= minFee;
