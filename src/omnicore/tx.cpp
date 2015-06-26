@@ -881,8 +881,6 @@ void CMPTransaction::printInfo(FILE *fp)
 
 int CMPTransaction::logicMath_SendToOwners()
 {
-    LOCK(cs_tally);
-
     if (!isTransactionTypeAllowed(block, property, type, version)) {
         return (PKT_ERROR_STO -22);
     }

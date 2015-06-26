@@ -1868,20 +1868,22 @@ static void prune_state_files( CBlockIndex const *topIndex )
 
 int mastercore_save_state( CBlockIndex const *pBlockIndex )
 {
-  // write the new state as of the given block
-  write_state_file(pBlockIndex, FILETYPE_BALANCES);
-  write_state_file(pBlockIndex, FILETYPE_OFFERS);
-  write_state_file(pBlockIndex, FILETYPE_ACCEPTS);
-  write_state_file(pBlockIndex, FILETYPE_GLOBALS);
-  write_state_file(pBlockIndex, FILETYPE_CROWDSALES);
-  write_state_file(pBlockIndex, FILETYPE_MDEXORDERS);
+    LOCK(cs_tally);
 
-  // clean-up the directory
-  prune_state_files(pBlockIndex);
+    // write the new state as of the given block
+    write_state_file(pBlockIndex, FILETYPE_BALANCES);
+    write_state_file(pBlockIndex, FILETYPE_OFFERS);
+    write_state_file(pBlockIndex, FILETYPE_ACCEPTS);
+    write_state_file(pBlockIndex, FILETYPE_GLOBALS);
+    write_state_file(pBlockIndex, FILETYPE_CROWDSALES);
+    write_state_file(pBlockIndex, FILETYPE_MDEXORDERS);
 
-  _my_sps->setWatermark(pBlockIndex->GetBlockHash());
+    // clean-up the directory
+    prune_state_files(pBlockIndex);
 
-  return 0;
+    _my_sps->setWatermark(pBlockIndex->GetBlockHash());
+
+    return 0;
 }
 
 /**
@@ -1889,19 +1891,15 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
  */
 static void clear_all_state()
 {
+    LOCK2(cs_tally, cs_pending);
+
     // Memory based storage
-    {
-        LOCK(cs_tally);
-        mp_tally_map.clear();
-    }
+    mp_tally_map.clear();
     my_offers.clear();
     my_accepts.clear();
     my_crowds.clear();
     metadex.clear();
-    {
-        LOCK(cs_pending);
-        my_pending.clear();
-    }
+    my_pending.clear();
 
     // LevelDB based storage
     _my_sps->Clear();
@@ -1919,6 +1917,8 @@ static void clear_all_state()
  */
 int mastercore_init()
 {
+    LOCK(cs_tally);
+
     if (mastercoreInitialized) {
         // nothing to do
         return 0;
@@ -2030,6 +2030,8 @@ int mastercore_init()
  */
 int mastercore_shutdown()
 {
+    LOCK(cs_tally);
+
     if (p_txlistdb) {
         delete p_txlistdb;
         p_txlistdb = NULL;
@@ -2058,6 +2060,8 @@ int mastercore_shutdown()
 // this is called for every new transaction that comes in (actually in block parsing loop)
 int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, CBlockIndex const * pBlockIndex)
 {
+    LOCK(cs_tally);
+
     if (!mastercoreInitialized) {
         mastercore_init();
     }
@@ -3251,9 +3255,9 @@ int validity = 0;
 
 int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex)
 {
-    if (reorgRecoveryMode > 0) {
-        LOCK(cs_tally);
+    LOCK(cs_tally);
 
+    if (reorgRecoveryMode > 0) {
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
@@ -3295,6 +3299,8 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         unsigned int countMP)
 {
+    LOCK(cs_tally);
+
     if (!mastercoreInitialized) {
         mastercore_init();
     }
@@ -3336,12 +3342,17 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex)
 {
+    LOCK(cs_tally);
+
     reorgRecoveryMode = 1;
     reorgRecoveryMaxHeight = (pBlockIndex->nHeight > reorgRecoveryMaxHeight) ? pBlockIndex->nHeight: reorgRecoveryMaxHeight;
     return 0;
 }
 
-int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex) {
+int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex)
+{
+    LOCK(cs_tally);
+
     return 0;
 }
 
@@ -3387,6 +3398,8 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
     if (obj_o && MSC_TYPE_TRADE_OFFER != type) {
         return -777; // can't fill in the Offer object !
     }
+
+    LOCK(cs_tally);
 
     if (mdex_o) {
         if (type != MSC_TYPE_METADEX_TRADE
@@ -3454,8 +3467,6 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 
 int CMPTransaction::logicMath_SimpleSend()
 {
-    LOCK(cs_tally);
-
     if (!isTransactionTypeAllowed(block, property, type, version)) {
         return (PKT_ERROR_SEND -22);
     }
