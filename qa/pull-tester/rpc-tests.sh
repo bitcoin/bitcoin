@@ -34,6 +34,7 @@ testScripts=(
     'signrawtransactions.py'
     'walletbackup.py'
     'nodehandling.py'
+    'reindex.py'
 );
 testScriptsExt=(
     'bipdersig-p2p.py'
@@ -45,7 +46,6 @@ testScriptsExt=(
     'invalidateblock.py'
     'keypool.py'
     'receivedby.py'
-    'reindex.py'
     'rpcbind_test.py'
 #   'script_test.py'
     'smartfees.py'
