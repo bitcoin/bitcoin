@@ -7,6 +7,7 @@
 #include "omnicore/mdex.h"
 
 #include "amount.h"
+#include "sync.h"
 #include "uint256.h"
 #include "ui_interface.h"
 
@@ -22,6 +23,9 @@ using json_spirit::write_string;
 
 namespace mastercore
 {
+//! Guards my_pending
+CCriticalSection cs_pending;
+
 //! Global map of pending transaction objects
 PendingMap my_pending;
 
@@ -116,8 +120,10 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     pending.prop = propertyId;
     pending.desc = txDesc;
     pending.type = type;
-    my_pending.insert(std::make_pair(txid, pending));
-
+    {
+        LOCK(cs_pending);
+        my_pending.insert(std::make_pair(txid, pending));
+    }
     // after adding a transaction to pending the available balance may now be reduced, refresh wallet totals
     CheckWalletUpdate(true); // force an update since some outbound pending (eg MetaDEx cancel) may not change balances
     uiInterface.OmniPendingChanged(true);
@@ -130,6 +136,8 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
  */
 void PendingDelete(const uint256& txid)
 {
+    LOCK(cs_pending);
+
     PendingMap::iterator it = my_pending.find(txid);
     if (it != my_pending.end()) {
         const CMPPending& pending = it->second;

@@ -1,34 +1,39 @@
 // Provides a cache of wallet balances and functionality for determining whether Omni state changes affected anything in the wallet
+#include "omnicore/walletcache.h"
+
+#include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 
 #include "init.h"
+#include "sync.h"
+#include "uint256.h"
 #include "wallet.h"
 
-#include <boost/algorithm/string.hpp>
-
+#include <stdint.h>
+#include <algorithm>
+#include <list>
 #include <map>
+#include <set>
 #include <string>
-
-using std::map;
-using std::string;
-
-using boost::algorithm::token_compress_on;
+#include <utility>
+#include <vector>
 
 using namespace mastercore;
-
-std::map<string, CMPTally> walletBalancesCache;
 
 //! Global vector of Omni transactions in the wallet
 std::vector<uint256> walletTXIDCache;
 
+//! Map of wallet balances
+static std::map<std::string, CMPTally> walletBalancesCache;
+
 /**
  * Adds a txid to the wallet txid cache, performing duplicate detection
  */
-void WalletTXIDCacheAdd(uint256 hash)
+void WalletTXIDCacheAdd(const uint256& hash)
 {
-    if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n",hash.GetHex());
+    if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n", hash.GetHex());
     if (std::find(walletTXIDCache.begin(), walletTXIDCache.end(), hash) != walletTXIDCache.end()) {
-        PrintToLog("ERROR: Wallet TXID Cache blocked duplicate insertion for %s\n",hash.GetHex());
+        PrintToLog("ERROR: Wallet TXID Cache blocked duplicate insertion for %s\n", hash.GetHex());
     } else {
         walletTXIDCache.push_back(hash);
     }
@@ -40,20 +45,21 @@ void WalletTXIDCacheAdd(uint256 hash)
 void WalletTXIDCacheInit()
 {
     if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: WalletTXIDCacheInit requested\n");
-    // Prepare a few items and get lock
-    CWallet *wallet = pwalletMain;
-    LOCK(wallet->cs_wallet);
+
+    LOCK2(cs_tally, pwalletMain->cs_wallet);
+
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+
     // Iterate through the wallet, checking if each transaction is Omni (via levelDB)
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
         CWalletTx *const pwtx = (*it).second.first;
         if (pwtx != 0) {
             // get the hash of the transaction and check leveldb to see if this is an Omni tx, if so add to cache
-            uint256 hash = pwtx->GetHash();
+            const uint256& hash = pwtx->GetHash();
             if (p_txlistdb->exists(hash)) {
                 walletTXIDCache.push_back(hash);
-                if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n",hash.GetHex());
+                if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: Adding tx to txid cache : %s\n", hash.GetHex());
             }
         }
     }
@@ -69,9 +75,7 @@ int WalletCacheUpdate()
     int numChanges = 0;
     std::set<std::string> changedAddresses;
 
-    LOCK(cs_tally);
-
-    for(std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
 
         // determine if this address is in the wallet

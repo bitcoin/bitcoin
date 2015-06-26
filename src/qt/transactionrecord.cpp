@@ -3,10 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "transactionrecord.h"
+
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"
 
 #include "base58.h"
+#include "sync.h"
 #include "timedata.h"
 #include "wallet.h"
 
@@ -45,8 +47,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     // Omni override - since we use multiple outputs these show up as multiple transaction records
     // and cause duplicate entries to be displayed in bitcoin history and overview recent
     bool omniOverride = false;
-    PendingMap::iterator it = my_pending.find(hash);
-    if (it != my_pending.end()) omniOverride = true;
+    {
+        LOCK(cs_pending);
+
+        PendingMap::iterator it = my_pending.find(hash);
+        if (it != my_pending.end()) omniOverride = true;
+    }
     if (p_txlistdb->exists(hash)) omniOverride = true;
     if (omniOverride) {
         TransactionRecord sub(hash, nTime);

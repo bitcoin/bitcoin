@@ -21,6 +21,7 @@
 #include "omnicore/pending.h"
 
 #include "main.h"
+#include "sync.h"
 
 #include <sstream>
 #include <string>
@@ -109,22 +110,25 @@ public:
         QString omniAmountStr;
 
         // check pending
-        PendingMap::iterator it = my_pending.find(hash);
-        if (it != my_pending.end()) {
-            omniOverride = true;
-            valid = true; // assume all outbound pending are valid prior to confirmation
-            CMPPending *p_pending = &(it->second);
-            address = QString::fromStdString(p_pending->src);
-            if (isPropertyDivisible(p_pending->prop)) {
-                omniAmountStr = QString::fromStdString(FormatDivisibleShortMP(p_pending->amount) + getTokenLabel(p_pending->prop));
-            } else {
-                omniAmountStr = QString::fromStdString(FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop));
-            }
-            // override amount for cancels
-            if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-                omniAmountStr = QString::fromStdString("N/A");
-            }
+        {
+            LOCK(cs_pending);
 
+            PendingMap::iterator it = my_pending.find(hash);
+            if (it != my_pending.end()) {
+                omniOverride = true;
+                valid = true; // assume all outbound pending are valid prior to confirmation
+                CMPPending *p_pending = &(it->second);
+                address = QString::fromStdString(p_pending->src);
+                if (isPropertyDivisible(p_pending->prop)) {
+                    omniAmountStr = QString::fromStdString(FormatDivisibleShortMP(p_pending->amount) + getTokenLabel(p_pending->prop));
+                } else {
+                    omniAmountStr = QString::fromStdString(FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop));
+                }
+                // override amount for cancels
+                if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                    omniAmountStr = QString::fromStdString("N/A");
+                }
+            }
         }
 
         // check cache (avoid reparsing the same transactions repeatedly over and over on repaint)
@@ -325,8 +329,12 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
     uint256 hash = 0;
     hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
     bool omniTx = false;
-    PendingMap::iterator it = my_pending.find(hash);
-    if (it != my_pending.end()) omniTx = true;
+    {
+        LOCK(cs_pending);
+
+        PendingMap::iterator it = my_pending.find(hash);
+        if (it != my_pending.end()) omniTx = true;
+    }
     std::map<uint256, OverviewCacheEntry>::iterator cacheIt = recentCache.find(hash);
     if (cacheIt != recentCache.end()) omniTx = true;
 

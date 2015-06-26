@@ -294,7 +294,11 @@ void LookupSPDialog::updateDisplayedProperty()
     string strTotalTokens;
     string strWalletTokens;
     int64_t totalTokens = getTotalTokens(propertyId);
-    int64_t walletTokens = global_balance_money[propertyId];
+    int64_t walletTokens = 0;
+    {
+        LOCK(cs_tally);
+        walletTokens = global_balance_money[propertyId];
+    }
     string tokenLabel;
     if (propertyId > 2)
     {
