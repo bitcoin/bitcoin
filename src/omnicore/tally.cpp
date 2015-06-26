@@ -45,6 +45,19 @@ uint32_t CMPTally::next()
 }
 
 /**
+ * Checks whether the addition of a + b overflows.
+ *
+ * @param a  The number
+ * @param b  The other number
+ * @return True, if a + b overflows
+ */
+static bool isOverflow(int64_t a, int64_t b)
+{
+    return (((b > 0) && (a > (std::numeric_limits<int64_t>::max() - b))) ||
+            ((b < 0) && (a < (std::numeric_limits<int64_t>::min() - b))));
+}
+
+/**
  * Updates the number of tokens for the given tally type.
  *
  * Negative balances are only permitted for pending balances.
@@ -62,9 +75,14 @@ bool CMPTally::updateMoney(uint32_t propertyId, int64_t amount, TallyType ttype)
     bool fUpdated = false;
     int64_t now64 = mp_token[propertyId].balance[ttype];
 
+    if (isOverflow(now64, amount)) {
+        PrintToLog("%s(): ERROR: arithmetic overflow [%d + %d]\n", __func__, now64, amount);
+        return false;
+    }
+
     if (PENDING != ttype && (now64 + amount) < 0) {
         // NOTE:
-        // This check also serves as overflow protection!
+        // Negative balances are only permitted for pending balances
     } else {
         now64 += amount;
         mp_token[propertyId].balance[ttype] = now64;

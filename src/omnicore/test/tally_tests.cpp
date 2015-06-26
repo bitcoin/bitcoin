@@ -282,12 +282,12 @@ BOOST_AUTO_TEST_CASE(tally_overflow)
     BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807LL));
     BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), (-int64_t(9223372036854775807LL)-1));
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), -1);
-/*  Not yet specified:
+
     BOOST_CHECK(!tally.updateMoney(1, -1, PENDING));
     BOOST_CHECK_EQUAL(tally.getMoney(1, BALANCE), int64_t(9223372036854775807LL));
     BOOST_CHECK_EQUAL(tally.getMoney(1, PENDING), (-int64_t(9223372036854775807LL)-1));
     BOOST_CHECK_EQUAL(tally.getMoneyAvailable(1), -1);
-*/
+
     BOOST_CHECK(tally.updateMoney(1, int64_t(9223372036854775807LL), ACCEPT_RESERVE));
     BOOST_CHECK(tally.updateMoney(2, int64_t(9223372036854775807LL), SELLOFFER_RESERVE));
     BOOST_CHECK(tally.updateMoney(3, int64_t(9223372036854775807LL), SELLOFFER_RESERVE));
