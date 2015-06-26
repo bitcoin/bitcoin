@@ -2078,11 +2078,6 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
         interp_ret = mp_obj.interpretPacket();
         if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
 
-        // check if the transaction is in the wallet, if so add it to walletTXIDCache
-        if (pwalletMain->mapWallet.count(tx.GetHash())) {
-            WalletTXIDCacheAdd(tx.GetHash());
-        }
-
         // of course only MP-related TXs get recorded
         bool bValid = (0 <= interp_ret);
 
