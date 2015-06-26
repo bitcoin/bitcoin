@@ -18,6 +18,18 @@ struct CCombinedBan {
     int64_t bantil;
 };
 
+class BannedNodeLessThan
+{
+public:
+    BannedNodeLessThan(int nColumn, Qt::SortOrder fOrder) :
+        column(nColumn), order(fOrder) {}
+    bool operator()(const CCombinedBan& left, const CCombinedBan& right) const;
+
+private:
+    int column;
+    Qt::SortOrder order;
+};
+
 /**
    Qt model providing information about connected peers, similar to the
    "getpeerinfo" RPC call. Used by the rpc console UI.
@@ -33,7 +45,7 @@ public:
 
     enum ColumnIndex {
         Address = 0,
-        Bantime = 1,
+        Bantime = 1
     };
 
     /** @name Methods overridden from QAbstractTableModel
