@@ -142,8 +142,6 @@ void SendMPDialog::updateFrom()
         QLineEdit *comboDisplay = ui->sendFromComboBox->lineEdit();
         comboDisplay->setText(QString::fromStdString(currentSetFromAddress));
         comboDisplay->setReadOnly(true);
-    } else {
-        currentSetFromAddress = "";
     }
 
     if (currentSetFromAddress.empty()) {
