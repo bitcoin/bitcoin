@@ -469,7 +469,7 @@ void TradeHistoryDialog::UpdateData()
         if (!orderOpen && filled) { statusText = "Filled"; ic = QIcon(":/icons/meta_filled"); }
         if (orderOpen && !partialFilled) { statusText = "Open"; ic = QIcon(":/icons/meta_open"); }
         if (orderOpen && partialFilled) { statusText = "Part Filled"; ic = QIcon(":/icons/meta_partial"); }
-        if (tmpObjTH->valid) { statusText = "Invalid"; ic = QIcon(":/icons/transaction_invalid"); }
+        if (!tmpObjTH->valid) { statusText = "Invalid"; ic = QIcon(":/icons/transaction_invalid"); }
 
         // format new amounts
         std::string displayIn = "";
