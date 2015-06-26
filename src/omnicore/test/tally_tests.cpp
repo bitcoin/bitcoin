@@ -1,10 +1,8 @@
-#include "omnicore/omnicore.h"
+#include "omnicore/tally.h"
 
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
-
-using namespace mastercore;
 
 BOOST_AUTO_TEST_SUITE(omnicore_tally_tests)
 

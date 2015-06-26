@@ -1,17 +1,8 @@
-//
-// first & so far only Master protocol source file
-// WARNING: Work In Progress -- major refactoring will be occurring often
-//
-// I am adding comments to aid with navigation and overall understanding of the design.
-// this is the 'core' portion of the node+wallet: mastercored
-// see 'qt' subdirectory for UI files
-//
-// remaining work, search for: TODO, FIXME
-//
-
-//
-// global TODO: need locks on the maps in this file & balances (moneys[],reserved[] & raccept[]) !!!
-//
+/**
+ * @file omnicore.cpp
+ *
+ * This file contains the core of Omni Core.
+ */
 
 #include "omnicore/omnicore.h"
 
@@ -26,6 +17,7 @@
 #include "omnicore/persistence.h"
 #include "omnicore/script.h"
 #include "omnicore/sp.h"
+#include "omnicore/tally.h"
 #include "omnicore/tx.h"
 #include "omnicore/utils.h"
 #include "omnicore/version.h"

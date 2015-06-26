@@ -15,6 +15,7 @@
 #include "omnicore/rpctx.h"
 #include "omnicore/rpcvalues.h"
 #include "omnicore/sp.h"
+#include "omnicore/tally.h"
 #include "omnicore/tx.h"
 #include "omnicore/version.h"
 

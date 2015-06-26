@@ -9,6 +9,7 @@
 
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/tally.h"
 
 #include "amount.h"
 #include "sync.h"
