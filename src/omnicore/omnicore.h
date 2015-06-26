@@ -186,12 +186,6 @@ private:
     //! Internal iterator pointing to a balance record
     TokenMap::iterator my_it;
 
-    // TODO: lock outside of CMPTally
-    //
-    // There are usually many tally operations, and the
-    // global tally map must be locked anyway, so locking
-    // here is redundant and might be costly.
-
 public:
     /** Resets the internal iterator. */
     uint32_t init()
@@ -222,11 +216,7 @@ public:
             return false;
         }
         bool bRet = false;
-        int64_t now64 = 0;
-
-        LOCK(cs_tally);
-
-        now64 = mp_token[propertyId].balance[ttype];
+        int64_t now64 = mp_token[propertyId].balance[ttype];
 
         if (PENDING != ttype && (now64 + amount) < 0) {
             // NOTE:
@@ -254,8 +244,6 @@ public:
             return 0;
         }
         int64_t money = 0;
-
-        LOCK(cs_tally);
         TokenMap::const_iterator it = mp_token.find(propertyId);
 
         if (it != mp_token.end()) {
@@ -269,7 +257,6 @@ public:
     /** Returns the number of available tokens. */
     int64_t getMoneyAvailable(uint32_t propertyId) const
     {
-        LOCK(cs_tally);
         TokenMap::const_iterator it = mp_token.find(propertyId);
 
         if (it != mp_token.end()) {
@@ -288,8 +275,6 @@ public:
     int64_t getMoneyReserved(uint32_t propertyId) const
     {
         int64_t money = 0;
-
-        LOCK(cs_tally);
         TokenMap::const_iterator it = mp_token.find(propertyId);
 
         if (it != mp_token.end()) {
@@ -305,8 +290,6 @@ public:
     /** Compares the tally with another tally and returns true, if they are equal. */
     bool operator==(const CMPTally& rhs) const
     {
-        LOCK(cs_tally);
-
         if (mp_token.size() != rhs.mp_token.size()) {
             return false;
         }

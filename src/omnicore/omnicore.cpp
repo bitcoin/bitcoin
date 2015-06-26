@@ -1401,9 +1401,12 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
   switch (what)
   {
     case FILETYPE_BALANCES:
+    {
+      LOCK(cs_tally);
       mp_tally_map.clear();
       inputLineFunc = input_msc_balances_string;
       break;
+    }
 
     case FILETYPE_OFFERS:
       my_offers.clear();
@@ -1887,7 +1890,10 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
 static void clear_all_state()
 {
     // Memory based storage
-    mp_tally_map.clear();
+    {
+        LOCK(cs_tally);
+        mp_tally_map.clear();
+    }
     my_offers.clear();
     my_accepts.clear();
     my_crowds.clear();

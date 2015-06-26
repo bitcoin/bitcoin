@@ -170,23 +170,20 @@ int extra2 = 0, extra3 = 0;
   // various extra tests
   switch (extra)
   {
-    case 0: // the old output
+    case 0:
     {
-    uint64_t total = 0;
+        LOCK(cs_tally);
 
+        int64_t total = 0;
         // display all balances
-        for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-        {
-          // my_it->first = key
-          // my_it->second = value
-
-          PrintToConsole("%34s => ", my_it->first);
-          total += (my_it->second).print(extra2, bDivisible);
+        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            PrintToConsole("%34s => ", my_it->first);
+            total += (my_it->second).print(extra2, bDivisible);
         }
 
         PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
-      }
-      break;
+        break;
+    }
 
     case 1:
       // display the whole CMPTxList (leveldb)
@@ -200,24 +197,22 @@ int extra2 = 0, extra3 = 0;
       break;
 
     case 3:
-        unsigned int id;
+    {
+        LOCK(cs_tally);
+
+        uint32_t id = 0;
         // for each address display all currencies it holds
-        for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-        {
-          // my_it->first = key
-          // my_it->second = value
-
-          PrintToConsole("%34s => ", my_it->first);
-          (my_it->second).print(extra2);
-
-          (my_it->second).init();
-          while (0 != (id = (my_it->second).next()))
-          {
-            PrintToConsole("Id: %u=0x%X ", id, id);
-          }
-          PrintToConsole("\n");
+        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            PrintToConsole("%34s => ", my_it->first);
+            (my_it->second).print(extra2);
+            (my_it->second).init();
+            while (0 != (id = (my_it->second).next())) {
+                PrintToConsole("Id: %u=0x%X ", id, id);
+            }
+            PrintToConsole("\n");
         }
-      break;
+        break;
+    }
 
     case 4:
       for(CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it)
@@ -351,6 +346,8 @@ Value getallbalancesforid_MP(const Array& params, bool fHelp)
     Array response;
     bool isDivisible = isPropertyDivisible(propertyId); // we want to check this BEFORE the loop
 
+    LOCK(cs_tally);
+
     for (std::map<std::string, CMPTally>::iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
         uint32_t id = 0;
         bool includeAddress = false;
@@ -400,6 +397,8 @@ Value getallbalancesforaddress_MP(const Array& params, bool fHelp)
     std::string address = ParseAddress(params[0]);
 
     Array response;
+
+    LOCK(cs_tally);
 
     CMPTally* addressTally = getTally(address);
 
