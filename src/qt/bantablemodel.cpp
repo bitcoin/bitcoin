@@ -13,7 +13,6 @@
 
 #include <QDebug>
 #include <QList>
-#include <QTimer>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/c_local_time_adjustor.hpp>
@@ -65,31 +64,15 @@ public:
 
 BanTableModel::BanTableModel(ClientModel *parent) :
     QAbstractTableModel(parent),
-    clientModel(parent),
-    timer(0)
+    clientModel(parent)
 {
     columns << tr("IP/Netmask") << tr("Banned Until");
     priv = new BanTablePriv();
     // default to unsorted
     priv->sortColumn = -1;
 
-    // set up timer for auto refresh
-    timer = new QTimer();
-    connect(timer, SIGNAL(timeout()), SLOT(refresh()));
-    timer->setInterval(MODEL_UPDATE_DELAY);
-
     // load initial data
     refresh();
-}
-
-void BanTableModel::startAutoRefresh()
-{
-    timer->start();
-}
-
-void BanTableModel::stopAutoRefresh()
-{
-    timer->stop();
 }
 
 int BanTableModel::rowCount(const QModelIndex &parent) const
