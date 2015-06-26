@@ -4509,13 +4509,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    // This asymmetric behavior for inbound and outbound connections was introduced
-    // to prevent a fingerprinting attack: an attacker can send specific fake addresses
-    // to users' AddrMan and later request them by sending getaddr messages.
-    // Making nodes which are behind NAT and can only make outgoing connections ignore
-    // the getaddr message mitigates the attack.
-    else if ((strCommand == "getaddr") && (pfrom->fInbound))
+    else if (strCommand == "getaddr")
     {
+        // This asymmetric behavior for inbound and outbound connections was introduced
+        // to prevent a fingerprinting attack: an attacker can send specific fake addresses
+        // to users' AddrMan and later request them by sending getaddr messages.
+        // Making nodes which are behind NAT and can only make outgoing connections ignore
+        // the getaddr message mitigates the attack.
+        if (!pfrom->fInbound)
+            return true;
+
         pfrom->vAddrToSend.clear();
         vector<CAddress> vAddr = addrman.GetAddr();
         BOOST_FOREACH(const CAddress &addr, vAddr)
