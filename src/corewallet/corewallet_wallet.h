@@ -24,19 +24,8 @@ public:
     FileDB *walletPrivateDB;
     FileDB *walletCacheDB;
 
-    //! state: current active hd chain
+    //! state: current active hd chain, must be protected over cs_coreWallet
     HDChainID activeHDChain;
-
-    std::string strChainPath;
-    std::string strMasterseedHex;
-    CExtPubKey internalPubKey;
-    CExtPubKey externalPubKey;
-
-
-    std::set<int> externalUsedKeysCache;
-
-    unsigned int internalNextPos;
-    unsigned int externalNextPos;
 
     Wallet(std::string strWalletFileIn)
     {
@@ -52,7 +41,7 @@ public:
     bool HDSetChainPath(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, bool overwrite = false);
 
     //!gets a child key from the internal or external chain at given index
-    bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, unsigned int nIndex, bool internal = false);
+    bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, std::string& newKeysChainpath, unsigned int nIndex, bool internal = false);
 
     //!get next free child key
     bool HDGetNextChildPubKey(const HDChainID& chainId, CPubKey &pubKeyOut, std::string& newKeysChainpathOut, bool internal = false);
@@ -66,18 +55,10 @@ public:
     //!set the active chain of keys
     bool HDGetActiveChainID(HDChainID& chainID);
     
-    bool GenerateBip32Structure(const std::string& chainpath, unsigned char (&vchOut)[32], bool useSeed=false);
-    CPubKey GenerateNewKey(int index=-1);
-    CPubKey GetNextUnusedKey(unsigned int& usedIndex);
-    CPubKey GetKeyAtIndex(unsigned int index, bool internal = false);
-    
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool LoadKeyMetadata(const CPubKey &pubkey, const CoreWallet::CKeyMetadata &metadata);
     bool LoadKey(const CKey& key, const CPubKey &pubkey);
     bool SetAddressBook(const CTxDestination& address, const std::string& purpose);
-    
-    CKeyID masterKeyID;
-    unsigned char masterSeed[32];
 };
 
 // WalletModel: a wallet metadata class

@@ -54,8 +54,8 @@ UniValue listwallets(const UniValue& params, bool fHelp);
 UniValue help(const UniValue& params, bool fHelp);
     
 static const RPCDispatchEntry vDispatchEntries[] = {
-    { "getaddress",                     &getaddress },
-    { "listaddresses",                  &listaddresses },
+    { "getnewaddress",                    &getnewaddress },
+    { "listaddresses",                    &listaddresses },
 
     { "hdaddchain",                       &hdaddchain },
     { "hdsetchain",                       &hdsetchain },
@@ -63,13 +63,12 @@ static const RPCDispatchEntry vDispatchEntries[] = {
     { "hdgetaddress",                     &hdgetaddress },
     
     // Multiwallet
-    { "addwallet",                      &addwallet },
-    { "listwallets",                    &listwallets },
+    { "addwallet",                        &addwallet },
+    { "listwallets",                      &listwallets },
     
     // Help / Debug
-    { "help",                           &help },
+    { "help",                             &help },
 };
-
     
 ///////////////////////////
 // helpers
@@ -110,13 +109,13 @@ UniValue ValueFromParams(const UniValue& params, const std::string& key)
 ///////////////////////////
 // Keys/Addresses stack
 ///////////////////////////
-UniValue getaddress(const UniValue& params, bool fHelp)
+UniValue getnewaddress(const UniValue& params, bool fHelp)
 {
     Wallet *wallet = WalletFromParams(params);
     if (fHelp || !wallet)
         throw RPCHelpException(
-                            "getaddress\n"
-                            "\nReturns a new Bitcoin address for receiving payments.\n"
+                            "getnewaddress\n"
+                            "\nReturns a new non-deterministic Bitcoin address for receiving payments.\n"
                             "\nResult:\n"
                             "\"bitcoinaddress\"    (string) The new bitcoin address\n"
                             "\nExamples:\n"
@@ -125,39 +124,9 @@ UniValue getaddress(const UniValue& params, bool fHelp)
                             );
     
 
-    UniValue valueIndex = ValueFromParams(params, "index");
-    
-    CKeyID keyID;
-    CPubKey newKey;
-    unsigned int index;
+    //TODO: non deterministic single key generation
 
-    if (!valueIndex.isNull())
-    {
-        if (valueIndex.isStr())
-            index = atoi(valueIndex.get_str());
-        else
-            index = valueIndex.get_int();
-    }
-
-    if (valueIndex.isNull())
-    {
-        newKey = wallet->GetNextUnusedKey(index);
-    }
-    else
-    {
-        newKey = wallet->GetKeyAtIndex(index);
-    }
-
-    keyID = newKey.GetID();
-    std::stringstream ss; ss << index;
-    UniValue obj(UniValue::VOBJ);
-    std::string chainPath = wallet->strChainPath;
-    boost::replace_all(chainPath, "c", "0");
-    boost::replace_all(chainPath, "k", ss.str());
-    obj.push_back(Pair(chainPath, CBitcoinAddress(keyID).ToString()));
-
-
-    return obj;
+    return NullUniValue;
 }
 
 UniValue listaddresses(const UniValue& params, bool fHelp)
@@ -185,18 +154,9 @@ UniValue listaddresses(const UniValue& params, bool fHelp)
         ret.push_back(obj);
     }
     
-    CKeyID masterKeyID = wallet->masterKeyID;
-    if (!masterKeyID.IsNull())
-    {
-        UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair(CBitcoinAddress(masterKeyID).ToString(), "masterkey"));
-        ret.push_back(obj);
-    }
-    
     return ret;
 }
 
-    
     
 ///////////////////////////
 // MultiWallet stack
@@ -218,22 +178,6 @@ UniValue addwallet(const UniValue& params, bool fHelp)
 
     std::string walletID = walletIDValue.get_str();
     Wallet *wallet = CoreWallet::GetManager()->AddNewWallet(walletID);
-
-    unsigned char vch[32];
-    UniValue seedHex = ValueFromParams(params, "seed");
-    bool useSeed = false;
-    if (!seedHex.isNull())
-    {
-        std::vector<unsigned char> result = ParseHex(seedHex.get_str());
-        memcpy((void *)&vch,(const void *)&result.front(),32);
-        useSeed = true;
-    }
-
-
-    bool success = wallet->GenerateBip32Structure("m/44'/0'/0'/c/k", vch, useSeed);
-    if (!useSeed)
-        obj.push_back(Pair("seed", HexStr(vch, vch+sizeof(vch))));
-
 
     return obj;
 }
@@ -310,7 +254,9 @@ UniValue help(const UniValue& params, bool fHelp)
 
 /*
  
-******* HDSTACK ********
+///////////////////////////
+// HD/Bip32 stack
+///////////////////////////
 
 default chainpath after bip44
 m = master key
@@ -381,12 +327,13 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
     if (fGenerateMasterSeed)
         result.push_back(Pair("seed_hex", HexStr(vSeed)));
     result.push_back(Pair("chainid", chainId.GetHex()));
+    result.push_back(Pair("chainpath", chainPath));
     return result;
 }
 
 UniValue hdsetchain(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (fHelp)
         throw std::runtime_error(
                             "hdsetchain <chainid>\n"
                             "\nReturns some hd relevant information.\n"
@@ -399,12 +346,13 @@ UniValue hdsetchain(const UniValue& params, bool fHelp)
                             );
 
     Wallet *wallet = WalletFromParams(params);
+    UniValue chainIdParam = ValueFromParams(params, "chainid");
 
     HDChainID chainId;
-    if (!IsHex(params[0].get_str()))
+    if (!chainIdParam.isStr() && !IsHex(chainIdParam.get_str()))
         throw std::runtime_error("Chain id format is invalid");
 
-    chainId.SetHex(params[0].get_str());
+    chainId.SetHex(chainIdParam.get_str());
 
     if (!wallet->HDSetActiveChainID(chainId))
         throw std::runtime_error("Could not set active chain");
@@ -436,7 +384,11 @@ UniValue hdgetinfo(const UniValue& params, bool fHelp)
     if (!wallet->GetAvailableChainIDs(chainIDs))
         throw std::runtime_error("Could not load chain ids");
 
-    UniValue result(UniValue::VARR);
+    HDChainID activeChain;
+    wallet->HDGetActiveChainID(activeChain);
+
+    UniValue result(UniValue::VOBJ);
+    UniValue chains(UniValue::VARR);
     BOOST_FOREACH(const HDChainID& chainId, chainIDs)
     {
         CHDChain chain;
@@ -448,9 +400,12 @@ UniValue hdgetinfo(const UniValue& params, bool fHelp)
         chainObject.push_back(Pair("creationtime", chain.nCreateTime));
         chainObject.push_back(Pair("chainpath", chain.chainPath));
 
-        result.push_back(chainObject);
+
+        chains.push_back(chainObject);
     }
 
+    result.push_back(Pair("availablechains", chains));
+    result.push_back(Pair("activechainid", activeChain.GetHex()));
     return result;
 }
 
@@ -474,13 +429,19 @@ UniValue hdgetaddress(const UniValue& params, bool fHelp)
                             );
 
     Wallet *wallet = WalletFromParams(params);
+    UniValue childIndex = ValueFromParams(params, "index");
 
     CPubKey newKey;
     std::string keyChainPath;
-    if (params.size() == 1 && params[0].isNum())
+    if (!childIndex.isNull())
     {
+        if (childIndex.isStr())
+        {
+            childIndex.setNumStr(childIndex.get_str());
+        }
+
         HDChainID emptyId;
-        if (!wallet->HDGetChildPubKeyAtIndex(emptyId, newKey, params[0].get_int()))
+        if (!wallet->HDGetChildPubKeyAtIndex(emptyId, newKey, keyChainPath, childIndex.get_int()))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
     }
     else

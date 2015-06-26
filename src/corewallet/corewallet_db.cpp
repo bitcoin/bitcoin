@@ -139,44 +139,52 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> metadata;
             pCoreWallet->mapAddressBook[CBitcoinAddress(strAddress).Get()] = metadata;
         }
-        else if (strType == "masterkeyid")
+        else if (strType == "hdmasterseed")
         {
-            ssValue >> pCoreWallet->masterKeyID;
+            uint256 masterPubKeyHash;
+            CKeyingMaterial masterSeed;
+            ssKey >> masterPubKeyHash;
+            ssValue >> masterSeed;
+            pCoreWallet->AddMasterSeed(masterPubKeyHash, masterSeed);
         }
-        else if (strType == "bip32intpubkey")
+        else if (strType == "hdcryptedmasterseed")
         {
-            ssValue >> pCoreWallet->internalPubKey.pubkey;
+            uint256 masterPubKeyHash;
+            std::vector<unsigned char> vchCryptedSecret;
+            ssKey >> masterPubKeyHash;
+            ssValue >> vchCryptedSecret;
+            pCoreWallet->AddCryptedMasterSeed(masterPubKeyHash, vchCryptedSecret);
         }
-        else if (strType == "bip32extpubkey")
+        else if (strType == "hdactivechain")
         {
-            ssValue >> pCoreWallet->externalPubKey.pubkey;
+            HDChainID chainID;
+            ssValue >> chainID;
+            pCoreWallet->HDSetActiveChainID(chainID, false); //don't check if the chain exists because this record could come in before the CHDChain object itself
         }
-        else if (strType == "chainpath")
+        else if (strType == "hdpubkey")
         {
-            ssValue >> pCoreWallet->strChainPath;
+            CHDPubKey hdPubKey;
+            ssValue >> hdPubKey;
+            if (!hdPubKey.IsValid())
+            {
+                strErr = "Error reading wallet database: CHDPubKey corrupt";
+                return false;
+            }
+            if (!pCoreWallet->LoadHDPubKey(hdPubKey))
+            {
+                strErr = "Error reading wallet database: LoadHDPubKey failed";
+                return false;
+            }
         }
-        else if (strType == "masterseed")
+        else if (strType == "hdchain")
         {
-            uint32_t seedNum;
-
-            ssKey >> seedNum;
-            ssValue >> pCoreWallet->strMasterseedHex;
-        }
-        else if (strType == "internalpubkey")
-        {
-            ssValue >> pCoreWallet->internalPubKey;
-        }
-        else if (strType == "externalpubkey")
-        {
-            ssValue >> pCoreWallet->externalPubKey;
-        }
-        else if (strType == "extpubkey")
-        {
-            CKeyID keyId;
-            CExtPubKey extPubKey;
-
-            ssKey >> keyId;
-            ssValue >> extPubKey;
+            CHDChain chain;
+            ssValue >> chain;
+            if (!pCoreWallet->AddChain(chain))
+            {
+                strErr = "Error reading wallet database: AddChain failed";
+                return false;
+            }
         }
 
 
