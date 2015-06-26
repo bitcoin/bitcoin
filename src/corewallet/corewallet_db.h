@@ -13,7 +13,8 @@
 
 namespace CoreWallet
 {
-    
+
+class WalletTx;
 class Wallet;
 
 // FileDB: a wallet file-database based on logdb
@@ -31,6 +32,9 @@ public:
     bool WriteHDChain(const CHDChain& chain);
     bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
     bool WriteHDAchiveChain(const uint256& hash);
+
+    bool WriteTx(uint256 hash, const WalletTx& wtx);
+    bool EraseTx(uint256 hash);
 };
     
 }; // end namespace CoreWallet

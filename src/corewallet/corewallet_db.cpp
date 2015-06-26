@@ -9,6 +9,7 @@
 
 #include "corewallet/corewallet_db.h"
 #include "corewallet/corewallet_wallet.h"
+#include "corewallet/corewallet_wtx.h"
 
 namespace CoreWallet
 {
@@ -65,6 +66,16 @@ bool FileDB::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMet
 bool FileDB::WriteHDAchiveChain(const uint256& hash)
 {
     return Write(std::string("hdactivechain"), hash);
+}
+
+bool FileDB::WriteTx(uint256 hash, const WalletTx& wtx)
+{
+    return Write(std::make_pair(std::string("tx"), hash), wtx);
+}
+
+bool FileDB::EraseTx(uint256 hash)
+{
+    return Erase(std::make_pair(std::string("tx"), hash));
 }
 
 bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr)
@@ -185,6 +196,14 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: AddChain failed";
                 return false;
             }
+        }
+        else if (strType == "tx")
+        {
+            uint256 hash;
+            ssKey >> hash;
+            WalletTx wtx;
+            ssValue >> wtx;
+            pCoreWallet->AddToWallet(wtx, true);
         }
 
 

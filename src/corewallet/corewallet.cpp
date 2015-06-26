@@ -173,7 +173,19 @@ Manager* GetManager()
 
 void Manager::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 {
+    LOCK(cs_mapWallets);
+    {
+        std::pair<std::string, WalletModel> walletAndMetadata;
+        BOOST_FOREACH(walletAndMetadata, mapWallets) {
+            //TODO: looks ugly
+            //Open the wallet within the SyncTransaction call is probably a bad idea, need to be changed
+            if (!mapWallets[walletAndMetadata.first].pWallet) //is it closed?
+                mapWallets[walletAndMetadata.first].pWallet = new Wallet(walletAndMetadata.first);
 
+
+            mapWallets[walletAndMetadata.first].pWallet->SyncTransaction(tx, pblock);
+        }
+    }
 }
 
 };

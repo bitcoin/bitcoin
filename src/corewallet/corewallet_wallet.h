@@ -6,20 +6,36 @@
 #ifndef BITCOIN_COREWALLT_WALLET_H
 #define BITCOIN_COREWALLT_WALLET_H
 
+#include "corewallet/coreinterface.h"
+
 #include "corewallet/corewallet_basics.h"
 #include "corewallet/corewallet_db.h"
+#include "corewallet/corewallet_wtx.h"
+#include "corewallet/corewallet_ismine.h"
 #include "corewallet/hdkeystore.h"
+
+#include "coincontrol.h"
 #include "key.h"
 #include "keystore.h"
+#include "ui_interface.h"
 #include "validationinterface.h"
 
+class WalletTx;
+
 namespace CoreWallet {
-    
+
+extern bool bSpendZeroConfChange;
+
 class Wallet : public CHDKeyStore, public CValidationInterface{
 public:
+
+    CoreInterface coreInterface;
+
     mutable CCriticalSection cs_coreWallet;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
     std::map<CTxDestination, CAddressBookMetadata> mapAddressBook;
+    std::map<uint256, WalletTx> mapWallet;
+    std::set<COutPoint> setLockedCoins;
     int64_t nTimeFirstKey;
     FileDB *walletPrivateDB;
     FileDB *walletCacheDB;
@@ -35,6 +51,8 @@ public:
 
         walletCacheDB = new FileDB(strWalletFileIn+".cache.logdb");
         walletCacheDB->LoadWallet(this);
+
+        coreInterface = CoreInterface();
     }
 
     //!adds a hd chain of keys to the wallet
@@ -59,6 +77,77 @@ public:
     bool LoadKeyMetadata(const CPubKey &pubkey, const CoreWallet::CKeyMetadata &metadata);
     bool LoadKey(const CKey& key, const CPubKey &pubkey);
     bool SetAddressBook(const CTxDestination& address, const std::string& purpose);
+
+
+    void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+
+    //receiving stack
+    bool AddToWallet(const WalletTx& wtxIn, bool fFromLoadWallet);
+    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
+    isminetype IsMine(const CTxIn& txin) const;
+    CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
+    isminetype IsMine(const CTxOut& txout) const;
+    CAmount GetCredit(const CTxOut& txout, const isminefilter& filter) const;
+    bool IsMine(const CTransaction& tx) const;
+    /** should probably be renamed to IsRelevantToMe */
+    bool IsFromMe(const CTransaction& tx) const;
+    CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
+
+    bool fBroadcastTransactions;
+    /** Inquire whether this wallet broadcasts transactions. */
+    bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
+    /** Set whether this wallet broadcasts transactions. */
+    void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
+
+    std::set<uint256> GetConflicts(const uint256& txid) const;
+
+    /**
+     * Used to keep track of spent outpoints, and
+     * detect and report conflicts (double-spends or
+     * mutated transactions where the mutant gets mined).
+     */
+    typedef std::multimap<COutPoint, uint256> TxSpends;
+    TxSpends mapTxSpends;
+    void AddToSpends(const COutPoint& outpoint, const uint256& wtxid);
+    void AddToSpends(const uint256& wtxid);
+    bool IsSpent(const uint256& hash, unsigned int n) const;
+    void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+
+    const WalletTx* GetWalletTx(const uint256& hash) const;
+
+    typedef std::pair<WalletTx*, std::string > TxPair;
+    typedef std::multimap<int64_t, TxPair > TxItems;
+    Wallet::TxItems OrderedTxItems();
+
+    bool WriteWTXToDisk(const WalletTx &wtx);
+
+    bool IsTrustedWTx(const WalletTx &wtx) const;
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue) const;
+
+    bool IsLockedCoin(uint256 hash, unsigned int n) const;
+    void LockCoin(COutPoint& output);
+    void UnlockCoin(COutPoint& output);
+    void UnlockAllCoins();
+    void ListLockedCoins(std::vector<COutPoint>& vOutpts);
+
+    //Balance funtions // needs refactor
+    CAmount GetBalance(const enum CREDIT_DEBIT_TYPE &balanceType, const isminefilter& filter) const;
+
+    bool RelayWalletTransaction(const WalletTx &wtx);
+
+    //core node interaction
+    const CBlockIndex* GetBlockIndex(uint256 blockhash, bool inActiveChain = false) const;
+    int GetActiveChainHeight() const;
+    int MempoolExists(uint256 hash) const;
+    bool AcceptToMemoryPool(const WalletTx &wtx, bool fLimitFree, bool fRejectAbsurdFee);
+
+    /**
+     * Wallet transaction added, removed or updated.
+     * @note called with lock cs_wallet held.
+     */
+    boost::signals2::signal<void (Wallet *wallet, const uint256 &hashTx,
+                                  ChangeType status)> NotifyTransactionChanged;
 };
 
 // WalletModel: a wallet metadata class

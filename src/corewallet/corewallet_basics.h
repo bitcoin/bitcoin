@@ -15,6 +15,14 @@
 
 namespace CoreWallet
 {
+    enum CREDIT_DEBIT_TYPE
+    {
+        CREDIT_DEBIT_TYPE_AVAILABLE = 0,
+        CREDIT_DEBIT_TYPE_UNCONFIRMED = 1,
+        CREDIT_DEBIT_TYPE_IMMATURE = 2,
+        CREDIT_DEBIT_TYPE_DEBIT = 3
+    };
+
     class CAddressBookMetadata
     {
     public:

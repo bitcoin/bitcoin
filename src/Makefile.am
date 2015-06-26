@@ -98,10 +98,13 @@ BITCOIN_CORE_H = \
   consensus/params.h \
   consensus/validation.h \
   core_io.h \
+	corewallet/coreinterface.h \
   corewallet/corewallet.h \
   corewallet/corewallet_basics.h \
   corewallet/corewallet_db.h \
+	corewallet/corewallet_ismine.h \
   corewallet/corewallet_wallet.h \
+	corewallet/corewallet_wtx.h \
   corewallet/crypter.h \
   corewallet/hdkeystore.h \
   corewallet/logdb.h \
@@ -224,10 +227,13 @@ libbitcoin_wallet_a_SOURCES = \
 # when corewallet enabled
 libbitcoin_corewallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_corewallet_a_SOURCES = \
-  corewallet/corewallet.cpp \
+  corewallet/coreinterface.cpp \
+	corewallet/corewallet.cpp \
   corewallet/corewallet_db.cpp \
+	corewallet/corewallet_ismine.cpp \
   corewallet/corewallet_rpc.cpp \
   corewallet/corewallet_wallet.cpp \
+	corewallet/corewallet_wtx.cpp \
   corewallet/crypter.cpp \
   corewallet/hdkeystore.cpp \
   corewallet/logdb.cpp \
