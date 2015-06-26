@@ -123,6 +123,8 @@ void MetaDExDialog::setWalletModel(WalletModel *model)
 
 void MetaDExDialog::PopulateAddresses()
 {
+    LOCK(cs_tally);
+
     uint32_t propertyId = global_metadex_market;
     bool testeco = false;
     if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
@@ -438,11 +440,8 @@ void MetaDExDialog::FullRefresh()
         ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Mastercoin"));
     }
 
-    // TODO: take a look at locks, what do we need here?
-    LOCK(cs_tally);
-
     // update form labels to reflect market
-    string primaryToken;
+    std::string primaryToken;
     if (testeco) { primaryToken = "TMSC"; } else { primaryToken = "MSC"; }
     ui->exchangeLabel->setText("Exchange - SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId) + "/" + primaryToken));
     ui->buyTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
