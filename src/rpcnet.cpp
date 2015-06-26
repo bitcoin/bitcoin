@@ -515,7 +515,7 @@ UniValue setban(const UniValue& params, bool fHelp)
         if (params.size() == 4 && params[3].isTrue())
             absolute = true;
 
-        isSubnet ? CNode::Ban(subNet, banTime, absolute) : CNode::Ban(netAddr, banTime, absolute);
+        isSubnet ? CNode::Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : CNode::Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
 
         //disconnect possible nodes
         while(CNode *bannedNode = (isSubnet ? FindNode(subNet) : FindNode(netAddr)))
@@ -542,15 +542,19 @@ UniValue listbanned(const UniValue& params, bool fHelp)
                             + HelpExampleRpc("listbanned", "")
                             );
 
-    std::map<CSubNet, int64_t> banMap;
+    banmap_t banMap;
     CNode::GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
-    for (std::map<CSubNet, int64_t>::iterator it = banMap.begin(); it != banMap.end(); it++)
+    for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
     {
+        CBanEntry banEntry = (*it).second;
         UniValue rec(UniValue::VOBJ);
         rec.push_back(Pair("address", (*it).first.ToString()));
-        rec.push_back(Pair("banned_untill", (*it).second));
+        rec.push_back(Pair("banned_until", banEntry.nBanUntil));
+        rec.push_back(Pair("ban_created", banEntry.nCreateTime));
+        rec.push_back(Pair("ban_reason", banEntry.banReasonToString()));
+
         bannedAddresses.push_back(rec);
     }
 

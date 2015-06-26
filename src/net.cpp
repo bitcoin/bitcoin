@@ -443,7 +443,7 @@ void CNode::PushVersion()
 
 
 
-std::map<CSubNet, int64_t> CNode::setBanned;
+banmap_t CNode::setBanned;
 CCriticalSection CNode::cs_setBanned;
 bool CNode::setBannedIsDirty;
 
@@ -459,12 +459,12 @@ bool CNode::IsBanned(CNetAddr ip)
     bool fResult = false;
     {
         LOCK(cs_setBanned);
-        for (std::map<CSubNet, int64_t>::iterator it = setBanned.begin(); it != setBanned.end(); it++)
+        for (banmap_t::iterator it = setBanned.begin(); it != setBanned.end(); it++)
         {
             CSubNet subNet = (*it).first;
-            int64_t t = (*it).second;
+            CBanEntry banEntry = (*it).second;
 
-            if(subNet.Match(ip) && GetTime() < t)
+            if(subNet.Match(ip) && GetTime() < banEntry.nBanUntil)
                 fResult = true;
         }
     }
@@ -476,30 +476,36 @@ bool CNode::IsBanned(CSubNet subnet)
     bool fResult = false;
     {
         LOCK(cs_setBanned);
-        std::map<CSubNet, int64_t>::iterator i = setBanned.find(subnet);
+        banmap_t::iterator i = setBanned.find(subnet);
         if (i != setBanned.end())
         {
-            int64_t t = (*i).second;
-            if (GetTime() < t)
+            CBanEntry banEntry = (*i).second;
+            if (GetTime() < banEntry.nBanUntil)
                 fResult = true;
         }
     }
     return fResult;
 }
 
-void CNode::Ban(const CNetAddr& addr, int64_t bantimeoffset, bool sinceUnixEpoch) {
+void CNode::Ban(const CNetAddr& addr, const BanReason &banReason, int64_t bantimeoffset, bool sinceUnixEpoch) {
     CSubNet subNet(addr.ToString()+(addr.IsIPv4() ? "/32" : "/128"));
-    Ban(subNet, bantimeoffset, sinceUnixEpoch);
+    Ban(subNet, banReason, bantimeoffset, sinceUnixEpoch);
 }
 
-void CNode::Ban(const CSubNet& subNet, int64_t bantimeoffset, bool sinceUnixEpoch) {
-    int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
-    if (bantimeoffset > 0)
-        banTime = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
+void CNode::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t bantimeoffset, bool sinceUnixEpoch) {
+    CBanEntry banEntry(GetTime());
+    banEntry.banReason = banReason;
+    if (bantimeoffset <= 0)
+    {
+        bantimeoffset = GetArg("-bantime", 60*60*24); // Default 24-hour ban
+        sinceUnixEpoch = false;
+    }
+    banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
+
 
     LOCK(cs_setBanned);
-    if (setBanned[subNet] < banTime)
-        setBanned[subNet] = banTime;
+    if (setBanned[subNet].nBanUntil < banEntry.nBanUntil)
+        setBanned[subNet] = banEntry;
 
     setBannedIsDirty = true;
 }
@@ -519,13 +525,13 @@ bool CNode::Unban(const CSubNet &subNet) {
     return false;
 }
 
-void CNode::GetBanned(std::map<CSubNet, int64_t> &banMap)
+void CNode::GetBanned(banmap_t &banMap)
 {
     LOCK(cs_setBanned);
     banMap = setBanned; //create a thread safe copy
 }
 
-void CNode::SetBanned(const std::map<CSubNet, int64_t> &banMap)
+void CNode::SetBanned(const banmap_t &banMap)
 {
     LOCK(cs_setBanned);
     setBanned = banMap;
@@ -537,10 +543,11 @@ void CNode::SweepBanned()
     int64_t now = GetTime();
 
     LOCK(cs_setBanned);
-    std::map<CSubNet, int64_t>::iterator it = setBanned.begin();
+    banmap_t::iterator it = setBanned.begin();
     while(it != setBanned.end())
     {
-        if(now > (*it).second)
+        CBanEntry banEntry = (*it).second;
+        if(now > banEntry.nBanUntil)
         {
             setBanned.erase(it++);
             setBannedIsDirty = true;
@@ -1708,7 +1715,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     //try to read stored banlist
     CBanDB bandb;
-    std::map<CSubNet, int64_t> banmap;
+    banmap_t banmap;
     if (!bandb.Read(banmap))
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
 
@@ -2183,7 +2190,7 @@ CBanDB::CBanDB()
     pathBanlist = GetDataDir() / "banlist.dat";
 }
 
-bool CBanDB::Write(const std::map<CSubNet, int64_t>& banSet)
+bool CBanDB::Write(const banmap_t& banSet)
 {
     // Generate random temporary filename
     unsigned short randv = 0;
@@ -2221,7 +2228,7 @@ bool CBanDB::Write(const std::map<CSubNet, int64_t>& banSet)
     return true;
 }
 
-bool CBanDB::Read(std::map<CSubNet, int64_t>& banSet)
+bool CBanDB::Read(banmap_t& banSet)
 {
     // open input file, and associate with CAutoFile
     FILE *file = fopen(pathBanlist.string().c_str(), "rb");
@@ -2282,7 +2289,7 @@ void DumpBanlist()
     CNode::SweepBanned(); //clean unused entires (if bantime has expired)
 
     CBanDB bandb;
-    std::map<CSubNet, int64_t> banmap;
+    banmap_t banmap;
     CNode::GetBanned(banmap);
     bandb.Write(banmap);
 
