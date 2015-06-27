@@ -801,6 +801,10 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
 // TODO: move
 CCoinsView mastercore::viewDummy;
 CCoinsViewCache mastercore::view(&viewDummy);
+
+//! Guards coins view cache
+CCriticalSection mastercore::cs_tx_cache;
+
 static unsigned int nCacheHits = 0;
 static unsigned int nCacheMiss = 0;
 
@@ -812,6 +816,15 @@ static unsigned int nCacheMiss = 0;
  */
 static bool FillTxInputCache(const CTransaction& tx)
 {
+    LOCK(cs_tx_cache);
+    static unsigned int nCacheSize = GetArg("-omnitxcache", 500000);
+
+    if (view.GetCacheSize() > nCacheSize) {
+        PrintToLog("%s(): clearing cache before insertion [size=%d, hit=%d, miss=%d]\n",
+                __func__, view.GetCacheSize(), nCacheHits, nCacheMiss);
+        view.Flush();
+    }
+
     for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); ++it) {
         const CTxIn& txIn = *it;
         unsigned int nOut = txIn.prevout.n;
