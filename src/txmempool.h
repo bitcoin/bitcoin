@@ -99,24 +99,6 @@ public:
     }
 };
 
-typedef boost::multi_index_container<
-    CTxMemPoolEntry,
-    boost::multi_index::indexed_by<
-        // sorted by txid
-        boost::multi_index::ordered_unique<mempoolentry_txid>,
-        // sorted by fee rate
-        boost::multi_index::ordered_non_unique<
-            boost::multi_index::identity<CTxMemPoolEntry>,
-            CompareTxMemPoolEntryByFee
-        >,
-        // sorted by priority
-        boost::multi_index::ordered_non_unique<
-            boost::multi_index::identity<CTxMemPoolEntry>,
-            CompareTxMemPoolEntryByPriority
-        >
-    >
-> ordered_transaction_set;
-
 class CBlockPolicyEstimator;
 
 /** An inpoint - a combination of a transaction and an index n into its vin */
@@ -152,8 +134,26 @@ private:
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
 
 public:
+    typedef boost::multi_index_container<
+        CTxMemPoolEntry,
+        boost::multi_index::indexed_by<
+            // sorted by txid
+            boost::multi_index::ordered_unique<mempoolentry_txid>,
+            // sorted by fee rate
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByFee
+            >,
+            // sorted by priority
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByPriority
+            >
+        >
+    > indexed_transaction_set;
+
     mutable CCriticalSection cs;
-    ordered_transaction_set mapTx;
+    indexed_transaction_set mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
