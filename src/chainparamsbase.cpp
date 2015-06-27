@@ -86,16 +86,21 @@ const CBaseChainParams& BaseParams()
     return *pCurrentBaseParams;
 }
 
-void SelectBaseParams(const std::string& chain)
+CBaseChainParams& BaseParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        pCurrentBaseParams = &mainParams;
+        return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
-        pCurrentBaseParams = &testNetParams;
+        return testNetParams;
     else if (chain == CBaseChainParams::REGTEST)
-        pCurrentBaseParams = &regTestParams;
+        return regTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+}
+
+void SelectBaseParams(const std::string& chain)
+{
+    pCurrentBaseParams = &BaseParams(chain);
 }
 
 std::string ChainNameFromCommandLine()
