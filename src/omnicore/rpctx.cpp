@@ -14,7 +14,10 @@
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 
+#include "init.h"
+#include "main.h"
 #include "rpcserver.h"
+#include "sync.h"
 #include "wallet.h"
 
 #include <boost/algorithm/string.hpp>
@@ -77,7 +80,7 @@ Value send_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_SimpleSend(propertyId, amount);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, payload, txid, rawHex, autoCommit);
 
@@ -159,7 +162,7 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_DExSell(propertyIdForSale, amountForSale, amountDesired, paymentWindow, minAcceptFee, action);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -211,10 +214,16 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
         RequireSaneDExPaymentWindow(toAddress, propertyId);
     }
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     // use new 0.10 custom fee to set the accept minimum fee appropriately
-    CMPOffer *sellOffer = DEx_getOffer(toAddress, propertyId);
-    if (sellOffer == NULL) throw JSONRPCError(RPC_TYPE_ERROR, "Unable to load sell offer from the distributed exchange");
-    int64_t nMinimumAcceptFee = sellOffer->getMinFee();
+    int64_t nMinimumAcceptFee = 0;
+    {
+        LOCK(cs_tally);
+        const CMPOffer* sellOffer = DEx_getOffer(toAddress, propertyId);
+        if (sellOffer == NULL) throw JSONRPCError(RPC_TYPE_ERROR, "Unable to load sell offer from the distributed exchange");
+        nMinimumAcceptFee = sellOffer->getMinFee();
+    }
 
     CFeeRate payTxFeeOriginal = payTxFee;
     bool fPayAtLeastCustomFeeOriginal = fPayAtLeastCustomFee;
@@ -225,7 +234,7 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit);
 
@@ -297,7 +306,7 @@ Value sendissuancecrowdsale_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_IssuanceVariable(ecosystem, type, previousId, category, subcategory, name, url, data, propertyIdDesired, numTokens, deadline, earlyBonus, issuerPercentage);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -356,7 +365,7 @@ Value sendissuancefixed_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_IssuanceFixed(ecosystem, type, previousId, category, subcategory, name, url, data, amount);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -413,7 +422,7 @@ Value sendissuancemanaged_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_IssuanceManaged(ecosystem, type, previousId, category, subcategory, name, url, data);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -460,7 +469,7 @@ Value sendsto_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_SendToOwners(propertyId, amount);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", redeemAddress, 0, payload, txid, rawHex, autoCommit);
 
@@ -513,7 +522,7 @@ Value sendgrant_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_Grant(propertyId, amount, memo);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit);
 
@@ -564,7 +573,7 @@ Value sendrevoke_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_Revoke(propertyId, amount, memo);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -610,7 +619,7 @@ Value sendclosecrowdsale_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_CloseCrowdsale(propertyId);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -726,7 +735,7 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_MetaDExTrade(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -780,7 +789,7 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_MetaDExCancelPrice(propertyIdForSale, amountForSale, propertyIdDesired, amountDesired);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -830,7 +839,7 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_MetaDExCancelPair(propertyIdForSale, propertyIdDesired);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -874,7 +883,7 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_MetaDExCancelEcosystem(ecosystem);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 
@@ -922,7 +931,7 @@ Value sendchangeissuer_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_ChangeIssuer(propertyId);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit);
 
@@ -971,7 +980,7 @@ Value sendalert_OMNI(const Array& params, bool fHelp)
     std::vector<unsigned char> payload = CreatePayload_OmniCoreAlert(alertType, expiryValue, typeCheck, verCheck, alertMessage);
 
     // request the wallet build the transaction (and if needed commit it)
-    uint256 txid = 0;
+    uint256 txid;
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, "", "", 0, payload, txid, rawHex, autoCommit);
 

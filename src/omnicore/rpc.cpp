@@ -139,6 +139,8 @@ Value setautocommit_OMNI(const Array& params, bool fHelp)
             + HelpExampleRpc("setautocommit", "false")
         );
 
+    LOCK(cs_tally);
+
     autoCommit = params[0].get_bool();
     return autoCommit;
 }
@@ -166,6 +168,8 @@ int extra2 = 0, extra3 = 0;
 
   PrintToConsole("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
 
+  LOCK(cs_tally);
+
   bool bDivisible = isPropertyDivisible(extra2);
 
   // various extra tests
@@ -173,8 +177,6 @@ int extra2 = 0, extra3 = 0;
   {
     case 0:
     {
-        LOCK(cs_tally);
-
         int64_t total = 0;
         // display all balances
         for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
@@ -199,8 +201,6 @@ int extra2 = 0, extra3 = 0;
 
     case 3:
     {
-        LOCK(cs_tally);
-
         uint32_t id = 0;
         // for each address display all currencies it holds
         for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
@@ -451,10 +451,13 @@ Value getproperty_MP(const Array& params, bool fHelp)
     RequireExistingProperty(propertyId);
 
     CMPSPInfo::Entry sp;
-    if (!_my_sps->getSP(propertyId, sp)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
-    }
+    {
+        LOCK(cs_tally);
 
+        if (!_my_sps->getSP(propertyId, sp)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+        }
+    }
     int64_t nTotalTokens = getTotalTokens(propertyId);
     std::string strCreationHash = sp.txid.GetHex();
     std::string strTotalTokens = FormatMP(propertyId, nTotalTokens);
@@ -491,6 +494,8 @@ Value listproperties_MP(const Array& params, bool fHelp)
         );
 
     Array response;
+
+    LOCK(cs_tally);
 
     uint32_t nextSPID = _my_sps->peekNextSPID(1);
     for (uint32_t propertyId = 1; propertyId < nextSPID; propertyId++) {
@@ -553,6 +558,8 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
 
     RequireExistingProperty(propertyId);
     RequireCrowdsale(propertyId);
+
+    LOCK(cs_tally);
 
     CMPSPInfo::Entry sp;
     if (!_my_sps->getSP(propertyId, sp)) {
@@ -669,6 +676,8 @@ Value getactivecrowdsales_MP(const Array& params, bool fHelp)
 
     Array response;
 
+    LOCK(cs_tally);
+
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
         uint32_t propertyId = crowd.getPropertyId();
@@ -744,10 +753,13 @@ Value getgrants_MP(const Array& params, bool fHelp)
     RequireManagedProperty(propertyId);
 
     CMPSPInfo::Entry sp;
-    if (false == _my_sps->getSP(propertyId, sp)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
-    }
+    {
+        LOCK(cs_tally);
 
+        if (false == _my_sps->getSP(propertyId, sp)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+        }
+    }
     Object response;
     const uint256& creationHash = sp.txid;
     int64_t totalTokens = getTotalTokens(propertyId);
@@ -785,6 +797,7 @@ Value getgrants_MP(const Array& params, bool fHelp)
 
 int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
   CMPSPInfo::Entry sp;
+  LOCK(cs_tally);
 
   if ((1 > tmpPropId) || (4294967295LL < tmpPropId))
     throw JSONRPCError(RPC_INVALID_PARAMETER, error);
@@ -820,6 +833,9 @@ Value getorderbook_MP(const Array& params, bool fHelp)
   //get property pair and total order amount at a price
   std::vector<CMPMetaDEx> vMetaDexObjects;
 
+  {
+  LOCK(cs_tally);
+
   for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
   {
     md_PricesMap & prices = my_it->second;
@@ -838,6 +854,8 @@ Value getorderbook_MP(const Array& params, bool fHelp)
         }
       }
     }
+  }
+
   }
   
   Array response;
@@ -876,6 +894,9 @@ Value gettradessince_MP(const Array& params, bool fHelp)
   
   std::vector<CMPMetaDEx> vMetaDexObjects;
 
+  {
+  LOCK(cs_tally);
+
   for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
   {
     md_PricesMap & prices = my_it->second;
@@ -899,7 +920,9 @@ Value gettradessince_MP(const Array& params, bool fHelp)
       }
     }
   }
-  
+
+  }
+
   Array response;
   MetaDexObjectsToJSON(vMetaDexObjects, response);
   
@@ -955,6 +978,9 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
   
   std::vector<CMPMetaDEx> vMetaDexObjects;
 
+  {
+  LOCK(cs_tally);
+
   for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
   {
     md_PricesMap & prices = my_it->second;
@@ -977,7 +1003,9 @@ Value gettradehistory_MP(const Array& params, bool fHelp)
       }
     }
   }
-  
+
+  }
+
   Array response;
   MetaDexObjectsToJSON(vMetaDexObjects, response);
   
@@ -1012,6 +1040,8 @@ Value getactivedexsells_MP(const Array& params, bool fHelp)
       }
 
       Array response;
+
+      LOCK(cs_tally);
 
       for(OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it)
       {
@@ -1100,6 +1130,8 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("listblocktransactions_MP", "279007")
         );
 
+    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
+
     int blockHeight = params[0].get_int();
 
     RequireHeightInChain(blockHeight);
@@ -1116,6 +1148,8 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
 
     // now we want to loop through each of the transactions in the block and run against CMPTxList::exists
     // those that return positive add to our response array
+
+    LOCK(cs_tally);
 
     BOOST_FOREACH(const CTransaction&tx, block.vtx) {
         if (p_txlistdb->exists(tx.GetHash())) {
@@ -1546,9 +1580,14 @@ Value gettransaction_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettransaction_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
+
     uint256 hash;
     hash.SetHex(params[0].get_str());
     Object txobj;
+
+    LOCK(cs_tally);
+
     // make a request to new RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, &txobj);
     // check the response, throw any error codes if false
@@ -1594,6 +1633,8 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("listtransactions_MP", "")
         );
 
+    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
+
     CWallet *wallet = pwalletMain;
     string sAddress = "";
     string addressParam = "";
@@ -1626,13 +1667,14 @@ Value listtransactions_MP(const Array& params, bool fHelp)
 
     Array response; //prep an array to hold our output
 
+    LOCK(cs_tally);
+
     // STO has no inbound transaction, so we need to use an insert methodology here
     string mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
     int64_t lastTXBlock = 999999;
 
-    LOCK(wallet->cs_wallet);
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
 
@@ -1744,9 +1786,11 @@ Value getinfo_MP(const Array& params, bool fHelp)
     infoResponse.push_back(Pair("bitcoincoreversion", BitcoinCoreVersion()));
     infoResponse.push_back(Pair("commitinfo", BuildCommit()));
 
+    LOCK(cs_tally);
+
     // provide the current block details
-    int block = chainActive.Height();
-    int64_t blockTime = chainActive[block]->GetBlockTime();
+    int block = GetHeight();
+    int64_t blockTime = GetLatestBlockTime();
     int blockMPTransactions = p_txlistdb->getMPTransactionCountBlock(block);
     int totalMPTransactions = p_txlistdb->getMPTransactionCountTotal();
     int totalMPTrades = t_tradelistdb->getMPTradeCountTotal();
@@ -1814,6 +1858,8 @@ Value getsto_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("getsto_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
+
     uint256 hash;
     hash.SetHex(params[0].get_str());
     string filterAddress = "";
@@ -1823,6 +1869,9 @@ Value getsto_MP(const Array& params, bool fHelp)
     uint256 blockHash = 0;
     if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
     uint64_t propertyId = 0;
+
+    LOCK(cs_tally);
+
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(wtx, 0, 0, mp_obj);
     if (0 <= parseRC) //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for safety
@@ -1888,6 +1937,8 @@ Value gettrade_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
+    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
+
     // Prepare a few vars
     uint256 hash;
     Object tradeobj;
@@ -1902,6 +1953,8 @@ Value gettrade_MP(const Array& params, bool fHelp)
     // Obtain the transaction
     hash.SetHex(params[0].get_str());
     if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
+
+    LOCK(cs_tally);
 
     // Ensure it can be parsed OK
     int parseRC = ParseTransaction(wtx, 0, 0, mp_obj);
