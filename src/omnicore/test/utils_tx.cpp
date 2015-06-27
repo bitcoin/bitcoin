@@ -64,6 +64,30 @@ CTxOut PayToPubKey_Unrelated()
     return CTxOut(amount, scriptPubKey);
 }
 
+CTxOut PayToBareMultisig_1of2()
+{
+    std::vector<unsigned char> vchPayload1 = ParseHex(
+        "04ad90e5b6bc86b3ec7fac2c5fbda7423fc8ef0d58df594c773fa05e2c281b2bfe"
+        "877677c668bd13603944e34f4818ee03cadd81a88542b8b4d5431264180e2c28");
+    std::vector<unsigned char> vchPayload2 = ParseHex(
+        "026766a63686d2cc5d82c929d339b7975010872aa6bf76f6fac69f28f8e293a914");
+
+    CPubKey pubKey1(vchPayload1.begin(), vchPayload1.end());
+    CPubKey pubKey2(vchPayload2.begin(), vchPayload2.end());
+
+    // 1-of-2 bare multisig script
+    CScript scriptPubKey;
+    scriptPubKey << CScript::EncodeOP_N(1);
+    scriptPubKey << ToByteVector(pubKey1);
+    scriptPubKey << ToByteVector(pubKey2);
+    scriptPubKey << CScript::EncodeOP_N(2);
+    scriptPubKey << OP_CHECKMULTISIG;
+
+    int64_t amount = GetDustThreshold(scriptPubKey);
+
+    return CTxOut(amount, scriptPubKey);
+}
+
 CTxOut PayToBareMultisig_1of3()
 {
     std::vector<unsigned char> vchPayload1 = ParseHex(

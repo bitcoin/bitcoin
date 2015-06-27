@@ -8,6 +8,7 @@ CTxOut PayToPubKeyHash_ExodusCrowdsale(int nHeight);
 CTxOut PayToPubKeyHash_Unrelated();
 CTxOut PayToScriptHash_Unrelated();
 CTxOut PayToPubKey_Unrelated();
+CTxOut PayToBareMultisig_1of2();
 CTxOut PayToBareMultisig_1of3();
 CTxOut PayToBareMultisig_3of5();
 CTxOut OpReturn_Empty();

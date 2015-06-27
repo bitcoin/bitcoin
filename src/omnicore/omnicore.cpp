@@ -1671,22 +1671,34 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 }
             }
 
+            // The number of packets is limited to MAX_PACKETS,
+            // which allows, at least in theory, to add 1 byte
+            // sequence numbers to each packet.
+
+            // Transactions with more than MAX_PACKET packets
+            // are not invalidated, but trimmed.
+
+            unsigned int nPackets = multisig_script_data.size();
+            if (nPackets > MAX_PACKETS) {
+                nPackets = MAX_PACKETS;
+                PrintToLog("limiting number of packets to %d [extracted=%d]\n", nPackets, multisig_script_data.size());
+            }
+
             // ### PREPARE A FEW VARS ###
             std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
             PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
-            unsigned char packets[MAX_PACKETS][32];
+            unsigned char packets[nPackets][32];
             unsigned int mdata_count = 0;  // multisig data count
 
             // ### DEOBFUSCATE MULTISIG PACKETS ###
-            for (unsigned int k = 0; k < multisig_script_data.size(); ++k) {
+            for (unsigned int k = 0; k < nPackets; ++k) {
+                assert(mdata_count < MAX_PACKETS);
+                assert(mdata_count < MAX_SHA256_OBFUSCATION_TIMES);
+
                 std::vector<unsigned char> hash = ParseHex(strObfuscatedHashes[mdata_count+1]);
                 std::vector<unsigned char> packet = ParseHex(multisig_script_data[k].substr(2*1,2*PACKET_SIZE));
                 for (unsigned int i = 0; i < packet.size(); i++) { // this is a data packet, must deobfuscate now
                     packet[i] ^= hash[i];
-                }
-                if (MAX_PACKETS <= mdata_count+1) {
-                    PrintToLog("increase MAX_PACKETS ! mdata_count= %d\n", mdata_count);
-                    return -222;
                 }
                 memcpy(&packets[mdata_count], &packet[0], PACKET_SIZE);
                 ++mdata_count;
