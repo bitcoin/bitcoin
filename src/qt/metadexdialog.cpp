@@ -17,6 +17,7 @@
 #include "omnicore/parse_string.h"
 #include "omnicore/pending.h"
 #include "omnicore/sp.h"
+#include "omnicore/tally.h"
 
 #include "amount.h"
 #include "sync.h"

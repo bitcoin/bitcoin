@@ -2,6 +2,7 @@
 
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/tally.h"
 
 #include "sync.h"
 
