@@ -422,7 +422,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + _("<category> can be:") + " " + debugCategories + ".");
     strUsage += HelpMessageOpt("-gen", strprintf(_("Generate coins (default: %u)"), 0));
-    strUsage += HelpMessageOpt("-genproclimit=<n>", strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"), 1));
+    strUsage += HelpMessageOpt("-genproclimit=<n>", strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"), DEFAULT_GENERATE_THREADS));
     strUsage += HelpMessageOpt("-help-debug", _("Show all debugging options (usage: --help -help-debug)"));
     strUsage += HelpMessageOpt("-logips", strprintf(_("Include IP addresses in debug output (default: %u)"), 0));
     strUsage += HelpMessageOpt("-logtimestamps", strprintf(_("Prepend debug output with timestamp (default: %u)"), 1));
@@ -1558,7 +1558,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     scheduler.scheduleEvery(f, nPowTargetSpacing);
 
     // Generate coins in the background
-    GenerateBitcoins(GetBoolArg("-gen", false), GetArg("-genproclimit", 1), Params());
+    GenerateBitcoins(GetBoolArg("-gen", false), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), Params());
 
     // ********************************************************* Step 12: finished
 
