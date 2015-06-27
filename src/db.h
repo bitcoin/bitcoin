@@ -25,6 +25,8 @@ class COutPoint;
 
 struct CBlockLocator;
 
+static const unsigned int DEFAULT_WALLET_DBLOGSIZE = 100;
+
 extern unsigned int nWalletDBUpdated;
 
 void ThreadFlushWalletDB(const std::string& strWalletFile);
