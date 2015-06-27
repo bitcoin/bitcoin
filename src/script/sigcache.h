@@ -10,6 +10,8 @@
 
 #include <vector>
 
+static const int64_t DEFAULT_MAXSIGCACHESIZE = 50000;
+
 class CPubKey;
 
 class CachingTransactionSignatureChecker : public TransactionSignatureChecker

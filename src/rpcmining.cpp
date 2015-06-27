@@ -99,7 +99,7 @@ UniValue getgenerate(const UniValue& params, bool fHelp)
         throw runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
-            "It is set with the command line argument -gen (or bitcoin.conf setting gen)\n"
+            "It is set with the command line argument -gen (or " + std::string(BITCOIN_CONF_FILENAME) + " setting gen)\n"
             "It can also be set with the setgenerate call.\n"
             "\nResult\n"
             "true|false      (boolean) If the server is set to generate coins or not\n"
@@ -109,7 +109,7 @@ UniValue getgenerate(const UniValue& params, bool fHelp)
         );
 
     LOCK(cs_main);
-    return GetBoolArg("-gen", false);
+    return GetBoolArg("-gen", DEFAULT_GENERATE);
 }
 
 UniValue generate(const UniValue& params, bool fHelp)

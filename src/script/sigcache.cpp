@@ -47,7 +47,7 @@ public:
         // (~200 bytes per cache entry times 50,000 entries)
         // Since there are a maximum of 20,000 signature operations per block
         // 50,000 is a reasonable default.
-        int64_t nMaxCacheSize = GetArg("-maxsigcachesize", 50000);
+        int64_t nMaxCacheSize = GetArg("-maxsigcachesize", DEFAULT_MAXSIGCACHESIZE);
         if (nMaxCacheSize <= 0) return;
 
         boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
