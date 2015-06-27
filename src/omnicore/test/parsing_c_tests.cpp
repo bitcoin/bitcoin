@@ -196,6 +196,42 @@ BOOST_AUTO_TEST_CASE(empty_op_return)
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(trimmed_op_return)
+{
+    {
+        int nBlock = std::numeric_limits<int>::max();
+
+        std::vector<CTxOut> txInputs;
+        txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
+
+        std::vector<CTxOut> txOutputs;
+
+        std::vector<unsigned char> vchFiller(MAX_PACKETS * PACKET_SIZE, 0x07);
+        std::vector<unsigned char> vchPayload = GetOmMarker();
+        vchPayload.insert(vchPayload.end(), vchFiller.begin(), vchFiller.end());
+
+        // These will be trimmed:
+        vchPayload.push_back(0x44);
+        vchPayload.push_back(0x44);
+        vchPayload.push_back(0x44);
+
+        CScript scriptPubKey;
+        scriptPubKey << OP_RETURN;
+        scriptPubKey << vchPayload;
+        CTxOut txOut = CTxOut(0, scriptPubKey);
+        txOutputs.push_back(txOut);
+
+        CTransaction dummyTx = TxClassC(txInputs, txOutputs);
+
+        CMPTransaction metaTx;
+        BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2");
+        BOOST_CHECK_EQUAL(metaTx.getPayload(), HexStr(vchFiller.begin(), vchFiller.end()));
+        BOOST_CHECK_EQUAL(metaTx.getPayload().size() / 2, MAX_PACKETS * PACKET_SIZE);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(multiple_op_return_short)
 {
     {
@@ -346,7 +382,6 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
         BOOST_CHECK_EQUAL(metaTx.getPayload(),
                 "00000000000000010000000006dac2c000000000000000030000000000000d48");
     }
-
     {
         /**
          * The following transaction is invalid, because the first pushed data

@@ -1776,8 +1776,18 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 if (!op_return_script_data[n].empty()) {
                     assert(IsHex(op_return_script_data[n])); // via GetScriptPushes()
                     std::vector<unsigned char> vch = ParseHex(op_return_script_data[n]);
-                    memcpy(single_pkt+packet_size, &vch[0], vch.size());
-                    packet_size += vch.size();
+                    unsigned int payload_size = vch.size();
+                    if (packet_size + payload_size > MAX_PACKETS * PACKET_SIZE) {
+                        payload_size = MAX_PACKETS * PACKET_SIZE - packet_size;
+                        PrintToLog("limiting payload size to %d byte\n", packet_size + payload_size);
+                    }
+                    if (payload_size > 0) {
+                        memcpy(single_pkt+packet_size, &vch[0], payload_size);
+                        packet_size += payload_size;
+                    }
+                    if (MAX_PACKETS * PACKET_SIZE == packet_size) {
+                        break;
+                    }
                 }
             }
         }
