@@ -777,8 +777,11 @@ int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
             }
             if (!scriptPushes.empty()) {
                 std::vector<unsigned char> vchMarker = GetOmMarker();
-                std::vector<unsigned char> vchPushes = ParseHex(scriptPushes[0]);
-                if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushes.begin())) {
+                std::vector<unsigned char> vchPushed = ParseHex(scriptPushes[0]);
+                if (vchPushed.size() < vchMarker.size()) {
+                    continue;
+                }
+                if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushed.begin())) {
                     hasOpReturn = true;
                 }
             }
@@ -1770,6 +1773,9 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                     if (!vstrPushes.empty()) {
                         std::vector<unsigned char> vchMarker = GetOmMarker();
                         std::vector<unsigned char> vchPushed = ParseHex(vstrPushes[0]);
+                        if (vchPushed.size() < vchMarker.size()) {
+                            continue;
+                        }
                         if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushed.begin())) {
                             size_t sizeHex = vchMarker.size() * 2;
                             // strip out the marker at the very beginning
