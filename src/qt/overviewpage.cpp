@@ -365,35 +365,29 @@ void OverviewPage::updateDarksendProgress()
     QString strToolPip = tr("Progress: %1% (inputs have an average of %2 of %n rounds)", "", nDarksendRounds).arg(progress).arg(pwalletMain->GetAverageAnonymizedRounds());
     ui->darksendProgress->setToolTip(strToolPip);
 
-    QString strSettings;
+    QString strAmountAndRounds;
+    int nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
+    QString strAnonymizeDarkcoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAnonymizeDarkcoinAmount * COIN, false, BitcoinUnits::separatorAlways);
     if(nMaxToAnonymize >= nAnonymizeDarkcoinAmount * COIN) {
         ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
-                                          .arg(BitcoinUnits::formatWithUnit(
-                                                   walletModel->getOptionsModel()->getDisplayUnit(),
-                                                   nAnonymizeDarkcoinAmount * COIN
-                                               )));
-        strSettings = BitcoinUnits::formatWithUnit(
-                    walletModel->getOptionsModel()->getDisplayUnit(),
-                    nAnonymizeDarkcoinAmount * COIN
-                ) + " / " + tr("%n Rounds", "", nDarksendRounds);
+                                          .arg(strAnonymizeDarkcoinAmount));
+        strAnonymizeDarkcoinAmount = strAnonymizeDarkcoinAmount.remove(strAnonymizeDarkcoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = strAnonymizeDarkcoinAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
     } else {
-        ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br/>"
+        QString strMaxToAnonymize = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nMaxToAnonymize, false, BitcoinUnits::separatorAlways);
+        ui->labelAmountRounds->setToolTip("<span style='white-space: nowrap;'>" +
+                                          tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br/>"
                                              "will anonymize <span style='color:red;'>%2</span> instead")
-                                          .arg(BitcoinUnits::formatWithUnit(
-                                                   walletModel->getOptionsModel()->getDisplayUnit(),
-                                                   nAnonymizeDarkcoinAmount * COIN
-                                               ))
-                                          .arg(BitcoinUnits::formatWithUnit(
-                                                   walletModel->getOptionsModel()->getDisplayUnit(),
-                                                   nMaxToAnonymize
-                                               )));
-        strSettings = "<span style='color:red;'>" + BitcoinUnits::formatWithUnit(
-                    walletModel->getOptionsModel()->getDisplayUnit(),
-                    nMaxToAnonymize
-                ) + " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
+                                          .arg(strAnonymizeDarkcoinAmount)
+                                          .arg(strMaxToAnonymize) +
+                                          "</span>");
+        strMaxToAnonymize = strMaxToAnonymize.remove(strMaxToAnonymize.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = "<span style='color:red;'>" +
+                QString(BitcoinUnits::factor(nDisplayUnit) == 1 ? "" : "~") + strMaxToAnonymize +
+                " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
     }
 
-    ui->labelAmountRounds->setText(strSettings);
+    ui->labelAmountRounds->setText(strAmountAndRounds);
 }
 
 
