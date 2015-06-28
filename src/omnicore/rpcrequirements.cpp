@@ -7,6 +7,7 @@
 #include "amount.h"
 #include "main.h"
 #include "rpcprotocol.h"
+#include "sync.h"
 #include "tinyformat.h"
 
 #include <stdint.h>
@@ -40,6 +41,7 @@ void RequirePropertyName(const std::string& name)
 
 void RequireExistingProperty(uint32_t propertyId)
 {
+    LOCK(cs_tally);
     if (!mastercore::_my_sps->hasSP(propertyId)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
     }
@@ -61,6 +63,7 @@ void RequireDifferentIds(uint32_t propertyId, uint32_t otherId)
 
 void RequireCrowdsale(uint32_t propertyId)
 {
+    LOCK(cs_tally);
     CMPSPInfo::Entry sp;
     if (!mastercore::_my_sps->getSP(propertyId, sp)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
@@ -72,6 +75,7 @@ void RequireCrowdsale(uint32_t propertyId)
 
 void RequireActiveCrowdsale(uint32_t propertyId)
 {
+    LOCK(cs_tally);
     if (!mastercore::isCrowdsaleActive(propertyId)) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Property identifier does not refer to an active crowdsale");
     }
@@ -79,6 +83,7 @@ void RequireActiveCrowdsale(uint32_t propertyId)
 
 void RequireManagedProperty(uint32_t propertyId)
 {
+    LOCK(cs_tally);
     CMPSPInfo::Entry sp;
     if (!mastercore::_my_sps->getSP(propertyId, sp)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
@@ -90,6 +95,7 @@ void RequireManagedProperty(uint32_t propertyId)
 
 void RequireTokenIssuer(const std::string& address, uint32_t propertyId)
 {
+    LOCK(cs_tally);
     CMPSPInfo::Entry sp;
     if (!mastercore::_my_sps->getSP(propertyId, sp)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
@@ -101,6 +107,7 @@ void RequireTokenIssuer(const std::string& address, uint32_t propertyId)
 
 void RequireMatchingDExOffer(const std::string& address, uint32_t propertyId)
 {
+    LOCK(cs_tally);
     if (!mastercore::DEx_offerExists(address, propertyId)) {
         throw JSONRPCError(RPC_TYPE_ERROR, "No matching sell offer on the distributed exchange");
     }
@@ -108,6 +115,7 @@ void RequireMatchingDExOffer(const std::string& address, uint32_t propertyId)
 
 void RequireNoOtherDExOffer(const std::string& address, uint32_t propertyId)
 {
+    LOCK(cs_tally);
     if (mastercore::DEx_offerExists(address, propertyId)) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Another active sell offer from the given address already exists on the distributed exchange");
     }
@@ -122,7 +130,8 @@ void RequireSaneReferenceAmount(int64_t amount)
 
 void RequireSaneDExPaymentWindow(const std::string& address, uint32_t propertyId)
 {
-    CMPOffer* poffer = mastercore::DEx_getOffer(address, propertyId);
+    LOCK(cs_tally);
+    const CMPOffer* poffer = mastercore::DEx_getOffer(address, propertyId);
     if (poffer == NULL) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Unable to load sell offer from the distributed exchange");
     }
@@ -133,7 +142,8 @@ void RequireSaneDExPaymentWindow(const std::string& address, uint32_t propertyId
 
 void RequireSaneDExFee(const std::string& address, uint32_t propertyId)
 {
-    CMPOffer* poffer = mastercore::DEx_getOffer(address, propertyId);
+    LOCK(cs_tally);
+    const CMPOffer* poffer = mastercore::DEx_getOffer(address, propertyId);
     if (poffer == NULL) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Unable to load sell offer from the distributed exchange");
     }
@@ -144,7 +154,7 @@ void RequireSaneDExFee(const std::string& address, uint32_t propertyId)
 
 void RequireHeightInChain(int blockHeight)
 {
-    if (blockHeight < 0 || chainActive.Height() < blockHeight) {
+    if (blockHeight < 0 || mastercore::GetHeight() < blockHeight) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
     }
 }
