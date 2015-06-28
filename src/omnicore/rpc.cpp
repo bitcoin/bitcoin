@@ -148,8 +148,8 @@ Value setautocommit_OMNI(const Array& params, bool fHelp)
 // display the tally map & the offer/accept list(s)
 Value mscrpc(const Array& params, bool fHelp)
 {
-int extra = 0;
-int extra2 = 0, extra3 = 0;
+    int extra = 0;
+    int extra2 = 0, extra3 = 0;
 
     if (fHelp || params.size() > 3)
         throw runtime_error(
@@ -162,87 +162,124 @@ int extra2 = 0, extra3 = 0;
             + HelpExampleRpc("mscrpc", "")
         );
 
-  if (0 < params.size()) extra = atoi(params[0].get_str());
-  if (1 < params.size()) extra2 = atoi(params[1].get_str());
-  if (2 < params.size()) extra3 = atoi(params[2].get_str());
+    if (0 < params.size()) extra = atoi(params[0].get_str());
+    if (1 < params.size()) extra2 = atoi(params[1].get_str());
+    if (2 < params.size()) extra3 = atoi(params[2].get_str());
 
-  PrintToConsole("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
+    PrintToConsole("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
 
-  LOCK(cs_tally);
+    bool bDivisible = isPropertyDivisible(extra2);
 
-  bool bDivisible = isPropertyDivisible(extra2);
-
-  // various extra tests
-  switch (extra)
-  {
-    case 0:
-    {
-        int64_t total = 0;
-        // display all balances
-        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            PrintToConsole("%34s => ", my_it->first);
-            total += (my_it->second).print(extra2, bDivisible);
-        }
-
-        PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
-        break;
-    }
-
-    case 1:
-      // display the whole CMPTxList (leveldb)
-      p_txlistdb->printAll();
-      p_txlistdb->printStats();
-      break;
-
-    case 2:
-        // display smart properties
-        _my_sps->printAll();
-      break;
-
-    case 3:
-    {
-        uint32_t id = 0;
-        // for each address display all currencies it holds
-        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            PrintToConsole("%34s => ", my_it->first);
-            (my_it->second).print(extra2);
-            (my_it->second).init();
-            while (0 != (id = (my_it->second).next())) {
-                PrintToConsole("Id: %u=0x%X ", id, id);
+    // various extra tests
+    switch (extra) {
+        case 0:
+        {
+            LOCK(cs_tally);
+            int64_t total = 0;
+            // display all balances
+            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+                PrintToConsole("%34s => ", my_it->first);
+                total += (my_it->second).print(extra2, bDivisible);
             }
-            PrintToConsole("\n");
+            PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
+            break;
         }
-        break;
+        case 1:
+        {
+            LOCK(cs_tally);
+            // display the whole CMPTxList (leveldb)
+            p_txlistdb->printAll();
+            p_txlistdb->printStats();
+            break;
+        }
+        case 2:
+        {
+            LOCK(cs_tally);
+            // display smart properties
+            _my_sps->printAll();
+            break;
+        }
+        case 3:
+        {
+            LOCK(cs_tally);
+            uint32_t id = 0;
+            // for each address display all currencies it holds
+            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+                PrintToConsole("%34s => ", my_it->first);
+                (my_it->second).print(extra2);
+                (my_it->second).init();
+                while (0 != (id = (my_it->second).next())) {
+                    PrintToConsole("Id: %u=0x%X ", id, id);
+                }
+                PrintToConsole("\n");
+            }
+            break;
+        }
+        case 4:
+        {
+            LOCK(cs_tally);
+            for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
+                (it->second).print(it->first);
+            }
+            break;
+        }
+        case 5:
+        {
+            LOCK(cs_tally);
+            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
+            break;
+        }
+        case 6:
+        {
+            LOCK(cs_tally);
+            MetaDEx_debug_print(true, true);
+            break;
+        }
+        case 7:
+        {
+            LOCK(cs_tally);
+            // display the whole CMPTradeList (leveldb)
+            t_tradelistdb->printAll();
+            t_tradelistdb->printStats();
+            break;
+        }
+        case 8:
+        {
+            LOCK(cs_tally);
+            // display the STO receive list
+            s_stolistdb->printAll();
+            s_stolistdb->printStats();
+            break;
+        }
+        case 9:
+        {
+            PrintToConsole("Locking cs_tally for %d milliseconds..\n", extra2);
+            LOCK(cs_tally);
+            MilliSleep(extra2);
+            PrintToConsole("Unlocking cs_tally now\n");
+            break;
+        }
+        case 10:
+        {
+            PrintToConsole("Locking cs_main for %d milliseconds..\n", extra2);
+            LOCK(cs_main);
+            MilliSleep(extra2);
+            PrintToConsole("Unlocking cs_main now\n");
+            break;
+        }
+        case 11:
+        {
+            PrintToConsole("Locking pwalletMain->cs_wallet for %d milliseconds..\n", extra2);
+            LOCK(pwalletMain->cs_wallet);
+            MilliSleep(extra2);
+            PrintToConsole("Unlocking pwalletMain->cs_wallet now\n");
+            break;
+        }
+        default:
+            break;
     }
 
-    case 4:
-      for(CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it)
-      {
-        (it->second).print(it->first);
-      }
-      break;
-
-    case 5:
-      PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES":"NO");
-      break;
-
-    case 6:
-      MetaDEx_debug_print(true, true);
-      break;
-
-    case 7:
-      // display the whole CMPTradeList (leveldb)
-      t_tradelistdb->printAll();
-      t_tradelistdb->printStats();
-      break;
-
-    case 8:
-      // display the STO receive list
-      s_stolistdb->printAll();
-      s_stolistdb->printStats();
-      break;
-  }
-  return GetHeight();
+    return GetHeight();
 }
 
 // display an MP balance via RPC
