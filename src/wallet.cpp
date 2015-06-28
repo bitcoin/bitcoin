@@ -2435,12 +2435,18 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         }
     }
 
-    if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom)
+    if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom) {
+        BOOST_FOREACH(CTxIn v, vCoins)
+            UnlockCoin(v.prevout);
         return "Error: can't make current denominated outputs";
+    }
 
     // we don't support change at all
-    if(nValueLeft != 0)
+    if(nValueLeft != 0) {
+        BOOST_FOREACH(CTxIn v, vCoins)
+            UnlockCoin(v.prevout);
         return "Error: change left-over in pool. Must use denominations only";
+    }
 
     //randomize the output order
     std::random_shuffle (vOut.begin(), vOut.end());
