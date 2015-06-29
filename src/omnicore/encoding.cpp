@@ -75,16 +75,6 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
 }
 
 /**
- * @return The marker for class C transactions.
- */
-static inline std::vector<unsigned char> GetOmMarker()
-{
-    const unsigned char pch[] = {0x6f, 0x6d}; // Hex-encoded: "om"
-
-    return std::vector<unsigned char>(pch, pch + sizeof (pch) / sizeof (pch[0]));
-}
-
-/**
  * Embedds a payload in an OP_RETURN output, prefixed with a transaction marker.
  *
  * The request is rejected, if the size of the payload with marker is larger than

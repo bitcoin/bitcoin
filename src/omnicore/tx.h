@@ -120,6 +120,8 @@ public:
     std::string getSender() const { return sender; }
     std::string getReceiver() const { return receiver; }
 
+    std::string getPayload() const { return HexStr(pkt, pkt + pkt_size); }
+
     uint64_t getAmount() const { return nValue; }
     uint64_t getNewAmount() const { return nNewValue; }
 

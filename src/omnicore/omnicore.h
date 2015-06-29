@@ -3,6 +3,8 @@
 
 class CBitcoinAddress;
 class CBlockIndex;
+class CCoinsView;
+class CCoinsViewCache;
 class CTransaction;
 
 #include "omnicore/log.h"
@@ -44,24 +46,19 @@ int const MAX_STATE_HISTORY = 50;
 #define SP_STRING_FIELD_LEN 256
 
 // Omni Layer Transaction Class
+#define NO_MARKER    0
 #define OMNI_CLASS_A 1
 #define OMNI_CLASS_B 2
 #define OMNI_CLASS_C 3
 
-// Maximum number of keys supported in Class B
-#define CLASS_B_MAX_SENDABLE_PACKETS 2
-
-// Master Protocol Transaction (Packet) Version
+// Omni Layer Transaction (Packet) Version
 #define MP_TX_PKT_V0  0
 #define MP_TX_PKT_V1  1
-
-// Maximum outputs per BTC Transaction
-#define MAX_BTC_OUTPUTS 16
 
 #define MIN_PAYLOAD_SIZE     5
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
-#define MAX_PACKETS         64
+#define MAX_PACKETS        255
 
 // Transaction types, from the spec
 enum TransactionType {
@@ -156,6 +153,12 @@ bool feeCheck(const std::string& address, size_t nDataSize);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
+
+/** Returns the Exodus crowdsale address. */
+const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock = 0);
+
+/** Returns the marker for class C transactions. */
+const std::vector<unsigned char> GetOmMarker();
 
 //! Used to indicate, whether to automatically commit created transactions
 extern bool autoCommit;
@@ -288,6 +291,12 @@ extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
 
+// TODO: move, rename
+extern CCoinsView viewDummy;
+extern CCoinsViewCache view;
+//! Guards coins view cache
+extern CCriticalSection cs_tx_cache;
+
 std::string strMPProperty(uint32_t propertyId);
 
 int GetHeight();
@@ -311,7 +320,14 @@ int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
 
 char *c_strMasterProtocolTXType(int i);
 
-bool isTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty = false);
+/** Checks, if the script type is allowed as input. */
+bool IsAllowedInputType(int whichType, int nBlock);
+/** Checks, if the script type qualifies as output. */
+bool IsAllowedOutputType(int whichType, int nBlock);
+/** Checks, if the transaction type and version is supported and enabled. */
+bool IsTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty = false);
+/** Returns the encoding class, used to embed a payload. */
+int GetEncodingClass(const CTransaction& tx, int nBlock);
 
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 
