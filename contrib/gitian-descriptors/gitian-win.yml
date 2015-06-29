@@ -84,6 +84,8 @@ script: |
   pushd temp
   tar xf ../$SOURCEDIST
   find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  mkdir -p $OUTDIR/src
+  cp ../$SOURCEDIST $OUTDIR/src
   popd
 
   ORIGPATH="$PATH"
@@ -109,7 +111,8 @@ script: |
     find ${DISTNAME} -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}.zip
     cd ../..
   done
-  mkdir -p $OUTDIR/src
-  mv $SOURCEDIST $OUTDIR/src
+  cd $OUTDIR
+  rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
+  find . -name "*-setup-unsigned.exe" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
   mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip
   mv ${OUTDIR}/${DISTNAME}-i686-*.zip ${OUTDIR}/${DISTNAME}-win32.zip
