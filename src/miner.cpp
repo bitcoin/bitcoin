@@ -129,7 +129,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         // Largest block you're willing to create:
         uint64_t nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
-        uint64_t nConsensusMaxSize = Params().MaxBlockSize(nBlockTime, sizeForkTime.load());
+        uint64_t nConsensusMaxSize = chainparams.GetConsensus().MaxBlockSize(nBlockTime, sizeForkTime.load());
         // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
         nBlockMaxSize = std::max((uint64_t)1000,
                                  std::min(nConsensusMaxSize-1000, nBlockMaxSize));
@@ -249,7 +249,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
             // Legacy limits on sigOps:
             unsigned int nTxSigOps = GetLegacySigOpCount(tx);
-            if (nBlockSigOps + nTxSigOps >= Params().MaxBlockSigops(nBlockTime, sizeForkTime.load()))
+            if (nBlockSigOps + nTxSigOps >= chainparams.GetConsensus().MaxBlockSigops(nBlockTime, sizeForkTime.load()))
                 continue;
 
             // Skip free transactions if we're past the minimum block size:
@@ -276,7 +276,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
 
             nTxSigOps += GetP2SHSigOpCount(tx, view);
-            if (nBlockSigOps + nTxSigOps >= Params().MaxBlockSigops(nBlockTime, sizeForkTime.load()))
+            if (nBlockSigOps + nTxSigOps >= chainparams.GetConsensus().MaxBlockSigops(nBlockTime, sizeForkTime.load()))
                 continue;
 
             // Note that flags: we don't want to set mempool/IsStandard()

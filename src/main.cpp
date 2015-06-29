@@ -951,7 +951,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state, Params().MaxTransactionSize(GetAdjustedTime(), sizeForkTime.load())))
+    if (!CheckTransaction(tx, state, Params().GetConsensus().MaxTransactionSize(GetAdjustedTime(), sizeForkTime.load())))
         return error("AcceptToMemoryPool: CheckTransaction failed");
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -1851,8 +1851,8 @@ static int64_t nTimeTotal = 0;
 
 static bool DidBlockTriggerSizeFork(const CBlock &block, const CBlockIndex *pindex, const CChainParams &chainparams) {
     return (block.nVersion & SIZE_FORK_VERSION) &&
-           (pblocktree->ForkActivated(SIZE_FORK_VERSION) == uint256()) &&
-           IsSuperMajority(SIZE_FORK_VERSION, pindex, chainparams.ActivateSizeForkMajority(), chainparams.GetConsensus(), true /* use bitmask */);
+        (pblocktree->ForkActivated(SIZE_FORK_VERSION) == uint256()) &&
+        IsSuperMajority(SIZE_FORK_VERSION, pindex, chainparams.GetConsensus().ActivateSizeForkMajority(), chainparams.GetConsensus(), true /* use bitmask */);
 }
 
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
@@ -1937,7 +1937,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         nInputs += tx.vin.size();
         nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > Params().MaxBlockSigops(block.GetBlockTime(), sizeForkTime.load()))
+        if (nSigOps > chainparams.GetConsensus().MaxBlockSigops(block.GetBlockTime(), sizeForkTime.load()))
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -1953,7 +1953,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 // this is to prevent a "rogue miner" from creating
                 // an incredibly-expensive-to-validate block.
                 nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > Params().MaxBlockSigops(block.GetBlockTime(), sizeForkTime.load()))
+                if (nSigOps > chainparams.GetConsensus().MaxBlockSigops(block.GetBlockTime(), sizeForkTime.load()))
                     return state.DoS(100, error("ConnectBlock(): too many sigops"),
                                      REJECT_INVALID, "bad-blk-sigops");
             }
@@ -2031,7 +2031,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeCallbacks * 0.000001);
 
     if (DidBlockTriggerSizeFork(block, pindex, chainparams)) {
-        uint64_t tAllowBigger = block.nTime + chainparams.SizeForkGracePeriod();
+        uint64_t tAllowBigger = block.nTime + chainparams.GetConsensus().SizeForkGracePeriod();
         LogPrintf("%s: Max block size fork activating at time %d, bigger blocks allowed at time %d\n",
                   __func__, block.nTime, tAllowBigger);
         pblocktree->ActivateFork(SIZE_FORK_VERSION, pindex->GetBlockHash());
@@ -2672,7 +2672,7 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
     }
 
     if (!fKnown) {
-        while (vinfoBlockFile[nFile].nSize + nAddSize >= Params().MaxBlockSize(nTime, sizeForkTime.load())*MIN_BLOCKFILE_BLOCKS) {
+        while (vinfoBlockFile[nFile].nSize + nAddSize >= Params().GetConsensus().MaxBlockSize(nTime, sizeForkTime.load())*MIN_BLOCKFILE_BLOCKS) {
             LogPrintf("Leaving block file %i: %s\n", nFile, vinfoBlockFile[nFile].ToString());
             FlushBlockFile(true);
             nFile++;
@@ -2790,8 +2790,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
-    uint64_t nMaxBlockSize = Params().MaxBlockSize(block.GetBlockTime(), sizeForkTime.load());
-    uint64_t nMaxTxSize = Params().MaxTransactionSize(block.GetBlockTime(), sizeForkTime.load());
+    uint64_t nMaxBlockSize = Params().GetConsensus().MaxBlockSize(block.GetBlockTime(), sizeForkTime.load());
+    uint64_t nMaxTxSize = Params().GetConsensus().MaxTransactionSize(block.GetBlockTime(), sizeForkTime.load());
     if (block.vtx.empty() ||
         block.vtx.size()*MIN_TRANSACTION_SIZE > nMaxBlockSize ||
         ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
@@ -2817,7 +2817,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         nSigOps += GetLegacySigOpCount(tx);
     }
-    if (nSigOps > Params().MaxBlockSigops(block.GetBlockTime(), sizeForkTime.load()))
+    if (nSigOps > Params().GetConsensus().MaxBlockSigops(block.GetBlockTime(), sizeForkTime.load()))
         return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
                          REJECT_INVALID, "bad-blk-sigops", true);
 
@@ -3249,7 +3249,7 @@ bool static LoadBlockIndexDB()
     if (sizeForkHash != uint256()) {
         BlockMap::iterator it = mapBlockIndex.find(sizeForkHash);
         assert(it != mapBlockIndex.end());
-        sizeForkTime.store(it->second->GetBlockTime() + chainparams.SizeForkGracePeriod());
+        sizeForkTime.store(it->second->GetBlockTime() + chainparams.GetConsensus().SizeForkGracePeriod());
     }
 
     boost::this_thread::interruption_point();
@@ -3534,7 +3534,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        uint64_t nMaxBlocksize = Params().MaxBlockSize(GetAdjustedTime(), sizeForkTime.load());
+        uint64_t nMaxBlocksize = chainparams.GetConsensus().MaxBlockSize(GetAdjustedTime(), sizeForkTime.load());
         CBufferedFile blkdat(fileIn, 2*nMaxBlocksize, nMaxBlocksize+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
@@ -3894,7 +3894,7 @@ bool static SanityCheckMessage(CNode* peer, const CNetMessage& msg)
 {
     const std::string& strCommand = msg.hdr.GetCommand();
     if (strCommand == "block") {
-        uint64_t maxSize = Params().MaxBlockSize(GetAdjustedTime() + 2 * 60 * 60, sizeForkTime.load());
+        uint64_t maxSize = Params().GetConsensus().MaxBlockSize(GetAdjustedTime() + 2 * 60 * 60, sizeForkTime.load());
         if (msg.hdr.nMessageSize > maxSize) {
             LogPrint("net", "Oversized %s message from peer=%i\n", SanitizeString(strCommand), peer->GetId());
             return false;

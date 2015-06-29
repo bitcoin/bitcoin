@@ -56,15 +56,15 @@ public:
         // Timestamps for forking consensus rule changes:
         //  Allow bigger blocks
         //  Limit transactions to 100,000 bytes
-        nEarliestSizeForkTime = 1452470400; // 11 Jan 2016 00:00:00 UTC
+        consensus.nEarliestSizeForkTime = 1452470400; // 11 Jan 2016 00:00:00 UTC
         // 1MB max blocks before 11 Jan 2016
         // Then, if miner consensus: 8MB max, doubling every two years
-        nMaxSizePreFork = 1000*1000; // 1MB max pre-fork
-        nSizeDoubleEpoch = 60*60*24*365*2; // two years
-        nMaxSizeBase = 8*1000*1000; // 8MB
-        nMaxSizeDoublings = 10;
-        nActivateSizeForkMajority = 750; // 75% of hashpower to activate fork
-        nSizeForkGracePeriod = 60*60*24*14; // two week grace period after activation
+        consensus.nMaxSizePreFork = 1000*1000; // 1MB max pre-fork
+        consensus.nSizeDoubleEpoch = 60*60*24*365*2; // two years
+        consensus.nMaxSizeBase = 8*1000*1000; // 8MB
+        consensus.nMaxSizeDoublings = 10;
+        consensus.nActivateSizeForkMajority = 750; // 75% of hashpower to activate fork
+        consensus.nSizeForkGracePeriod = 60*60*24*14; // two week grace period after activation
 
         /**
          * Build the genesis block. Note that the output of its generation
@@ -165,13 +165,13 @@ public:
 
         // 1MB max blocks before 1 Aug 2015
         // Then, if miner consensus: 8MB max, doubling every two years
-        nMaxSizePreFork = 1000*1000; // 1MB max pre-fork
-        nEarliestSizeForkTime = 1438387200; // 1 Aug 2015 00:00:00 UTC
-        nSizeDoubleEpoch = 60*60*24*365*2; // two years
-        nMaxSizeBase = 8*1000*1000; // 8MB
-        nMaxSizeDoublings = 10;
-        nActivateSizeForkMajority = 75; // 75 of 100 to activate fork
-        nSizeForkGracePeriod = 60*60*24; // 1-day grace period
+        consensus.nMaxSizePreFork = 1000*1000; // 1MB max pre-fork
+        consensus.nEarliestSizeForkTime = 1438387200; // 1 Aug 2015 00:00:00 UTC
+        consensus.nSizeDoubleEpoch = 60*60*24*365*2; // two years
+        consensus.nMaxSizeBase = 8*1000*1000; // 8MB
+        consensus.nMaxSizeDoublings = 10;
+        consensus.nActivateSizeForkMajority = 75; // 75 of 100 to activate fork
+        consensus.nSizeForkGracePeriod = 60*60*24; // 1-day grace period
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1296688602;

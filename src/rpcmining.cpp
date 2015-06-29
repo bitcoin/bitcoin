@@ -575,9 +575,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
     result.push_back(Pair("mutable", aMutable));
     result.push_back(Pair("noncerange", "00000000ffffffff"));
-    result.push_back(Pair("sigoplimit", Params().MaxBlockSigops(nBlockTime, sizeForkTime.load())));
-    result.push_back(Pair("sizelimit", Params().MaxBlockSize(nBlockTime, sizeForkTime.load())));
-    result.push_back(Pair("txsizelimit", Params().MaxTransactionSize(nBlockTime, sizeForkTime.load())));
+    result.push_back(Pair("sigoplimit", Params().GetConsensus().MaxBlockSigops(nBlockTime, sizeForkTime.load())));
+    result.push_back(Pair("sizelimit", Params().GetConsensus().MaxBlockSize(nBlockTime, sizeForkTime.load())));
+    result.push_back(Pair("txsizelimit", Params().GetConsensus().MaxTransactionSize(nBlockTime, sizeForkTime.load())));
     result.push_back(Pair("curtime", nBlockTime));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
