@@ -97,3 +97,7 @@ CLEANFILES = gen_context src/ecmult_static_context.h
 endif
 
 EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
+
+if ENABLE_MODULE_ECDH
+include src/modules/ecdh/Makefile.am.include
+endif

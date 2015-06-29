@@ -2356,6 +2356,10 @@ void run_ecdsa_openssl(void) {
 }
 #endif
 
+#ifdef ENABLE_MODULE_ECDH
+# include "modules/ecdh/tests_impl.h"
+#endif
+
 int main(int argc, char **argv) {
     unsigned char seed16[16] = {0};
     unsigned char run32[32] = {0};
@@ -2442,6 +2446,11 @@ int main(int argc, char **argv) {
     /* endomorphism tests */
 #ifdef USE_ENDOMORPHISM
     run_endomorphism_tests();
+#endif
+
+#ifdef ENABLE_MODULE_ECDH
+    /* ecdh tests */
+    run_ecdh_tests();
 #endif
 
     /* ecdsa tests */

@@ -102,6 +102,11 @@ AC_ARG_ENABLE(ecmult_static_precomputation,
     [use_ecmult_static_precomputation=$enableval],
     [use_ecmult_static_precomputation=yes])
 
+AC_ARG_ENABLE(module_ecdh,
+    AS_HELP_STRING([--enable-module-ecdh],[enable ECDH shared secret computation (default is no)]),
+    [enable_module_ecdh=$enableval],
+    [enable_module_ecdh=no])
+
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
 
@@ -315,6 +320,10 @@ if test x"$use_ecmult_static_precomputation" = x"yes"; then
   AC_DEFINE(USE_ECMULT_STATIC_PRECOMPUTATION, 1, [Define this symbol to use a statically generated ecmult table])
 fi
 
+if test x"$enable_module_ecdh" = x"yes"; then
+  AC_DEFINE(ENABLE_MODULE_ECDH, 1, [Define this symbol to enable the ECDH module])
+fi
+
 AC_C_BIGENDIAN()
 
 AC_MSG_NOTICE([Using assembly optimizations: $set_asm])
@@ -322,6 +331,7 @@ AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 AC_MSG_NOTICE([Using endomorphism optimizations: $use_endomorphism])
+AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
 
 AC_CONFIG_HEADERS([src/libsecp256k1-config.h])
 AC_CONFIG_FILES([Makefile libsecp256k1.pc])
@@ -332,6 +342,7 @@ AC_SUBST(SECP_TEST_INCLUDES)
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])
 AM_CONDITIONAL([USE_ECMULT_STATIC_PRECOMPUTATION], [test x"$use_ecmult_static_precomputation" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_ECDH], [test x"$enable_module_ecdh" = x"yes"])
 
 dnl make sure nothing new is exported so that we don't break the cache
 PKGCONFIG_PATH_TEMP="$PKG_CONFIG_PATH"

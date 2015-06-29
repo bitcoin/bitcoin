@@ -526,3 +526,7 @@ int secp256k1_context_randomize(secp256k1_context_t* ctx, const unsigned char *s
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
     return 1;
 }
+
+#ifdef ENABLE_MODULE_ECDH
+# include "modules/ecdh/main_impl.h"
+#endif
