@@ -65,6 +65,8 @@ public:
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** In the future use NetworkIDString() for RPC fields */
     bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
+    /** In the future use NetworkIDString() for RPC fields */
+    int64_t FullRbfActivationTime() const { return nFullRbfActivationTime; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
@@ -92,6 +94,7 @@ protected:
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
     bool fTestnetToBeDeprecatedFieldRPC;
+    int64_t nFullRbfActivationTime;
     Checkpoints::CCheckpointData checkpointData;
 };
 

@@ -62,6 +62,7 @@ bool fCheckpointsEnabled = true;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
+int64_t nFullRbfActivationTime = -1;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
@@ -1072,6 +1073,76 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
             if (sConflicts.size())
             {
+                const bool fFullRBF = nFullRbfActivationTime && GetAdjustedTime() >= nFullRbfActivationTime;
+
+                if (!fFullRBF)
+                {
+                    // Prior to the full-RBF activation time first-seen-safe
+                    // rules are enforced.
+
+                    // For simplicity we only replace transactions on a 1-for-1
+                    // basis; we don't, for instance, look at all outputs paid
+                    // by the set of replaced transactions.
+                    if (sConflicts.size() > 1)
+                        return state.DoS(0, error("AcceptToMemoryPool: replacement %s conflicts with more than one other transaction",
+                                                  hash.ToString()),
+                                         REJECT_DUPLICATE, "bad-txns-inputs-spent");
+
+                    const uint256 hashConflicting = *sConflicts.begin();
+                    const CTransaction txConflicting = pool.mapTx[hashConflicting].GetTx();
+
+                    // The conflicting transaction's vout must be a subset of the
+                    // replacement. Outputs can pay more than before, but not less.
+                    // For simplicity we require that the order of outputs be
+                    // unchanged.
+                    if (tx.vout.size() < txConflicting.vout.size())
+                    {
+                        return state.DoS(0, error("AcceptToMemoryPool: replacement has %s fewer outputs than original %s",
+                                                  hash.ToString(),
+                                                  hashConflicting.ToString()),
+                                         REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                    }
+                    for (unsigned int j = 0; j < txConflicting.vout.size(); j++)
+                    {
+                        if (txConflicting.vout[j].scriptPubKey != tx.vout[j].scriptPubKey ||
+                            txConflicting.vout[j].nValue > tx.vout[j].nValue)
+                        {
+                            return state.DoS(0, error("AcceptToMemoryPool: replacement %s outputs not a subset of original %s",
+                                                      hash.ToString(),
+                                                      hashConflicting.ToString()),
+                                             REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                        }
+                    }
+
+                    // Check that any new inputs spend only confirmed coins.
+                    //
+                    // Replacing a transaction with one that spends unconfirmed
+                    // outputs could be used as a way of preventing a tx from
+                    // being mined, increasing the chance of a zeroconf
+                    // doublespend.
+                    //
+                    // It also might not be economically rational for the
+                    // miner, however it's enough of an edge case that we'll
+                    // ignore it for full-RBF mode; the mempool isn't really
+                    // sophisticated enough yet to analyse this properly, and
+                    // the potential downside for the miner is minimal.
+                    set<COutPoint> setConflictsPrevouts;
+                    BOOST_FOREACH(const CTxIn txin, txConflicting.vin)
+                        setConflictsPrevouts.insert(txin.prevout);
+                    for (unsigned int j = 0; j < tx.vin.size(); j++)
+                    {
+                        if (!setConflictsPrevouts.count(tx.vin[j].prevout))
+                        {
+                            // Rather than check the UTXO set - potentially
+                            // expensive - it's cheaper to just check that the new
+                            // input refers to a tx that is *not* in the mempool.
+                            if (pool.exists(tx.vin[j].prevout.hash))
+                                return state.DoS(0, error("AcceptToMemoryPool: replacement %s adds unconfirmed input, idx %d",
+                                                          hash.ToString(), j),
+                                                 REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                        }
+                    }
+                }
 
                 // Sum up conflicting size/fees for that set and all children.
                 int nTxVisited = 0;
@@ -1114,6 +1185,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                         COutPoint outpoint(hashChildTx, i);
                         if (pool.mapNextTx.count(outpoint))
                         {
+                            if (!fFullRBF)
+                            {
+                                return state.DoS(0, error("AcceptToMemoryPool: outpoint %s:%d already spent; can't replace with %s",
+                                                          hashChildTx.ToString(), i,
+                                                          hash.ToString()),
+                                                 REJECT_DUPLICATE, "bad-txns-inputs-spent");
+                            }
                             sConflicts.insert(pool.mapNextTx[outpoint].ptx->GetHash());
                         }
                     }
