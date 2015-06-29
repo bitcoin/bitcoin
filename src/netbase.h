@@ -118,6 +118,9 @@ class CSubNet
         CSubNet();
         explicit CSubNet(const std::string &strSubnet, bool fAllowLookup = false);
 
+        //constructor for single ip subnet (<ipv4>/32 or <ipv6>/128)
+        explicit CSubNet(const CNetAddr &addr);
+
         bool Match(const CNetAddr &addr) const;
 
         std::string ToString() const;
