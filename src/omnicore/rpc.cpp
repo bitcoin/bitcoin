@@ -490,7 +490,6 @@ Value getproperty_MP(const Array& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-
         if (!_my_sps->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
@@ -596,11 +595,12 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     RequireExistingProperty(propertyId);
     RequireCrowdsale(propertyId);
 
-    LOCK(cs_tally);
-
     CMPSPInfo::Entry sp;
-    if (!_my_sps->getSP(propertyId, sp)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+    {
+        LOCK(cs_tally);
+        if (!_my_sps->getSP(propertyId, sp)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+        }
     }
 
     bool showVerbose = false;
@@ -620,6 +620,9 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
 
     if (active) {
         bool crowdFound = false;
+
+        LOCK(cs_tally);
+
         for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
             const CMPCrowd& crowd = it->second;
             if (propertyId == crowd.getPropertyId()) {
@@ -713,7 +716,7 @@ Value getactivecrowdsales_MP(const Array& params, bool fHelp)
 
     Array response;
 
-    LOCK(cs_tally);
+    LOCK2(cs_main, cs_tally);
 
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
@@ -792,7 +795,6 @@ Value getgrants_MP(const Array& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-
         if (false == _my_sps->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
@@ -2067,7 +2069,11 @@ Value gettrade_MP(const Array& params, bool fHelp)
 
     // everything seems ok, now add status and add array of matches to the object
     // work out status
-    bool orderOpen = MetaDEx_isOpen(hash, propertyId);
+    bool orderOpen = false;
+    {
+        LOCK(cs_tally);
+        orderOpen = MetaDEx_isOpen(hash, propertyId);
+    }
     bool partialFilled = false;
     bool filled = false;
     string statusText;
