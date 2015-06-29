@@ -1167,18 +1167,19 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("listblocktransactions_MP", "279007")
         );
 
-    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
-
     int blockHeight = params[0].get_int();
 
     RequireHeightInChain(blockHeight);
 
     // next let's obtain the block for this height
-    CBlockIndex* pBlockIndex = chainActive[blockHeight];
-
     CBlock block;
-    if (!ReadBlockFromDisk(block, pBlockIndex)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block from disk");
+    {
+        LOCK(cs_main);
+        CBlockIndex* pBlockIndex = chainActive[blockHeight];
+
+        if (!ReadBlockFromDisk(block, pBlockIndex)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block from disk");
+        }
     }
 
     Array response;
@@ -1260,7 +1261,12 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
     CMPMetaDEx temp_metadexoffer;
 
     // replace initial MP detection with levelDB lookup instead of parse, this is much faster especially in calls like list/search
-    if (p_txlistdb->exists(wtxid))
+    bool fExists = false;
+    {
+        LOCK(cs_tally);
+        fExists = p_txlistdb->exists(wtxid);
+    }
+    if (fExists)
     {
         //transaction is in levelDB, so we can attempt to parse it
         int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
@@ -1282,11 +1288,18 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                 uint64_t tmpVout;
                 uint64_t tmpNValue;
                 uint64_t tmpPropertyId;
-                p_txlistdb->getPurchaseDetails(wtxid,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                {
+                    LOCK(cs_tally);
+                    p_txlistdb->getPurchaseDetails(wtxid,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                }
                 txobj->push_back(Pair("sendingaddress", tmpBuyer));
                 // get the details of sub records for payment(s) in the tx and push into an array
                 Array purchases;
-                int numberOfPurchases=p_txlistdb->getNumberOfPurchases(wtxid);
+                int numberOfPurchases = 0;
+                {
+                    LOCK(cs_tally);
+                    numberOfPurchases = p_txlistdb->getNumberOfPurchases(wtxid);
+                }
                 if (0<numberOfPurchases)
                 {
                     for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++)
@@ -1296,7 +1309,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                         string seller;
                         uint64_t vout;
                         uint64_t nValue;
-                        p_txlistdb->getPurchaseDetails(wtxid,purchaseNumber,&buyer,&seller,&vout,&propertyId,&nValue);
+                        {
+                            LOCK(cs_tally);
+                            p_txlistdb->getPurchaseDetails(wtxid,purchaseNumber,&buyer,&seller,&vout,&propertyId,&nValue);
+                        }
                         bIsMine = false;
                         bIsMine = IsMyAddress(buyer);
                         if (!bIsMine)
@@ -1334,7 +1350,10 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                     int tmpblock=0;
                     uint32_t tmptype=0;
                     uint64_t amountNew=0;
-                    valid=getValidMPTX(wtxid, &tmpblock, &tmptype, &amountNew);
+                    {
+                        LOCK(cs_tally);
+                        valid=getValidMPTX(wtxid, &tmpblock, &tmptype, &amountNew);
+                    }
                     //populate based on type of tx
                     switch (MPTxTypeInt)
                     {
@@ -1399,6 +1418,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                             mp_obj.step2_SmartProperty(rc);
                             if (0 == rc)
                             {
+                                LOCK(cs_tally);
                                 propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
                                 amount = getTotalTokens(propertyId);
                                 propertyName = mp_obj.getSPName();
@@ -1408,6 +1428,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                             mp_obj.step2_SmartProperty(rc);
                             if (0 == rc)
                             {
+                                LOCK(cs_tally);
                                 propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
                                 amount = 0; // crowdsale txs always create zero tokens
                                 propertyName = mp_obj.getSPName();
@@ -1419,6 +1440,7 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                             mp_obj.step2_SmartProperty(rc);
                             if (0 == rc)
                             {
+                                LOCK(cs_tally);
                                 propertyId = _my_sps->findSPByTX(wtxid); // propertyId of created property (if valid)
                                 amount = 0; // crowdsale txs always create zero tokens
                                 propertyName = mp_obj.getSPName();
@@ -1430,6 +1452,8 @@ int populateRPCTransactionObject(const uint256& txid, Object *txobj, std::string
                                 propertyId = mp_obj.getProperty();
                                 amount = mp_obj.getAmount();
                                 showReference = true;
+
+                                LOCK(cs_tally);
                                 //check crowdsale invest?
                                 crowdPurchase = isCrowdsalePurchase(wtxid, refAddress, &crowdPropertyId, &crowdTokens, &issuerTokens);
                                 if (crowdPurchase)
@@ -1617,13 +1641,9 @@ Value gettransaction_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettransaction_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
-
     uint256 hash;
     hash.SetHex(params[0].get_str());
     Object txobj;
-
-    LOCK(cs_tally);
 
     // make a request to new RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, &txobj);
@@ -1670,8 +1690,6 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("listtransactions_MP", "")
         );
 
-    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
-
     CWallet *wallet = pwalletMain;
     string sAddress = "";
     string addressParam = "";
@@ -1704,16 +1722,22 @@ Value listtransactions_MP(const Array& params, bool fHelp)
 
     Array response; //prep an array to hold our output
 
-    LOCK(cs_tally);
-
     // STO has no inbound transaction, so we need to use an insert methodology here
-    string mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
+    std::string mySTOReceipts;
+    {
+        LOCK(cs_tally);
+        mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
+    }
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
     int64_t lastTXBlock = 999999;
 
     std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    CWallet::TxItems txOrdered;
+    {
+        LOCK(pwalletMain->cs_wallet);
+        txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    }
 
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
@@ -1743,7 +1767,10 @@ Value listtransactions_MP(const Array& params, bool fHelp)
                             Array receiveArray;
                             uint64_t tmpAmount = 0;
                             uint64_t stoFee = 0;
-                            s_stolistdb->getRecipients(hash, addressParam, &receiveArray, &tmpAmount, &stoFee);
+                            {
+                                LOCK(cs_tally);
+                                s_stolistdb->getRecipients(hash, addressParam, &receiveArray, &tmpAmount, &stoFee);
+                            }
                             // add matches array and stofee to object
                             txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
                             txobj.push_back(Pair("recipients", receiveArray));
@@ -1823,11 +1850,12 @@ Value getinfo_MP(const Array& params, bool fHelp)
     infoResponse.push_back(Pair("bitcoincoreversion", BitcoinCoreVersion()));
     infoResponse.push_back(Pair("commitinfo", BuildCommit()));
 
-    LOCK(cs_tally);
-
     // provide the current block details
     int block = GetHeight();
     int64_t blockTime = GetLatestBlockTime();
+
+    LOCK(cs_tally);
+
     int blockMPTransactions = p_txlistdb->getMPTransactionCountBlock(block);
     int totalMPTransactions = p_txlistdb->getMPTransactionCountTotal();
     int totalMPTrades = t_tradelistdb->getMPTradeCountTotal();
@@ -1895,8 +1923,6 @@ Value getsto_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("getsto_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
-
     uint256 hash;
     hash.SetHex(params[0].get_str());
     string filterAddress = "";
@@ -1906,8 +1932,6 @@ Value getsto_MP(const Array& params, bool fHelp)
     uint256 blockHash = 0;
     if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
     uint64_t propertyId = 0;
-
-    LOCK(cs_tally);
 
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(wtx, 0, 0, mp_obj);
@@ -1950,7 +1974,10 @@ Value getsto_MP(const Array& params, bool fHelp)
         Array receiveArray;
         uint64_t tmpAmount = 0;
         uint64_t stoFee = 0;
-        s_stolistdb->getRecipients(hash, filterAddress, &receiveArray, &tmpAmount, &stoFee);
+        {
+            LOCK(cs_tally);
+            s_stolistdb->getRecipients(hash, filterAddress, &receiveArray, &tmpAmount, &stoFee);
+        }
         // add matches array and stofee to object
         txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
         txobj.push_back(Pair("recipients", receiveArray));
@@ -1974,8 +2001,6 @@ Value gettrade_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    // LOCK2(cs_main, pwalletMain->cs_wallet) via non-threadSafe flag in rpcserver.cpp
-
     // Prepare a few vars
     uint256 hash;
     Object tradeobj;
@@ -1990,8 +2015,6 @@ Value gettrade_MP(const Array& params, bool fHelp)
     // Obtain the transaction
     hash.SetHex(params[0].get_str());
     if (!GetTransaction(hash, wtx, blockHash, true)) { return MP_TX_NOT_FOUND; }
-
-    LOCK(cs_tally);
 
     // Ensure it can be parsed OK
     int parseRC = ParseTransaction(wtx, 0, 0, mp_obj);
@@ -2034,8 +2057,10 @@ Value gettrade_MP(const Array& params, bool fHelp)
     Array tradeArray;
     int64_t totalBought = 0;
     int64_t totalSold = 0;
-    t_tradelistdb->getMatchingTrades(hash, propertyId, &tradeArray, &totalSold, &totalBought);
-
+    {
+        LOCK(cs_tally);
+        t_tradelistdb->getMatchingTrades(hash, propertyId, &tradeArray, &totalSold, &totalBought);
+    }
     // get action byte
     int actionByte = 0;
     if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) { actionByte = (int)temp_metadexoffer.getAction(); }
@@ -2055,6 +2080,8 @@ Value gettrade_MP(const Array& params, bool fHelp)
     if((orderOpen) && (!partialFilled)) statusText = "open"; // offer exists but no matches yet
     if((orderOpen) && (partialFilled)) statusText = "open part filled"; // offer exists, some matches but not filled yet
     if(actionByte==1) txobj.push_back(Pair("status", statusText)); // no status for cancel txs
+
+    LOCK(cs_tally);
 
     // add cancels array to object and set status as cancelled only if cancel type
     if(actionByte != 1) {
