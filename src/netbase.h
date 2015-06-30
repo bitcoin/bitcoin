@@ -73,7 +73,12 @@ class CNetAddr
         bool IsRFC4862() const; // IPv6 autoconfig (FE80::/64)
         bool IsRFC6052() const; // IPv6 well-known prefix (64:FF9B::/96)
         bool IsRFC6145() const; // IPv6 IPv4-translated address (::FFFF:0:0:0/96)
-        bool IsTor() const;
+
+        // Returns true if the IP is a .onion address mapped into IPv6 space using the OnionCat scheme.
+        // This is used to ensure hidden services (which have no exposed IP address) can be represented
+        // internally in a uniform manner.
+        bool IsOnionCat() const;
+
         bool IsLocal() const;
         bool IsRoutable() const;
         bool IsValid() const;
