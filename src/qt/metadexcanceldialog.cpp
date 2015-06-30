@@ -92,6 +92,8 @@ void MetaDExCancelDialog::ReinitUI()
  */
 void MetaDExCancelDialog::UpdateAddressSelector()
 {
+    LOCK(cs_tally);
+
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         md_PricesMap & prices = my_it->second;
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
@@ -139,6 +141,8 @@ void MetaDExCancelDialog::UpdateCancelCombo()
     }
 
     ui->cancelCombo->clear();
+
+    LOCK(cs_tally);
 
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         md_PricesMap & prices = my_it->second;
@@ -262,6 +266,9 @@ void MetaDExCancelDialog::SendCancelTransaction()
 
     if (action == 2) { // do not attempt to reverse calc values from price, pull suitable ForSale/Desired amounts from metadex map
         bool matched = false;
+
+        LOCK(cs_tally);
+
         for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
             if (my_it->first != propertyIdForSale) { continue; } // move along, this isn't the prop you're looking for
             md_PricesMap & prices = my_it->second;

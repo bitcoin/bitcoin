@@ -185,6 +185,7 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
             QTableWidgetItem *dateCell = new QTableWidgetItem;
             QDateTime txTime;
             if (objTH.blockHeight > 0) {
+                LOCK(cs_main);
                 CBlockIndex* pBlkIdx = chainActive[objTH.blockHeight];
                 if (NULL != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
                 dateCell->setData(Qt::DisplayRole, txTime);
@@ -309,7 +310,10 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // use levelDB to perform a fast check on whether it's a bitcoin or Omni tx and whether it's a trade
         std::string tempStrValue;
-        if (!p_txlistdb->getTX(hash, tempStrValue)) continue;
+        {
+            LOCK(cs_tally);
+            if (!p_txlistdb->getTX(hash, tempStrValue)) continue;
+        }
         std::vector<std::string> vstr;
         boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
         if (vstr.size() > 2) {
@@ -374,8 +378,11 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
                 propertyIdDesired = temp_metadexoffer.getDesProperty();
                 divisibleDesired = isPropertyDivisible(propertyIdDesired);
                 amountDesired = temp_metadexoffer.getAmountDesired();
-                t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
-                orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
+                {
+                    LOCK(cs_tally);
+                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+                    orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
+                }
             }
         }
 
@@ -432,7 +439,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 // This function will loop through each of the rows in tradeHistoryTable and check if the details need updating
 void TradeHistoryDialog::UpdateData()
 {
-    int chainHeight = chainActive.Height();
+    int chainHeight = GetHeight();
     int rowCount = ui->tradeHistoryTable->rowCount();
     ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
     for (int row = 0; row < rowCount; row++) {
@@ -458,9 +465,11 @@ void TradeHistoryDialog::UpdateData()
         int64_t totalBought = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
-        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
-        orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
-
+        {
+            LOCK(cs_tally);
+            t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+            orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
+        }
         // work out new status & icon
         bool partialFilled = false;
         bool filled = false;
@@ -594,7 +603,11 @@ void TradeHistoryDialog::showDetails()
             t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
 
             // obtain the status of the trade
-            bool orderOpen = MetaDEx_isOpen(txid, propertyId);
+            bool orderOpen = false;
+            {
+                LOCK(cs_tally);
+                orderOpen = MetaDEx_isOpen(txid, propertyId);
+            }
             bool partialFilled = false, filled = false;
             string statusText = "unknown";
             if (totalSold>0) partialFilled = true;
