@@ -54,6 +54,10 @@ using std::vector;
 using namespace json_spirit;
 using namespace mastercore;
 
+bool CompareRPCSortKey(const std::pair<std::string, Object>& firstJSONObj, const std::pair<std::string, Object>& secondJSONObj)
+{
+    return firstJSONObj.first > secondJSONObj.first;
+}
 
 void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 {
@@ -1329,7 +1333,9 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     if (params.size() > 4) nEndBlock = params[4].get_int64();
     if (nEndBlock < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative end block");
 
-    Array response; //prep an array to hold our output
+    std::vector<std::pair<std::string,Object> > vecResponse;
+    std::set<uint256> seenHashes;
+    Array response;
 
     // STO has no inbound transaction, so we need to use an insert methodology here
     std::string mySTOReceipts;
@@ -1339,7 +1345,7 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     }
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
-    int64_t lastTXBlock = 999999;
+    int nSTO = vecReceipts.size();
 
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered;
@@ -1360,56 +1366,69 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             int blockHeight = pBlockIndex->nHeight;
             if ((blockHeight < nStartBlock) || (blockHeight > nEndBlock)) continue; // ignore it if not within our range
 
-            // ### START STO CHECK ### (was a STO received between last and next wallet transactions)
-            for(uint32_t i = 0; i<vecReceipts.size(); i++) {
-                std::vector<std::string> svstr;
-                boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), token_compress_on);
-                if (svstr.size() != 4) {
-                    PrintToLog("STODB Error - number of tokens is not as expected (%s)\n", vecReceipts[i]);
-                    continue;
-                }
-                if (atoi(svstr[1]) < lastTXBlock && atoi(svstr[1]) > blockHeight) { // STO receipt found - insert into response
-                    uint256 hash;
-                    hash.SetHex(svstr[0]);
-                    Object txobj;
-                    int populateResult = -1;
-                    populateResult = populateRPCTransactionObject(hash, txobj); // don't spam listtransactions output with STO extended details
-                    if (0 == populateResult) response.push_back(txobj);
-                }
-            }
-            // ### END STO CHECK ###
-
+            // make a request to new RPC populator function to populate a transaction object (if it is a MP transaction)
             uint256 hash = pwtx->GetHash();
             Object txobj;
-
-            // make a request to new RPC populator function to populate a transaction object (if it is a MP transaction)
             int populateResult = -1;
             if (addressFilter) {
                 populateResult = populateRPCTransactionObject(hash, txobj, addressParam); // pass in an address filter
             } else {
                 populateResult = populateRPCTransactionObject(hash, txobj); // no address filter
             }
-            if (0 == populateResult) response.push_back(txobj); // add the transaction object to the response array if we get a 0 rc
-            lastTXBlock = blockHeight;
+            if (0 == populateResult) {
+                // obtain the wallet order position for sorting
+                std::string sortKey = strprintf("%06d%010d", blockHeight, pwtx->nOrderPos);
+                vecResponse.push_back(make_pair(sortKey, txobj)); // add the transaction object to the response array if we get a 0 rc
+                seenHashes.insert(hash);
+            }
 
             // don't burn time doing more work than we need to
-            if ((int)response.size() >= (nCount+nFrom)) break;
+            if ((int)vecResponse.size() >= (nCount+nFrom+nSTO)) break;
         }
     }
 
-    // sort array here and cut on nFrom and nCount
+    // Insert STO receipts
+    for (uint32_t i = 0; i<vecReceipts.size(); i++) {
+        std::vector<std::string> svstr;
+        boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), token_compress_on);
+        if (svstr.size() != 4) {
+            PrintToLog("STODB Error - number of tokens is not as expected (%s)\n", vecReceipts[i]);
+            continue;
+        }
+        int blockHeight = atoi(svstr[1]);
+        if (blockHeight >= nStartBlock && blockHeight <= nEndBlock) { // STO receipt found within our range
+            uint256 hash;
+            hash.SetHex(svstr[0]);
+            if (seenHashes.find(hash) != seenHashes.end()) continue; // ignore if we've already seen this tx during wallet parsing
+            Object txobj;
+            int populateResult = -1;
+            populateResult = populateRPCTransactionObject(hash, txobj);
+            if (0 == populateResult) {
+                std::string sortKey = strprintf("%06d%010d", blockHeight, 0); // no wallet position to use for STO receipts
+                vecResponse.push_back(make_pair(sortKey, txobj));
+            }
+
+        }
+    }
+
+    // sort the response via block then wallet position and add to response array
+    std::sort(vecResponse.begin(), vecResponse.end(), CompareRPCSortKey);
+    for (std::vector<std::pair<std::string,Object> >::iterator iter = vecResponse.begin(); iter != vecResponse.end(); ++iter) {
+        response.push_back(iter->second);
+    }
+
+    // cut on nFrom and nCount
     if (nFrom > (int)response.size()) nFrom = response.size();
     if ((nFrom + nCount) > (int)response.size()) nCount = response.size() - nFrom;
     Array::iterator first = response.begin();
     std::advance(first, nFrom);
     Array::iterator last = response.begin();
     std::advance(last, nFrom+nCount);
-
     if (last != response.end()) response.erase(last, response.end());
     if (first != response.begin()) response.erase(response.begin(), first);
+    std::reverse(response.begin(), response.end());
 
-    std::reverse(response.begin(), response.end()); // return oldest to newest?
-    return response;   // return response array for JSON serialization
+    return response;
 }
 
 Value getinfo_MP(const Array& params, bool fHelp)
