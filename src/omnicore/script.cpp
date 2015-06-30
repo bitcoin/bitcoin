@@ -112,9 +112,10 @@ bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<st
         mTemplates.insert(std::make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
 
         // Empty, provably prunable, data-carrying output
-        mTemplates.insert(std::make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
         mTemplates.insert(std::make_pair(TX_NULL_DATA, CScript() << OP_RETURN));
     }
+
+    vSolutionsRet.clear();
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
@@ -124,6 +125,20 @@ bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<st
         std::vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
         return true;
+    }
+
+    // Provably prunable, data-carrying output
+    //
+    // So long as script passes the IsUnspendable() test and all but the first
+    // byte passes the IsPushOnly() test we don't care what exactly is in the
+    // script.
+    if (scriptPubKey.size() >= 2 && scriptPubKey.at(0) == OP_RETURN)
+    {
+        CScript script(scriptPubKey.begin()+1, scriptPubKey.end());
+        if (script.IsPushOnly()) {
+            typeRet = TX_NULL_DATA;
+            return true;
+        }
     }
 
     // Scan templates
@@ -197,10 +212,6 @@ bool SafeSolver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<st
                 }
                 else
                     break;
-            }
-            else if (opcode2 == OP_SMALLDATA)
-            {
-                // No size limit enforced
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
             {

@@ -37,10 +37,11 @@ matrix:
     - compiler: ": 64-bit"
       env: HOST=x86_64-unknown-linux-gnu RUN_OMNIJ_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
     - compiler: ": Win64"
-      env: HOST=x86_64-w64-mingw32 GOAL="install" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
+      env: HOST=x86_64-w64-mingw32 GOAL="deploy" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
       addons:
         apt:
           packages:
+            - nsis
             - gcc-mingw-w64-x86-64
             - g++-mingw-w64-x86-64
             - binutils-mingw-w64-x86-64

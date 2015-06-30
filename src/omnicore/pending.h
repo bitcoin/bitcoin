@@ -2,7 +2,9 @@
 #define OMNICORE_PENDING_H
 
 class uint256;
-class CMPPending;
+struct CMPPending;
+
+#include "sync.h"
 
 #include <stdint.h>
 #include <map>
@@ -12,6 +14,8 @@ namespace mastercore
 {
 //! Map of pending transaction objects
 typedef std::map<uint256, CMPPending> PendingMap;
+//! Guards my_pending
+extern CCriticalSection cs_pending;
 //! Global map of pending transaction objects
 extern PendingMap my_pending;
 

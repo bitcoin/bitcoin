@@ -1,17 +1,15 @@
-// global Master Protocol header file
-// globals consts (DEFINEs for now) should be here
-//
-// for now (?) class declarations go here -- work in progress; probably will get pulled out into a separate file, note: some declarations are still in the .cpp file
-
 #ifndef OMNICORE_OMNICORE_H
 #define OMNICORE_OMNICORE_H
 
 class CBitcoinAddress;
 class CBlockIndex;
+class CCoinsView;
+class CCoinsViewCache;
 class CTransaction;
 
 #include "omnicore/log.h"
 #include "omnicore/persistence.h"
+#include "omnicore/tally.h"
 
 #include "sync.h"
 #include "uint256.h"
@@ -28,6 +26,7 @@ class CTransaction;
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 using json_spirit::Array;
 
@@ -46,29 +45,20 @@ int const MAX_STATE_HISTORY = 50;
 
 #define SP_STRING_FIELD_LEN 256
 
-// some boost formats
-#define FORMAT_BOOST_TXINDEXKEY "index-tx-%s"
-#define FORMAT_BOOST_SPKEY      "sp-%d"
-
 // Omni Layer Transaction Class
+#define NO_MARKER    0
 #define OMNI_CLASS_A 1
 #define OMNI_CLASS_B 2
 #define OMNI_CLASS_C 3
 
-// Maximum number of keys supported in Class B
-#define CLASS_B_MAX_SENDABLE_PACKETS 2
-
-// Master Protocol Transaction (Packet) Version
+// Omni Layer Transaction (Packet) Version
 #define MP_TX_PKT_V0  0
 #define MP_TX_PKT_V1  1
-
-// Maximum outputs per BTC Transaction
-#define MAX_BTC_OUTPUTS 16
 
 #define MIN_PAYLOAD_SIZE     5
 #define PACKET_SIZE_CLASS_A 19
 #define PACKET_SIZE         31
-#define MAX_PACKETS         64
+#define MAX_PACKETS        255
 
 // Transaction types, from the spec
 enum TransactionType {
@@ -158,139 +148,23 @@ enum FILETYPES {
 // forward declarations
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
-std::string FormatMP(unsigned int, int64_t n, bool fSign = false);
-int64_t feeCheck(const string &address);
+std::string FormatMP(uint32_t, int64_t n, bool fSign = false);
+bool feeCheck(const std::string& address, size_t nDataSize);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
 
-/** Used to indicate, whether to automatically commit created transactions. */
+/** Returns the Exodus crowdsale address. */
+const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock = 0);
+
+/** Returns the marker for class C transactions. */
+const std::vector<unsigned char> GetOmMarker();
+
+//! Used to indicate, whether to automatically commit created transactions
 extern bool autoCommit;
 
+//! Global lock for state objects
 extern CCriticalSection cs_tally;
-
-enum TallyType { BALANCE = 0, SELLOFFER_RESERVE = 1, ACCEPT_RESERVE = 2, PENDING = 3, METADEX_RESERVE = 4, TALLY_TYPE_COUNT };
-
-class CMPTally
-{
-private:
-typedef struct
-{
-  int64_t balance[TALLY_TYPE_COUNT];
-} BalanceRecord;
-
-  typedef std::map<unsigned int, BalanceRecord> TokenMap;
-  TokenMap mp_token;
-  TokenMap::iterator my_it;
-
-  bool propertyExists(unsigned int which_property) const
-  {
-  const TokenMap::const_iterator it = mp_token.find(which_property);
-
-    return (it != mp_token.end());
-  }
-
-public:
-
-  unsigned int init()
-  {
-  unsigned int ret = 0;
-
-    my_it = mp_token.begin();
-    if (my_it != mp_token.end()) ret = my_it->first;
-
-    return ret;
-  }
-
-  unsigned int next()
-  {
-  unsigned int ret;
-
-    if (my_it == mp_token.end()) return 0;
-
-    ret = my_it->first;
-
-    ++my_it;
-
-    return ret;
-  }
-
-  bool updateMoney(unsigned int which_property, int64_t amount, TallyType ttype)
-  {
-  bool bRet = false;
-  int64_t now64;
-
-    if (TALLY_TYPE_COUNT <= ttype) return false;
-
-    LOCK(cs_tally);
-
-    now64 = mp_token[which_property].balance[ttype];
-
-    if ((PENDING != ttype) && (0>(now64 + amount)))
-    {
-    }
-    else
-    {
-      now64 += amount;
-      mp_token[which_property].balance[ttype] = now64;
-
-      bRet = true;
-    }
-
-    return bRet;
-  }
-
-  // the constructor -- create an empty tally for an address
-  CMPTally()
-  {
-    my_it = mp_token.begin();
-  }
-
-  int64_t print(int which_property = OMNI_PROPERTY_MSC, bool bDivisible = true)
-  {
-  int64_t money = 0;
-  int64_t so_r = 0;
-  int64_t a_r = 0;
-  int64_t pending = 0;
-
-    if (propertyExists(which_property))
-    {
-      money = mp_token[which_property].balance[BALANCE];
-      so_r = mp_token[which_property].balance[SELLOFFER_RESERVE];
-      a_r = mp_token[which_property].balance[ACCEPT_RESERVE];
-      pending = mp_token[which_property].balance[PENDING];
-    }
-
-    if (bDivisible)
-    {
-      PrintToConsole("%22s [SO_RESERVE= %22s , ACCEPT_RESERVE= %22s ] %22s\n",
-       FormatDivisibleMP(money, true), FormatDivisibleMP(so_r, true), FormatDivisibleMP(a_r, true), FormatDivisibleMP(pending, true));
-    }
-    else
-    {
-      PrintToConsole("%14lu [SO_RESERVE= %14lu , ACCEPT_RESERVE= %14lu ] %14ld\n", money, so_r, a_r, pending);
-    }
-
-    return (money + so_r + a_r);
-  }
-
-  int64_t getMoney(unsigned int which_property, TallyType ttype) const
-  {
-    if (TALLY_TYPE_COUNT <= ttype) return 0;
-
-    int64_t money = 0;
-
-    LOCK(cs_tally);
-    TokenMap::const_iterator it = mp_token.find(which_property);
-
-    if (it != mp_token.end()) {
-        const BalanceRecord& record = it->second;
-        money = record.balance[ttype];
-    }
-
-    return money;
-  }
-};
 
 /** LevelDB based storage for STO recipients.
  */
@@ -383,27 +257,27 @@ public:
     bool isMPinBlockRange(int, int, bool);
 };
 
-extern uint64_t global_metadex_market;
-//! Available balances of wallet properties in the main ecosystem
-extern std::map<uint32_t, int64_t> global_balance_money_maineco;
-//! Reserved balances of wallet properties in the main ecosystem
-extern std::map<uint32_t, int64_t> global_balance_reserved_maineco;
-//! Available balances of wallet properties in the test ecosystem
-extern std::map<uint32_t, int64_t> global_balance_money_testeco;
-//! Reserved balances of wallet properties in the test ecosystem
-extern std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Available balances of wallet properties
+extern std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+extern std::map<uint32_t, int64_t> global_balance_reserved;
+//! Vector containing a list of properties relative to the wallet
+extern std::set<uint32_t> global_wallet_property_list;
 
-int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype);
-int64_t getUserAvailableMPbalance(const string &Address, unsigned int property);
-bool IsMyAddress(const std::string &address);
+int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype);
+int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId);
+int IsMyAddress(const std::string& address);
 
-string getLabel(const string &address);
+std::string getLabel(const std::string& address);
 
 /** Global handler to initialize Omni Core. */
 int mastercore_init();
 
 /** Global handler to shut down Omni Core. */
 int mastercore_shutdown();
+
+/** Global handler to total wallet balances. */
+void CheckWalletUpdate(bool forceUpdate = false);
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
@@ -414,42 +288,54 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex );
 
 namespace mastercore
 {
-extern std::map<string, CMPTally> mp_tally_map;
+extern std::map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
 
-string strMPProperty(unsigned int i);
+// TODO: move, rename
+extern CCoinsView viewDummy;
+extern CCoinsViewCache view;
+//! Guards coins view cache
+extern CCriticalSection cs_tx_cache;
 
-int GetHeight(void);
-uint32_t GetLatestBlockTime(void);
+std::string strMPProperty(uint32_t propertyId);
+
+int GetHeight();
+uint32_t GetLatestBlockTime();
 CBlockIndex* GetBlockIndex(const uint256& hash);
 
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 
 std::string FormatIndivisibleMP(int64_t n);
 
-int ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
-                 int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit);
+int ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+                 int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit);
 
-bool isTestEcosystemProperty(unsigned int property);
-bool isMainEcosystemProperty(unsigned int property);
+bool isTestEcosystemProperty(uint32_t propertyId);
+bool isMainEcosystemProperty(uint32_t propertyId);
 uint32_t GetNextPropertyId(bool maineco); // maybe move into sp
 
-CMPTally *getTally(const string & address);
+CMPTally* getTally(const std::string& address);
 
-int64_t getTotalTokens(unsigned int propertyId, int64_t *n_owners_total = NULL);
-int set_wallet_totals();
+int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
 
 char *c_strMasterProtocolTXType(int i);
 
-bool isTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty = false);
+/** Checks, if the script type is allowed as input. */
+bool IsAllowedInputType(int whichType, int nBlock);
+/** Checks, if the script type qualifies as output. */
+bool IsAllowedOutputType(int whichType, int nBlock);
+/** Checks, if the transaction type and version is supported and enabled. */
+bool IsTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty = false);
+/** Returns the encoding class, used to embed a payload. */
+int GetEncodingClass(const CTransaction& tx, int nBlock);
 
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 
-bool update_tally_map(string who, unsigned int which_currency, int64_t amount, TallyType ttype);
+bool update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype);
 
-std::string getTokenLabel(unsigned int propertyId);
+std::string getTokenLabel(uint32_t propertyId);
 }
 
 

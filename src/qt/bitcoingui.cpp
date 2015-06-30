@@ -70,6 +70,8 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     labelEncryptionIcon(0),
     labelConnectionsIcon(0),
     labelBlocksIcon(0),
+    labelOmniPendingIcon(0),
+    labelOmniPendingText(0),
     progressBarLabel(0),
     progressBar(0),
     progressDialog(0),
@@ -189,6 +191,22 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
 
+    // Notification for pending transactions
+    QFrame *framePending = new QFrame();
+    framePending->setContentsMargins(0,0,0,0);
+    framePending->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    QHBoxLayout *framePendingLayout = new QHBoxLayout(framePending);
+    framePendingLayout->setContentsMargins(3,0,3,0);
+    framePendingLayout->setSpacing(3);
+    framePendingLayout->addStretch();
+    labelOmniPendingIcon = new QLabel();
+    labelOmniPendingText = new QLabel("You have Omni transactions awaiting confirmation.");
+    framePendingLayout->addWidget(labelOmniPendingIcon);
+    framePendingLayout->addWidget(labelOmniPendingText);
+    framePendingLayout->addStretch();
+    labelOmniPendingIcon->hide();
+    labelOmniPendingText->hide();
+
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
     progressBarLabel->setVisible(false);
@@ -205,6 +223,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
         progressBar->setStyleSheet("QProgressBar { background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
     }
 
+    statusBar()->addWidget(framePending);
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
@@ -461,6 +480,9 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         // Show progress dialog
         connect(clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
 
+        // Update Omni pending status
+        connect(clientModel, SIGNAL(refreshOmniPending(bool)), this, SLOT(setOmniPendingStatus(bool)));
+
         rpcConsole->setClientModel(clientModel);
 #ifdef ENABLE_WALLET
         if(walletFrame)
@@ -636,6 +658,12 @@ void BitcoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
+}
+
+void BitcoinGUI::gotoOmniHistoryTab()
+{
+    historyAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoOmniHistoryTab();
 }
 
 void BitcoinGUI::gotoBitcoinHistoryTab()
@@ -955,6 +983,19 @@ bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
         return true;
     }
     return false;
+}
+
+void BitcoinGUI::setOmniPendingStatus(bool pending)
+{
+    if (!pending) {
+        labelOmniPendingIcon->hide();
+        labelOmniPendingText->hide();
+    } else {
+        labelOmniPendingIcon->show();
+        labelOmniPendingText->show();
+        labelOmniPendingIcon->setPixmap(QIcon(":/icons/hourglass").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelOmniPendingIcon->setToolTip(tr("You have Omni transactions awaiting confirmation."));
+    }
 }
 
 void BitcoinGUI::setEncryptionStatus(int status)

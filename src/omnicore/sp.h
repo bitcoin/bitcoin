@@ -8,11 +8,11 @@
 class CBlockIndex;
 class uint256;
 
+#include "serialize.h"
+
 #include <boost/filesystem.hpp>
 
 #include <openssl/sha.h>
-
-#include "json/json_spirit_value.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -23,6 +23,32 @@ class uint256;
 #include <vector>
 
 /** LevelDB based storage for currencies, smart properties and tokens.
+ *
+ * DB Schema:
+ *
+ *  Key:
+ *      char 'B'
+ *  Value:
+ *      uint256 hashBlock
+ *
+ *  Key:
+ *      char 's'
+ *      uint32_t propertyId
+ *  Value:
+ *      CMPSPInfo::Entry info
+ *
+ *  Key:
+ *      char 't'
+ *      uint256 hashTxid
+ *  Value:
+ *      uint32_t propertyId
+ *
+ *  Key:
+ *      char 'b'
+ *      uint256 hashBlock
+ *      uint32_t propertyId
+ *  Value:
+ *      CMPSPInfo::Entry info
  */
 class CMPSPInfo : public CDBBase
 {
@@ -30,26 +56,26 @@ public:
     struct Entry {
         // common SP data
         std::string issuer;
-        unsigned short prop_type;
-        unsigned int prev_prop_id;
+        uint16_t prop_type;
+        uint32_t prev_prop_id;
         std::string category;
         std::string subcategory;
         std::string name;
         std::string url;
         std::string data;
-        uint64_t num_tokens;
+        int64_t num_tokens;
 
         // crowdsale generated SP
-        unsigned int property_desired;
-        uint64_t deadline;
-        unsigned char early_bird;
-        unsigned char percentage;
+        uint32_t property_desired;
+        int64_t deadline;
+        uint8_t early_bird;
+        uint8_t percentage;
 
         // closedearly states, if the SP was a crowdsale and closed due to MAXTOKENS or CLOSE command
         bool close_early;
         bool max_tokens;
-        uint64_t missedTokens;
-        uint64_t timeclosed;
+        int64_t missedTokens;
+        int64_t timeclosed;
         uint256 txid_close;
 
         // other information
@@ -59,14 +85,44 @@ public:
         bool fixed;
         bool manual;
 
-        // for crowdsale properties, schema is 'txid:amtSent:deadlineUnix:userIssuedTokens:IssuerIssuedTokens;'
-        // for manual properties, schema is 'txid:grantAmount:revokeAmount;'
-        std::map<std::string, std::vector<uint64_t> > historicalData;
+        // For crowdsale properties:
+        //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens
+        // For managed properties:
+        //   txid -> granted amount, revoked amount
+        std::map<uint256, std::vector<int64_t> > historicalData;
 
         Entry();
 
-        json_spirit::Object toJSON() const;
-        void fromJSON(const json_spirit::Object& json);
+        ADD_SERIALIZE_METHODS;
+
+        template <typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            READWRITE(issuer);
+            READWRITE(prop_type);
+            READWRITE(prev_prop_id);
+            READWRITE(category);
+            READWRITE(subcategory);
+            READWRITE(name);
+            READWRITE(url);
+            READWRITE(data);
+            READWRITE(num_tokens);
+            READWRITE(property_desired);
+            READWRITE(deadline);
+            READWRITE(early_bird);
+            READWRITE(percentage);
+            READWRITE(close_early);
+            READWRITE(max_tokens);
+            READWRITE(missedTokens);
+            READWRITE(timeclosed);
+            READWRITE(txid_close);
+            READWRITE(txid);
+            READWRITE(creation_block);
+            READWRITE(update_block);
+            READWRITE(fixed);
+            READWRITE(manual);
+            READWRITE(historicalData);
+        }
+
         bool isDivisible() const;
         void print() const;
     };
@@ -76,27 +132,26 @@ private:
     Entry implied_msc;
     Entry implied_tmsc;
 
-    unsigned int next_spid;
-    unsigned int next_test_spid;
+    uint32_t next_spid;
+    uint32_t next_test_spid;
 
 public:
     CMPSPInfo(const boost::filesystem::path& path, bool fWipe);
     virtual ~CMPSPInfo();
 
-    void init(unsigned int nextSPID = 0x3UL, unsigned int nextTestSPID = TEST_ECO_PROPERTY_1);
+    void init(uint32_t nextSPID = 0x3UL, uint32_t nextTestSPID = TEST_ECO_PROPERTY_1);
 
-    unsigned int peekNextSPID(unsigned char ecosystem) const;
-    unsigned int updateSP(unsigned int propertyID, const Entry& info);
-    unsigned int putSP(unsigned char ecosystem, const Entry& info);
-    bool getSP(unsigned int spid, Entry& info) const;
-    bool hasSP(unsigned int spid) const;
-    unsigned int findSPByTX(const uint256& txid) const;
+    uint32_t peekNextSPID(uint8_t ecosystem) const;
+    bool updateSP(uint32_t propertyId, const Entry& info);
+    uint32_t putSP(uint8_t ecosystem, const Entry& info);
+    bool getSP(uint32_t propertyId, Entry& info) const;
+    bool hasSP(uint32_t propertyId) const;
+    uint32_t findSPByTX(const uint256& txid) const;
 
-    int popBlock(const uint256& block_hash);
+    int64_t popBlock(const uint256& block_hash);
 
-    static std::string const watermarkKey;
     void setWatermark(const uint256& watermark);
-    int getWatermark(uint256& watermark) const;
+    bool getWatermark(uint256& watermark) const;
 
     void printAll() const;
 };
@@ -106,39 +161,40 @@ public:
 class CMPCrowd
 {
 private:
-    unsigned int propertyId;
+    uint32_t propertyId;
+    int64_t nValue;
 
-    uint64_t nValue;
+    uint32_t property_desired;
+    int64_t deadline;
+    uint8_t early_bird;
+    uint8_t percentage;
 
-    unsigned int property_desired;
-    uint64_t deadline;
-    unsigned char early_bird;
-    unsigned char percentage;
-
-    uint64_t u_created;
-    uint64_t i_created;
+    int64_t u_created;
+    int64_t i_created;
 
     uint256 txid; // NOTE: not persisted as it doesnt seem used
 
-    std::map<std::string, std::vector<uint64_t> > txFundraiserData; // schema is 'txid:amtSent:deadlineUnix:userIssuedTokens:IssuerIssuedTokens;'
+    // Schema:
+    //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens
+    std::map<uint256, std::vector<int64_t> > txFundraiserData;
 
 public:
     CMPCrowd();
-    CMPCrowd(unsigned int pid, uint64_t nv, unsigned int cd, uint64_t dl, unsigned char eb, unsigned char per, uint64_t uct, uint64_t ict);
+    CMPCrowd(uint32_t pid, int64_t nv, uint32_t cd, int64_t dl, uint8_t eb, uint8_t per, int64_t uct, int64_t ict);
 
-    unsigned int getPropertyId() const { return propertyId; }
+    uint32_t getPropertyId() const { return propertyId; }
 
-    uint64_t getDeadline() const { return deadline; }
-    uint64_t getCurrDes() const { return property_desired; }
+    int64_t getDeadline() const { return deadline; }
+    uint32_t getCurrDes() const { return property_desired; }
 
-    void incTokensUserCreated(uint64_t amount) { u_created += amount; }
-    void incTokensIssuerCreated(uint64_t amount) { i_created += amount; }
+    void incTokensUserCreated(int64_t amount) { u_created += amount; }
+    void incTokensIssuerCreated(int64_t amount) { i_created += amount; }
 
-    uint64_t getUserCreated() const { return u_created; }
-    uint64_t getIssuerCreated() const { return i_created; }
+    int64_t getUserCreated() const { return u_created; }
+    int64_t getIssuerCreated() const { return i_created; }
 
-    void insertDatabase(const std::string& txhash, const std::vector<uint64_t>& txdata);
-    std::map<std::string, std::vector<uint64_t> > getDatabase() const { return txFundraiserData; }
+    void insertDatabase(const uint256& txHash, const std::vector<int64_t>& txData);
+    std::map<uint256, std::vector<int64_t> > getDatabase() const { return txFundraiserData; }
 
     void print(const std::string& address, FILE* fp = stdout) const;
     void saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& addr) const;
@@ -151,22 +207,22 @@ typedef std::map<std::string, CMPCrowd> CrowdMap;
 extern CMPSPInfo* _my_sps;
 extern CrowdMap my_crowds;
 
-const char* c_strPropertyType(int propertyType);
+const char* c_strPropertyType(uint16_t propertyType);
 
-std::string getPropertyName(unsigned int propertyId);
-bool isPropertyDivisible(unsigned int propertyId);
+std::string getPropertyName(uint32_t propertyId);
+bool isPropertyDivisible(uint32_t propertyId);
 
 CMPCrowd* getCrowd(const std::string& address);
 
-bool isCrowdsaleActive(unsigned int propertyId);
+bool isCrowdsaleActive(uint32_t propertyId);
 bool isCrowdsalePurchase(const uint256& txid, const std::string& address, int64_t* propertyId, int64_t* userTokens, int64_t* issuerTokens);
 
 // TODO: check, if this could be combined with the other calculate* functions
-int calculateFractional(unsigned short int propType, unsigned char bonusPerc, uint64_t fundraiserSecs, 
-  uint64_t numProps, unsigned char issuerPerc, const std::map<std::string, std::vector<uint64_t> >& txFundraiserData, 
-  const uint64_t amountPremined);
+int64_t calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundraiserSecs,
+        int64_t numProps, uint8_t issuerPerc, const std::map<uint256, std::vector<int64_t> >& txFundraiserData,
+        const int64_t amountPremined);
 
-void eraseMaxedCrowdsale(const std::string& address, uint64_t blockTime, int block);
+void eraseMaxedCrowdsale(const std::string& address, int64_t blockTime, int block);
 
 unsigned int eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex);
 

@@ -5,11 +5,13 @@
 #ifndef METADEXDIALOG_H
 #define METADEXDIALOG_H
 
+#include <stdint.h>
 #include <string>
 
 #include <QDialog>
 
 class WalletModel;
+class ClientModel;
 
 QT_BEGIN_NAMESPACE
 class QString;
@@ -29,7 +31,6 @@ public:
     explicit MetaDExDialog(QWidget *parent = 0);
     ~MetaDExDialog();
 
-    void FullRefresh();
     void SwitchMarket();
     void AddRow(bool useBuyList, bool includesMe, const std::string& price, const std::string& available, const std::string& total);
     void UpdateSellAddressBalance();
@@ -37,8 +38,10 @@ public:
     void UpdateOffers();
     void UpdateSellOffers();
     void UpdateBuyOffers();
-    void setModel(WalletModel *model);
+    void setWalletModel(WalletModel *model);
+    void setClientModel(ClientModel *model);
     void recalcTotal(bool useBuyFields);
+    void PopulateAddresses();
 
 public slots:
     void switchButtonClicked();
@@ -48,10 +51,15 @@ public slots:
     void buyClicked(int row, int col);
     void sendTrade(bool sell);
     void OrderRefresh();
+    void UpdateBalances();
+    void BalanceOrderRefresh();
+    void FullRefresh();
 
 private:
     Ui::MetaDExDialog *ui;
-    WalletModel *model;
+    ClientModel *clientModel;
+    WalletModel *walletModel;
+    uint32_t global_metadex_market;
 
 private slots:
     void buyTrade();

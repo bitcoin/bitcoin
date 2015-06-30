@@ -146,7 +146,7 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                     break;
                 case 4: //Update alert, show upgrade alert in UI and getalert_MP call + use isTransactionTypeAllowed to verify client support and shutdown if not present
                     //check of the new tx type is supported at live block
-                    bool txSupported = isTransactionTypeAllowed(expiryValue + 1, OMNI_PROPERTY_MSC, typeCheck, verCheck);
+                    bool txSupported = IsTransactionTypeAllowed(expiryValue + 1, OMNI_PROPERTY_MSC, typeCheck, verCheck);
 
                     //check if we are at/past the live blockheight                    
                     bool txLive = (curBlock > (int64_t) expiryValue);

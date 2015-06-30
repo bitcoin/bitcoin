@@ -25,8 +25,8 @@
 bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& redeemingPubKey,
         const std::vector<unsigned char>& vchPayload, std::vector<std::pair<CScript, int64_t> >& vecOutputs)
 {
-    int nRemainingBytes = vchPayload.size();
-    int nNextByte = 0;
+    unsigned int nRemainingBytes = vchPayload.size();
+    unsigned int nNextByte = 0;
     unsigned char chSeqNum = 1;
     std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
     PrepareObfuscatedHashes(senderAddress, strObfuscatedHashes);
@@ -37,7 +37,7 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
         vKeys.push_back(redeemingPubKey); // Always include the redeeming pubkey
         for (int i = 0; i < nKeys; i++) {
             // Add up to 30 bytes of data
-            int nCurrentBytes = nRemainingBytes < (PACKET_SIZE - 1) ? nRemainingBytes: (PACKET_SIZE - 1);
+            unsigned int nCurrentBytes = nRemainingBytes < (PACKET_SIZE - 1) ? nRemainingBytes: (PACKET_SIZE - 1);
             std::vector<unsigned char> vchFakeKey;
             vchFakeKey.insert(vchFakeKey.end(), chSeqNum); // Add sequence number
             vchFakeKey.insert(vchFakeKey.end(), vchPayload.begin() + nNextByte,
@@ -46,7 +46,7 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
             nNextByte += nCurrentBytes;
             nRemainingBytes -= nCurrentBytes;
             std::vector<unsigned char> vchHash = ParseHex(strObfuscatedHashes[chSeqNum]);
-            for (int j = 0; j < PACKET_SIZE; j++) { // Xor in the obfuscation
+            for (size_t j = 0; j < PACKET_SIZE; j++) { // Xor in the obfuscation
                 vchFakeKey[j] = vchFakeKey[j] ^ vchHash[j];
             }
             vchFakeKey.insert(vchFakeKey.begin(), 0x02); // Prepend a public key prefix
@@ -72,16 +72,6 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
     CScript scriptExodusOutput = GetScriptForDestination(ExodusAddress().Get());
     vecOutputs.push_back(std::make_pair(scriptExodusOutput, GetDustThreshold(scriptExodusOutput)));
     return true;
-}
-
-/**
- * @return The marker for class C transactions.
- */
-static inline std::vector<unsigned char> GetOmMarker()
-{
-    const unsigned char pch[] = {0x6f, 0x6d}; // Hex-encoded: "om"
-
-    return std::vector<unsigned char>(pch, pch + sizeof (pch) / sizeof (pch[0]));
 }
 
 /**

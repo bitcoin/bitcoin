@@ -59,6 +59,11 @@
         <file alias="token_msc">res/icons/token_msc.png</file>
         <file alias="token_btc">res/icons/token_btc.png</file>
         <file alias="transaction_invalid">res/icons/transaction_invalid.png</file>
+        <file alias="hourglass">res/icons/omni_hourglass.png</file>
+        <file alias="omnitxin">res/icons/omni_txin.png</file>
+        <file alias="omnitxout">res/icons/omni_txout.png</file>
+        <file alias="omnitxinout">res/icons/omni_txinout.png</file>
+        <file alias="omnitxinvalid">res/icons/omni_txinvalid.png</file>
         <!-- /Omni Core QT -->
     </qresource>
     <qresource prefix="/images">

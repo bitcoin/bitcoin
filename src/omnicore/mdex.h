@@ -65,7 +65,7 @@ public:
     int getBlock() const { return block; }
     unsigned int getIdx() const { return idx; }
 
-    uint64_t getBlockTime() const;
+    int64_t getBlockTime() const;
 
     // needed only by the RPC functions
     // needed only by the RPC functions

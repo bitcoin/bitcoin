@@ -16,6 +16,7 @@
 #include "omnicore/rpctxobject.h"
 #include "omnicore/rpcvalues.h"
 #include "omnicore/sp.h"
+#include "omnicore/tally.h"
 #include "omnicore/tx.h"
 #include "omnicore/version.h"
 
@@ -167,23 +168,20 @@ int extra2 = 0, extra3 = 0;
   // various extra tests
   switch (extra)
   {
-    case 0: // the old output
+    case 0:
     {
-    uint64_t total = 0;
+        LOCK(cs_tally);
 
+        int64_t total = 0;
         // display all balances
-        for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-        {
-          // my_it->first = key
-          // my_it->second = value
-
-          PrintToConsole("%34s => ", my_it->first);
-          total += (my_it->second).print(extra2, bDivisible);
+        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            PrintToConsole("%34s => ", my_it->first);
+            total += (my_it->second).print(extra2, bDivisible);
         }
 
         PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
-      }
-      break;
+        break;
+    }
 
     case 1:
       // display the whole CMPTxList (leveldb)
@@ -197,24 +195,22 @@ int extra2 = 0, extra3 = 0;
       break;
 
     case 3:
-        unsigned int id;
+    {
+        LOCK(cs_tally);
+
+        uint32_t id = 0;
         // for each address display all currencies it holds
-        for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-        {
-          // my_it->first = key
-          // my_it->second = value
-
-          PrintToConsole("%34s => ", my_it->first);
-          (my_it->second).print(extra2);
-
-          (my_it->second).init();
-          while (0 != (id = (my_it->second).next()))
-          {
-            PrintToConsole("Id: %u=0x%X ", id, id);
-          }
-          PrintToConsole("\n");
+        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+            PrintToConsole("%34s => ", my_it->first);
+            (my_it->second).print(extra2);
+            (my_it->second).init();
+            while (0 != (id = (my_it->second).next())) {
+                PrintToConsole("Id: %u=0x%X ", id, id);
+            }
+            PrintToConsole("\n");
         }
-      break;
+        break;
+    }
 
     case 4:
       for(CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it)
@@ -348,6 +344,8 @@ Value getallbalancesforid_MP(const Array& params, bool fHelp)
     Array response;
     bool isDivisible = isPropertyDivisible(propertyId); // we want to check this BEFORE the loop
 
+    LOCK(cs_tally);
+
     for (std::map<std::string, CMPTally>::iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
         uint32_t id = 0;
         bool includeAddress = false;
@@ -397,6 +395,8 @@ Value getallbalancesforaddress_MP(const Array& params, bool fHelp)
     std::string address = ParseAddress(params[0]);
 
     Array response;
+
+    LOCK(cs_tally);
 
     CMPTally* addressTally = getTally(address);
 
@@ -569,7 +569,7 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
 
     Object response;
     bool active = isCrowdsaleActive(propertyId);
-    std::map<std::string, std::vector<uint64_t> > database;
+    std::map<uint256, std::vector<int64_t> > database;
 
     if (active) {
         bool crowdFound = false;
@@ -597,11 +597,11 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     }
 
     Array participanttxs;
-    std::map<std::string, std::vector<uint64_t> >::const_iterator it;
+    std::map<uint256, std::vector<int64_t> >::const_iterator it;
     for (it = database.begin(); it != database.end(); it++) {
         Object participanttx;
 
-        const std::string& txid = it->first;
+        const std::string& txid = it->first.GetHex();
         int64_t userTokens = it->second.at(2);
         int64_t issuerTokens = it->second.at(3);
         int64_t amountSent = it->second.at(0);
@@ -750,9 +750,9 @@ Value getgrants_MP(const Array& params, bool fHelp)
     int64_t totalTokens = getTotalTokens(propertyId);
 
     Array issuancetxs;
-    std::map<std::string, std::vector<uint64_t> >::const_iterator it;
+    std::map<uint256, std::vector<int64_t> >::const_iterator it;
     for (it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
-        const std::string& txid = it->first;
+        const std::string& txid = it->first.GetHex();
         int64_t grantedTokens = it->second.at(0);
         int64_t revokedTokens = it->second.at(1);
 
@@ -783,7 +783,7 @@ Value getgrants_MP(const Array& params, bool fHelp)
 int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
   CMPSPInfo::Entry sp;
 
-  if ((1 > tmpPropId) || (4294967295 < tmpPropId)) 
+  if ((1 > tmpPropId) || (4294967295LL < tmpPropId))
     throw JSONRPCError(RPC_INVALID_PARAMETER, error);
   if (false == _my_sps->getSP(tmpPropId, sp)) 
     throw JSONRPCError(RPC_INVALID_PARAMETER, exist_error);
@@ -852,7 +852,7 @@ Value gettradessince_MP(const Array& params, bool fHelp)
 
   unsigned int propertyIdSaleFilter = 0, propertyIdWantFilter = 0;
 
-  uint64_t timestamp = (params.size() > 0) ? params[0].get_int64() : GetLatestBlockTime() - 1209600; //2 weeks 
+  int64_t timestamp = (params.size() > 0) ? params[0].get_int64() : GetLatestBlockTime() - 1209600; // 2 weeks
 
   bool filter_by_one = (params.size() > 1) ? true : false;
   bool filter_by_both = (params.size() > 2) ? true : false;
@@ -1263,13 +1263,11 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     Array response; //prep an array to hold our output
 
     // STO has no inbound transaction, so we need to use an insert methodology here
-    // get STO receipts affecting me
     string mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
     int64_t lastTXBlock = 999999;
 
-    // rewrite to use original listtransactions methodology from core
     LOCK(wallet->cs_wallet);
     std::list<CAccountingEntry> acentries;
     CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
@@ -1305,7 +1303,6 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             }
             // ### END STO CHECK ###
 
-            // populateRPCTransactionObject will throw us a non-0 rc if this isn't a MP transaction, speeds up search by orders of magnitude
             uint256 hash = pwtx->GetHash();
             Object txobj;
 

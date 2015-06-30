@@ -23,7 +23,7 @@ std::string ParseAddress(const json_spirit::Value& value)
 uint32_t ParsePropertyId(const json_spirit::Value& value)
 {
     int64_t propertyId = value.get_int64();
-    if (propertyId < 1 || 4294967295 < propertyId) {
+    if (propertyId < 1 || 4294967295LL < propertyId) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier is out of range");
     }
     return static_cast<uint32_t>(propertyId);

@@ -30,7 +30,9 @@ ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     peerTableModel(0),
     cachedNumBlocks(0),
     cachedReindexing(0), cachedImporting(0),
-    numBlocksAtStartup(-1), pollTimer(0)
+    numBlocksAtStartup(-1), pollTimer(0),
+    lockedOmniStateChanged(false),
+    lockedOmniBalanceChanged(false)
 {
     peerTableModel = new PeerTableModel(this);
     pollTimer = new QTimer(this);
@@ -127,9 +129,44 @@ void ClientModel::updateNumConnections(int numConnections)
     emit numConnectionsChanged(numConnections);
 }
 
+void ClientModel::invalidateOmniState()
+{
+    emit reinitOmniState();
+}
+
 void ClientModel::updateOmniState()
 {
+    lockedOmniStateChanged = false;
     emit refreshOmniState();
+}
+
+bool ClientModel::tryLockOmniStateChanged()
+{
+    if (lockedOmniStateChanged) {
+        return false;
+    }
+    lockedOmniStateChanged = true;
+    return true;
+}
+
+void ClientModel::updateOmniBalance()
+{
+    lockedOmniBalanceChanged = false;
+    emit refreshOmniBalance();
+}
+
+bool ClientModel::tryLockOmniBalanceChanged()
+{
+    if (lockedOmniBalanceChanged) {
+        return false;
+    }
+    lockedOmniBalanceChanged = true;
+    return true;
+}
+
+void ClientModel::updateOmniPending(bool pending)
+{
+    emit refreshOmniPending(pending);
 }
 
 void ClientModel::updateAlert(const QString &hash, int status)
@@ -207,10 +244,32 @@ QString ClientModel::formatClientStartupTime() const
 }
 
 // Handlers for core signals
+static void OmniStateInvalidated(ClientModel *clientmodel)
+{
+    // This will be triggered for if a reorg invalidates the state
+    QMetaObject::invokeMethod(clientmodel, "invalidateOmniState", Qt::QueuedConnection);
+}
+
 static void OmniStateChanged(ClientModel *clientmodel)
 {
     // This will be triggered for each block that contains Omni layer transactions
-    QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
+    if (clientmodel->tryLockOmniStateChanged()) {
+        QMetaObject::invokeMethod(clientmodel, "updateOmniState", Qt::QueuedConnection);
+    }
+}
+
+static void OmniBalanceChanged(ClientModel *clientmodel)
+{
+    // Triggered when a balance for a wallet address changes
+    if (clientmodel->tryLockOmniBalanceChanged()) {
+        QMetaObject::invokeMethod(clientmodel, "updateOmniBalance", Qt::QueuedConnection);
+    }
+}
+
+static void OmniPendingChanged(ClientModel *clientmodel, bool pending)
+{
+    // Triggered when Omni pending map adds/removes transactions
+    QMetaObject::invokeMethod(clientmodel, "updateOmniPending", Qt::QueuedConnection, Q_ARG(bool, pending));
 }
 
 static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
@@ -243,6 +302,9 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.OmniStateChanged.connect(boost::bind(OmniStateChanged, this));
+    uiInterface.OmniPendingChanged.connect(boost::bind(OmniPendingChanged, this, _1));
+    uiInterface.OmniBalanceChanged.connect(boost::bind(OmniBalanceChanged, this));
+    uiInterface.OmniStateInvalidated.connect(boost::bind(OmniStateInvalidated, this));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -252,4 +314,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.OmniStateChanged.disconnect(boost::bind(OmniStateChanged, this));
+    uiInterface.OmniPendingChanged.disconnect(boost::bind(OmniPendingChanged, this, _1));
+    uiInterface.OmniBalanceChanged.disconnect(boost::bind(OmniBalanceChanged, this));
+    uiInterface.OmniStateInvalidated.disconnect(boost::bind(OmniStateInvalidated, this));
 }

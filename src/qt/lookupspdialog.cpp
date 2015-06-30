@@ -295,10 +295,10 @@ void LookupSPDialog::updateDisplayedProperty()
     string strWalletTokens;
     int64_t totalTokens = getTotalTokens(propertyId);
     int64_t walletTokens = 0;
-    if (propertyId<2147483648)
-    { walletTokens = global_balance_money_maineco[propertyId]; }
-    else
-    { walletTokens = global_balance_money_testeco[propertyId-2147483647]; }
+    {
+        LOCK(cs_tally);
+        walletTokens = global_balance_money[propertyId];
+    }
     string tokenLabel;
     if (propertyId > 2)
     {

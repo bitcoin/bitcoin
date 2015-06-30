@@ -1,17 +1,8 @@
-//
-// first & so far only Master protocol source file
-// WARNING: Work In Progress -- major refactoring will be occurring often
-//
-// I am adding comments to aid with navigation and overall understanding of the design.
-// this is the 'core' portion of the node+wallet: mastercored
-// see 'qt' subdirectory for UI files
-//
-// remaining work, search for: TODO, FIXME
-//
-
-//
-// global TODO: need locks on the maps in this file & balances (moneys[],reserved[] & raccept[]) !!!
-//
+/**
+ * @file omnicore.cpp
+ *
+ * This file contains the core of Omni Core.
+ */
 
 #include "omnicore/omnicore.h"
 
@@ -26,13 +17,16 @@
 #include "omnicore/persistence.h"
 #include "omnicore/script.h"
 #include "omnicore/sp.h"
+#include "omnicore/tally.h"
 #include "omnicore/tx.h"
 #include "omnicore/utils.h"
 #include "omnicore/version.h"
+#include "omnicore/walletcache.h"
 
 #include "base58.h"
 #include "chainparams.h"
 #include "coincontrol.h"
+#include "coins.h"
 #include "init.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
@@ -94,25 +88,22 @@ using std::vector;
 
 using namespace mastercore;
 
-
-// comment out MY_HACK & others here - used for Unit Testing only !
-// #define MY_HACK
+CCriticalSection cs_tally;
 
 static string exodus_address = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
+
+static const string exodus_mainnet = "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P";
 static const string exodus_testnet = "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv";
 static const string getmoney_testnet = "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP";
 
-static int nWaterlineBlock = 0;  //
+static int nWaterlineBlock = 0;
 
-uint64_t global_metadex_market;
-//! Available balances of wallet properties in the main ecosystem
-std::map<uint32_t, int64_t> global_balance_money_maineco;
-//! Reserved balances of wallet properties in the main ecosystem
-std::map<uint32_t, int64_t> global_balance_reserved_maineco;
-//! Available balances of wallet properties in the test ecosystem
-std::map<uint32_t, int64_t> global_balance_money_testeco;
-//! Reserved balances of wallet properties in the test ecosystem
-std::map<uint32_t, int64_t> global_balance_reserved_testeco;
+//! Available balances of wallet properties
+std::map<uint32_t, int64_t> global_balance_money;
+//! Reserved balances of wallet propertiess
+std::map<uint32_t, int64_t> global_balance_reserved;
+//! Vector containing a list of properties relative to the wallet
+std::set<uint32_t> global_wallet_property_list;
 
 /**
  * Used to indicate, whether to automatically commit created transactions.
@@ -196,30 +187,32 @@ static bool writePersistence(int block_now)
   return true;
 }
 
-string mastercore::strMPProperty(unsigned int i)
+std::string mastercore::strMPProperty(uint32_t propertyId)
 {
-string str = "*unknown*";
+    std::string str = "*unknown*";
 
-  // test user-token
-  if (0x80000000 & i)
-  {
-    str = strprintf("Test token: %d : 0x%08X", 0x7FFFFFFF & i, i);
-  }
-  else
-  switch (i)
-  {
-    case OMNI_PROPERTY_BTC: str = "BTC"; break;
-    case OMNI_PROPERTY_MSC: str = "MSC"; break;
-    case OMNI_PROPERTY_TMSC: str = "TMSC"; break;
-    default: str = strprintf("SP token: %d", i);
-  }
+    // test user-token
+    if (0x80000000 & propertyId) {
+        str = strprintf("Test token: %d : 0x%08X", 0x7FFFFFFF & propertyId, propertyId);
+    } else {
+        switch (propertyId) {
+            case OMNI_PROPERTY_BTC: str = "BTC";
+                break;
+            case OMNI_PROPERTY_MSC: str = "MSC";
+                break;
+            case OMNI_PROPERTY_TMSC: str = "TMSC";
+                break;
+            default:
+                str = strprintf("SP token: %d", propertyId);
+        }
+    }
 
-  return str;
+    return str;
 }
 
-inline bool isNonMainNet()
+inline bool MainNet()
 {
-    return Params().NetworkIDString() != "main";
+    return Params().NetworkIDString() == "main";
 }
 
 inline bool TestNet()
@@ -237,52 +230,59 @@ inline bool UnitTest()
     return Params().NetworkIDString() == "unittest";
 }
 
-string FormatDivisibleShortMP(int64_t n)
+inline bool isNonMainNet()
 {
-int64_t n_abs = (n > 0 ? n : -n);
-int64_t quotient = n_abs/COIN;
-int64_t remainder = n_abs%COIN;
-string str = strprintf("%d.%08d", quotient, remainder);
-// clean up trailing zeros - good for RPC not so much for UI
-str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-if (str.length() > 0) { std::string::iterator it = str.end() - 1; if (*it == '.') { str.erase(it); } } //get rid of trailing dot if non decimal
-return str;
+    return !MainNet() && !UnitTest();
 }
 
-// mostly taken from Bitcoin's FormatMoney()
-string FormatDivisibleMP(int64_t n, bool fSign)
+std::string FormatDivisibleShortMP(int64_t n)
 {
-// Note: not using straight sprintf here because we do NOT want
-// localized number formatting.
-int64_t n_abs = (n > 0 ? n : -n);
-int64_t quotient = n_abs/COIN;
-int64_t remainder = n_abs%COIN;
-string str = strprintf("%d.%08d", quotient, remainder);
+    int64_t n_abs = (n > 0 ? n : -n);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    std::string str = strprintf("%d.%08d", quotient, remainder);
+    // clean up trailing zeros - good for RPC not so much for UI
+    str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+    if (str.length() > 0) {
+        std::string::iterator it = str.end() - 1;
+        if (*it == '.') {
+            str.erase(it);
+        }
+    } //get rid of trailing dot if non decimal
+    return str;
+}
 
-  if (!fSign) return str;
+std::string FormatDivisibleMP(int64_t n, bool fSign)
+{
+    // Note: not using straight sprintf here because we do NOT want
+    // localized number formatting.
+    int64_t n_abs = (n > 0 ? n : -n);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    std::string str = strprintf("%d.%08d", quotient, remainder);
 
-  if (n < 0)
-      str.insert((unsigned int)0, 1, '-');
-  else
-      str.insert((unsigned int)0, 1, '+');
-  return str;
+    if (!fSign) return str;
+
+    if (n < 0)
+        str.insert((unsigned int) 0, 1, '-');
+    else
+        str.insert((unsigned int) 0, 1, '+');
+    return str;
 }
 
 std::string mastercore::FormatIndivisibleMP(int64_t n)
 {
-  string str = strprintf("%ld", n);
-  return str;
+    return strprintf("%d", n);
 }
 
-std::string FormatMP(unsigned int property, int64_t n, bool fSign)
+std::string FormatMP(uint32_t property, int64_t n, bool fSign)
 {
-  if (isPropertyDivisible(property)) return FormatDivisibleMP(n, fSign);
-  else return FormatIndivisibleMP(n);
+    if (isPropertyDivisible(property)) {
+        return FormatDivisibleMP(n, fSign);
+    } else {
+        return FormatIndivisibleMP(n);
+    }
 }
-
-string const CMPSPInfo::watermarkKey("watermark");
-
-CCriticalSection cs_tally;
 
 OfferMap mastercore::my_offers;
 AcceptMap mastercore::my_accepts;
@@ -293,163 +293,165 @@ CrowdMap mastercore::my_crowds;
 // this is the master list of all amounts for all addresses for all properties, map is sorted by Bitcoin address
 std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
-CMPTally *mastercore::getTally(const string & address)
+CMPTally* mastercore::getTally(const std::string& address)
 {
-  LOCK (cs_tally);
+    LOCK(cs_tally);
 
-  map<string, CMPTally>::iterator it = mp_tally_map.find(address);
+    std::map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
 
-  if (it != mp_tally_map.end()) return &(it->second);
+    if (it != mp_tally_map.end()) return &(it->second);
 
-  return (CMPTally *) NULL;
+    return (CMPTally *) NULL;
 }
 
 // look at balance for an address
-int64_t getMPbalance(const string &Address, unsigned int property, TallyType ttype)
+int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype)
 {
-uint64_t balance = 0;
+    int64_t balance = 0;
+    if (TALLY_TYPE_COUNT <= ttype) {
+        return 0;
+    }
+    if (ttype == ACCEPT_RESERVE && propertyId > OMNI_PROPERTY_TMSC) {
+        // ACCEPT_RESERVE is always empty, except for MSC and TMSC
+        return 0; 
+    }
 
-  if (TALLY_TYPE_COUNT <= ttype) return 0;
+    LOCK(cs_tally);
+    const std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(address);
+    if (my_it != mp_tally_map.end()) {
+        balance = (my_it->second).getMoney(propertyId, ttype);
+    }
 
-  LOCK(cs_tally);
-
-const map<string, CMPTally>::iterator my_it = mp_tally_map.find(Address);
-
-  if (my_it != mp_tally_map.end())
-  {
-    balance = (my_it->second).getMoney(property, ttype);
-  }
-
-  return balance;
+    return balance;
 }
 
-int64_t getUserAvailableMPbalance(const string &Address, unsigned int property)
+int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId)
 {
-int64_t money = getMPbalance(Address, property, BALANCE);
-int64_t pending = getMPbalance(Address, property, PENDING);
+    int64_t money = getMPbalance(address, propertyId, BALANCE);
+    int64_t pending = getMPbalance(address, propertyId, PENDING);
 
-  if (0 > pending)
-  {
-    return (money + pending); // show the decrease in money available
-  }
+    if (0 > pending) {
+        return (money + pending); // show the decrease in available money
+    }
 
-  return money;
+    return money;
 }
 
-bool mastercore::isTestEcosystemProperty(unsigned int property)
+bool mastercore::isTestEcosystemProperty(uint32_t propertyId)
 {
-  if ((OMNI_PROPERTY_TMSC == property) || (TEST_ECO_PROPERTY_1 <= property)) return true;
+    if ((OMNI_PROPERTY_TMSC == propertyId) || (TEST_ECO_PROPERTY_1 <= propertyId)) return true;
 
-  return false;
+    return false;
 }
 
-bool mastercore::isMainEcosystemProperty(unsigned int property)
+bool mastercore::isMainEcosystemProperty(uint32_t propertyId)
 {
-  if ((OMNI_PROPERTY_BTC != property) && !isTestEcosystemProperty(property)) return true;
+    if ((OMNI_PROPERTY_BTC != propertyId) && !isTestEcosystemProperty(propertyId)) return true;
 
-  return false;
+    return false;
 }
 
-std::string mastercore::getTokenLabel(unsigned int propertyId)
+std::string mastercore::getTokenLabel(uint32_t propertyId)
 {
     std::string tokenStr;
     if (propertyId < 3) {
-        if(propertyId == 1) { tokenStr = " MSC"; } else { tokenStr = " TMSC"; }
+        if (propertyId == 1) {
+            tokenStr = " MSC";
+        } else {
+            tokenStr = " TMSC";
+        }
     } else {
-        tokenStr = " SPT#" + to_string(propertyId);
+        tokenStr = strprintf(" SPT#%d", propertyId);
     }
     return tokenStr;
 }
 
 // get total tokens for a property
 // optionally counts the number of addresses who own that property: n_owners_total
-int64_t mastercore::getTotalTokens(unsigned int propertyId, int64_t *n_owners_total)
+int64_t mastercore::getTotalTokens(uint32_t propertyId, int64_t* n_owners_total)
 {
-int64_t prev = 0, owners = 0;
+    int64_t prev = 0;
+    int64_t owners = 0;
+    int64_t totalTokens = 0;
 
-  LOCK(cs_tally);
+    LOCK(cs_tally);
 
-  CMPSPInfo::Entry property;
-  if (false == _my_sps->getSP(propertyId, property)) return 0; // property ID does not exist
+    CMPSPInfo::Entry property;
+    if (false == _my_sps->getSP(propertyId, property)) {
+        return 0; // property ID does not exist
+    }
 
-  int64_t totalTokens = 0;
-  bool fixedIssuance = property.fixed;
+    if (!property.fixed || n_owners_total) {
+        for (std::map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+            const CMPTally& tally = it->second;
 
-  if (!fixedIssuance || n_owners_total)
-  {
-      for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-      {
-          string address = my_it->first;
-          totalTokens += getMPbalance(address, propertyId, BALANCE);
-          totalTokens += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
-          totalTokens += getMPbalance(address, propertyId, METADEX_RESERVE);
-          if (propertyId<3) totalTokens += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+            totalTokens += tally.getMoney(propertyId, BALANCE);
+            totalTokens += tally.getMoney(propertyId, SELLOFFER_RESERVE);
+            totalTokens += tally.getMoney(propertyId, ACCEPT_RESERVE);
+            totalTokens += tally.getMoney(propertyId, METADEX_RESERVE);
 
-          if (prev != totalTokens)
-          {
-            prev = totalTokens;
-            owners++;
-          }
-      }
-  }
+            if (prev != totalTokens) {
+                prev = totalTokens;
+                owners++;
+            }
+        }
+    }
 
-  if (fixedIssuance)
-  {
-      totalTokens = property.num_tokens; //only valid for TX50
-  }
+    if (property.fixed) {
+        totalTokens = property.num_tokens; // only valid for TX50
+    }
 
-  if (n_owners_total) *n_owners_total = owners;
+    if (n_owners_total) *n_owners_total = owners;
 
-  return totalTokens;
+    return totalTokens;
 }
 
 // return true if everything is ok
-bool mastercore::update_tally_map(string who, unsigned int which_property, int64_t amount, TallyType ttype)
+bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, int64_t amount, TallyType ttype)
 {
-bool bRet = false;
-int64_t before, after;
-
-  if (0 == amount)
-  {
-    PrintToLog("%s(%s, %u=0x%X, %+ld, ttype= %d) 0 FUNDS !\n", __FUNCTION__, who, which_property, which_property, amount, ttype);
-    return false;
-  }
-
-  LOCK(cs_tally);
-
-  before = getMPbalance(who, which_property, ttype);
-
-  map<string, CMPTally>::iterator my_it = mp_tally_map.find(who);
-  if (my_it == mp_tally_map.end())
-  {
-    // insert an empty element
-    my_it = (mp_tally_map.insert(std::make_pair(who,CMPTally()))).first;
-  }
-
-  CMPTally &tally = my_it->second;
-
-  bRet = tally.updateMoney(which_property, amount, ttype);
-
-  after = getMPbalance(who, which_property, ttype);
-  if (!bRet) PrintToLog("%s(%s, %u=0x%X, %+ld, ttype=%d) INSUFFICIENT FUNDS\n", __FUNCTION__, who, which_property, which_property, amount, ttype);
-
-  if (msc_debug_tally)
-  {
-    if ((exodus_address != who) || (exodus_address == who && msc_debug_exo))
-    {
-      PrintToLog("%s(%s, %u=0x%X, %+ld, ttype=%d); before=%ld, after=%ld\n",
-       __FUNCTION__, who, which_property, which_property, amount, ttype, before, after);
+    if (0 == amount) {
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: amount to credit or debit is zero\n", __func__, who, propertyId, propertyId, amount, ttype);
+        return false;
     }
-  }
+    if (ttype >= TALLY_TYPE_COUNT) {
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: invalid tally type\n", __func__, who, propertyId, propertyId, amount, ttype);
+        return false;
+    }
+    
+    bool bRet = false;
+    int64_t before = 0;
+    int64_t after = 0;
 
-  return bRet;
+    LOCK(cs_tally);
+
+    before = getMPbalance(who, propertyId, ttype);
+
+    std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.find(who);
+    if (my_it == mp_tally_map.end()) {
+        // insert an empty element
+        my_it = (mp_tally_map.insert(std::make_pair(who, CMPTally()))).first;
+    }
+
+    CMPTally& tally = my_it->second;
+    bRet = tally.updateMoney(propertyId, amount, ttype);
+
+    after = getMPbalance(who, propertyId, ttype);
+    if (!bRet) {
+        assert(before == after);
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d) ERROR: insufficient balance (=%d)\n", __func__, who, propertyId, propertyId, amount, ttype, before);
+    }
+    if (msc_debug_tally && (exodus_address != who || msc_debug_exo)) {
+        PrintToLog("%s(%s, %u=0x%X, %+d, ttype=%d): before=%d, after=%d\n", __func__, who, propertyId, propertyId, amount, ttype, before, after);
+    }
+
+    return bRet;
 }
 
 // calculateFundraiser does token calculations per transaction
 // calcluateFractional does calculations for missed tokens
-void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
-        uint64_t fundraiserSecs, uint64_t currentSecs, uint64_t numProps, unsigned char issuerPerc, uint64_t totalTokens,
-        std::pair<uint64_t, uint64_t>& tokens, bool &close_crowdsale)
+static void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
+        int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
+        std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale)
 {
     // Weeks in seconds
     int128_t weeks_sec_ = 604800L;
@@ -506,13 +508,19 @@ void calculateFundraiser(uint64_t amtTransfer, unsigned char bonusPerc,
     // The tokens to credit
     assert(createdTokens_int <= std::numeric_limits<int64_t>::max());
     assert(issuerTokens_int <= std::numeric_limits<int64_t>::max());
-    tokens = std::make_pair(createdTokens_int.convert_to<uint64_t>(), issuerTokens_int.convert_to<uint64_t>());
+    tokens = std::make_pair(createdTokens_int.convert_to<int64_t>(), issuerTokens_int.convert_to<int64_t>());
 }
 
-// certain transaction types are not live on the network until some specific block height
-// certain transactions will be unknown to the client, i.e. "black holes" based on their version
-// the Restrictions array is as such: type, block-allowed-in, top-version-allowed
-bool mastercore::isTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty)
+/**
+ * Checks, if the transaction type and version is supported and enabled.
+ *
+ * Certain transaction types are not live/enabled until some specific block height.
+ * Certain transactions will be unknown to the client, i.e. "black holes" based on their version.
+ *
+ * The restrictions array is as such:
+ *   type, block-allowed-in, top-version-allowed
+ */
+bool mastercore::IsTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty)
 {
 bool bAllowed = false;
 bool bBlackHole = false;
@@ -598,59 +606,52 @@ const double available_reward=all_reward * part_available;
 
 uint32_t mastercore::GetNextPropertyId(bool maineco)
 {
-  if(maineco) {
-      return _my_sps->peekNextSPID(1);
-  } else {
-      return _my_sps->peekNextSPID(2);
-  }
+    if (maineco) {
+        return _my_sps->peekNextSPID(1);
+    } else {
+        return _my_sps->peekNextSPID(2);
+    }
 }
 
-// TODO: optimize efficiency -- iterate only over wallet's addresses in the future
-// NOTE: if we loop over wallet addresses we miss tokens that may be in change addresses (since mapAddressBook does not
-//       include change addresses).  with current transaction load, about 0.02 - 0.06 seconds is spent on this function
-int mastercore::set_wallet_totals()
+void CheckWalletUpdate(bool forceUpdate)
 {
-  //concerned about efficiency here, time how long this takes, averaging 0.02-0.04s on my system
-  //timer t;
-  int my_addresses_count = 0;
-  int64_t propertyId;
-  unsigned int nextSPID = _my_sps->peekNextSPID(1); // real eco
-  unsigned int nextTestSPID = _my_sps->peekNextSPID(2); // test eco
+    LOCK(cs_tally);
 
-  //zero bals
-  for (propertyId = 1; propertyId<nextSPID; propertyId++) //main eco
-  {
-    global_balance_money_maineco[propertyId] = 0;
-    global_balance_reserved_maineco[propertyId] = 0;
-  }
-  for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) //test eco
-  {
-    global_balance_money_testeco[propertyId-2147483647] = 0;
-    global_balance_reserved_testeco[propertyId-2147483647] = 0;
-  }
-
-  for(map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it)
-  {
-    if (IsMyAddress(my_it->first))
-    {
-       for (propertyId = 1; propertyId<nextSPID; propertyId++) //main eco
-       {
-              //global_balance_money_maineco[propertyId] += getMPbalance(my_it->first, propertyId, BALANCE);
-              global_balance_money_maineco[propertyId] += getUserAvailableMPbalance(my_it->first, propertyId);
-              global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-              global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-              if (propertyId < 3) global_balance_reserved_maineco[propertyId] += getMPbalance(my_it->first, propertyId, ACCEPT_RESERVE);
-       }
-       for (propertyId = TEST_ECO_PROPERTY_1; propertyId<nextTestSPID; propertyId++) //test eco
-       {
-              //global_balance_money_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, BALANCE);
-              global_balance_money_testeco[propertyId-2147483647] += getUserAvailableMPbalance(my_it->first, propertyId);
-              global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, SELLOFFER_RESERVE);
-              global_balance_reserved_testeco[propertyId-2147483647] += getMPbalance(my_it->first, propertyId, METADEX_RESERVE);
-       }
+    if (!WalletCacheUpdate()) {
+        // no balance changes were detected that affect wallet addresses, signal a generic change to overall Omni state
+        if (!forceUpdate) {
+            uiInterface.OmniStateChanged();
+            return;
+        }
     }
-  }
-  return (my_addresses_count);
+
+    // balance changes were found in the wallet, update the global totals and signal a Omni balance change
+    global_balance_money.clear();
+    global_balance_reserved.clear();
+
+    // populate global balance totals and wallet property list - note global balances do not include additional balances from watch-only addresses
+    for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        // check if the address is a wallet address (including watched addresses)
+        std::string address = my_it->first;
+        int addressIsMine = IsMyAddress(address);
+        if (!addressIsMine) continue;
+        // iterate only those properties in the TokenMap for this address
+        my_it->second.init();
+        uint32_t propertyId;
+        while (0 != (propertyId = (my_it->second).next())) {
+            // add to the global wallet property list
+            global_wallet_property_list.insert(propertyId);
+            // check if the address is spendable (only spendable balances are included in totals)
+            if (addressIsMine != ISMINE_SPENDABLE) continue;
+            // work out the balances and add to globals
+            global_balance_money[propertyId] += getUserAvailableMPbalance(address, propertyId);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, SELLOFFER_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, METADEX_RESERVE);
+            global_balance_reserved[propertyId] += getMPbalance(address, propertyId, ACCEPT_RESERVE);
+        }
+    }
+    // signal an Omni balance change
+    uiInterface.OmniBalanceChanged();
 }
 
 int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
@@ -678,27 +679,678 @@ int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t Ex
   return -1;
 }
 
+/**
+ * Checks, if the script type is allowed as input.
+ */
+bool mastercore::IsAllowedInputType(int whichType, int nBlock)
+{
+    switch (whichType)
+    {
+        case TX_PUBKEYHASH:
+            return true;
+
+        case TX_SCRIPTHASH:
+            return (P2SH_BLOCK <= nBlock || isNonMainNet());
+    }
+
+    return false;
+}
+
+/**
+ * Checks, if the script type qualifies as output.
+ */
+bool mastercore::IsAllowedOutputType(int whichType, int nBlock)
+{
+    switch (whichType)
+    {
+        case TX_PUBKEYHASH:
+            return true;
+
+        case TX_MULTISIG:
+            return true;
+
+        case TX_SCRIPTHASH:
+            return (P2SH_BLOCK <= nBlock || isNonMainNet());
+
+        case TX_NULL_DATA:
+            return (OP_RETURN_BLOCK <= nBlock || isNonMainNet());
+    }
+
+    return false;
+}
+
+/**
+ * Returns the encoding class, used to embed a payload.
+ *
+ *   0 None
+ *   1 Class A (p2pkh)
+ *   2 Class B (multisig)
+ *   3 Class C (op-return)
+ */
+int mastercore::GetEncodingClass(const CTransaction& tx, int nBlock)
+{
+    bool hasExodus = false;
+    bool hasMultisig = false;
+    bool hasOpReturn = false;
+    bool hasMoney = false;
+
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        const CTxOut& output = tx.vout[n];
+
+        txnouttype outType;
+        if (!GetOutputType(output.scriptPubKey, outType)) {
+            continue;
+        }
+        if (!IsAllowedOutputType(outType, nBlock)) {
+            continue;
+        }
+
+        if (outType == TX_PUBKEYHASH) {
+            CTxDestination dest;
+            if (ExtractDestination(output.scriptPubKey, dest)) {
+                CBitcoinAddress address(dest);
+                if (address == ExodusAddress()) {
+                    hasExodus = true;
+                }
+                if (address == ExodusCrowdsaleAddress(nBlock)) {
+                    hasMoney = true;
+                }
+            }
+        }
+        if (outType == TX_MULTISIG) {
+            hasMultisig = true;
+        }
+        if (outType == TX_NULL_DATA) {
+            // Ensure there is a payload, and the first pushed element equals,
+            // or starts with the "omni" marker
+            std::vector<std::string> scriptPushes;
+            if (!GetScriptPushes(output.scriptPubKey, scriptPushes)) {
+                continue;
+            }
+            if (!scriptPushes.empty()) {
+                std::vector<unsigned char> vchMarker = GetOmMarker();
+                std::vector<unsigned char> vchPushed = ParseHex(scriptPushes[0]);
+                if (vchPushed.size() < vchMarker.size()) {
+                    continue;
+                }
+                if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushed.begin())) {
+                    hasOpReturn = true;
+                }
+            }
+        }
+    }
+
+    if (hasOpReturn) {
+        return OMNI_CLASS_C;
+    }
+    if (hasExodus && hasMultisig) {
+        return OMNI_CLASS_B;
+    }
+    if (hasExodus || hasMoney) {
+        return OMNI_CLASS_A;
+    }
+
+    return NO_MARKER;
+}
+
+// TODO: move
+CCoinsView mastercore::viewDummy;
+CCoinsViewCache mastercore::view(&viewDummy);
+
+//! Guards coins view cache
+CCriticalSection mastercore::cs_tx_cache;
+
+static unsigned int nCacheHits = 0;
+static unsigned int nCacheMiss = 0;
+
+/**
+ * Fetches transaction inputs and adds them to the coins view cache.
+ *
+ * @param tx[in]  The transaction to fetch inputs for
+ * @return True, if all inputs were successfully added to the cache
+ */
+static bool FillTxInputCache(const CTransaction& tx)
+{
+    LOCK(cs_tx_cache);
+    static unsigned int nCacheSize = GetArg("-omnitxcache", 500000);
+
+    if (view.GetCacheSize() > nCacheSize) {
+        PrintToLog("%s(): clearing cache before insertion [size=%d, hit=%d, miss=%d]\n",
+                __func__, view.GetCacheSize(), nCacheHits, nCacheMiss);
+        view.Flush();
+    }
+
+    for (std::vector<CTxIn>::const_iterator it = tx.vin.begin(); it != tx.vin.end(); ++it) {
+        const CTxIn& txIn = *it;
+        unsigned int nOut = txIn.prevout.n;
+        CCoinsModifier coins = view.ModifyCoins(txIn.prevout.hash);
+
+        if (coins->IsAvailable(nOut)) {
+            ++nCacheHits;
+            continue;
+        } else {
+            ++nCacheMiss;
+        }
+
+        CTransaction txPrev;
+        uint256 hashBlock;
+        if (!GetTransaction(txIn.prevout.hash, txPrev, hashBlock, true)) {
+            return false;
+        }
+
+        if (nOut >= coins->vout.size()) {
+            coins->vout.resize(nOut+1);
+        }
+        coins->vout[nOut].scriptPubKey = txPrev.vout[nOut].scriptPubKey;
+        coins->vout[nOut].nValue = txPrev.vout[nOut].nValue;
+    }
+
+    return true;
+}
+
+namespace legacy {
+
+/**
+ * Legacy code is kept to guarantee a safe transition until a new feature,
+ * or a replacement of consensus critical code is enabled.
+ *
+ * Once the new replacement code is activated on mainnet, and it is conform
+ * with historical consensus, the legacy code can safely be removed.
+ */
+
+static const int MAX_LEGACY_PACKETS = 64;
+static const int MAX_BTC_OUTPUTS    = 16;
+
 static bool isAllowedOutputType(int whichType, int nBlock)
 {
-  int p2shAllowed = 0;
-  int opReturnAllowed = 0;
+    int p2shAllowed = 0;
 
-  if (OP_RETURN_BLOCK <= nBlock || isNonMainNet()) {
-    opReturnAllowed = 1;
-  }
-
-  if (P2SH_BLOCK <= nBlock || isNonMainNet()) {
-    p2shAllowed = 1;
-  }
-  // validTypes:
-  // 1) Pay to pubkey hash
-  // 2) Pay to Script Hash (IFF p2sh is allowed)
-  if ((TX_PUBKEYHASH == whichType) || (p2shAllowed && (TX_SCRIPTHASH == whichType)) || (opReturnAllowed && (TX_NULL_DATA == whichType))) {
-    return true;
-  } else {
-    return false;
-  }
+    if (P2SH_BLOCK <= nBlock || isNonMainNet()) {
+        p2shAllowed = 1;
+    }
+    // validTypes:
+    // 1) Pay to pubkey hash
+    // 2) Pay to Script Hash (if P2SH is allowed)
+    if ((TX_PUBKEYHASH == whichType) || (p2shAllowed && (TX_SCRIPTHASH == whichType))) {
+        return true;
+    } else {
+        return false;
+    }
 }
+
+static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime = 0)
+{
+    std::string strSender;
+    // class A: data & address storage -- combine them into a structure or something
+    std::vector<std::string> script_data;
+    std::vector<std::string> address_data;
+    std::vector<int64_t> value_data;
+    int64_t ExodusValues[MAX_BTC_OUTPUTS] = {0};
+    int64_t TestNetMoneyValues[MAX_BTC_OUTPUTS] = {0}; // new way to get funded on TestNet, send TBTC to moneyman address
+    std::string strReference;
+    unsigned char single_pkt[MAX_LEGACY_PACKETS * PACKET_SIZE];
+    unsigned int packet_size = 0;
+    int fMultisig = 0;
+    int marker_count = 0, getmoney_count = 0;
+    // class B: multisig data storage
+    std::vector<std::string> multisig_script_data;
+    uint64_t inAll = 0;
+    uint64_t outAll = 0;
+    uint64_t txFee = 0;
+
+    mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
+
+    // quickly go through the outputs & ensure there is a marker (a send to the Exodus address)
+    for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+        CTxDestination dest;
+        std::string strAddress;
+
+        outAll += wtx.vout[i].nValue;
+
+        if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
+            strAddress = CBitcoinAddress(dest).ToString();
+
+            if (exodus_address == strAddress) {
+                ExodusValues[marker_count++] = wtx.vout[i].nValue;
+            } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
+                TestNetMoneyValues[getmoney_count++] = wtx.vout[i].nValue;
+            }
+        }
+    }
+    if ((isNonMainNet() && getmoney_count)) {
+    } else if (!marker_count) {
+        return -1;
+    }
+
+    PrintToLog("____________________________________________________________________________________________________________________________________\n");
+    PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+
+    // now save output addresses & scripts for later use
+    // also determine if there is a multisig in there, if so = Class B
+    for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+        CTxDestination dest;
+        std::string strAddress;
+
+        if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
+            txnouttype whichType;
+            bool validType = false;
+            if (!GetOutputType(wtx.vout[i].scriptPubKey, whichType)) validType = false;
+            if (isAllowedOutputType(whichType, nBlock)) validType = true;
+
+            strAddress = CBitcoinAddress(dest).ToString();
+
+            if ((exodus_address != strAddress) && (validType)) {
+                if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", i, strAddress, wtx.vout[i].scriptPubKey.ToString());
+
+                // saving for Class A processing or reference
+                GetScriptPushes(wtx.vout[i].scriptPubKey, script_data);
+                address_data.push_back(strAddress);
+                value_data.push_back(wtx.vout[i].nValue);
+            }
+        } else {
+            // a multisig ?
+            txnouttype type;
+            std::vector<CTxDestination> vDest;
+            int nRequired;
+
+            if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) {
+                ++fMultisig;
+            }
+        }
+    }
+
+    if (msc_debug_parser_data) {
+        PrintToLog("address_data.size=%lu\n", address_data.size());
+        PrintToLog("script_data.size=%lu\n", script_data.size());
+        PrintToLog("value_data.size=%lu\n", value_data.size());
+    }
+
+    int inputs_errors = 0; // several types of erroroneous MP TX inputs
+    std::map<std::string, uint64_t> inputs_sum_of_values;
+    // now go through inputs & identify the sender, collect input amounts
+    // go through inputs, find the largest per Mastercoin protocol, the Sender
+
+    // Add previous transaction inputs to the cache
+    if (!FillTxInputCache(wtx)) {
+        PrintToLog("%s() ERROR: failed to get inputs for %s\n", __func__, wtx.GetHash().GetHex());
+        return -101;
+    }
+
+    assert(view.HaveInputs(wtx));
+
+    for (unsigned int i = 0; i < wtx.vin.size(); i++) {
+        if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
+
+        const CTxIn& txIn = wtx.vin[i];
+        const CTxOut& txOut = view.GetOutputFor(txIn);
+
+        assert(!txOut.IsNull());
+
+        CTxDestination source;
+
+        uint64_t nValue = txOut.nValue;
+        txnouttype whichType;
+
+        inAll += nValue;
+
+        if (ExtractDestination(txOut.scriptPubKey, source)) // extract the destination of the previous transaction's vout[n]
+        {
+            // we only allow pay-to-pubkeyhash, pay-to-scripthash & probably pay-to-pubkey (?)
+            {
+                if (!GetOutputType(txOut.scriptPubKey, whichType)) ++inputs_errors;
+                if (!isAllowedOutputType(whichType, nBlock)) ++inputs_errors;
+
+                if (inputs_errors) break;
+            }
+
+            CBitcoinAddress addressSource(source); // convert this to an address
+
+            inputs_sum_of_values[addressSource.ToString()] += nValue;
+        }
+        else ++inputs_errors;
+
+        if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, txIn.ToString());
+    } // end of inputs for loop
+
+    txFee = inAll - outAll; // this is the fee paid to miners for this TX
+
+    if (inputs_errors) // not a valid MP TX
+    {
+        return -101;
+    }
+
+    // largest by sum of values
+    uint64_t nMax = 0;
+    for (std::map<std::string, uint64_t>::iterator my_it = inputs_sum_of_values.begin(); my_it != inputs_sum_of_values.end(); ++my_it) {
+        uint64_t nTemp = my_it->second;
+
+        if (nTemp > nMax) {
+            strSender = my_it->first;
+            if (msc_debug_exo) PrintToLog("looking for The Sender: %s , nMax=%lu, nTemp=%lu\n", strSender, nMax, nTemp);
+            nMax = nTemp;
+        }
+    }
+
+    if (!strSender.empty()) {
+        if (msc_debug_verbose) PrintToLog("The Sender: %s : His Input Sum of Values= %s ; fee= %s\n",
+                strSender, FormatDivisibleMP(nMax), FormatDivisibleMP(txFee));
+    } else {
+        PrintToLog("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex());
+        return -5;
+    }
+
+    // This calculates exodus fundraiser for each tx within a given block
+    int64_t BTC_amount = ExodusValues[0];
+    if (isNonMainNet())
+    {
+        if (MONEYMAN_TESTNET_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0];
+    }
+
+    if (RegTest())
+    {
+        if (MONEYMAN_REGTEST_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0];
+    }
+
+    if (0 < BTC_amount && !bRPConly) (void) TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
+
+    // go through the outputs
+    for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+        CTxDestination address;
+
+        // if TRUE -- non-multisig
+        if (ExtractDestination(wtx.vout[i].scriptPubKey, address)) {
+        } else {
+            // probably a multisig -- get them
+            txnouttype type;
+            std::vector<CTxDestination> vDest;
+            int nRequired;
+
+            // CScript is a std::vector
+            if (msc_debug_script) PrintToLog("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
+
+            if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) {
+                if (msc_debug_script) PrintToLog(" >> multisig: ");
+                BOOST_FOREACH(const CTxDestination &dest, vDest)
+                {
+                    CBitcoinAddress address = CBitcoinAddress(dest);
+                    if (msc_debug_script) PrintToLog("%s ; ", address.ToString());
+                }
+                if (msc_debug_script) PrintToLog("\n");
+                // ignore first public key, as it should belong to the sender
+                // and it be used to avoid the creation of unspendable dust
+                GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
+            }
+        }
+    } // end of the outputs' for loop
+
+    std::string strObfuscatedHashes[1 + MAX_SHA256_OBFUSCATION_TIMES];
+    PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
+
+    unsigned char packets[MAX_LEGACY_PACKETS][32];
+    int mdata_count = 0; // multisig data count
+    if (!fMultisig) {
+        // ---------------------------------- Class A parsing ---------------------------
+
+        // Init vars
+        std::string strScriptData;
+        std::string strDataAddress;
+        std::string strRefAddress;
+        unsigned char dataAddressSeq = 0xFF;
+        unsigned char seq = 0xFF;
+        int64_t dataAddressValue = 0;
+
+        // Step 1, locate the data packet
+        for (unsigned k = 0; k < script_data.size(); k++) // loop through outputs
+        {
+            txnouttype whichType;
+            if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
+            if (!isAllowedOutputType(whichType, nBlock)) break;
+            std::string strSub = script_data[k].substr(2, 16); // retrieve bytes 1-9 of packet for peek & decode comparison
+            seq = (ParseHex(script_data[k].substr(0, 2)))[0]; // retrieve sequence number
+
+            if (("0000000000000001" == strSub) || ("0000000000000002" == strSub)) // peek & decode comparison
+            {
+                if (strScriptData.empty()) // confirm we have not already located a data address
+                {
+                    strScriptData = script_data[k].substr(2 * 1, 2 * PACKET_SIZE_CLASS_A); // populate data packet
+                    strDataAddress = address_data[k]; // record data address
+                    dataAddressSeq = seq; // record data address seq num for reference matching
+                    dataAddressValue = value_data[k]; // record data address amount for reference matching
+                    if (msc_debug_parser_data) PrintToLog("Data Address located - data[%d]:%s: %s (%s)\n", k, script_data[k], address_data[k], FormatDivisibleMP(value_data[k]));
+                } else {
+                    // invalidate - Class A cannot be more than one data packet - possible collision, treat as default (BTC payment)
+                    strDataAddress = ""; //empty strScriptData to block further parsing
+                    if (msc_debug_parser_data) PrintToLog("Multiple Data Addresses found (collision?) Class A invalidated, defaulting to BTC payment\n");
+                    break;
+                }
+            }
+        }
+
+        // Step 2, see if we can locate an address with a seqnum +1 of DataAddressSeq
+        if (!strDataAddress.empty()) // verify Step 1, we should now have a valid data packet, if so continue parsing
+        {
+            unsigned char expectedRefAddressSeq = dataAddressSeq + 1;
+            for (unsigned k = 0; k < script_data.size(); k++) // loop through outputs
+            {
+                txnouttype whichType;
+                if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
+                if (!isAllowedOutputType(whichType, nBlock)) break;
+
+                seq = (ParseHex(script_data[k].substr(0, 2)))[0]; // retrieve sequence number
+
+                if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (expectedRefAddressSeq == seq)) // found reference address with matching sequence number
+                {
+                    if (strRefAddress.empty()) // confirm we have not already located a reference address
+                    {
+                        strRefAddress = address_data[k]; // set ref address
+                        if (msc_debug_parser_data) PrintToLog("Reference Address located via seqnum - data[%d]:%s: %s (%s)\n", k, script_data[k], address_data[k], FormatDivisibleMP(value_data[k]));
+                    }
+                    else
+                    {
+                        // can't trust sequence numbers to provide reference address, there is a collision with >1 address with expected seqnum
+                        strRefAddress = ""; // blank ref address
+                        if (msc_debug_parser_data) PrintToLog("Reference Address sequence number collision, will fall back to evaluating matching output amounts\n");
+                        break;
+                    }
+                }
+            }
+            // Step 3, if we still don't have a reference address, see if we can locate an address with matching output amounts
+            if (strRefAddress.empty())
+            {
+                for (unsigned k = 0; k < script_data.size(); k++) // loop through outputs
+                {
+                    txnouttype whichType;
+                    if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
+                    if (!isAllowedOutputType(whichType, nBlock)) break;
+
+                    if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (dataAddressValue == value_data[k])) // this output matches data output, check if matches exodus output
+                    {
+                        for (int exodus_idx = 0; exodus_idx < marker_count; exodus_idx++) {
+                            if (value_data[k] == ExodusValues[exodus_idx]) //this output matches data address value and exodus address value, choose as ref
+                            {
+                                if (strRefAddress.empty()) {
+                                    strRefAddress = address_data[k];
+                                    if (msc_debug_parser_data) PrintToLog("Reference Address located via matching amounts - data[%d]:%s: %s (%s)\n", k, script_data[k], address_data[k], FormatDivisibleMP(value_data[k]));
+                                } else {
+                                    strRefAddress = "";
+                                    if (msc_debug_parser_data) PrintToLog("Reference Address collision, multiple potential candidates. Class A invalidated, defaulting to BTC payment\n");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } // end if (!strDataAddress.empty())
+
+        // Populate expected var strReference with chosen address (if not empty)
+        if (!strRefAddress.empty()) strReference = strRefAddress;
+
+        // Last validation step, if strRefAddress is empty, blank strDataAddress so we default to BTC payment
+        if (strRefAddress.empty()) strDataAddress = "";
+
+        // -------------------------------- End Class A parsing -------------------------
+
+        if (strDataAddress.empty()) // an empty Data Address here means it is not Class A valid and should be defaulted to a BTC payment
+        {
+            // this must be the BTC payment - validate (?)
+            PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+            PrintToLog("!! this may be the BTC payment for an offer !!\n");
+
+            // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
+
+            int count = 0;
+            // go through the outputs, once again...
+            {
+                for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+                    CTxDestination dest;
+
+                    if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
+                        const std::string strAddress = CBitcoinAddress(dest).ToString();
+
+                        if (exodus_address == strAddress) continue;
+                        PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
+
+                        // check everything & pay BTC for the property we are buying here...
+                        if (bRPConly) count = 55555; // no real way to validate a payment during simple RPC call
+                        else if (0 == DEx_payment(wtx.GetHash(), i, strAddress, strSender, wtx.vout[i].nValue, nBlock)) ++count;
+                    }
+                }
+            }
+            return count ? count : -5678; // return count -- the actual number of payments within this TX or error if none were made
+        }
+        else
+        {
+            // valid Class A packet almost ready
+            if (msc_debug_parser_data) PrintToLog("valid Class A:from=%s:to=%s:data=%s\n", strSender, strReference, strScriptData);
+            packet_size = PACKET_SIZE_CLASS_A;
+            memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
+        }
+    }
+    else // if (fMultisig)
+    {
+        unsigned int k = 0;
+        // gotta find the Reference - Z rewrite - scrappy & inefficient, can be optimized
+
+        if (msc_debug_parser_data) PrintToLog("Beginning reference identification\n");
+
+        bool referenceFound = false; // bool to hold whether we've found the reference yet
+        bool changeRemoved = false; // bool to hold whether we've ignored the first output to sender as change
+        unsigned int potentialReferenceOutputs = 0; // int to hold number of potential reference outputs
+
+        // how many potential reference outputs do we have, if just one select it right here
+        BOOST_FOREACH(const std::string &addr, address_data)
+        {
+            // keep Michael's original debug info & k int as used elsewhere
+            if (msc_debug_parser_data) PrintToLog("ref? data[%d]:%s: %s (%s)\n",
+                    k, script_data[k], addr, FormatDivisibleMP(value_data[k]));
+            ++k;
+
+            if (addr != exodus_address)
+            {
+                ++potentialReferenceOutputs;
+                if (1 == potentialReferenceOutputs)
+                {
+                    strReference = addr;
+                    referenceFound = true;
+                    if (msc_debug_parser_data) PrintToLog("Single reference potentially id'd as follows: %s\n", strReference);
+                }
+                else //as soon as potentialReferenceOutputs > 1 we need to go fishing
+                {
+                    strReference = ""; // avoid leaving strReference populated for sanity
+                    referenceFound = false;
+                    if (msc_debug_parser_data) PrintToLog("More than one potential reference candidate, blanking strReference, need to go fishing\n");
+                }
+            }
+        }
+
+        // do we have a reference now? or do we need to dig deeper
+        if (!referenceFound) // multiple possible reference addresses
+        {
+            if (msc_debug_parser_data) PrintToLog("Reference has not been found yet, going fishing\n");
+
+            BOOST_FOREACH(const string &addr, address_data)
+            {
+                // !!!! address_data is ordered by vout (i think - please confirm that's correct analysis?)
+                if (addr != exodus_address) // removed strSender restriction, not to spec
+                {
+                    if ((addr == strSender) && (!changeRemoved)) {
+                        // per spec ignore first output to sender as change if multiple possible ref addresses
+                        changeRemoved = true;
+                        if (msc_debug_parser_data) PrintToLog("Removed change\n");
+                    } else {
+                        // this may be set several times, but last time will be highest vout
+                        strReference = addr;
+                        if (msc_debug_parser_data) PrintToLog("Resetting strReference as follows: %s\n ", strReference);
+                    }
+                }
+            }
+        }
+
+        if (msc_debug_parser_data) PrintToLog("Ending reference identification\n");
+        if (msc_debug_parser_data) PrintToLog("Final decision on reference identification is: %s\n", strReference);
+
+        // multisig , Class B; get the data packets that are found here
+        for (unsigned int k = 0; k < multisig_script_data.size(); k++) {
+            CPubKey key(ParseHex(multisig_script_data[k]));
+            CKeyID keyID = key.GetID();
+            std::string strAddress = CBitcoinAddress(keyID).ToString();
+            std::string strPacket;
+
+            {
+                // this is a data packet, must deobfuscate now
+                std::vector<unsigned char> hash = ParseHex(strObfuscatedHashes[mdata_count + 1]);
+                std::vector<unsigned char> packet = ParseHex(multisig_script_data[k].substr(2 * 1, 2 * PACKET_SIZE));
+
+                for (unsigned int i = 0; i < packet.size(); i++) {
+                    packet[i] ^= hash[i];
+                }
+
+                memcpy(&packets[mdata_count], &packet[0], PACKET_SIZE);
+                strPacket = HexStr(packet.begin(), packet.end(), false);
+                ++mdata_count;
+
+                if (MAX_LEGACY_PACKETS <= mdata_count) {
+                    PrintToLog("increase MAX_PACKETS ! mdata_count= %d\n", mdata_count);
+                    return -222;
+                }
+            }
+
+            if (msc_debug_parser_data) PrintToLog("multisig_data[%d]:%s: %s\n", k, multisig_script_data[k], strAddress);
+
+            if (!strPacket.empty()) {
+                if (msc_debug_parser) PrintToLog("packet #%d: %s\n", mdata_count, strPacket);
+            }
+        }
+
+        packet_size = mdata_count * (PACKET_SIZE - 1);
+
+        if (sizeof (single_pkt) < packet_size) {
+            return -111;
+        }
+    } // end of if (fMultisig)
+
+    // now decode mastercoin packets
+    for (int m = 0; m < mdata_count; m++) {
+        if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
+
+        // check to ensure the sequence numbers are sequential and begin with 01 !
+        if (1 + m != packets[m][0]) {
+            if (msc_debug_spec) PrintToLog("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1 + m, packets[m][0]);
+        }
+
+        // now ignoring sequence numbers for Class B packets
+        memcpy(m * (PACKET_SIZE - 1) + single_pkt, 1 + packets[m], PACKET_SIZE - 1);
+    }
+
+    if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
+
+    mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *) &single_pkt, packet_size, fMultisig, (inAll - outAll));
+
+    return 0;
+}
+
+} // namespace legacy
 
 // idx is position within the block, 0-based
 // int msc_tx_push(const CTransaction &wtx, int nBlock, unsigned int idx)
@@ -708,380 +1360,455 @@ static bool isAllowedOutputType(int whichType, int nBlock)
 // RETURNS: >0 if 1 or more payments have been made
 static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime)
 {
-  string strSender;
-  vector<string>script_data;
-  vector<string>address_data;
-  vector<int64_t>value_data;
-  vector<string>multisig_script_data;
-  vector<string>op_return_script_data;
-  int64_t ExodusValues[MAX_BTC_OUTPUTS] = { 0 };
-  int64_t TestNetMoneyValues[MAX_BTC_OUTPUTS] = { 0 };  // new way to get funded on TestNet, send TBTC to moneyman address
-  string strReference;
-  unsigned char single_pkt[MAX_PACKETS * PACKET_SIZE];
-  unsigned int packet_size = 0;
-  int fMultisig = 0;
-  bool fOPReturn = false;
-  int marker_count = 0, getmoney_count = 0;
-  bool hasOmniBytes = false;
-  uint64_t inAll = 0;
-  uint64_t outAll = 0;
-  uint64_t txFee = 0;
-  int omniClass = 0;
-  mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
+    // Fallback to legacy parsing, if OP_RETURN isn't enabled:
+    if (!IsAllowedOutputType(TX_NULL_DATA, nBlock)) {
+        return legacy::parseTransaction(bRPConly, wtx, nBlock, idx, mp_tx, nTime);
+    }
 
+    mp_tx.Set(wtx.GetHash(), nBlock, idx, nTime);
 
-  // ### EXODUS MARKER IDENTIFICATION ### - quickly go through the outputs & ensure there is a marker (exodus and/or omni bytes)
-  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-      outAll += wtx.vout[i].nValue;
-      txnouttype outType;
-      if (!GetOutputType(wtx.vout[i].scriptPubKey, outType)) continue; //unable to get an output type, ignore
-      if (outType == TX_PUBKEYHASH) { // look for exodus marker
-          CTxDestination dest;
-          string strAddress;
-          if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
-              strAddress = CBitcoinAddress(dest).ToString();
-              if (exodus_address == strAddress) {
-                  ExodusValues[marker_count++] = wtx.vout[i].nValue;
-              } else if (isNonMainNet() && (getmoney_testnet == strAddress)) {
-                  TestNetMoneyValues[getmoney_count++] = wtx.vout[i].nValue;
-              }
-          }
-      }
-      if (outType == TX_NULL_DATA) { // look for 'omni' bytes
-          vector<string>temp_op_return_script_data;
-          GetScriptPushes(wtx.vout[i].scriptPubKey, temp_op_return_script_data);
-          if (temp_op_return_script_data.size() > 0) {
-              if (temp_op_return_script_data[0].size() > 8) {
-                  // only v0/v1 (and alert) txs are live, add 6f6d0002 to parse a v2 tx when one goes live
-                  if(("6f6d0000" == temp_op_return_script_data[0].substr(0,8)) ||
-                     ("6f6d0001" == temp_op_return_script_data[0].substr(0,8)) ||
-                     ("6f6dffff" == temp_op_return_script_data[0].substr(0,8))) {
-                      hasOmniBytes = true;
-                  }
-              }
-          }
-      }
-  }
-  if ((isNonMainNet() && getmoney_count)) {} else if ((!marker_count) && (!hasOmniBytes)) { return -1; } // no Exodus/omni marker, not a valid Omni transaction
-  PrintToLog("____________________________________________________________________________________________________________________________________\n");
-  PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    // ### CLASS IDENTIFICATION AND MARKER CHECK ###
+    int omniClass = GetEncodingClass(wtx, nBlock);
 
+    if (omniClass == NO_MARKER) {
+        return -1; // No Exodus/Omni marker, thus not a valid Omni transaction
+    }
+    PrintToLog("____________________________________________________________________________________________________________________________________\n");
+    PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
 
-  // ### DATA POPULATION ### - save output addresses, scripts, multsig and op_return data and determine tx class
-  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-      CTxDestination dest;
-      string strAddress;
-      txnouttype whichType;
-      bool validType = false;
-      if (!GetOutputType(wtx.vout[i].scriptPubKey, whichType)) validType=false;
-      if (isAllowedOutputType(whichType, nBlock)) validType=true;
-      if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
-          strAddress = CBitcoinAddress(dest).ToString();
-          if ((exodus_address != strAddress) && (validType)) {
-              if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", i, strAddress, wtx.vout[i].scriptPubKey.ToString());
-              // saving for Class A processing or reference
-              GetScriptPushes(wtx.vout[i].scriptPubKey, script_data);
-              address_data.push_back(strAddress);
-              value_data.push_back(wtx.vout[i].nValue);
-          }
-      } else {
-          if ((whichType == TX_NULL_DATA) && (validType)) {
-              fOPReturn = true;
-              GetScriptPushes(wtx.vout[i].scriptPubKey, op_return_script_data); // only one OP_RETURN output permitted per tx
-              string debug_op_string;
-              if (op_return_script_data.size() > 0) debug_op_string=op_return_script_data[0];
-              if (msc_debug_parser_data) PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), debug_op_string, i);
-          } else { // likeky a multisig
-              txnouttype type;
-              std::vector<CTxDestination> vDest;
-              int nRequired;
-              if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) ++fMultisig;
-          }
-      }
-  }
-  if (msc_debug_parser_data) PrintToLog(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
+    // Add previous transaction inputs to the cache
+    if (!FillTxInputCache(wtx)) {
+        PrintToLog("%s() ERROR: failed to get inputs for %s\n", __func__, wtx.GetHash().GetHex());
+        return -101;
+    }
 
+    assert(view.HaveInputs(wtx));
 
-  // ### CLASS IDENTIFICATION ###
-  if (fOPReturn) omniClass = OMNI_CLASS_C; // the presence of an OP_RETURN output will enfore parsing as class C
-  if ((!fOPReturn) && (fMultisig)) omniClass = OMNI_CLASS_B; // no OP_RETURN output and the presence of multsig outputs will enforce parsing as class B
-  if (omniClass == 0) omniClass = OMNI_CLASS_A; // no class set, default to Class A
+    // ### SENDER IDENTIFICATION ###
+    std::string strSender;
 
+    if (omniClass != OMNI_CLASS_C)
+    {
+        // OLD LOGIC - collect input amounts and identify sender via "largest input by sum"
+        std::map<std::string, int64_t> inputs_sum_of_values;
 
-  // ### SENDER IDENTIFICATION ### - collect input amounts and identify sender via "largest input by sum"
-  int inputs_errors = 0;  // several types of erroroneous MP TX inputs
-  map <string, uint64_t> inputs_sum_of_values;
-  for (unsigned int i = 0; i < wtx.vin.size(); i++) {
-      if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
-      CTransaction txPrev;
-      uint256 hashBlock;
-      if (!GetTransaction(wtx.vin[i].prevout.hash, txPrev, hashBlock, true)) { return -101; } // get the vin's previous transaction
-      unsigned int n = wtx.vin[i].prevout.n;
-      CTxDestination source;
-      txnouttype whichType;
-      inAll += txPrev.vout[n].nValue;
-      if (ExtractDestination(txPrev.vout[n].scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
-          if (!GetOutputType(txPrev.vout[n].scriptPubKey, whichType)) { ++inputs_errors; break; }
-          if (!isAllowedOutputType(whichType, nBlock)) { ++inputs_errors; break; }
-          CBitcoinAddress addressSource(source);
-          inputs_sum_of_values[addressSource.ToString()] += txPrev.vout[n].nValue;
-      }
-      else ++inputs_errors;
-      if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].ToString());
-  }
-  if (inputs_errors) { return -101; } // not a valid Omni TX, disallowed inputs invalidate the transaction
-  txFee = inAll - outAll; // miner fee
-  uint64_t nMax = 0;
-  for(map<string, uint64_t>::iterator my_it = inputs_sum_of_values.begin(); my_it != inputs_sum_of_values.end(); ++my_it) { // find largest by sum
-      uint64_t nTemp = my_it->second;
-      if (nTemp > nMax) {
-          strSender = my_it->first;
-          if (msc_debug_exo) PrintToLog("looking for The Sender: %s , nMax=%lu, nTemp=%lu\n", strSender, nMax, nTemp);
-          nMax = nTemp;
-      }
-  }
-  if (!strSender.empty()) {
-      if (msc_debug_verbose) PrintToLog("The Sender: %s : His Input Sum of Values= %lu.%08lu ; fee= %lu.%08lu\n", strSender, nMax / COIN, nMax % COIN, txFee/COIN, txFee%COIN);
-  } else {
-      PrintToLog("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex());
-      return -5;
-  }
+        for (unsigned int i = 0; i < wtx.vin.size(); ++i) {
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", i, wtx.vin[i].scriptSig.ToString());
 
+            const CTxIn& txIn = wtx.vin[i];
+            const CTxOut& txOut = view.GetOutputFor(txIn);
 
-  // ### CHECK FOR ANY REQUIRED EXODUS CROWDSALE PAYMENTS ###
-  int64_t BTC_amount = ExodusValues[0];
-  if (isNonMainNet()) { if (MONEYMAN_TESTNET_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0]; }
-  if (RegTest()) { if (MONEYMAN_REGTEST_BLOCK <= nBlock) BTC_amount = TestNetMoneyValues[0]; }
-  if (0 < BTC_amount && !bRPConly) (void) TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
+            assert(!txOut.IsNull());
 
+            CTxDestination source;
+            txnouttype whichType;
+            if (!GetOutputType(txOut.scriptPubKey, whichType)) {
+                return -104;
+            }
+            if (!IsAllowedInputType(whichType, nBlock)) {
+                return -105;
+            }
+            if (ExtractDestination(txOut.scriptPubKey, source)) { // extract the destination of the previous transaction's vout[n] and check it's allowed type
+                CBitcoinAddress addressSource(source);
+                inputs_sum_of_values[addressSource.ToString()] += txOut.nValue;
+            }
+            else return -106;
+        }
 
-  // ### POPULATE MULTISIG SCRIPT DATA ###
-  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-      CTxDestination address;
-      if (ExtractDestination(wtx.vout[i].scriptPubKey, address)) {} else { // if true it's a plain pay-to-pubkeyhash output
-          txnouttype type;
-          std::vector<CTxDestination> vDest;
-          int nRequired;
-          if (msc_debug_script) PrintToLog("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
-          if (ExtractDestinations(wtx.vout[i].scriptPubKey, type, vDest, nRequired)) {
-              if (msc_debug_script) PrintToLog(" >> multisig: ");
-              BOOST_FOREACH(const CTxDestination &dest, vDest) {
-                  CBitcoinAddress address = CBitcoinAddress(dest);
-                  CKeyID keyID;
-                  if (!address.GetKeyID(keyID)) { } // TODO: add an error handler
-                  if (msc_debug_script) PrintToLog("%s ; ", address.ToString());
-              }
-              if (msc_debug_script) PrintToLog("\n");
-              // ignore first public key, as it should belong to the sender
-              // and it be used to avoid the creation of unspendable dust
-              GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
-          }
-      }
-  }
+        int64_t nMax = 0;
+        for (std::map<std::string, int64_t>::iterator it = inputs_sum_of_values.begin(); it != inputs_sum_of_values.end(); ++it) { // find largest by sum
+            int64_t nTemp = it->second;
+            if (nTemp > nMax) {
+                strSender = it->first;
+                if (msc_debug_exo) PrintToLog("looking for The Sender: %s , nMax=%lu, nTemp=%d\n", strSender, nMax, nTemp);
+                nMax = nTemp;
+            }
+        }
+    }
+    else
+    {
+        // NEW LOGIC - the sender is chosen based on the first vin
 
+        // determine the sender, but invalidate transaction, if the input is not accepted
+        {
+            unsigned int vin_n = 0; // the first input
+            if (msc_debug_vin) PrintToLog("vin=%d:%s\n", vin_n, wtx.vin[vin_n].scriptSig.ToString());
 
-  // ### PREPARE A FEW VARS ###
-  string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
-  PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
-  unsigned char packets[MAX_PACKETS][32];
-  int mdata_count = 0;  // multisig data count
+            const CTxIn& txIn = wtx.vin[vin_n];
+            const CTxOut& txOut = view.GetOutputFor(txIn);
 
+            assert(!txOut.IsNull());
 
-  // ### CLASS A PARSING ###
-  if (omniClass == OMNI_CLASS_A) {
-      string strScriptData;
-      string strDataAddress;
-      string strRefAddress;
-      unsigned char dataAddressSeq = 0xFF;
-      unsigned char seq = 0xFF;
-      int64_t dataAddressValue = 0;
-      for (unsigned k = 0; k<script_data.size();k++) { // Step 1, locate the data packet
-          txnouttype whichType;
-          if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
-          if (!isAllowedOutputType(whichType, nBlock)) break;
-          string strSub = script_data[k].substr(2,16); // retrieve bytes 1-9 of packet for peek & decode comparison
-          seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
-          if (("0000000000000001" == strSub) || ("0000000000000002" == strSub)) { // peek & decode comparison
-              if (strScriptData.empty()) { // confirm we have not already located a data address
-                  strScriptData = script_data[k].substr(2*1,2*PACKET_SIZE_CLASS_A); // populate data packet
-                  strDataAddress = address_data[k]; // record data address
-                  dataAddressSeq = seq; // record data address seq num for reference matching
-                  dataAddressValue = value_data[k]; // record data address amount for reference matching
-                  if (msc_debug_parser_data) PrintToLog("Data Address located - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], address_data[k], value_data[k] / COIN, value_data[k] % COIN);
-              } else { // invalidate - Class A cannot be more than one data packet - possible collision, treat as default (BTC payment)
-                  strDataAddress = ""; //empty strScriptData to block further parsing
-                  if (msc_debug_parser_data) PrintToLog("Multiple Data Addresses found (collision?) Class A invalidated, defaulting to BTC payment\n");
-                  break;
-              }
-          }
-      }
-      if (!strDataAddress.empty()) { // Step 2, try to locate address with seqnum = DataAddressSeq+1 (also verify Step 1, we should now have a valid data packet)
-          unsigned char expectedRefAddressSeq = dataAddressSeq + 1;
-          for (unsigned k = 0; k<script_data.size();k++) { // loop through outputs
-              txnouttype whichType;
-              if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
-              if (!isAllowedOutputType(whichType, nBlock)) break;
-              seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
-              if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (expectedRefAddressSeq == seq)) { // found reference address with matching sequence number
-                  if (strRefAddress.empty()) { // confirm we have not already located a reference address
-                      strRefAddress = address_data[k]; // set ref address
-                      if (msc_debug_parser_data) PrintToLog("Reference Address located via seqnum - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], address_data[k], value_data[k] / COIN, value_data[k] % COIN);
-                  } else { // can't trust sequence numbers to provide reference address, there is a collision with >1 address with expected seqnum
-                      strRefAddress = ""; // blank ref address
-                      if (msc_debug_parser_data) PrintToLog("Reference Address sequence number collision, will fall back to evaluating matching output amounts\n");
-                      break;
-                  }
-              }
-          }
-          if (strRefAddress.empty()) { // Step 3, if we still don't have a reference address, see if we can locate an address with matching output amounts
-              for (unsigned k = 0; k<script_data.size();k++) { // loop through outputs
-                  txnouttype whichType;
-                  if (!GetOutputType(wtx.vout[k].scriptPubKey, whichType)) break; // unable to determine type, ignore output
-                  if (!isAllowedOutputType(whichType, nBlock)) break;
-                  if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (dataAddressValue == value_data[k])) { // this output matches data output, check if matches exodus output
-                      for (int exodus_idx=0;exodus_idx<marker_count;exodus_idx++) {
-                          if (value_data[k] == ExodusValues[exodus_idx]) { //this output matches data address value and exodus address value, choose as ref
-                              if (strRefAddress.empty()) {
-                                  strRefAddress = address_data[k];
-                                  if (msc_debug_parser_data) PrintToLog("Reference Address located via matching amounts - data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], address_data[k], value_data[k] / COIN, value_data[k] % COIN);
-                              } else {
-                                  strRefAddress = "";
-                                  if (msc_debug_parser_data) PrintToLog("Reference Address collision, multiple potential candidates. Class A invalidated, defaulting to BTC payment\n");
-                                  break;
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      } // end if (!strDataAddress.empty())
-      if (!strRefAddress.empty()) strReference=strRefAddress; // populate expected var strReference with chosen address (if not empty)
-      if (strRefAddress.empty()) strDataAddress=""; // last validation step, if strRefAddress is empty, blank strDataAddress so we default to BTC payment
-      if (!strDataAddress.empty()) { // valid Class A packet almost ready
-          if (msc_debug_parser_data) PrintToLog("valid Class A:from=%s:to=%s:data=%s\n", strSender, strReference, strScriptData);
-          packet_size = PACKET_SIZE_CLASS_A;
-          memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
-      } else {
-          // ### BTC PAYMENT FOR DEX HANDLING ###
-          PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
-          PrintToLog("!! this may be the BTC payment for an offer !!\n");
-          // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
-          int count = 0;
-          for (unsigned int i = 0; i < wtx.vout.size(); i++) {
-              CTxDestination dest;
-              if (ExtractDestination(wtx.vout[i].scriptPubKey, dest)) {
-                  const string strAddress = CBitcoinAddress(dest).ToString();
-                  if (exodus_address == strAddress) continue;
-                  PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double)wtx.vout[i].nValue/(double)COIN);
-                  // check everything & pay BTC for the property we are buying here...
-                  if (bRPConly) count = 55555;  // no real way to validate a payment during simple RPC call
-                  else if (0 == DEx_payment(wtx.GetHash(), i, strAddress, strSender, wtx.vout[i].nValue, nBlock)) ++count;
-              }
-          }
-          return count ? count : -5678; // return count -- the actual number of payments within this TX or error if none were made
-      }
-  }
+            txnouttype whichType;
+            if (!GetOutputType(txOut.scriptPubKey, whichType)) {
+                return -108;
+            }
+            if (!IsAllowedInputType(whichType, nBlock)) {
+                return -109;
+            }
+            CTxDestination source;
+            if (ExtractDestination(txOut.scriptPubKey, source)) {
+                strSender = CBitcoinAddress(source).ToString();
+            }
+            else return -110;
+        }
+    }
 
+    int64_t inAll = view.GetValueIn(wtx);
+    int64_t outAll = wtx.GetValueOut();
+    int64_t txFee = inAll - outAll; // miner fee
 
-  // ### CLASS B / CLASS C PARSING ###
-  if ((omniClass == OMNI_CLASS_B) || (omniClass == OMNI_CLASS_C)) {
-      unsigned int k = 0;
-      if (msc_debug_parser_data) PrintToLog("Beginning reference identification\n");
-      bool referenceFound = false; // bool to hold whether we've found the reference yet
-      bool changeRemoved = false; // bool to hold whether we've ignored the first output to sender as change
-      unsigned int potentialReferenceOutputs = 0; // int to hold number of potential reference outputs
-      BOOST_FOREACH(const string &addr, address_data) { // how many potential reference outputs do we have, if just one select it right here
-          if (msc_debug_parser_data) PrintToLog("ref? data[%d]:%s: %s (%lu.%08lu)\n", k, script_data[k], addr, value_data[k] / COIN, value_data[k] % COIN);
-          ++k;
-          if (addr != exodus_address) {
-              ++potentialReferenceOutputs;
-              if (1 == potentialReferenceOutputs) {
-                  strReference = addr;
-                  referenceFound = true;
-                  if (msc_debug_parser_data) PrintToLog("Single reference potentially id'd as follows: %s \n", strReference);
-              } else { //as soon as potentialReferenceOutputs > 1 we need to go fishing
-                  strReference = ""; // avoid leaving strReference populated for sanity
-                  referenceFound = false;
-                  if (msc_debug_parser_data) PrintToLog("More than one potential reference candidate, blanking strReference, need to go fishing\n");
-              }
-          }
-      }
-      if (!referenceFound) { // do we have a reference now? or do we need to dig deeper
-          if (msc_debug_parser_data) PrintToLog("Reference has not been found yet, going fishing\n");
-          BOOST_FOREACH(const string &addr, address_data) {
-              if (addr != exodus_address) { // removed strSender restriction, not to spec
-                  if ((addr == strSender) && (!changeRemoved)) {
-                      changeRemoved = true; // per spec ignore first output to sender as change if multiple possible ref addresses
-                      if (msc_debug_parser_data) PrintToLog("Removed change\n");
-                  } else {
-                      strReference = addr; // this may be set several times, but last time will be highest vout
-                      if (msc_debug_parser_data) PrintToLog("Resetting strReference as follows: %s \n ", strReference);
-                  }
-              }
-          }
-      }
-      if (msc_debug_parser_data) PrintToLog("Ending reference identification\nFinal decision on reference identification is: %s\n", strReference);
-      if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
-      // ### CLASS B SPECIFC PARSING ###
-      if (omniClass == OMNI_CLASS_B) {
-          for (unsigned int k = 0; k<multisig_script_data.size();k++) {
-              if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
-              CPubKey key(ParseHex(multisig_script_data[k]));
-              CKeyID keyID = key.GetID();
-              string strAddress = CBitcoinAddress(keyID).ToString();
-              char *c_addr_type = (char *)"";
-              string strPacket;
-              if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
-              vector<unsigned char>hash = ParseHex(strObfuscatedHashes[mdata_count+1]);
-              vector<unsigned char>packet = ParseHex(multisig_script_data[k].substr(2*1,2*PACKET_SIZE));
-              for (unsigned int i=0;i<packet.size();i++) { // this is a data packet, must deobfuscate now
-                  packet[i] ^= hash[i];
-              }
-              memcpy(&packets[mdata_count], &packet[0], PACKET_SIZE);
-              strPacket = HexStr(packet.begin(),packet.end(), false);
-              ++mdata_count;
-              if (MAX_PACKETS <= mdata_count) {
-                  PrintToLog("increase MAX_PACKETS ! mdata_count= %d\n", mdata_count);
-                  return -222;
-              }
-              if (msc_debug_parser_data) PrintToLog("multisig_data[%d]:%s: %s%s\n", k, multisig_script_data[k], strAddress, c_addr_type);
-              if (!strPacket.empty()) { if (msc_debug_parser) PrintToLog("packet #%d: %s\n", mdata_count, strPacket); }
-              if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
-          }
-          packet_size = mdata_count * (PACKET_SIZE - 1);
-          if (sizeof(single_pkt)<packet_size) return -111;
-          if (msc_debug_parser) PrintToLog("%s(), line %d, file: %s\n", __FUNCTION__, __LINE__, __FILE__);
-      }
-      // ### CLASS C SPECIFIC PARSING ###
-      if (omniClass == OMNI_CLASS_C) {
-          if (op_return_script_data.size() > 0) {
-              if (op_return_script_data[0].size() > 4) {
-                  std::string payload = op_return_script_data[0].substr(4,op_return_script_data[0].size()-4); // strip out marker
-                  packet_size=(payload.size())/2; // get packet byte size - hex so always a multiple of 2
-                  if(packet_size < MIN_PAYLOAD_SIZE) return -111;
-                  memcpy(single_pkt, &ParseHex(payload)[0], packet_size); // load the packet ready to set mp tx info
-              }
-          }
-      }
-  }
+    if (!strSender.empty()) {
+        if (msc_debug_verbose) PrintToLog("The Sender: %s : fee= %s\n", strSender, FormatDivisibleMP(txFee));
+    } else {
+        PrintToLog("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex());
+        return -5;
+    }
 
+    if (!bRPConly) {
+        // ### CHECK FOR ANY REQUIRED EXODUS CROWDSALE PAYMENTS ###
+        int64_t BTC_amount = 0;
+        for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+            CTxDestination dest;
+            if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+                if (CBitcoinAddress(dest) == ExodusCrowdsaleAddress(nBlock)) {
+                    BTC_amount = wtx.vout[n].nValue;
+                    break; // TODO: maybe sum all values
+                }
+            }
+        }
+        if (0 < BTC_amount) {
+            TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
+        }
+    }
 
-  // ### FINALIZE CLASS B ###
-  for (int m=0;m<mdata_count;m++) { // now decode mastercoin packets
-      if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
-      // check to ensure the sequence numbers are sequential and begin with 01 !
-      if (1+m != packets[m][0]) {
-          if (msc_debug_spec) PrintToLog("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1+m, packets[m][0]);
-      }
-      memcpy(m*(PACKET_SIZE-1)+single_pkt, 1+packets[m], PACKET_SIZE-1); // now ignoring sequence numbers for Class B packets
-  }
+    // ### DATA POPULATION ### - save output addresses, values and scripts
+    std::string strReference;
+    unsigned char single_pkt[MAX_PACKETS * PACKET_SIZE];
+    unsigned int packet_size = 0;
+    std::vector<std::string> script_data;
+    std::vector<std::string> address_data;
+    std::vector<int64_t> value_data;
 
+    for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+        txnouttype whichType;
+        if (!GetOutputType(wtx.vout[n].scriptPubKey, whichType)) {
+            continue;
+        }
+        if (!IsAllowedOutputType(whichType, nBlock)) {
+            continue;
+        }
+        CTxDestination dest;
+        if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+            CBitcoinAddress address(dest);
+            if (!(address == ExodusAddress())) {
+                // saving for Class A processing or reference
+                GetScriptPushes(wtx.vout[n].scriptPubKey, script_data);
+                address_data.push_back(address.ToString());
+                value_data.push_back(wtx.vout[n].nValue);
+                if (msc_debug_parser_data) PrintToLog("saving address_data #%d: %s:%s\n", n, address.ToString(), wtx.vout[n].scriptPubKey.ToString());
+            }
+        }
+    }
+    if (msc_debug_parser_data) PrintToLog(" address_data.size=%lu\n script_data.size=%lu\n value_data.size=%lu\n", address_data.size(), script_data.size(), value_data.size());
 
-  // ### SET MP TX INFO ###
-  if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
-  mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+    // ### CLASS A PARSING ###
+    if (omniClass == OMNI_CLASS_A) {
+        std::string strScriptData;
+        std::string strDataAddress;
+        std::string strRefAddress;
+        unsigned char dataAddressSeq = 0xFF;
+        unsigned char seq = 0xFF;
+        int64_t dataAddressValue = 0;
+        for (unsigned k = 0; k < script_data.size(); ++k) { // Step 1, locate the data packet
+            std::string strSub = script_data[k].substr(2,16); // retrieve bytes 1-9 of packet for peek & decode comparison
+            seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
+            if ("0000000000000001" == strSub || "0000000000000002" == strSub) { // peek & decode comparison
+                if (strScriptData.empty()) { // confirm we have not already located a data address
+                    strScriptData = script_data[k].substr(2*1,2*PACKET_SIZE_CLASS_A); // populate data packet
+                    strDataAddress = address_data[k]; // record data address
+                    dataAddressSeq = seq; // record data address seq num for reference matching
+                    dataAddressValue = value_data[k]; // record data address amount for reference matching
+                    if (msc_debug_parser_data) PrintToLog("Data Address located - data[%d]:%s: %s (%s)\n", k, script_data[k], address_data[k], FormatDivisibleMP(value_data[k]));
+                } else { // invalidate - Class A cannot be more than one data packet - possible collision, treat as default (BTC payment)
+                    strDataAddress.clear(); //empty strScriptData to block further parsing
+                    if (msc_debug_parser_data) PrintToLog("Multiple Data Addresses found (collision?) Class A invalidated, defaulting to BTC payment\n");
+                    break;
+                }
+            }
+        }
+        if (!strDataAddress.empty()) { // Step 2, try to locate address with seqnum = DataAddressSeq+1 (also verify Step 1, we should now have a valid data packet)
+            unsigned char expectedRefAddressSeq = dataAddressSeq + 1;
+            for (unsigned k = 0; k < script_data.size(); ++k) { // loop through outputs
+                seq = (ParseHex(script_data[k].substr(0,2)))[0]; // retrieve sequence number
+                if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (expectedRefAddressSeq == seq)) { // found reference address with matching sequence number
+                    if (strRefAddress.empty()) { // confirm we have not already located a reference address
+                        strRefAddress = address_data[k]; // set ref address
+                        if (msc_debug_parser_data) PrintToLog("Reference Address located via seqnum - data[%d]:%s: %s (%s)\n", k, script_data[k], address_data[k], FormatDivisibleMP(value_data[k]));
+                    } else { // can't trust sequence numbers to provide reference address, there is a collision with >1 address with expected seqnum
+                        strRefAddress.clear(); // blank ref address
+                        if (msc_debug_parser_data) PrintToLog("Reference Address sequence number collision, will fall back to evaluating matching output amounts\n");
+                        break;
+                    }
+                }
+            }
+            std::vector<int64_t> ExodusValues;
+            for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+                CTxDestination dest;
+                if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+                    if (CBitcoinAddress(dest) == ExodusAddress()) {
+                        ExodusValues.push_back(wtx.vout[n].nValue);
+                    }
+                }
+            }
+            if (strRefAddress.empty()) { // Step 3, if we still don't have a reference address, see if we can locate an address with matching output amounts
+                for (unsigned k = 0; k < script_data.size(); ++k) { // loop through outputs
+                    if ((address_data[k] != strDataAddress) && (address_data[k] != exodus_address) && (dataAddressValue == value_data[k])) { // this output matches data output, check if matches exodus output
+                        for (unsigned int exodus_idx = 0; exodus_idx < ExodusValues.size(); exodus_idx++) {
+                            if (value_data[k] == ExodusValues[exodus_idx]) { //this output matches data address value and exodus address value, choose as ref
+                                if (strRefAddress.empty()) {
+                                    strRefAddress = address_data[k];
+                                    if (msc_debug_parser_data) PrintToLog("Reference Address located via matching amounts - data[%d]:%s: %s (%s)\n", k, script_data[k], address_data[k], FormatDivisibleMP(value_data[k]));
+                                } else {
+                                    strRefAddress.clear();
+                                    if (msc_debug_parser_data) PrintToLog("Reference Address collision, multiple potential candidates. Class A invalidated, defaulting to BTC payment\n");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } // end if (!strDataAddress.empty())
+        if (!strRefAddress.empty()) {
+            strReference = strRefAddress; // populate expected var strReference with chosen address (if not empty)
+        }
+        if (strRefAddress.empty()) {
+            strDataAddress.clear(); // last validation step, if strRefAddress is empty, blank strDataAddress so we default to BTC payment
+        }
+        if (!strDataAddress.empty()) { // valid Class A packet almost ready
+            if (msc_debug_parser_data) PrintToLog("valid Class A:from=%s:to=%s:data=%s\n", strSender, strReference, strScriptData);
+            packet_size = PACKET_SIZE_CLASS_A;
+            memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
+        } else {
+            // ### BTC PAYMENT FOR DEX HANDLING ###
+            PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+            PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
+            int count = 0;
+            for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+                CTxDestination dest;
+                if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
+                    CBitcoinAddress address(dest);
+                    if (address == ExodusAddress()) {
+                        continue;
+                    }
+                    std::string strAddress = address.ToString();
+                    PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(wtx.vout[n].nValue));
+                    // check everything & pay BTC for the property we are buying here...
+                    if (bRPConly) count = 55555;  // no real way to validate a payment during simple RPC call
+                    else if (0 == DEx_payment(wtx.GetHash(), n, strAddress, strSender, wtx.vout[n].nValue, nBlock)) ++count;
+                }
+            }
+            return count ? count : -5678; // return count -- the actual number of payments within this TX or error if none were made
+        }
+    }
+    // ### CLASS B / CLASS C PARSING ###
+    if ((omniClass == OMNI_CLASS_B) || (omniClass == OMNI_CLASS_C)) {
+        if (msc_debug_parser_data) PrintToLog("Beginning reference identification\n");
+        bool referenceFound = false; // bool to hold whether we've found the reference yet
+        bool changeRemoved = false; // bool to hold whether we've ignored the first output to sender as change
+        unsigned int potentialReferenceOutputs = 0; // int to hold number of potential reference outputs
+        for (unsigned k = 0; k < address_data.size(); ++k) { // how many potential reference outputs do we have, if just one select it right here
+            const std::string& addr = address_data[k];
+            if (msc_debug_parser_data) PrintToLog("ref? data[%d]:%s: %s (%s)\n", k, script_data[k], addr, FormatIndivisibleMP(value_data[k]));
+            if (addr != exodus_address) {
+                ++potentialReferenceOutputs;
+                if (1 == potentialReferenceOutputs) {
+                    strReference = addr;
+                    referenceFound = true;
+                    if (msc_debug_parser_data) PrintToLog("Single reference potentially id'd as follows: %s \n", strReference);
+                } else { //as soon as potentialReferenceOutputs > 1 we need to go fishing
+                    strReference.clear(); // avoid leaving strReference populated for sanity
+                    referenceFound = false;
+                    if (msc_debug_parser_data) PrintToLog("More than one potential reference candidate, blanking strReference, need to go fishing\n");
+                }
+            }
+        }
+        if (!referenceFound) { // do we have a reference now? or do we need to dig deeper
+            if (msc_debug_parser_data) PrintToLog("Reference has not been found yet, going fishing\n");
+            for (unsigned k = 0; k < address_data.size(); ++k) {
+                const std::string& addr = address_data[k];
+                if (addr != exodus_address) { // removed strSender restriction, not to spec
+                    if (addr == strSender && !changeRemoved) {
+                        changeRemoved = true; // per spec ignore first output to sender as change if multiple possible ref addresses
+                        if (msc_debug_parser_data) PrintToLog("Removed change\n");
+                    } else {
+                        strReference = addr; // this may be set several times, but last time will be highest vout
+                        if (msc_debug_parser_data) PrintToLog("Resetting strReference as follows: %s \n ", strReference);
+                    }
+                }
+            }
+        }
+        if (msc_debug_parser_data) PrintToLog("Ending reference identification\nFinal decision on reference identification is: %s\n", strReference);
 
-  return 0;
+        // ### CLASS B SPECIFC PARSING ###
+        if (omniClass == OMNI_CLASS_B) {
+            std::vector<std::string> multisig_script_data;
+
+            // ### POPULATE MULTISIG SCRIPT DATA ###
+            for (unsigned int i = 0; i < wtx.vout.size(); ++i) {
+                txnouttype whichType;
+                std::vector<CTxDestination> vDest;
+                int nRequired;
+                if (msc_debug_script) PrintToLog("scriptPubKey: %s\n", HexStr(wtx.vout[i].scriptPubKey));
+                if (!ExtractDestinations(wtx.vout[i].scriptPubKey, whichType, vDest, nRequired)) {
+                    continue;
+                }
+                if (whichType == TX_MULTISIG) {
+                    if (msc_debug_script) {
+                        PrintToLog(" >> multisig: ");
+                        BOOST_FOREACH(const CTxDestination& dest, vDest) {
+                            PrintToLog("%s ; ", CBitcoinAddress(dest).ToString());
+                        }
+                        PrintToLog("\n");
+                    }
+                    // ignore first public key, as it should belong to the sender
+                    // and it be used to avoid the creation of unspendable dust
+                    GetScriptPushes(wtx.vout[i].scriptPubKey, multisig_script_data, true);
+                }
+            }
+
+            // The number of packets is limited to MAX_PACKETS,
+            // which allows, at least in theory, to add 1 byte
+            // sequence numbers to each packet.
+
+            // Transactions with more than MAX_PACKET packets
+            // are not invalidated, but trimmed.
+
+            unsigned int nPackets = multisig_script_data.size();
+            if (nPackets > MAX_PACKETS) {
+                nPackets = MAX_PACKETS;
+                PrintToLog("limiting number of packets to %d [extracted=%d]\n", nPackets, multisig_script_data.size());
+            }
+
+            // ### PREPARE A FEW VARS ###
+            std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
+            PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
+            unsigned char packets[nPackets][32];
+            unsigned int mdata_count = 0;  // multisig data count
+
+            // ### DEOBFUSCATE MULTISIG PACKETS ###
+            for (unsigned int k = 0; k < nPackets; ++k) {
+                assert(mdata_count < MAX_PACKETS);
+                assert(mdata_count < MAX_SHA256_OBFUSCATION_TIMES);
+
+                std::vector<unsigned char> hash = ParseHex(strObfuscatedHashes[mdata_count+1]);
+                std::vector<unsigned char> packet = ParseHex(multisig_script_data[k].substr(2*1,2*PACKET_SIZE));
+                for (unsigned int i = 0; i < packet.size(); i++) { // this is a data packet, must deobfuscate now
+                    packet[i] ^= hash[i];
+                }
+                memcpy(&packets[mdata_count], &packet[0], PACKET_SIZE);
+                ++mdata_count;
+
+                if (msc_debug_parser_data) {
+                    CPubKey key(ParseHex(multisig_script_data[k]));
+                    CKeyID keyID = key.GetID();
+                    std::string strAddress = CBitcoinAddress(keyID).ToString();
+                    PrintToLog("multisig_data[%d]:%s: %s\n", k, multisig_script_data[k], strAddress);
+                }
+                if (msc_debug_parser) {
+                    if (!packet.empty()) {
+                        std::string strPacket = HexStr(packet.begin(), packet.end());
+                        PrintToLog("packet #%d: %s\n", mdata_count, strPacket);
+                    }
+                }
+            }
+            packet_size = mdata_count * (PACKET_SIZE - 1);
+            if (sizeof(single_pkt) < packet_size) {
+                return -111;
+            }
+
+            // ### FINALIZE CLASS B ###
+            for (unsigned int m = 0; m < mdata_count; ++m) { // now decode mastercoin packets
+                if (msc_debug_parser) PrintToLog("m=%d: %s\n", m, HexStr(packets[m], PACKET_SIZE + packets[m], false));
+
+                // check to ensure the sequence numbers are sequential and begin with 01 !
+                if (1 + m != packets[m][0]) {
+                    if (msc_debug_spec) PrintToLog("Error: non-sequential seqnum ! expected=%d, got=%d\n", 1+m, packets[m][0]);
+                }
+
+                memcpy(m*(PACKET_SIZE-1)+single_pkt, 1+packets[m], PACKET_SIZE-1); // now ignoring sequence numbers for Class B packets
+            }
+        }
+
+        // ### CLASS C SPECIFIC PARSING ###
+        if (omniClass == OMNI_CLASS_C) {
+            std::vector<std::string> op_return_script_data;
+
+            // ### POPULATE OP RETURN SCRIPT DATA ###
+            for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
+                txnouttype whichType;
+                if (!GetOutputType(wtx.vout[n].scriptPubKey, whichType)) {
+                    continue;
+                }
+                if (!IsAllowedOutputType(whichType, nBlock)) {
+                    continue;
+                }
+                if (whichType == TX_NULL_DATA) {
+                    // only consider outputs, which are explicitly tagged
+                    std::vector<std::string> vstrPushes;
+                    if (!GetScriptPushes(wtx.vout[n].scriptPubKey, vstrPushes)) {
+                        continue;
+                    }
+                    // TODO: maybe encapsulate the following sort of messy code
+                    if (!vstrPushes.empty()) {
+                        std::vector<unsigned char> vchMarker = GetOmMarker();
+                        std::vector<unsigned char> vchPushed = ParseHex(vstrPushes[0]);
+                        if (vchPushed.size() < vchMarker.size()) {
+                            continue;
+                        }
+                        if (std::equal(vchMarker.begin(), vchMarker.end(), vchPushed.begin())) {
+                            size_t sizeHex = vchMarker.size() * 2;
+                            // strip out the marker at the very beginning
+                            vstrPushes[0] = vstrPushes[0].substr(sizeHex);
+                            // add the data to the rest
+                            op_return_script_data.insert(op_return_script_data.end(), vstrPushes.begin(), vstrPushes.end());
+
+                            if (msc_debug_parser_data) {
+                                PrintToLog("Class C transaction detected: %s parsed to %s at vout %d\n", wtx.GetHash().GetHex(), vstrPushes[0], n);
+                            }
+                        }
+                    }
+                }
+            }
+            // ### EXTRACT PAYLOAD FOR CLASS C ###
+            for (unsigned int n = 0; n < op_return_script_data.size(); ++n) {
+                if (!op_return_script_data[n].empty()) {
+                    assert(IsHex(op_return_script_data[n])); // via GetScriptPushes()
+                    std::vector<unsigned char> vch = ParseHex(op_return_script_data[n]);
+                    unsigned int payload_size = vch.size();
+                    if (packet_size + payload_size > MAX_PACKETS * PACKET_SIZE) {
+                        payload_size = MAX_PACKETS * PACKET_SIZE - packet_size;
+                        PrintToLog("limiting payload size to %d byte\n", packet_size + payload_size);
+                    }
+                    if (payload_size > 0) {
+                        memcpy(single_pkt+packet_size, &vch[0], payload_size);
+                        packet_size += payload_size;
+                    }
+                    if (MAX_PACKETS * PACKET_SIZE == packet_size) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // ### SET MP TX INFO ###
+    if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt));
+    mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+
+    return 0;
 }
 
 /**
@@ -1321,62 +2048,50 @@ int input_globals_state_string(const string &s)
 }
 
 // addr,propertyId,nValue,property_desired,deadline,early_bird,percentage,txid
-int input_mp_crowdsale_string(const string &s)
+int input_mp_crowdsale_string(const std::string& s)
 {
-  string sellerAddr;
-  unsigned int propertyId;
-  uint64_t nValue;
-  unsigned int property_desired;
-  uint64_t deadline;
-  unsigned char early_bird;
-  unsigned char percentage;
-  uint64_t u_created;
-  uint64_t i_created;
+    std::vector<std::string> vstr;
+    boost::split(vstr, s, boost::is_any_of(" ,"), boost::token_compress_on);
 
-  std::vector<std::string> vstr;
-  boost::split(vstr, s, boost::is_any_of(" ,"), token_compress_on);
-  unsigned int i = 0;
+    if (9 > vstr.size()) return -1;
 
-  if (9 > vstr.size()) return -1;
+    unsigned int i = 0;
 
-  sellerAddr = vstr[i++];
-  propertyId = atoi(vstr[i++]);
-  nValue = boost::lexical_cast<uint64_t>(vstr[i++]);
-  property_desired = atoi(vstr[i++]);
-  deadline = boost::lexical_cast<uint64_t>(vstr[i++]);
-  early_bird = (unsigned char)atoi(vstr[i++]);
-  percentage = (unsigned char)atoi(vstr[i++]);
-  u_created = boost::lexical_cast<uint64_t>(vstr[i++]);
-  i_created = boost::lexical_cast<uint64_t>(vstr[i++]);
+    std::string sellerAddr = vstr[i++];
+    uint32_t propertyId = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t nValue = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint32_t property_desired = boost::lexical_cast<uint32_t>(vstr[i++]);
+    int64_t deadline = boost::lexical_cast<int64_t>(vstr[i++]);
+    uint8_t early_bird = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
+    uint8_t percentage = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
+    int64_t u_created = boost::lexical_cast<int64_t>(vstr[i++]);
+    int64_t i_created = boost::lexical_cast<int64_t>(vstr[i++]);
 
-  CMPCrowd newCrowdsale(propertyId,nValue,property_desired,deadline,early_bird,percentage,u_created,i_created);
+    CMPCrowd newCrowdsale(propertyId, nValue, property_desired, deadline, early_bird, percentage, u_created, i_created);
 
-  // load the remaining as database pairs
-  while (i < vstr.size()) {
-    std::vector<std::string> entryData;
-    boost::split(entryData, vstr[i++], boost::is_any_of("="), token_compress_on);
-    if ( 2 != entryData.size()) return -1;
+    // load the remaining as database pairs
+    while (i < vstr.size()) {
+        std::vector<std::string> entryData;
+        boost::split(entryData, vstr[i++], boost::is_any_of("="), boost::token_compress_on);
+        if (2 != entryData.size()) return -1;
 
-    std::vector<std::string> valueData;
-    boost::split(valueData, entryData[1], boost::is_any_of(";"), token_compress_on);
+        std::vector<std::string> valueData;
+        boost::split(valueData, entryData[1], boost::is_any_of(";"), boost::token_compress_on);
 
-    std::vector<uint64_t> vals;
-    std::vector<std::string>::const_iterator iter;
-    for (iter = valueData.begin(); iter != valueData.end(); ++iter) {
-      vals.push_back(boost::lexical_cast<uint64_t>(*iter));
+        std::vector<int64_t> vals;
+        for (std::vector<std::string>::const_iterator it = valueData.begin(); it != valueData.end(); ++it) {
+            vals.push_back(boost::lexical_cast<int64_t>(*it));
+        }
+
+        uint256 txHash(entryData[0]);
+        newCrowdsale.insertDatabase(txHash, vals);
     }
 
-    newCrowdsale.insertDatabase(entryData[0], vals);
-  }
+    if (!my_crowds.insert(std::make_pair(sellerAddr, newCrowdsale)).second) {
+        return -1;
+    }
 
-
-  if (my_crowds.insert(std::make_pair(sellerAddr, newCrowdsale)).second) {
     return 0;
-  } else {
-    return -1;
-  }
-
-  return 0;
 }
 
 // address, block, amount for sale, property, amount desired, property desired, subaction, idx, txid, amount remaining
@@ -1419,9 +2134,12 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
   switch (what)
   {
     case FILETYPE_BALANCES:
+    {
+      LOCK(cs_tally);
       mp_tally_map.clear();
       inputLineFunc = input_msc_balances_string;
       break;
+    }
 
     case FILETYPE_OFFERS:
       my_offers.clear();
@@ -1539,7 +2257,7 @@ static int load_most_relevant_state()
   // check the SP database and roll it back to its latest valid state
   // according to the active chain
   uint256 spWatermark;
-  if (0 > _my_sps->getWatermark(spWatermark)) {
+  if (!_my_sps->getWatermark(spWatermark)) {
     //trigger a full reparse, if the SP database has no watermark
     return -1;
   }
@@ -1753,16 +2471,15 @@ static int write_globals_state(ofstream &file, SHA256_CTX *shaCtx)
   return 0;
 }
 
-static int write_mp_crowdsales(ofstream &file, SHA256_CTX *shaCtx)
+static int write_mp_crowdsales(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-  CrowdMap::const_iterator iter;
-  for (iter = my_crowds.begin(); iter != my_crowds.end(); ++iter) {
-    // decompose the key for address
-    CMPCrowd const &crowd = (*iter).second;
-    crowd.saveCrowdSale(file, shaCtx, (*iter).first);
-  }
+    for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
+        // decompose the key for address
+        const CMPCrowd& crowd = it->second;
+        crowd.saveCrowdSale(file, shaCtx, it->first);
+    }
 
-  return 0;
+    return 0;
 }
 
 static int write_state_file( CBlockIndex const *pBlockIndex, int what )
@@ -1884,20 +2601,22 @@ static void prune_state_files( CBlockIndex const *topIndex )
 
 int mastercore_save_state( CBlockIndex const *pBlockIndex )
 {
-  // write the new state as of the given block
-  write_state_file(pBlockIndex, FILETYPE_BALANCES);
-  write_state_file(pBlockIndex, FILETYPE_OFFERS);
-  write_state_file(pBlockIndex, FILETYPE_ACCEPTS);
-  write_state_file(pBlockIndex, FILETYPE_GLOBALS);
-  write_state_file(pBlockIndex, FILETYPE_CROWDSALES);
-  write_state_file(pBlockIndex, FILETYPE_MDEXORDERS);
+    LOCK(cs_tally);
 
-  // clean-up the directory
-  prune_state_files(pBlockIndex);
+    // write the new state as of the given block
+    write_state_file(pBlockIndex, FILETYPE_BALANCES);
+    write_state_file(pBlockIndex, FILETYPE_OFFERS);
+    write_state_file(pBlockIndex, FILETYPE_ACCEPTS);
+    write_state_file(pBlockIndex, FILETYPE_GLOBALS);
+    write_state_file(pBlockIndex, FILETYPE_CROWDSALES);
+    write_state_file(pBlockIndex, FILETYPE_MDEXORDERS);
 
-  _my_sps->setWatermark(pBlockIndex->GetBlockHash());
+    // clean-up the directory
+    prune_state_files(pBlockIndex);
 
-  return 0;
+    _my_sps->setWatermark(pBlockIndex->GetBlockHash());
+
+    return 0;
 }
 
 /**
@@ -1905,6 +2624,8 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
  */
 static void clear_all_state()
 {
+    LOCK2(cs_tally, cs_pending);
+
     // Memory based storage
     mp_tally_map.clear();
     my_offers.clear();
@@ -1929,6 +2650,8 @@ static void clear_all_state()
  */
 int mastercore_init()
 {
+    LOCK(cs_tally);
+
     if (mastercoreInitialized) {
         // nothing to do
         return 0;
@@ -1943,7 +2666,7 @@ int mastercore_init()
     InitDebugLogLevels();
     ShrinkDebugLog();
 
-    if (isNonMainNet() && !UnitTest()) {
+    if (isNonMainNet()) {
         exodus_address = exodus_testnet;
     }
 
@@ -2040,6 +2763,8 @@ int mastercore_init()
  */
 int mastercore_shutdown()
 {
+    LOCK(cs_tally);
+
     if (p_txlistdb) {
         delete p_txlistdb;
         p_txlistdb = NULL;
@@ -2068,6 +2793,8 @@ int mastercore_shutdown()
 // this is called for every new transaction that comes in (actually in block parsing loop)
 int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, CBlockIndex const * pBlockIndex)
 {
+    LOCK(cs_tally);
+
     if (!mastercoreInitialized) {
         mastercore_init();
     }
@@ -2101,15 +2828,12 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
 }
 
 // IsMine wrapper to determine whether the address is in our local wallet
-bool IsMyAddress(const std::string &address) 
+int IsMyAddress(const std::string &address)
 {
-  if (!pwalletMain) return false;
-
-  const CBitcoinAddress& mscaddress = address;
-
-  CTxDestination lookupaddress = mscaddress.Get(); 
-
-  return (IsMine(*pwalletMain, lookupaddress));
+    if (!pwalletMain) return ISMINE_NO;
+    const CBitcoinAddress& omniAddress = address;
+    CTxDestination omniDest = omniAddress.Get();
+    return IsMine(*pwalletMain, omniDest);
 }
 
 // gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
@@ -2167,7 +2891,7 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
           if (!GetOutputType(pcoin->vout[i].scriptPubKey, whichType))
             continue;
 
-          if (!isAllowedOutputType(whichType, nHeight))
+          if (!IsAllowedInputType(whichType, nHeight))
             continue;
 
           CTxDestination dest;
@@ -2210,28 +2934,45 @@ static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl,
 return n_total;
 }
 
-int64_t feeCheck(const string &address)
-{
-    // check the supplied address against selectCoins to determine if sufficient fees for send
-    CCoinControl coinControl;
-    return selectCoins(address, coinControl, 0);
-}
-
 // This function determines whether it is valid to use a Class C transaction for a given payload size
 static bool UseEncodingClassC(size_t nDataSize)
 {
-    size_t nTotalSize = nDataSize + 2; // Marker "om"
+    size_t nTotalSize = nDataSize + GetOmMarker().size(); // Marker "omni"
     bool fDataEnabled = GetBoolArg("-datacarrier", true);
     int nBlockNow = GetHeight();
-    if (!isAllowedOutputType(TX_NULL_DATA, nBlockNow)) {
+    if (!IsAllowedOutputType(TX_NULL_DATA, nBlockNow)) {
         fDataEnabled = false;
     }
     return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
 }
 
+bool feeCheck(const string &address, size_t nDataSize)
+{
+    // check the supplied address against selectCoins to determine if sufficient fees for send
+    CCoinControl coinControl;
+    int64_t inputTotal = selectCoins(address, coinControl, 0);
+    bool ClassC = UseEncodingClassC(nDataSize);
+    int64_t minFee = 0;
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
+    if (ClassC) {
+        // estimated minimum fee calculation for Class C with payload of nDataSize
+        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        minFee = 10000; // simply warn when below 10,000 satoshi for now
+    } else {
+        // estimated minimum fee calculation for Class B with payload of nDataSize
+        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        minFee = 10000; // simply warn when below 10,000 satoshi for now
+    }
+
+    return inputTotal >= minFee;
+}
+
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
-int mastercore::ClassAgnosticWalletTXBuilder(const string &senderAddress, const string &receiverAddress, const string &redemptionAddress,
-                          int64_t referenceAmount, const std::vector<unsigned char> &data, uint256 & txid, string &rawHex, bool commit)
+int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
+                          int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
 {
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
@@ -3356,6 +4097,8 @@ int validity = 0;
 
 int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockIndex)
 {
+    LOCK(cs_tally);
+
     if (reorgRecoveryMode > 0) {
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
@@ -3376,6 +4119,11 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
             nWaterlineBlock = best_state_block;
         }
 
+        // clear the global wallet property list, perform a forced wallet update and tell the UI that state is no longer valid, and UI views need to be reinit
+        global_wallet_property_list.clear();
+        CheckWalletUpdate(true);
+        uiInterface.OmniStateInvalidated();
+
         if (nWaterlineBlock < nBlockPrev) {
             // scan from the block after the best active block to catch up to the active chain
             msc_initial_scan(nWaterlineBlock + 1);
@@ -3393,6 +4141,8 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         unsigned int countMP)
 {
+    LOCK(cs_tally);
+
     if (!mastercoreInitialized) {
         mastercore_init();
     }
@@ -3418,16 +4168,11 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
             devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
     }
 
-    // get the total MSC for this wallet, for QT display
-    set_wallet_totals();
-
     // check the alert status, do we need to do anything else here?
     CheckExpiredAlerts(nBlockNow, pBlockIndex->GetBlockTime());
 
-    // force an update of the UI once per processed block containing Omni transactions
-    if (countMP > 0) { // there were Omni transactions in this block
-        uiInterface.OmniStateChanged();
-    }
+    // transactions were found in the block, signal the UI accordingly
+    if (countMP > 0) CheckWalletUpdate();
 
     // save out the state after this block
     if (writePersistence(nBlockNow)) {
@@ -3439,12 +4184,17 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
 int mastercore_handler_disc_begin(int nBlockNow, CBlockIndex const * pBlockIndex)
 {
+    LOCK(cs_tally);
+
     reorgRecoveryMode = 1;
     reorgRecoveryMaxHeight = (pBlockIndex->nHeight > reorgRecoveryMaxHeight) ? pBlockIndex->nHeight: reorgRecoveryMaxHeight;
     return 0;
 }
 
-int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex) {
+int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex)
+{
+    LOCK(cs_tally);
+
     return 0;
 }
 
@@ -3461,7 +4211,49 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex) 
  */
 const CBitcoinAddress ExodusAddress()
 {
-    return CBitcoinAddress(exodus_address);
+    if (isNonMainNet()) {
+        static CBitcoinAddress testAddress(exodus_testnet);
+        return testAddress;
+    } else {
+        static CBitcoinAddress mainAddress(exodus_mainnet);
+        return mainAddress;
+    }
+}
+
+/**
+ * Returns the Exodus crowdsale address.
+ *
+ * Main network:
+ *   1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P
+ *
+ * Test network:
+ *   mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv (for blocks <  270775)
+ *   moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP (for blocks >= 270775)
+ *
+ * @return The Exodus fundraiser address
+ */
+const CBitcoinAddress ExodusCrowdsaleAddress(int nBlock)
+{
+    if (MONEYMAN_TESTNET_BLOCK <= nBlock && isNonMainNet()) {
+        static CBitcoinAddress moneyAddress(getmoney_testnet);
+        return moneyAddress;
+    }
+    else if (MONEYMAN_REGTEST_BLOCK <= nBlock && RegTest()) {
+        static CBitcoinAddress moneyAddress(getmoney_testnet);
+        return moneyAddress;
+    }
+
+    return ExodusAddress();
+}
+
+/**
+ * @return The marker for class C transactions.
+ */
+const std::vector<unsigned char> GetOmMarker()
+{
+    static unsigned char pch[] = {0x6f, 0x6d, 0x6e, 0x69}; // Hex-encoded: "omni"
+
+    return std::vector<unsigned char>(pch, pch + sizeof(pch) / sizeof(pch[0]));
 }
 
  // the 31-byte packet & the packet #
@@ -3490,6 +4282,8 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
     if (obj_o && MSC_TYPE_TRADE_OFFER != type) {
         return -777; // can't fill in the Offer object !
     }
+
+    LOCK(cs_tally);
 
     if (mdex_o) {
         if (type != MSC_TYPE_METADEX_TRADE
@@ -3557,9 +4351,7 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 
 int CMPTransaction::logicMath_SimpleSend()
 {
-    LOCK(cs_tally);
-
-    if (!isTransactionTypeAllowed(block, property, type, version)) {
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
         return (PKT_ERROR_SEND -22);
     }
 
@@ -3598,7 +4390,7 @@ int CMPTransaction::logicMath_SimpleSend()
 
             if (spFound) {
                 // Holds the tokens to be credited to the sender and receiver
-                std::pair<uint64_t, uint64_t> tokens;
+                std::pair<int64_t, int64_t> tokens;
 
                 // Passed by reference to determine, if max_tokens has been reached
                 bool close_crowdsale = false;
@@ -3616,7 +4408,7 @@ int CMPTransaction::logicMath_SimpleSend()
                 }
 
                 // Calculate the amounts to credit for this fundraiser
-                calculateFundraiser(nValue, sp.early_bird, sp.deadline, (uint64_t) blockTime,
+                calculateFundraiser(nValue, sp.early_bird, sp.deadline, blockTime,
                         sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
                         tokens, close_crowdsale);
 
@@ -3625,11 +4417,11 @@ int CMPTransaction::logicMath_SimpleSend()
                 pcrowdsale->incTokensIssuerCreated(tokens.second);
 
                 // Data to pass to txFundraiserData
-                uint64_t txdata[] = {(uint64_t) nValue, (uint64_t) blockTime, (uint64_t) tokens.first, (uint64_t) tokens.second};
-                std::vector<uint64_t> txDataVec(txdata, txdata + sizeof (txdata) / sizeof (txdata[0]));
+                int64_t txdata[] = {(int64_t) nValue, blockTime, tokens.first, tokens.second};
+                std::vector<int64_t> txDataVec(txdata, txdata + sizeof(txdata) / sizeof(txdata[0]));
 
                 // Insert data about crowdsale participation
-                pcrowdsale->insertDatabase(txid.GetHex(), txDataVec);
+                pcrowdsale->insertDatabase(txid, txDataVec);
 
                 // Credit tokens for this fundraiser
                 update_tally_map(sender, pcrowdsale->getPropertyId(), tokens.first, BALANCE);

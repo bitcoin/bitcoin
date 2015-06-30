@@ -34,17 +34,16 @@ public:
 
     void clearFields();
     void sendMPTransaction();
-    void updateFrom();
     void updateProperty();
     void updatePropSelector();
 
 public slots:
-//  void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
     void propertyComboBoxChanged(int idx);
     void sendFromComboBoxChanged(int idx);
     void clearButtonClicked();
     void sendButtonClicked();
     void balancesUpdated();
+    void updateFrom();
 
 private:
     Ui::SendMPDialog *ui;

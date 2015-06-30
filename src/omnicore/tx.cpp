@@ -231,7 +231,7 @@ unsigned int prop_id;
   PrintToLog("\t             URL: %s\n", url);
   PrintToLog("\t            Data: %s\n", data);
 
-  if (!isTransactionTypeAllowed(block, prop_id, type, version))
+  if (!IsTransactionTypeAllowed(block, prop_id, type, version))
   {
     error_code = (PKT_ERROR_SP -503);
     return NULL;
@@ -881,9 +881,7 @@ void CMPTransaction::printInfo(FILE *fp)
 
 int CMPTransaction::logicMath_SendToOwners()
 {
-    LOCK(cs_tally);
-
-    if (!isTransactionTypeAllowed(block, property, type, version)) {
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
         return (PKT_ERROR_STO -22);
     }
 
@@ -977,7 +975,7 @@ int rc = PKT_ERROR_TRADEOFFER;
       }
 
       // block height checks, for instance DEX is only available on MSC starting with block 290630
-      if (!isTransactionTypeAllowed(block, property, type, version)) return -88888;
+      if (!IsTransactionTypeAllowed(block, property, type, version)) return -88888;
 
       if (obj_o)
       {
@@ -1104,7 +1102,7 @@ int CMPTransaction::logicMath_MetaDExTrade()
 
     int rc = PKT_ERROR_METADEX - 100;
 
-    if (!isTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_METADEX -889);
+    if (!IsTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_METADEX -889);
 
     // ensure we are not trading same property for itself
     if (property == desired_property) return (PKT_ERROR_METADEX -5);
@@ -1140,7 +1138,7 @@ int CMPTransaction::logicMath_MetaDExCancelPrice()
 
     int rc = PKT_ERROR_METADEX -100;
 
-    if (!isTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_METADEX -890);
+    if (!IsTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_METADEX -890);
 
     // ensure we are not trading same property for itself
     if (property == desired_property) return (PKT_ERROR_METADEX -5);
@@ -1164,7 +1162,7 @@ int CMPTransaction::logicMath_MetaDExCancelPair()
 {
     int rc = PKT_ERROR_METADEX -100;
 
-    if (!isTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_METADEX -891);
+    if (!IsTransactionTypeAllowed(block, property, type, version)) return (PKT_ERROR_METADEX -891);
 
     // ensure we are not trading same property for itself
     if (property == desired_property) return (PKT_ERROR_METADEX - 5);
@@ -1184,7 +1182,7 @@ int CMPTransaction::logicMath_MetaDExCancelEcosystem()
 {
     int rc = PKT_ERROR_METADEX -101;
 
-    if (!isTransactionTypeAllowed(block, ecosystem, type, version, true)) return (PKT_ERROR_METADEX -892);
+    if (!IsTransactionTypeAllowed(block, ecosystem, type, version, true)) return (PKT_ERROR_METADEX -892);
 
     rc = MetaDEx_CANCEL_EVERYTHING(txid, block, sender, ecosystem);
 
@@ -1199,8 +1197,8 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
     if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
         return (PKT_ERROR_SP -502);
     }
-    unsigned int prop_id = _my_sps->peekNextSPID(ecosystem);
-    if (!isTransactionTypeAllowed(block, prop_id, type, version)) {
+    uint32_t prop_id = _my_sps->peekNextSPID(ecosystem);
+    if (!IsTransactionTypeAllowed(block, prop_id, type, version)) {
         return (PKT_ERROR_SP -503);
     }
     if ('\0' == name[0]) {
@@ -1230,7 +1228,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
     newSP.fixed = true;
     newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
 
-    const unsigned int id = _my_sps->putSP(ecosystem, newSP);
+    const uint32_t id = _my_sps->putSP(ecosystem, newSP);
     update_tally_map(sender, id, nValue, BALANCE);
 
     rc = 0;
@@ -1245,8 +1243,8 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
     if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
         return (PKT_ERROR_SP -502);
     }
-    unsigned int prop_id = _my_sps->peekNextSPID(ecosystem);
-    if (!isTransactionTypeAllowed(block, prop_id, type, version)) {
+    uint32_t prop_id = _my_sps->peekNextSPID(ecosystem);
+    if (!IsTransactionTypeAllowed(block, prop_id, type, version)) {
         return (PKT_ERROR_SP -503);
     }
     if ('\0' == name[0]) {
@@ -1261,7 +1259,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
     }
     if (!deadline) return (PKT_ERROR_SP - 203); // deadline cannot be 0
     // deadline can not be smaller than the timestamp of the current block
-    if (deadline < (uint64_t) blockTime) return (PKT_ERROR_SP - 204);
+    if ((int64_t) deadline < blockTime) return (PKT_ERROR_SP - 204);
     // ------------------------------------------
 
     int rc = -1;
@@ -1289,7 +1287,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
     newSP.percentage = percentage;
     newSP.creation_block = newSP.update_block = chainActive[block]->GetBlockHash();
 
-    const unsigned int id = _my_sps->putSP(ecosystem, newSP);
+    const uint32_t id = _my_sps->putSP(ecosystem, newSP);
     my_crowds.insert(std::make_pair(sender, CMPCrowd(id, nValue, property, deadline, early_bird, percentage, 0, 0)));
     PrintToLog("CREATED CROWDSALE id: %u value: %lu property: %u\n", id, nValue, property);
 
@@ -1355,8 +1353,8 @@ int CMPTransaction::logicMath_CreatePropertyMananged()
     if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
         return (PKT_ERROR_SP -502);
     }
-    unsigned int prop_id = _my_sps->peekNextSPID(ecosystem);
-    if (!isTransactionTypeAllowed(block, prop_id, type, version)) {
+    uint32_t prop_id = _my_sps->peekNextSPID(ecosystem);
+    if (!IsTransactionTypeAllowed(block, prop_id, type, version)) {
         return (PKT_ERROR_SP -503);
     }
     if ('\0' == name[0]) {
@@ -1378,7 +1376,7 @@ int CMPTransaction::logicMath_CreatePropertyMananged()
     newSP.fixed = false;
     newSP.manual = true;
 
-    const unsigned int id = _my_sps->putSP(ecosystem, newSP);
+    uint32_t id = _my_sps->putSP(ecosystem, newSP);
     PrintToLog("CREATED MANUAL PROPERTY id: %u admin: %s \n", id, sender);
 
     rc = 0;
@@ -1394,7 +1392,7 @@ int CMPTransaction::logicMath_GrantTokens()
 
     int rc = PKT_ERROR_TOKENS - 1000;
 
-    if (!isTransactionTypeAllowed(block, property, type, version)) {
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
       PrintToLog("\tRejecting Grant: Transaction type not yet allowed\n");
       return (PKT_ERROR_TOKENS - 22);
     }
@@ -1427,11 +1425,11 @@ int CMPTransaction::logicMath_GrantTokens()
 
     // overflow tokens check
     if (MAX_INT_8_BYTES - sp.num_tokens < nValue) {
-      char prettyTokens[256];
+      std::string prettyTokens;
       if (sp.isDivisible()) {
-        snprintf(prettyTokens, 256, "%lu.%08lu", nValue / COIN, nValue % COIN);
+        prettyTokens = FormatDivisibleMP(nValue);
       } else {
-        snprintf(prettyTokens, 256, "%lu", nValue);
+        prettyTokens = FormatIndivisibleMP(nValue);
       }
       PrintToLog("\tRejecting Grant: granting %s tokens on SP id:%u would overflow the maximum limit for tokens in a smart property\n", prettyTokens, property);
       return (PKT_ERROR_TOKENS - 27);
@@ -1444,11 +1442,10 @@ int CMPTransaction::logicMath_GrantTokens()
     rc = logicMath_SimpleSend();
 
     // record this grant
-    std::vector<uint64_t> dataPt;
+    std::vector<int64_t> dataPt;
     dataPt.push_back(nValue);
     dataPt.push_back(0);
-    string txidStr = txid.ToString();
-    sp.historicalData.insert(std::make_pair(txidStr, dataPt));
+    sp.historicalData.insert(std::make_pair(txid, dataPt));
     sp.update_block = chainActive[block]->GetBlockHash();
     _my_sps->updateSP(property, sp);
 
@@ -1464,7 +1461,7 @@ int CMPTransaction::logicMath_RevokeTokens()
 
     int rc = PKT_ERROR_TOKENS - 1000;
 
-    if (!isTransactionTypeAllowed(block, property, type, version)) {
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
       PrintToLog("\tRejecting Revoke: Transaction type not yet allowed\n");
       return (PKT_ERROR_TOKENS - 22);
     }
@@ -1495,11 +1492,10 @@ int CMPTransaction::logicMath_RevokeTokens()
     }
 
     // record this revoke
-    std::vector<uint64_t> dataPt;
+    std::vector<int64_t> dataPt;
     dataPt.push_back(0);
     dataPt.push_back(nValue);
-    string txidStr = txid.ToString();
-    sp.historicalData.insert(std::make_pair(txidStr, dataPt));
+    sp.historicalData.insert(std::make_pair(txid, dataPt));
     sp.update_block = chainActive[block]->GetBlockHash();
     _my_sps->updateSP(property, sp);
 
@@ -1511,7 +1507,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
 {
   int rc = PKT_ERROR_TOKENS - 1000;
 
-  if (!isTransactionTypeAllowed(block, property, type, version)) {
+  if (!IsTransactionTypeAllowed(block, property, type, version)) {
     PrintToLog("\tRejecting Change of Issuer: Transaction type not yet allowed\n");
     return (PKT_ERROR_TOKENS - 22);
   }

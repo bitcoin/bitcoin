@@ -189,6 +189,7 @@ Value setgenerate(const Array& params, bool fHelp)
             ++nHeight;
             blockHashes.push_back(pblock->GetHash().GetHex());
         }
+        reservekey.KeepKey();
         return blockHashes;
     }
     else // Not -regtest: start generate thread, return immediately

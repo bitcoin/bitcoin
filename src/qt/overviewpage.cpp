@@ -17,11 +17,17 @@
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/tx.h"
+#include "omnicore/pending.h"
 
 #include "main.h"
+#include "sync.h"
 
 #include <sstream>
 #include <string>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <QAbstractItemDelegate>
 #include <QBrush>
@@ -47,6 +53,25 @@ using namespace mastercore;
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 6 // 3 - number of recent transactions to display
 
+struct OverviewCacheEntry
+{
+    OverviewCacheEntry()
+      : address("unknown"), amount("0.0000000"), valid(false), sendToSelf(false), outbound(false)
+    {}
+
+    OverviewCacheEntry(const QString& addressIn, const QString& amountIn, bool validIn, bool sendToSelfIn, bool outboundIn)
+      : address(addressIn), amount(amountIn), valid(validIn), sendToSelf(sendToSelfIn), outbound(outboundIn)
+    {}
+
+    QString address;
+    QString amount;
+    bool valid;
+    bool sendToSelf;
+    bool outbound;
+};
+
+std::map<uint256, OverviewCacheEntry> recentCache;
+
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
@@ -61,6 +86,12 @@ public:
     {
         painter->save();
 
+        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
+        QString address = index.data(Qt::DisplayRole).toString();
+        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
+        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
+        QVariant value = index.data(Qt::ForegroundRole);
+
         QIcon icon = qvariant_cast<QIcon>(index.data(Qt::DecorationRole));
         QRect mainRect = option.rect;
         QRect decorationRect(mainRect.topLeft(), QSize(DECORATION_SIZE, DECORATION_SIZE));
@@ -69,13 +100,132 @@ public:
         int halfheight = (mainRect.height() - 2*ypad)/2;
         QRect amountRect(mainRect.left() + xspace, mainRect.top()+ypad, mainRect.width() - xspace, halfheight);
         QRect addressRect(mainRect.left() + xspace, mainRect.top()+ypad+halfheight, mainRect.width() - xspace, halfheight);
+
+        // Rather ugly way to provide recent transaction display support - each time we paint a transaction we will check if
+        // it's Omni and override the values if so.  This will not scale at all, but since we're only ever doing 6 txns via the occasional
+        // repaint performance should be a non-issue and it'll provide the functionality short term while a better approach is devised.
+        uint256 hash = 0;
+        hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
+        bool omniOverride = false, omniSendToSelf = false, valid = false, omniOutbound = true;
+        QString omniAmountStr;
+
+        // check pending
+        {
+            LOCK(cs_pending);
+
+            PendingMap::iterator it = my_pending.find(hash);
+            if (it != my_pending.end()) {
+                omniOverride = true;
+                valid = true; // assume all outbound pending are valid prior to confirmation
+                CMPPending *p_pending = &(it->second);
+                address = QString::fromStdString(p_pending->src);
+                if (isPropertyDivisible(p_pending->prop)) {
+                    omniAmountStr = QString::fromStdString(FormatDivisibleShortMP(p_pending->amount) + getTokenLabel(p_pending->prop));
+                } else {
+                    omniAmountStr = QString::fromStdString(FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop));
+                }
+                // override amount for cancels
+                if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                    omniAmountStr = QString::fromStdString("N/A");
+                }
+            }
+        }
+
+        // check cache (avoid reparsing the same transactions repeatedly over and over on repaint)
+        std::map<uint256, OverviewCacheEntry>::iterator cacheIt = recentCache.find(hash);
+        if (cacheIt != recentCache.end()) {
+            OverviewCacheEntry txEntry = cacheIt->second;
+            address = txEntry.address;
+            valid = txEntry.valid;
+            omniSendToSelf = txEntry.sendToSelf;
+            omniOutbound = txEntry.outbound;
+            omniAmountStr = txEntry.amount;
+            omniOverride = true;
+            amount = 0;
+        } else { // cache miss, check database
+            if (p_txlistdb->exists(hash)) {
+                omniOverride = true;
+                amount = 0;
+                CTransaction wtx;
+                uint256 blockHash = 0;
+                if (GetTransaction(hash, wtx, blockHash, true)) {
+                    if ((0 != blockHash) || (NULL != GetBlockIndex(blockHash))) {
+                        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+                        if (NULL != pBlockIndex) {
+                            int blockHeight = pBlockIndex->nHeight;
+                            CMPTransaction mp_obj;
+                            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
+                            if (0 < parseRC) { //positive RC means DEx payment
+                                std::string tmpBuyer, tmpSeller;
+                                uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
+                                p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                bool bIsBuy = IsMyAddress(tmpBuyer);
+                                int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
+                                if (0<numberOfPurchases) { // calculate total bought/sold
+                                    for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
+                                        p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                        total += tmpNValue;
+                                    }
+                                    if (!bIsBuy) {
+                                          address = QString::fromStdString(tmpSeller);
+                                    } else {
+                                          address = QString::fromStdString(tmpBuyer);
+                                          omniOutbound = false;
+                                    }
+                                    omniAmountStr = QString::fromStdString(FormatDivisibleMP(total));
+                                }
+                            } else if (0 == parseRC) {
+                                if (mp_obj.interpret_Transaction()) {
+                                    valid = getValidMPTX(hash);
+                                    uint32_t omniPropertyId = mp_obj.getProperty();
+                                    int64_t omniAmount = mp_obj.getAmount();
+                                    if (isPropertyDivisible(omniPropertyId)) {
+                                        omniAmountStr = QString::fromStdString(FormatDivisibleShortMP(omniAmount) + getTokenLabel(omniPropertyId));
+                                    } else {
+                                        omniAmountStr = QString::fromStdString(FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId));
+                                    }
+                                    if (!mp_obj.getReceiver().empty()) {
+                                        if (IsMyAddress(mp_obj.getReceiver())) {
+                                            omniOutbound = false;
+                                            if (IsMyAddress(mp_obj.getSender())) omniSendToSelf = true;
+                                        }
+                                        address = QString::fromStdString(mp_obj.getReceiver());
+                                    } else {
+                                        address = QString::fromStdString(mp_obj.getSender());
+                                    }
+                                }
+                            }
+
+                            // override amount for cancels
+                            if (mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PRICE || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PAIR || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                                omniAmountStr = QString::fromStdString("N/A");
+                            }
+
+                            // insert into cache
+                            OverviewCacheEntry newEntry;
+                            newEntry.valid = valid;
+                            newEntry.sendToSelf = omniSendToSelf;
+                            newEntry.outbound = omniOutbound;
+                            newEntry.address = address;
+                            newEntry.amount = omniAmountStr;
+                            recentCache.insert(std::make_pair(hash, newEntry));
+                        }
+                    }
+                }
+            }
+        }
+
+        if (omniOverride) {
+            if (!valid) {
+                icon = QIcon(":/icons/omnitxinvalid");
+            } else {
+                icon = QIcon(":/icons/omnitxout");
+                if (!omniOutbound) icon = QIcon(":/icons/omnitxin");
+                if (omniSendToSelf) icon = QIcon(":/icons/omnitxinout");
+            }
+        }
         icon.paint(painter, decorationRect);
 
-        QDateTime date = index.data(TransactionTableModel::DateRole).toDateTime();
-        QString address = index.data(Qt::DisplayRole).toString();
-        qint64 amount = index.data(TransactionTableModel::AmountRole).toLongLong();
-        bool confirmed = index.data(TransactionTableModel::ConfirmedRole).toBool();
-        QVariant value = index.data(Qt::ForegroundRole);
         QColor foreground = option.palette.color(QPalette::Text);
         if(value.canConvert<QBrush>())
         {
@@ -94,7 +244,7 @@ public:
             iconWatchonly.paint(painter, watchonlyRect);
         }
 
-        if(amount < 0)
+        if(amount < 0 || omniOutbound)
         {
             foreground = COLOR_NEGATIVE;
         }
@@ -107,7 +257,12 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
+        QString amountText;
+        if (!omniOverride) {
+            amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
+        } else {
+            amountText = omniAmountStr;
+        }
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -170,8 +325,25 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
-    if(filter)
-        emit transactionClicked(filter->mapToSource(index));
+    // is this an Omni transaction that has been clicked?  Use pending & cache to find out quickly
+    uint256 hash = 0;
+    hash.SetHex(index.data(TransactionTableModel::TxIDRole).toString().toStdString());
+    bool omniTx = false;
+    {
+        LOCK(cs_pending);
+
+        PendingMap::iterator it = my_pending.find(hash);
+        if (it != my_pending.end()) omniTx = true;
+    }
+    std::map<uint256, OverviewCacheEntry>::iterator cacheIt = recentCache.find(hash);
+    if (cacheIt != recentCache.end()) omniTx = true;
+
+    // override if it's an Omni transaction
+    if (omniTx) {
+        emit omniTransactionClicked(hash);
+    } else {
+        if (filter) emit transactionClicked(filter->mapToSource(index));
+    }
 }
 
 OverviewPage::~OverviewPage()
@@ -282,36 +454,41 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
     }
 }
 
+void OverviewPage::reinitOmni()
+{
+    recentCache.clear();
+    ui->overviewLW->clear();
+    UpdatePropertyBalance(0,0,0);
+    UpdatePropertyBalance(1,0,0);
+    updateOmni();
+}
+
 void OverviewPage::updateOmni()
 {
-    // force a refresh of wallet totals
-    set_wallet_totals();
+    LOCK(cs_tally);
+
     // always show MSC
-    UpdatePropertyBalance(1,global_balance_money_maineco[1],global_balance_reserved_maineco[1]);
+    UpdatePropertyBalance(1,global_balance_money[1],global_balance_reserved[1]);
     // loop properties and update overview
     unsigned int propertyId;
     unsigned int maxPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
     unsigned int maxPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
     // main eco
     for (propertyId = 2; propertyId < maxPropIdMainEco; propertyId++) {
-        if ((global_balance_money_maineco[propertyId] > 0) || (global_balance_reserved_maineco[propertyId] > 0)) {
-            UpdatePropertyBalance(propertyId,global_balance_money_maineco[propertyId],global_balance_reserved_maineco[propertyId]);
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
+            UpdatePropertyBalance(propertyId,global_balance_money[propertyId],global_balance_reserved[propertyId]);
         }
     }
     // test eco
     for (propertyId = 2147483647; propertyId < maxPropIdTestEco; propertyId++) {
-        if ((global_balance_money_testeco[propertyId-2147483647] > 0) || (global_balance_reserved_testeco[propertyId-2147483647] > 0)) {
-            UpdatePropertyBalance(propertyId,global_balance_money_testeco[propertyId-2147483647],global_balance_reserved_testeco[propertyId-2147483647]);
+        if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
+            UpdatePropertyBalance(propertyId,global_balance_money[propertyId],global_balance_reserved[propertyId]);
         }
     }
 }
 
 void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
-    // Mastercore alerts come as block transactions and do not trip bitcoin alertsChanged() signal so let's check the
-    // alert status with the update balance signal that comes in after each block to see if it had any alerts in it
-    updateAlerts();
-
     //int unit = walletModel->getOptionsModel()->getDisplayUnit(); //only needed if we decide not to use new overview property list
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
@@ -366,8 +543,14 @@ void OverviewPage::setClientModel(ClientModel *model)
         connect(model, SIGNAL(alertsChanged(QString)), this, SLOT(updateAlerts()));
         updateAlerts();
 
-        // Refresh Omni info if there have been Omni layer transactions
-        connect(model, SIGNAL(refreshOmniState()), this, SLOT(updateOmni()));
+        // Refresh Omni info if there have been Omni layer transactions with balances affecting wallet
+        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(updateOmni()));
+
+        // Reinit Omni info if there has been a chain reorg
+        connect(model, SIGNAL(reinitOmniState()), this, SLOT(reinitOmni()));
+
+        // Refresh alerts when there has been a change to the Omni State
+        connect(model, SIGNAL(refreshOmniState()), this, SLOT(updateAlerts()));
     }
 }
 
@@ -392,9 +575,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
-
-        // Refresh Omni information in case this was an internal Omni transaction
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(updateOmni()));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
