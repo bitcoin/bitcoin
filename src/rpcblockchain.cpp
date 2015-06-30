@@ -189,7 +189,7 @@ UniValue mempoolToJSON(bool fVerbose = false)
             info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
             info.push_back(Pair("time", e.GetTime()));
             info.push_back(Pair("height", (int)e.GetHeight()));
-            info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
+            info.push_back(Pair("startingpriority", e.GetStartingPriority()));
             info.push_back(Pair("currentpriority", e.GetPriority(chainActive.Height())));
             info.push_back(Pair("descendantcount", e.GetCountWithDescendants()));
             info.push_back(Pair("descendantsize", e.GetSizeWithDescendants()));
