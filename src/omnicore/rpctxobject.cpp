@@ -42,8 +42,14 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     int confirmations =  1 + GetHeight() - pBlockIndex->nHeight;
     int64_t blockTime = pBlockIndex->nTime;
 
+
     // lookup transaction in levelDB to see if it's an Omni transaction
-    if (!p_txlistdb->exists(txid)) return MP_TX_IS_NOT_MASTER_PROTOCOL;
+    bool fExists = false;
+    {
+        LOCK(cs_tally);
+        fExists = p_txlistdb->exists(txid);
+    }
+    if (!fExists) return MP_TX_IS_NOT_MASTER_PROTOCOL;
 
     // attempt to parse the transaction
     CMPTransaction mp_obj;
@@ -55,7 +61,10 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     if (parseRC > 0) {
         std::string tmpBuyer, tmpSeller;
         uint64_t tmpVout, tmpNValue, tmpPropertyId;
-        p_txlistdb->getPurchaseDetails(txid, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+        {
+            LOCK(cs_tally);
+            p_txlistdb->getPurchaseDetails(txid, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+        }
         Array purchases;
         if (populateRPCDExPurchases(wtx, purchases, filterAddress) <= 0) return -1;
         txobj.push_back(Pair("txid", txid.GetHex()));
@@ -74,7 +83,11 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     if (!filterAddress.empty() && mp_obj.getSender() != filterAddress && mp_obj.getReceiver() != filterAddress) return -1;
 
     // obtain validity
-    bool valid = getValidMPTX(txid);
+    bool valid = false;
+    {
+        LOCK(cs_tally);
+        valid = getValidMPTX(txid);
+    }
 
     // populate some initial info for the transaction
     bool bMine = false;
@@ -180,6 +193,7 @@ void populateRPCTypeSimpleSend(CMPTransaction& omniObj, Object& txobj)
     if (0 != omniObj.step2_Value()) return;
     uint32_t propertyId = omniObj.getProperty();
     int64_t crowdPropertyId = 0, crowdTokens = 0, issuerTokens = 0;
+    LOCK(cs_tally);
     bool crowdPurchase = isCrowdsalePurchase(omniObj.getHash(), omniObj.getReceiver(), &crowdPropertyId, &crowdTokens, &issuerTokens);
     if (crowdPurchase) {
         CMPSPInfo::Entry sp;
@@ -234,6 +248,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
     int tmpblock = 0;
     uint32_t tmptype = 0;
     uint64_t amountNew = 0;
+    LOCK(cs_tally);
     bool tmpValid = getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
     if (tmpValid && amountNew > 0) amount = amountNew;
 
@@ -347,6 +362,8 @@ void populateRPCTypeAcceptOffer(CMPTransaction& omniObj, Object& txobj)
     int tmpblock = 0;
     uint32_t tmptype = 0;
     uint64_t amountNew = 0;
+
+    LOCK(cs_tally);
     bool tmpValid = getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
     if (tmpValid && amountNew > 0) amount = amountNew;
 
@@ -360,6 +377,8 @@ void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, Object& txobj)
     int rc = -1;
     omniObj.step2_SmartProperty(rc);
     if (0 != rc) return;
+
+    LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
 
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -373,6 +392,8 @@ void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, Object& txob
     int rc = -1;
     omniObj.step2_SmartProperty(rc);
     if (0 != rc) return;
+
+    LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
 
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -386,6 +407,8 @@ void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, Object& txobj)
     int rc = -1;
     omniObj.step2_SmartProperty(rc);
     if (0 != rc) return;
+
+    LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
 
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -432,6 +455,7 @@ void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extende
 {
     Array receiveArray;
     uint64_t tmpAmount = 0, stoFee = 0;
+    LOCK(cs_tally);
     s_stolistdb->getRecipients(txid, extendedDetailsFilter, &receiveArray, &tmpAmount, &stoFee);
     txobj.push_back(Pair("totalstofee", FormatDivisibleMP(stoFee))); // fee always MSC so always divisible
     txobj.push_back(Pair("recipients", receiveArray));
@@ -441,6 +465,7 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
 {
     Array tradeArray;
     int64_t totalReceived = 0, totalSold = 0;
+    LOCK(cs_tally);
     t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     std::string statusText = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold, totalReceived);
     txobj.push_back(Pair("status", statusText));
@@ -453,6 +478,7 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
 void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
 {
     Array cancelArray;
+    LOCK(cs_tally);
     int numberOfCancels = p_txlistdb->getNumberOfMetaDExCancels(txid);
     if (0<numberOfCancels) {
         for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
@@ -482,7 +508,11 @@ void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
  */
 int populateRPCDExPurchases(const CTransaction& wtx, Array& purchases, std::string filterAddress)
 {
-    int numberOfPurchases=p_txlistdb->getNumberOfPurchases(wtx.GetHash());
+    int numberOfPurchases = 0;
+    {
+        LOCK(cs_tally);
+        numberOfPurchases = p_txlistdb->getNumberOfPurchases(wtx.GetHash());
+    }
     if (numberOfPurchases <= 0) {
         PrintToLog("TXLISTDB Error: Transaction %s parsed as a DEx payment but could not locate purchases in txlistdb.\n", wtx.GetHash().GetHex());
         return -1;
@@ -491,7 +521,10 @@ int populateRPCDExPurchases(const CTransaction& wtx, Array& purchases, std::stri
         Object purchaseObj;
         std::string buyer, seller;
         uint64_t vout, nValue, propertyId;
-        p_txlistdb->getPurchaseDetails(wtx.GetHash(), purchaseNumber, &buyer, &seller, &vout, &propertyId, &nValue);
+        {
+            LOCK(cs_tally);
+            p_txlistdb->getPurchaseDetails(wtx.GetHash(), purchaseNumber, &buyer, &seller, &vout, &propertyId, &nValue);
+        }
         if (!filterAddress.empty() && buyer != filterAddress && seller != filterAddress) continue; // filter requested & doesn't match
         bool bIsMine = false;
         if (IsMyAddress(buyer) || IsMyAddress(seller)) bIsMine = true;
