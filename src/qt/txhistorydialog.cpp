@@ -33,9 +33,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
-//temp
-#include <boost/timer.hpp>
-
 #include <stdint.h>
 #include <list>
 #include <map>
@@ -181,8 +178,6 @@ void TXHistoryDialog::setWalletModel(WalletModel *model)
 
 int TXHistoryDialog::PopulateHistoryMap()
 {
-    boost::timer timer;
-
     CWallet *wallet = pwalletMain;
     if (NULL == wallet) return 0;
     // try and fix intermittent freeze on startup and while running by only updating if we can get required locks
@@ -444,17 +439,12 @@ int TXHistoryDialog::PopulateHistoryMap()
         }
     }
 
-    printf("PerfCheck: PopulateHistoryMap() took ");
-    std::cout << timer.elapsed() << std::endl;
-
     // ### END WALLET TRANSACTIONS PROCESSING ###
     return nProcessed;
 }
 
 void TXHistoryDialog::UpdateConfirmations()
 {
-    boost::timer timer;
-
     int chainHeight = chainActive.Height(); // get the chain height
     int rowCount = ui->txHistoryTable->rowCount();
     for (int row = 0; row < rowCount; row++) {
@@ -486,19 +476,10 @@ void TXHistoryDialog::UpdateConfirmations()
         iconCell->setIcon(ic);
         ui->txHistoryTable->setItem(row, 2, iconCell);
     }
-
-    printf("PerfCheck: UpdateConfirmations() took ");
-    std::cout << timer.elapsed() << std::endl;
-
 }
 
 void TXHistoryDialog::UpdateHistory()
 {
-    // temp
-    tempPerfTest();
-
-    boost::timer timer;
-
     // now moved to a new methodology where historical transactions are stored in a map in memory (effectively a cache) so we can compare our
     // history table against the cache.  This allows us to avoid reparsing transactions repeatedly and provides a diff to modify the table without
     // repopuplating all the rows top to bottom each refresh.
@@ -558,9 +539,6 @@ void TXHistoryDialog::UpdateHistory()
         ui->txHistoryTable->setSortingEnabled(true); // re-enable sorting
     }
     UpdateConfirmations();
-
-    printf("PerfCheck: UpdateHistory() took ");
-    std::cout << timer.elapsed() << std::endl;
 }
 
 void TXHistoryDialog::contextualMenu(const QPoint &point)
@@ -662,37 +640,6 @@ std::string TXHistoryDialog::shrinkTxType(int txType, bool *fundsMoved)
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: displayType = "Change Issuer"; *fundsMoved = false; break;
     }
     return displayType;
-}
-
-void TXHistoryDialog::tempPerfTest()
-{
-    boost::timer timerAddMap;
-    CWallet *wallet = pwalletMain;
-    if (NULL == wallet) return;
-    TRY_LOCK(cs_main,lckMain);
-    if (!lckMain) return;
-    TRY_LOCK(wallet->cs_wallet, lckWallet);
-    if (!lckWallet) return;
-    std::vector<uint256> vecTransactions;
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx != 0) {
-            uint256 hash = pwtx->GetHash();
-            vecTransactions.push_back(hash);
-        }
-    }
-    printf("PerfCheck: Iterating wallet transactions and adding them to a map took ");
-    std::cout << timerAddMap.elapsed() << std::endl;
-
-    boost::timer timerLevelDB;
-    for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
-        if (!p_txlistdb->exists(*it)) { } // do nothing
-    }
-    printf("PerfCheck: Iterating wallet transaction map and checking level DB took ");
-    std::cout << timerLevelDB.elapsed() << std::endl;
-
 }
 
 

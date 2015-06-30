@@ -58,7 +58,6 @@ public:
 
     virtual void resizeEvent(QResizeEvent* event);
     std::string shrinkTxType(int txType, bool *fundsMoved);
-    void tempPerfTest();
 
 private:
     Ui::txHistoryDialog *ui;
