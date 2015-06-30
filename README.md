@@ -138,11 +138,11 @@ Related projects:
 
 * https://github.com/OmniLayer/OmniJ
 
-* https://github.com/mastercoin-MSC/omniwallet
+* https://github.com/OmniLayer/omniwallet
 
-* https://github.com/mastercoin-MSC/spec
+* https://github.com/OmniLayer/spec
 
 Support:
 --------
 
-* Open a [GitHub issue] (https://github.com/OmniLayer/omnicore/issues) to file a bug submission.
+* Please open a [GitHub issue] (https://github.com/OmniLayer/omnicore/issues) to file a bug submission.
