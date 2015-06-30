@@ -16,6 +16,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "crypto/common.h"
+#include "ipgroups.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -890,22 +891,53 @@ void ThreadSocketHandler()
                             nInbound++;
                 }
 
+                bool shouldConnect = true;
+
                 if (hSocket == INVALID_SOCKET)
                 {
                     int nErr = WSAGetLastError();
                     if (nErr != WSAEWOULDBLOCK)
                         LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
+                    shouldConnect = false;
                 }
                 else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
                 {
-                    CloseSocket(hSocket);
+                    // Calculate the priority of the new IP to see if we should drop it immediately (normal) or kick
+                    // one of the other peers out to make room for it.
+                    CIPGroup *group = FindGroupForIP(addr);
+                    int priority = group ? group->priority : 0;
+
+                    bool disconnected = false;
+                    {
+                        LOCK(cs_vNodes);
+                        BOOST_FOREACH(CNode *n, vNodes)
+                        {
+                            int nodePriority = n->pIpGroup ? n->pIpGroup->priority : 0;
+                            if (nodePriority < priority) {
+                                LogPrintf("Connection slots exhausted, evicting peer %d with priority %d (group %s) to free up resources\n",
+                                          n->id, nodePriority, n->pIpGroup ? n->pIpGroup->name : "default");
+                                n->fDisconnect = true;
+                                disconnected = true;
+                                // Leave shouldConnect = true to allow this socket through.
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!disconnected) {
+                        CloseSocket(hSocket);
+                        LogPrintf("Connection slots exhausted, refusing inbound connection from %s\n", addr.ToString());
+                        shouldConnect = false;
+                    }
                 }
                 else if (CNode::IsBanned(addr) && !whitelisted)
                 {
                     LogPrintf("connection from %s dropped (banned)\n", addr.ToString());
                     CloseSocket(hSocket);
+                    shouldConnect = false;
                 }
-                else
+
+                if (shouldConnect)
                 {
                     CNode* pnode = new CNode(hSocket, addr, "", true);
                     pnode->AddRef();
@@ -1663,6 +1695,8 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (pnodeLocalHost == NULL)
         pnodeLocalHost = new CNode(INVALID_SOCKET, CAddress(CService("127.0.0.1", 0), nLocalServices));
 
+    InitIPGroups();
+
     Discover(threadGroup);
 
     //
@@ -1998,10 +2032,12 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
         id = nLastNodeId++;
     }
 
+    pIpGroup = FindGroupForIP(CNetAddr(addr.ToStringIP()));
+    std::string strIpGroup = pIpGroup ? tfm::format("(group %s)", pIpGroup->name) : "";
     if (fLogIPs)
-        LogPrint("net", "Added connection to %s peer=%d\n", addrName, id);
+        LogPrint("net", "Added connection to %s peer=%d %s\n", addrName, id, strIpGroup);
     else
-        LogPrint("net", "Added connection peer=%d\n", id);
+        LogPrint("net", "Added connection peer=%d %s\n", id, strIpGroup);
 
     // Be shy and don't send version until we hear
     if (hSocket != INVALID_SOCKET && !fInbound)
