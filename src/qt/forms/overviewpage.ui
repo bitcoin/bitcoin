@@ -179,7 +179,7 @@
              </widget>
             </item>
             <item row="4" column="0" colspan="2">
-             <widget class="Line" name="line">
+             <widget class="Line" name="lineSpendableBalance">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -481,7 +481,7 @@
               </font>
              </property>
              <property name="text">
-              <string>0 DASH</string>
+              <string notr="true">0 DASH</string>
              </property>
             </widget>
            </item>
@@ -974,7 +974,7 @@
            <string>Start/Stop Mixing</string>
           </property>
          </widget>
-         <widget class="Line" name="line">
+         <widget class="Line" name="lineLastMessage">
           <property name="geometry">
            <rect>
             <x>10</x>

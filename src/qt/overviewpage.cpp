@@ -140,25 +140,24 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->labelDarksendSyncStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
-    lastNewBlock = 0;
-
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);
-    } else if(!fMasterNode) {
-        timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
-        timer->start(333);
-    }
-
-    if(fMasterNode){
-        ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
-        ui->darksendAuto->setText("(" + tr("Disabled") + ")");
-        ui->darksendReset->setText("(" + tr("Disabled") + ")");
-        ui->frameDarksend->setEnabled(false);
-    }else if(!fEnableDarksend){
-        ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
     } else {
-        ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
+        if(fMasterNode){
+            ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
+            ui->darksendAuto->setText("(" + tr("Disabled") + ")");
+            ui->darksendReset->setText("(" + tr("Disabled") + ")");
+            ui->frameDarksend->setEnabled(false);
+        } else {
+            if(!fEnableDarksend){
+                ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+            } else {
+                ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
+            }
+            timer = new QTimer(this);
+            connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+            timer->start(333);
+        }
     }
 
     // start with displaying the "out of sync" warnings
@@ -206,6 +205,10 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
+
+    updateDarksendProgress();
+
+    static int cachedTxLocks = 0;
 
     if(cachedTxLocks != nCompleteTXLocks){
         cachedTxLocks = nCompleteTXLocks;
@@ -306,36 +309,49 @@ void OverviewPage::updateDarksendProgress()
     if(IsInitialBlockDownload()) return;
 
     int64_t nBalance = pwalletMain->GetBalance();
+    QString strAmountAndRounds;
+    int nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
+    QString strAnonymizeDarkcoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAnonymizeDarkcoinAmount * COIN, false, BitcoinUnits::separatorAlways);
+
     if(nBalance == 0)
     {
         ui->darksendProgress->setValue(0);
-        QString s(tr("No inputs detected"));
-        ui->darksendProgress->setToolTip(s);
+        ui->darksendProgress->setToolTip(tr("No inputs detected"));
 
         // when balance is zero just show info from settings
-        QString strSettings = BitcoinUnits::formatWithUnit(
-                    walletModel->getOptionsModel()->getDisplayUnit(),
-                    nAnonymizeDarkcoinAmount * COIN
-                ) + " / " + tr("%n Rounds", "", nDarksendRounds);
+        strAnonymizeDarkcoinAmount = strAnonymizeDarkcoinAmount.remove(strAnonymizeDarkcoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = strAnonymizeDarkcoinAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
 
-        ui->labelAmountRounds->setText(strSettings);
+        ui->labelAmountRounds->setToolTip(tr("No inputs detected"));
+        ui->labelAmountRounds->setText(strAmountAndRounds);
         return;
     }
 
-    //get denominated unconfirmed inputs
-    if(pwalletMain->GetDenominatedBalance(true, true) > 0)
-    {
-        QString s(tr("Found unconfirmed denominated outputs, will wait till they confirm to recalculate."));
-        ui->darksendProgress->setToolTip(s);
-        return;
-    }
-
-    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance(true);
+    int64_t nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true, true);
+    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance(true) + nDenominatedUnconfirmedBalance;
 
     // If it's more than the anon threshold, limit to that.
     if(nMaxToAnonymize > nAnonymizeDarkcoinAmount*COIN) nMaxToAnonymize = nAnonymizeDarkcoinAmount*COIN;
 
     if(nMaxToAnonymize == 0) return;
+
+    if(nMaxToAnonymize >= nAnonymizeDarkcoinAmount * COIN) {
+        ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
+                                          .arg(strAnonymizeDarkcoinAmount));
+        strAnonymizeDarkcoinAmount = strAnonymizeDarkcoinAmount.remove(strAnonymizeDarkcoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = strAnonymizeDarkcoinAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
+    } else {
+        QString strMaxToAnonymize = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nMaxToAnonymize, false, BitcoinUnits::separatorAlways);
+        ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br>"
+                                             "will anonymize <span style='color:red;'>%2</span> instead")
+                                          .arg(strAnonymizeDarkcoinAmount)
+                                          .arg(strMaxToAnonymize));
+        strMaxToAnonymize = strMaxToAnonymize.remove(strMaxToAnonymize.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = "<span style='color:red;'>" +
+                QString(BitcoinUnits::factor(nDisplayUnit) == 1 ? "" : "~") + strMaxToAnonymize +
+                " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
+    }
+    ui->labelAmountRounds->setText(strAmountAndRounds);
 
     // calculate parts of the progress, each of them shouldn't be higher than 1:
     // mixing progress of denominated balance
@@ -364,35 +380,13 @@ void OverviewPage::updateDarksendProgress()
 
     QString strToolPip = tr("Progress: %1% (inputs have an average of %2 of %n rounds)", "", nDarksendRounds).arg(progress).arg(pwalletMain->GetAverageAnonymizedRounds());
     ui->darksendProgress->setToolTip(strToolPip);
-
-    QString strAmountAndRounds;
-    int nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
-    QString strAnonymizeDarkcoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAnonymizeDarkcoinAmount * COIN, false, BitcoinUnits::separatorAlways);
-    if(nMaxToAnonymize >= nAnonymizeDarkcoinAmount * COIN) {
-        ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
-                                          .arg(strAnonymizeDarkcoinAmount));
-        strAnonymizeDarkcoinAmount = strAnonymizeDarkcoinAmount.remove(strAnonymizeDarkcoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
-        strAmountAndRounds = strAnonymizeDarkcoinAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
-    } else {
-        QString strMaxToAnonymize = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nMaxToAnonymize, false, BitcoinUnits::separatorAlways);
-        ui->labelAmountRounds->setToolTip("<span style='white-space: nowrap;'>" +
-                                          tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br/>"
-                                             "will anonymize <span style='color:red;'>%2</span> instead")
-                                          .arg(strAnonymizeDarkcoinAmount)
-                                          .arg(strMaxToAnonymize) +
-                                          "</span>");
-        strMaxToAnonymize = strMaxToAnonymize.remove(strMaxToAnonymize.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
-        strAmountAndRounds = "<span style='color:red;'>" +
-                QString(BitcoinUnits::factor(nDisplayUnit) == 1 ? "" : "~") + strMaxToAnonymize +
-                " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
-    }
-
-    ui->labelAmountRounds->setText(strAmountAndRounds);
 }
 
 
 void OverviewPage::darkSendStatus()
 {
+    static int64_t lastNewBlock = 0;
+
     int nBestHeight = chainActive.Tip()->nHeight;
 
     if(nBestHeight != darkSendPool.cachedNumBlocks)
@@ -400,7 +394,6 @@ void OverviewPage::darkSendStatus()
         //we we're processing lots of blocks, we'll just leave
         if(GetTime() - lastNewBlock < 10) return;
         lastNewBlock = GetTime();
-
         updateDarksendProgress();
     }
 
