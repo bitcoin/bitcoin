@@ -15,13 +15,11 @@
 class CBaseChainParams
 {
 public:
-    enum Network {
-        MAIN,
-        TESTNET,
-        REGTEST,
-
-        MAX_NETWORK_TYPES
-    };
+    /** BIP70 chain name strings (main, test or regtest) */
+    static const std::string MAIN;
+    static const std::string TESTNET;
+    static const std::string REGTEST;
+    static const std::string MAX_NETWORK_TYPES;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
@@ -40,13 +38,13 @@ protected:
 const CBaseChainParams& BaseParams();
 
 /** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(CBaseChainParams::Network network);
+void SelectBaseParams(const std::string& chain);
 
 /**
- * Looks for -regtest or -testnet and returns the appropriate Network ID.
- * Returns MAX_NETWORK_TYPES if an invalid combination is given.
+ * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+ * @return CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given. CBaseChainParams::MAIN by default.
  */
-CBaseChainParams::Network NetworkIdFromCommandLine();
+std::string ChainNameFromCommandLine();
 
 /**
  * Calls NetworkIdFromCommandLine() and then calls SelectParams as appropriate.
