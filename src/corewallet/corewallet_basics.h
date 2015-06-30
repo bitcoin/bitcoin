@@ -6,6 +6,7 @@
 #ifndef BITCOIN_COREWALLET_COREWALLET_BASICS_H
 #define BITCOIN_COREWALLET_COREWALLET_BASICS_H
 
+#include "base58.h"
 #include "pubkey.h"
 #include "serialize.h"
 
@@ -98,6 +99,13 @@ namespace CoreWallet
             nDerivationIndex = 0;
             nDepth = 0;
         }
+    };
+
+    struct CRecipient
+    {
+        CScript scriptPubKey;
+        CAmount nAmount;
+        bool fSubtractFeeFromAmount;
     };
 }; // end namespace CoreWallet
 

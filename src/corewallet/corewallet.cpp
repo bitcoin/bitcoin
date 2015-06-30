@@ -7,6 +7,7 @@
 #include "corewallet/corewallet_db.h"
 #include "corewallet/corewallet_wallet.h"
 #include "rpcserver.h"
+#include "script/script.h"
 #include "ui_interface.h"
 #include "univalue/univalue.h"
 #include "util.h"
@@ -15,6 +16,7 @@
 #include <string>
 
 #include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace CoreWallet {
 
@@ -143,23 +145,6 @@ void Dealloc()
         managerSharedInstance = NULL;
     }
 }
-    
-void RegisterSignals()
-{
-    AddJSONRPCURISchema("/corewallet");
-    RPCServer::OnExtendedCommandExecute(boost::bind(&CoreWallet::ExecuteRPC, _1, _2, _3, _4));
-    
-    GetMainSignals().ShutdownFinished.connect(boost::bind(&Dealloc));
-    GetMainSignals().CreateHelpString.connect(boost::bind(&AppendHelpMessageString, _1, _2));
-    GetMainSignals().LoadModules.connect(boost::bind(&LoadAsModule, _1, _2, _3));
-}
-
-void UnregisterSignals()
-{
-    GetMainSignals().ShutdownFinished.disconnect(boost::bind(&Dealloc));
-    GetMainSignals().CreateHelpString.disconnect(boost::bind(&AppendHelpMessageString, _1, _2));
-    GetMainSignals().LoadModules.disconnect(boost::bind(&LoadAsModule, _1, _2, _3));
-}
 
 Manager* GetManager()
 {
@@ -188,4 +173,29 @@ void Manager::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
     }
 }
 
+void GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
+{
+    Wallet *wallet = CoreWallet::GetManager()->GetWalletWithID("");
+    if (wallet)
+        wallet->GetScriptForMining(script);
+}
+
+void RegisterSignals()
+{
+    AddJSONRPCURISchema("/corewallet");
+    RPCServer::OnExtendedCommandExecute(boost::bind(&CoreWallet::ExecuteRPC, _1, _2, _3, _4));
+
+    GetMainSignals().ShutdownFinished.connect(boost::bind(&Dealloc));
+    GetMainSignals().CreateHelpString.connect(boost::bind(&AppendHelpMessageString, _1, _2));
+    GetMainSignals().LoadModules.connect(boost::bind(&LoadAsModule, _1, _2, _3));
+    GetMainSignals().ScriptForMining.connect(boost::bind(&GetScriptForMining, _1));
+}
+
+void UnregisterSignals()
+{
+    GetMainSignals().ShutdownFinished.disconnect(boost::bind(&Dealloc));
+    GetMainSignals().CreateHelpString.disconnect(boost::bind(&AppendHelpMessageString, _1, _2));
+    GetMainSignals().LoadModules.disconnect(boost::bind(&LoadAsModule, _1, _2, _3));
+    GetMainSignals().ScriptForMining.disconnect(boost::bind(&GetScriptForMining, _1));
+}
 };

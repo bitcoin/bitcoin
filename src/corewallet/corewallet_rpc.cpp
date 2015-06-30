@@ -3,12 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "base58.h"
 #include "corewallet/corewallet_basics.h"
 #include "corewallet/corewallet.h"
+
+#include "base58.h"
+#include "core_io.h"
 #include "pubkey.h"
 #include "rpcserver.h"
 #include "utilstrencodings.h"
+#include "utilmoneystr.h"
 
 #include <string>
 
@@ -118,6 +121,14 @@ UniValue ValueFromParams(const UniValue& params, const std::string& key, UniValu
             else
                 val.setBool(false);
         }
+        if (forceType == UniValue::VOBJ)
+            if (val.isStr())
+            {
+                std::string jsonStr = val.get_str();
+                if (!val.read(jsonStr))
+                    throw std::runtime_error("Invalid JSON");
+            }
+
         return val;
     }
     else
@@ -708,7 +719,58 @@ UniValue createtx(const UniValue& params, bool fHelp)
     Wallet *wallet = WalletFromParams(params);
     std::vector<std::pair<CBitcoinAddress, CAmount> > sendToList;
 
-    UniValue sendToArray = ValueFromParams(params, "sendto");
+    UniValue sendToArray = ValueFromParams(params, "sendto", UniValue::VOBJ);
+    UniValue sendTx = ValueFromParams(params, "send", UniValue::VBOOL);
+
+    CAmount curBalance = wallet->GetBalance(CREDIT_DEBIT_TYPE_AVAILABLE, ISMINE_SPENDABLE);
+
+    CBitcoinAddress address(sendToArray.getKeys()[0]);
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+
+    CAmount nValue = AmountFromValue(sendToArray.getValues()[0]);
+    // Check amount
+    if (nValue <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+
+    if (nValue > curBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    bool shouldSend = false;
+    if (!sendTx.isNull() && sendTx.isTrue())
+        shouldSend = true;
+
+    // Parse Bitcoin address
+    CScript scriptPubKey = GetScriptForDestination(address.Get());
+
+    bool fSubtractFeeFromAmount = false;
+    WalletTx wtxNew;
+
+    // Create and send the transaction
+    CHDReserveKey reservekey(wallet);
+    CAmount nFeeRequired;
+    std::string strError;
+    std::vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    if (!wallet->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError)) {
+        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+
+    if (shouldSend && !wallet->CommitTransaction(wtxNew, reservekey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("hex", EncodeHexTx(wtxNew)));
+    result.push_back(Pair("fee", ValueFromAmount(nFeeRequired)));
+    result.push_back(Pair("sent", shouldSend));
+    if (shouldSend)
+        result.push_back(Pair("txid", wtxNew.GetHash().GetHex()));
+
+    return result;
 }
     
 ///////////////////////////

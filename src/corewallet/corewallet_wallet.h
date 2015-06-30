@@ -20,20 +20,32 @@
 #include "ui_interface.h"
 #include "validationinterface.h"
 
-class WalletTx;
+
 
 namespace CoreWallet {
 
+class WalletTx;
+class CReserveKey;
+
+static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 extern bool bSpendZeroConfChange;
+extern bool fSendFreeTransactions;
+extern bool fPayAtLeastCustomFee;
+extern unsigned int nTxConfirmTarget;
+extern CFeeRate payTxFee;
+extern CAmount maxTxFee;
 
 class Wallet : public CHDKeyStore, public CValidationInterface{
+private:
+    bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const WalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
 public:
-
+    static CFeeRate minTxFee;
     CoreInterface coreInterface;
 
     mutable CCriticalSection cs_coreWallet;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
     std::map<CTxDestination, CAddressBookMetadata> mapAddressBook;
+    std::map<uint256, int> mapRequestCount;
     std::map<uint256, WalletTx> mapWallet;
     std::set<COutPoint> setLockedCoins;
     int64_t nTimeFirstKey;
@@ -43,17 +55,7 @@ public:
     //! state: current active hd chain, must be protected over cs_coreWallet
     HDChainID activeHDChain;
 
-    Wallet(std::string strWalletFileIn)
-    {
-        //instantiate a wallet backend object and maps the stored values
-        walletPrivateDB = new FileDB(strWalletFileIn+".private.logdb");
-        walletPrivateDB->LoadWallet(this);
-
-        walletCacheDB = new FileDB(strWalletFileIn+".cache.logdb");
-        walletCacheDB->LoadWallet(this);
-
-        coreInterface = CoreInterface();
-    }
+    Wallet(std::string strWalletFileIn);
 
     //!adds a hd chain of keys to the wallet
     bool HDSetChainPath(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, bool overwrite = false);
@@ -123,7 +125,7 @@ public:
     bool WriteWTXToDisk(const WalletTx &wtx);
 
     bool IsTrustedWTx(const WalletTx &wtx) const;
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue) const;
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue = false) const;
 
     bool IsLockedCoin(uint256 hash, unsigned int n) const;
     void LockCoin(COutPoint& output);
@@ -136,11 +138,21 @@ public:
 
     bool RelayWalletTransaction(const WalletTx &wtx);
 
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const WalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, WalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
+    bool CommitTransaction(WalletTx& wtxNew, CReserveKey& reservekey);
+    CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget);
+
     //core node interaction
     const CBlockIndex* GetBlockIndex(uint256 blockhash, bool inActiveChain = false) const;
     int GetActiveChainHeight() const;
     int MempoolExists(uint256 hash) const;
-    bool AcceptToMemoryPool(const WalletTx &wtx, bool fLimitFree, bool fRejectAbsurdFee);
+    bool AcceptToMemoryPool(const WalletTx &wtx, bool fLimitFree=true, bool fRejectAbsurdFee=true);
+    CFeeRate GetMinRelayTxFee();
+    unsigned int GetMaxStandardTxSize();
+
+    //mining
+    void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
 
     /**
      * Wallet transaction added, removed or updated.
@@ -194,7 +206,7 @@ public:
 };
 
 /** A key allocated from the key pool. */
-class CReserveKey
+class CReserveKey : public CReserveScript
 {
 protected:
     Wallet* pwallet;
@@ -215,6 +227,7 @@ public:
     void ReturnKey();
     virtual bool GetReservedKey(CPubKey &pubkey);
     void KeepKey();
+    void KeepScript() { KeepKey(); }
 };
 
 class CHDReserveKey : public CReserveKey
