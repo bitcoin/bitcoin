@@ -217,7 +217,11 @@ void MetaDExDialog::SwitchMarket()
         return;
     }
     // check that the property exists
-    bool spExists = _my_sps->hasSP(searchPropertyId);
+    bool spExists = false;
+    {
+        LOCK(cs_tally);
+        spExists = _my_sps->hasSP(searchPropertyId);
+    }
     if (!spExists) {
         QMessageBox::critical( this, "Unable to switch market",
         "The property ID entered was not found." );
@@ -348,6 +352,9 @@ void MetaDExDialog::UpdateOffers()
     for (int useBuyList = 0; useBuyList < 2; ++useBuyList) {
         if (useBuyList) { ui->buyList->setRowCount(0); } else { ui->sellList->setRowCount(0); }
         bool testeco = isTestEcosystemProperty(global_metadex_market);
+
+        LOCK(cs_tally);
+
         for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
             if ((!useBuyList) && (my_it->first != global_metadex_market)) { continue; } // not the property we're looking for, don't waste any more work
             if ((useBuyList) && (((!testeco) && (my_it->first != OMNI_PROPERTY_MSC)) || ((testeco) && (my_it->first != OMNI_PROPERTY_TMSC)))) continue;

@@ -136,6 +136,8 @@ Value setautocommit_OMNI(const Array& params, bool fHelp)
             + HelpExampleRpc("setautocommit", "false")
         );
 
+    LOCK(cs_tally);
+
     autoCommit = params[0].get_bool();
     return autoCommit;
 }
@@ -143,8 +145,8 @@ Value setautocommit_OMNI(const Array& params, bool fHelp)
 // display the tally map & the offer/accept list(s)
 Value mscrpc(const Array& params, bool fHelp)
 {
-int extra = 0;
-int extra2 = 0, extra3 = 0;
+    int extra = 0;
+    int extra2 = 0, extra3 = 0;
 
     if (fHelp || params.size() > 3)
         throw runtime_error(
@@ -157,89 +159,124 @@ int extra2 = 0, extra3 = 0;
             + HelpExampleRpc("mscrpc", "")
         );
 
-  if (0 < params.size()) extra = atoi(params[0].get_str());
-  if (1 < params.size()) extra2 = atoi(params[1].get_str());
-  if (2 < params.size()) extra3 = atoi(params[2].get_str());
+    if (0 < params.size()) extra = atoi(params[0].get_str());
+    if (1 < params.size()) extra2 = atoi(params[1].get_str());
+    if (2 < params.size()) extra3 = atoi(params[2].get_str());
 
-  PrintToConsole("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
+    PrintToConsole("%s(extra=%d,extra2=%d,extra3=%d)\n", __FUNCTION__, extra, extra2, extra3);
 
-  bool bDivisible = isPropertyDivisible(extra2);
+    bool bDivisible = isPropertyDivisible(extra2);
 
-  // various extra tests
-  switch (extra)
-  {
-    case 0:
-    {
-        LOCK(cs_tally);
-
-        int64_t total = 0;
-        // display all balances
-        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            PrintToConsole("%34s => ", my_it->first);
-            total += (my_it->second).print(extra2, bDivisible);
-        }
-
-        PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
-        break;
-    }
-
-    case 1:
-      // display the whole CMPTxList (leveldb)
-      p_txlistdb->printAll();
-      p_txlistdb->printStats();
-      break;
-
-    case 2:
-        // display smart properties
-        _my_sps->printAll();
-      break;
-
-    case 3:
-    {
-        LOCK(cs_tally);
-
-        uint32_t id = 0;
-        // for each address display all currencies it holds
-        for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
-            PrintToConsole("%34s => ", my_it->first);
-            (my_it->second).print(extra2);
-            (my_it->second).init();
-            while (0 != (id = (my_it->second).next())) {
-                PrintToConsole("Id: %u=0x%X ", id, id);
+    // various extra tests
+    switch (extra) {
+        case 0:
+        {
+            LOCK(cs_tally);
+            int64_t total = 0;
+            // display all balances
+            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+                PrintToConsole("%34s => ", my_it->first);
+                total += (my_it->second).print(extra2, bDivisible);
             }
-            PrintToConsole("\n");
+            PrintToConsole("total for property %d  = %X is %s\n", extra2, extra2, FormatDivisibleMP(total));
+            break;
         }
-        break;
+        case 1:
+        {
+            LOCK(cs_tally);
+            // display the whole CMPTxList (leveldb)
+            p_txlistdb->printAll();
+            p_txlistdb->printStats();
+            break;
+        }
+        case 2:
+        {
+            LOCK(cs_tally);
+            // display smart properties
+            _my_sps->printAll();
+            break;
+        }
+        case 3:
+        {
+            LOCK(cs_tally);
+            uint32_t id = 0;
+            // for each address display all currencies it holds
+            for (std::map<std::string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+                PrintToConsole("%34s => ", my_it->first);
+                (my_it->second).print(extra2);
+                (my_it->second).init();
+                while (0 != (id = (my_it->second).next())) {
+                    PrintToConsole("Id: %u=0x%X ", id, id);
+                }
+                PrintToConsole("\n");
+            }
+            break;
+        }
+        case 4:
+        {
+            LOCK(cs_tally);
+            for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
+                (it->second).print(it->first);
+            }
+            break;
+        }
+        case 5:
+        {
+            LOCK(cs_tally);
+            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
+            break;
+        }
+        case 6:
+        {
+            LOCK(cs_tally);
+            MetaDEx_debug_print(true, true);
+            break;
+        }
+        case 7:
+        {
+            LOCK(cs_tally);
+            // display the whole CMPTradeList (leveldb)
+            t_tradelistdb->printAll();
+            t_tradelistdb->printStats();
+            break;
+        }
+        case 8:
+        {
+            LOCK(cs_tally);
+            // display the STO receive list
+            s_stolistdb->printAll();
+            s_stolistdb->printStats();
+            break;
+        }
+        case 9:
+        {
+            PrintToConsole("Locking cs_tally for %d milliseconds..\n", extra2);
+            LOCK(cs_tally);
+            MilliSleep(extra2);
+            PrintToConsole("Unlocking cs_tally now\n");
+            break;
+        }
+        case 10:
+        {
+            PrintToConsole("Locking cs_main for %d milliseconds..\n", extra2);
+            LOCK(cs_main);
+            MilliSleep(extra2);
+            PrintToConsole("Unlocking cs_main now\n");
+            break;
+        }
+        case 11:
+        {
+            PrintToConsole("Locking pwalletMain->cs_wallet for %d milliseconds..\n", extra2);
+            LOCK(pwalletMain->cs_wallet);
+            MilliSleep(extra2);
+            PrintToConsole("Unlocking pwalletMain->cs_wallet now\n");
+            break;
+        }
+        default:
+            break;
     }
 
-    case 4:
-      for(CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it)
-      {
-        (it->second).print(it->first);
-      }
-      break;
-
-    case 5:
-      PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, isMPinBlockRange(extra2, extra3, false) ? "YES":"NO");
-      break;
-
-    case 6:
-      MetaDEx_debug_print(true, true);
-      break;
-
-    case 7:
-      // display the whole CMPTradeList (leveldb)
-      t_tradelistdb->printAll();
-      t_tradelistdb->printStats();
-      break;
-
-    case 8:
-      // display the STO receive list
-      s_stolistdb->printAll();
-      s_stolistdb->printStats();
-      break;
-  }
-  return GetHeight();
+    return GetHeight();
 }
 
 // display an MP balance via RPC
@@ -448,10 +485,12 @@ Value getproperty_MP(const Array& params, bool fHelp)
     RequireExistingProperty(propertyId);
 
     CMPSPInfo::Entry sp;
-    if (!_my_sps->getSP(propertyId, sp)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+    {
+        LOCK(cs_tally);
+        if (!_my_sps->getSP(propertyId, sp)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+        }
     }
-
     int64_t nTotalTokens = getTotalTokens(propertyId);
     std::string strCreationHash = sp.txid.GetHex();
     std::string strTotalTokens = FormatMP(propertyId, nTotalTokens);
@@ -488,6 +527,8 @@ Value listproperties_MP(const Array& params, bool fHelp)
         );
 
     Array response;
+
+    LOCK(cs_tally);
 
     uint32_t nextSPID = _my_sps->peekNextSPID(1);
     for (uint32_t propertyId = 1; propertyId < nextSPID; propertyId++) {
@@ -552,8 +593,11 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     RequireCrowdsale(propertyId);
 
     CMPSPInfo::Entry sp;
-    if (!_my_sps->getSP(propertyId, sp)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+    {
+        LOCK(cs_tally);
+        if (!_my_sps->getSP(propertyId, sp)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+        }
     }
 
     bool showVerbose = false;
@@ -573,6 +617,9 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
 
     if (active) {
         bool crowdFound = false;
+
+        LOCK(cs_tally);
+
         for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
             const CMPCrowd& crowd = it->second;
             if (propertyId == crowd.getPropertyId()) {
@@ -666,6 +713,8 @@ Value getactivecrowdsales_MP(const Array& params, bool fHelp)
 
     Array response;
 
+    LOCK2(cs_main, cs_tally);
+
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
         uint32_t propertyId = crowd.getPropertyId();
@@ -741,10 +790,12 @@ Value getgrants_MP(const Array& params, bool fHelp)
     RequireManagedProperty(propertyId);
 
     CMPSPInfo::Entry sp;
-    if (false == _my_sps->getSP(propertyId, sp)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+    {
+        LOCK(cs_tally);
+        if (false == _my_sps->getSP(propertyId, sp)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
+        }
     }
-
     Object response;
     const uint256& creationHash = sp.txid;
     int64_t totalTokens = getTotalTokens(propertyId);
@@ -782,6 +833,7 @@ Value getgrants_MP(const Array& params, bool fHelp)
 
 int check_prop_valid(int64_t tmpPropId, string error, string exist_error ) {
   CMPSPInfo::Entry sp;
+  LOCK(cs_tally);
 
   if ((1 > tmpPropId) || (4294967295LL < tmpPropId))
     throw JSONRPCError(RPC_INVALID_PARAMETER, error);
@@ -812,15 +864,20 @@ Value getorderbook_MP(const Array& params, bool fHelp)
   }
 
   std::vector<CMPMetaDEx> vecMetaDexObjects;
-  for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-      md_PricesMap & prices = my_it->second;
-      for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
-          md_Set & indexes = (it->second);
-          for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
-              CMPMetaDEx obj = *it;
-              if (obj.getProperty() == propertyIdForSale) {
-                  if (!filterDesired || (obj.getProperty() == propertyIdForSale && obj.getDesProperty() == propertyIdDesired)) {
-                      vecMetaDexObjects.push_back(obj);
+
+  {
+      LOCK(cs_tally);
+
+      for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+          md_PricesMap & prices = my_it->second;
+          for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
+              md_Set & indexes = (it->second);
+              for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                  CMPMetaDEx obj = *it;
+                  if (obj.getProperty() == propertyIdForSale) {
+                      if (!filterDesired || (obj.getProperty() == propertyIdForSale && obj.getDesProperty() == propertyIdDesired)) {
+                          vecMetaDexObjects.push_back(obj);
+                      }
                   }
               }
           }
@@ -867,6 +924,9 @@ Value gettradessince_MP(const Array& params, bool fHelp)
   
   std::vector<CMPMetaDEx> vMetaDexObjects;
 
+  {
+  LOCK(cs_tally);
+
   for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it)
   {
     md_PricesMap & prices = my_it->second;
@@ -890,7 +950,9 @@ Value gettradessince_MP(const Array& params, bool fHelp)
       }
     }
   }
-  
+
+  }
+
   Array response;
   MetaDexObjectsToJSON(vMetaDexObjects, response);
   
@@ -1041,6 +1103,8 @@ Value getactivedexsells_MP(const Array& params, bool fHelp)
 
       Array response;
 
+      LOCK(cs_tally);
+
       for(OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it)
       {
           CMPOffer selloffer = it->second;
@@ -1133,17 +1197,22 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
     RequireHeightInChain(blockHeight);
 
     // next let's obtain the block for this height
-    CBlockIndex* pBlockIndex = chainActive[blockHeight];
-
     CBlock block;
-    if (!ReadBlockFromDisk(block, pBlockIndex)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block from disk");
+    {
+        LOCK(cs_main);
+        CBlockIndex* pBlockIndex = chainActive[blockHeight];
+
+        if (!ReadBlockFromDisk(block, pBlockIndex)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Failed to read block from disk");
+        }
     }
 
     Array response;
 
     // now we want to loop through each of the transactions in the block and run against CMPTxList::exists
     // those that return positive add to our response array
+
+    LOCK(cs_tally);
 
     BOOST_FOREACH(const CTransaction&tx, block.vtx) {
         if (p_txlistdb->exists(tx.GetHash())) {
@@ -1190,6 +1259,7 @@ Value gettransaction_MP(const Array& params, bool fHelp)
     uint256 hash;
     hash.SetHex(params[0].get_str());
     Object txobj;
+
     // make a request to new RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, txobj);
     // check the response, throw any error codes if false
@@ -1232,7 +1302,6 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("listtransactions_MP", "")
         );
 
-    CWallet *wallet = pwalletMain;
     string sAddress = "";
     string addressParam = "";
     bool addressFilter;
@@ -1263,14 +1332,21 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     Array response; //prep an array to hold our output
 
     // STO has no inbound transaction, so we need to use an insert methodology here
-    string mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
+    std::string mySTOReceipts;
+    {
+        LOCK(cs_tally);
+        mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
+    }
     std::vector<std::string> vecReceipts;
     boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
     int64_t lastTXBlock = 999999;
 
-    LOCK(wallet->cs_wallet);
     std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    CWallet::TxItems txOrdered;
+    {
+        LOCK(pwalletMain->cs_wallet);
+        txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
+    }
 
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
@@ -1371,8 +1447,11 @@ Value getinfo_MP(const Array& params, bool fHelp)
     infoResponse.push_back(Pair("commitinfo", BuildCommit()));
 
     // provide the current block details
-    int block = chainActive.Height();
-    int64_t blockTime = chainActive[block]->GetBlockTime();
+    int block = GetHeight();
+    int64_t blockTime = GetLatestBlockTime();
+
+    LOCK(cs_tally);
+
     int blockMPTransactions = p_txlistdb->getMPTransactionCountBlock(block);
     int totalMPTransactions = p_txlistdb->getMPTransactionCountTotal();
     int totalMPTrades = t_tradelistdb->getMPTradeCountTotal();

@@ -158,8 +158,12 @@ public:
                             if (0 < parseRC) { //positive RC means DEx payment
                                 std::string tmpBuyer, tmpSeller;
                                 uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
-                                p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                {
+                                    LOCK(cs_tally);
+                                    p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                }
                                 bool bIsBuy = IsMyAddress(tmpBuyer);
+                                LOCK(cs_tally);
                                 int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
                                 if (0<numberOfPurchases) { // calculate total bought/sold
                                     for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {

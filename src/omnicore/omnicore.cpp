@@ -295,8 +295,6 @@ std::map<std::string, CMPTally> mastercore::mp_tally_map;
 
 CMPTally* mastercore::getTally(const std::string& address)
 {
-    LOCK(cs_tally);
-
     std::map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
 
     if (it != mp_tally_map.end()) return &(it->second);
@@ -615,8 +613,6 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 
 void CheckWalletUpdate(bool forceUpdate)
 {
-    LOCK(cs_tally);
-
     if (!WalletCacheUpdate()) {
         // no balance changes were detected that affect wallet addresses, signal a generic change to overall Omni state
         if (!forceUpdate) {
@@ -624,6 +620,8 @@ void CheckWalletUpdate(bool forceUpdate)
             return;
         }
     }
+
+    LOCK(cs_tally);
 
     // balance changes were found in the wallet, update the global totals and signal a Omni balance change
     global_balance_money.clear();
@@ -2134,12 +2132,9 @@ static int msc_file_load(const string &filename, int what, bool verifyHash = fal
   switch (what)
   {
     case FILETYPE_BALANCES:
-    {
-      LOCK(cs_tally);
       mp_tally_map.clear();
       inputLineFunc = input_msc_balances_string;
       break;
-    }
 
     case FILETYPE_OFFERS:
       my_offers.clear();
@@ -2360,8 +2355,6 @@ static int load_most_relevant_state()
 
 static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-    LOCK(cs_tally);
-
     std::map<std::string, CMPTally>::iterator iter;
     for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
         bool emptyWallet = true;
@@ -2601,8 +2594,6 @@ static void prune_state_files( CBlockIndex const *topIndex )
 
 int mastercore_save_state( CBlockIndex const *pBlockIndex )
 {
-    LOCK(cs_tally);
-
     // write the new state as of the given block
     write_state_file(pBlockIndex, FILETYPE_BALANCES);
     write_state_file(pBlockIndex, FILETYPE_OFFERS);

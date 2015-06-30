@@ -72,10 +72,10 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 CClientUIInterface uiInterface;
 
 // Omni Core initialization and shutdown handlers
-int mastercore_init();
-int mastercore_shutdown();
-int CheckWalletUpdate(bool forceUpdate = false);
-void WalletTXIDCacheInit();
+extern int mastercore_init();
+extern int mastercore_shutdown();
+extern int CheckWalletUpdate(bool forceUpdate = false);
+
 
 //////////////////////////////////////////////////////////////////////////////
 //

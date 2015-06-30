@@ -76,6 +76,8 @@ int WalletCacheUpdate()
     int numChanges = 0;
     std::set<std::string> changedAddresses;
 
+    LOCK(cs_tally);
+
     for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
 
