@@ -2808,6 +2808,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         // Resurrect mempool transactions from the disconnected block.
         std::vector<uint256> vHashUpdate;
         BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+            mempool.UpdateDependentPriorities(tx, pindexDelete->nHeight, false);
             // ignore validation errors in resurrected transactions
             CValidationState stateDummy;
             if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, true)) {
