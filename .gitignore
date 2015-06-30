@@ -39,6 +39,9 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
+# Omni Core Windows installer script
+src/omnicore/res/omnicore-setup-win.nsi
+
 src/univalue/gen
 
 src/qt/*.moc

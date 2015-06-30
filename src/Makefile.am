@@ -308,7 +308,7 @@ omnicored_SOURCES = bitcoind.cpp
 #
 
 if TARGET_WINDOWS
-omnicored_SOURCES += bitcoind-res.rc
+omnicored_SOURCES += omnicore/res/omnicored-res.rc
 endif
 
 omnicored_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
@@ -345,7 +345,7 @@ bitcoin_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
 bitcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-omnicore_cli_SOURCES += bitcoin-cli-res.rc
+omnicore_cli_SOURCES += omnicore/res/omnicore-cli-res.rc
 endif
 omnicore_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 

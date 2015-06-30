@@ -17,7 +17,10 @@ OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
 OSX_PLIST=$(top_srcdir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
-DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
+DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md) \
+  $(wildcard src/omnicore/*.md) \
+  $(wildcard src/omnicore/doc/*.md) \
+  $(wildcard src/omnicore/doc/release-notes/*.md)
 
 WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
@@ -53,7 +56,7 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIND_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_QT_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_CLI_BIN) $(top_builddir)/release
-	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
+	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/src/omnicore/res/omnicore-setup-win.nsi || \
 	  echo error: could not build $@
 	@echo built $@
 

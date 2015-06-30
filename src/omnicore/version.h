@@ -1,26 +1,50 @@
 #ifndef OMNICORE_VERSION_H
 #define OMNICORE_VERSION_H
 
-#include <string>
+#if defined(HAVE_CONFIG_H)
+#include "config/bitcoin-config.h"
+#else
+
+//
+// Omni Core version information are also to be defined in configure.ac.
+//
+// During the configuration, this information are used for other places.
+//
+
+// Even greater than major versions
+#define OMNICORE_VERSION_MILESTONE   0
 
 // Increase with every consensus affecting change
-#define OMNICORE_VERSION_MAJOR   10
+#define OMNICORE_VERSION_MAJOR       10
 
 // Increase with every non-consensus affecting feature
-#define OMNICORE_VERSION_MINOR   0
+#define OMNICORE_VERSION_MINOR       0
 
 // Increase with every patch, which is not a feature or consensus affecting
-#define OMNICORE_VERSION_PATCH   0
+#define OMNICORE_VERSION_PATCH       0
 
-// Use "-dev" for development versions, switch to "-rel" for tags
-#define OMNICORE_VERSION_TYPE    "-dev"
+// Use "dev" for development versions, switch to "rc" for release candidates
+#define OMNICORE_VERSION_STATUS      dev
 
+
+#endif // HAVE_CONFIG_H
+
+#if !defined(WINDRES_PREPROC)
+
+//
+// *-res.rc includes this file, but it cannot cope with real c++ code.
+// WINDRES_PREPROC is defined to indicate that its pre-processor is running.
+// Anything other than a define should be guarded below:
+//
+
+#include <string>
 
 //! Omni Core client version
 static const int OMNICORE_VERSION =
-                        +  100000 * OMNICORE_VERSION_MAJOR
-                        +     100 * OMNICORE_VERSION_MINOR
-                        +       1 * OMNICORE_VERSION_PATCH;
+                     +  100000000 * OMNICORE_VERSION_MILESTONE
+                     +     100000 * OMNICORE_VERSION_MAJOR
+                     +        100 * OMNICORE_VERSION_MINOR
+                     +          1 * OMNICORE_VERSION_PATCH;
 
 //! Returns formatted Omni Core version, e.g. "0.0.9.1-dev"
 const std::string OmniCoreVersion();
@@ -34,5 +58,7 @@ const std::string BuildDate();
 //! Returns commit identifier, if available
 const std::string BuildCommit();
 
+
+#endif // WINDRES_PREPROC
 
 #endif // OMNICORE_VERSION_H

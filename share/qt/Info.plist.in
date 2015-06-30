@@ -17,13 +17,13 @@
   <string>APPL</string>
 
   <key>CFBundleGetInfoString</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers and the Omni Core developers</string>
+  <string>@OMNICORE_VERSION_MILESTONE@.@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@.@OMNICORE_VERSION_PATCH@-@OMNICORE_VERSION_STATUS@, Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers and the Omni Core developers</string>
 
   <key>CFBundleShortVersionString</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
+  <string>@OMNICORE_VERSION_MILESTONE@.@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@</string>
 
   <key>CFBundleVersion</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
+  <string>@OMNICORE_VERSION_MILESTONE@.@OMNICORE_VERSION_MAJOR@.@OMNICORE_VERSION_MINOR@</string>
 
   <key>CFBundleSignature</key>
   <string>????</string>
