@@ -12,7 +12,7 @@
  * This just configures logging and chain parameters.
  */
 struct BasicTestingSetup {
-    BasicTestingSetup(CBaseChainParams::Network network = CBaseChainParams::MAIN);
+    BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
 };
 
@@ -25,7 +25,7 @@ struct TestingSetup: public BasicTestingSetup {
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
 
-    TestingSetup(CBaseChainParams::Network network = CBaseChainParams::MAIN);
+    TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
 };
 
