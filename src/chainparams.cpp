@@ -260,6 +260,6 @@ const CChainParams& Params(const std::string& chain)
 
 void SelectParams(const std::string& network)
 {
-    SelectBaseParams(network);
+    cGlobalChainBaseParams.Set(CBaseChainParams::Factory(network));
     cGlobalChainParams.Set(CChainParams::Factory(network));
 }

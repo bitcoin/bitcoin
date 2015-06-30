@@ -45,25 +45,10 @@ protected:
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
 
 /**
- * Return the currently selected parameters. This won't change after app
- * startup, except for unit tests.
- */
-const CBaseChainParams& BaseParams();
-
-/** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(const std::string& chain);
-
-/**
  * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
  * @return CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given. CBaseChainParams::MAIN by default.
  */
 std::string ChainNameFromCommandLine();
-
-/**
- * Return true if SelectBaseParamsFromCommandLine() has been called to select
- * a network.
- */
-bool AreBaseParamsConfigured();
 
 extern Container<CBaseChainParams> cGlobalChainBaseParams;
 

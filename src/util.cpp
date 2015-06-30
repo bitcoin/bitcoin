@@ -224,7 +224,7 @@ int LogPrintStr(const std::string &str)
         ret = fwrite(str.data(), 1, str.size(), stdout);
         fflush(stdout);
     }
-    else if (fPrintToDebugLog && AreBaseParamsConfigured())
+    else if (fPrintToDebugLog && !cGlobalChainBaseParams.IsNull())
     {
         static bool fStartedNewLine = true;
         boost::call_once(&DebugPrintInit, debugPrintInitFlag);
@@ -448,7 +448,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific)
         path = GetDefaultDataDir();
     }
     if (fNetSpecific)
-        path /= BaseParams().DataDir();
+        path /= cGlobalChainBaseParams.Get().DataDir();
 
     fs::create_directories(path);
 

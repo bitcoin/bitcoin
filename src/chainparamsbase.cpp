@@ -75,11 +75,6 @@ static CBaseUnitTestParams unitTestParams;
 
 Container<CBaseChainParams> cGlobalChainBaseParams;
 
-const CBaseChainParams& BaseParams()
-{
-    return cGlobalChainBaseParams.Get();
-}
-
 CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
@@ -89,11 +84,6 @@ CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
     else if (chain == CBaseChainParams::REGTEST)
         return new CBaseRegTestParams();
     throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
-}
-
-void SelectBaseParams(const std::string& chain)
-{
-    cGlobalChainBaseParams.Set(CBaseChainParams::Factory(chain));
 }
 
 std::string ChainNameFromCommandLine()
@@ -108,9 +98,4 @@ std::string ChainNameFromCommandLine()
     if (fTestNet)
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
-}
-
-bool AreBaseParamsConfigured()
-{
-    return !cGlobalChainBaseParams.IsNull();
 }
