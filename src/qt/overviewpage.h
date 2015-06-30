@@ -57,11 +57,6 @@ private:
     CAmount currentWatchUnconfBalance;
     CAmount currentWatchImmatureBalance;
 
-    qint64 cachedTxLocks;
-    qint64 lastNewBlock;
-
-    int cachedNumBlocks;
-
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
 
