@@ -294,7 +294,7 @@ void BitcoinCore::restart(QStringList args)
         CExplicitNetCleanup::callCleanup();
         QProcess::startDetached(QApplication::applicationFilePath(), args);
         qDebug() << __func__ << ": Restart initiated...";
-        QCoreApplication::quit();
+        QApplication::quit();
     } catch (std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
