@@ -421,7 +421,7 @@ static bool ProcessBlockFound(CBlock* pblock, const CChainParams& chainparams)
     return true;
 }
 
-void static BitcoinMiner(const CChainParams& chainparams, const CScript& coinbaseScript)
+void static BitcoinMiner(const CChainParams& chainparams)
 {
     LogPrintf("BitcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -429,7 +429,14 @@ void static BitcoinMiner(const CChainParams& chainparams, const CScript& coinbas
 
     unsigned int nExtraNonce = 0;
 
+    boost::shared_ptr<CReserveScript> coinbaseScript;
+    GetMainSignals().ScriptForMining(coinbaseScript);
+
     try {
+        //throw an error if no script was provided
+        if (!coinbaseScript->reserveScript.size())
+            throw std::runtime_error("No coinbase script available (mining requires a wallet)");
+
         while (true) {
             if (chainparams.MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
@@ -452,7 +459,7 @@ void static BitcoinMiner(const CChainParams& chainparams, const CScript& coinbas
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
 
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(coinbaseScript));
+            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(coinbaseScript->reserveScript));
             if (!pblocktemplate.get())
             {
                 LogPrintf("Error in BitcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
@@ -486,6 +493,7 @@ void static BitcoinMiner(const CChainParams& chainparams, const CScript& coinbas
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
                         ProcessBlockFound(pblock, chainparams);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                        coinbaseScript->KeepScript();
 
                         // In regression test mode, stop mining after a block is found.
                         if (chainparams.MineBlocksOnDemand())
@@ -551,14 +559,7 @@ void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainpar
     if (nThreads == 0 || !fGenerate)
         return;
 
-    CScript coinbaseScript;
-    GetMainSignals().ScriptForMining(coinbaseScript);
-
-    //throw an error if no script was provided
-    if (!coinbaseScript.size())
-        throw std::runtime_error("No coinbase script available (mining requires a wallet)");
-
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams), coinbaseScript));
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams)));
 }
