@@ -683,10 +683,10 @@ public:
     }
 
     void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
-    void UpdateRequestCount(const CBlock& block)
+    void ResetRequestCount(const uint256 &hash)
     {
         LOCK(cs_wallet);
-        mapRequestCount[block.GetHash()] = 0;
+        mapRequestCount[hash] = 0;
     };
     
     unsigned int GetKeyPoolSize()
