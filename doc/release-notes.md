@@ -232,6 +232,7 @@ git merge commit are mentioned.
 - #5985 `37b4e42` Fix removing of orphan transactions
 - #6221 `6cb70ca` Prune: Support noncontiguous block files
 - #6256 `fce474c` Use best header chain timestamps to detect partitioning
+- #6233 `a587606` Advance pindexLastCommonBlock for blocks in chainActive
 
 ### P2P protocol and network code
 - #5507 `844ace9` Prevent DOS attacks on in-flight data structures
@@ -247,6 +248,7 @@ git merge commit are mentioned.
 - #5976 `9f7809f` Reduce download timeouts as blocks arrive
 - #6172 `b4bbad1` Ignore getheaders requests when not synced
 - #5875 `304892f` Be stricter in processing unrequested blocks
+- #6333 `41bbc85` Hardcoded seeds update June 2015
 
 ### Validation
 - #5143 `48e1765` Implement BIP62 rule 6
@@ -269,6 +271,10 @@ git merge commit are mentioned.
 - #6269 `95aca44` gitian: Use the new bitcoin-detached-sigs git repo for OSX signatures
 - #6285 `ef1d506` Fix scheduler build with some boost versions.
 - #6280 `25c2216` depends: fix Boost 1.55 build on GCC 5
+- #6303 `b711599` gitian: add a gitian-win-signer descriptor
+- #6246 `8ea6d37` Fix build on FreeBSD
+- #6282 `daf956b` fix crash on shutdown when e.g. changing -txindex and abort action
+- #6354 `bdf0d94` Gitian windows signing normalization
 
 ### Wallet
 - #2340 `811c71d` Discourage fee sniping with nLockTime
@@ -366,6 +372,7 @@ git merge commit are mentioned.
 - #6210 `dfdb6dd` build: disable optional use of gmp in internal secp256k1 build
 - #6264 `94cd705` Remove translation for -help-debug options
 - #6286 `3902c15` Remove berkeley-db4 workaround in MacOSX build docs
+- #6319 `3f8fcc9` doc: update mailing list address
 
 Credits
 =======
