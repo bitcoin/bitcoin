@@ -2356,25 +2356,32 @@ void ThreadCheckDarkSendPool()
         if(c % 5 == 0 && RequestedMasternodeAssets <= 2){
             bool fIsInitialDownload = IsInitialBlockDownload();
             if(!fIsInitialDownload) {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                {
-                    if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
+                CBlockIndex* pindexPrev = chainActive.Tip();
+                if(pindexPrev != NULL) {
+                    if(pindexPrev->nTime > GetAdjustedTime() - (60*24))
+                    {
 
-                        //keep track of who we've asked for the list
-                        if(pnode->HasFulfilledRequest("mnsync")) continue;
-                        pnode->FulfilledRequest("mnsync");
+                        LOCK(cs_vNodes);
+                        BOOST_FOREACH(CNode* pnode, vNodes)
+                        {
+                            if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
 
-                        LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
+                                //keep track of who we've asked for the list
+                                if(pnode->HasFulfilledRequest("mnsync")) continue;
+                                pnode->FulfilledRequest("mnsync");
 
-                        //request full mn list only if Masternodes.dat was updated quite a long time ago
-                        mnodeman.DsegUpdate(pnode);
+                                LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
 
-                        pnode->PushMessage("mnget"); //sync payees
-                        pnode->PushMessage("mnvs"); //sync masternode votes
-                        pnode->PushMessage("getsporks"); //get current network sporks
-                        RequestedMasternodeAssets++;
-                        break;
+                                //request full mn list only if Masternodes.dat was updated quite a long time ago
+                                mnodeman.DsegUpdate(pnode);
+
+                                pnode->PushMessage("mnget"); //sync payees
+                                pnode->PushMessage("mnvs"); //sync masternode votes
+                                pnode->PushMessage("getsporks"); //get current network sporks
+                                RequestedMasternodeAssets++;
+                                break;
+                            }
+                        }
                     }
                 }
             }
