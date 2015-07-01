@@ -85,6 +85,9 @@ public:
         mapFinalizedBudgets.clear();
     }
 
+    int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
+    int sizeProposals() {return (int)mapProposals.size();}
+
     void Sync(CNode* node);
 
     void Calculate();
