@@ -411,7 +411,7 @@ static bool ProcessBlockFound(CBlock* pblock, const CChainParams& chainparams)
     }
 
     // Inform about the new block
-    GetMainSignals().BlockFound(*pblock);
+    GetMainSignals().BlockFound(pblock->GetHash());
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
