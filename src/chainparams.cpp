@@ -5,6 +5,7 @@
 
 #include "chainparams.h"
 
+#include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -128,7 +129,6 @@ public:
         };
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -188,7 +188,6 @@ public:
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -234,40 +233,14 @@ public:
         };
     }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
-
-const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
-}
-
-CChainParams &Params(CBaseChainParams::Network network) {
-    switch (network) {
-        case CBaseChainParams::MAIN:
-            return mainParams;
-        case CBaseChainParams::TESTNET:
-            return testNetParams;
-        case CBaseChainParams::REGTEST:
-            return regTestParams;
-        default:
-            assert(false && "Unimplemented network");
-            return mainParams;
-    }
-}
-
-void SelectParams(CBaseChainParams::Network network) {
-    SelectBaseParams(network);
-    pCurrentParams = &Params(network);
-}
-
-bool SelectParamsFromCommandLine()
+CChainParams* CChainParams::Factory(const std::string& chain)
 {
-    CBaseChainParams::Network network = NetworkIdFromCommandLine();
-    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
-        return false;
-
-    SelectParams(network);
-    return true;
+    if (chain == CBaseChainParams::MAIN)
+        return new CMainParams();
+    else if (chain == CBaseChainParams::TESTNET)
+        return new CTestNetParams();
+    else if (chain == CBaseChainParams::REGTEST)
+        return new CRegTestParams();
+    throw std::runtime_error(strprintf(_("%s: Unknown chain %s."), __func__, chain));
 }

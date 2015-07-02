@@ -9,8 +9,10 @@
 #include "chainparamsbase.h"
 #include "checkpoints.h"
 #include "consensus/params.h"
+#include "globals/chainparamsglobals.h" // TODO remove from here, blame @jtimon, not @theuni
 #include "primitives/block.h"
 #include "protocol.h"
+#include "templates.hpp"
 
 #include <vector>
 
@@ -71,6 +73,12 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const Checkpoints::CCheckpointData& Checkpoints() const { return checkpointData; }
+    /**
+     * Creates and returns a CChainParams* of the chosen chain. The caller has to delete the object.
+     * @returns a CChainParams* of the chosen chain.
+     * @throws a std::runtime_error if the chain is not supported.
+     */
+    static CChainParams* Factory(const std::string& chain);
 protected:
     CChainParams() {}
 
@@ -94,23 +102,5 @@ protected:
     bool fTestnetToBeDeprecatedFieldRPC;
     Checkpoints::CCheckpointData checkpointData;
 };
-
-/**
- * Return the currently selected parameters. This won't change after app
- * startup, except for unit tests.
- */
-const CChainParams &Params();
-
-/** Return parameters for the given network. */
-CChainParams &Params(CBaseChainParams::Network network);
-
-/** Sets the params returned by Params() to those for the given network. */
-void SelectParams(CBaseChainParams::Network network);
-
-/**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
- */
-bool SelectParamsFromCommandLine();
 
 #endif // BITCOIN_CHAINPARAMS_H
