@@ -16,8 +16,13 @@ CCriticalSection cs_budget;
 
 std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
 std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
+std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
 std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
 std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
+std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
+
+std::map<uint256, int64_t> askedForSourceProposalOrBudget;
+
 int nSubmittedFinalBudget;
 
 int GetBudgetPaymentCycleBlocks(){
@@ -25,6 +30,28 @@ int GetBudgetPaymentCycleBlocks(){
 
     //for testing purposes
     return 50;
+}
+
+void CheckOrphanVotes()
+{
+    std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
+    while(it1 != mapOrphanMasternodeBudgetVotes.end()){
+        if(budget.UpdateProposal(((*it1).second), NULL)){
+            LogPrintf("CheckOrphanVotes: Proposal/Budget is known, activating and removing orphan vote\n");
+            mapOrphanMasternodeBudgetVotes.erase(it1++);
+        } else {
+            ++it1;
+        }
+    }
+    std::map<uint256, CFinalizedBudgetVote>::iterator it2 = mapOrphanFinalizedBudgetVotes.begin();
+    while(it2 != mapOrphanFinalizedBudgetVotes.end()){
+        if(budget.UpdateFinalizedBudget(((*it2).second),NULL)){
+            LogPrintf("CheckOrphanVotes: Proposal/Budget is known, activating and removing orphan vote\n");
+            mapOrphanFinalizedBudgetVotes.erase(it2++);
+        } else {
+            ++it2;
+        }
+    }
 }
 
 void SubmitFinalBudget()
@@ -85,7 +112,7 @@ void SubmitFinalBudget()
 
     mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
     vote.Relay();
-    budget.UpdateFinalizedBudget(vote);
+    budget.UpdateFinalizedBudget(vote, NULL);
 }
 
 //
@@ -583,8 +610,11 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
         }
 
+        uint256 nProp;
+        vRecv >> nProp;
+
         pfrom->FulfilledRequest("mnvs");
-        budget.Sync(pfrom);
+        budget.Sync(pfrom, nProp);
         LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString().c_str());
     }
 
@@ -625,6 +655,9 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
             //can only do this four times a day on the network
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes+=25;
+
+            //We might have active votes for this proposal that are valid now
+            CheckOrphanVotes();
         } else {
             LogPrintf("mvote - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
             return;
@@ -653,7 +686,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
-            budget.UpdateProposal(vote);
+            budget.UpdateProposal(vote, pfrom);
             vote.Relay();
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
         } else {
@@ -694,6 +727,9 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             prop.Relay();
 
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
+
+            //we might have active votes for this budget that are now valid
+            CheckOrphanVotes();
         } else {
             LogPrintf("mvote - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
             return;
@@ -722,7 +758,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
-            budget.UpdateFinalizedBudget(vote);
+            budget.UpdateFinalizedBudget(vote, pfrom);
             vote.Relay();
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
         } else {
@@ -738,7 +774,7 @@ bool CBudgetManager::PropExists(uint256 nHash)
     return false;
 }
 
-void CBudgetManager::Sync(CNode* pfrom)
+void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
 {
     /*  
         Sync with a client on the network
@@ -753,7 +789,7 @@ void CBudgetManager::Sync(CNode* pfrom)
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* bp = budget.FindProposal((*it1).first);
-        if(bp){
+        if(bp && (nProp == 0 || (*it1).first == nProp)){
             pfrom->PushMessage("mprop", ((*it1).second));
         }
         it1++;
@@ -762,7 +798,7 @@ void CBudgetManager::Sync(CNode* pfrom)
     std::map<uint256, CBudgetVote>::iterator it2 = mapSeenMasternodeBudgetVotes.begin();
     while(it2 != mapSeenMasternodeBudgetVotes.end()){
         CBudgetProposal* bp = budget.FindProposal((*it2).second.nProposalHash);
-        if(bp){
+        if(bp && (nProp == 0 || (*it1).first == nProp)){
             pfrom->PushMessage("mvote", ((*it2).second));
         }
         it2++;
@@ -771,7 +807,7 @@ void CBudgetManager::Sync(CNode* pfrom)
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* bp = budget.FindFinalizedBudget((*it3).first);
-        if(bp){
+        if(bp && (nProp == 0 || (*it1).first == nProp)){
             pfrom->PushMessage("fbs", ((*it3).second));
         }
         it3++;
@@ -780,35 +816,56 @@ void CBudgetManager::Sync(CNode* pfrom)
     std::map<uint256, CFinalizedBudgetVote>::iterator it4 = mapSeenFinalizedBudgetVotes.begin();
     while(it4 != mapSeenFinalizedBudgetVotes.end()){
         CFinalizedBudget* bp = budget.FindFinalizedBudget((*it4).second.nBudgetHash);
-        if(bp){
+        if(bp && (nProp == 0 || (*it1).first == nProp)){
             pfrom->PushMessage("fbvote", ((*it4).second));
         }
         it4++;
     }
 }
 
-void CBudgetManager::UpdateProposal(CBudgetVote& vote)
+bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom)
 {
     LOCK(cs);
+
     if(!mapProposals.count(vote.nProposalHash)){
-        LogPrintf("ERROR : Unknown proposal %d\n", vote.nProposalHash.ToString().c_str());
-        return;
+        if(pfrom){
+            LogPrintf("Unknown proposal %d, Asking for source proposal\n", vote.nProposalHash.ToString().c_str());
+            mapOrphanMasternodeBudgetVotes[vote.nProposalHash] = vote;
+
+            if(!askedForSourceProposalOrBudget.count(vote.nProposalHash)){
+                pfrom->PushMessage("mnvs", vote.nProposalHash);
+                askedForSourceProposalOrBudget[vote.nProposalHash] = GetTime();
+            }
+        }
+
+        return false;
     }
 
+
     mapProposals[vote.nProposalHash].AddOrUpdateVote(vote);
+    return true;
 }
 
-void CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote)
+bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom)
 {
     LOCK(cs);
 
     if(!mapFinalizedBudgets.count(vote.nBudgetHash)){
-        LogPrintf("ERROR: Unknown Finalized Proposal %s\n", vote.nBudgetHash.ToString().c_str());
-        //should ask for it
-        return;
+        if(pfrom){
+            LogPrintf("Unknown Finalized Proposal %s, Asking for source proposal\n", vote.nBudgetHash.ToString().c_str());
+            mapOrphanFinalizedBudgetVotes[vote.nBudgetHash] = vote;
+
+            if(!askedForSourceProposalOrBudget.count(vote.nBudgetHash)){
+                pfrom->PushMessage("mnvs", vote.nBudgetHash);
+                askedForSourceProposalOrBudget[vote.nBudgetHash] = GetTime();
+            }
+
+        }
+        return false;
     }
 
     mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(vote);
+    return true;
 }
 
 CBudgetProposal::CBudgetProposal()
@@ -1318,7 +1375,7 @@ void CFinalizedBudget::SubmitVote()
 
     mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
     vote.Relay();
-    budget.UpdateFinalizedBudget(vote);
+    budget.UpdateFinalizedBudget(vote, NULL);
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()

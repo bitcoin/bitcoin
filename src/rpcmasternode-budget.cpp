@@ -223,7 +223,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
-        budget.UpdateProposal(vote);
+        budget.UpdateProposal(vote, NULL);
 
     }
 
@@ -400,7 +400,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
-        budget.UpdateFinalizedBudget(vote);
+        budget.UpdateFinalizedBudget(vote, NULL);
 
         return "success";
 
@@ -455,7 +455,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
             mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
-            budget.UpdateFinalizedBudget(vote);
+            budget.UpdateFinalizedBudget(vote, NULL);
 
             success++;
         }
@@ -488,7 +488,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
-        budget.UpdateFinalizedBudget(vote);
+        budget.UpdateFinalizedBudget(vote, NULL);
 
         return "success";
     }
