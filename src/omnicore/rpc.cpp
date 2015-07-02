@@ -6,6 +6,7 @@
 #include "omnicore/createpayload.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
+#include "omnicore/fetchwallettx.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
@@ -1306,20 +1307,11 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("listtransactions_MP", "")
         );
 
-    string sAddress = "";
+    // obtains parameters - default all wallet addresses & last 10 transactions
     string addressParam = "";
-    bool addressFilter;
-
-    // if 0 params consider all addresses in wallet, otherwise first param is filter address
-    addressFilter = false;
     if (params.size() > 0) {
-        // allow setting "" or "*" to use nCount and nFrom params with all addresses in wallet
-        if ( ("*" != params[0].get_str()) && ("" != params[0].get_str()) ) {
-            addressParam = params[0].get_str();
-            addressFilter = true;
-        }
+        if (("*" != params[0].get_str()) && ("" != params[0].get_str())) addressParam = params[0].get_str();
     }
-
     int64_t nCount = 10;
     if (params.size() > 1) nCount = params[1].get_int64();
     if (nCount < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
@@ -1333,88 +1325,16 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     if (params.size() > 4) nEndBlock = params[4].get_int64();
     if (nEndBlock < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative end block");
 
-    std::vector<std::pair<std::string,Object> > vecResponse;
-    std::set<uint256> seenHashes;
+    // obtain a sorted list of Omni layer wallet transactions (including STO receipts and pending)
+    std::map<std::string,uint256> walletTransactions = FetchWalletOmniTransactions(nFrom+nCount, nStartBlock, nEndBlock);
+
+    // reverse iterate over (now ordered) transactions and populate RPC objects for each one
     Array response;
-
-    // STO has no inbound transaction, so we need to use an insert methodology here
-    std::string mySTOReceipts;
-    {
-        LOCK(cs_tally);
-        mySTOReceipts = s_stolistdb->getMySTOReceipts(addressParam);
-    }
-    std::vector<std::string> vecReceipts;
-    boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), token_compress_on);
-    int nSTO = vecReceipts.size();
-
-    std::list<CAccountingEntry> acentries;
-    CWallet::TxItems txOrdered;
-    {
-        LOCK(pwalletMain->cs_wallet);
-        txOrdered = pwalletMain->OrderedTxItems(acentries, "*");
-    }
-
-    // iterate backwards until we have nCount items to return:
-    for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx != 0) {
-            // get the height of the transaction and check it's within the chosen parameters
-            uint256 blockHash = pwtx->hashBlock;
-            if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) continue;
-            CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-            if (NULL == pBlockIndex) continue;
-            int blockHeight = pBlockIndex->nHeight;
-            if ((blockHeight < nStartBlock) || (blockHeight > nEndBlock)) continue; // ignore it if not within our range
-
-            // make a request to new RPC populator function to populate a transaction object (if it is a MP transaction)
-            uint256 hash = pwtx->GetHash();
-            Object txobj;
-            int populateResult = -1;
-            if (addressFilter) {
-                populateResult = populateRPCTransactionObject(hash, txobj, addressParam); // pass in an address filter
-            } else {
-                populateResult = populateRPCTransactionObject(hash, txobj); // no address filter
-            }
-            if (0 == populateResult) {
-                // obtain the wallet order position for sorting
-                std::string sortKey = strprintf("%06d%010d", blockHeight, pwtx->nOrderPos);
-                vecResponse.push_back(make_pair(sortKey, txobj)); // add the transaction object to the response array if we get a 0 rc
-                seenHashes.insert(hash);
-            }
-
-            // don't burn time doing more work than we need to
-            if ((int)vecResponse.size() >= (nCount+nFrom+nSTO)) break;
-        }
-    }
-
-    // Insert STO receipts
-    for (uint32_t i = 0; i<vecReceipts.size(); i++) {
-        std::vector<std::string> svstr;
-        boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), token_compress_on);
-        if (svstr.size() != 4) {
-            PrintToLog("STODB Error - number of tokens is not as expected (%s)\n", vecReceipts[i]);
-            continue;
-        }
-        int blockHeight = atoi(svstr[1]);
-        if (blockHeight >= nStartBlock && blockHeight <= nEndBlock) { // STO receipt found within our range
-            uint256 hash;
-            hash.SetHex(svstr[0]);
-            if (seenHashes.find(hash) != seenHashes.end()) continue; // ignore if we've already seen this tx during wallet parsing
-            Object txobj;
-            int populateResult = -1;
-            populateResult = populateRPCTransactionObject(hash, txobj);
-            if (0 == populateResult) {
-                std::string sortKey = strprintf("%06d%010d", blockHeight, 0); // no wallet position to use for STO receipts
-                vecResponse.push_back(make_pair(sortKey, txobj));
-            }
-
-        }
-    }
-
-    // sort the response via block then wallet position and add to response array
-    std::sort(vecResponse.begin(), vecResponse.end(), CompareRPCSortKey);
-    for (std::vector<std::pair<std::string,Object> >::iterator iter = vecResponse.begin(); iter != vecResponse.end(); ++iter) {
-        response.push_back(iter->second);
+    for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
+        uint256 txHash = it->second;
+        Object txobj;
+        int populateResult = populateRPCTransactionObject(txHash, txobj, addressParam);
+        if (0 == populateResult) response.push_back(txobj);
     }
 
     // cut on nFrom and nCount
@@ -1428,6 +1348,7 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     if (first != response.begin()) response.erase(response.begin(), first);
     std::reverse(response.begin(), response.end());
 
+    // return the populated array
     return response;
 }
 
