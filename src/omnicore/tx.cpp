@@ -30,6 +30,9 @@ using boost::algorithm::token_compress_on;
 
 using namespace mastercore;
 
+// --------------------- DEPRECHIATED ------------------------
+// Please use CMPTransaction::interpret_Transaction() instead.
+// -----------------------------------------------------------
 
 // initial packet interpret step
 int CMPTransaction::step1()
@@ -157,17 +160,6 @@ int CMPTransaction::step2_Value()
   }
 
   return 0;
-}
-
-// overrun check, are we beyond the end of packet?
-bool CMPTransaction::isOverrun(const char *p, unsigned int line)
-{
-int now = (char *)p - (char *)&pkt;
-bool bRet = (now > pkt_size);
-
-    if (bRet) PrintToLog("%s(%sline=%u):now= %u, pkt_size= %u\n", __FUNCTION__, bRet ? "OVERRUN !!! ":"", line, now, pkt_size);
-
-    return bRet;
 }
 
 // extract Smart Property data
@@ -343,7 +335,54 @@ int CMPTransaction::step3_sp_variable(const char *p)
   return 0;
 }
 
-/** Interpret transaction based on type */
+// -----------------------------------------------------------
+
+/** Checks whether a pointer to the payload is past it's last position. */
+bool CMPTransaction::isOverrun(const char *p, unsigned int line)
+{
+int now = (char *)p - (char *)&pkt;
+bool bRet = (now > pkt_size);
+
+    if (bRet) PrintToLog("%s(%sline=%u):now= %u, pkt_size= %u\n", __FUNCTION__, bRet ? "OVERRUN !!! ":"", line, now, pkt_size);
+
+    return bRet;
+}
+
+char *mastercore::c_strMasterProtocolTXType(int i)
+{
+  switch (i)
+  {
+    case MSC_TYPE_SIMPLE_SEND: return ((char *)"Simple Send");
+    case MSC_TYPE_RESTRICTED_SEND: return ((char *)"Restricted Send");
+    case MSC_TYPE_SEND_TO_OWNERS: return ((char *)"Send To Owners");
+    case MSC_TYPE_SAVINGS_MARK: return ((char *)"Savings");
+    case MSC_TYPE_SAVINGS_COMPROMISED: return ((char *)"Savings COMPROMISED");
+    case MSC_TYPE_RATELIMITED_MARK: return ((char *)"Rate-Limiting");
+    case MSC_TYPE_AUTOMATIC_DISPENSARY: return ((char *)"Automatic Dispensary");
+    case MSC_TYPE_TRADE_OFFER: return ((char *)"DEx Sell Offer");
+    case MSC_TYPE_METADEX_TRADE: return ((char *)"MetaDEx trade");
+    case MSC_TYPE_METADEX_CANCEL_PRICE: return ((char *)"MetaDEx cancel-price");
+    case MSC_TYPE_METADEX_CANCEL_PAIR: return ((char *)"MetaDEx cancel-pair");
+    case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM: return ((char *)"MetaDEx cancel-ecosystem");
+    case MSC_TYPE_ACCEPT_OFFER_BTC: return ((char *)"DEx Accept Offer");
+    case MSC_TYPE_CREATE_PROPERTY_FIXED: return ((char *)"Create Property - Fixed");
+    case MSC_TYPE_CREATE_PROPERTY_VARIABLE: return ((char *)"Create Property - Variable");
+    case MSC_TYPE_PROMOTE_PROPERTY: return ((char *)"Promote Property");
+    case MSC_TYPE_CLOSE_CROWDSALE: return ((char *)"Close Crowdsale");
+    case MSC_TYPE_CREATE_PROPERTY_MANUAL: return ((char *)"Create Property - Manual");
+    case MSC_TYPE_GRANT_PROPERTY_TOKENS: return ((char *)"Grant Property Tokens");
+    case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return ((char *)"Revoke Property Tokens");
+    case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return ((char *)"Change Issuer Address");
+    case MSC_TYPE_NOTIFICATION: return ((char *)"Notification");
+    case OMNICORE_MESSAGE_TYPE_ALERT: return ((char *)"ALERT");
+
+    default: return ((char *)"* unknown type *");
+  }
+}
+
+// -------------------- PACKET PARSING -----------------------
+
+/** Parses the packet or payload. */
 bool CMPTransaction::interpret_Transaction()
 {
     if (!interpret_TransactionType()) {
@@ -404,6 +443,7 @@ bool CMPTransaction::interpret_Transaction()
     return false;
 }
 
+/** Helper to convert class number to string. */
 static std::string intToClass(int multi)
 {
     switch (multi) {
@@ -872,6 +912,9 @@ bool CMPTransaction::interpret_Alert()
     return true;
 }
 
+// ---------------------- CORE LOGIC -------------------------
+
+/** Tx 3 */
 int CMPTransaction::logicMath_SendToOwners()
 {
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
@@ -951,7 +994,7 @@ int CMPTransaction::logicMath_SendToOwners()
     return 0;
 }
 
-
+/** Tx 20 */
 int CMPTransaction::logicMath_TradeOffer(CMPOffer *obj_o)
 {
     if (MAX_INT_8_BYTES < nValue) {
@@ -1053,6 +1096,7 @@ int rc = PKT_ERROR_TRADEOFFER;
     return rc;
 }
 
+/** Tx 22 */
 int CMPTransaction::logicMath_AcceptOffer_BTC()
 {
     if (MAX_INT_8_BYTES < nValue) {
@@ -1086,6 +1130,7 @@ int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx* mdex_o)
     return rc;
 }
 
+/** Tx 25 */
 int CMPTransaction::logicMath_MetaDExTrade()
 {
     if (MAX_INT_8_BYTES < nValue) {
@@ -1122,6 +1167,7 @@ int CMPTransaction::logicMath_MetaDExTrade()
     return rc;
 }
 
+/** Tx 26 */
 int CMPTransaction::logicMath_MetaDExCancelPrice()
 {
     if (MAX_INT_8_BYTES < nValue) {
@@ -1151,6 +1197,7 @@ int CMPTransaction::logicMath_MetaDExCancelPrice()
     return rc;
 }
 
+/** Tx 27 */
 int CMPTransaction::logicMath_MetaDExCancelPair()
 {
     int rc = PKT_ERROR_METADEX -100;
@@ -1171,6 +1218,7 @@ int CMPTransaction::logicMath_MetaDExCancelPair()
     return rc;
 }
 
+/** Tx 28 */
 int CMPTransaction::logicMath_MetaDExCancelEcosystem()
 {
     int rc = PKT_ERROR_METADEX -101;
@@ -1182,6 +1230,7 @@ int CMPTransaction::logicMath_MetaDExCancelEcosystem()
     return rc;
 }
 
+/** Tx 50 */
 int CMPTransaction::logicMath_CreatePropertyFixed()
 {
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
@@ -1228,6 +1277,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
     return rc;
 }
 
+/** Tx 51 */
 int CMPTransaction::logicMath_CreatePropertyVariable()
 {
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
@@ -1288,6 +1338,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
     return rc;
 }
 
+/** Tx 53 */
 int CMPTransaction::logicMath_CloseCrowdsale()
 {
     int rc = -1;
@@ -1338,6 +1389,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     return rc;
 }
 
+/** Tx 54 */
 int CMPTransaction::logicMath_CreatePropertyMananged()
 {
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
@@ -1376,6 +1428,7 @@ int CMPTransaction::logicMath_CreatePropertyMananged()
     return rc;
 }
 
+/** Tx 55 */
 int CMPTransaction::logicMath_GrantTokens()
 {
     if (MAX_INT_8_BYTES < nValue) {
@@ -1445,6 +1498,7 @@ int CMPTransaction::logicMath_GrantTokens()
     return rc;
 }
 
+/** Tx 56 */
 int CMPTransaction::logicMath_RevokeTokens()
 {
     if (MAX_INT_8_BYTES < nValue) {
@@ -1496,6 +1550,7 @@ int CMPTransaction::logicMath_RevokeTokens()
     return rc;
 }
 
+/** Tx 70 */
 int CMPTransaction::logicMath_ChangeIssuer()
 {
   int rc = PKT_ERROR_TOKENS - 1000;
@@ -1538,6 +1593,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
   return rc;
 }
 
+/** Tx 65535 */
 int CMPTransaction::logicMath_Alert()
 {
     // check the packet version is also FF
@@ -1607,37 +1663,5 @@ int CMPTransaction::logicMath_SavingsCompromised()
 int rc = -23456;
 
   return rc;
-}
-
-char *mastercore::c_strMasterProtocolTXType(int i)
-{
-  switch (i)
-  {
-    case MSC_TYPE_SIMPLE_SEND: return ((char *)"Simple Send");
-    case MSC_TYPE_RESTRICTED_SEND: return ((char *)"Restricted Send");
-    case MSC_TYPE_SEND_TO_OWNERS: return ((char *)"Send To Owners");
-    case MSC_TYPE_SAVINGS_MARK: return ((char *)"Savings");
-    case MSC_TYPE_SAVINGS_COMPROMISED: return ((char *)"Savings COMPROMISED");
-    case MSC_TYPE_RATELIMITED_MARK: return ((char *)"Rate-Limiting");
-    case MSC_TYPE_AUTOMATIC_DISPENSARY: return ((char *)"Automatic Dispensary");
-    case MSC_TYPE_TRADE_OFFER: return ((char *)"DEx Sell Offer");
-    case MSC_TYPE_METADEX_TRADE: return ((char *)"MetaDEx trade");
-    case MSC_TYPE_METADEX_CANCEL_PRICE: return ((char *)"MetaDEx cancel-price");
-    case MSC_TYPE_METADEX_CANCEL_PAIR: return ((char *)"MetaDEx cancel-pair");
-    case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM: return ((char *)"MetaDEx cancel-ecosystem");
-    case MSC_TYPE_ACCEPT_OFFER_BTC: return ((char *)"DEx Accept Offer");
-    case MSC_TYPE_CREATE_PROPERTY_FIXED: return ((char *)"Create Property - Fixed");
-    case MSC_TYPE_CREATE_PROPERTY_VARIABLE: return ((char *)"Create Property - Variable");
-    case MSC_TYPE_PROMOTE_PROPERTY: return ((char *)"Promote Property");
-    case MSC_TYPE_CLOSE_CROWDSALE: return ((char *)"Close Crowdsale");
-    case MSC_TYPE_CREATE_PROPERTY_MANUAL: return ((char *)"Create Property - Manual");
-    case MSC_TYPE_GRANT_PROPERTY_TOKENS: return ((char *)"Grant Property Tokens");
-    case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return ((char *)"Revoke Property Tokens");
-    case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return ((char *)"Change Issuer Address");
-    case MSC_TYPE_NOTIFICATION: return ((char *)"Notification");
-    case OMNICORE_MESSAGE_TYPE_ALERT: return ((char *)"ALERT");
-
-    default: return ((char *)"* unknown type *");
-  }
 }
 
