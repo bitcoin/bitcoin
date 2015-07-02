@@ -3,6 +3,7 @@
 // Bitcoin Core includes
 #include "wallet.h"
 #include "json/json_spirit_value.h"
+#include "json/json_spirit_reader_template.h"
 
 // Omni Core includes
 #include "omnicore/rpctxobject.h"
@@ -12,6 +13,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/pending.h"
 
 // Boost includes
 #include <boost/lexical_cast.hpp>
@@ -34,13 +36,26 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     CTransaction wtx;
     uint256 blockHash = 0;
     if (!GetTransaction(txid, wtx, blockHash, true)) return MP_TX_NOT_FOUND;
-    if (0 == blockHash) return MP_TX_UNCONFIRMED;
+    if (0 == blockHash) {
+        // is it one of our pending transactions?  if so return pending description
+        LOCK(cs_pending);
+        PendingMap::iterator it = my_pending.find(txid);
+        if (it != my_pending.end()) {
+            const CMPPending& pending = it->second;
+            if (!filterAddress.empty() && pending.src != filterAddress) return -1;
+            Value tempVal;
+            read_string(pending.desc, tempVal);
+            txobj = tempVal.get_obj();
+            return 0;
+        } else {
+            return MP_TX_UNCONFIRMED;
+        }
+    }
     CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
     if (NULL == pBlockIndex) return MP_BLOCK_NOT_IN_CHAIN;
     int blockHeight = pBlockIndex->nHeight;
     int confirmations =  1 + GetHeight() - pBlockIndex->nHeight;
     int64_t blockTime = pBlockIndex->nTime;
-
 
     // lookup transaction in levelDB to see if it's an Omni transaction
     bool fExists = false;
