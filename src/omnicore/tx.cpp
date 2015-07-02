@@ -337,6 +337,50 @@ int CMPTransaction::step3_sp_variable(const char *p)
 
 // -----------------------------------------------------------
 
+/** Returns a label for the given transaction type. */
+std::string mastercore::c_strMasterProtocolTXType(uint16_t txType)
+{
+    switch (txType) {
+        case MSC_TYPE_SIMPLE_SEND: return "Simple Send";
+        case MSC_TYPE_RESTRICTED_SEND: return "Restricted Send";
+        case MSC_TYPE_SEND_TO_OWNERS: return "Send To Owners";
+        case MSC_TYPE_SAVINGS_MARK: return "Savings";
+        case MSC_TYPE_SAVINGS_COMPROMISED: return "Savings COMPROMISED";
+        case MSC_TYPE_RATELIMITED_MARK: return "Rate-Limiting";
+        case MSC_TYPE_AUTOMATIC_DISPENSARY: return "Automatic Dispensary";
+        case MSC_TYPE_TRADE_OFFER: return "DEx Sell Offer";
+        case MSC_TYPE_METADEX_TRADE: return "MetaDEx trade";
+        case MSC_TYPE_METADEX_CANCEL_PRICE: return "MetaDEx cancel-price";
+        case MSC_TYPE_METADEX_CANCEL_PAIR: return "MetaDEx cancel-pair";
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM: return "MetaDEx cancel-ecosystem";
+        case MSC_TYPE_ACCEPT_OFFER_BTC: return "DEx Accept Offer";
+        case MSC_TYPE_CREATE_PROPERTY_FIXED: return "Create Property - Fixed";
+        case MSC_TYPE_CREATE_PROPERTY_VARIABLE: return "Create Property - Variable";
+        case MSC_TYPE_PROMOTE_PROPERTY: return "Promote Property";
+        case MSC_TYPE_CLOSE_CROWDSALE: return "Close Crowdsale";
+        case MSC_TYPE_CREATE_PROPERTY_MANUAL: return "Create Property - Manual";
+        case MSC_TYPE_GRANT_PROPERTY_TOKENS: return "Grant Property Tokens";
+        case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return "Revoke Property Tokens";
+        case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return "Change Issuer Address";
+        case MSC_TYPE_NOTIFICATION: return "Notification";
+        case OMNICORE_MESSAGE_TYPE_ALERT: return "ALERT";
+
+        default: return "* unknown type *";
+    }
+}
+
+/** Helper to convert class number to string. */
+static std::string intToClass(int multi)
+{
+    switch (multi) {
+        case 1:
+            return "B";
+        case 2:
+            return "C";
+    }
+    return "A";
+}
+
 /** Checks whether a pointer to the payload is past it's last position. */
 bool CMPTransaction::isOverrun(const char *p, unsigned int line)
 {
@@ -346,38 +390,6 @@ bool bRet = (now > pkt_size);
     if (bRet) PrintToLog("%s(%sline=%u):now= %u, pkt_size= %u\n", __FUNCTION__, bRet ? "OVERRUN !!! ":"", line, now, pkt_size);
 
     return bRet;
-}
-
-char *mastercore::c_strMasterProtocolTXType(int i)
-{
-  switch (i)
-  {
-    case MSC_TYPE_SIMPLE_SEND: return ((char *)"Simple Send");
-    case MSC_TYPE_RESTRICTED_SEND: return ((char *)"Restricted Send");
-    case MSC_TYPE_SEND_TO_OWNERS: return ((char *)"Send To Owners");
-    case MSC_TYPE_SAVINGS_MARK: return ((char *)"Savings");
-    case MSC_TYPE_SAVINGS_COMPROMISED: return ((char *)"Savings COMPROMISED");
-    case MSC_TYPE_RATELIMITED_MARK: return ((char *)"Rate-Limiting");
-    case MSC_TYPE_AUTOMATIC_DISPENSARY: return ((char *)"Automatic Dispensary");
-    case MSC_TYPE_TRADE_OFFER: return ((char *)"DEx Sell Offer");
-    case MSC_TYPE_METADEX_TRADE: return ((char *)"MetaDEx trade");
-    case MSC_TYPE_METADEX_CANCEL_PRICE: return ((char *)"MetaDEx cancel-price");
-    case MSC_TYPE_METADEX_CANCEL_PAIR: return ((char *)"MetaDEx cancel-pair");
-    case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM: return ((char *)"MetaDEx cancel-ecosystem");
-    case MSC_TYPE_ACCEPT_OFFER_BTC: return ((char *)"DEx Accept Offer");
-    case MSC_TYPE_CREATE_PROPERTY_FIXED: return ((char *)"Create Property - Fixed");
-    case MSC_TYPE_CREATE_PROPERTY_VARIABLE: return ((char *)"Create Property - Variable");
-    case MSC_TYPE_PROMOTE_PROPERTY: return ((char *)"Promote Property");
-    case MSC_TYPE_CLOSE_CROWDSALE: return ((char *)"Close Crowdsale");
-    case MSC_TYPE_CREATE_PROPERTY_MANUAL: return ((char *)"Create Property - Manual");
-    case MSC_TYPE_GRANT_PROPERTY_TOKENS: return ((char *)"Grant Property Tokens");
-    case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return ((char *)"Revoke Property Tokens");
-    case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return ((char *)"Change Issuer Address");
-    case MSC_TYPE_NOTIFICATION: return ((char *)"Notification");
-    case OMNICORE_MESSAGE_TYPE_ALERT: return ((char *)"ALERT");
-
-    default: return ((char *)"* unknown type *");
-  }
 }
 
 // -------------------- PACKET PARSING -----------------------
@@ -441,18 +453,6 @@ bool CMPTransaction::interpret_Transaction()
     }
 
     return false;
-}
-
-/** Helper to convert class number to string. */
-static std::string intToClass(int multi)
-{
-    switch (multi) {
-        case 1:
-            return "B";
-        case 2:
-            return "C";
-    }
-    return "A";
 }
 
 /** Version and type */
