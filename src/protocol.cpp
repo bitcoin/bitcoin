@@ -22,19 +22,15 @@ static const char* ppszTypeName[] =
     "tx lock request",
     "tx lock vote",
     "spork",
-    "masternode winner",
-    "masternode scan",
-    "masternode vote",
-    "masternode proposal",
-    "masternode quorum",
-    "masternode announce",
-    "masternode ping",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown",
-    "unknown"
+    "mn winner",
+    "mn scan error",
+    "mn budget vote",
+    "mn budget proposal",
+    "mn budget finalized",
+    "mn budget finalized vote",
+    "mn quorum",
+    "mn announce",
+    "mn ping"
 };
 
 CMessageHeader::CMessageHeader()
@@ -133,7 +129,7 @@ CInv::CInv(const std::string& strType, const uint256& hashIn)
         }
     }
     if (i == ARRAYLEN(ppszTypeName))
-        throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType));
+        LogPrint("net", "CInv::CInv(string, uint256) : unknown type '%s'", strType);
     hash = hashIn;
 }
 
@@ -150,7 +146,8 @@ bool CInv::IsKnownType() const
 const char* CInv::GetCommand() const
 {
     if (!IsKnownType())
-        throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
+        LogPrint("net", "CInv::GetCommand() : type=%d unknown type", type);
+
     return ppszTypeName[type];
 }
 
