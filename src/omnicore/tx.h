@@ -81,7 +81,7 @@ private:
     char alertString[SP_STRING_FIELD_LEN];
 
     /** Checks whether a pointer to the payload is past it's last position. */
-    bool isOverrun(const char* p, unsigned int line);
+    bool isOverrun(const char* p);
 
     /**
      * Payload parsing

@@ -4232,18 +4232,33 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 int CMPTransaction::logicMath_SimpleSend()
 {
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
         return (PKT_ERROR_SEND -22);
     }
 
     if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
+        PrintToLog("%s(): rejected: value out of range or zero: %d", __func__, nValue);
         return (PKT_ERROR_SEND -23);
     }
 
     if (!_my_sps->hasSP(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SEND -24);
     }
 
-    if (getMPbalance(sender, property, BALANCE) < (int64_t)nValue) {
+    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    if (nBalance < (int64_t) nValue) {
+        PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
+                __func__,
+                sender,
+                FormatMP(property, nBalance),
+                FormatMP(property, nValue),
+                property);
         return (PKT_ERROR_SEND -25);
     }
 
