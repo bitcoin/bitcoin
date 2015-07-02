@@ -157,6 +157,7 @@ public:
     uint64_t getAmount() const { return nValue; }
     uint64_t getNewAmount() const { return nNewValue; }
     std::string getSPName() const { return name; }
+    std::string getAlertString() const { return alertString; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -244,11 +245,8 @@ public:
 
     // Deprecated
     int step1();
-    int step2_Alert(std::string* new_global_alert_message);
     int step2_Value();
     const char* step2_SmartProperty(int& error_code);
-    int step3_sp_fixed(const char* p);
-    int step3_sp_variable(const char* p);
 };
 
 /** Parses a transaction and populates the CMPTransaction object. */
