@@ -674,6 +674,55 @@ public:
     }
 };
 
+class Bitcoin_CTransactionCompressed
+{
+public:
+	uint256 txHash;
+    std::vector<COutPoint> vin;
+
+    Bitcoin_CTransactionCompressed()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(txHash);
+        READWRITE(vin);
+    )
+
+    void SetNull()
+    {
+    	txHash = uint256(0);
+        vin.clear();
+    }
+};
+
+class Bitcoin_CBlockCompressed
+{
+public:
+    std::vector<Bitcoin_CTransactionCompressed> vtx;
+
+    //Memory only, must be set on creation
+	uint256 blockHash;
+
+    Bitcoin_CBlockCompressed()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(vtx);
+    )
+
+    void SetNull()
+    {
+    	blockHash = uint256(0);
+        vtx.clear();
+    }
+};
+
 /** Capture information about block/transaction validation */
 class CValidationState {
 private:

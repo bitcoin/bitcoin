@@ -69,10 +69,10 @@ private:
 public:
     bool WriteBlockIndex(const Bitcoin_CDiskBlockIndex& blockindex);
     bool BatchWriteBlockIndex(std::vector<Bitcoin_CDiskBlockIndex>& vblockindexes);
-    bool WriteBlockTxHashesWithInputs(const Bitcoin_CDiskBlockIndex& blockindex, const std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs);
-    bool BatchWriteBlockTxHashesWithInputs(std::vector<Bitcoin_CDiskBlockIndex>& vblockindexes, const std::vector<std::vector<pair<uint256, std::vector<COutPoint> > > > &vTxHashesWithInputs);
-    bool ReadBlockTxHashesWithInputs(const uint256 &blockHash, std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs);
-    bool EraseBlockTxHashesWithInputs(const uint256 &blockHash);
+    bool WriteBlockCompressed(const Bitcoin_CBlockCompressed& blockCompressed);
+    bool BatchWriteBlocksCompressed(const std::vector<Bitcoin_CBlockCompressed>& vblocksCompressed);
+    bool ReadBlockCompressed(const uint256& blockHash, Bitcoin_CBlockCompressed& blockCompressed);
+    bool EraseBlockCompressed(const uint256& blockHash);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);

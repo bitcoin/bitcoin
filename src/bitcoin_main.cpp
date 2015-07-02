@@ -2432,7 +2432,7 @@ bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo) {
 		}
 		const Bitcoin_CBlockIndex * pindex = pTrimTo;
 		while(pindex != NULL && pindex->nTime >= nTrimBackToTime) {
-			bitcoin_pblocktree->EraseBlockTxHashesWithInputs(pindex->GetBlockHash());
+			bitcoin_pblocktree->EraseBlockCompressed(pindex->GetBlockHash());
 			pindex = (Bitcoin_CBlockIndex *) pindex->pprev;
 		}
 
@@ -2828,15 +2828,16 @@ bool Bitcoin_ReceivedBlockTransactions(const Bitcoin_CBlock &block, CValidationS
     if (pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS))
         bitcoin_setBlockIndexValid.insert(pindexNew);
 
-    std::vector<pair<uint256, std::vector<COutPoint> > > vTxHashesWithInputs;
+    Bitcoin_CBlockCompressed blockCompressed;
     for (unsigned int i = 0; i < block.vtx.size(); i++) {
 		const Bitcoin_CTransaction& tx = block.vtx[i];
 
-		std::vector<COutPoint> inputs;
+		Bitcoin_CTransactionCompressed txCompressed;
+		txCompressed.txHash = tx.GetHash();
 		for (unsigned int j = 0; j < tx.vin.size(); j++) {
-			inputs.push_back(tx.vin[j].prevout);
+			txCompressed.vin.push_back(tx.vin[j].prevout);
 		}
-		vTxHashesWithInputs.push_back(make_pair(tx.GetHash(), inputs));
+		blockCompressed.vtx.push_back(txCompressed);
 	}
 
     Bitcoin_CDiskBlockIndex diskIndexNew(pindexNew);
@@ -2844,7 +2845,8 @@ bool Bitcoin_ReceivedBlockTransactions(const Bitcoin_CBlock &block, CValidationS
     if (!bitcoin_pblocktree->WriteBlockIndex(diskIndexNew))
         return state.Abort(_("Failed to write block index"));
 
-    if (!bitcoin_pblocktree->WriteBlockTxHashesWithInputs(diskIndexNew, vTxHashesWithInputs))
+    blockCompressed.blockHash = diskIndexNew.GetBlockHash();
+    if (!bitcoin_pblocktree->WriteBlockCompressed(blockCompressed))
         return state.Abort(_("Failed to write block tx hashes"));
 
     // New best?
