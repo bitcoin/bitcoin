@@ -120,7 +120,7 @@ void StartShutdown()
 }
 bool ShutdownRequested()
 {
-    return fRequestShutdown;
+    return fRequestShutdown || fRestartRequested;
 }
 
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
@@ -149,6 +149,7 @@ static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown()
 {
+    fRequestShutdown = true; // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
