@@ -7,8 +7,8 @@
 # Test proper accounting with an equivalent malleability clone
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.authproxy import AuthServiceProxy, JSONRPCException
 from decimal import Decimal
 from util import *
 import os
