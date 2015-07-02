@@ -275,6 +275,15 @@ std::string mastercore::FormatIndivisibleMP(int64_t n)
     return strprintf("%d", n);
 }
 
+std::string FormatShortMP(uint32_t property, int64_t n)
+{
+    if (isPropertyDivisible(property)) {
+        return FormatDivisibleShortMP(n);
+    } else {
+        return FormatIndivisibleMP(n);
+    }
+}
+
 std::string FormatMP(uint32_t property, int64_t n, bool fSign)
 {
     if (isPropertyDivisible(property)) {

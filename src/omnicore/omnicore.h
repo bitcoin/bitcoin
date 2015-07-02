@@ -149,6 +149,7 @@ enum FILETYPES {
 std::string FormatDivisibleMP(int64_t n, bool fSign = false);
 std::string FormatDivisibleShortMP(int64_t);
 std::string FormatMP(uint32_t, int64_t n, bool fSign = false);
+std::string FormatShortMP(uint32_t, int64_t);
 bool feeCheck(const std::string& address, size_t nDataSize);
 
 /** Returns the Exodus address. */
