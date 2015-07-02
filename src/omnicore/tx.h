@@ -93,6 +93,53 @@ private:
         }
     };
 
+    /** Checks whether a pointer to the payload is past it's last position. */
+    bool isOverrun(const char* p, unsigned int line);
+
+    /**
+     * Payload parsing
+     */
+    bool interpret_TransactionType();
+    bool interpret_SimpleSend();
+    bool interpret_SendToOwners();
+    bool interpret_TradeOffer();
+    bool interpret_MetaDExTrade();
+    bool interpret_MetaDExCancelPrice();
+    bool interpret_MetaDExCancelPair();
+    bool interpret_MetaDExCancelEcosystem();
+    bool interpret_AcceptOfferBTC();
+    bool interpret_CreatePropertyFixed();
+    bool interpret_CreatePropertyVariable();
+    bool interpret_CloseCrowdsale();
+    bool interpret_CreatePropertyMananged();
+    bool interpret_GrantTokens();
+    bool interpret_RevokeTokens();
+    bool interpret_ChangeIssuer();
+    bool interpret_Alert();
+
+    /**
+     * Logic and "effects"
+     */
+    int logicMath_SimpleSend();
+    int logicMath_SendToOwners();
+    int logicMath_TradeOffer(CMPOffer*);
+    int logicMath_MetaDEx(CMPMetaDEx*);
+    int logicMath_AcceptOffer_BTC();
+    int logicMath_MetaDExTrade();
+    int logicMath_MetaDExCancelPrice();
+    int logicMath_MetaDExCancelPair();
+    int logicMath_MetaDExCancelEcosystem();
+    int logicMath_CreatePropertyFixed();
+    int logicMath_CreatePropertyVariable();
+    int logicMath_CloseCrowdsale();
+    int logicMath_CreatePropertyMananged();
+    int logicMath_GrantTokens();
+    int logicMath_RevokeTokens();
+    int logicMath_ChangeIssuer();
+    int logicMath_Alert();
+    int logicMath_SavingsMark();
+    int logicMath_SavingsCompromised();
+
 public:
     enum ActionTypes
     {
@@ -172,53 +219,11 @@ public:
         SetNull();
     }
 
-    /**
-     * Payload parsing
-     */
+    /** Parses the payload. */
     bool interpret_Transaction();
-    bool interpret_TransactionType();
-    bool interpret_SimpleSend();
-    bool interpret_SendToOwners();
-    bool interpret_TradeOffer();
-    bool interpret_MetaDExTrade();
-    bool interpret_MetaDExCancelPrice();
-    bool interpret_MetaDExCancelPair();
-    bool interpret_MetaDExCancelEcosystem();
-    bool interpret_AcceptOfferBTC();
-    bool interpret_CreatePropertyFixed();
-    bool interpret_CreatePropertyVariable();
-    bool interpret_CloseCrowdsale();
-    bool interpret_CreatePropertyMananged();
-    bool interpret_GrantTokens();
-    bool interpret_RevokeTokens();
-    bool interpret_ChangeIssuer();
-    bool interpret_Alert();
 
-    /**
-     * Logic and "effects"
-     */
-    int logicMath_SimpleSend();
-    int logicMath_SendToOwners();
-    int logicMath_TradeOffer(CMPOffer*);
-    int logicMath_MetaDEx(CMPMetaDEx*);
-    int logicMath_AcceptOffer_BTC();
-    int logicMath_MetaDExTrade();
-    int logicMath_MetaDExCancelPrice();
-    int logicMath_MetaDExCancelPair();
-    int logicMath_MetaDExCancelEcosystem();
-    int logicMath_CreatePropertyFixed();
-    int logicMath_CreatePropertyVariable();
-    int logicMath_CloseCrowdsale();
-    int logicMath_CreatePropertyMananged();
-    int logicMath_GrantTokens();
-    int logicMath_RevokeTokens();
-    int logicMath_ChangeIssuer();
-    int logicMath_Alert();
-    int logicMath_SavingsMark();
-    int logicMath_SavingsCompromised();
-
+    /** Interprets the payload and executes logic. */
     int interpretPacket(CMPOffer* obj_o = NULL, CMPMetaDEx* mdex_o = NULL);
-    bool isOverrun(const char* p, unsigned int line);
 
     // Deprecated
     int step1();
@@ -252,9 +257,9 @@ public:
         memcpy(&pkt, p, pkt_size);
     }
 
+    /** Compares transaction objects based on block height and position within the block. */
     bool operator<(const CMPTransaction& other) const
     {
-        // sort by block # & additionally the tx index within the block
         if (block != other.block) return block > other.block;
         return tx_idx > other.tx_idx;
     }
