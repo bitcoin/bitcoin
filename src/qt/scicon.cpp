@@ -11,10 +11,12 @@
 #include <QPalette>
 #include <QPixmap>
 
-namespace {
-
-void MakeSingleColorImage(QImage& img, const QColor& colorbase)
+static void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 {
+#if defined(WIN32) || defined(MAC_OSX)
+    Q_UNUSED(img);
+    Q_UNUSED(colorbase);
+#else
     img = img.convertToFormat(QImage::Format_ARGB32);
     for (int x = img.width(); x--; )
     {
@@ -24,22 +26,20 @@ void MakeSingleColorImage(QImage& img, const QColor& colorbase)
             img.setPixel(x, y, qRgba(colorbase.red(), colorbase.green(), colorbase.blue(), qAlpha(rgb)));
         }
     }
-}
-
+#endif
 }
 
 QImage SingleColorImage(const QString& filename, const QColor& colorbase)
 {
     QImage img(filename);
-#if !defined(WIN32) && !defined(MAC_OSX)
     MakeSingleColorImage(img, colorbase);
-#endif
     return img;
 }
 
 QIcon SingleColorIcon(const QIcon& ico, const QColor& colorbase)
 {
 #if defined(WIN32) || defined(MAC_OSX)
+    Q_UNUSED(colorbase);
     return ico;
 #else
     QIcon new_ico;
