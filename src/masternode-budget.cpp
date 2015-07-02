@@ -574,10 +574,13 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     LOCK(cs_budget);
 
     if (strCommand == "mnvs") { //Masternode vote sync
-        if(pfrom->HasFulfilledRequest("mnvs")) {
-            LogPrintf("mnvs - peer already asked me for the list\n");
-            Misbehaving(pfrom->GetId(), 20);
-            return;
+        bool IsLocal = pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal(); 
+        if(!IsLocal){
+            if(pfrom->HasFulfilledRequest("mnvs")) {
+                LogPrintf("mnvs - peer already asked me for the list\n");
+                Misbehaving(pfrom->GetId(), 20);
+                return;
+            }
         }
 
         pfrom->FulfilledRequest("mnvs");
@@ -735,14 +738,53 @@ bool CBudgetManager::PropExists(uint256 nHash)
     return false;
 }
 
-void CBudgetManager::Sync(CNode* node)
+void CBudgetManager::Sync(CNode* pfrom)
 {
-    std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
-    while(it != mapProposals.end()){
-        (*it).second.Sync(node);
-        ++it;
+    /*  
+        Sync with a client on the network
+
+        --
+
+        This code checks each of the hash maps for all known budget proposals and finalized budget proposals, then checks them against the 
+        budget object to see if they're OK. If all checks pass, we'll send it to the peer. 
+
+    */
+
+    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end()){
+        CBudgetProposal* bp = budget.FindProposal((*it1).first);
+        if(bp){
+            pfrom->PushMessage("mprop", ((*it1).second));
+        }
+        it1++;
     }
 
+    std::map<uint256, CBudgetVote>::iterator it2 = mapSeenMasternodeBudgetVotes.begin();
+    while(it2 != mapSeenMasternodeBudgetVotes.end()){
+        CBudgetProposal* bp = budget.FindProposal((*it2).second.nProposalHash);
+        if(bp){
+            pfrom->PushMessage("mvote", ((*it2).second));
+        }
+        it2++;
+    }
+
+    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+    while(it3 != mapSeenFinalizedBudgets.end()){
+        CFinalizedBudget* bp = budget.FindFinalizedBudget((*it3).first);
+        if(bp){
+            pfrom->PushMessage("fbs", ((*it3).second));
+        }
+        it3++;
+    }
+
+    std::map<uint256, CFinalizedBudgetVote>::iterator it4 = mapSeenFinalizedBudgetVotes.begin();
+    while(it4 != mapSeenFinalizedBudgetVotes.end()){
+        CFinalizedBudget* bp = budget.FindFinalizedBudget((*it4).second.nBudgetHash);
+        if(bp){
+            pfrom->PushMessage("fbvote", ((*it4).second));
+        }
+        it4++;
+    }
 }
 
 void CBudgetManager::UpdateProposal(CBudgetVote& vote)
@@ -923,18 +965,6 @@ int CBudgetProposal::GetTotalPaymentCount()
 int CBudgetProposal::GetRemainingPaymentCount()
 {
     return (GetBlockEndCycle()-GetBlockCurrentCycle())/GetBudgetPaymentCycleBlocks();
-}
-
-void CBudgetProposal::Sync(CNode* node)
-{
-    //send the proposal
-    node->PushMessage("mprop", (*this));
-
-    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
-    while(it != mapVotes.end()){
-        node->PushMessage("mvote", (*it).second);
-        ++it;
-    }
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast()
