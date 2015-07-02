@@ -378,6 +378,9 @@ public:
         return (GetDebit(filter) > 0);
     }
 
+    // True if only scriptSigs are different
+    bool IsEquivalentTo(const CWalletTx& tx) const;
+
     bool IsTrusted() const;
 
     bool WriteToDisk(CWalletDB *pwalletdb);
