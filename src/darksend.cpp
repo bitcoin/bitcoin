@@ -2376,7 +2376,8 @@ void ThreadCheckDarkSendPool()
                                 mnodeman.DsegUpdate(pnode);
 
                                 pnode->PushMessage("mnget"); //sync payees
-                                pnode->PushMessage("mnvs"); //sync masternode votes
+                                uint256 n = 0;
+                                pnode->PushMessage("mnvs", n); //sync masternode votes
                                 pnode->PushMessage("getsporks"); //get current network sporks
                                 RequestedMasternodeAssets++;
                                 break;
