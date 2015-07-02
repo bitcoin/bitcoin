@@ -549,7 +549,7 @@ UniValue listbanned(const UniValue& params, bool fHelp)
     {
         UniValue rec(UniValue::VOBJ);
         rec.push_back(Pair("address", (*it).first.ToString()));
-        rec.push_back(Pair("banned_untill", (*it).second));
+        rec.push_back(Pair("banned_until", (*it).second));
         bannedAddresses.push_back(rec);
     }
 
