@@ -930,13 +930,6 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
         if (!valRequest.read(strRequest))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
-        // Return immediately if in warmup
-        {
-            LOCK(cs_rpcWarmup);
-            if (fRPCInWarmup)
-                throw JSONRPCError(RPC_IN_WARMUP, rpcWarmupStatus);
-        }
-
         string strReply;
 
         // singleton request
@@ -1008,6 +1001,13 @@ void ServiceConnection(AcceptedConnection *conn)
 
 UniValue CRPCTable::execute(const std::string &strMethod, const UniValue &params) const
 {
+    // Return immediately if in warmup
+    {
+        LOCK(cs_rpcWarmup);
+        if (fRPCInWarmup)
+            throw JSONRPCError(RPC_IN_WARMUP, rpcWarmupStatus);
+    }
+
     // Find method
     const CRPCCommand *pcmd = tableRPC[strMethod];
     if (!pcmd)
