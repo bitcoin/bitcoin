@@ -14,7 +14,6 @@
 #include "omnicore/tx.h"
 
 // Boost includes
-#include <boost/exception/to_string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -483,7 +482,7 @@ void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
     if (0<numberOfCancels) {
         for(int refNumber = 1; refNumber <= numberOfCancels; refNumber++) {
             Object cancelTx;
-            std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + boost::to_string(refNumber));
+            std::string strValue = p_txlistdb->getKeyValue(txid.ToString() + "-C" + strprintf("%d",refNumber));
             if (strValue.empty()) continue;
             std::vector<std::string> vstr;
             boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
