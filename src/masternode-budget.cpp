@@ -1265,7 +1265,7 @@ int64_t CFinalizedBudget::GetTotalPayout()
 }
 
 std::string CFinalizedBudget::GetProposals() {
-    std::string ret = "aeu";
+    std::string ret = "";
 
     BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals){
         CFinalizedBudget* prop = budget.FindFinalizedBudget(payment.nProposalHash);
