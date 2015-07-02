@@ -184,8 +184,6 @@ public:
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
 
-    void Sync(CNode* node);
-
     void Clean(CFinalizedBudgetVote& vote);
     void AddOrUpdateVote(CFinalizedBudgetVote& vote);
     double GetScore();
@@ -361,8 +359,6 @@ public:
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
     CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn);
-
-    void Sync(CNode* node);
 
     void Calculate();
     void AddOrUpdateVote(CBudgetVote& vote);
