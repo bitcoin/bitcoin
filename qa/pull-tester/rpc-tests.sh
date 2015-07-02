@@ -35,6 +35,7 @@ testScripts=(
     'walletbackup.py'
     'nodehandling.py'
     'reindex.py'
+    'decodescript.py'
 );
 testScriptsExt=(
     'bipdersig-p2p.py'
