@@ -1693,7 +1693,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             // ### PREPARE A FEW VARS ###
             std::string strObfuscatedHashes[1+MAX_SHA256_OBFUSCATION_TIMES];
             PrepareObfuscatedHashes(strSender, strObfuscatedHashes);
-            unsigned char packets[nPackets][32];
+            unsigned char packets[MAX_PACKETS][32];
             unsigned int mdata_count = 0;  // multisig data count
 
             // ### DEOBFUSCATE MULTISIG PACKETS ###
