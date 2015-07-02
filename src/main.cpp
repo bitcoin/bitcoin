@@ -4086,7 +4086,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     nNonDoubleSpendRelaying++;
             }
 
-            if (nNonDoubleSpendRelaying > nMaxConnections / 4) {
+            if (nNonDoubleSpendRelaying > (nMaxConnections / 4) * 3) {
                 LogPrint("net", "reached quota of non-doublespend-relaying nodes; disconnecting %s\n",
                          pfrom->addr.ToString());
                 pfrom->fDisconnect = true;
