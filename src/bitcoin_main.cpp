@@ -2424,6 +2424,18 @@ bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo) {
 			nFile++;
 		}
 
+		//TODO - Make as batch update for efficiency
+		//Walk all the way from trim to old trim to time, with some margin
+		int nTrimBackToTime = bitcoin_mainState.nTrimToTime - 24*60*60;
+		if(nTrimBackToTime < 0) {
+			nTrimBackToTime = 0;
+		}
+		const Bitcoin_CBlockIndex * pindex = pTrimTo;
+		while(pindex != NULL && pindex->nTime >= nTrimBackToTime) {
+			bitcoin_pblocktree->EraseBlockTxHashesWithInputs(pindex->GetBlockHash());
+			pindex = (Bitcoin_CBlockIndex *) pindex->pprev;
+		}
+
 		bitcoin_mainState.nTrimToTime = nTrimToTime;
 		bitcoin_pblocktree->WriteTrimToTime(bitcoin_mainState.nTrimToTime);
     }

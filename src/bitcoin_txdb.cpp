@@ -222,6 +222,9 @@ bool Bitcoin_CBlockTreeDB::BatchWriteBlockTxHashesWithInputs(std::vector<Bitcoin
 bool Bitcoin_CBlockTreeDB::ReadBlockTxHashesWithInputs(const uint256 &blockHash, std::vector<pair<uint256, std::vector<COutPoint> > > &vTxHashesWithInputs) {
     return Read(make_pair('h', blockHash), vTxHashesWithInputs);
 }
+bool Bitcoin_CBlockTreeDB::EraseBlockTxHashesWithInputs(const uint256 &blockHash) {
+    return Erase(make_pair('h', blockHash));
+}
 
 bool Bitcoin_CBlockTreeDB::WriteBlockFileInfo(int nFile, const CBlockFileInfo &info) {
     return Write(make_pair('f', nFile), info);
