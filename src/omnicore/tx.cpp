@@ -1436,6 +1436,18 @@ int CMPTransaction::logicMath_CloseCrowdsale()
 /** Tx 54 */
 int CMPTransaction::logicMath_CreatePropertyMananged()
 {
+    uint256 blockHash;
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = chainActive[block];
+        if (pindex == NULL) {
+            PrintToLog("%s(): ERROR: block %d not in the active chain\n", __func__, block);
+            return (PKT_ERROR_SP -20);
+        }
+        blockHash = pindex->GetBlockHash();
+    }
+
     if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
         PrintToLog("%s(): rejected: invalid ecosystem: %d\n", __func__, (uint32_t) ecosystem);
         return (PKT_ERROR_SP -21);
@@ -1474,6 +1486,8 @@ int CMPTransaction::logicMath_CreatePropertyMananged()
     newSP.data.assign(data);
     newSP.fixed = false;
     newSP.manual = true;
+    newSP.creation_block = blockHash;
+    newSP.update_block = newSP.creation_block;
 
     uint32_t propertyId = _my_sps->putSP(ecosystem, newSP);
     assert(propertyId > 0);
