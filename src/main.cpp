@@ -108,7 +108,7 @@ namespace {
     set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexCandidates;
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted = 0;
-    /** All pairs A->B, where A (or one if its ancestors) misses transactions, but B has transactions. */
+    /** All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions. */
     multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
 
     CCriticalSection cs_LastBlockFile;
