@@ -55,11 +55,6 @@ using std::vector;
 using namespace json_spirit;
 using namespace mastercore;
 
-bool CompareRPCSortKey(const std::pair<std::string, Object>& firstJSONObj, const std::pair<std::string, Object>& secondJSONObj)
-{
-    return firstJSONObj.first > secondJSONObj.first;
-}
-
 void PropertyToJSON(const CMPSPInfo::Entry& sProperty, Object& property_obj)
 {
     property_obj.push_back(Pair("name", sProperty.name));
