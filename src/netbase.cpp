@@ -704,7 +704,7 @@ bool CNetAddr::IsIPv4() const
 
 bool CNetAddr::IsIPv6() const
 {
-    return (!IsIPv4() && !IsTor());
+    return (!IsIPv4() && !IsOnionCat());
 }
 
 bool CNetAddr::IsRFC1918() const
@@ -780,7 +780,7 @@ bool CNetAddr::IsRFC4843() const
     return (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10);
 }
 
-bool CNetAddr::IsTor() const
+bool CNetAddr::IsOnionCat() const
 {
     return (memcmp(ip, pchOnionCat, sizeof(pchOnionCat)) == 0);
 }
@@ -843,7 +843,7 @@ bool CNetAddr::IsValid() const
 
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsTor()) || IsRFC4843() || IsLocal());
+    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || (IsRFC4193() && !IsOnionCat()) || IsRFC4843() || IsLocal());
 }
 
 enum Network CNetAddr::GetNetwork() const
@@ -854,7 +854,7 @@ enum Network CNetAddr::GetNetwork() const
     if (IsIPv4())
         return NET_IPV4;
 
-    if (IsTor())
+    if (IsOnionCat())
         return NET_TOR;
 
     return NET_IPV6;
@@ -862,7 +862,7 @@ enum Network CNetAddr::GetNetwork() const
 
 std::string CNetAddr::ToStringIP() const
 {
-    if (IsTor())
+    if (IsOnionCat())
         return EncodeBase32(&ip[6], 10) + ".onion";
     CService serv(*this, 0);
     struct sockaddr_storage sockaddr;
@@ -959,7 +959,7 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
         vchRet.push_back(GetByte(2) ^ 0xFF);
         return vchRet;
     }
-    else if (IsTor())
+    else if (IsOnionCat())
     {
         nClass = NET_TOR;
         nStartByte = 6;
@@ -1209,7 +1209,7 @@ std::string CService::ToStringPort() const
 
 std::string CService::ToStringIPPort() const
 {
-    if (IsIPv4() || IsTor()) {
+    if (IsIPv4() || IsOnionCat()) {
         return ToStringIP() + ":" + ToStringPort();
     } else {
         return "[" + ToStringIP() + "]:" + ToStringPort();

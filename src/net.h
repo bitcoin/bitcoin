@@ -18,6 +18,7 @@
 #include "sync.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#include "ipgroups.h"
 
 #include <deque>
 #include <stdint.h>
@@ -339,6 +340,8 @@ public:
     CBloomFilter* pfilter;
     int nRefCount;
     NodeId id;
+    CIPGroup *pIpGroup;
+
 protected:
 
     // Denial-of-service detection/prevention
