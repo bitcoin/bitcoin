@@ -852,12 +852,12 @@ Value getorderbook_MP(const Array& params, bool fHelp)
 {
    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getorderbook_MP property_id1 ( property_id2 )\n"
-            "\nRequest active trade information from the MetaDEx\n"
+            "getorderbook_MP propertyid ( propertyid )\n"
+            "\nRequest active trade information from the MetaDEx.\n"
 
             "\nArguments:\n"
-            "1. propertyid           (int, required) filter orders on propertyid for sale\n"
-            "2. propertyid           (int, optional) filter orders on propertyid desired\n"
+            "1. propertyid           (number, required) filter orders by propertyid for sale\n"
+            "2. propertyid           (number, optional) filter orders by propertyid desired\n"
         );
 
   uint32_t propertyIdForSale = 0, propertyIdDesired = 0;
@@ -984,34 +984,13 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
             "3. propertyid       (int, optional) filter by propertyid transacted\n"
         );
 
-    Array response;
 
-    string address = params[0].get_str();
-    int64_t count = 10;
-    if (params.size() > 1) {
-        count = params[1].get_int64();
-        if (count < 1) // TODO: do we need a maximum here?
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid value for count parameter");
-    }
-    uint32_t propertyId = 0;
-    if (params.size() > 2) {
-        int64_t tmpPropertyId = params[2].get_int64();
-        if (tmpPropertyId < 1 || tmpPropertyId > 4294967295) // not safe to do conversion
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
-        propertyId = boost::lexical_cast<uint32_t>(tmpPropertyId);
-        CMPSPInfo::Entry sp;
-        if (false == _my_sps->getSP(propertyId, sp))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
-    }
+    std::string address = ParseAddress(params[0]);
+    uint32_t count = (params.size() > 1) ? ParsePropertyId(params[1]) : 10;
+    uint32_t propertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : 0;
+    std::vector<uint256> vecTransactions; // hold txids to avoid duplicates
 
-    // to provide a proper trade history for an address we must utilize a two part methodology:
     // 1) check the metadex maps for open trades
-    // 2) check the trades database for closed trades
-
-    // vector vecTransactions will hold the txids from both stage 1 and stage 2 to avoid duplicates
-    std::vector<uint256> vecTransactions;
-
-    // stage 1
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         md_PricesMap & prices = my_it->second;
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
@@ -1025,11 +1004,15 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
             }
         }
     }
+    // 2) check the trades database for closed trades
+    {
+        LOCK(cs_tally);
+        t_tradelistdb->getTradesForAddress(address, vecTransactions, propertyId);
+    }
+    // 3) TODO - cancelled trades do not currently appear in trade history - consider how to attack this
 
-    // stage 2
-    t_tradelistdb->getTradesForAddress(address, &vecTransactions, propertyId);
-
-    // populate
+    // 4) populate the RPC response
+    Array response;
     for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
         Object txobj;
         int populateResult = populateRPCTransactionObject(*it, txobj, "", true);
