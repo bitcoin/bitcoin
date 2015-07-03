@@ -3041,7 +3041,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 
 int CMPTxList::setLastAlert(int blockHeight)
 {
-    if (blockHeight > chainActive.Height()) blockHeight = chainActive.Height();
+    if (blockHeight > GetHeight()) blockHeight = GetHeight();
     if (!pdb) return 0;
     Slice skey, svalue;
     Iterator* it = NewIterator();
@@ -3095,23 +3095,24 @@ int CMPTxList::setLastAlert(int blockHeight)
         else // note reparsing here is unavoidable because we've only loaded a txid and have no other alert info stored
         {
             CMPTransaction mp_obj;
-            int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
-            string new_global_alert_message;
-            if (0 <= parseRC)
+            if (0 <= ParseTransaction(wtx, blockHeight, 0, mp_obj))
             {
-                if (0<=mp_obj.step1())
+                if (mp_obj.interpret_Transaction())
                 {
-                    if(65535 == mp_obj.getType())
+                    if (OMNICORE_MESSAGE_TYPE_ALERT == mp_obj.getType())
                     {
-                        // TODO: use new parsing/interpretation functions
-                        if (0 == mp_obj.step2_Alert(&new_global_alert_message))
+                        SetOmniCoreAlert(mp_obj.getAlertString());
+
+                        int64_t blockTime = 0;
                         {
-                            SetOmniCoreAlert(new_global_alert_message);
-                            // check if expired
+                            LOCK(cs_main);
                             CBlockIndex* pBlockIndex = chainActive[blockHeight];
                             if (pBlockIndex != NULL) {
-                                CheckExpiredAlerts(blockHeight, pBlockIndex->GetBlockTime());
+                                blockTime = pBlockIndex->GetBlockTime();
                             }
+                        }
+                        if (blockTime > 0) {
+                            CheckExpiredAlerts(blockHeight, blockTime);
                         }
                     }
                 }
@@ -4210,7 +4211,7 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
             return logicMath_CloseCrowdsale();
 
         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-            return logicMath_CreatePropertyMananged();
+            return logicMath_CreatePropertyManaged();
 
         case MSC_TYPE_GRANT_PROPERTY_TOKENS:
             return logicMath_GrantTokens();
@@ -4231,18 +4232,33 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
 int CMPTransaction::logicMath_SimpleSend()
 {
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
         return (PKT_ERROR_SEND -22);
     }
 
     if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
+        PrintToLog("%s(): rejected: value out of range or zero: %d", __func__, nValue);
         return (PKT_ERROR_SEND -23);
     }
 
     if (!_my_sps->hasSP(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SEND -24);
     }
 
-    if (getMPbalance(sender, property, BALANCE) < (int64_t)nValue) {
+    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    if (nBalance < (int64_t) nValue) {
+        PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
+                __func__,
+                sender,
+                FormatMP(property, nBalance),
+                FormatMP(property, nValue),
+                property);
         return (PKT_ERROR_SEND -25);
     }
 
