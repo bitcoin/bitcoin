@@ -968,12 +968,17 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "gettradehistory_MP\n"
-            "\nAllows user to retrieve MetaDEx trade history for the supplied address\n"
+            "gettradehistoryforaddress_MP \"address\" ( count propertyid )\n"
+            "\nRetrieves MetaDEx trade history for the supplied address\n"
             "\nArguments:\n"
             "1. address          (string, required) address to retrieve history for\n"
-            "2. count            (int, optional) number of trades to retrieve (default: 10)\n"
-            "3. propertyid       (int, optional) filter by propertyid transacted\n"
+            "2. count            (number, optional) number of trades to retrieve (default: 10)\n"
+            "3. propertyid       (number, optional) filter by propertyid transacted (default: no filter)\n"
+            "\nResult:\n"
+            "{JSON array of MetaDEx trades including matches}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("gettradehistoryforaddress_OMNI", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\"")
+            + HelpExampleRpc("gettradehistoryforaddress_OMNI", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\"")
         );
 
     std::string address = ParseAddress(params[0]);
