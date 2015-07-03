@@ -25,7 +25,7 @@ Value mnbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show"))
+        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show" && strCommand != "projection"))
         throw runtime_error(
                 "mnbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
@@ -36,6 +36,7 @@ Value mnbudget(const Array& params, bool fHelp)
                 "  getvotes           - Show current masternode budgets\n"
                 "  getinfo            - Show current masternode budgets\n"
                 "  show               - Show all budgets\n"
+                "  projection         - Show the projection of which proposals will be paid the next cycle\n"
                 );
 
     if(strCommand == "vote-many")
@@ -227,7 +228,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
     }
 
-    if(strCommand == "show")
+    if(strCommand == "projection")
     {
         Object resultObj;
         int64_t nTotalAllotted = 0;
@@ -255,6 +256,39 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
             bObj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
             bObj.push_back(Pair("TotalBudgetAlloted",  nTotalAllotted));
+            resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
+        }
+
+        return resultObj;
+    }
+
+    if(strCommand == "show")
+    {
+        Object resultObj;
+        int64_t nTotalAllotted = 0;
+
+        std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
+        BOOST_FOREACH(CBudgetProposal* prop, winningProps)
+        {
+            nTotalAllotted += prop->GetAllotted();
+
+            CTxDestination address1;
+            ExtractDestination(prop->GetPayee(), address1);
+            CBitcoinAddress address2(address1);
+
+            Object bObj;
+            bObj.push_back(Pair("URL",  prop->GetURL()));
+            bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
+            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)prop->GetTotalPaymentCount()));
+            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)prop->GetRemainingPaymentCount()));
+            bObj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
+            bObj.push_back(Pair("Ratio",  prop->GetRatio()));
+            bObj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
+            bObj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
+            bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
+            bObj.push_back(Pair("Amount",  (int64_t)prop->GetAmount()));
             resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
         }
 

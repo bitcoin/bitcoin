@@ -458,6 +458,22 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     return false;
 }
 
+std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
+{
+    std::vector<CBudgetProposal*> ret;
+
+    std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
+    while(it2 != mapProposals.end())
+    {
+        CBudgetProposal* prop = &((*it2).second);
+        ret.push_back(prop);
+
+        it2++;
+    }
+
+    return ret;
+}
+
 //Need to review this function
 std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 {
@@ -496,7 +512,6 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         //prop start/end should be inside this period
         if(prop->nBlockStart <= nBlockStart && prop->nBlockEnd >= nBlockEnd) 
         {
-
             if(nTotalBudget == nBudgetAllocated){
                 prop->SetAllotted(0);
             } else if(prop->GetAmount() + nBudgetAllocated <= nTotalBudget) {
