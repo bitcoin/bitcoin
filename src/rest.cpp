@@ -430,7 +430,7 @@ static bool rest_getutxos(AcceptedConnection* conn,
     if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
         throw RESTERR(HTTP_INTERNAL_SERVER_ERROR, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));
 
-    // check spentness and form a bitmap (as well as a JSON capable human-readble string representation)
+    // check spentness and form a bitmap (as well as a JSON capable human-readable string representation)
     vector<unsigned char> bitmap;
     vector<CCoin> outs;
     std::string bitmapStringRepresentation;
