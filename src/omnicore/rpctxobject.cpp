@@ -1,4 +1,5 @@
 // Handler for populating RPC transaction objects
+#include "omnicore/rpctxobject.h"
 
 // Bitcoin Core includes
 #include "wallet.h"

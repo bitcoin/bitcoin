@@ -2,12 +2,10 @@
 
 #include "omnicore/rpctx.h"
 
-#include "omnicore/convert.h"
 #include "omnicore/createpayload.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
 #include "omnicore/omnicore.h"
-#include "omnicore/parse_string.h"
 #include "omnicore/pending.h"
 #include "omnicore/rpcrequirements.h"
 #include "omnicore/rpcvalues.h"
@@ -20,26 +18,13 @@
 #include "sync.h"
 #include "wallet.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/exception/to_string.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include "json/json_spirit_value.h"
 
 #include <stdint.h>
-
-#include <map>
 #include <stdexcept>
 #include <string>
 
-using boost::algorithm::token_compress_on;
-using boost::to_string;
-
-using std::map;
 using std::runtime_error;
-using std::string;
-using std::vector;
-
 using namespace json_spirit;
 using namespace mastercore;
 
