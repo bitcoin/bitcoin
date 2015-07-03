@@ -299,6 +299,14 @@ int TXHistoryDialog::PopulateHistoryMap()
         if (type == MSC_TYPE_METADEX_CANCEL_PRICE || type == MSC_TYPE_METADEX_CANCEL_PAIR || type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || htxo.txType == "Unknown") {
             displayAmount = "N/A";
         }
+        // override - display amount received not STO amount in packet (the total amount) for STOs I didn't send
+        if (type == MSC_TYPE_SEND_TO_OWNERS && !IsMyAddress(mp_obj.getSender())) {
+            Array receiveArray;
+            uint64_t tmpAmount = 0, stoFee = 0;
+            LOCK(cs_tally);
+            s_stolistdb->getRecipients(txHash, "", &receiveArray, &tmpAmount, &stoFee);
+            displayAmount = FormatShortMP(mp_obj.getProperty(), tmpAmount) + getTokenLabel(mp_obj.getProperty());
+        }
         htxo.amount = displayAmount;
         txHistoryMap.insert(std::make_pair(txHash, htxo));
         nProcessed++;
