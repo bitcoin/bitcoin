@@ -3835,19 +3835,14 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       std::string sellerAddress, matchingAddress;
       int64_t amountReceived = 0, amountSold = 0;
       if (strKey.size() != 129) continue; // only interested in matches
-      boost::split(vecKeys, strKey, boost::is_any_of("+"), token_compress_on);
-      if (vecKeys.size() != 2) {
-          PrintToLog("TRADEDB error - unexpected number of tokens in key (%s)\n", strKey);
-          continue;
-      }
-      boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);
-      if (vecValues.size() != 7) {
-          PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
+      boost::split(vecKeys, strKey, boost::is_any_of("+"), boost::token_compress_on);
+      boost::split(vecValues, strValue, boost::is_any_of(":"), boost::token_compress_on);
+      if (vecKeys.size() != 2 || vecValues.size() != 7) {
+          PrintToLog("TRADEDB error - unexpected number of tokens (%s:%s)\n", strKey, strValue);
           continue;
       }
       uint32_t tradePropertyIdSideA = boost::lexical_cast<uint32_t>(vecValues[2]);
       uint32_t tradePropertyIdSideB = boost::lexical_cast<uint32_t>(vecValues[3]);
-
       if (tradePropertyIdSideA == propertyIdSideA && tradePropertyIdSideB == propertyIdSideB) {
           sellerTxid.SetHex(vecKeys[1]);
           sellerAddress = vecValues[1];
@@ -3970,7 +3965,7 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
   leveldb::Slice skey, svalue;
   unsigned int count = 0;
   std::vector<std::string> vstr;
-  int block;
+  int block = 0;
   unsigned int n_found = 0;
   leveldb::Iterator* it = NewIterator();
   for(it->SeekToFirst(); it->Valid(); it->Next())
@@ -3980,17 +3975,12 @@ int CMPTradeList::deleteAboveBlock(int blockNum)
     ++count;
     string strvalue = it->value().ToString();
     boost::split(vstr, strvalue, boost::is_any_of(":"), token_compress_on);
-    // only care about the block number/height here
-    if (7 == vstr.size())
-    {
-      block = atoi(vstr[6]);
-
-      if (block >= blockNum)
-      {
+    if (7 == vstr.size()) block = atoi(vstr[6]); // trade matches have 7 tokens, key is txid+txid, only care about block
+    if (5 == vstr.size()) block = atoi(vstr[3]); // trades have 5 tokens, key is txid, only care about block
+    if (block >= blockNum) {
         ++n_found;
         PrintToLog("%s() DELETING FROM TRADEDB: %s=%s\n", __FUNCTION__, skey.ToString(), svalue.ToString());
         pdb->Delete(writeoptions, skey);
-      }
     }
   }
 
