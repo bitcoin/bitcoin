@@ -6,7 +6,7 @@ The following is a list of assets used in the bitcoin source and their proper at
 ### Info
 * Icon Pack: Typicons (http://typicons.com)
 * Designer: Stephen Hutchings (and more)
-* License: CC BY-SA
+* License: MIT
 * Site: [https://github.com/stephenhutchings/typicons.font](https://github.com/stephenhutchings/typicons.font)
 
 ### Assets Used
@@ -29,7 +29,7 @@ Jonas Schnelli
 ### Info
 * Designer: Jonas Schnelli
 * Bitcoin Icon: (based on the original bitcoin logo from Bitboy)
-* Some icons are based on Stephan Hutchings Typicons (these are under CC BY-SA license)
+* Some icons are based on Stephan Hutchings Typicons
 * License: MIT
 
 ### Assets Used
