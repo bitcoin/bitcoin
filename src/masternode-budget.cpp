@@ -1268,13 +1268,13 @@ std::string CFinalizedBudget::GetProposals() {
     std::string ret = "";
 
     BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals){
-        CFinalizedBudget* prop = budget.FindFinalizedBudget(payment.nProposalHash);
+        CBudgetProposal* prop = budget.FindProposal(payment.nProposalHash);
 
         std::string token = payment.nProposalHash.ToString();
 
         if(prop) token = prop->GetName();
         if(ret == "") {ret = token;}
-        else {ret = "," + token;}
+        else {ret += "," + token;}
     }
     return ret;
 }
