@@ -242,8 +242,7 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
 
 void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
 {
-    CMPOffer temp_offer;
-    if (0 > omniObj.interpretPacket(&temp_offer)) return;
+    CMPOffer temp_offer(omniObj);
     uint32_t propertyId = omniObj.getProperty();
     int64_t amount = omniObj.getAmount();
 

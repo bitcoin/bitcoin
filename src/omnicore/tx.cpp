@@ -871,7 +871,7 @@ int CMPTransaction::logicMath_SendToOwners()
 }
 
 /** Tx 20 */
-int CMPTransaction::logicMath_TradeOffer(CMPOffer* obj_o)
+int CMPTransaction::logicMath_TradeOffer()
 {
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
@@ -894,11 +894,6 @@ int CMPTransaction::logicMath_TradeOffer(CMPOffer* obj_o)
     }
 
     // ------------------------------------------
-
-    if (obj_o) {
-        obj_o->Set(amount_desired, min_fee, blocktimelimit, subaction);
-        return PKT_RETURNED_OBJECT;
-    }
 
     int rc = PKT_ERROR_TRADEOFFER;
 

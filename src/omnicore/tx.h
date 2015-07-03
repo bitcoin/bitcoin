@@ -25,6 +25,7 @@ using mastercore::c_strMasterProtocolTXType;
 class CMPTransaction
 {
     friend class CMPMetaDEx;
+    friend class CMPOffer;
 
 private:
     uint256 txid;
@@ -111,7 +112,7 @@ private:
      */
     int logicMath_SimpleSend();
     int logicMath_SendToOwners();
-    int logicMath_TradeOffer(CMPOffer*);
+    int logicMath_TradeOffer();
     int logicMath_AcceptOffer_BTC();
     int logicMath_MetaDExTrade();
     int logicMath_MetaDExCancelPrice();
@@ -236,7 +237,7 @@ public:
     bool interpret_Transaction();
 
     /** Interprets the payload and executes the logic. */
-    int interpretPacket(CMPOffer* obj_o = NULL);
+    int interpretPacket();
 
     /** Compares transaction objects based on block height and position within the block. */
     bool operator<(const CMPTransaction& other) const
