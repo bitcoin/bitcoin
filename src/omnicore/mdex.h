@@ -1,6 +1,8 @@
 #ifndef OMNICORE_MDEX_H
 #define OMNICORE_MDEX_H
 
+#include "omnicore/tx.h"
+
 #include "uint256.h"
 
 #include <boost/lexical_cast.hpp>
@@ -46,10 +48,9 @@ private:
 
 public:
     uint256 getHash() const { return txid; }
-    void setHash(const uint256& hash) { txid = hash; }
 
-    unsigned int getProperty() const { return property; }
-    unsigned int getDesProperty() const { return desired_property; }
+    uint32_t getProperty() const { return property; }
+    uint32_t getDesProperty() const { return desired_property; }
 
     int64_t getAmountForSale() const { return amount_forsale; }
     int64_t getAmountDesired() const { return amount_desired; }
@@ -67,8 +68,6 @@ public:
 
     int64_t getBlockTime() const;
 
-    // needed only by the RPC functions
-    // needed only by the RPC functions
     CMPMetaDEx()
       : block(0), txid(0), idx(0), property(0), amount_forsale(0), desired_property(0), amount_desired(0),
         amount_remaining(0), subaction(0) {}
@@ -83,7 +82,10 @@ public:
       : block(b), txid(tx), idx(i), property(c), amount_forsale(nValue), desired_property(cd), amount_desired(ad),
         amount_remaining(ar), subaction(suba), addr(addr) {}
 
-    void Set(const std::string&, int, uint32_t, int64_t, uint32_t, int64_t, const uint256&, uint32_t, uint8_t);
+    CMPMetaDEx(const CMPTransaction& tx)
+      : block(tx.block), txid(tx.txid), idx(tx.tx_idx), property(tx.property), amount_forsale(tx.nValue),
+        desired_property(tx.desired_property), amount_desired(tx.desired_value), amount_remaining(tx.nValue),
+        subaction(tx.subaction), addr(tx.sender) {}
 
     std::string ToString() const;
 

@@ -376,19 +376,6 @@ void CMPMetaDEx::setAmountRemaining(int64_t amount, const std::string& label)
     PrintToLog("update remaining amount still up for sale (%ld %s):%s\n", amount, label, ToString());
 }
 
-void CMPMetaDEx::Set(const std::string& sa, int b, uint32_t c, int64_t nValue, uint32_t cd, int64_t ad, const uint256& tx, uint32_t i, uint8_t suba)
-{
-    addr = sa;
-    block = b;
-    txid = tx;
-    property = c;
-    amount_forsale = nValue;
-    desired_property = cd;
-    amount_desired = ad;
-    idx = i;
-    subaction = suba;
-}
-
 std::string CMPMetaDEx::ToString() const
 {
     return strprintf("%s:%34s in %d/%03u, txid: %s , trade #%u %s for #%u %s",

@@ -354,7 +354,6 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
 
         // setup some variables
         CMPTransaction mp_obj;
-        CMPMetaDEx temp_metadexoffer;
         std::string statusText;
         uint32_t propertyIdForSale = 0;
         uint32_t propertyIdDesired = 0;
@@ -375,15 +374,14 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
             propertyIdForSale = mp_obj.getProperty();
             amountForSale = mp_obj.getAmount();
             divisibleForSale = isPropertyDivisible(propertyIdForSale);
-            if (0 <= mp_obj.interpretPacket(NULL,&temp_metadexoffer)) {
-                propertyIdDesired = temp_metadexoffer.getDesProperty();
-                divisibleDesired = isPropertyDivisible(propertyIdDesired);
-                amountDesired = temp_metadexoffer.getAmountDesired();
-                {
-                    LOCK(cs_tally);
-                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
-                    orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
-                }
+            CMPMetaDEx temp_metadexoffer(mp_obj);
+            propertyIdDesired = temp_metadexoffer.getDesProperty();
+            divisibleDesired = isPropertyDivisible(propertyIdDesired);
+            amountDesired = temp_metadexoffer.getAmountDesired();
+            {
+                LOCK(cs_tally);
+                t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
+                orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
             }
         }
 

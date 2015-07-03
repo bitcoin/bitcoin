@@ -4270,7 +4270,7 @@ const std::vector<unsigned char> GetOmMarker()
  // optional: provide the pointer to the CMPOffer object, it will get filled in
  // verify that it does via if (MSC_TYPE_TRADE_OFFER == mp_obj.getType())
  //
-int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
+int CMPTransaction::interpretPacket(CMPOffer* obj_o)
 {
     if (!interpret_Transaction()) {
         return -98765;
@@ -4281,17 +4281,6 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
     }
 
     LOCK(cs_tally);
-
-    if (mdex_o) {
-        if (type != MSC_TYPE_METADEX_TRADE
-                && type != MSC_TYPE_METADEX_CANCEL_PRICE
-                && type != MSC_TYPE_METADEX_CANCEL_PAIR
-                && type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
-            return -778; // can't fill in the MetaDEx object !
-        } else {
-            return logicMath_MetaDEx(mdex_o); // temp
-        }
-    }
 
     switch (type) {
         case MSC_TYPE_SIMPLE_SEND:

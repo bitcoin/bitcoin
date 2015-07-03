@@ -997,17 +997,6 @@ int CMPTransaction::logicMath_AcceptOffer_BTC()
     return rc;
 }
 
-// TODO: depreciate
-int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx* mdex_o)
-{
-    if (mdex_o) {
-        mdex_o->Set(sender, block, property, nValue, desired_property, desired_value, txid, tx_idx, action);
-        return PKT_RETURNED_OBJECT;
-    }
-
-    return PKT_ERROR_METADEX -100;
-}
-
 /** Tx 25 */
 int CMPTransaction::logicMath_MetaDExTrade()
 {

@@ -277,8 +277,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
 
 void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
 {
-    CMPMetaDEx metaObj;
-    if (0 > omniObj.interpretPacket(NULL, &metaObj)) return;
+    CMPMetaDEx metaObj(omniObj);
 
     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
@@ -308,8 +307,7 @@ void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool ex
 
 void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
 {
-    CMPMetaDEx metaObj;
-    if (0 > omniObj.interpretPacket(NULL, &metaObj)) return;
+    CMPMetaDEx metaObj(omniObj);
 
     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
@@ -337,8 +335,7 @@ void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, b
 
 void populateRPCTypeMetaDExCancelPair(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
 {
-    CMPMetaDEx metaObj;
-    if (0 > omniObj.interpretPacket(NULL, &metaObj)) return;
+    CMPMetaDEx metaObj(omniObj);
 
     // populate
     txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
