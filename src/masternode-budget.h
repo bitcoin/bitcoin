@@ -103,6 +103,7 @@ public:
 
     int64_t GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal*> GetBudget();
+    std::vector<CBudgetProposal*> GetAllProposals();
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
     bool IsBudgetPaymentBlock(int nBlockHeight);
     void AddProposal(CBudgetProposal& prop);
