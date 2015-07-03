@@ -1329,34 +1329,11 @@ Value getsto_MP(const Array& params, bool fHelp)
         );
 
     Object txobj;
-    uint256 hash;
-    hash.SetHex(params[0].get_str());
+    uint256 hash(params[0].get_str());
     string filterAddress = "";
-    if (params.size() == 2) filterAddress=params[1].get_str();
-
-    // make a request to RPC populator function to populate a transaction object
+    if (params.size() == 2) filterAddress = params[1].get_str();
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true, filterAddress);
-    // check the response, throw any error codes if false
-    if (0>populateResult) {
-        // TODO: consider throwing other error codes, check back with Bitcoin Core
-        switch (populateResult) {
-            case MP_TX_NOT_FOUND:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
-            case MP_TX_UNCONFIRMED:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unconfirmed transactions are not supported");
-            case MP_BLOCK_NOT_IN_CHAIN:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not part of the active chain");
-            case MP_CROWDSALE_WITHOUT_PROPERTY:
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: \
-                                                      \"Crowdsale Purchase\" without valid property identifier");
-            case MP_INVALID_TX_IN_DB_FOUND:
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: Invalid transaction found");
-            case MP_TX_IS_NOT_MASTER_PROTOCOL:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
-        }
-    }
-
-    // return object
+    if (populateResult != 0) PopulateFailure(populateResult);
     return txobj;
 }
 
@@ -1375,33 +1352,10 @@ Value gettrade_MP(const Array& params, bool fHelp)
             + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    uint256 hash;
-    hash.SetHex(params[0].get_str());
+    uint256 hash(params[0].get_str());
     Object txobj;
-
-    // make a request to RPC populator function to populate a transaction object
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true);
-    // check the response, throw any error codes if false
-    if (0>populateResult) {
-        // TODO: consider throwing other error codes, check back with Bitcoin Core
-        switch (populateResult) {
-            case MP_TX_NOT_FOUND:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
-            case MP_TX_UNCONFIRMED:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unconfirmed transactions are not supported");
-            case MP_BLOCK_NOT_IN_CHAIN:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not part of the active chain");
-            case MP_CROWDSALE_WITHOUT_PROPERTY:
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: \
-                                                      \"Crowdsale Purchase\" without valid property identifier");
-            case MP_INVALID_TX_IN_DB_FOUND:
-                throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: Invalid transaction found");
-            case MP_TX_IS_NOT_MASTER_PROTOCOL:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
-        }
-    }
-
-    // return object
+    if (populateResult != 0) PopulateFailure(populateResult);
     return txobj;
 }
 
