@@ -854,36 +854,33 @@ Value getorderbook_MP(const Array& params, bool fHelp)
         throw runtime_error(
             "getorderbook_MP propertyid ( propertyid )\n"
             "\nRequest active trade information from the MetaDEx.\n"
-
             "\nArguments:\n"
             "1. propertyid           (number, required) filter orders by propertyid for sale\n"
             "2. propertyid           (number, optional) filter orders by propertyid desired\n"
+            "\nResult:\n"
+            "{JSON array of MetaDEx trades}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getorderbook_MP", "1 12")
+            + HelpExampleRpc("getorderbook_MP", "1 12")
         );
 
-  uint32_t propertyIdForSale = 0, propertyIdDesired = 0;
   bool filterDesired = (params.size() == 2) ? true : false;
-
-  propertyIdForSale = check_prop_valid(params[0].get_int64(), "Invalid property identifier (for sale)", "Property identifier does not exist (for sale)");
-  if (filterDesired) {
-    propertyIdDesired = check_prop_valid(params[1].get_int64(), "Invalid property identifier (desired)", "Property identifier does not exist (desired)");
-  }
+  uint32_t propertyIdForSale = 0, propertyIdDesired = 0;
+  propertyIdForSale = check_prop_valid(params[0].get_int64(), "Invalid property id (for sale)", "Property id does not exist (for sale)");
+  if (filterDesired) propertyIdDesired = check_prop_valid(params[1].get_int64(), "Invalid property id (desired)", "Property id does not exist (desired)");
 
   std::vector<CMPMetaDEx> vecMetaDexObjects;
 
   {
       LOCK(cs_tally);
-
       for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
           md_PricesMap & prices = my_it->second;
           for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
               md_Set & indexes = (it->second);
               for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                   CMPMetaDEx obj = *it;
-                  if (obj.getProperty() == propertyIdForSale) {
-                      if (!filterDesired || (obj.getProperty() == propertyIdForSale && obj.getDesProperty() == propertyIdDesired)) {
-                          vecMetaDexObjects.push_back(obj);
-                      }
-                  }
+                  if (obj.getProperty() != propertyIdForSale) continue;
+                  if (!filterDesired || obj.getDesProperty() == propertyIdDesired) vecMetaDexObjects.push_back(obj);
               }
           }
       }
