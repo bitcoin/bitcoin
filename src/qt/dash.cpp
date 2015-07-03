@@ -185,6 +185,9 @@ signals:
 private:
     boost::thread_group threadGroup;
 
+    /// Flag indicating a restart
+    bool execute_restart;
+
     /// Pass fatal exception message to UI thread
     void handleRunawayException(std::exception *e);
 };
@@ -262,6 +265,8 @@ void BitcoinCore::handleRunawayException(std::exception *e)
 
 void BitcoinCore::initialize()
 {
+    execute_restart = true;
+
     try
     {
         qDebug() << __func__ << ": Running AppInit2 in thread";
@@ -282,23 +287,26 @@ void BitcoinCore::initialize()
 }
 
 void BitcoinCore::restart(QStringList args)
-{      
-    try
-    {
-        qDebug() << __func__ << ": Running Restart in thread";
-        threadGroup.interrupt_all();
-        threadGroup.join_all();
-        PrepareShutdown();
-        qDebug() << __func__ << ": Shutdown finished";
-        emit shutdownResult(1);
-        CExplicitNetCleanup::callCleanup();
-        QProcess::startDetached(QApplication::applicationFilePath(), args);
-        qDebug() << __func__ << ": Restart initiated...";
-        QApplication::quit();
-    } catch (std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(NULL);
+{
+    if(execute_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+        execute_restart = false;
+        try
+        {
+            qDebug() << __func__ << ": Running Restart in thread";
+            threadGroup.interrupt_all();
+            threadGroup.join_all();
+            PrepareShutdown();
+            qDebug() << __func__ << ": Shutdown finished";
+            emit shutdownResult(1);
+            CExplicitNetCleanup::callCleanup();
+            QProcess::startDetached(QApplication::applicationFilePath(), args);
+            qDebug() << __func__ << ": Restart initiated...";
+            QApplication::quit();
+        } catch (std::exception& e) {
+            handleRunawayException(&e);
+        } catch (...) {
+            handleRunawayException(NULL);
+        }
     }
 }
 
