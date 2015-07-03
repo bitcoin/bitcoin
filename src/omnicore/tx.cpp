@@ -278,7 +278,7 @@ bool CMPTransaction::interpret_Transaction()
             return interpret_CloseCrowdsale();
 
         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-            return interpret_CreatePropertyMananged();
+            return interpret_CreatePropertyManaged();
 
         case MSC_TYPE_GRANT_PROPERTY_TOKENS:
             return interpret_GrantTokens();
@@ -637,7 +637,7 @@ bool CMPTransaction::interpret_CloseCrowdsale()
 }
 
 /** Tx 54 */
-bool CMPTransaction::interpret_CreatePropertyMananged()
+bool CMPTransaction::interpret_CreatePropertyManaged()
 {
     if (pkt_size < 17) {
         return false;
@@ -1434,7 +1434,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
 }
 
 /** Tx 54 */
-int CMPTransaction::logicMath_CreatePropertyMananged()
+int CMPTransaction::logicMath_CreatePropertyManaged()
 {
     uint256 blockHash;
     {

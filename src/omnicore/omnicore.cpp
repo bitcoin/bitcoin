@@ -4211,7 +4211,7 @@ int CMPTransaction::interpretPacket(CMPOffer* obj_o, CMPMetaDEx* mdex_o)
             return logicMath_CloseCrowdsale();
 
         case MSC_TYPE_CREATE_PROPERTY_MANUAL:
-            return logicMath_CreatePropertyMananged();
+            return logicMath_CreatePropertyManaged();
 
         case MSC_TYPE_GRANT_PROPERTY_TOKENS:
             return logicMath_GrantTokens();

@@ -98,7 +98,7 @@ private:
     bool interpret_CreatePropertyFixed();
     bool interpret_CreatePropertyVariable();
     bool interpret_CloseCrowdsale();
-    bool interpret_CreatePropertyMananged();
+    bool interpret_CreatePropertyManaged();
     bool interpret_GrantTokens();
     bool interpret_RevokeTokens();
     bool interpret_ChangeIssuer();
@@ -119,7 +119,7 @@ private:
     int logicMath_CreatePropertyFixed();
     int logicMath_CreatePropertyVariable();
     int logicMath_CloseCrowdsale();
-    int logicMath_CreatePropertyMananged();
+    int logicMath_CreatePropertyManaged();
     int logicMath_GrantTokens();
     int logicMath_RevokeTokens();
     int logicMath_ChangeIssuer();
