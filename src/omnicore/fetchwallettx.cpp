@@ -102,7 +102,7 @@ std::map<std::string,uint256> FetchWalletOmniTransactions(int count, int startBl
   */
 uint64_t GetTransactionByteOffset(const uint256& txid)
 {
-    // TODO: Do we need a lock here?
+    LOCK(cs_main);
     CDiskTxPos position;
     if (pblocktree->ReadTxIndex(txid, position)) {
         return position.nTxOffset;
