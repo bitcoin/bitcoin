@@ -306,7 +306,9 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateDarksendProgress()
 {
-    if(IsInitialBlockDownload()) return;
+    if(IsInitialBlockDownload() || ShutdownRequested()) return;
+
+    if(!pwalletMain || !walletModel || !walletModel->getOptionsModel()) return;
 
     int64_t nBalance = pwalletMain->GetBalance();
     QString strAmountAndRounds;
