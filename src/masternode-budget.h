@@ -85,7 +85,10 @@ public:
         mapFinalizedBudgets.clear();
     }
 
-    void Sync(CNode* node);
+    int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
+    int sizeProposals() {return (int)mapProposals.size();}
+
+    void Sync(CNode* node, uint256 nProp);
 
     void Calculate();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
@@ -103,9 +106,10 @@ public:
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
     bool IsBudgetPaymentBlock(int nBlockHeight);
     void AddProposal(CBudgetProposal& prop);
-    void UpdateProposal(CBudgetVote& vote);
     void AddFinalizedBudget(CFinalizedBudget& prop);
-    void UpdateFinalizedBudget(CFinalizedBudgetVote& vote);
+
+    bool UpdateProposal(CBudgetVote& vote, CNode* pfrom);
+    bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom);
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int64_t nBlockHeight);
@@ -180,8 +184,6 @@ public:
 
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
-
-    void Sync(CNode* node);
 
     void Clean(CFinalizedBudgetVote& vote);
     void AddOrUpdateVote(CFinalizedBudgetVote& vote);
@@ -358,8 +360,6 @@ public:
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
     CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn);
-
-    void Sync(CNode* node);
 
     void Calculate();
     void AddOrUpdateVote(CBudgetVote& vote);

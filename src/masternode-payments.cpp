@@ -23,15 +23,14 @@ bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue){
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
-    //while syncing take the longest chain
-    if (fImporting || fReindex || pindexPrev->nHeight+1 < Checkpoints::GetTotalBlocksEstimate()) {
+    if(budget.sizeFinalized() == 0 && budget.sizeProposals() == 0) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max 100 per budgeting
         if((pindexPrev->nHeight+1) % GetBudgetPaymentCycleBlocks() < 100){
             return true;
         } else {
             if(nBlockValue > nExpectedValue) return false;
         }
-    } else { // we're synced so check the budget schedule
+    } else { // we're synced and have data so check the budget schedule
         if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
             //the value of the block is evaluated in CheckBlock
             return true;

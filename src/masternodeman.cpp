@@ -319,12 +319,14 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
     LOCK(cs);
 
-    std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
-    if (it != mWeAskedForMasternodeList.end())
-    {
-        if (GetTime() < (*it).second) {
-            LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
-            return;
+    if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())){
+        std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
+        if (it != mWeAskedForMasternodeList.end())
+        {
+            if (GetTime() < (*it).second) {
+                LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+                return;
+            }
         }
     }
     pnode->PushMessage("dseg", CTxIn());
@@ -659,7 +661,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(vin == CTxIn()) { //only should ask for this once
             //local network
-            if(!pfrom->addr.IsRFC1918() && Params().NetworkID() == CBaseChainParams::MAIN) {
+            bool isLocal = (pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal());
+
+            if(!isLocal && Params().NetworkID() == CBaseChainParams::MAIN) {
                 std::map<CNetAddr, int64_t>::iterator i = mAskedUsForMasternodeList.find(pfrom->addr);
                 if (i != mAskedUsForMasternodeList.end()){
                     int64_t t = (*i).second;
