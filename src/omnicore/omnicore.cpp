@@ -3910,7 +3910,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
 
 // obtains a vector of txids where the supplied address participated in a trade (needed for gettradehistory_MP)
 // optional property ID parameter will filter on propertyId transacted if supplied
-void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>* vecTransactions, uint32_t propertyIdForSale)
+void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdForSale)
 {
   if (!pdb) return;
   leveldb::Iterator* it = NewIterator();
@@ -3940,8 +3940,8 @@ void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>
               txid.SetHex(vecKeys[1]);
           }
           if (propertyIdForSale != 0 && propertyIdForSale != tradePropertyIdSideA && propertyIdForSale != tradePropertyIdSideB) continue;
-          if (std::find(vecTransactions->begin(), vecTransactions->end(), txid) == vecTransactions->end()) { // avoid duplicates
-              vecTransactions->push_back(txid);
+          if (std::find(vecTransactions.begin(), vecTransactions.end(), txid) == vecTransactions.end()) { // avoid duplicates
+              vecTransactions.push_back(txid);
           }
       }
   }
