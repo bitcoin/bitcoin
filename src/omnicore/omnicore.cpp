@@ -3909,7 +3909,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
 // obtains a vector of txids where the supplied address participated in a trade (needed for gettradehistory_MP)
 // optional property ID parameter will filter on propertyId transacted if supplied
 // sorted by block then index
-void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdForSale)
+void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdFilter)
 {
   if (!pdb) return;
   std::map<std::string,uint256> mapTrades;
@@ -3923,14 +3923,15 @@ void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>
       size_t addressMatch = strValue.find(address);
       if (addressMatch == std::string::npos) continue;
       boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);
-      if (vecValues.size() != 4) {
+      if (vecValues.size() != 5) {
           PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
           continue;
       }
-      uint32_t propertyId = boost::lexical_cast<uint32_t>(vecValues[1]);
-      int64_t blockNum = boost::lexical_cast<uint32_t>(vecValues[2]);
-      int64_t txIndex = boost::lexical_cast<uint32_t>(vecValues[3]);
-      if (propertyIdForSale != 0 && propertyIdForSale != propertyId) continue; // filter
+      uint32_t propertyIdForSale = boost::lexical_cast<uint32_t>(vecValues[1]);
+      uint32_t propertyIdDesired = boost::lexical_cast<uint32_t>(vecValues[2]);
+      int64_t blockNum = boost::lexical_cast<uint32_t>(vecValues[3]);
+      int64_t txIndex = boost::lexical_cast<uint32_t>(vecValues[4]);
+      if (propertyIdFilter != 0 && propertyIdFilter != propertyIdForSale && propertyIdFilter != propertyIdDesired) continue;
       std::string sortKey = strprintf("%06d%010d", blockNum, txIndex);
       mapTrades.insert(std::make_pair(sortKey, txid));
   }
@@ -3940,10 +3941,10 @@ void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>
   }
 }
 
-void CMPTradeList::recordNewTrade(const uint256& txid, const std::string& address, uint32_t propertyIdForSale, int blockNum, int blockIndex)
+void CMPTradeList::recordNewTrade(const uint256& txid, const std::string& address, uint32_t propertyIdForSale, uint32_t propertyIdDesired, int blockNum, int blockIndex)
 {
   if (!pdb) return;
-  std::string strValue = strprintf("%s:%d:%d:%d", address, propertyIdForSale, blockNum, blockIndex);
+  std::string strValue = strprintf("%s:%d:%d:%d:%d", address, propertyIdForSale, propertyIdDesired, blockNum, blockIndex);
   Status status = pdb->Put(writeoptions, txid.ToString(), strValue);
   ++nWritten;
   if (msc_debug_tradedb) PrintToLog("%s(): %s\n", __FUNCTION__, status.ToString());

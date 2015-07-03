@@ -209,13 +209,13 @@ public:
     }
 
     void recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
-    void recordNewTrade(const uint256& txid, const std::string& address, uint32_t propertyIdForSale, int blockNum, int blockIndex);
+    void recordNewTrade(const uint256& txid, const std::string& address, uint32_t propertyIdForSale, uint32_t propertyIdDesired, int blockNum, int blockIndex);
     int deleteAboveBlock(int blockNum);
     bool exists(const uint256 &txid);
     void printStats();
     void printAll();
     bool getMatchingTrades(const uint256& txid, uint32_t propertyId, Array& tradeArray, int64_t& totalSold, int64_t& totalBought);
-    void getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdForSale = 0);
+    void getTradesForAddress(std::string address, std::vector<uint256>& vecTransactions, uint32_t propertyIdFilter = 0);
     void getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, Array& response);
     int getMPTradeCountTotal();
 };
