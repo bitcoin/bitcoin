@@ -950,25 +950,15 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
     Array response;
 
     // obtain property identifiers for pair & check valid parameters
-    uint32_t propertyIdSideA = 0, propertyIdSideB = 0;
-    int64_t tmpPropertyIdSideA = params[0].get_int64();
-    int64_t tmpPropertyIdSideB = params[1].get_int64();
-    if (tmpPropertyIdSideA < 1 || tmpPropertyIdSideA > 4294967295 || tmpPropertyIdSideB < 1 || tmpPropertyIdSideB > 4294967295)
-         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property identifier");
-    propertyIdSideA = boost::lexical_cast<uint32_t>(tmpPropertyIdSideA);
-    propertyIdSideB = boost::lexical_cast<uint32_t>(tmpPropertyIdSideB);
-    if (!_my_sps->hasSP(propertyIdSideA) || !_my_sps->hasSP(propertyIdSideB))
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
-    if ((propertyIdSideA != 1 && propertyIdSideA != 2 && propertyIdSideB != 1 && propertyIdSideB != 2) || propertyIdSideA == propertyIdSideB)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid trade pair");
+    uint32_t propertyIdSideA = (params.size() > 0) ? ParsePropertyId(params[0]) : 0;
+    uint32_t propertyIdSideB = (params.size() > 1) ? ParsePropertyId(params[1]) : 0;
+    uint32_t count = (params.size() > 2) ? ParsePropertyId(params[2]) : 10;
+    RequireExistingProperty(propertyIdSideA);
+    RequireExistingProperty(propertyIdSideB);
+    RequireSameEcosystem(propertyIdSideA, propertyIdSideB);
+    RequireDifferentIds(propertyIdSideA, propertyIdSideB);
 
-    // obtain count parameter if supplied
-    int64_t count = 10;
-    if (params.size() > 2) count = params[2].get_int64();
-    if (count < 1) // TODO: do we need a maximum here?
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid value for count parameter");
-
-    // metadex maps are irrelevant for this call, we are looking for completed trades which are stored in tradelistdb
+    // request pair trade history from trade db
     t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response);
 
     return response;
