@@ -964,14 +964,6 @@ Value gettradessince_MP(const Array& params, bool fHelp)
   return response;
 }
 
-/* TODO: point for discussion - "trade history" is ambiguous; providing trade history for a
- * pair is likely to be more useful than trade history for an address.  Regardless the existing
- * function did neither (only showing open trades, not trade history) so has been rewritten.
- *
- * Perhaps consider renaming this to gettradehistoryforaddress_OMNI to match existing naming
- * (eg getallbalancesforaddress_MP) then look at addition of new gettradehistoryforpair_OMNI
- * call.
- */
 Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
@@ -984,42 +976,30 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
             "3. propertyid       (int, optional) filter by propertyid transacted\n"
         );
 
-
     std::string address = ParseAddress(params[0]);
     uint32_t count = (params.size() > 1) ? ParsePropertyId(params[1]) : 10;
     uint32_t propertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : 0;
-    std::vector<uint256> vecTransactions; // hold txids to avoid duplicates
 
-    // 1) check the metadex maps for open trades
-    for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
-        md_PricesMap & prices = my_it->second;
-        for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
-            md_Set & indexes = (it->second);
-            for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
-                CMPMetaDEx obj = *it;
-                if (obj.getAddr() == address) {
-                    if (propertyId != 0 && propertyId != obj.getProperty() && propertyId != obj.getDesProperty()) continue;
-                    vecTransactions.push_back(obj.getHash());
-                }
-            }
-        }
-    }
-    // 2) check the trades database for closed trades
+    // Obtain a sorted vector of txids for the address trade history
+    std::vector<uint256> vecTransactions;
     {
         LOCK(cs_tally);
         t_tradelistdb->getTradesForAddress(address, vecTransactions, propertyId);
     }
-    // 3) TODO - cancelled trades do not currently appear in trade history - consider how to attack this
 
-    // 4) populate the RPC response
+    // Populate the address trade history into JSON objects until we have processed count transactions
     Array response;
+    uint32_t processed = 0;
     for(std::vector<uint256>::iterator it = vecTransactions.begin(); it != vecTransactions.end(); ++it) {
         Object txobj;
         int populateResult = populateRPCTransactionObject(*it, txobj, "", true);
-        if (0 == populateResult) response.push_back(txobj);
+        if (0 == populateResult) {
+            response.push_back(txobj);
+            processed++;
+            if (processed >= count) break;
+        }
     }
 
-    // TODO: sort response array on confirmations attribute and crop response to (count) most recent transactions
     return response;
 }
 

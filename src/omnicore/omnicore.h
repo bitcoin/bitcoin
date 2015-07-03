@@ -208,7 +208,8 @@ public:
         if (msc_debug_persistence) PrintToLog("CMPTradeList closed\n");
     }
 
-    void recordTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
+    void recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum);
+    void recordNewTrade(const uint256& txid, const std::string& address, uint32_t propertyIdForSale, int blockNum, int blockIndex);
     int deleteAboveBlock(int blockNum);
     bool exists(const uint256 &txid);
     void printStats();

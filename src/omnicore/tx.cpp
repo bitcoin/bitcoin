@@ -1124,8 +1124,8 @@ int CMPTransaction::logicMath_MetaDExTrade()
     // ensure sufficient balance is available to offer
     if (getMPbalance(sender, property, BALANCE) < static_cast<int64_t>(nNewValue)) return (PKT_ERROR_METADEX -567);
 
+    t_tradelistdb->recordNewTrade(txid, sender, property, block, tx_idx);
     rc = MetaDEx_ADD(sender, property, nNewValue, block, desired_property, desired_value, txid, tx_idx);
-
     return rc;
 }
 
