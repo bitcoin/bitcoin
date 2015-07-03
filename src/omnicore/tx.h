@@ -245,11 +245,6 @@ public:
         if (block != other.block) return block > other.block;
         return tx_idx > other.tx_idx;
     }
-
-    // Deprecated
-    int step1();
-    int step2_Value();
-    const char* step2_SmartProperty(int& error_code);
 };
 
 /** Parses a transaction and populates the CMPTransaction object. */
