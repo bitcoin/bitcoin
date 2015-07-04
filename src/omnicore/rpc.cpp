@@ -924,8 +924,9 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
         );
 
     std::string address = ParseAddress(params[0]);
-    uint32_t count = (params.size() > 1) ? ParsePropertyId(params[1]) : 10;
+    uint64_t count = (params.size() > 1) ? params[1].get_uint64() : 10;
     uint32_t propertyId = (params.size() > 2) ? ParsePropertyId(params[2]) : 0;
+    if (propertyId != 0) RequireExistingProperty(propertyId);
 
     // Obtain a sorted vector of txids for the address trade history
     std::vector<uint256> vecTransactions;
@@ -952,7 +953,7 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
 
 Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 3)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
             "gettradehistory_MP\n"
             "\nAllows user to retrieve MetaDEx trade history for the specified market\n"
@@ -965,9 +966,9 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
     Array response;
 
     // obtain property identifiers for pair & check valid parameters
-    uint32_t propertyIdSideA = (params.size() > 0) ? ParsePropertyId(params[0]) : 0;
-    uint32_t propertyIdSideB = (params.size() > 1) ? ParsePropertyId(params[1]) : 0;
-    uint32_t count = (params.size() > 2) ? ParsePropertyId(params[2]) : 10;
+    uint32_t propertyIdSideA = ParsePropertyId(params[0]);
+    uint32_t propertyIdSideB = ParsePropertyId(params[1]);
+    uint64_t count = (params.size() > 2) ? params[1].get_uint64() : 10;
     RequireExistingProperty(propertyIdSideA);
     RequireExistingProperty(propertyIdSideB);
     RequireSameEcosystem(propertyIdSideA, propertyIdSideB);
