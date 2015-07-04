@@ -19,23 +19,39 @@ CMasternodePayments masternodePayments;
 map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
 map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
-bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue){
+bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
-    if(budget.sizeFinalized() == 0 && budget.sizeProposals() == 0) { //there is no budget data to use to check anything
+    int nHeight = 0;
+    if(pindexPrev->GetBlockHash() == block.hashPrevBlock)
+    {
+        nHeight = pindexPrev->nHeight+1;
+    } else { //out of order
+        BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex){
+            if(item.first == block.hashPrevBlock) {
+                nHeight = item.second->nHeight+1;
+            }
+        }
+    }
+
+    if(nHeight == 0){
+        LogPrintf("IsBlockValueValid() : WARNING: Couldn't find previous block");
+    }
+
+    if((budget.sizeFinalized() == 0 && budget.sizeProposals() == 0) || nHeight == 0) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max 100 per budgeting
-        if((pindexPrev->nHeight+1) % GetBudgetPaymentCycleBlocks() < 100){
+        if(nHeight % GetBudgetPaymentCycleBlocks() < 100){
             return true;
         } else {
-            if(nBlockValue > nExpectedValue) return false;
+            if(block.vtx[0].GetValueOut() > nExpectedValue) return false;
         }
     } else { // we're synced and have data so check the budget schedule
-        if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+        if(budget.IsBudgetPaymentBlock(nHeight)){
             //the value of the block is evaluated in CheckBlock
             return true;
         } else {
-            if(nBlockValue > nExpectedValue) return false;
+            if(block.vtx[0].GetValueOut() > nExpectedValue) return false;
         }
     }
 
