@@ -465,8 +465,10 @@ std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
     while(it2 != mapProposals.end())
     {
+        (*it).second.CleanAndRemove();
+
         CBudgetProposal* prop = &((*it2).second);
-        ret.push_back(prop);
+        ret.push_back(prop);        
 
         it2++;
     }
@@ -483,6 +485,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
+        (*it).second.CleanAndRemove();
         mapList.insert(make_pair((*it).second.GetHash(), (*it).second.GetYeas()));
         ++it;
     }
@@ -951,6 +954,21 @@ void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
 
     uint256 hash = vote.vin.prevout.GetHash();
     mapVotes[hash] = vote;
+}
+
+// If masternode voted for a proposal, but is now invalid -- remove the vote
+void CBudgetProposal::CleanAndRemove()
+{
+    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+
+    while(it != mapVotes.end()) {
+        if ((*it).second.SignatureValid()) 
+        {
+            ++it;
+        } else {
+            mapVotes.erase(it++);
+        }
+    }
 }
 
 double CBudgetProposal::GetRatio()
