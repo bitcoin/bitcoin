@@ -28,11 +28,9 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
     {
         nHeight = pindexPrev->nHeight+1;
     } else { //out of order
-        BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex){
-            if(item.first == block.hashPrevBlock) {
-                nHeight = item.second->nHeight+1;
-            }
-        }
+        BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+        if (mi != mapBlockIndex.end() && (*mi).second)
+            nHeight = (*mi).second->nHeight+1;
     }
 
     if(nHeight == 0){
