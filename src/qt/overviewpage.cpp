@@ -20,6 +20,7 @@
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <QSettings>
 #include <QTimer>
 
 #define DECORATION_SIZE 48
@@ -455,6 +456,15 @@ void OverviewPage::darksendReset(){
 }
 
 void OverviewPage::toggleDarksend(){
+    QSettings settings;
+    // Popup some information on first mixing
+    QString hasMixed = settings.value("hasMixed").toString();
+    if(hasMixed.isEmpty()){
+        QMessageBox::information(this, tr("Darksend"),
+                tr("If you don't want to see internal Darksend fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
+                QMessageBox::Ok, QMessageBox::Ok);
+        settings.setValue("hasMixed", "hasMixed");
+    }
     if(!fEnableDarksend){
         int64_t balance = pwalletMain->GetBalance();
         float minAmount = 1.49 * COIN;
