@@ -958,9 +958,14 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
             "gettradehistory_MP\n"
             "\nAllows user to retrieve MetaDEx trade history for the specified market\n"
             "\nArguments:\n"
-            "1. propertyid           (int, required) the first side of the pair\n"
-            "2. propertyid           (int, required) the second side of the pair\n"
-            "3. count                (int, optional) number of trades to retrieve (default: 10)\n"
+            "1. propertyid           (number, required) the first side of the pair\n"
+            "2. propertyid           (number, required) the second side of the pair\n"
+            "3. count                (number, optional) number of trades to retrieve (default: 10)\n"
+            "\nResult:\n"
+            "{JSON array of MetaDEx trades including matches}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("gettradehistoryforpair_OMNI", "1 12")
+            + HelpExampleRpc("gettradehistoryforpair_OMNI", "1 12")
         );
 
     Array response;
