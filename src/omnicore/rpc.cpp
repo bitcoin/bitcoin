@@ -971,7 +971,7 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
     // obtain property identifiers for pair & check valid parameters
     uint32_t propertyIdSideA = ParsePropertyId(params[0]);
     uint32_t propertyIdSideB = ParsePropertyId(params[1]);
-    uint64_t count = (params.size() > 2) ? params[1].get_uint64() : 10;
+    uint64_t count = (params.size() > 2) ? params[2].get_uint64() : 10;
     RequireExistingProperty(propertyIdSideA);
     RequireExistingProperty(propertyIdSideB);
     RequireSameEcosystem(propertyIdSideA, propertyIdSideB);

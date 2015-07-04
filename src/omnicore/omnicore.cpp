@@ -3897,11 +3897,12 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
   // sort the response most recent first before adding to the array
   std::sort(vecResponse.begin(), vecResponse.end(), CompareTradePair);
   uint64_t processed = 0;
-  for (std::vector<std::pair<int64_t,Object> >::reverse_iterator it = vecResponse.rbegin(); it != vecResponse.rend(); ++it) {
+  for (std::vector<std::pair<int64_t,Object> >::iterator it = vecResponse.begin(); it != vecResponse.end(); ++it) {
       responseArray.push_back(it->second);
       processed++;
       if (processed >= count) break;
   }
+  std::reverse(responseArray.begin(), responseArray.end());
   delete it;
 }
 
