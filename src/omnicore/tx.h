@@ -1,24 +1,20 @@
 #ifndef OMNICORE_TX_H
 #define OMNICORE_TX_H
 
-class CMPOffer;
 class CMPMetaDEx;
-
-#include "omnicore/log.h"
-#include "omnicore/omnicore.h"
-
+class CMPOffer;
 class CTransaction;
 
-#include "amount.h"
+#include "omnicore/omnicore.h"
+
 #include "uint256.h"
 #include "utilstrencodings.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
+#include <string.h>
 #include <string>
-#include <utility>
 
 using mastercore::c_strMasterProtocolTXType;
 
@@ -84,16 +80,55 @@ private:
     // Alert
     char alertString[SP_STRING_FIELD_LEN];
 
-    struct SendToOwners_compare
-    {
-        bool operator()(std::pair<int64_t, std::string> p1, std::pair<int64_t, std::string> p2) const
-        {
-            if (p1.first == p2.first) return p1.second > p2.second; // reverse check
-            else return p1.first < p2.first;
-        }
-    };
+    /** Checks whether a pointer to the payload is past it's last position. */
+    bool isOverrun(const char* p);
+
+    /**
+     * Payload parsing
+     */
+    bool interpret_TransactionType();
+    bool interpret_SimpleSend();
+    bool interpret_SendToOwners();
+    bool interpret_TradeOffer();
+    bool interpret_MetaDExTrade();
+    bool interpret_MetaDExCancelPrice();
+    bool interpret_MetaDExCancelPair();
+    bool interpret_MetaDExCancelEcosystem();
+    bool interpret_AcceptOfferBTC();
+    bool interpret_CreatePropertyFixed();
+    bool interpret_CreatePropertyVariable();
+    bool interpret_CloseCrowdsale();
+    bool interpret_CreatePropertyManaged();
+    bool interpret_GrantTokens();
+    bool interpret_RevokeTokens();
+    bool interpret_ChangeIssuer();
+    bool interpret_Alert();
+
+    /**
+     * Logic and "effects"
+     */
+    int logicMath_SimpleSend();
+    int logicMath_SendToOwners();
+    int logicMath_TradeOffer(CMPOffer*);
+    int logicMath_MetaDEx(CMPMetaDEx*);
+    int logicMath_AcceptOffer_BTC();
+    int logicMath_MetaDExTrade();
+    int logicMath_MetaDExCancelPrice();
+    int logicMath_MetaDExCancelPair();
+    int logicMath_MetaDExCancelEcosystem();
+    int logicMath_CreatePropertyFixed();
+    int logicMath_CreatePropertyVariable();
+    int logicMath_CloseCrowdsale();
+    int logicMath_CreatePropertyManaged();
+    int logicMath_GrantTokens();
+    int logicMath_RevokeTokens();
+    int logicMath_ChangeIssuer();
+    int logicMath_Alert();
+    int logicMath_SavingsMark();
+    int logicMath_SavingsCompromised();
 
 public:
+    //! DEx and MetaDEx action values
     enum ActionTypes
     {
         INVALID = 0,
@@ -117,19 +152,21 @@ public:
     unsigned short getVersion() const { return version; }
     unsigned short getPropertyType() const { return prop_type; }
     uint64_t getFeePaid() const { return tx_fee_paid; }
-
     std::string getSender() const { return sender; }
     std::string getReceiver() const { return receiver; }
-
     std::string getPayload() const { return HexStr(pkt, pkt + pkt_size); }
-
     uint64_t getAmount() const { return nValue; }
     uint64_t getNewAmount() const { return nNewValue; }
-
     std::string getSPName() const { return name; }
+    std::string getAlertString() const { return alertString; }
 
-    void printInfo(FILE *fp);
+    /** Creates a new CMPTransaction object. */
+    CMPTransaction()
+    {
+        SetNull();
+    }
 
+    /** Resets and clears all values. */
     void SetNull()
     {
         txid = 0;
@@ -168,67 +205,7 @@ public:
         memset(&alertString, 0, sizeof(alertString));
     }
 
-    CMPTransaction()
-    {
-        SetNull();
-    }
-
-    /**
-     * Payload parsing
-     */
-    bool interpret_Transaction();
-    bool interpret_TransactionType();
-    bool interpret_SimpleSend();
-    bool interpret_SendToOwners();
-    bool interpret_TradeOffer();
-    bool interpret_MetaDExTrade();
-    bool interpret_MetaDExCancelPrice();
-    bool interpret_MetaDExCancelPair();
-    bool interpret_MetaDExCancelEcosystem();
-    bool interpret_AcceptOfferBTC();
-    bool interpret_CreatePropertyFixed();
-    bool interpret_CreatePropertyVariable();
-    bool interpret_CloseCrowdsale();
-    bool interpret_CreatePropertyMananged();
-    bool interpret_GrantTokens();
-    bool interpret_RevokeTokens();
-    bool interpret_ChangeIssuer();
-    bool interpret_Alert();
-
-    /**
-     * Logic and "effects"
-     */
-    int logicMath_SimpleSend();
-    int logicMath_SendToOwners();
-    int logicMath_TradeOffer(CMPOffer*);
-    int logicMath_MetaDEx(CMPMetaDEx*);
-    int logicMath_AcceptOffer_BTC();
-    int logicMath_MetaDExTrade();
-    int logicMath_MetaDExCancelPrice();
-    int logicMath_MetaDExCancelPair();
-    int logicMath_MetaDExCancelEcosystem();
-    int logicMath_CreatePropertyFixed();
-    int logicMath_CreatePropertyVariable();
-    int logicMath_CloseCrowdsale();
-    int logicMath_CreatePropertyMananged();
-    int logicMath_GrantTokens();
-    int logicMath_RevokeTokens();
-    int logicMath_ChangeIssuer();
-    int logicMath_Alert();
-    int logicMath_SavingsMark();
-    int logicMath_SavingsCompromised();
-
-    int interpretPacket(CMPOffer* obj_o = NULL, CMPMetaDEx* mdex_o = NULL);
-    bool isOverrun(const char* p, unsigned int line);
-
-    // Deprecated
-    int step1();
-    int step2_Alert(std::string* new_global_alert_message);
-    int step2_Value();
-    const char* step2_SmartProperty(int& error_code);
-    int step3_sp_fixed(const char* p);
-    int step3_sp_variable(const char* p);
-
+    /** Sets the given values. */
     void Set(const uint256& t, int b, unsigned int idx, int64_t bt)
     {
         txid = t;
@@ -237,6 +214,7 @@ public:
         blockTime = bt;
     }
 
+    /** Sets the given values. */
     void Set(const std::string& s, const std::string& r, uint64_t n, const uint256& t,
         int b, unsigned int idx, unsigned char *p, unsigned int size, int fMultisig, uint64_t txf)
     {
@@ -253,26 +231,26 @@ public:
         memcpy(&pkt, p, pkt_size);
     }
 
+    /** Parses the packet or payload. */
+    bool interpret_Transaction();
+
+    /** Interprets the payload and executes the logic. */
+    int interpretPacket(CMPOffer* obj_o = NULL, CMPMetaDEx* mdex_o = NULL);
+
+    /** Compares transaction objects based on block height and position within the block. */
     bool operator<(const CMPTransaction& other) const
     {
-        // sort by block # & additionally the tx index within the block
         if (block != other.block) return block > other.block;
         return tx_idx > other.tx_idx;
     }
 
-    void print()
-    {
-        PrintToLog("BLOCK: %d =txid: %s =fee: %s\n", block, txid.GetHex(), FormatDivisibleMP(tx_fee_paid));
-        PrintToLog("sender: %s ; receiver: %s\n", sender, receiver);
-
-        if (0 < pkt_size) {
-            PrintToLog("pkt: %s\n", HexStr(pkt, pkt_size + pkt, false));
-        } else {
-            // error ?
-        }
-    }
+    // Deprecated
+    int step1();
+    int step2_Value();
+    const char* step2_SmartProperty(int& error_code);
 };
 
+/** Parses a transaction and populates the CMPTransaction object. */
 int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction& mptx, unsigned int nTime=0);
 
 

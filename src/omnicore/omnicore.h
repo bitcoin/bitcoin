@@ -322,7 +322,7 @@ CMPTally* getTally(const std::string& address);
 
 int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
 
-char *c_strMasterProtocolTXType(int i);
+std::string c_strMasterProtocolTXType(uint16_t txType);
 
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
