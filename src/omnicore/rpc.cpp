@@ -955,7 +955,7 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "gettradehistory_MP\n"
+            "gettradehistoryforpair_MP\n"
             "\nAllows user to retrieve MetaDEx trade history for the specified market\n"
             "\nArguments:\n"
             "1. propertyid           (number, required) the first side of the pair\n"
