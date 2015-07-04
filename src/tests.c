@@ -737,6 +737,15 @@ void run_field_convert(void) {
     CHECK(memcmp(&fes2, &fes, sizeof(fes)) == 0);
 }
 
+int fe_memcmp(const secp256k1_fe_t *a, const secp256k1_fe_t *b) {
+    secp256k1_fe_t t = *b;
+#ifdef VERIFY
+    t.magnitude = a->magnitude;
+    t.normalized = a->normalized;
+#endif
+    return memcmp(a, &t, sizeof(secp256k1_fe_t));
+}
+
 void run_field_misc(void) {
     secp256k1_fe_t x;
     secp256k1_fe_t y;
@@ -757,12 +766,13 @@ void run_field_misc(void) {
         q = x;
         secp256k1_fe_cmov(&x, &z, 0);
         secp256k1_fe_cmov(&x, &x, 1);
-        CHECK(memcmp(&x, &z, sizeof(x)) != 0);
-        CHECK(memcmp(&x, &q, sizeof(x)) == 0);
+        CHECK(fe_memcmp(&x, &z) != 0);
+        CHECK(fe_memcmp(&x, &q) == 0);
         secp256k1_fe_cmov(&q, &z, 1);
-        CHECK(memcmp(&q, &z, sizeof(q)) == 0);
+        CHECK(fe_memcmp(&q, &z) == 0);
         /* Test storage conversion and conditional moves. */
-        secp256k1_fe_normalize(&z);
+        secp256k1_fe_normalize_var(&x);
+        secp256k1_fe_normalize_var(&z);
         CHECK(!secp256k1_fe_equal_var(&x, &z));
         secp256k1_fe_to_storage(&xs, &x);
         secp256k1_fe_to_storage(&ys, &y);

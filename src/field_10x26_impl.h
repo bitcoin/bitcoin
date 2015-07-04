@@ -1083,8 +1083,10 @@ static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe_t *r, const secp256k
     r->n[8] = (r->n[8] & mask0) | (a->n[8] & mask1);
     r->n[9] = (r->n[9] & mask0) | (a->n[9] & mask1);
 #ifdef VERIFY
-    r->magnitude = (r->magnitude & mask0) | (a->magnitude & mask1);
-    r->normalized = (r->normalized & mask0) | (a->normalized & mask1);
+    if (a->magnitude > r->magnitude) {
+        r->magnitude = a->magnitude;
+    }
+    r->normalized &= a->normalized;
 #endif
 }
 
