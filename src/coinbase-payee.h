@@ -69,7 +69,7 @@ public:
         mapPaidTime.clear();
     }
 
-    void BuildIndex();
+    void BuildIndex(bool bForced=false);
     void ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nTime);
     int64_t GetLastPaid(CScript& pubkey);
     void CleanUp();
