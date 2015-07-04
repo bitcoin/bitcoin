@@ -510,7 +510,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         CBudgetProposal* prop = &((*it2).second);
 
         //prop start/end should be inside this period
-        if(prop->nBlockStart <= nBlockStart && prop->nBlockEnd >= nBlockEnd) 
+        if(prop->nBlockStart <= nBlockStart && prop->nBlockEnd >= nBlockEnd && prop->GetYeas() > 10) 
         {
             if(nTotalBudget == nBudgetAllocated){
                 prop->SetAllotted(0);
