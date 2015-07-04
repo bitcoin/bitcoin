@@ -2097,7 +2097,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeConnect += nTime1 - nTimeStart;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs-1), nTimeConnect * 0.000001);
 
-    if(!IsBlockValueValid(block.vtx[0].GetValueOut(), GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, nFees))){
+    if(!IsBlockValueValid(block, GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, nFees))){
         return state.DoS(100,
                          error("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
                                block.vtx[0].GetValueOut(), GetBlockValue(pindex->pprev->nBits, pindex->pprev->nHeight, nFees)),
@@ -2943,11 +2943,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         {
             nHeight = pindexPrev->nHeight+1;
         } else { //out of order
-            BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex){
-                if(item.first == block.hashPrevBlock) {
-                    nHeight = item.second->nHeight+1;
-                }
-            }
+            BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+            if (mi != mapBlockIndex.end() && (*mi).second)
+                nHeight = (*mi).second->nHeight+1;
         }
 
         if(nHeight != 0){
@@ -3959,11 +3957,19 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_BUDGET_VOTE:
         return mapSeenMasternodeBudgetVotes.count(inv.hash);
     case MSG_BUDGET_PROPOSAL:
-        return mapSeenMasternodeBudgetProposals.count(inv.hash);
+        if(!mapSeenMasternodeBudgetProposals.count(inv.hash)){
+            return false;
+        } else {
+            return !mapSeenMasternodeBudgetProposals[inv.hash].fInvalid;
+        }
     case MSG_BUDGET_FINALIZED_VOTE:
         return mapSeenFinalizedBudgetVotes.count(inv.hash);
     case MSG_BUDGET_FINALIZED:
-        return mapSeenFinalizedBudgets.count(inv.hash);
+        if(!mapSeenFinalizedBudgets.count(inv.hash)){
+            return false;
+        } else {
+            return !mapSeenFinalizedBudgets[inv.hash].fInvalid;
+        }
     case MSG_MASTERNODE_ANNOUNCE:
         return mapSeenMasternodeBroadcast.count(inv.hash);
     case MSG_MASTERNODE_PING:

@@ -1470,8 +1470,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         return false;
     }
     if(!fEnableDarksend) {
-        if(fDebug) LogPrintf("CDarksendPool::DoAutomaticDenominating - Darksend is disabled\n");
-        strAutoDenomResult = _("Darksend is disabled.");
         return false;
     }
 
@@ -2353,7 +2351,7 @@ void ThreadCheckDarkSendPool()
         if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
 
         //try to sync the Masternode list and payment list every 5 seconds from at least 3 nodes
-        if(c % 5 == 0 && RequestedMasternodeAssets <= 2){
+        if(c % 5 == 0 && RequestedMasternodeAssets <= 5){
             bool fIsInitialDownload = IsInitialBlockDownload();
             if(!fIsInitialDownload) {
                 CBlockIndex* pindexPrev = chainActive.Tip();
@@ -2373,12 +2371,20 @@ void ThreadCheckDarkSendPool()
                                 LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
 
                                 //request full mn list only if Masternodes.dat was updated quite a long time ago
-                                mnodeman.DsegUpdate(pnode);
+                                
+                                if(RequestedMasternodeAssets == 0 || RequestedMasternodeAssets == 1){   
+                                    mnodeman.DsegUpdate(pnode);
+                                    pnode->PushMessage("getsporks"); //get current network sporks
+                                }
 
-                                pnode->PushMessage("mnget"); //sync payees
-                                uint256 n = 0;
-                                pnode->PushMessage("mnvs", n); //sync masternode votes
-                                pnode->PushMessage("getsporks"); //get current network sporks
+                                if(RequestedMasternodeAssets == 2 || RequestedMasternodeAssets == 3)
+                                    pnode->PushMessage("mnget"); //sync payees
+                                
+                                if(RequestedMasternodeAssets == 4 || RequestedMasternodeAssets == 5){
+                                    uint256 n = 0;
+                                    pnode->PushMessage("mnvs", n); //sync masternode votes
+                                }
+
                                 RequestedMasternodeAssets++;
                                 break;
                             }

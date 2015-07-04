@@ -19,23 +19,37 @@ CMasternodePayments masternodePayments;
 map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
 map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
-bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue){
+bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
-    if(budget.sizeFinalized() == 0 && budget.sizeProposals() == 0) { //there is no budget data to use to check anything
+    int nHeight = 0;
+    if(pindexPrev->GetBlockHash() == block.hashPrevBlock)
+    {
+        nHeight = pindexPrev->nHeight+1;
+    } else { //out of order
+        BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+        if (mi != mapBlockIndex.end() && (*mi).second)
+            nHeight = (*mi).second->nHeight+1;
+    }
+
+    if(nHeight == 0){
+        LogPrintf("IsBlockValueValid() : WARNING: Couldn't find previous block");
+    }
+
+    if((budget.sizeFinalized() == 0 && budget.sizeProposals() == 0) || nHeight == 0) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max 100 per budgeting
-        if((pindexPrev->nHeight+1) % GetBudgetPaymentCycleBlocks() < 100){
+        if(nHeight % GetBudgetPaymentCycleBlocks() < 100){
             return true;
         } else {
-            if(nBlockValue > nExpectedValue) return false;
+            if(block.vtx[0].GetValueOut() > nExpectedValue) return false;
         }
     } else { // we're synced and have data so check the budget schedule
-        if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+        if(budget.IsBudgetPaymentBlock(nHeight)){
             //the value of the block is evaluated in CheckBlock
             return true;
         } else {
-            if(nBlockValue > nExpectedValue) return false;
+            if(block.vtx[0].GetValueOut() > nExpectedValue) return false;
         }
     }
 
@@ -254,13 +268,11 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
-    LogPrintf("CMasternodePayments::AddWinningMasternode - getblockhash\n");
     uint256 blockHash = 0;
     if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
         return false;
     }
 
-    LogPrintf("CMasternodePayments::AddWinningMasternode - checkhash\n");
     if(mapMasternodePayeeVotes.count(winnerIn.GetHash())){
        return false;
     }
@@ -268,14 +280,12 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     mapMasternodePayeeVotes[winnerIn.GetHash()] = winnerIn;
 
     if(!mapMasternodeBlocks.count(winnerIn.nBlockHeight)){
-       LogPrintf("CMasternodePayments::AddWinningMasternode - create new blockpayee obj\n");
        CMasternodeBlockPayees blockPayees(winnerIn.nBlockHeight);
        mapMasternodeBlocks[winnerIn.nBlockHeight] = blockPayees;
     }
 
     int n = 1;
     if(IsReferenceNode(winnerIn.vinMasternode)) n = 100;
-    LogPrintf("CMasternodePayments::AddWinningMasternode - AddPayee - %d\n", n);
     mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee, n);
 
     return true;
