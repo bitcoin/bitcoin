@@ -968,8 +968,6 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
             + HelpExampleRpc("gettradehistoryforpair_OMNI", "1 12")
         );
 
-    Array response;
-
     // obtain property identifiers for pair & check valid parameters
     uint32_t propertyIdSideA = ParsePropertyId(params[0]);
     uint32_t propertyIdSideB = ParsePropertyId(params[1]);
@@ -980,8 +978,9 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
     RequireDifferentIds(propertyIdSideA, propertyIdSideB);
 
     // request pair trade history from trade db
-    t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response);
-
+    Array response;
+    LOCK(cs_tally);
+    t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response, count);
     return response;
 }
 
