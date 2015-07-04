@@ -371,13 +371,13 @@ void MetaDExDialog::UpdateOffers()
                     unitPriceStr = obj.displayUnitPrice();
                     if (useBuyList) {
                         if (obj.getDesProperty()==global_metadex_market) {
-                            available += obj.getAmountDesired();
-                            total += obj.getAmountForSale();
+                            available += obj.getAmountToFill();
+                            total += obj.getAmountRemaining();
                         }
                     } else {
                         if ( ((testeco) && (obj.getDesProperty() == 2)) || ((!testeco) && (obj.getDesProperty() == 1)) ) {
-                            available += obj.getAmountForSale();
-                            total += obj.getAmountDesired();
+                            available += obj.getAmountRemaining();
+                            total += obj.getAmountToFill();
                         }
                     }
                 }
