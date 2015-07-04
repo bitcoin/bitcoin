@@ -2938,9 +2938,25 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev != NULL)
     {
-        if(!IsBlockPayeeValid(block.vtx[0], pindexPrev->nHeight+1))
+        int nHeight = 0;
+        if(pindexPrev->GetBlockHash() == block.hashPrevBlock)
         {
-            return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+            nHeight = pindexPrev->nHeight+1;
+        } else { //out of order
+            BOOST_FOREACH(const PAIRTYPE(const uint256, CBlockIndex*)& item, mapBlockIndex){
+                if(item.first == block.hashPrevBlock) {
+                    nHeight = item.second->nHeight+1;
+                }
+            }
+        }
+
+        if(nHeight != 0){
+            if(!IsBlockPayeeValid(block.vtx[0], nHeight))
+            {
+                return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+            }
+        } else {
+            LogPrintf("CheckBlock() : WARNING: Couldn't find previous block, skipping IsBlockPayeeValid()");
         }
     }
 

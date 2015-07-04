@@ -98,7 +98,6 @@ public:
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
 
-
     void CleanUp();
 
     int64_t GetTotalBudget(int nHeight);
@@ -324,9 +323,7 @@ public:
         READWRITE(nTime);
         READWRITE(vchSig);
     }
-
-
-
+    
 };
 
 //
