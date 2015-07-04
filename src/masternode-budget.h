@@ -385,6 +385,8 @@ public:
     void SetAllotted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
     int64_t GetAllotted() {return nAlloted;}
 
+    void CleanAndRemove();
+
     uint256 GetHash(){
         /*
             vin is not included on purpose
