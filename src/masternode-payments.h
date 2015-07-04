@@ -29,7 +29,7 @@ void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDa
 bool IsReferenceNode(CTxIn& vin);
 bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight);
 std::string GetRequiredPaymentsString(int64_t nBlockHeight);
-bool IsBlockValueValid(int64_t nBlockValue, int64_t nExpectedValue);
+bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue);
 void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
 class CMasternodePayee

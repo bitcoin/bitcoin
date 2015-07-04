@@ -28,6 +28,7 @@ class CTxBudgetPayment;
 #define VOTE_ABSTAIN  0
 #define VOTE_YES      1
 #define VOTE_NO       2
+#define VOTE_PROP_INC       15 //how many "votes" to count for a new proposal
 
 extern std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
 extern std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
@@ -35,7 +36,6 @@ extern std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
 extern std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
 
 extern CBudgetManager budget;
-
 void DumpBudgets();
 
 //Amount of blocks in a months period of time (using 2.6 minutes per)
@@ -115,6 +115,10 @@ public:
     std::string GetRequiredPaymentsString(int64_t nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
+    //Have masternodes resign proposals with masternodes that have went inactive
+    void ResignInvalidProposals();
+    void CheckSignatureValidity();
+
     void Clear(){
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();
@@ -185,7 +189,7 @@ public:
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
 
-    void Clean(CFinalizedBudgetVote& vote);
+    void CleanAndRemove();
     void AddOrUpdateVote(CFinalizedBudgetVote& vote);
     double GetScore();
     bool HasMinimumRequiredSupport();
@@ -265,6 +269,7 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
+    bool fInvalid;
     CFinalizedBudgetBroadcast();
     CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
     CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn);
@@ -385,6 +390,8 @@ public:
     void SetAllotted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
     int64_t GetAllotted() {return nAlloted;}
 
+    void CleanAndRemove();
+
     uint256 GetHash(){
         /*
             vin is not included on purpose
@@ -431,6 +438,7 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
+    bool fInvalid;
     CBudgetProposalBroadcast();
     CBudgetProposalBroadcast(const CBudgetProposal& other);
     CBudgetProposalBroadcast(CTxIn vinIn, std::string strProposalNameIn, std::string strURL, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn);

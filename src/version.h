@@ -24,6 +24,9 @@ static const int MIN_PEER_PROTO_VERSION = 70066;
 //! minimum peer version accepted by DarksendPool
 static const int MIN_POOL_PEER_PROTO_VERSION = 70083;
 
+//! minimum peer version for masternode budgets
+static const int MIN_BUDGET_PEER_PROTO_VERSION = 70083;
+
 //! minimum peer version that can receive masternode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version

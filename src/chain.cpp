@@ -25,7 +25,7 @@ void CChain::SetTip(CBlockIndex *pindex) {
     }
 
     //recalculate the coinbase payee cache if needed
-    if(nChainSwitch > 0) {
+    if(nChainSwitch > 1) {
         coinbasePayee.BuildIndex(true);
     }
 }

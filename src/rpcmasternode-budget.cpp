@@ -256,6 +256,15 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
             bObj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
             bObj.push_back(Pair("TotalBudgetAlloted",  nTotalAllotted));
+
+            std::string strError = "";
+            bObj.push_back(Pair("IsValid",  prop->IsValid(strError)));
+            bObj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
+
+            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {   
+                bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
+            }
+
             resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
         }
 
@@ -289,6 +298,15 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
             bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
             bObj.push_back(Pair("Amount",  (int64_t)prop->GetAmount()));
+
+            std::string strError = "";
+            bObj.push_back(Pair("IsValid",  prop->IsValid(strError)));
+            bObj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
+
+            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {   
+                bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
+            }
+
             resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
         }
 

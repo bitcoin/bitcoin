@@ -29,7 +29,7 @@
 #define MASTERNODE_MIN_MNB_SECONDS             (5*60)
 #define MASTERNODE_PING_SECONDS                (15*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
-#define MASTERNODE_REMOVAL_SECONDS             (24*60*60)
+#define MASTERNODE_REMOVAL_SECONDS             (75*60)
 
 using namespace std;
 
@@ -77,7 +77,7 @@ public:
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
     int nVotedTimes;
-
+    
     CMasternode();
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& other);
