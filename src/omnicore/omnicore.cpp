@@ -3820,7 +3820,7 @@ bool CompareTradePair(const std::pair<int64_t, Object>& firstJSONObj, const std:
 }
 
 // obtains an array of matching trades with pricing and volume details for a pair sorted by blocknumber
-void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, Array& responseArray)
+void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyIdSideB, Array& responseArray, uint64_t count)
 {
   if (!pdb) return;
   leveldb::Iterator* it = NewIterator();
@@ -3896,8 +3896,11 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
 
   // sort the response most recent first before adding to the array
   std::sort(vecResponse.begin(), vecResponse.end(), CompareTradePair);
-  for (std::vector<std::pair<int64_t,Object> >::iterator it = vecResponse.begin(); it != vecResponse.end(); ++it) {
+  uint64_t processed = 0;
+  for (std::vector<std::pair<int64_t,Object> >::reverse_iterator it = vecResponse.rbegin(); it != vecResponse.rend(); ++it) {
       responseArray.push_back(it->second);
+      processed++;
+      if (processed >= count) break;
   }
   delete it;
 }
