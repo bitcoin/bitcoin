@@ -461,7 +461,7 @@ static void secp256k1_gej_add_zinv_var(secp256k1_gej_t *r, const secp256k1_gej_t
 
 
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
-    /* Operations: 7 mul, 5 sqr, 5 normalize, 17 mul_int/add/negate/cmov */
+    /* Operations: 7 mul, 5 sqr, 4 normalize, 17 mul_int/add/negate/cmov */
     static const secp256k1_fe_t fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_fe_t zz, u1, u2, s1, s2, z, t, tt, m, n, q, rr;
     secp256k1_fe_t m_alt, rr_alt;
@@ -557,23 +557,21 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      * so M^3 * Malt is either Malt^4 (which is computed by squaring), or
      * zero (which is "computed" by cmov). So the cost is one squaring
      * versus two multiplications. */
-    secp256k1_fe_sqr(&n, &n);                           /* n = M^3 * Malt (1) */
-    secp256k1_fe_cmov(&n, &m, degenerate);
-    secp256k1_fe_normalize_weak(&n);
+    secp256k1_fe_sqr(&n, &n);
+    secp256k1_fe_cmov(&n, &m, degenerate);              /* n = M^3 * Malt (2) */
     secp256k1_fe_sqr(&t, &rr_alt);                      /* t = Ralt^2 (1) */
     secp256k1_fe_mul(&r->z, &m_alt, &z);                /* r->z = Malt*Z (1) */
     infinity = secp256k1_fe_normalizes_to_zero(&r->z) * (1 - a->infinity);
     secp256k1_fe_mul_int(&r->z, 2);                     /* r->z = Z3 = 2*Malt*Z (2) */
-    r->x = t;                                           /* r->x = Ralt^2 (1) */
     secp256k1_fe_negate(&q, &q, 1);                     /* q = -Q (2) */
-    secp256k1_fe_add(&r->x, &q);                        /* r->x = Ralt^2-Q (3) */
-    secp256k1_fe_normalize(&r->x);
-    t = r->x;
+    secp256k1_fe_add(&t, &q);                           /* t = Ralt^2-Q (3) */
+    secp256k1_fe_normalize_weak(&t);
+    r->x = t;                                           /* r->x = Ralt^2-Q (1) */
     secp256k1_fe_mul_int(&t, 2);                        /* t = 2*x3 (2) */
-    secp256k1_fe_add(&t, &q);                           /* t = 2*x3 - Q: (8) */
+    secp256k1_fe_add(&t, &q);                           /* t = 2*x3 - Q: (4) */
     secp256k1_fe_mul(&t, &t, &rr_alt);                  /* t = Ralt*(2*x3 - Q) (1) */
-    secp256k1_fe_add(&t, &n);                           /* t = Ralt*(2*x3 - Q) + M^3*Malt (2) */
-    secp256k1_fe_negate(&r->y, &t, 2);                  /* r->y = Ralt*(Q - 2x3) - M^3*Malt (3) */
+    secp256k1_fe_add(&t, &n);                           /* t = Ralt*(2*x3 - Q) + M^3*Malt (3) */
+    secp256k1_fe_negate(&r->y, &t, 3);                  /* r->y = Ralt*(Q - 2x3) - M^3*Malt (4) */
     secp256k1_fe_normalize_weak(&r->y);
     secp256k1_fe_mul_int(&r->x, 4);                     /* r->x = X3 = 4*(Ralt^2-Q) */
     secp256k1_fe_mul_int(&r->y, 4);                     /* r->y = Y3 = 4*Ralt*(Q - 2x3) - 4*M^3*Malt (4) */
