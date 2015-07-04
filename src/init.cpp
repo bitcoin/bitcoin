@@ -120,7 +120,7 @@ void StartShutdown()
 }
 bool ShutdownRequested()
 {
-    return fRequestShutdown;
+    return fRequestShutdown || fRestartRequested;
 }
 
 class CCoinsViewErrorCatcher : public CCoinsViewBacked
@@ -149,6 +149,7 @@ static CCoinsViewErrorCatcher *pcoinscatcher = NULL;
 /** Preparing steps before shutting down or restarting the wallet */
 void PrepareShutdown()
 {
+    fRequestShutdown = true; // Needed when we shutdown the wallet
     fRestartRequested = true; // Needed when we restart the wallet
     LogPrintf("%s: In progress...\n", __func__);
     static CCriticalSection cs_Shutdown;
@@ -828,8 +829,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
-    if (!lock.try_lock())
+
+    // Wait maximum 10 seconds if an old wallet is still running. Avoids lockup during restart
+    if (!lock.timed_lock(boost::get_system_time() + boost::posix_time::seconds(10)))
         return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Dash Core is probably already running."), strDataDir));
+
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
