@@ -197,9 +197,30 @@ int TXHistoryDialog::PopulateHistoryMap()
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
         uint256 txHash = it->second;
 
-        // check historyMap, if this tx exists don't waste resources doing anymore work on it
+        // check historyMap, if this tx exists and isn't pending don't waste resources doing anymore work on it
         HistoryMap::iterator hIter = txHistoryMap.find(txHash);
-        if (hIter != txHistoryMap.end()) continue;
+        if (hIter != txHistoryMap.end()) { // the tx is in historyMap, if it's a confirmed transaction skip it
+            HistoryTXObject *temphtxo = &(hIter->second);
+            if (temphtxo->blockHeight != 0) continue;
+            {
+                LOCK(cs_pending);
+                PendingMap::iterator pending_it = my_pending.find(txHash);
+                if (pending_it != my_pending.end()) continue; // transaction is still pending, do nothing
+            }
+
+            // pending transaction has confirmed, remove temp pending object from map and allow it to be readded as an Omni transaction
+            txHistoryMap.erase(hIter);
+            ui->txHistoryTable->setSortingEnabled(false); // disable sorting temporarily while we update the table (leaving enabled gives unexpected results)
+            QAbstractItemModel* historyAbstractModel = ui->txHistoryTable->model(); // get a model to work with
+            QSortFilterProxyModel historyProxy;
+            historyProxy.setSourceModel(historyAbstractModel);
+            historyProxy.setFilterKeyColumn(0);
+            historyProxy.setFilterFixedString(QString::fromStdString(txHash.GetHex()));
+            QModelIndex rowIndex = historyProxy.mapToSource(historyProxy.index(0,0)); // map to the row in the actual table
+            if(rowIndex.isValid()) ui->txHistoryTable->removeRow(rowIndex.row()); // delete the pending tx row, it'll be readded as a proper confirmed transaction
+            ui->txHistoryTable->setSortingEnabled(true); // re-enable sorting
+        }
+
         CTransaction wtx;
         uint256 blockHash = 0;
         if (!GetTransaction(txHash, wtx, blockHash, true)) continue;
