@@ -49,18 +49,23 @@ Value send_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() < 4 || params.size() > 6)
         throw runtime_error(
             "send_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"redeemaddress\" \"referenceamount\" )\n"
-            "\nCreates and broadcasts a simple send for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "ToAddress     : the address to send to\n"
-            "PropertyID    : the id of the smart property to send\n"
-            "Amount        : the amount to send\n"
-            "RedeemAddress : (optional) the address that can redeem class B data outputs. Defaults to FromAddress\n"
-            "ReferenceAmount:(optional) the number of satoshis to send to the recipient in the reference output\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nCreate and broadcast a simple send transaction.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, required) the address of the receiver\n"
+            "3. propertyid           (number, required) the identifier of the tokens to send\n"
+            "4. amount               (string, required) the amount to send\n"
+            "5. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "6. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored send_OMNI 1FromAddress 1ToAddress PropertyID Amount\n"
+            + HelpExampleCli("send_OMNI", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"100.0\"")
+            + HelpExampleRpc("send_OMNI", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"100.0\"")
         );
 
     // obtain parameters & info
@@ -103,19 +108,25 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 7)
         throw runtime_error(
             "senddexsell_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
-            "\nPlace or cancel a sell offer on the BTC/MSC layer of the distributed exchange.\n"
-            "\nParameters:\n"
-            "FromAddress         : the address to send this transaction from\n"
-            "PropertyIDForSale   : the property to list for sale (must be MSC or TMSC)\n"
-            "AmountForSale       : the amount to list for sale\n"
-            "AmountDesired       : the amount of BTC desired\n"
-            "PaymentWindow       : the time limit a buyer has to pay following a successful accept\n"
-            "MinAcceptFee        : the mining fee a buyer has to pay to accept\n"
-            "Action              : the action to take: (1) new, (2) update, (3) cancel \n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nPlace, update or cancel a sell offer on the traditional distributed MSC/BTC exchange.\n"
+
+            "\nArguments:\n"
+
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be MSC or TMSC)\n"
+            "3. amountforsale        (string, required) the amount of tokens to list for sale\n"
+            "4. amountdesired        (string, required) the amount of bitcoins desired\n"
+            "5. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accept\n"
+            "6. minacceptfee         (string, required) a minimum mining fee a buyer has to pay to accept the offer\n"
+            "7. action               (number, required) the action to take: (1) new, (2) update, (3) cancel\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored senddexsell_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" \"AmountDesired\" PaymentWindow MinAcceptFee Action\n"
+            + HelpExampleCli("senddexsell_OMNI", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
+            + HelpExampleRpc("senddexsell_OMNI", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
         );
 
     // obtain parameters & info
@@ -184,18 +195,23 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "senddexaccept_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\"\n"
-            "\nCreates and broadcasts an accept offer for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "ToAddress     : the address to send the accept to\n"
-            "PropertyID    : the id of the property to accept\n"
-            "Amount        : the amount to accept\n"
-            "Override      : override minimum accept fee and payment window checks (use with caution!)\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+            "senddexaccept_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\" ( override )\n"
+
+            "\nCreate and broadcast an accept offer for the specified token and amount.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, required) the address of the seller\n"
+            "3. propertyid           (number, required) the identifier of the token to purchase\n"
+            "4. amount               (string, required) the amount to accept\n"
+            "5. override             (boolean, optional) override minimum accept fee and payment window checks (use with caution!)\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored senddexaccept_OMNI 1FromAddress 1ToAddress PropertyID Amount\n"
+            + HelpExampleCli("senddexaccept_OMNI", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
+            + HelpExampleRpc("senddexaccept_OMNI", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")    
         );
 
     // obtain parameters & info
@@ -259,27 +275,32 @@ Value sendissuancecrowdsale_OMNI(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 14)
         throw runtime_error(
-            "sendissuancecrowdsale_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" propertyiddesired tokensperunit deadline earlybonus issuerpercentage\n"
-            "\nCreates and broadcasts a property creation transaction (crowdsale issuance) with the supplied details.\n"
-            "\nParameters:\n"
-            "FromAddress        : the address to send from\n"
-            "Ecosystem          : the ecosystem to create the property - (1) main, (2) test\n"
-            "Type               : the type of tokens - (1) indivisible, (2) divisible\n"
-            "PreviousID         : the previous property id (0 for a new property)\n"
-            "Category           : The category for the new property (max 255 chars)\n"
-            "Subcategory        : the subcategory for the new property (max 255 chars)\n"
-            "Name               : the name of the new property (max 255 chars)\n"
-            "URL                : the URL for the new property (max 255 chars)\n"
-            "Data               : additional data for the new property (max 255 chars)\n"
-            "PropertyIDDesired  : the property that will be used to purchase from the crowdsale\n"
-            "TokensPerUnit      : the amount of tokens per unit crowdfunded\n"
-            "Deadline           : the deadline for the crowdsale\n"
-            "EarlyBonus         : the early bonus %/week\n"
-            "IssuerPercentage   : the percentage of crowdfunded tokens that will be additionally created for the issuer\n"
+            "sendissuancecrowdsale_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" propertyiddesired tokensperunit deadline ( earlybonus issuerpercentage )\n"
+
+            "Create new tokens as crowdsale."
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. ecosystem            (string, required) the ecosystem to create the tokens in: (1) main, (2) test\n"
+            "3. type                 (number, required) the type of the tokens to create: (1) indivisible, (2) divisible\n"
+            "4. previousid           (number, optional) an identifier of a predecessor token (0 for new crowdsales)\n"
+            "5. category             (string, optional) a category for the new tokens (can be \"\")\n"
+            "6. subcategory          (string, optional) a subcategory for the new tokens  (can be \"\")\n"
+            "7. name                 (string, required) the name of the new tokens to create\n"
+            "8. url                  (string, optional) an URL for further information about the new tokens (can be \"\")\n"
+            "9. data                 (string, optional) a description for the new tokens (can be \"\")\n"
+            "10. propertyiddesired   (number, required) the identifier of a token eligible to participate in the crowdsale\n"
+            "11. tokensperunit       (string, required) the amount of tokens granted per unit invested in the crowdsale\n"
+            "12. deadline            (number, required) the deadline of the crowdsale as Unix timestamp\n"
+            "13. earlybonus          (number, required) an early bird bonus for participants in percent per week (default: 0)\n"
+            "14. issuerpercentage    (number, required) a percentage of tokens that will be granted to the issuer (default: 0)\n"
+
             "\nResult:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendissuancecrowdsale_OMNI \"1FromAddress\" Ecosystem Type PreviousID \"Category\" \"Subcategory\" \"Name\" \"URL\" \"Data\" PropertyIDDesired TokensPerUnit Deadline EarlyBonus IssuerPercentage\n"
+            + HelpExampleCli("sendissuancecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 1 \"100\" 1483228800 30 2")
+            + HelpExampleRpc("sendissuancecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 1, \"100\", 1483228800, 30, 2")
         );
 
     // obtain parameters & info
@@ -328,22 +349,27 @@ Value sendissuancefixed_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 10)
         throw runtime_error(
             "sendissuancefixed_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" \"amount\"\n"
-            "\nCreates and broadcasts a property creation transaction (fixed issuance) with the supplied details.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "Ecosystem     : the ecosystem to create the property - (1) main, (2) test\n"
-            "Type          : the type of tokens - (1) indivisible, (2) divisible\n"
-            "PreviousID    : the previous property id (0 for a new property)\n"
-            "Category      : The category for the new property (max 255 chars)\n"
-            "Subcategory   : the subcategory for the new property (max 255 chars)\n"
-            "Name          : the name of the new property (max 255 chars)\n"
-            "URL           : the URL for the new property (max 255 chars)\n"
-            "Data          : additional data for the new property (max 255 chars)\n"
-            "Amount        : the number of tokens to create\n"
+
+            "\nCreate new tokens with fixed supply.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. ecosystem            (string, required) the ecosystem to create the tokens in: (1) main, (2) test\n"
+            "3. type                 (number, required) the type of the tokens to create: (1) indivisible, (2) divisible\n"
+            "4. previousid           (number, optional) an identifier of a predecessor token (0 for new tokens)\n"
+            "5. category             (string, optional) a category for the new tokens (can be \"\")\n"
+            "6. subcategory          (string, optional) a subcategory for the new tokens  (can be \"\")\n"
+            "7. name                 (string, required) the name of the new tokens to create\n"
+            "8. url                  (string, optional) an URL for further information about the new tokens (can be \"\")\n"
+            "9. data                 (string, optional) a description for the new tokens (can be \"\")\n"
+            "10. amount              (string, required) the number of tokens to create\n"
+
             "\nResult:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendissuancefixed_OMNI \"1FromAddress\" Ecosystem Type PreviousID \"Category\" \"Subcategory\" \"Name\" \"URL\" \"Data\" \"Amount\"\n"
+            + HelpExampleCli("sendissuancefixed_OMNI", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
+            + HelpExampleRpc("sendissuancefixed_OMNI", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
         );
 
     // obtain parameters & info
@@ -387,21 +413,26 @@ Value sendissuancemanaged_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 9)
         throw runtime_error(
             "sendissuancemanual_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\"\n"
-            "\nCreates and broadcasts a property creation transaction (managed issuance) with the supplied details.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "Ecosystem     : the ecosystem to create the property - (1) main, (2) test\n"
-            "Type          : the type of tokens - (1) indivisible, (2) divisible\n"
-            "PreviousID    : the previous property id (0 for a new property)\n"
-            "Category      : The category for the new property (max 255 chars)\n"
-            "Subcategory   : the subcategory for the new property (max 255 chars)\n"
-            "Name          : the name of the new property (max 255 chars)\n"
-            "URL           : the URL for the new property (max 255 chars)\n"
-            "Data          : additional data for the new property (max 255 chars)\n"
+
+            "\nCreate new tokens with manageable supply.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. ecosystem            (string, required) the ecosystem to create the tokens in: (1) main, (2) test\n"
+            "3. type                 (number, required) the type of the tokens to create: (1) indivisible, (2) divisible\n"
+            "4. previousid           (number, optional) an identifier of a predecessor token (0 for new tokens)\n"
+            "5. category             (string, optional) a category for the new tokens (can be \"\")\n"
+            "6. subcategory          (string, optional) a subcategory for the new tokens  (can be \"\")\n"
+            "7. name                 (string, required) the name of the new tokens to create\n"
+            "8. url                  (string, optional) an URL for further information about the new tokens (can be \"\")\n"
+            "9. data                 (string, optional) a description for the new tokens (can be \"\")\n"
+
             "\nResult:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendissuancemanual_OMNI \"1FromAddress\" Ecosystem Type PreviousID \"Category\" \"Subcategory\" \"Name\" \"URL\" \"Data\"\n"
+            + HelpExampleCli("sendissuancemanaged_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
+            + HelpExampleRpc("sendissuancemanaged_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
         );
 
     // obtain parameters & info
@@ -444,16 +475,21 @@ Value sendsto_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
             "sendsto_OMNI \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" )\n"
-            "\nCreates and broadcasts a send-to-owners transaction for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send from\n"
-            "PropertyID    : the id of the smart property to send\n"
-            "Amount (string): the amount to send\n"
-            "RedeemAddress : (optional) the address that can redeem class B data outputs. Defaults to FromAddress\n"
+
+            "\nCreate and broadcast a send-to-owners transaction.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress       (string, required) the address to send from\n"
+            "2. propertyid        (number, required) the identifier of the tokens to distribute\n"
+            "3. amount            (string, required) the amount to distribute\n"
+            "4. redeemaddress     (string, optional) an address that can spent the transaction dust (sender by default)\n"
+
             "\nResult:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendsto_OMNI 1FromAddress PropertyID Amount\n"
+            + HelpExampleCli("sendsto_OMNI", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 3 \"5000\"")
+            + HelpExampleRpc("sendsto_OMNI", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 3, \"5000\"")
         );
 
     // obtain parameters & info
@@ -492,18 +528,22 @@ Value sendgrant_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
             "sendgrant_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"memo\" )\n"
-            "\nCreates and broadcasts a token grant for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send this transaction from\n"
-            "ToAddress     : the address to send the granted tokens to (defaults to FromAddress)\n"
-            "PropertyID    : the id of the smart property to grant\n"
-            "Amount        : the amount to grant\n"
-            "Memo          : (optional) attach a text note to this transaction (max 255 chars)\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nIssue or grant new units of managed tokens.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, optional) the receiver of the tokens (sender by default)\n"
+            "3. propertyid           (number, required) the identifier of the tokens to grant\n"
+            "4. amount               (string, required) the amount of tokens to create\n"
+            "5. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendgrant_OMNI \"1FromAddress\" \"1ToAddress\" PropertyID Amount\n"
-            ">omnicored sendgrant_OMNI \"1FromAddress\" \"\" PropertyID Amount \"Grant tokens to the sending address and attach this note\"\n"
+            + HelpExampleCli("sendgrant_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"7000\"")
+            + HelpExampleRpc("sendgrant_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"7000\"")
         );
 
     // obtain parameters & info
@@ -544,17 +584,21 @@ Value sendrevoke_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
             "sendrevoke_OMNI \"fromaddress\" propertyid \"amount\" ( \"memo\" )\n"
-            "\nCreates and broadcasts a token revoke for a given amount and currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send the transaction from\n"
-            "PropertyID    : the id of the smart property to revoke\n"
-            "Amount        : the amount to revoke\n"
-            "Memo          : (optional) attach a text note to this transaction (max 255 chars)\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nRevoke units of managed tokens.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to revoke the tokens from\n"
+            "2. propertyid           (number, required) the identifier of the tokens to revoke\n"
+            "3. amount               (string, required) the amount of tokens to revoke\n"
+            "4. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendrevoke_OMNI \"1FromAddress\" PropertyID Amount\n"
-            ">omnicored sendrevoke_OMNI \"1FromAddress\" PropertyID Amount \"Revoke tokens from the sending address and attach this note\"\n"
+            + HelpExampleCli("sendrevoke_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"100\"")
+            + HelpExampleRpc("sendrevoke_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"100\"")
         );
 
     // obtain parameters & info
@@ -595,14 +639,19 @@ Value sendclosecrowdsale_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 2)
         throw runtime_error(
             "sendclosecrowdsale_OMNI \"fromaddress\" propertyid\n"
-            "\nCreates and broadcasts a close crowdsale message for a given currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send this transaction from\n"
-            "PropertyID    : the id of the smart property to close the crowdsale\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nManually close a crowdsale.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address associated with the crowdsale to close\n"
+            "2. propertyid           (number, required) the identifier of the crowdsale to close\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendclosecrowdsale_OMNI \"1FromAddress\" PropertyID\n"
+            + HelpExampleCli("sendclosecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 70")
+            + HelpExampleRpc("sendclosecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 70")
         );
 
     // obtain parameters & info
@@ -704,17 +753,22 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 5)
         throw runtime_error(
             "sendtrade_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
+
             "\nPlace a trade offer on the distributed token exchange.\n"
-            "\nParameters:\n"
-            "FromAddress         : the address to send this transaction from\n"
-            "PropertyIDForSale   : the property to list for sale\n"
-            "AmountForSale       : the amount to list for sale\n"
-            "PropertyIDDesired   : the property desired\n"
-            "AmountDesired       : the amount desired\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to trade with\n"
+            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale\n"
+            "3. amountforsale        (string, required) the amount of tokens to list for sale\n"
+            "4. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
+            "5. amountdesired        (string, required) the amount of tokens desired in exchange\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendtrade_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\"\n"
+            + HelpExampleCli("sendtrade_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"250.0\" 1 \"10.0\"")
+            + HelpExampleRpc("sendtrade_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"250.0\", 1, \"10.0\"")
         );
 
     // obtain parameters & info
@@ -758,17 +812,22 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 5)
         throw runtime_error(
             "sendcanceltradesbyprice_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
-            "\nCancel offers on the distributed token exchange with the given price.\n"
-            "\nParameters:\n"
-            "FromAddress         : the address to send this transaction from\n"
-            "PropertyIDForSale   : the property listed for sale\n"
-            "AmountForSale       : the amount listed for sale\n"
-            "PropertyIDDesired   : the property desired\n"
-            "AmountDesired       : the desired amount\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nCancel offers on the distributed token exchange with the specified price.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to trade with\n"
+            "2. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
+            "3. amountforsale        (string, required) the amount of tokens to listed for sale\n"
+            "4. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
+            "5. amountdesired        (string, required) the amount of tokens desired in exchange\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendcanceltradesbyprice_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\"\n"
+            + HelpExampleCli("sendcanceltradesbyprice_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"100.0\" 1 \"5.0\"")
+            + HelpExampleRpc("sendcanceltradesbyprice_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"100.0\", 1, \"5.0\"")
         );
 
     // obtain parameters & info
@@ -812,15 +871,20 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 3)
         throw runtime_error(
             "sendcanceltradesbypair_OMNI \"fromaddress\" propertyidforsale propertiddesired\n"
-            "\nCancel offers on the distributed token exchange with the given currency pair.\n"
-            "\nParameters:\n"
-            "FromAddress         : the address to send this transaction from\n"
-            "PropertyIDForSale   : the property listed for sale\n"
-            "PropertyIDDesired   : the property desired\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nCancel all offers on the distributed token exchange with the given currency pair.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to trade with\n"
+            "2. propertyidforsale    (number, required) the identifier of the tokens listed for sale\n"
+            "3. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendcanceltradesbypair_OMNI \"1FromAddress\" PropertyIDForSale \"AmountForSale\" PropertyIDDesired \"AmountDesired\"\n"
+            + HelpExampleCli("sendcanceltradesbypair_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1 31")
+            + HelpExampleRpc("sendcanceltradesbypair_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1, 31")
         );
 
     // obtain parameters & info
@@ -862,14 +926,19 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 2)
         throw runtime_error(
             "sendcancelalltrades_OMNI \"fromaddress\" ecosystem\n"
-            "\nCancel all offers on the distributed token exchange in the given ecosystem.\n"
-            "\nParameters:\n"
-            "FromAddress         : the address to send this transaction from\n"
-            "Ecosystem           : the ecosystem of the offers to cancel - (0) both, (1) main, (2) test\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nCancel all offers on the distributed token exchange.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to trade with\n"
+            "2. ecosystem            (number, required) the ecosystem of the offers to cancel: (0) both, (1) main, (2) test\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendcancelalltrades_OMNI \"1FromAddress\" Ecosystem\n"
+            + HelpExampleCli("sendcancelalltrades_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1")
+            + HelpExampleRpc("sendcancelalltrades_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1")
         );
 
     // obtain parameters & info
@@ -906,15 +975,20 @@ Value sendchangeissuer_OMNI(const Array& params, bool fHelp)
     if (fHelp || params.size() != 3)
         throw runtime_error(
             "sendchangeissuer_OMNI \"fromaddress\" \"toaddress\" propertyid\n"
-            "\nCreates and broadcasts a change issuer message for a given currency/property ID.\n"
-            "\nParameters:\n"
-            "FromAddress   : the address to send this transaction from\n"
-            "ToAddress     : the address to transfer administrative control for this property to\n"
-            "PropertyID    : the id of the smart property to change issuer\n"
-            "Result:\n"
-            "txid    (string) The transaction ID of the sent transaction\n"
+
+            "\nChange the issuer on record of the given tokens.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address associated with the tokens\n"
+            "2. toaddress            (string, required) the address to transfer administrative control to\n"
+            "3. propertyid           (number, required) the identifier of the tokens\n"
+
+            "\nResult:\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
+
             "\nExamples:\n"
-            ">omnicored sendchangeissuer_OMNI \"1FromAddress\" \"1ToAddress\" PropertyID\n"
+            + HelpExampleCli("sendtrade_OMNI", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
+            + HelpExampleRpc("sendtrade_OMNI", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
         );
 
     // obtain parameters & info
@@ -962,7 +1036,7 @@ Value sendalert_OMNI(const Array& params, bool fHelp)
             "5. versioncheck      (number, required) the client version to target\n"
             "6. message           (string, required) the user-faced alert message\n"
             "\nResult:\n"
-            "txid          (string) The transaction hash of the transaction\n"
+            "\"hash\"               (string) the hex-encoded transaction hash\n"
             "\nExamples\n"
             + HelpExampleCli("sendalert_OMNI", "")
             + HelpExampleRpc("sendalert_OMNI", "")

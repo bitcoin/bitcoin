@@ -122,7 +122,7 @@ public:
   unsigned char getBlockTimeLimit() { return blocktimelimit; }
   unsigned int getProperty() const { return property; }
 
-  int getAcceptBlock()  { return block; }
+  int getAcceptBlock() const { return block; }
 
   CMPAccept(uint64_t a, int b, unsigned char blt, unsigned int c, uint64_t o, uint64_t btc, const uint256 &txid):accept_amount_remaining(a),blocktimelimit(blt),property(c),
    offer_amount_original(o), BTC_desired_original(btc),offer_txid(txid),block(b)
