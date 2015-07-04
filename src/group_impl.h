@@ -463,7 +463,7 @@ static void secp256k1_gej_add_zinv_var(secp256k1_gej_t *r, const secp256k1_gej_t
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
     /* Operations: 7 mul, 5 sqr, 4 normalize, 17 mul_int/add/negate/cmov */
     static const secp256k1_fe_t fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
-    secp256k1_fe_t zz, u1, u2, s1, s2, z, t, tt, m, n, q, rr;
+    secp256k1_fe_t zz, u1, u2, s1, s2, t, tt, m, n, q, rr;
     secp256k1_fe_t m_alt, rr_alt;
     int infinity, degenerate;
     VERIFY_CHECK(!b->infinity);
@@ -525,7 +525,6 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     s1 = a->y; secp256k1_fe_normalize_weak(&s1);        /* s1 = S1 = Y1*Z2^3 (1) */
     secp256k1_fe_mul(&s2, &b->y, &zz);                  /* s2 = Y2*Z2^2 (1) */
     secp256k1_fe_mul(&s2, &s2, &a->z);                  /* s2 = S2 = Y2*Z1^3 (1) */
-    z = a->z;                                           /* z = Z = Z1*Z2 (8) */
     t = u1; secp256k1_fe_add(&t, &u2);                  /* t = T = U1+U2 (2) */
     m = s1; secp256k1_fe_add(&m, &s2);                  /* m = M = S1+S2 (2) */
     secp256k1_fe_sqr(&rr, &t);                          /* rr = T^2 (1) */
@@ -560,7 +559,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     secp256k1_fe_sqr(&n, &n);
     secp256k1_fe_cmov(&n, &m, degenerate);              /* n = M^3 * Malt (2) */
     secp256k1_fe_sqr(&t, &rr_alt);                      /* t = Ralt^2 (1) */
-    secp256k1_fe_mul(&r->z, &m_alt, &z);                /* r->z = Malt*Z (1) */
+    secp256k1_fe_mul(&r->z, &a->z, &m_alt);             /* r->z = Malt*Z (1) */
     infinity = secp256k1_fe_normalizes_to_zero(&r->z) * (1 - a->infinity);
     secp256k1_fe_mul_int(&r->z, 2);                     /* r->z = Z3 = 2*Malt*Z (2) */
     secp256k1_fe_negate(&q, &q, 1);                     /* q = -Q (2) */
