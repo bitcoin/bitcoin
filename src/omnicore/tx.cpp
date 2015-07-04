@@ -1076,8 +1076,8 @@ int CMPTransaction::logicMath_MetaDExTrade()
 
     // ------------------------------------------
 
+    t_tradelistdb->recordNewTrade(txid, sender, property, desired_property, block, tx_idx);
     int rc = MetaDEx_ADD(sender, property, nNewValue, block, desired_property, desired_value, txid, tx_idx);
-
     return rc;
 }
 

@@ -292,7 +292,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             if (msc_debug_metadex1) PrintToLog("==== TRADED !!! %u=%s\n", NewReturn, getTradeReturnType(NewReturn));
 
             // record the trade in MPTradeList
-            t_tradelistdb->recordTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
+            t_tradelistdb->recordMatchedTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
                 pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGot, buyer_amountGot, pnew->getBlock());
 
             if (msc_debug_metadex1) PrintToLog("++ erased old: %s\n", offerIt->ToString());
@@ -354,6 +354,14 @@ rational_t CMPMetaDEx::inversePrice() const
     rational_t inversePrice(int128_t(0));
     if (amount_desired) inversePrice = rational_t(amount_forsale, amount_desired);
     return inversePrice;
+}
+
+int64_t CMPMetaDEx::getAmountToFill() const
+{
+    rational_t rAmountNeededToFill = amount_remaining * unitPrice();
+    // round up to ensure that the amount we present will actually result in buying all available tokens
+    int64_t iAmountNeededToFill = xToInt64(rAmountNeededToFill, true);
+    return iAmountNeededToFill;
 }
 
 int64_t CMPMetaDEx::getBlockTime() const
@@ -665,6 +673,29 @@ bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)
         }
     }
     return false;
+}
+
+// returns a string denoting the status of a trade
+// to save doing a second levelDB iteration if already done in calling function, pass in optional totalSold & totalBought
+std::string mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold, int64_t totalReceived)
+{
+    if (totalSold == -1 || totalReceived == -1) {
+        // can only skip calling getMatchingTrades if these values were supplied (ie != default value of -1)
+        Array tradeArray;
+        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+    }
+    bool orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
+    bool partialFilled = false;
+    bool filled = false;
+    string statusText = "unknown";
+    if (totalSold > 0) partialFilled = true;
+    if (totalSold >= amountForSale) filled = true;
+    if (!orderOpen && !partialFilled) statusText = "cancelled"; // offers that are closed but not filled must have been cancelled
+    if (!orderOpen && partialFilled) statusText = "cancelled part filled"; // offers that are closed but not filled must have been cancelled
+    if (!orderOpen && filled) statusText = "filled"; // filled offers are closed
+    if (orderOpen && !partialFilled) statusText = "open"; // offer exists but no matches yet
+    if (orderOpen && partialFilled) statusText = "open part filled"; // offer exists, some matches but not filled yet
+    return statusText;
 }
 
 void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)

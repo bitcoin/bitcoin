@@ -16,6 +16,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"
 #include "omnicore/rpc.h"
+#include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 
@@ -362,7 +363,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         bool divisibleForSale = false;
         bool divisibleDesired = false;
         Array tradeArray;
-        int64_t totalBought = 0;
+        int64_t totalReceived = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
         bool valid = false;
@@ -380,7 +381,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
                 amountDesired = temp_metadexoffer.getAmountDesired();
                 {
                     LOCK(cs_tally);
-                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+                    t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
                     orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
                 }
             }
@@ -407,9 +408,9 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         displayText += getTokenLabel(propertyIdDesired);
         std::string displayIn = "";
         std::string displayOut = "-";
-        if(divisibleDesired) { displayIn += FormatDivisibleShortMP(totalBought); } else { displayIn += FormatIndivisibleMP(totalBought); }
+        if(divisibleDesired) { displayIn += FormatDivisibleShortMP(totalReceived); } else { displayIn += FormatIndivisibleMP(totalReceived); }
         if(divisibleForSale) { displayOut += FormatDivisibleShortMP(totalSold); } else { displayOut += FormatIndivisibleMP(totalSold); }
-        if(totalBought == 0) displayIn = "0";
+        if(totalReceived == 0) displayIn = "0";
         if(totalSold == 0) displayOut = "0";
         displayIn += getTokenLabel(propertyIdDesired);
         displayOut += getTokenLabel(propertyIdForSale);
@@ -462,12 +463,12 @@ void TradeHistoryDialog::UpdateData()
         uint32_t propertyIdDesired = tmpObjTH->propertyIdDesired;
         int64_t amountForSale = tmpObjTH->amountForSale;
         Array tradeArray;
-        int64_t totalBought = 0;
+        int64_t totalReceived = 0;
         int64_t totalSold = 0;
         bool orderOpen = false;
         {
             LOCK(cs_tally);
-            t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, &tradeArray, &totalSold, &totalBought);
+            t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
             orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
         }
         // work out new status & icon
@@ -487,9 +488,9 @@ void TradeHistoryDialog::UpdateData()
         // format new amounts
         std::string displayIn = "";
         std::string displayOut = "-";
-        if (isPropertyDivisible(propertyIdDesired)) { displayIn += FormatDivisibleShortMP(totalBought); } else { displayIn += FormatIndivisibleMP(totalBought); }
+        if (isPropertyDivisible(propertyIdDesired)) { displayIn += FormatDivisibleShortMP(totalReceived); } else { displayIn += FormatIndivisibleMP(totalReceived); }
         if (isPropertyDivisible(propertyIdForSale)) { displayOut += FormatDivisibleShortMP(totalSold); } else { displayOut += FormatIndivisibleMP(totalSold); }
-        if (totalBought == 0) displayIn = "0";
+        if (totalReceived == 0) displayIn = "0";
         if (totalSold == 0) displayOut = "0";
         displayIn += getTokenLabel(propertyIdDesired);
         displayOut += getTokenLabel(propertyIdForSale);
@@ -577,54 +578,10 @@ void TradeHistoryDialog::showDetails()
             fPending = true;
         }
     }
+
     if (!fPending) {
-        int pop = populateRPCTransactionObject(txid, &txobj, "");
-        if (0<=pop) {
-            Object tradeobj;
-            CMPMetaDEx temp_metadexoffer;
-            string senderAddress;
-            unsigned int propertyId = 0;
-            CTransaction wtx;
-            uint256 blockHash = 0;
-            if (!GetTransaction(txid, wtx, blockHash, true)) { return; }
-            CMPTransaction mp_obj;
-            int parseRC = ParseTransaction(wtx, 0, 0, mp_obj);
-            if (0 <= parseRC) { //negative RC means no MP content/badly encoded TX, we shouldn't see this if TX in levelDB but check for sanity
-                if (0<=mp_obj.step1()) {
-                    senderAddress = mp_obj.getSender();
-                    if (0 == mp_obj.step2_Value()) propertyId = mp_obj.getProperty();
-                }
-            }
-            int64_t amountForSale = mp_obj.getAmount();
-
-            // obtain an array of matched trades
-            Array tradeArray, cancelArray;
-            int64_t totalBought = 0, totalSold = 0;
-            t_tradelistdb->getMatchingTrades(txid, propertyId, &tradeArray, &totalSold, &totalBought);
-
-            // obtain the status of the trade
-            bool orderOpen = false;
-            {
-                LOCK(cs_tally);
-                orderOpen = MetaDEx_isOpen(txid, propertyId);
-            }
-            bool partialFilled = false, filled = false;
-            string statusText = "unknown";
-            if (totalSold>0) partialFilled = true;
-            if (totalSold>=amountForSale) filled = true;
-            if (orderOpen) {
-                if (!partialFilled) { statusText = "open"; } else { statusText = "open part filled"; }
-            } else {
-                if (!partialFilled) { statusText = "cancelled"; } else { statusText = "cancelled part filled"; }
-                if (filled) statusText = "filled";
-            }
-            txobj.push_back(Pair("status", statusText));
-
-            // add the array
-            txobj.push_back(Pair("matches", tradeArray));
-            if((statusText == "cancelled") || (statusText == "cancelled part filled")) txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
-            strTXText = write_string(Value(txobj), true);
-        }
+        int pop = populateRPCTransactionObject(txid, txobj, "", true);
+        if (0<=pop) strTXText = write_string(Value(txobj), true);
     }
 
     if (!strTXText.empty()) {

@@ -145,6 +145,7 @@ public:
         CANCEL_EVERYTHING   = 4,
     };
 
+    uint256 getHash() const { return txid; }
     unsigned int getType() const { return type; }
     std::string getTypeString() const { return c_strMasterProtocolTXType(getType()); }
     unsigned int getProperty() const { return property; }

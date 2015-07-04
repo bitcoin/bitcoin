@@ -4,6 +4,7 @@ OMNICORE_H = \
   omnicore/dex.h \
   omnicore/encoding.h \
   omnicore/errors.h \
+  omnicore/fetchwallettx.h \
   omnicore/log.h \
   omnicore/mdex.h \
   omnicore/notifications.h \
@@ -14,6 +15,7 @@ OMNICORE_H = \
   omnicore/rpc.h \
   omnicore/rpcrequirements.h \
   omnicore/rpctx.h \
+  omnicore/rpctxobject.h \
   omnicore/rpcvalues.h \
   omnicore/script.h \
   omnicore/sp.h \
@@ -29,6 +31,7 @@ OMNICORE_CPP = \
   omnicore/createpayload.cpp \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \
+  omnicore/fetchwallettx.cpp \
   omnicore/log.cpp \
   omnicore/mdex.cpp \
   omnicore/notifications.cpp \
@@ -39,6 +42,7 @@ OMNICORE_CPP = \
   omnicore/rpc.cpp \
   omnicore/rpcrequirements.cpp \
   omnicore/rpctx.cpp \
+  omnicore/rpctxobject.cpp \
   omnicore/rpcvalues.cpp \
   omnicore/script.cpp \
   omnicore/sp.cpp \

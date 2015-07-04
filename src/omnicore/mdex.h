@@ -54,6 +54,7 @@ public:
     int64_t getAmountForSale() const { return amount_forsale; }
     int64_t getAmountDesired() const { return amount_desired; }
     int64_t getAmountRemaining() const { return amount_remaining; }
+    int64_t getAmountToFill() const;
 
     void setAmountRemaining(int64_t ar, const std::string& label = "");
 
@@ -125,6 +126,7 @@ int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, uint32_t block, const std::st
 bool MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx);
 void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
 bool MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale = 0);
+std::string MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold = -1, int64_t totalReceived = -1);
 }
 
 
