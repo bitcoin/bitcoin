@@ -30,159 +30,6 @@ using boost::algorithm::token_compress_on;
 
 using namespace mastercore;
 
-// --------------------- DEPRECHIATED ------------------------
-// Please use CMPTransaction::interpret_Transaction() instead.
-// -----------------------------------------------------------
-
-// initial packet interpret step
-int CMPTransaction::step1()
-{
-  if (MIN_PAYLOAD_SIZE > pkt_size)  // class C packets could now be as small as 8 bytes
-  {
-    PrintToLog("%s() ERROR PACKET TOO SMALL; size = %d, line %d, file: %s\n", __FUNCTION__, pkt_size, __LINE__, __FILE__);
-    return -(PKT_ERROR -1);
-  }
-
-  // collect version
-  memcpy(&version, &pkt[0], 2);
-  swapByteOrder16(version);
-
-  // blank out version bytes in the packet
-  pkt[0]=0; pkt[1]=0;
-  
-  memcpy(&type, &pkt[0], 4);
-
-  swapByteOrder32(type);
-
-  string classType;
-  switch(multi) {
-      case 0:
-          classType = "A";
-      break;
-      case 1:
-          classType = "B";
-      break;
-      case 2:
-          classType = "C";
-      break;
-  }
-  PrintToLog("\t         version: %d, Class %s\n", version, classType);
-  PrintToLog("\t            type: %u (%s)\n", type, c_strMasterProtocolTXType(type));
-
-  return (type);
-}
-
-// extract Value for certain types of packets
-int CMPTransaction::step2_Value()
-{
-  memcpy(&nValue, &pkt[8], 8);
-  swapByteOrder64(nValue);
-
-  // here we are copying nValue into nNewValue to be stored into our leveldb later: MP_txlist
-  nNewValue = nValue;
-
-  memcpy(&property, &pkt[4], 4);
-  swapByteOrder32(property);
-
-  PrintToLog("\t        property: %u (%s)\n", property, strMPProperty(property));
-  PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
-
-  if (MAX_INT_8_BYTES < nValue)
-  {
-    return (PKT_ERROR -801);  // out of range
-  }
-
-  return 0;
-}
-
-// extract Smart Property data
-// RETURNS: the pointer to the next piece to be parsed
-// ERROR is returns NULL and/or sets the error_code
-const char *CMPTransaction::step2_SmartProperty(int &error_code)
-{
-const char *p = 11 + (char *)&pkt;
-std::vector<std::string>spstr;
-unsigned int i;
-unsigned int prop_id;
-
-  error_code = 0;
-
-  memcpy(&ecosystem, &pkt[4], 1);
-  PrintToLog("\t       Ecosystem: %u\n", ecosystem);
-
-  // valid values are 1 & 2
-  if ((OMNI_PROPERTY_MSC != ecosystem) && (OMNI_PROPERTY_TMSC != ecosystem))
-  {
-    error_code = (PKT_ERROR_SP -501);
-    return NULL;
-  }
-
-  prop_id = _my_sps->peekNextSPID(ecosystem);
-
-  memcpy(&prop_type, &pkt[5], 2);
-  swapByteOrder16(prop_type);
-
-  memcpy(&prev_prop_id, &pkt[7], 4);
-  swapByteOrder32(prev_prop_id);
-
-  PrintToLog("\t     Property ID: %u (%s)\n", prop_id, strMPProperty(prop_id));
-  PrintToLog("\t   Property type: %u (%s)\n", prop_type, c_strPropertyType(prop_type));
-  PrintToLog("\tPrev Property ID: %u\n", prev_prop_id);
-
-  // only 1 & 2 are valid right now
-  if ((MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type) && (MSC_PROPERTY_TYPE_DIVISIBLE != prop_type))
-  {
-    error_code = (PKT_ERROR_SP -502);
-    return NULL;
-  }
-
-  for (i = 0; i<5; i++)
-  {
-    spstr.push_back(std::string(p));
-    p += spstr.back().size() + 1;
-  }
-
-  i = 0;
-
-  memcpy(category, spstr[i].c_str(), std::min(spstr[i].length(),sizeof(category)-1)); i++;
-  memcpy(subcategory, spstr[i].c_str(), std::min(spstr[i].length(),sizeof(subcategory)-1)); i++;
-  memcpy(name, spstr[i].c_str(), std::min(spstr[i].length(),sizeof(name)-1)); i++;
-  memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(),sizeof(url)-1)); i++;
-  memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(),sizeof(data)-1)); i++;
-
-  PrintToLog("\t        Category: %s\n", category);
-  PrintToLog("\t     Subcategory: %s\n", subcategory);
-  PrintToLog("\t            Name: %s\n", name);
-  PrintToLog("\t             URL: %s\n", url);
-  PrintToLog("\t            Data: %s\n", data);
-
-  if (!IsTransactionTypeAllowed(block, prop_id, type, version))
-  {
-    error_code = (PKT_ERROR_SP -503);
-    return NULL;
-  }
-
-  // name can not be NULL
-  if ('\0' == name[0])
-  {
-    error_code = (PKT_ERROR_SP -505);
-    return NULL;
-  }
-
-  if (!p) error_code = (PKT_ERROR_SP -510);
-
-  if (isOverrun(p))
-  {
-    PrintToLog("%s(OVERRUN !!! line=%u): pkt_size= %u\n", __FUNCTION__, __LINE__, pkt_size);
-    error_code = (PKT_ERROR_SP -800);
-    return NULL;
-  }
-
-  return p;
-}
-
-// -----------------------------------------------------------
-
 /** Returns a label for the given transaction type. */
 std::string mastercore::c_strMasterProtocolTXType(uint16_t txType)
 {
@@ -871,7 +718,7 @@ int CMPTransaction::logicMath_SendToOwners()
 }
 
 /** Tx 20 */
-int CMPTransaction::logicMath_TradeOffer(CMPOffer* obj_o)
+int CMPTransaction::logicMath_TradeOffer()
 {
     if (!IsTransactionTypeAllowed(block, property, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
@@ -894,11 +741,6 @@ int CMPTransaction::logicMath_TradeOffer(CMPOffer* obj_o)
     }
 
     // ------------------------------------------
-
-    if (obj_o) {
-        obj_o->Set(amount_desired, min_fee, blocktimelimit, subaction);
-        return PKT_RETURNED_OBJECT;
-    }
 
     int rc = PKT_ERROR_TRADEOFFER;
 
@@ -995,17 +837,6 @@ int CMPTransaction::logicMath_AcceptOffer_BTC()
     int rc = DEx_acceptCreate(sender, receiver, property, nValue, block, tx_fee_paid, &nNewValue);
 
     return rc;
-}
-
-// TODO: depreciate
-int CMPTransaction::logicMath_MetaDEx(CMPMetaDEx* mdex_o)
-{
-    if (mdex_o) {
-        mdex_o->Set(sender, block, property, nValue, desired_property, desired_value, txid, tx_idx, action);
-        return PKT_RETURNED_OBJECT;
-    }
-
-    return PKT_ERROR_METADEX -100;
 }
 
 /** Tx 25 */
