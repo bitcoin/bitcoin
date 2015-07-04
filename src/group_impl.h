@@ -461,7 +461,7 @@ static void secp256k1_gej_add_zinv_var(secp256k1_gej_t *r, const secp256k1_gej_t
 
 
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
-    /* Operations: 7 mul, 5 sqr, 4 normalize, 17 mul_int/add/negate/cmov */
+    /* Operations: 7 mul, 5 sqr, 4 normalize, 22 mul_int/add/negate/cmov */
     static const secp256k1_fe_t fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_fe_t zz, u1, u2, s1, s2, t, tt, m, n, q, rr;
     secp256k1_fe_t m_alt, rr_alt;
@@ -528,8 +528,9 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     t = u1; secp256k1_fe_add(&t, &u2);                  /* t = T = U1+U2 (2) */
     m = s1; secp256k1_fe_add(&m, &s2);                  /* m = M = S1+S2 (2) */
     secp256k1_fe_sqr(&rr, &t);                          /* rr = T^2 (1) */
-    secp256k1_fe_mul(&tt, &u1, &u2); secp256k1_fe_negate(&tt, &tt, 1); /* tt = -U1*U2 (2) */
-    secp256k1_fe_add(&rr, &tt);                                        /* rr = R = T^2-U1*U2 (3) */
+    secp256k1_fe_negate(&m_alt, &u2, 1);                /* m = -X2*Z1^2 */
+    secp256k1_fe_mul(&tt, &u1, &m_alt);                 /* tt = -U1*U2 (2) */
+    secp256k1_fe_add(&rr, &tt);                         /* rr = R = T^2-U1*U2 (3) */
     /** If lambda = R/M = 0/0 we have a problem (except in the "trivial"
      *  case that Z = z1z2 = 0, and this is special-cased later on). */
     degenerate = secp256k1_fe_normalizes_to_zero(&m) &
@@ -541,7 +542,6 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      * so we set R/M equal to this. */
     secp256k1_fe_negate(&rr_alt, &s2, 1);   /* rr = -Y2*Z1^3  */
     secp256k1_fe_add(&rr_alt, &s1);         /* rr = Y1*Z2^3 - Y2*Z1^3 */
-    secp256k1_fe_negate(&m_alt, &u2, 1);    /* m = -X2*Z1^2 */
     secp256k1_fe_add(&m_alt, &u1);          /* m = X1*Z2^2 - X2*Z1^2 */
 
     secp256k1_fe_cmov(&rr_alt, &rr, !degenerate);
