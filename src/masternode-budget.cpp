@@ -510,7 +510,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         CBudgetProposal* prop = &((*it2).second);
 
         //prop start/end should be inside this period
-        if(prop->nBlockStart <= nBlockStart && prop->nBlockEnd >= nBlockEnd && prop->GetYeas() > 10) 
+        if(prop->nBlockStart <= nBlockStart && prop->nBlockEnd >= nBlockEnd && prop->GetYeas()-prop->GetNays() > mnodeman.CountEnabled()/10) 
         {
             if(nTotalBudget == nBudgetAllocated){
                 prop->SetAllotted(0);
@@ -922,10 +922,15 @@ bool CBudgetProposal::IsValid(std::string& strError)
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) {strError = "Tip is NULL"; return true;}
 
+    if(GetYeas()+GetNays() < -(mnodeman.CountEnabled()/10)){
+         strError = "Active removal";
+         return false;
+    }
+
     //if proposal doesn't gain traction within 2 weeks, remove it
     // nTime not being saved correctly
     // if(nTime + (60*60*24*2) < GetAdjustedTime()) {
-    //     if(GetYeas() < 10) {
+    //     if(GetYeas()-GetNays() < (mnodeman.CountEnabled()/10)) {
     //         strError = "Not enough support";
     //         return false;
     //     }
