@@ -169,11 +169,14 @@ void DumpCoinbasePayees()
     LogPrintf("Coinbase payee dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-void CCoinbasePayee::BuildIndex()
+void CCoinbasePayee::BuildIndex(bool bForced)
 {
-    if(mapPaidTime.size() > 0) {
+    if(mapPaidTime.size() > 0 && !bForced) {
         LogPrintf("CCoinbasePayee::BuildIndex - coinbase cache exists, skipping BuildIndex\n");
         return;
+    } else if(bForced) {
+        LogPrintf("CCoinbasePayee::BuildIndex - Rebuilding coinbase cache\n");
+        mapPaidTime.clear();
     }
 
     //scan last 30 days worth of blocks, run processBlockCoinbaseTX for each

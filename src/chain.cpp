@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
+#include "coinbase-payee.h"
 
 using namespace std;
 
@@ -15,10 +16,17 @@ void CChain::SetTip(CBlockIndex *pindex) {
         vChain.clear();
         return;
     }
+    int nChainSwitch = 0;
     vChain.resize(pindex->nHeight + 1);
     while (pindex && vChain[pindex->nHeight] != pindex) {
         vChain[pindex->nHeight] = pindex;
         pindex = pindex->pprev;
+        nChainSwitch++;
+    }
+
+    //recalculate the coinbase payee cache if needed
+    if(nChainSwitch > 0) {
+        coinbasePayee.BuildIndex(true);
     }
 }
 
