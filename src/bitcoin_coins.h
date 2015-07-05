@@ -92,6 +92,29 @@ public:
     	ClearUnspendable();
     }
 
+    //This constructor has only one usage. NB it must NOT be used for anything else!
+    //1. To create an object that can be compared with equalsForBlockCompressedAttributes
+    Bitcoin_CCoins(const Bitcoin_CTransactionCompressed &tx, int nHeightIn) : fCoinBase(tx.IsCoinBase()), nHeight(nHeightIn), nVersion(tx.nVersion) {
+        if(tx.IsCreatedFromBlock()) {
+        	BOOST_FOREACH(const CTxOut & txout, tx.vout) {
+        		vout.push_back(Bitcoin_CTxOut(txout.nValue, 0, txout.scriptPubKey, 0));
+        	}
+        } else {
+        	//Add dummy Bitcoin_CTxOut to use for comparison
+			for (unsigned int i = 0; i < tx.voutSpendable.size(); i++) {
+				CScript dummyScript;
+				if(tx.voutSpendable[i]) {
+					dummyScript << OP_NOP;
+				} else {
+					dummyScript << OP_RETURN;
+				}
+				vout.push_back(Bitcoin_CTxOut(0, 0, dummyScript, -1));
+			}
+        }
+
+        ClearUnspendable();
+    }
+
     bool equalsForBlockAttributes(const Bitcoin_CCoins &b) {
          // Empty Bitcoin_CCoins objects are always equal.
          if (IsPruned() && b.IsPruned()) {
@@ -119,6 +142,25 @@ public:
      	return true;
     }
 
+    bool equalsForBlockCompressedAttributes(const Bitcoin_CCoins &b) {
+        // Empty Bitcoin_CCoins objects are always equal.
+        if (IsPruned() && b.IsPruned()) {
+            return true;
+        }
+
+        if (fCoinBase != b.fCoinBase ||
+               nHeight != b.nHeight ||
+               nVersion != b.nVersion) {
+       	 return false;
+        }
+
+         if(vout.size() != b.vout.size()) {
+        	 return false;
+         }
+
+     	return true;
+    }
+
     // empty constructor
     Bitcoin_CCoins() : fCoinBase(false), vout(0), nHeight(0), nVersion(0) { }
 
@@ -133,20 +175,20 @@ public:
 
     	ClearUnspendable();
     }
-    void ActivateClaimable(const Bitcoin_CTransaction& tx, const ClaimSum& claimSum) {
+    void ActivateClaimable(const Bitcoin_CTransactionCompressed& tx, const ClaimSum& claimSum) {
 		for (unsigned int i = 0; i < vout.size(); i++) {
 			Bitcoin_CTxOut & txout = vout[i];
 
 			const int64_t nValue = txout.nValueOriginal;
 			const int64_t nValueClaimable = ReduceByFraction(nValue, claimSum.nValueClaimableSum, claimSum.nValueOriginalSum);
-			assert((nValueClaimable >= 0 && nValueClaimable <= nValue) || tx.vout[i].scriptPubKey.IsUnspendable());
+			assert((nValueClaimable >= 0 && nValueClaimable <= nValue) || !tx.voutSpendable[i]);
 
 			txout.nValueClaimable = nValueClaimable;
 		}
 
     	ClearUnspendable();
     }
-    void ActivateClaimableCoinbase(const Bitcoin_CTransaction& tx, const int64_t nTotalReduceFees, const int64_t& nTotalValueOut) {
+    void ActivateClaimableCoinbase(const Bitcoin_CTransactionCompressed& tx, const int64_t nTotalReduceFees, const int64_t& nTotalValueOut) {
 		for (unsigned int i = 0; i < vout.size(); i++) {
 			Bitcoin_CTxOut & txout = vout[i];
 
@@ -156,7 +198,7 @@ public:
 			if(nValue > nFractionReducedFee) {
 				nValueClaimable = nValue - nFractionReducedFee;
 			}
-			assert((nValueClaimable >= 0 && nValueClaimable <= nValue) || tx.vout[i].scriptPubKey.IsUnspendable());
+			assert((nValueClaimable >= 0 && nValueClaimable <= nValue) || !tx.voutSpendable[i]);
 
 			txout.nValueClaimable = nValueClaimable;
 		}
@@ -462,7 +504,7 @@ public:
         @return	Sum of value of all inputs (scriptSigs)
      */
     int64_t Bitcoin_GetValueIn(const Bitcoin_CTransaction& tx);
-    void Claim_GetValueIn(const Bitcoin_CTransaction& tx, ClaimSum& claimSum);
+    void Claim_GetValueIn(const Bitcoin_CTransactionCompressed& tx, ClaimSum& claimSum);
     int64_t Claim_GetValueIn(const Credits_CTransaction& tx);
 
     // Check whether all prevouts of the transaction are present in the UTXO set represented by this view

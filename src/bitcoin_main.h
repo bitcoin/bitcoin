@@ -169,7 +169,8 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &tx, uint2
 /** Find the best known block, and make it the tip of the block chain */
 bool Bitcoin_ActivateBestChain(CValidationState &state);
 /** Trim all old block files + undo files up to this block */
-bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo);
+bool Bitcoin_TrimBlockHistory();
+bool Bitcoin_TrimCompressedBlockHistory(CValidationState &state);
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
 bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
 int64_t Bitcoin_GetBlockValue(int nHeight, int64_t nFees);
@@ -429,14 +430,14 @@ bool Bitcoin_ReadBlockFromDisk(Bitcoin_CBlock& block, const Bitcoin_CBlockIndex*
 /** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
 bool Bitcoin_DeleteBlockUndoFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
 bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins,  bool updateUndo, bool* pfClean = NULL);
-bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos, bool* pfClean = NULL);
+bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlockCompressed& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
 /** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
 bool Bitcoin_WriteBlockUndosToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
 bool Bitcoin_WriteChainState(CValidationState &state);
 bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, bool fJustCheck);
-bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
+bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlockCompressed& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcoin_AddToBlockIndex(Bitcoin_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
@@ -671,55 +672,6 @@ public:
     void print() const
     {
         LogPrintf("%s\n", ToString());
-    }
-};
-
-class Bitcoin_CTransactionCompressed
-{
-public:
-	uint256 txHash;
-    std::vector<COutPoint> vin;
-
-    Bitcoin_CTransactionCompressed()
-    {
-        SetNull();
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(txHash);
-        READWRITE(vin);
-    )
-
-    void SetNull()
-    {
-    	txHash = uint256(0);
-        vin.clear();
-    }
-};
-
-class Bitcoin_CBlockCompressed
-{
-public:
-    std::vector<Bitcoin_CTransactionCompressed> vtx;
-
-    //Memory only, must be set on creation
-	uint256 blockHash;
-
-    Bitcoin_CBlockCompressed()
-    {
-        SetNull();
-    }
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(vtx);
-    )
-
-    void SetNull()
-    {
-    	blockHash = uint256(0);
-        vtx.clear();
     }
 };
 

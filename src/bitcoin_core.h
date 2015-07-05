@@ -261,6 +261,92 @@ public:
     void print() const;
 };
 
+class Bitcoin_CTransactionCompressed
+{
+public:
+    static const int CURRENT_VERSION=1;
+    int nVersion;
+	uint256 txHash;
+    int64_t valueOut;
+    std::vector<COutPoint> vin;
+    //Only holds info whether the out is spendable or not. 0 == unspendable, 1 == spendable
+    std::vector<int> voutSpendable;
+
+    //Memory only
+    bool isCoinBase;
+   std::vector<CTxOut> vout;
+    bool isCreatedFromBlock;
+
+    Bitcoin_CTransactionCompressed(const Bitcoin_CTransaction &tx, bool isCoinBaseIn)
+    {
+        SetNull();
+
+		txHash = tx.GetHash();
+		valueOut = tx.GetValueOut();
+		isCoinBase = isCoinBaseIn;
+		for (unsigned int j = 0; j < tx.vin.size(); j++) {
+			vin.push_back(tx.vin[j].prevout);
+		}
+		for (unsigned int j = 0; j < tx.vout.size(); j++) {
+			voutSpendable.push_back(tx.vout[j].scriptPubKey.IsUnspendable() ? 0 : 1);
+			vout.push_back(tx.vout[j]);
+		}
+		isCreatedFromBlock = true;
+    }
+
+    Bitcoin_CTransactionCompressed()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(txHash);
+        READWRITE(valueOut);
+        READWRITE(vin);
+        READWRITE(voutSpendable);
+    )
+
+    void SetNull()
+    {
+        nVersion = Bitcoin_CTransaction::CURRENT_VERSION;
+    	txHash = uint256(0);
+        valueOut = 0;
+        vin.clear();
+        voutSpendable.clear();
+        isCoinBase = false;
+        vout.clear();
+        isCreatedFromBlock = false;
+    }
+
+    const uint256& GetHash() const {
+    	return txHash;
+    }
+
+    bool IsCoinBase() const {
+    	return isCoinBase;
+    }
+
+    bool IsCreatedFromBlock() const {
+    	return isCreatedFromBlock;
+    }
+
+    int64_t GetValueOut() const {
+    	return valueOut;
+    }
+
+    bool HasSpendable() const {
+        BOOST_FOREACH(const int& spendable, voutSpendable) {
+        	if(spendable) {
+        		return true;
+        	}
+        }
+        return false;
+    }
+};
+
 /** wrapper for CTxOut that provides a more compact serialization */
 class Bitcoin_CTxOutCompressor
 {
@@ -465,6 +551,46 @@ public:
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
     void print() const;
+};
+
+class Bitcoin_CBlockCompressed
+{
+public:
+    std::vector<Bitcoin_CTransactionCompressed> vtx;
+
+    //Memory only, must be set on creation
+	uint256 blockHash;
+
+	Bitcoin_CBlockCompressed(const Bitcoin_CBlock &block)
+    {
+        SetNull();
+
+        for (unsigned int i = 0; i < block.vtx.size(); i++) {
+    		vtx.push_back(Bitcoin_CTransactionCompressed(block.vtx[i], i == 0));
+    	}
+        blockHash = block.GetHash();
+    }
+
+    Bitcoin_CBlockCompressed()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(vtx);
+    )
+
+    void SetNull()
+    {
+    	blockHash = uint256(0);
+        vtx.clear();
+    }
+
+    uint256 GetHash() const
+    {
+        return blockHash;
+    }
 };
 
 #endif

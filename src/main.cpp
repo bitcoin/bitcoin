@@ -2504,22 +2504,8 @@ bool static Bitcredit_ConnectTip(CValidationState &state, Credits_CBlockIndex *p
     // Update chainActive & related variables.
     Bitcredit_UpdateTip(pindexNew);
 
-    if(!fastForwardClaimState) {
-    	//Every 1000 blocks, trim the bitcoin block files
-		int trimFrequency = 1000;
-		const Credits_CBlockIndex * ptip = (Credits_CBlockIndex*) credits_chainActive.Tip();
-		if (ptip->nHeight > trimFrequency && ptip->nHeight % trimFrequency == 0) {
-			const Credits_CBlockIndex * pTrimToCreditsBlock = credits_chainActive[ptip->nHeight - trimFrequency];
-
-			std::map<uint256, Bitcoin_CBlockIndex*>::iterator mi = bitcoin_mapBlockIndex.find(pTrimToCreditsBlock->hashLinkedBitcoinBlock);
-			if (mi == bitcoin_mapBlockIndex.end()) {
-		        return state.Abort(strprintf(_("Referenced claim bitcoin block %s can not be found"), pTrimToCreditsBlock->hashLinkedBitcoinBlock.ToString()));
-		    }
-			const Bitcoin_CBlockIndex* pTrimTo = (*mi).second;
-			if (!Bitcoin_TrimBlockHistory(pTrimTo)) {
-				return error("Bitcoin: ConnectTip() : Could not trim block history!");
-			}
-		}
+	if (!Bitcoin_TrimCompressedBlockHistory(state)) {
+		return error("Bitcoin: ConnectTip() : Could not trim block history!");
     }
 
     // Tell wallet about transactions that went from mempool
