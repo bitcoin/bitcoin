@@ -25,7 +25,6 @@
 #endif
 
 #include "init.h"
-#include "main.h"
 #include "rpcserver.h"
 #include "scheduler.h"
 #include "ui_interface.h"

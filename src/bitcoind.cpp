@@ -7,7 +7,6 @@
 #include "clientversion.h"
 #include "rpcserver.h"
 #include "init.h"
-#include "main.h"
 #include "noui.h"
 #include "scheduler.h"
 #include "util.h"
