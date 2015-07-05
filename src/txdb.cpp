@@ -5,6 +5,7 @@
 
 #include "txdb.h"
 
+#include "chain.h"
 #include "chainparams.h"
 #include "hash.h"
 #include "main.h"

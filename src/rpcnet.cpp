@@ -4,6 +4,7 @@
 
 #include "rpcserver.h"
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "main.h"
 #include "net.h"
@@ -12,6 +13,7 @@
 #include "sync.h"
 #include "timedata.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/foreach.hpp>

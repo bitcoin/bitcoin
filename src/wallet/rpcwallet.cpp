@@ -5,6 +5,7 @@
 
 #include "amount.h"
 #include "base58.h"
+#include "chain.h"
 #include "core_io.h"
 #include "init.h"
 #include "main.h"

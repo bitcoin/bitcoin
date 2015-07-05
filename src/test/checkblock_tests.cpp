@@ -5,6 +5,7 @@
 #include "clientversion.h"
 #include "consensus/validation.h"
 #include "main.h"
+#include "primitives/block.h"
 #include "test/test_bitcoin.h"
 #include "utiltime.h"
 
