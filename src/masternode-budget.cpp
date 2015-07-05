@@ -1258,6 +1258,11 @@ void CFinalizedBudget::AutoCheck()
     {
         std::vector<CBudgetProposal*> props1 = budget.GetBudget();
 
+        if(props1.size() == 0) {
+            LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
+            return;
+        }
+
         for(unsigned int i = 0; i < vecProposals.size(); i++){
             if(i > props1.size()-1) {
                 LogPrintf("CFinalizedBudget::AutoCheck - Vector size mismatch, aborting\n");
