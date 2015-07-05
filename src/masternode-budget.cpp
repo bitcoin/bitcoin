@@ -465,7 +465,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
     while(it2 != mapProposals.end())
     {
-        (*it).second.CleanAndRemove();
+        (*it2).second.CleanAndRemove();
 
         CBudgetProposal* prop = &((*it2).second);
         ret.push_back(prop);        
