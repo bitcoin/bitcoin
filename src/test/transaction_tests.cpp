@@ -15,6 +15,7 @@
 #include "policy/policy.h"
 #include "script/script.h"
 #include "script/script_error.h"
+#include "utilstrencodings.h"
 
 #include <map>
 #include <string>

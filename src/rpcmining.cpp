@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
+#include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
@@ -14,7 +15,9 @@
 #include "net.h"
 #include "pow.h"
 #include "rpcserver.h"
+#include "txmempool.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "validationinterface.h"
 
 #include <stdint.h>
