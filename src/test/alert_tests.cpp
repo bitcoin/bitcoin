@@ -2,17 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//
 // Unit tests for alert system
-//
 
 #include "alert.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "clientversion.h"
 #include "data/alertTests.raw.h"
-
-#include "main.h"
+#include "main.h" // For PartitionCheck
 #include "serialize.h"
 #include "streams.h"
 #include "util.h"
