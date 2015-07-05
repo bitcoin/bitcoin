@@ -7,6 +7,7 @@
 #include "chainparams.h"
 #include "primitives/transaction.h"
 
+#include <QSettings>
 #include <QStringList>
 
 BitcoinUnits::BitcoinUnits(QObject *parent):
@@ -176,6 +177,43 @@ QString BitcoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 //
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
+
+QString BitcoinUnits::simpleFormat(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators)
+{
+    // Note: not using straight sprintf here because we do NOT want
+    // localized number formatting.
+    if(!valid(unit))
+        return QString(); // Refuse to format invalid unit
+    qint64 n = (qint64)nIn;
+    qint64 coin = factor(unit);
+    int num_decimals = decimals(unit);
+    qint64 n_abs = (n > 0 ? n : -n);
+    qint64 quotient = n_abs / coin;
+    qint64 remainder = n_abs % coin;
+    QString quotient_str = QString::number(quotient);
+    QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
+
+    if (n < 0)
+        quotient_str.insert(0, '-');
+    else if (fPlus && n > 0)
+        quotient_str.insert(0, '+');
+
+    return quotient_str + QString(".") + remainder_str;
+}
+
+QString BitcoinUnits::roundWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+{
+    QSettings settings;
+    int digits = settings.value("digits").toInt();
+    
+    QString result = simpleFormat(unit, amount, plussign);
+    double dAmount = result.toDouble();
+
+    QString rounded;
+    rounded.setNum(dAmount, 'f', digits);
+
+    return rounded + QString(" ") + name(unit);
+}
 
 QString BitcoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
