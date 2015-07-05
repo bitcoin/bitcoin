@@ -4,7 +4,6 @@
 
 #include "chain.h"
 #include "chainparams.h"
-#include "main.h"
 #include "pow.h"
 #include "random.h"
 #include "util.h"

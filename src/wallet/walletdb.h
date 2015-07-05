@@ -9,7 +9,6 @@
 #include "amount.h"
 #include "wallet/db.h"
 #include "key.h"
-#include "keystore.h"
 
 #include <list>
 #include <stdint.h>
