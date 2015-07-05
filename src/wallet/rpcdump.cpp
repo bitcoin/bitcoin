@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+#include "chain.h"
 #include "rpcserver.h"
 #include "init.h"
 #include "main.h"
@@ -20,6 +21,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "univalue/univalue.h"
+
+#include <boost/foreach.hpp>
 
 using namespace std;
 

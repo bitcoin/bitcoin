@@ -13,6 +13,7 @@
 #include "script/script_error.h"
 #include "script/sign.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "test/test_bitcoin.h"
 
 #if defined(HAVE_CONSENSUS_LIB)

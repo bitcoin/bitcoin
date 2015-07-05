@@ -9,6 +9,8 @@
 #include "key.h"
 #include "script/standard.h"
 
+#include <stdint.h>
+
 class CKeyStore;
 class CScript;
 

@@ -6,6 +6,7 @@
 
 #include "test_bitcoin.h"
 
+#include "chainparams.h"
 #include "key.h"
 #include "main.h"
 #include "random.h"

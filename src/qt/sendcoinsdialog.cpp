@@ -19,6 +19,7 @@
 #include "coincontrol.h"
 #include "main.h"
 #include "ui_interface.h"
+#include "txmempool.h"
 #include "wallet/wallet.h"
 
 #include <QMessageBox>

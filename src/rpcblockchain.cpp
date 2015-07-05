@@ -3,13 +3,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chain.h"
+#include "chainparams.h"
 #include "checkpoints.h"
+#include "coins.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "primitives/transaction.h"
 #include "rpcserver.h"
+#include "streams.h"
 #include "sync.h"
+#include "txmempool.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include <stdint.h>
 
