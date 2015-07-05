@@ -5,38 +5,34 @@
 
 namespace mastercore
 {
-/** The block heights with which corresponding transactions or features are considered as valid or enabled.
- */
-enum BLOCKHEIGHTRESTRICTIONS {
-    //! Starting block for parsing in regtest mode
-    START_REGTEST_BLOCK = 5,
-    //! Block to enable the Exodus fundraiser address in regtest mode
-    MONEYMAN_REGTEST_BLOCK = 101,
-    //! Starting block for parsing on testnet
-    START_TESTNET_BLOCK = 263000,
-    //! Block to enable the Exodus fundraiser address on testnet
-    MONEYMAN_TESTNET_BLOCK = 270775,
-    //! First block of the Exodus fundraiser
-    GENESIS_BLOCK = 249498,
-    //! Last block of the Exodus fundraiser
-    LAST_EXODUS_BLOCK = 255365,
-    //! Block to enable DEx transactions
-    MSC_DEX_BLOCK = 290630,
-    //! Block to enable smart property transactions
-    MSC_SP_BLOCK = 297110,
-    //! Block to enable managed properties
-    MSC_MANUALSP_BLOCK = 323230,
-    //! Block to enable send-to-owners transactions
-    MSC_STO_BLOCK = 342650,
-    //! Block to enable MetaDEx transactions
-    MSC_METADEX_BLOCK = 999999,
-    //! Block to enable betting transactions
-    MSC_BET_BLOCK = 999999,
-    //! Block to enable pay-to-script-hash support
-    P2SH_BLOCK = 322000,
-    //! Block to enable OP_RETURN based encoding
-    OP_RETURN_BLOCK = 999999
-};
+//! Starting block for parsing in regtest mode
+const int START_REGTEST_BLOCK = 5;
+//! Block to enable the Exodus fundraiser address in regtest mode
+const int MONEYMAN_REGTEST_BLOCK = 101;
+//! Starting block for parsing on testnet
+const int START_TESTNET_BLOCK = 263000;
+//! Block to enable the Exodus fundraiser address on testnet
+const int MONEYMAN_TESTNET_BLOCK = 270775;
+//! First block of the Exodus fundraiser
+const int GENESIS_BLOCK = 249498;
+//! Last block of the Exodus fundraiser
+const int LAST_EXODUS_BLOCK = 255365;
+//! Block to enable DEx transactions
+const int MSC_DEX_BLOCK = 290630;
+//! Block to enable smart property transactions
+const int MSC_SP_BLOCK = 297110;
+//! Block to enable managed properties
+const int MSC_MANUALSP_BLOCK = 323230;
+//! Block to enable send-to-owners transactions
+const int MSC_STO_BLOCK = 342650;
+//! Block to enable MetaDEx transactions
+const int MSC_METADEX_BLOCK = 999999;
+//! Block to enable betting transactions
+const int MSC_BET_BLOCK = 999999;
+//! Block to enable pay-to-script-hash support
+const int P2SH_BLOCK = 322000;
+//! Block to enable OP_RETURN based encoding
+const int OP_RETURN_BLOCK = 999999;
 
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
