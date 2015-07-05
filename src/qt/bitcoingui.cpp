@@ -117,6 +117,8 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     } else {
         windowTitle += tr("Node");
     }
+    QString userWindowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
+    if(!userWindowTitle.isEmpty()) windowTitle += " - " + userWindowTitle;
     windowTitle += " " + networkStyle->getTitleAddText();
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(networkStyle->getAppIcon());
