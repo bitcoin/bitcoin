@@ -113,7 +113,13 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 #endif // ENABLE_WALLET
     if(enableWallet)
     {
-        windowTitle += tr("Wallet");
+        QString userWindowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
+        if(userWindowTitle.isEmpty()){
+            windowTitle += tr("Wallet");
+        }
+        else{
+            windowTitle += userWindowTitle;
+        }
     } else {
         windowTitle += tr("Node");
     }
