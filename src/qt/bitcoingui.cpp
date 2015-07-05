@@ -113,16 +113,12 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 #endif // ENABLE_WALLET
     if(enableWallet)
     {
-        QString userWindowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
-        if(userWindowTitle.isEmpty()){
-            windowTitle += tr("Wallet");
-        }
-        else{
-            windowTitle += userWindowTitle;
-        }
+        windowTitle += tr("Wallet");
     } else {
         windowTitle += tr("Node");
     }
+    QString userWindowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
+    if(!userWindowTitle.isEmpty()) windowTitle += " - " + userWindowTitle;
     windowTitle += " " + networkStyle->getTitleAddText();
 #ifndef Q_OS_MAC
     QApplication::setWindowIcon(networkStyle->getAppIcon());
