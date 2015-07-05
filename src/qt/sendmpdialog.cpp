@@ -17,6 +17,7 @@
 #include "omnicore/pending.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
+#include "omnicore/utilsbitcoin.h"
 
 #include "amount.h"
 #include "base58.h"

@@ -17,6 +17,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
+#include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 
 #include "amount.h"

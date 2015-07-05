@@ -95,26 +95,6 @@ enum TransactionType {
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_APPENDING   129
 #define MSC_PROPERTY_TYPE_DIVISIBLE_APPENDING     130
 
-// block height (MainNet) with which the corresponding transaction is considered valid, per spec
-enum BLOCKHEIGHTRESTRICTIONS {
-// starting block for parsing on TestNet
-  START_TESTNET_BLOCK=263000,
-  START_REGTEST_BLOCK=5,
-  MONEYMAN_REGTEST_BLOCK= 101, // new address to assign MSC & TMSC on RegTest
-  MONEYMAN_TESTNET_BLOCK= 270775, // new address to assign MSC & TMSC on TestNet
-  POST_EXODUS_BLOCK = 255366,
-  MSC_DEX_BLOCK     = 290630,
-  MSC_SP_BLOCK      = 297110,
-  GENESIS_BLOCK     = 249498,
-  LAST_EXODUS_BLOCK = 255365,
-  MSC_STO_BLOCK     = 342650,
-  MSC_METADEX_BLOCK = 999999,
-  MSC_BET_BLOCK     = 999999,
-  MSC_MANUALSP_BLOCK= 323230,
-  P2SH_BLOCK        = 322000,
-  OP_RETURN_BLOCK   = 999999
-};
-
 enum FILETYPES {
   FILETYPE_BALANCES = 0,
   FILETYPE_OFFERS,
@@ -303,10 +283,6 @@ extern CCriticalSection cs_tx_cache;
 
 std::string strMPProperty(uint32_t propertyId);
 
-int GetHeight();
-uint32_t GetLatestBlockTime();
-CBlockIndex* GetBlockIndex(const uint256& hash);
-
 bool isMPinBlockRange(int starting_block, int ending_block, bool bDeleteFound);
 
 std::string FormatIndivisibleMP(int64_t n);
@@ -324,12 +300,6 @@ int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
 
 std::string c_strMasterProtocolTXType(uint16_t txType);
 
-/** Checks, if the script type is allowed as input. */
-bool IsAllowedInputType(int whichType, int nBlock);
-/** Checks, if the script type qualifies as output. */
-bool IsAllowedOutputType(int whichType, int nBlock);
-/** Checks, if the transaction type and version is supported and enabled. */
-bool IsTransactionTypeAllowed(int txBlock, unsigned int txProperty, unsigned int txType, unsigned short version, bool bAllowNullProperty = false);
 /** Returns the encoding class, used to embed a payload. */
 int GetEncodingClass(const CTransaction& tx, int nBlock);
 

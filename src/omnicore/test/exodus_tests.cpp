@@ -1,4 +1,5 @@
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 
 #include "base58.h"
 #include "chainparams.h"

@@ -8,6 +8,7 @@
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
 
