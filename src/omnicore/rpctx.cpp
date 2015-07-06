@@ -28,12 +28,12 @@ using std::runtime_error;
 using namespace json_spirit;
 using namespace mastercore;
 
-// send_OMNI - simple send
-Value send_OMNI(const Array& params, bool fHelp)
+// omni_send - simple send
+Value omni_send(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 6)
         throw runtime_error(
-            "send_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"redeemaddress\" \"referenceamount\" )\n"
+            "omni_send \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"redeemaddress\" \"referenceamount\" )\n"
 
             "\nCreate and broadcast a simple send transaction.\n"
 
@@ -49,8 +49,8 @@ Value send_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("send_OMNI", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"100.0\"")
-            + HelpExampleRpc("send_OMNI", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"100.0\"")
+            + HelpExampleCli("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"100.0\"")
+            + HelpExampleRpc("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"100.0\"")
         );
 
     // obtain parameters & info
@@ -87,12 +87,12 @@ Value send_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// senddexsell_OMNI - DEx sell offer
-Value senddexsell_OMNI(const Array& params, bool fHelp)
+// omni_senddexsell - DEx sell offer
+Value omni_senddexsell(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 7)
         throw runtime_error(
-            "senddexsell_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
+            "omni_senddexsell \"fromaddress\" propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
 
             "\nPlace, update or cancel a sell offer on the traditional distributed MSC/BTC exchange.\n"
 
@@ -110,8 +110,8 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("senddexsell_OMNI", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
-            + HelpExampleRpc("senddexsell_OMNI", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
+            + HelpExampleCli("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
+            + HelpExampleRpc("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"1.5\", \"0.75\", 25, \"0.0005\", 1")
         );
 
     // obtain parameters & info
@@ -175,12 +175,12 @@ Value senddexsell_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// senddexaccept_OMNI - DEx accept offer
-Value senddexaccept_OMNI(const Array& params, bool fHelp)
+// omni_senddexaccept - DEx accept offer
+Value omni_senddexaccept(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "senddexaccept_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\" ( override )\n"
+            "omni_senddexaccept \"fromaddress\" \"toaddress\" propertyid \"amount\" ( override )\n"
 
             "\nCreate and broadcast an accept offer for the specified token and amount.\n"
 
@@ -195,8 +195,8 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("senddexaccept_OMNI", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
-            + HelpExampleRpc("senddexaccept_OMNI", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")    
+            + HelpExampleCli("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
+            + HelpExampleRpc("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")    
         );
 
     // obtain parameters & info
@@ -255,12 +255,12 @@ Value senddexaccept_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendissuancecrowdsale_OMNI - Issue new property with crowdsale
-Value sendissuancecrowdsale_OMNI(const Array& params, bool fHelp)
+// omni_sendissuancecrowdsale - Issue new property with crowdsale
+Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 14)
         throw runtime_error(
-            "sendissuancecrowdsale_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" propertyiddesired tokensperunit deadline ( earlybonus issuerpercentage )\n"
+            "omni_sendissuancecrowdsale \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" propertyiddesired tokensperunit deadline ( earlybonus issuerpercentage )\n"
 
             "Create new tokens as crowdsale."
 
@@ -284,8 +284,8 @@ Value sendissuancecrowdsale_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendissuancecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 1 \"100\" 1483228800 30 2")
-            + HelpExampleRpc("sendissuancecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 1, \"100\", 1483228800, 30, 2")
+            + HelpExampleCli("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 1 \"100\" 1483228800 30 2")
+            + HelpExampleRpc("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 1, \"100\", 1483228800, 30, 2")
         );
 
     // obtain parameters & info
@@ -328,12 +328,12 @@ Value sendissuancecrowdsale_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendissuancecfixed_OMNI - Issue new property with fixed amount
-Value sendissuancefixed_OMNI(const Array& params, bool fHelp)
+// omni_sendissuancecfixed - Issue new property with fixed amount
+Value omni_sendissuancefixed(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 10)
         throw runtime_error(
-            "sendissuancefixed_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" \"amount\"\n"
+            "omni_sendissuancefixed \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\" \"amount\"\n"
 
             "\nCreate new tokens with fixed supply.\n"
 
@@ -353,8 +353,8 @@ Value sendissuancefixed_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendissuancefixed_OMNI", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
-            + HelpExampleRpc("sendissuancefixed_OMNI", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
+            + HelpExampleCli("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
+            + HelpExampleRpc("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", \"1000000\"")
         );
 
     // obtain parameters & info
@@ -392,12 +392,12 @@ Value sendissuancefixed_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendissuancemanual_OMNI - Issue new property with manual issuance (grant/revoke)
-Value sendissuancemanaged_OMNI(const Array& params, bool fHelp)
+// omni_sendissuancemanaged - Issue new property with manual issuance (grant/revoke)
+Value omni_sendissuancemanaged(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 9)
         throw runtime_error(
-            "sendissuancemanual_OMNI \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\"\n"
+            "omni_sendissuancemanaged \"fromaddress\" ecosystem type previousid \"category\" \"subcategory\" \"name\" \"url\" \"data\"\n"
 
             "\nCreate new tokens with manageable supply.\n"
 
@@ -416,8 +416,8 @@ Value sendissuancemanaged_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendissuancemanaged_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
-            + HelpExampleRpc("sendissuancemanaged_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
+            + HelpExampleCli("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
+            + HelpExampleRpc("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\"")
         );
 
     // obtain parameters & info
@@ -454,12 +454,12 @@ Value sendissuancemanaged_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendsto_OMNI - Send to owners
-Value sendsto_OMNI(const Array& params, bool fHelp)
+// omni_sendsto - Send to owners
+Value omni_sendsto(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "sendsto_OMNI \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" )\n"
+            "omni_sendsto \"fromaddress\" propertyid \"amount\" ( \"redeemaddress\" )\n"
 
             "\nCreate and broadcast a send-to-owners transaction.\n"
 
@@ -473,8 +473,8 @@ Value sendsto_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendsto_OMNI", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 3 \"5000\"")
-            + HelpExampleRpc("sendsto_OMNI", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 3, \"5000\"")
+            + HelpExampleCli("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 3 \"5000\"")
+            + HelpExampleRpc("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 3, \"5000\"")
         );
 
     // obtain parameters & info
@@ -507,12 +507,12 @@ Value sendsto_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendgrant_OMNI - Grant tokens
-Value sendgrant_OMNI(const Array& params, bool fHelp)
+// omni_sendgrant - Grant tokens
+Value omni_sendgrant(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 4 || params.size() > 5)
         throw runtime_error(
-            "sendgrant_OMNI \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"memo\" )\n"
+            "omni_sendgrant \"fromaddress\" \"toaddress\" propertyid \"amount\" ( \"memo\" )\n"
 
             "\nIssue or grant new units of managed tokens.\n"
 
@@ -527,8 +527,8 @@ Value sendgrant_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendgrant_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"7000\"")
-            + HelpExampleRpc("sendgrant_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"7000\"")
+            + HelpExampleCli("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"7000\"")
+            + HelpExampleRpc("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"7000\"")
         );
 
     // obtain parameters & info
@@ -563,12 +563,12 @@ Value sendgrant_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendrevoke_OMNI - Revoke tokens
-Value sendrevoke_OMNI(const Array& params, bool fHelp)
+// omni_sendrevoke - Revoke tokens
+Value omni_sendrevoke(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 4)
         throw runtime_error(
-            "sendrevoke_OMNI \"fromaddress\" propertyid \"amount\" ( \"memo\" )\n"
+            "omni_sendrevoke \"fromaddress\" propertyid \"amount\" ( \"memo\" )\n"
 
             "\nRevoke units of managed tokens.\n"
 
@@ -582,8 +582,8 @@ Value sendrevoke_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendrevoke_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"100\"")
-            + HelpExampleRpc("sendrevoke_OMNI", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"100\"")
+            + HelpExampleCli("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"100\"")
+            + HelpExampleRpc("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\", \"\", 51, \"100\"")
         );
 
     // obtain parameters & info
@@ -618,12 +618,12 @@ Value sendrevoke_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendclosecrowdsale_OMNI - Close an active crowdsale
-Value sendclosecrowdsale_OMNI(const Array& params, bool fHelp)
+// omni_sendclosecrowdsale - Close an active crowdsale
+Value omni_sendclosecrowdsale(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "sendclosecrowdsale_OMNI \"fromaddress\" propertyid\n"
+            "omni_sendclosecrowdsale \"fromaddress\" propertyid\n"
 
             "\nManually close a crowdsale.\n"
 
@@ -635,8 +635,8 @@ Value sendclosecrowdsale_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendclosecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 70")
-            + HelpExampleRpc("sendclosecrowdsale_OMNI", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 70")
+            + HelpExampleCli("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 70")
+            + HelpExampleRpc("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 70")
         );
 
     // obtain parameters & info
@@ -694,7 +694,7 @@ Value trade_MP(const Array& params, bool fHelp)
             values.push_back(params[2]); // amountForSale
             values.push_back(params[3]); // propertyIdDesired
             values.push_back(params[4]); // amountDesired
-            return sendtrade_OMNI(values, fHelp);
+            return omni_sendtrade(values, fHelp);
         }
         case CMPTransaction::CANCEL_AT_PRICE:
         {
@@ -703,14 +703,14 @@ Value trade_MP(const Array& params, bool fHelp)
             values.push_back(params[2]); // amountForSale
             values.push_back(params[3]); // propertyIdDesired
             values.push_back(params[4]); // amountDesired
-            return sendcanceltradesbyprice_OMNI(values, fHelp);
+            return omni_sendcanceltradesbyprice(values, fHelp);
         }
         case CMPTransaction::CANCEL_ALL_FOR_PAIR:
         {
             values.push_back(params[0]); // fromAddress
             values.push_back(params[1]); // propertyIdForSale
             values.push_back(params[3]); // propertyIdDesired
-            return sendcanceltradesbypair_OMNI(values, fHelp);
+            return omni_sendcanceltradesbypair(values, fHelp);
         }
         case CMPTransaction::CANCEL_EVERYTHING:
         {
@@ -725,7 +725,7 @@ Value trade_MP(const Array& params, bool fHelp)
             }
             values.push_back(params[0]); // fromAddress
             values.push_back(ecosystem);
-            return sendcancelalltrades_OMNI(values, fHelp);
+            return omni_sendcancelalltrades(values, fHelp);
         }
     }
 
@@ -733,11 +733,11 @@ Value trade_MP(const Array& params, bool fHelp)
 }
 
 // Send a new MetaDEx trade
-Value sendtrade_OMNI(const Array& params, bool fHelp)
+Value omni_sendtrade(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-            "sendtrade_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
+            "omni_sendtrade \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
 
             "\nPlace a trade offer on the distributed token exchange.\n"
 
@@ -752,8 +752,8 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendtrade_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"250.0\" 1 \"10.0\"")
-            + HelpExampleRpc("sendtrade_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"250.0\", 1, \"10.0\"")
+            + HelpExampleCli("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"250.0\" 1 \"10.0\"")
+            + HelpExampleRpc("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"250.0\", 1, \"10.0\"")
         );
 
     // obtain parameters & info
@@ -792,11 +792,11 @@ Value sendtrade_OMNI(const Array& params, bool fHelp)
 }
 
 // Cancel MetaDEx by price
-Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
+Value omni_sendcanceltradesbyprice(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 5)
         throw runtime_error(
-            "sendcanceltradesbyprice_OMNI \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
+            "omni_sendcanceltradesbyprice \"fromaddress\" propertyidforsale \"amountforsale\" propertiddesired \"amountdesired\"\n"
 
             "\nCancel offers on the distributed token exchange with the specified price.\n"
 
@@ -811,8 +811,8 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendcanceltradesbyprice_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"100.0\" 1 \"5.0\"")
-            + HelpExampleRpc("sendcanceltradesbyprice_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"100.0\", 1, \"5.0\"")
+            + HelpExampleCli("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"100.0\" 1 \"5.0\"")
+            + HelpExampleRpc("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 31, \"100.0\", 1, \"5.0\"")
         );
 
     // obtain parameters & info
@@ -851,11 +851,11 @@ Value sendcanceltradesbyprice_OMNI(const Array& params, bool fHelp)
 }
 
 // Cancel MetaDEx orders by currency pair
-Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
+Value omni_sendcanceltradesbypair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "sendcanceltradesbypair_OMNI \"fromaddress\" propertyidforsale propertiddesired\n"
+            "omni_sendcanceltradesbypair \"fromaddress\" propertyidforsale propertiddesired\n"
 
             "\nCancel all offers on the distributed token exchange with the given currency pair.\n"
 
@@ -868,8 +868,8 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendcanceltradesbypair_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1 31")
-            + HelpExampleRpc("sendcanceltradesbypair_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1, 31")
+            + HelpExampleCli("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1 31")
+            + HelpExampleRpc("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1, 31")
         );
 
     // obtain parameters & info
@@ -906,11 +906,11 @@ Value sendcanceltradesbypair_OMNI(const Array& params, bool fHelp)
 }
 
 // Cancel MetaDEx orders by ecosystem
-Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
+Value omni_sendcancelalltrades(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "sendcancelalltrades_OMNI \"fromaddress\" ecosystem\n"
+            "omni_sendcancelalltrades \"fromaddress\" ecosystem\n"
 
             "\nCancel all offers on the distributed token exchange.\n"
 
@@ -922,8 +922,8 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendcancelalltrades_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1")
-            + HelpExampleRpc("sendcancelalltrades_OMNI", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1")
+            + HelpExampleCli("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1")
+            + HelpExampleRpc("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\", 1")
         );
 
     // obtain parameters & info
@@ -954,12 +954,12 @@ Value sendcancelalltrades_OMNI(const Array& params, bool fHelp)
     }
 }
 
-// sendchangeissuer_OMNI - Change issuer for a property
-Value sendchangeissuer_OMNI(const Array& params, bool fHelp)
+// omni_sendchangeissuer - Change issuer for a property
+Value omni_sendchangeissuer(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "sendchangeissuer_OMNI \"fromaddress\" \"toaddress\" propertyid\n"
+            "omni_sendchangeissuer \"fromaddress\" \"toaddress\" propertyid\n"
 
             "\nChange the issuer on record of the given tokens.\n"
 
@@ -972,8 +972,8 @@ Value sendchangeissuer_OMNI(const Array& params, bool fHelp)
             "\"hash\"               (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("sendtrade_OMNI", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
-            + HelpExampleRpc("sendtrade_OMNI", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
+            + HelpExampleCli("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
+            + HelpExampleRpc("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\", \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\", 3")
         );
 
     // obtain parameters & info
@@ -1006,11 +1006,11 @@ Value sendchangeissuer_OMNI(const Array& params, bool fHelp)
     }
 }
 
-Value sendalert_OMNI(const Array& params, bool fHelp)
+Value omni_sendalert(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
-            "sendalert_OMNI \"fromaddress\" alerttype expiryvalue typecheck versioncheck \"message\"\n"
+            "omni_sendalert \"fromaddress\" alerttype expiryvalue typecheck versioncheck \"message\"\n"
             "\nCreates and broadcasts an Omni Core alert.\n"
             "\nNote: Omni Core ignores alerts from unauthorized sources.\n"
             "\nArguments:\n"
@@ -1023,8 +1023,8 @@ Value sendalert_OMNI(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"hash\"               (string) the hex-encoded transaction hash\n"
             "\nExamples\n"
-            + HelpExampleCli("sendalert_OMNI", "")
-            + HelpExampleRpc("sendalert_OMNI", "")
+            + HelpExampleCli("omni_sendalert", "")
+            + HelpExampleRpc("omni_sendalert", "")
         );
 
     // obtain parameters & info

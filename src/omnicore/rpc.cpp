@@ -127,19 +127,19 @@ void BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
 }
 
 // determine whether to automatically commit transactions
-Value setautocommit_OMNI(const Array& params, bool fHelp)
+Value omni_setautocommit(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "setautocommit flag\n"
+            "omni_setautocommit flag\n"
             "\nSets the global flag that determines whether transactions are automatically committed and broadcast.\n"
             "\nArguments:\n"
             "1. flag    (boolean, required) the flag\n"
             "\nResult:\n"
             "(boolean) the new flag status\n"
             "\nExamples:\n"
-            + HelpExampleCli("setautocommit", "false")
-            + HelpExampleRpc("setautocommit", "false")
+            + HelpExampleCli("omni_setautocommit", "false")
+            + HelpExampleRpc("omni_setautocommit", "false")
         );
 
     LOCK(cs_tally);
@@ -286,11 +286,11 @@ Value mscrpc(const Array& params, bool fHelp)
 }
 
 // display an MP balance via RPC
-Value getbalance_MP(const Array& params, bool fHelp)
+Value omni_getbalance(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "getbalance_MP \"address\" propertyid\n"
+            "omni_getbalance \"address\" propertyid\n"
             "\nReturns the token balance for a given address and property.\n"
             "\nArguments:\n"
             "1. address           (string, required) the address\n"
@@ -301,8 +301,8 @@ Value getbalance_MP(const Array& params, bool fHelp)
             "  \"reserved\" : \"x.xxxxxxxx\"   (string) the amount reserved by sell offers and accepts\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getbalance_MP", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
-            + HelpExampleRpc("getbalance_MP", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
+            + HelpExampleCli("omni_getbalance", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
+            + HelpExampleRpc("omni_getbalance", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
         );
 
     std::string address = ParseAddress(params[0]);
@@ -316,11 +316,11 @@ Value getbalance_MP(const Array& params, bool fHelp)
     return balanceObj;
 }
 
-Value sendrawtx_MP(const Array& params, bool fHelp)
+Value omni_sendrawtx(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendrawtx_MP \"fromaddress\" \"rawtransaction\" ( \"referenceaddress\" \"redeemaddress\" \"referenceamount\" )\n"
+            "omni_sendrawtx \"fromaddress\" \"rawtransaction\" ( \"referenceaddress\" \"redeemaddress\" \"referenceamount\" )\n"
             "\nBroadcasts a raw Omni Layer transaction.\n"
             "\nArguments:\n"
             "1. fromaddress       (string, required) the address to send from\n"
@@ -331,8 +331,8 @@ Value sendrawtx_MP(const Array& params, bool fHelp)
             "\nResult:\n"
             "\"hash\"               (string) the hex-encoded transaction hash\n"
             "\nExamples:\n"
-            + HelpExampleCli("sendrawtx_MP", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\" \"000000000000000100000000017d7840\" \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
-            + HelpExampleRpc("sendrawtx_MP", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\", \"000000000000000100000000017d7840\", \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
+            + HelpExampleCli("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\" \"000000000000000100000000017d7840\" \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
+            + HelpExampleRpc("omni_sendrawtx", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\", \"000000000000000100000000017d7840\", \"1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV\"")
         );
 
     std::string fromAddress = ParseAddress(params[0]);
@@ -358,11 +358,11 @@ Value sendrawtx_MP(const Array& params, bool fHelp)
     }
 }
 
-Value getallbalancesforid_MP(const Array& params, bool fHelp)
+Value omni_getallbalancesforid(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getallbalancesforid_MP propertyid\n"
+            "omni_getallbalancesforid propertyid\n"
             "\nReturns a list of token balances for a given currency or property identifier.\n"
             "\nArguments:\n"
             "1. propertyid        (number, required) the property identifier\n"
@@ -376,8 +376,8 @@ Value getallbalancesforid_MP(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getallbalancesforid_MP", "1")
-            + HelpExampleRpc("getallbalancesforid_MP", "1")
+            + HelpExampleCli("omni_getallbalancesforid", "1")
+            + HelpExampleRpc("omni_getallbalancesforid", "1")
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
@@ -413,11 +413,11 @@ Value getallbalancesforid_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getallbalancesforaddress_MP(const Array& params, bool fHelp)
+Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getallbalancesforaddress_MP \"address\"\n"
+            "omni_getallbalancesforaddress \"address\"\n"
             "\nReturns a list of all token balances for a given address.\n"
             "\nArguments:\n"
             "1. address           (string, required) the address\n"
@@ -431,8 +431,8 @@ Value getallbalancesforaddress_MP(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getallbalancesforaddress_MP", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")
-            + HelpExampleRpc("getallbalancesforaddress_MP", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")
+            + HelpExampleCli("omni_getallbalancesforaddress", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")
+            + HelpExampleRpc("omni_getallbalancesforaddress", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")
         );
 
     std::string address = ParseAddress(params[0]);
@@ -461,11 +461,11 @@ Value getallbalancesforaddress_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getproperty_MP(const Array& params, bool fHelp)
+Value omni_getproperty(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getproperty_MP propertyid\n"
+            "omni_getproperty propertyid\n"
             "\nReturns details for a property identifier.\n"
             "\nArguments:\n"
             "1. propertyid        (number, required) the property identifier\n"
@@ -482,8 +482,8 @@ Value getproperty_MP(const Array& params, bool fHelp)
             "  \"totaltokens\" : x     (string) the total number of tokens in existence\n"
             "}\n"
             "\nExamples\n"
-            + HelpExampleCli("getproperty_MP", "3")
-            + HelpExampleRpc("getproperty_MP", "3")
+            + HelpExampleCli("omni_getproperty", "3")
+            + HelpExampleRpc("omni_getproperty", "3")
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
@@ -512,11 +512,11 @@ Value getproperty_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value listproperties_MP(const Array& params, bool fHelp)
+Value omni_listproperties(const Array& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
-            "listproperties_MP\n"
+            "omni_listproperties\n"
             "\nLists all smart properties.\n"
             "\nResult:\n"
             "{\n"
@@ -528,8 +528,8 @@ Value listproperties_MP(const Array& params, bool fHelp)
             "  \"divisible\" : false,     (boolean) whether the property is divisible\n"
             "}\n"
             "\nExamples\n"
-            + HelpExampleCli("listproperties_MP", "")
-            + HelpExampleRpc("listproperties_MP", "")
+            + HelpExampleCli("omni_listproperties", "")
+            + HelpExampleRpc("omni_listproperties", "")
         );
 
     Array response;
@@ -563,11 +563,11 @@ Value listproperties_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getcrowdsale_MP(const Array& params, bool fHelp)
+Value omni_getcrowdsale(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getcrowdsale_MP propertyid ( verbose )\n"
+            "omni_getcrowdsale propertyid ( verbose )\n"
             "\nGet information about a crowdsale for a property identifier.\n"
             "\nArguments:\n"
             "1. propertyid        (number, required) the property identifier\n"
@@ -590,8 +590,8 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
             "  \"closetx\" : \"txid\",     (string) the transaction that closed the crowdsale\n"
             "}\n"
             "\nExamples\n"
-            + HelpExampleCli("getcrowdsale_MP", "3 true")
-            + HelpExampleRpc("getcrowdsale_MP", "3, true")
+            + HelpExampleCli("omni_getcrowdsale", "3 true")
+            + HelpExampleRpc("omni_getcrowdsale", "3, true")
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
@@ -693,11 +693,11 @@ Value getcrowdsale_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getactivecrowdsales_MP(const Array& params, bool fHelp)
+Value omni_getactivecrowdsales(const Array& params, bool fHelp)
 {
     if (fHelp)
         throw runtime_error(
-            "getactivecrowdsales_MP\n"
+            "omni_getactivecrowdsales\n"
             "\nGet active crowdsales.\n"
             "\nResult:\n"
             "{\n"
@@ -712,8 +712,8 @@ Value getactivecrowdsales_MP(const Array& params, bool fHelp)
             "  \"deadline\" : xxx,     (number) the time the crowdsale will automatically end\n"
             "}\n"
             "\nExamples\n"
-            + HelpExampleCli("getactivecrowdsales_MP", "")
-            + HelpExampleRpc("getactivecrowdsales_MP", "")
+            + HelpExampleCli("omni_getactivecrowdsales", "")
+            + HelpExampleRpc("omni_getactivecrowdsales", "")
         );
 
     Array response;
@@ -758,11 +758,11 @@ Value getactivecrowdsales_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getgrants_MP(const Array& params, bool fHelp)
+Value omni_getgrants(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getgrants_MP propertyid\n"
+            "omni_getgrants propertyid\n"
             "\nGet information about grants and revokes for a property identifier.\n"
             "\nArguments:\n"
             "1. propertyid        (number, required) the property identifier\n"
@@ -785,8 +785,8 @@ Value getgrants_MP(const Array& params, bool fHelp)
             "                  ]\n"
             "}\n"
             "\nExamples\n"
-            + HelpExampleCli("getgrants_MP", "31")
-            + HelpExampleRpc("getgrants_MP", "31")
+            + HelpExampleCli("omni_getgrants", "31")
+            + HelpExampleRpc("omni_getgrants", "31")
         );
 
     uint32_t propertyId = ParsePropertyId(params[0]);
@@ -836,11 +836,11 @@ Value getgrants_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getorderbook_MP(const Array& params, bool fHelp)
+Value omni_getorderbook(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getorderbook_MP propertyid ( propertyid )\n"
+            "omni_getorderbook propertyid ( propertyid )\n"
             "\nRequest active trade information from the MetaDEx.\n"
             "\nArguments:\n"
             "1. propertyid           (number, required) filter orders by propertyid for sale\n"
@@ -850,8 +850,8 @@ Value getorderbook_MP(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getorderbook_MP", "1 12")
-            + HelpExampleRpc("getorderbook_MP", "1, 12")
+            + HelpExampleCli("omni_getorderbook", "1 12")
+            + HelpExampleRpc("omni_getorderbook", "1, 12")
         );
 
     bool filterDesired = (params.size() > 1);
@@ -889,11 +889,11 @@ Value getorderbook_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
+Value omni_gettradehistoryforaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "gettradehistoryforaddress_MP \"address\" ( count propertyid )\n"
+            "omni_gettradehistoryforaddress \"address\" ( count propertyid )\n"
             "\nRetrieves MetaDEx trade history for the supplied address\n"
             "\nArguments:\n"
             "1. address          (string, required) address to retrieve history for\n"
@@ -904,8 +904,8 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("gettradehistoryforaddress_OMNI", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\"")
-            + HelpExampleRpc("gettradehistoryforaddress_OMNI", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\"")
+            + HelpExampleCli("omni_gettradehistoryforaddress", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\"")
+            + HelpExampleRpc("omni_gettradehistoryforaddress", "\"1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8\"")
         );
 
     std::string address = ParseAddress(params[0]);
@@ -940,11 +940,11 @@ Value gettradehistoryforaddress_OMNI(const Array& params, bool fHelp)
     return response;
 }
 
-Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
+Value omni_gettradehistoryforpair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "gettradehistoryforpair_OMNI propertyid propertyid ( count )\n"
+            "omni_gettradehistoryforpair propertyid propertyid ( count )\n"
             "\nAllows user to retrieve MetaDEx trade history for the specified market\n"
             "\nArguments:\n"
             "1. propertyid           (number, required) the first side of the pair\n"
@@ -955,8 +955,8 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("gettradehistoryforpair_OMNI", "1 12 500")
-            + HelpExampleRpc("gettradehistoryforpair_OMNI", "1, 12, 500")
+            + HelpExampleCli("omni_gettradehistoryforpair", "1 12 500")
+            + HelpExampleRpc("omni_gettradehistoryforpair", "1, 12, 500")
         );
 
     // obtain property identifiers for pair & check valid parameters
@@ -976,11 +976,11 @@ Value gettradehistoryforpair_OMNI(const Array& params, bool fHelp)
     return response;
 }
 
-Value getactivedexsells_MP(const Array& params, bool fHelp)
+Value omni_getactivedexsells(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getactivedexsells_MP ( address )\n"
+            "omni_getactivedexsells ( address )\n"
             "\nReturns currently active offers on the distributed exchange.\n"
             "\nArguments:\n"
             "1. address          (string, optional) address filter (default: include any)\n"
@@ -991,8 +991,8 @@ Value getactivedexsells_MP(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("getactivedexsells_MP", "")
-            + HelpExampleRpc("getactivedexsells_MP", "")
+            + HelpExampleCli("omni_getactivedexsells", "")
+            + HelpExampleRpc("omni_getactivedexsells", "")
         );
 
     std::string addressFilter;
@@ -1072,11 +1072,11 @@ Value getactivedexsells_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value listblocktransactions_MP(const Array& params, bool fHelp)
+Value omni_listblocktransactions(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "listblocktransactions_MP index\n"
+            "omni_listblocktransactions index\n"
             "\nReturns all Master Protocol transactions in a block.\n"
             "\nArguments:\n"
             "1. index         (numeric, required) The block height or index\n"
@@ -1087,8 +1087,8 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
             "]\n"
 
             "\nExamples\n"
-            + HelpExampleCli("listblocktransactions_MP", "279007")
-            + HelpExampleRpc("listblocktransactions_MP", "279007")
+            + HelpExampleCli("omni_listblocktransactions", "279007")
+            + HelpExampleRpc("omni_listblocktransactions", "279007")
         );
 
     int blockHeight = params[0].get_int();
@@ -1124,11 +1124,11 @@ Value listblocktransactions_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value gettransaction_MP(const Array& params, bool fHelp)
+Value omni_gettransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "gettransaction_MP \"txid\"\n"
+            "omni_gettransaction \"txid\"\n"
             "\nGet detailed information about a Master Protocol transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
@@ -1149,8 +1149,8 @@ Value gettransaction_MP(const Array& params, bool fHelp)
             "}\n"
 
             "\nbExamples\n"
-            + HelpExampleCli("gettransaction_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-            + HelpExampleRpc("gettransaction_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleCli("omni_gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("omni_gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
     uint256 hash(params[0].get_str());
@@ -1162,11 +1162,11 @@ Value gettransaction_MP(const Array& params, bool fHelp)
     return txobj;
 }
 
-Value listtransactions_MP(const Array& params, bool fHelp)
+Value omni_listtransactions(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 5)
         throw runtime_error(
-            "listtransactions_MP ( \"address\" count skip startblock endblock )\n"
+            "omni_listtransactions ( \"address\" count skip startblock endblock )\n"
             "\nList wallet transactions, optionally filtered by an address and block boundaries.\n"
             "\nArguments:\n"
             "1. address           (string, optional) address filter (default: \"*\")\n"
@@ -1178,8 +1178,8 @@ Value listtransactions_MP(const Array& params, bool fHelp)
             "[                             (array of transactions)\n"
             "  ...\n"
             "]\n"
-            + HelpExampleCli("listtransactions_MP", "")
-            + HelpExampleRpc("listtransactions_MP", "")
+            + HelpExampleCli("omni_listtransactions", "")
+            + HelpExampleRpc("omni_listtransactions", "")
         );
 
     // obtains parameters - default all wallet addresses & last 10 transactions
@@ -1226,11 +1226,11 @@ Value listtransactions_MP(const Array& params, bool fHelp)
     return response;
 }
 
-Value getinfo_MP(const Array& params, bool fHelp)
+Value omni_getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
-            "getinfo_MP\n"
+            "omni_getinfo\n"
             "Returns various state information of the client and protocol.\n"
             "\nResult:\n"
             "{\n"
@@ -1248,8 +1248,8 @@ Value getinfo_MP(const Array& params, bool fHelp)
             "  }\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getinfo", "")
-            + HelpExampleRpc("getinfo", "")
+            + HelpExampleCli("omni_getinfo", "")
+            + HelpExampleRpc("omni_getinfo", "")
         );
 
     Object infoResponse;
@@ -1316,11 +1316,11 @@ Value getinfo_MP(const Array& params, bool fHelp)
     return infoResponse;
 }
 
-Value getsto_MP(const Array& params, bool fHelp)
+Value omni_getsto(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getsto_MP \"txid\" \"recipientfilter\"\n"
+            "omni_getsto \"txid\" \"recipientfilter\"\n"
             "\nGet information and recipients of send to owners transaction <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
@@ -1328,8 +1328,8 @@ Value getsto_MP(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"txid\" : \"transactionid\",   (string) The transaction id\n"
-            + HelpExampleCli("getsto_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-            + HelpExampleRpc("getsto_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleCli("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
     uint256 hash(params[0].get_str());
@@ -1343,19 +1343,19 @@ Value getsto_MP(const Array& params, bool fHelp)
     return txobj;
 }
 
-Value gettrade_MP(const Array& params, bool fHelp)
+Value omni_gettrade(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "gettrade_MP \"txid\"\n"
+            "omni_gettrade \"txid\"\n"
             "\nGet detailed information and trade matches for a Master Protocol MetaDEx trade offer <txid>\n"
             "\nArguments:\n"
             "1. \"txid\"    (string, required) The transaction id\n"
             "\nResult:\n"
             "{\n"
             "  \"txid\" : \"transactionid\",   (string) The transaction id\n"
-            + HelpExampleCli("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-            + HelpExampleRpc("gettrade_MP", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleCli("omni_gettrade", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("omni_gettrade", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
     uint256 hash(params[0].get_str());

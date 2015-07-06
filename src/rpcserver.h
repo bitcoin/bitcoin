@@ -226,49 +226,68 @@ extern json_spirit::Value getchaintips(const json_spirit::Array& params, bool fH
 extern json_spirit::Value invalidateblock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value reconsiderblock(const json_spirit::Array& params, bool fHelp);
 
-//! Omni Core related RPC calls
+/* Omni Core data retrieval calls */
+extern json_spirit::Value omni_getinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getallbalancesforid(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getbalance(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_gettransaction(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_listtransactions(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getproperty(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_listproperties(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getcrowdsale(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getgrants(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getactivedexsells(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getactivecrowdsales(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getorderbook(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_gettrade(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendrawtx(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getsto(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_listblocktransactions(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getallbalancesforaddress(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_gettradehistoryforaddress(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_gettradehistoryforpair(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_setautocommit(const json_spirit::Array& params, bool fHelp);
+
+/* Omni Core transaction calls */
+extern json_spirit::Value omni_send(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_senddexsell(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_senddexaccept(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendissuancecrowdsale(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendissuancefixed(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendissuancemanaged(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendtrade(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendcanceltradesbyprice(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendcanceltradesbypair(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendcancelalltrades(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendsto(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendgrant(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendrevoke(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendclosecrowdsale(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendchangeissuer(const json_spirit::Array& params, bool fHelp);
+
+/* Omni Core hidden calls - primarily aliased calls for backwards compatibiltiy (not shown in help) */
+extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendalert(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getinfo_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getallbalancesforid_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getbalance_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value send_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendtoowners_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendrawtx_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value gettransaction_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value listtransactions_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getproperty_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listproperties_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getcrowdsale_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getactivecrowdsales_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getgrants_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getallbalancesforaddress_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getactivedexsells_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gettransaction_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gettrade_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getactivecrowdsales_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getorderbook_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value listtransactions_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value listblocktransactions_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getinfo_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendtoowners_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendrawtx_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getsto_MP(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value setautocommit_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gettradehistoryforaddress_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gettradehistoryforpair_OMNI(const json_spirit::Array& params, bool fHelp);
-
-//! Omni Core transaction calls
-extern json_spirit::Value send_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value senddexsell_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value senddexaccept_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendissuancecrowdsale_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendissuancefixed_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendissuancemanaged_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendsto_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendgrant_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendrevoke_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendclosecrowdsale_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendchangeissuer_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp); // depreciated
-extern json_spirit::Value sendtrade_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendcanceltradesbyprice_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendcanceltradesbypair_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendcancelalltrades_OMNI(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendalert_OMNI(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value gettrade_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value listblocktransactions_MP(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getallbalancesforaddress_MP(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,
