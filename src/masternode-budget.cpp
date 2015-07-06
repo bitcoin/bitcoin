@@ -810,7 +810,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         pfrom->FulfilledRequest("mnvs");
         budget.Sync(pfrom, nProp);
-        LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString().c_str());
+        LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString());
     }
 
     if (strCommand == "mprop") { //Masternode Proposal
@@ -827,6 +827,12 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         //set time we first saw this prop
         prop.nTime = GetAdjustedTime();
 
+        CMasternode* pmn = mnodeman.Find(prop.vin);
+        if(pmn == NULL) {
+            if(fDebug) LogPrintf("mprop - unknown masternode - vin: %s\n", prop.vin.ToString());
+            return;
+        }
+
         if(!prop.SignatureValid()){
             LogPrintf("mprop - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
@@ -835,13 +841,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         std::string strError = "";
         if(!prop.IsValid(strError)) {
-            LogPrintf("mprop - invalid prop - %s\n", strError.c_str());
-            return;
-        }
-
-        CMasternode* pmn = mnodeman.Find(prop.vin);
-        if(pmn == NULL) {
-            LogPrintf("mprop - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
+            LogPrintf("mprop - invalid budget proposal - %s\n", strError.c_str());
             return;
         }
 
@@ -860,7 +860,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //We might have active votes for this proposal that are valid now
             CheckOrphanVotes();
         } else {
-            LogPrintf("mvote - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
+            LogPrintf("mvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
         }
     }
@@ -873,15 +873,15 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(!vote.SignatureValid()){
-            LogPrintf("mvote - signature invalid\n");
-            Misbehaving(pfrom->GetId(), 20);
+        CMasternode* pmn = mnodeman.Find(vote.vin);
+        if(pmn == NULL) {
+            if(fDebug) LogPrintf("mvote - unknown masternode - vin: %s\n", vote.vin.ToString());
             return;
         }
 
-        CMasternode* pmn = mnodeman.Find(vote.vin);
-        if(pmn == NULL) {
-            LogPrintf("mvote - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
+        if(!vote.SignatureValid()){
+            LogPrintf("mvote - signature invalid\n");
+            Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
@@ -891,54 +891,54 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             vote.Relay();
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
         } else {
-            LogPrintf("mvote - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
+            LogPrintf("mvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
         }
     }
 
     if (strCommand == "fbs") { //Finalized Budget Suggestion
-        CFinalizedBudgetBroadcast prop;
-        vRecv >> prop;
+        CFinalizedBudgetBroadcast fbs;
+        vRecv >> fbs;
 
-        if(mapSeenFinalizedBudgets.count(prop.GetHash())){
+        if(mapSeenFinalizedBudgets.count(fbs.GetHash())){
             //if this budget went inactive, we'll update it with the new re-signature
-            if(!mapSeenFinalizedBudgets[prop.GetHash()].fInvalid){
+            if(!mapSeenFinalizedBudgets[fbs.GetHash()].fInvalid){
                 return;
             }
         }
 
-        if(!prop.SignatureValid()){
+        CMasternode* pmn = mnodeman.Find(fbs.vin);
+        if(pmn == NULL) {
+            if(fDebug) LogPrintf("fbs - unknown masternode - vin: %s\n", fbs.vin.ToString());
+            return;
+        }
+
+        if(!fbs.SignatureValid()){
             LogPrintf("fbs - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
-        if(!prop.IsValid()) {
-            LogPrintf("fbs - invalid prop\n");
-            return;
-        }
-
-        CMasternode* pmn = mnodeman.Find(prop.vin);
-        if(pmn == NULL) {
-            LogPrintf("fbs - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
+        if(!fbs.IsValid()) {
+            LogPrintf("fbs - invalid finalized budget\n");
             return;
         }
 
         //delete if it exists and insert the new object
-        if(mapSeenFinalizedBudgets.count(prop.GetHash())) mapSeenFinalizedBudgets.erase(prop.GetHash());
-        mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
+        if(mapSeenFinalizedBudgets.count(fbs.GetHash())) mapSeenFinalizedBudgets.erase(fbs.GetHash());
+        mapSeenFinalizedBudgets.insert(make_pair(fbs.GetHash(), fbs));
 
         if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
-            CFinalizedBudget p(prop);
+            CFinalizedBudget p(fbs);
             budget.AddFinalizedBudget(p);
-            prop.Relay();
+            fbs.Relay();
 
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes+=VOTE_PROP_INC;
 
             //we might have active votes for this budget that are now valid
             CheckOrphanVotes();
         } else {
-            LogPrintf("fbs - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
+            LogPrintf("fbs - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
         }
     }
@@ -951,15 +951,15 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(!vote.SignatureValid()){
-            LogPrintf("fbvote - signature invalid\n");
-            Misbehaving(pfrom->GetId(), 20);
+        CMasternode* pmn = mnodeman.Find(vote.vin);
+        if(pmn == NULL) {
+            if(fDebug) LogPrintf("fbvote - unknown masternode - vin: %s\n", vote.vin.ToString());
             return;
         }
 
-        CMasternode* pmn = mnodeman.Find(vote.vin);
-        if(pmn == NULL) {
-            LogPrintf("fbvote - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
+        if(!vote.SignatureValid()){
+            LogPrintf("fbvote - signature invalid\n");
+            Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
@@ -969,7 +969,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             vote.Relay();
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
         } else {
-            LogPrintf("fbvote - masternode can't vote again - vin:%s \n", pmn->vin.ToString().c_str());
+            LogPrintf("fbvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
         }
     }
@@ -1400,7 +1400,7 @@ bool CBudgetVote::SignatureValid()
 
     if(pmn == NULL)
     {
-        LogPrintf("CBudgetProposalBroadcast::SignatureValid() - Unknown Masternode - %s\n", vin.ToString().c_str());
+        LogPrintf("CBudgetVote::SignatureValid() - Unknown Masternode - %s\n", vin.ToString().c_str());
         return false;
     }
 
