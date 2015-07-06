@@ -36,7 +36,8 @@ public:
         ProxyPort,              // int
         DisplayUnit,            // BitcoinUnits::Unit
         ThirdPartyTxUrls,       // QString
-        Theme,                  // QString        
+        Digits,                 // QString
+        Theme,                  // QString
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
