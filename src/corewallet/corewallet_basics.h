@@ -16,6 +16,20 @@
 
 namespace CoreWallet
 {
+    class Wallet;
+
+    //keyvalue store (database/logdb) keys
+    static const std::string kvs_keymetadata_key                = "keymeta";
+    static const std::string kvs_key_key                        = "key";
+    static const std::string kvs_hd_master_seed_key             = "hdmasterseed";
+    static const std::string kvs_hd_hdchain_key                 = "hdchain"; //chain of keys metadata like m/44'/0'... (CHDChain)
+    static const std::string kvs_hd_encrypted_master_seed_key   = "hdcryptedmasterseed";
+    static const std::string kvs_hdpubkey_key                   = "hdpubkey"; //a pubkey with some hd metadata (CHDPubKey)
+    static const std::string kvs_hdactivechain_key              = "hdactivechain"; //the current active hd chain of keys (uint256)
+    static const std::string kvs_wtx_key                        = "tx";
+    static const std::string kvs_address_book_metadata_key      = "adrmeta";
+
+
     enum CREDIT_DEBIT_TYPE
     {
         CREDIT_DEBIT_TYPE_AVAILABLE = 0,
@@ -31,7 +45,8 @@ namespace CoreWallet
         int nVersion;
         std::string label;
         std::string purpose;
-        
+        std::map<std::string, std::string> destdata; //flexible key wallet store for the UI layer
+
         CAddressBookMetadata()
         {
             SetNull();
@@ -45,6 +60,7 @@ namespace CoreWallet
             nVersion = this->nVersion;
             READWRITE(label);
             READWRITE(purpose);
+            READWRITE(destdata);
         }
         
         void SetNull()
@@ -106,6 +122,49 @@ namespace CoreWallet
         CScript scriptPubKey;
         CAmount nAmount;
         bool fSubtractFeeFromAmount;
+    };
+
+    // WalletModel: a wallet metadata class
+    class WalletModel
+    {
+    public:
+        static const int CURRENT_VERSION=1;
+        int nVersion;
+
+        Wallet* pWallet; //no persistance
+        std::string walletID; //only A-Za-z0-9._-
+        std::string strWalletFilename;
+        int64_t nCreateTime; // 0 means unknown
+
+        WalletModel()
+        {
+            SetNull();
+        }
+
+        WalletModel(const std::string& filenameIn, Wallet *pWalletIn)
+        {
+            SetNull();
+
+            strWalletFilename = filenameIn;
+            pWallet = pWalletIn;
+        }
+
+        void SetNull()
+        {
+            nVersion = CURRENT_VERSION;
+            nCreateTime = 0;
+            pWallet = NULL;
+        }
+
+        ADD_SERIALIZE_METHODS;
+
+        template <typename Stream, typename Operation>
+        inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+            READWRITE(this->nVersion);
+            nVersion = this->nVersion;
+            READWRITE(nCreateTime);
+            READWRITE(strWalletFilename);
+        }
     };
 }; // end namespace CoreWallet
 

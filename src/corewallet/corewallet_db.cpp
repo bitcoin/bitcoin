@@ -16,7 +16,7 @@ namespace CoreWallet
     
 bool FileDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata& keyMeta)
 {
-    if (!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta, false))
+    if (!Write(std::make_pair(kvs_keymetadata_key, vchPubKey), keyMeta, false))
         return false;
     
     // hash pubkey/privkey to accelerate wallet load
@@ -25,64 +25,64 @@ bool FileDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, cons
     vchKey.insert(vchKey.end(), vchPubKey.begin(), vchPubKey.end());
     vchKey.insert(vchKey.end(), vchPrivKey.begin(), vchPrivKey.end());
     
-    return Write(std::make_pair(std::string("key"), vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
+    return Write(std::make_pair(kvs_key_key, vchPubKey), std::make_pair(vchPrivKey, Hash(vchKey.begin(), vchKey.end())), false);
 }
 
 bool FileDB::WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed)
 {
-    return Write(std::make_pair(std::string("hdmasterseed"), hash), masterSeed);
+    return Write(std::make_pair(kvs_hd_master_seed_key, hash), masterSeed);
 }
 
 bool FileDB::WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret)
 {
-    if (!Write(std::make_pair(std::string("hdcryptedmasterseed"), hash), vchCryptedSecret))
+    if (!Write(std::make_pair(kvs_hd_encrypted_master_seed_key, hash), vchCryptedSecret))
         return false;
 
-    Erase(std::make_pair(std::string("hdmasterseed"), hash));
-    Erase(std::make_pair(std::string("hdmasterseed"), hash));
+    Erase(std::make_pair(kvs_hd_master_seed_key, hash));
+    Erase(std::make_pair(kvs_hd_master_seed_key, hash));
 
     return true;
 }
 
 bool FileDB::EraseHDMasterSeed(const uint256& hash)
 {
-    return Erase(std::make_pair(std::string("hdmasterseed"), hash));
+    return Erase(std::make_pair(kvs_hd_master_seed_key, hash));
 }
 
 bool FileDB::WriteHDChain(const CHDChain &chain)
 {
-    return Write(std::make_pair(std::string("hdchain"), chain.chainHash), chain);
+    return Write(std::make_pair(kvs_hd_hdchain_key, chain.chainHash), chain);
 }
 
 bool FileDB::WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta)
 {
-    if (!Write(std::make_pair(std::string("keymeta"), hdPubKey.pubkey),
+    if (!Write(std::make_pair(kvs_keymetadata_key, hdPubKey.pubkey),
                keyMeta))
         return false;
 
-    return Write(std::make_pair(std::string("hdpubkey"), hdPubKey.pubkey), hdPubKey);
+    return Write(std::make_pair(kvs_hdpubkey_key, hdPubKey.pubkey), hdPubKey);
 }
 
 bool FileDB::WriteHDAchiveChain(const uint256& hash)
 {
-    return Write(std::string("hdactivechain"), hash);
+    return Write(kvs_hdactivechain_key, hash);
 }
 
 bool FileDB::WriteTx(uint256 hash, const WalletTx& wtx)
 {
-    return Write(std::make_pair(std::string("tx"), hash), wtx);
+    return Write(std::make_pair(kvs_wtx_key, hash), wtx);
 }
 
 bool FileDB::EraseTx(uint256 hash)
 {
-    return Erase(std::make_pair(std::string("tx"), hash));
+    return Erase(std::make_pair(kvs_wtx_key, hash));
 }
 
 bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue, std::string& strType, std::string& strErr)
 {
     try {
         ssKey >> strType;
-        if (strType == "key")
+        if (strType == kvs_key_key)
         {
             CPubKey vchPubKey;
             ssKey >> vchPubKey;
@@ -122,27 +122,27 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: CPrivKey corrupt";
                 return false;
             }
-            if (!pCoreWallet->LoadKey(key, vchPubKey))
+            if (!pCoreWallet->InMemAddKey(key, vchPubKey))
             {
                 strErr = "Error reading wallet database: LoadKey failed";
                 return false;
             }
         }
-        else if (strType == "keymeta")
+        else if (strType == kvs_keymetadata_key)
         {
             CPubKey vchPubKey;
             ssKey >> vchPubKey;
             CKeyMetadata keyMeta;
             ssValue >> keyMeta;
             
-            pCoreWallet->LoadKeyMetadata(vchPubKey, keyMeta);
+            pCoreWallet->InMemAddKeyMetadata(vchPubKey, keyMeta);
             
             // find earliest key creation time, as wallet birthday
             if (!pCoreWallet->nTimeFirstKey ||
                 (keyMeta.nCreateTime < pCoreWallet->nTimeFirstKey))
                 pCoreWallet->nTimeFirstKey = keyMeta.nCreateTime;
         }
-        else if (strType == "adrmeta")
+        else if (strType == kvs_address_book_metadata_key)
         {
             std::string strAddress;
             CAddressBookMetadata metadata;
@@ -150,7 +150,7 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> metadata;
             pCoreWallet->mapAddressBook[CBitcoinAddress(strAddress).Get()] = metadata;
         }
-        else if (strType == "hdmasterseed")
+        else if (strType == kvs_hd_master_seed_key)
         {
             uint256 masterPubKeyHash;
             CKeyingMaterial masterSeed;
@@ -158,7 +158,7 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> masterSeed;
             pCoreWallet->AddMasterSeed(masterPubKeyHash, masterSeed);
         }
-        else if (strType == "hdcryptedmasterseed")
+        else if (strType == kvs_hd_encrypted_master_seed_key)
         {
             uint256 masterPubKeyHash;
             std::vector<unsigned char> vchCryptedSecret;
@@ -166,13 +166,13 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> vchCryptedSecret;
             pCoreWallet->AddCryptedMasterSeed(masterPubKeyHash, vchCryptedSecret);
         }
-        else if (strType == "hdactivechain")
+        else if (strType == kvs_hdactivechain_key)
         {
             HDChainID chainID;
             ssValue >> chainID;
             pCoreWallet->HDSetActiveChainID(chainID, false); //don't check if the chain exists because this record could come in before the CHDChain object itself
         }
-        else if (strType == "hdpubkey")
+        else if (strType == kvs_hdpubkey_key)
         {
             CHDPubKey hdPubKey;
             ssValue >> hdPubKey;
@@ -187,7 +187,7 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
-        else if (strType == "hdchain")
+        else if (strType == kvs_hd_hdchain_key)
         {
             CHDChain chain;
             ssValue >> chain;
@@ -197,7 +197,7 @@ bool ReadKeyValue(Wallet* pCoreWallet, CDataStream& ssKey, CDataStream& ssValue,
                 return false;
             }
         }
-        else if (strType == "tx")
+        else if (strType == kvs_wtx_key)
         {
             uint256 hash;
             ssKey >> hash;
@@ -239,13 +239,13 @@ bool FileDB::LoadWallet(Wallet* pCoreWallet)
             {
                 // losing keys is considered a catastrophic error, anything else
                 // we assume the user can live with:
-                if (strType == "key")
+                if (strType == kvs_key_key)
                     result = false;
                 else
                 {
                     // Leave other errors alone, if we try to fix them we might make things worse.
                     fNoncriticalErrors = true; // ... but do warn the user there is something wrong.
-                    if (strType == "tx")
+                    if (strType == kvs_wtx_key)
                         // Rescan if there is a bad transaction record:
                         SoftSetBoolArg("-rescan", true);
                 }

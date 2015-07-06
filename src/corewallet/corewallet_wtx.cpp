@@ -27,25 +27,6 @@ bool WalletTx::RelayWalletTransaction()
     return false;
 }
 
-CAmount WalletTx::GetDebit(const isminefilter& filter) const
-{
-    if (vin.empty())
-        return 0;
-
-    CAmount debit = 0;
-    CAmount cacheOut;
-    if (GetCache(CREDIT_DEBIT_TYPE_DEBIT, filter, cacheOut))
-        debit += cacheOut;
-    else
-    {
-        cacheOut = pwallet->GetDebit(*this, filter);
-        SetCache(CREDIT_DEBIT_TYPE_DEBIT, filter, cacheOut);
-        debit += cacheOut;
-    }
-    
-    return debit;
-}
-
 int64_t WalletTx::GetTxTime() const
 {
     int64_t n = nTimeSmart;

@@ -48,12 +48,12 @@ Wallet::Wallet(std::string strWalletFileIn)
     coreInterface = CoreInterface();
 }
 
-bool Wallet::LoadKey(const CKey& key, const CPubKey &pubkey)
+bool Wallet::InMemAddKey(const CKey& key, const CPubKey &pubkey)
 {
     return CCryptoKeyStore::AddKeyPubKey(key, pubkey);
 }
 
-bool Wallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
+bool Wallet::AddAndStoreKeyPubKey(const CKey& secret, const CPubKey &pubkey)
 {
     if (!CCryptoKeyStore::AddKeyPubKey(secret, pubkey))
         return false;
@@ -61,7 +61,7 @@ bool Wallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     return walletCacheDB->WriteKey(pubkey, secret.GetPrivKey(), mapKeyMetadata[pubkey.GetID()]);
 }
 
-bool Wallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
+bool Wallet::InMemAddKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
 {
     LOCK(cs_coreWallet);
     if (meta.nCreateTime && (!nTimeFirstKey || meta.nCreateTime < nTimeFirstKey))
@@ -71,7 +71,7 @@ bool Wallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
     return true;
 }
 
-bool Wallet::SetAddressBook(const CTxDestination& address, const std::string& strPurpose)
+bool Wallet::SetAndStoreAddressBook(const CTxDestination& address, const std::string& strPurpose)
 {
     LOCK(cs_coreWallet);
     std::map<CTxDestination, CAddressBookMetadata> ::iterator mi = mapAddressBook.find(address);
@@ -79,8 +79,9 @@ bool Wallet::SetAddressBook(const CTxDestination& address, const std::string& st
         mapAddressBook[address] = CAddressBookMetadata();
     
     mapAddressBook[address].purpose = strPurpose;
-    
-    return walletCacheDB->Write(std::make_pair(std::string("adrmeta"), CBitcoinAddress(address).ToString()), mapAddressBook[address]);
+
+    //TODO: move to database and not directly call ->Write()
+    return walletCacheDB->Write(std::make_pair(std::string(kvs_address_book_metadata_key), CBitcoinAddress(address).ToString()), mapAddressBook[address]);
 }
 
 
@@ -320,28 +321,28 @@ const WalletTx* Wallet::GetWalletTx(const uint256& hash) const
     return &(it->second);
 }
 
-Wallet::TxItems Wallet::OrderedTxItems()
+Wallet::WtxItems Wallet::OrderedTxItems()
 {
     AssertLockHeld(cs_coreWallet); // mapWallet
 
     // First: get all WalletTx and CAccountingEntry into a sorted-by-order multimap.
-    TxItems txOrdered;
+    WtxItems txOrdered;
 
     // Note: maintaining indices in the database of (account,time) --> txid and (account, time) --> acentry
     // would make this much faster for applications that do this a lot.
     for (std::map<uint256, WalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
     {
         WalletTx* wtx = &((*it).second);
-        txOrdered.insert(std::make_pair(wtx->nOrderPos, TxPair(wtx, "")));
+        txOrdered.insert(std::make_pair(wtx->nOrderPos, wtx));
     }
     
     return txOrdered;
 }
 
 /*
- ########################
+ ###################
  # Coin Lock Stack #
- ########################
+ ###################
  */
 void Wallet::LockCoin(COutPoint& output)
 {
@@ -401,7 +402,7 @@ bool Wallet::IsTrustedWTx(const WalletTx &wtx) const
         return true;
     if (nDepth < 0)
         return false;
-    if (!bSpendZeroConfChange || !wtx.IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+    if (!bSpendZeroConfChange || !IsFromMe(wtx, ISMINE_ALL)) // using wtx's cached debit
         return false;
 
     // Trusted if all inputs are from us and are in the mempool:
@@ -527,7 +528,7 @@ bool Wallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int 
 
         const WalletTx *pcoin = output.tx;
 
-        if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
+        if (output.nDepth < (IsFromMe(*pcoin, ISMINE_ALL) ? nConfMine : nConfTheirs))
             continue;
 
         int i = output.i;
@@ -1044,83 +1045,13 @@ bool Wallet::RelayWalletTransaction(const WalletTx &wtx)
  ######################
 */
 
-std::set<uint256> Wallet::GetConflicts(const uint256& txid) const
-{
-    std::set<uint256> result;
-    AssertLockHeld(cs_coreWallet);
-
-    std::map<uint256, WalletTx>::const_iterator it = mapWallet.find(txid);
-    if (it == mapWallet.end())
-        return result;
-    const WalletTx& wtx = it->second;
-
-    std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
-
-    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
-    {
-        if (mapTxSpends.count(txin.prevout) <= 1)
-            continue;  // No conflict if zero or one spends
-        range = mapTxSpends.equal_range(txin.prevout);
-        for (TxSpends::const_iterator it = range.first; it != range.second; ++it)
-            result.insert(it->second);
-    }
-    return result;
-}
-
-/**
- * Outpoint is spent if any non-conflicted transaction
- * spends it:
- */
-bool Wallet::IsSpent(const uint256& hash, unsigned int n) const
-{
-    AssertLockHeld(cs_coreWallet);
-
-    const COutPoint outpoint(hash, n);
-    std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
-    range = mapTxSpends.equal_range(outpoint);
-
-    for (TxSpends::const_iterator it = range.first; it != range.second; ++it)
-    {
-        const uint256& wtxid = it->second;
-        std::map<uint256, WalletTx>::const_iterator mit = mapWallet.find(wtxid);
-        if (mit != mapWallet.end() && mit->second.GetDepthInMainChain() >= 0)
-            return true; // Spent
-    }
-    return false;
-}
-
-void Wallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
-{
-    AssertLockHeld(cs_coreWallet);
-
-    mapTxSpends.insert(std::make_pair(outpoint, wtxid));
-
-    std::pair<TxSpends::iterator, TxSpends::iterator> range;
-    range = mapTxSpends.equal_range(outpoint);
-    SyncMetaData(range);
-}
-
-
-void Wallet::AddToSpends(const uint256& wtxid)
-{
-    AssertLockHeld(cs_coreWallet);
-
-    assert(mapWallet.count(wtxid));
-    WalletTx& thisTx = mapWallet[wtxid];
-    if (thisTx.IsCoinBase()) // Coinbases don't spend anything!
-        return;
-    
-    BOOST_FOREACH(const CTxIn& txin, thisTx.vin)
-    AddToSpends(txin.prevout, wtxid);
-}
-
-bool Wallet::AddToWallet(const WalletTx& wtxIn, bool fFromLoadWallet)
+bool Wallet::AddToWallet(const WalletTx& wtxIn, bool fOnlyInMemory)
 {
     LOCK(cs_coreWallet);
 
     uint256 hash = wtxIn.GetHash();
 
-    if (fFromLoadWallet)
+    if (fOnlyInMemory)
     {
         //TODO add CheckTransaction from main.cpp like check
         mapWallet[hash] = wtxIn;
@@ -1150,10 +1081,10 @@ bool Wallet::AddToWallet(const WalletTx& wtxIn, bool fFromLoadWallet)
                     {
                         // Tolerate times up to the last timestamp in the wallet not more than 5 minutes into the future
                         int64_t latestTolerated = latestNow + 300;
-                        TxItems txOrdered = OrderedTxItems();
-                        for (TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+                        WtxItems txOrdered = OrderedTxItems();
+                        for (WtxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
                         {
-                            WalletTx *const pwtx = (*it).second.first;
+                            WalletTx *const pwtx = (*it).second;
                             if (pwtx == &wtx)
                                 continue;
 
@@ -1272,9 +1203,18 @@ CAmount Wallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
         if (mi != mapWallet.end())
         {
             const WalletTx& prev = (*mi).second;
+
+            CAmount debit = 0;
+            if (prev.GetCache(CREDIT_DEBIT_TYPE_DEBIT, filter, debit))
+                return debit;
+
             if (txin.prevout.n < prev.vout.size())
                 if (IsMine(prev.vout[txin.prevout.n]) & filter)
-                    return prev.vout[txin.prevout.n].nValue;
+                {
+                    debit = prev.vout[txin.prevout.n].nValue;
+                    prev.SetCache(CREDIT_DEBIT_TYPE_DEBIT, filter, debit);
+                    return debit;
+                }
         }
     }
     return 0;
@@ -1300,14 +1240,109 @@ bool Wallet::IsMine(const CTransaction& tx) const
     return false;
 }
 
-bool Wallet::IsFromMe(const CTransaction& tx) const
+bool Wallet::IsFromMe(const CTransaction& tx, const isminefilter& filter) const
 {
-    return (GetDebit(tx, ISMINE_ALL) > 0);
+    return (GetDebit(tx, filter) > 0);
 }
 
 bool Wallet::WriteWTXToDisk(const WalletTx &wtx)
 {
     return walletCacheDB->WriteTx(wtx.GetHash(), wtx);
+}
+
+void Wallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
+{
+    LOCK(cs_coreWallet);
+    if (!AddToWalletIfInvolvingMe(tx, pblock, true))
+        return; // Not one of ours
+
+    // If a transaction changes 'conflicted' state, that changes the balance
+    // available of the outputs it spends. So force those to be
+    // recomputed, also:
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
+        if (mapWallet.count(txin.prevout.hash))
+            mapWallet[txin.prevout.hash].MarkDirty();
+    }
+}
+
+
+
+/*
+ #############################
+ # Conflict management stack #
+ #############################
+ */
+
+
+std::set<uint256> Wallet::GetConflicts(const uint256& txid) const
+{
+    std::set<uint256> result;
+    AssertLockHeld(cs_coreWallet);
+
+    std::map<uint256, WalletTx>::const_iterator it = mapWallet.find(txid);
+    if (it == mapWallet.end())
+        return result;
+    const WalletTx& wtx = it->second;
+
+    std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
+
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+    {
+        if (mapTxSpends.count(txin.prevout) <= 1)
+            continue;  // No conflict if zero or one spends
+        range = mapTxSpends.equal_range(txin.prevout);
+        for (TxSpends::const_iterator it = range.first; it != range.second; ++it)
+            result.insert(it->second);
+    }
+    return result;
+}
+
+/**
+ * Outpoint is spent if any non-conflicted transaction
+ * spends it:
+ */
+bool Wallet::IsSpent(const uint256& hash, unsigned int n) const
+{
+    AssertLockHeld(cs_coreWallet);
+
+    const COutPoint outpoint(hash, n);
+    std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
+    range = mapTxSpends.equal_range(outpoint);
+
+    for (TxSpends::const_iterator it = range.first; it != range.second; ++it)
+    {
+        const uint256& wtxid = it->second;
+        std::map<uint256, WalletTx>::const_iterator mit = mapWallet.find(wtxid);
+        if (mit != mapWallet.end() && mit->second.GetDepthInMainChain() >= 0)
+            return true; // Spent
+    }
+    return false;
+}
+
+void Wallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
+{
+    AssertLockHeld(cs_coreWallet);
+
+    mapTxSpends.insert(std::make_pair(outpoint, wtxid));
+
+    std::pair<TxSpends::iterator, TxSpends::iterator> range;
+    range = mapTxSpends.equal_range(outpoint);
+    SyncMetaData(range);
+}
+
+
+void Wallet::AddToSpends(const uint256& wtxid)
+{
+    AssertLockHeld(cs_coreWallet);
+
+    assert(mapWallet.count(wtxid));
+    WalletTx& thisTx = mapWallet[wtxid];
+    if (thisTx.IsCoinBase()) // Coinbases don't spend anything!
+        return;
+
+    BOOST_FOREACH(const CTxIn& txin, thisTx.vin)
+    AddToSpends(txin.prevout, wtxid);
 }
 
 void Wallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> range)
@@ -1345,21 +1380,7 @@ void Wallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> rang
     }
 }
 
-void Wallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
-{
-    LOCK(cs_coreWallet);
-    if (!AddToWalletIfInvolvingMe(tx, pblock, true))
-        return; // Not one of ours
 
-    // If a transaction changes 'conflicted' state, that changes the balance
-    // available of the outputs it spends. So force those to be
-    // recomputed, also:
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        if (mapWallet.count(txin.prevout.hash))
-            mapWallet[txin.prevout.hash].MarkDirty();
-    }
-}
 
 /*
  #############################
@@ -1495,9 +1516,9 @@ unsigned int Wallet::GetMaxStandardTxSize()
     return coreInterface.GetMaxStandardTxSize();
 }
 
-
 void Wallet::GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
+    //used for mining (mainly for regression tests)
     boost::shared_ptr<CHDReserveKey> rKey(new CHDReserveKey(this));
     CPubKey pubkey;
     if (!rKey->GetReservedKey(pubkey))

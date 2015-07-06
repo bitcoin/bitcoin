@@ -176,6 +176,8 @@ UniValue listaddresses(const UniValue& params, bool fHelp)
                             + HelpExampleRpc("listaddresses", "")
                             );
     UniValue ret(UniValue::VARR);
+
+    LOCK(wallet->cs_coreWallet);
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookMetadata)& item, wallet->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
@@ -477,7 +479,7 @@ UniValue hdgetaddress(const UniValue& params, bool fHelp)
     }
     CKeyID keyID = newKey.GetID();
     
-    wallet->SetAddressBook(keyID, "receive");
+    wallet->SetAndStoreAddressBook(keyID, "receive");
     
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("address", CBitcoinAddress(keyID).ToString()));
@@ -508,12 +510,12 @@ void WalletTxToJSON(const Wallet* wallet, const WalletTx& wtx, UniValue& entry)
     isminefilter filter = ISMINE_SPENDABLE; //TODO: make filter configurable over params
 
     CAmount nCredit = wallet->GetCredit(wtx, filter);
-    CAmount nDebit = wtx.GetDebit(filter);
+    CAmount nDebit = wallet->GetDebit(wtx, filter);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (wtx.IsFromMe(filter) ? wtx.GetValueOut() - nDebit : 0);
+    CAmount nFee = (wallet->IsFromMe(wtx, filter) ? wtx.GetValueOut() - nDebit : 0);
 
     entry.push_back(Pair("amount", ValueFromAmount(nNet - nFee)));
-    if (wtx.IsFromMe(filter))
+    if (wallet->IsFromMe(wtx, filter))
         entry.push_back(Pair("fee", ValueFromAmount(nFee)));
 
 
@@ -528,14 +530,14 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
     Wallet *wallet = WalletFromParams(params);
     
     LOCK(wallet->cs_coreWallet);
-    Wallet::TxItems txOrdered = wallet->OrderedTxItems();
+    Wallet::WtxItems txOrdered = wallet->OrderedTxItems();
 
     UniValue result(UniValue::VARR);
 
     // iterate backwards until we have nCount items to return:
-    for (Wallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+    for (Wallet::WtxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        WalletTx *const pwtx = (*it).second.first;
+        WalletTx *const pwtx = (*it).second;
         UniValue entry(UniValue::VOBJ);
         WalletTxToJSON(wallet, *pwtx, entry);
         result.push_back(entry);

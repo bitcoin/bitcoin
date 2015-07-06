@@ -130,7 +130,6 @@ public:
     }
 
     //! filter decides which addresses will count towards the debit
-    CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetChange() const;
 
     void GetAmounts(std::list<COutputEntry>& listReceived,
@@ -139,10 +138,6 @@ public:
     void GetAccountAmounts(const std::string& strAccount, CAmount& nReceived,
                            CAmount& nSent, CAmount& nFee, const isminefilter& filter) const;
     
-    bool IsFromMe(const isminefilter& filter) const
-    {
-        return (GetDebit(filter) > 0);
-    }
 
     int64_t GetTxTime() const;
     int GetRequestCount() const;

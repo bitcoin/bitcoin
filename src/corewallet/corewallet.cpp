@@ -125,7 +125,7 @@ Wallet* Manager::GetWalletWithID(const std::string& walletIDIn)
 std::vector<std::string> Manager::GetWalletIDs()
 {
     std::vector<std::string> vIDs;
-    std::pair<std::string, WalletModel> walletAndMetadata; // what a map<int, int> is made of
+    std::pair<std::string, WalletModel> walletAndMetadata;
 
     LOCK(cs_mapWallets);
     {
@@ -162,11 +162,11 @@ void Manager::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
     {
         std::pair<std::string, WalletModel> walletAndMetadata;
         BOOST_FOREACH(walletAndMetadata, mapWallets) {
-            //TODO: looks ugly
+            //TODO: needs a better approach
             //Open the wallet within the SyncTransaction call is probably a bad idea, need to be changed
-            if (!mapWallets[walletAndMetadata.first].pWallet) //is it closed?
+            //Also we lock all wallets during the new wallet open (will map everything to mem)
+            if (!mapWallets[walletAndMetadata.first].pWallet)
                 mapWallets[walletAndMetadata.first].pWallet = new Wallet(walletAndMetadata.first);
-
 
             mapWallets[walletAndMetadata.first].pWallet->SyncTransaction(tx, pblock);
         }
@@ -175,16 +175,25 @@ void Manager::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 
 void GetScriptForMining(boost::shared_ptr<CReserveScript> &script)
 {
+    //get the default wallet for mining coins
+    //TODO: allow user to configure which wallet is used for mining
     Wallet *wallet = CoreWallet::GetManager()->GetWalletWithID("");
     if (wallet)
         wallet->GetScriptForMining(script);
 }
 
-void RegisterSignals()
+void RegisterRPC()
 {
+    //Extend the existing RPC Server
+    //After adding a new endpoint, we can listen to any incomming
+    //command over the RPCServer::OnExtendedCommandExecute signal.
     AddJSONRPCURISchema("/corewallet");
     RPCServer::OnExtendedCommandExecute(boost::bind(&CoreWallet::ExecuteRPC, _1, _2, _3, _4));
+}
 
+void RegisterSignals()
+{
+    RegisterRPC();
     GetMainSignals().ShutdownFinished.connect(boost::bind(&Dealloc));
     GetMainSignals().CreateHelpString.connect(boost::bind(&AppendHelpMessageString, _1, _2));
     GetMainSignals().LoadModules.connect(boost::bind(&LoadAsModule, _1, _2, _3));
