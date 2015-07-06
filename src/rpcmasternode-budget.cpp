@@ -25,7 +25,7 @@ Value mnbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show" && strCommand != "projection"))
+        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show" && strCommand != "projection" && strCommand != "check"))
         throw runtime_error(
                 "mnbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
@@ -37,6 +37,7 @@ Value mnbudget(const Array& params, bool fHelp)
                 "  getinfo            - Show current masternode budgets\n"
                 "  show               - Show all budgets\n"
                 "  projection         - Show the projection of which proposals will be paid the next cycle\n"
+                "  check              - Scan proposals and remove invalid\n"
                 );
 
     if(strCommand == "vote-many")
@@ -121,7 +122,7 @@ Value mnbudget(const Array& params, bool fHelp)
                 printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
-            }    
+            }
 
             //create the proposal incase we're the first to make it
             CBudgetProposalBroadcast prop(pmn->vin, strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart);
@@ -262,7 +263,7 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("IsValid",  prop->IsValid(strError)));
             bObj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
 
-            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {   
+            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {
                 bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
             }
 
@@ -305,7 +306,7 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("IsValid",  prop->IsValid(strError)));
             bObj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
 
-            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {   
+            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {
                 bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
             }
 
@@ -356,7 +357,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::string strProposalName = params[1].get_str();
 
         Object obj;
-        
+
         CBudgetProposal* prop = budget.FindProposal(strProposalName);
 
         if(prop == NULL) return "Unknown proposal name";
@@ -366,9 +367,16 @@ Value mnbudget(const Array& params, bool fHelp)
             obj.push_back(Pair((*it).second.vin.prevout.ToStringShort().c_str(),  (*it).second.GetVoteString().c_str()));
             it++;
         }
-        
+
 
         return obj;
+    }
+
+    if(strCommand == "check")
+    {
+        budget.CheckAndRemove();
+
+        return "Success";
     }
 
     return Value::null;
@@ -396,7 +404,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
     {
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
-        
+
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev)
             return "Must be synced to suggest";
@@ -498,7 +506,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
-            }    
+            }
 
 
             CFinalizedBudgetVote vote(pmn->vin, hash);

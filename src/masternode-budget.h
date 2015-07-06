@@ -395,7 +395,7 @@ public:
     {
         //c4 mnbudget vote one http://www.one.com/one.json 100 1000 xx9FwiqeRbuxBn5Sh3SNeoxmgpwQNSuMC4 1000 yes
 
-        int nPayments = (nBlockEnd - nBlockStart) % GetBudgetPaymentCycleBlocks();
+        int nPayments = GetTotalPaymentCount();
 
         CTxDestination address1;
         ExtractDestination(address, address1);
