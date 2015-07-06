@@ -403,7 +403,7 @@ public:
 
 
         std::string strCommand = "dash-cli mnbudget vote " + strProposalName + " " + strURL + " " + boost::lexical_cast<std::string>(nPayments);
-        strCommand += " " + boost::lexical_cast<std::string>(nBlockStart) + " " + address2.ToString() + " " + boost::lexical_cast<std::string>(nAmount) + " yes|no";
+        strCommand += " " + boost::lexical_cast<std::string>(nBlockStart) + " " + address2.ToString() + " " + boost::lexical_cast<std::string>(nAmount/COIN) + " yes|no";
 
         return strCommand;
     }
