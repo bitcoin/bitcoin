@@ -12,6 +12,7 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
+#include "policy/policy.h"
 #include "script/script.h"
 #include "script/script_error.h"
 
