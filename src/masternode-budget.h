@@ -12,7 +12,8 @@
 #include "util.h"
 #include "base58.h"
 #include "masternode.h"
-//#include "timedata.h"
+#include <boost/lexical_cast.hpp>
+
 
 using namespace std;
 
@@ -389,6 +390,25 @@ public:
 
     void SetAllotted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
     int64_t GetAllotted() {return nAlloted;}
+
+    std::string GetVoteCommand()
+    {
+        //c4 mnbudget vote one http://www.one.com/one.json 100 1000 xx9FwiqeRbuxBn5Sh3SNeoxmgpwQNSuMC4 1000 yes
+
+        int nPayments = (nBlockEnd - nBlockStart) % GetBudgetPaymentCycleBlocks();
+            
+        CTxDestination address1;
+        ExtractDestination(address, address1);
+        CBitcoinAddress address2(address1);
+
+
+        std::string strCommand = "dash-cli mnbudget vote " + strProposalName + " " + strURL + " " + boost::lexical_cast<std::string>(nPayments);
+        strCommand += " " + boost::lexical_cast<std::string>(nBlockStart) + " " + boost::lexical_cast<std::string>(nAmount) + " " + address2.ToString();
+        strCommand += " " + boost::lexical_cast<std::string>(nAmount) + " yes|no";
+
+        return strCommand;
+    }
+
 
     void CleanAndRemove();
 

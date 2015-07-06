@@ -243,6 +243,7 @@ Value mnbudget(const Array& params, bool fHelp)
             CBitcoinAddress address2(address1);
 
             Object bObj;
+            bObj.push_back(Pair("VoteCommand",  prop->GetVoteCommand().c_str()));
             bObj.push_back(Pair("URL",  prop->GetURL()));
             bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
             bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
@@ -286,6 +287,7 @@ Value mnbudget(const Array& params, bool fHelp)
             CBitcoinAddress address2(address1);
 
             Object bObj;
+            bObj.push_back(Pair("VoteCommand",  prop->GetVoteCommand().c_str()));
             bObj.push_back(Pair("URL",  prop->GetURL()));
             bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
             bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
