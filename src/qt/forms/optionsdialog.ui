@@ -525,6 +525,20 @@ https://www.transifex.com/projects/p/dash/</string>
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5_Display">
+         <item>
+          <widget class="QLabel" name="digitsLabel">
+           <property name="text">
+            <string>Decimal digits</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QValueComboBox" name="digits"/>
+         </item>
+        </layout>
+       </item>
+       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3_Display">
          <item>
           <widget class="QLabel" name="thirdPartyTxUrlsLabel">
