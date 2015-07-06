@@ -91,8 +91,8 @@ before_script:
     - depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
     - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
     - ./configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
-    - make distdir PACKAGE=bitcoin VERSION=$HOST
-    - cd bitcoin-$HOST
+    - make distdir PACKAGE=omnicore VERSION=$HOST
+    - cd omnicore-$HOST
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
 script:
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )

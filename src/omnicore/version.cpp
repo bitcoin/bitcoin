@@ -27,21 +27,28 @@
 #    endif
 #endif
 
+#ifdef OMNICORE_VERSION_STATUS
+#    define OMNICORE_VERSION_SUFFIX STRINGIZE(OMNICORE_VERSION_STATUS)
+#else
+#    define OMNICORE_VERSION_SUFFIX ""
+#endif
+
 //! Returns formatted Omni Core version, e.g. "0.0.9.1-dev"
 const std::string OmniCoreVersion()
 {
-    // TODO: replace zeros at some point
     if (OMNICORE_VERSION_PATCH) {
-        return strprintf("0.0.%d.%d.%d%s",
+        return strprintf("%d.%d.%d.%d-%s",
+                OMNICORE_VERSION_MILESTONE,
                 OMNICORE_VERSION_MAJOR,
                 OMNICORE_VERSION_MINOR,
                 OMNICORE_VERSION_PATCH,
-                OMNICORE_VERSION_TYPE);
+                OMNICORE_VERSION_SUFFIX);
     } else {
-        return strprintf("0.0.%d.%d%s",
+        return strprintf("%d.%d.%d-%s",
+                OMNICORE_VERSION_MILESTONE,
                 OMNICORE_VERSION_MAJOR,
                 OMNICORE_VERSION_MINOR,
-                OMNICORE_VERSION_TYPE);
+                OMNICORE_VERSION_SUFFIX);
     }
 }
 
