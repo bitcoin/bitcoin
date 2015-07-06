@@ -329,7 +329,7 @@ public:
         READWRITE(nTime);
         READWRITE(vchSig);
     }
-    
+
 };
 
 //
@@ -396,15 +396,14 @@ public:
         //c4 mnbudget vote one http://www.one.com/one.json 100 1000 xx9FwiqeRbuxBn5Sh3SNeoxmgpwQNSuMC4 1000 yes
 
         int nPayments = (nBlockEnd - nBlockStart) % GetBudgetPaymentCycleBlocks();
-            
+
         CTxDestination address1;
         ExtractDestination(address, address1);
         CBitcoinAddress address2(address1);
 
 
         std::string strCommand = "dash-cli mnbudget vote " + strProposalName + " " + strURL + " " + boost::lexical_cast<std::string>(nPayments);
-        strCommand += " " + boost::lexical_cast<std::string>(nBlockStart) + " " + boost::lexical_cast<std::string>(nAmount) + " " + address2.ToString();
-        strCommand += " " + boost::lexical_cast<std::string>(nAmount) + " yes|no";
+        strCommand += " " + boost::lexical_cast<std::string>(nBlockStart) + " " + address2.ToString() + " " + boost::lexical_cast<std::string>(nAmount) + " yes|no";
 
         return strCommand;
     }
