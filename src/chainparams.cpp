@@ -288,6 +288,58 @@ public:
     }
 };
 
+class CSizeTestParams : public CChainParams {
+public:
+    CSizeTestParams() {
+        consensus.nMaxBlockSize = GetArg("-blocksize", 1000000);
+        strNetworkID = strprintf("sizetest%d", consensus.nMaxBlockSize);
+        consensus.nSubsidyHalvingInterval = 150;
+        consensus.nMajorityEnforceBlockUpgrade = 750;
+        consensus.nMajorityRejectBlockOutdated = 950;
+        consensus.nMajorityWindow = 1000;
+        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = true;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
+
+        CScript scriptDestination(CScript() << OP_TRUE);
+        genesis = CreateGenesisBlock(strNetworkID.c_str(), scriptDestination, 1296688602, 0, 0x2007ffff, 1, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+
+        nDefaultPort = 28333;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = true;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
+
+        pchMessageStart[0] = 0xe0;
+        pchMessageStart[1] = 0x35;
+        pchMessageStart[2] = 0x8e;
+        pchMessageStart[3] = 0xfb;
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        checkpointData = (CCheckpointData){
+            boost::assign::map_list_of
+            (     0, consensus.hashGenesisBlock),
+            0,
+            0,
+            0
+        };
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+    }
+};
+
 static boost::scoped_ptr<CChainParams> globalChainParams;
 
 const CChainParams &Params() {
@@ -303,6 +355,8 @@ CChainParams* CChainParams::Factory(const std::string& chain)
         return new CTestNetParams();
     else if (chain == CBaseChainParams::REGTEST)
         return new CRegTestParams();
+    else if (chain == CBaseChainParams::SIZETEST)
+        return new CSizeTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
