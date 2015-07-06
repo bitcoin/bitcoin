@@ -528,7 +528,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
     t = u1; secp256k1_fe_add(&t, &u2);                  /* t = T = U1+U2 (2) */
     m = s1; secp256k1_fe_add(&m, &s2);                  /* m = M = S1+S2 (2) */
     secp256k1_fe_sqr(&rr, &t);                          /* rr = T^2 (1) */
-    secp256k1_fe_negate(&m_alt, &u2, 1);                /* m = -X2*Z1^2 */
+    secp256k1_fe_negate(&m_alt, &u2, 1);                /* Malt = -X2*Z1^2 */
     secp256k1_fe_mul(&tt, &u1, &m_alt);                 /* tt = -U1*U2 (2) */
     secp256k1_fe_add(&rr, &tt);                         /* rr = R = T^2-U1*U2 (3) */
     /** If lambda = R/M = 0/0 we have a problem (except in the "trivial"
@@ -542,7 +542,7 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      * so we set R/M equal to this. */
     secp256k1_fe_negate(&rr_alt, &s2, 1);   /* rr = -Y2*Z1^3  */
     secp256k1_fe_add(&rr_alt, &s1);         /* rr = Y1*Z2^3 - Y2*Z1^3 */
-    secp256k1_fe_add(&m_alt, &u1);          /* m = X1*Z2^2 - X2*Z1^2 */
+    secp256k1_fe_add(&m_alt, &u1);          /* Malt = X1*Z2^2 - X2*Z1^2 */
 
     secp256k1_fe_cmov(&rr_alt, &rr, !degenerate);
     secp256k1_fe_cmov(&m_alt, &m, !degenerate);
