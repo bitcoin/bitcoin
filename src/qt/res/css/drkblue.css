@@ -1068,7 +1068,6 @@ QDialog#SendCoinsDialog .QFrame#frameCoinControl .QValidatedLineEdit#lineEditCoi
 QDialog#SendCoinsDialog .QFrame#frameCoinControl .QLabel#labelCoinControlChangeLabel { /* Custom Change Address Validation Label */
 font-weight:normal;
 qproperty-margin:-6;
-qproperty-padding:0;
 margin-right:112px;
 }
 
