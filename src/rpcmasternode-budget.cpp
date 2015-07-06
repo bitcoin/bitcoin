@@ -332,6 +332,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CBitcoinAddress address2(address1);
 
         Object obj;
+        obj.push_back(Pair("VoteCommand",  prop->GetVoteCommand().c_str()));
         obj.push_back(Pair("Name",  prop->GetName().c_str()));
         obj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
         obj.push_back(Pair("URL",  prop->GetURL().c_str()));
@@ -345,6 +346,15 @@ Value mnbudget(const Array& params, bool fHelp)
         obj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
         obj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
         obj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
+
+        std::string strError = "";
+        obj.push_back(Pair("IsValid",  prop->IsValid(strError)));
+        obj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
+
+        if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {
+            obj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
+        }
+
 
         return obj;
     }
