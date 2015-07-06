@@ -47,9 +47,7 @@ void random_field_element_magnitude(secp256k1_fe_t *fe) {
     secp256k1_fe_negate(&zero, &zero, 0);
     secp256k1_fe_mul_int(&zero, n - 1);
     secp256k1_fe_add(fe, &zero);
-#ifdef VERIFY
-    CHECK(fe->magnitude == n);
-#endif
+    VERIFY_CHECK(fe->magnitude == n);
 }
 
 void random_group_element_test(secp256k1_ge_t *ge) {
@@ -752,7 +750,7 @@ void run_field_misc(void) {
     secp256k1_fe_t z;
     secp256k1_fe_t q;
     secp256k1_fe_t fe5 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 5);
-    int i;
+    int i, j;
     for (i = 0; i < 5*count; i++) {
         secp256k1_fe_storage_t xs, ys, zs;
         random_fe(&x);
@@ -765,15 +763,27 @@ void run_field_misc(void) {
         /* Test fe conditional move; z is not normalized here. */
         q = x;
         secp256k1_fe_cmov(&x, &z, 0);
+        VERIFY_CHECK(!x.normalized && x.magnitude == z.magnitude);
         secp256k1_fe_cmov(&x, &x, 1);
         CHECK(fe_memcmp(&x, &z) != 0);
         CHECK(fe_memcmp(&x, &q) == 0);
         secp256k1_fe_cmov(&q, &z, 1);
+        VERIFY_CHECK(!q.normalized && q.magnitude == z.magnitude);
         CHECK(fe_memcmp(&q, &z) == 0);
-        /* Test storage conversion and conditional moves. */
         secp256k1_fe_normalize_var(&x);
         secp256k1_fe_normalize_var(&z);
         CHECK(!secp256k1_fe_equal_var(&x, &z));
+        secp256k1_fe_normalize_var(&q);
+        secp256k1_fe_cmov(&q, &z, (i&1));
+        VERIFY_CHECK(q.normalized && q.magnitude == 1);
+        for (j = 0; j < 6; j++) {
+            secp256k1_fe_negate(&z, &z, j+1);
+            secp256k1_fe_normalize_var(&q);
+            secp256k1_fe_cmov(&q, &z, (j&1));
+            VERIFY_CHECK(!q.normalized && q.magnitude == (j+2));
+        }
+        secp256k1_fe_normalize_var(&z);
+        /* Test storage conversion and conditional moves. */
         secp256k1_fe_to_storage(&xs, &x);
         secp256k1_fe_to_storage(&ys, &y);
         secp256k1_fe_to_storage(&zs, &z);
@@ -1671,7 +1681,7 @@ void test_ecdsa_end_to_end(void) {
     extra[31] = 0;
     extra[0] = 1;
     CHECK(secp256k1_ecdsa_sign(ctx, message, signature4, &signaturelen4, privkey, NULL, extra) == 1);
-    CHECK(signaturelen3 > 0);
+    CHECK(signaturelen4 > 0);
     CHECK((signaturelen != signaturelen2) || (memcmp(signature, signature2, signaturelen) != 0));
     CHECK((signaturelen != signaturelen3) || (memcmp(signature, signature3, signaturelen) != 0));
     CHECK((signaturelen3 != signaturelen2) || (memcmp(signature3, signature2, signaturelen3) != 0));
