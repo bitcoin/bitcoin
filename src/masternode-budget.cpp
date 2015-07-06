@@ -625,6 +625,8 @@ std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
     while(it2 != mapProposals.end())
     {
+        (*it2).second.CleanAndRemove();
+
         CBudgetProposal* prop = &((*it2).second);
         ret.push_back(prop);        
 
@@ -643,6 +645,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
+        (*it).second.CleanAndRemove();
         mapList.insert(make_pair((*it).second.GetHash(), (*it).second.GetYeas()));
         ++it;
     }
@@ -1446,6 +1449,11 @@ void CFinalizedBudget::AutoCheck()
     if(strBudgetMode == "auto") //only vote for exact matches
     {
         std::vector<CBudgetProposal*> props1 = budget.GetBudget();
+
+        if(props1.size() == 0) {
+            LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
+            return;
+        }
 
         for(unsigned int i = 0; i < vecProposals.size(); i++){
             if(i > props1.size()-1) {
