@@ -14,27 +14,9 @@
 
 #include <boost/foreach.hpp>
 
-    /**
-     * Check transaction inputs to mitigate two
-     * potential denial-of-service attacks:
-     * 
-     * 1. scriptSigs with extra data stuffed into them,
-     *    not consumed by scriptPubKey (or P2SH script)
-     * 2. P2SH scripts with a crazy number of expensive
-     *    CHECKSIG/CHECKMULTISIG operations
-     *
-     * Check transaction inputs, and make sure any
-     * pay-to-script-hash transactions are evaluating IsStandard scripts
-     * 
-     * Why bother? To avoid denial-of-service attacks; an attacker
-     * can submit a standard HASH... OP_EQUAL transaction,
-     * which will get accepted into blocks. The redemption
-     * script can be anything; an attacker could use a very
-     * expensive-to-check-upon-redemption script like:
-     *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
-     */
+/** CStandardPolicy implementation */
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
+bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
@@ -54,8 +36,11 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     return whichType != TX_NONSTANDARD;
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
 {
+    if (!fRequireStandard)
+        return true;
+
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
         return false;
@@ -93,7 +78,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
+        if (!ApproveScript(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -118,8 +103,11 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     return true;
 }
 
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
+    if (!fRequireStandard)
+        return true;
+
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
 

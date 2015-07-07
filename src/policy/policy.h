@@ -42,17 +42,59 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
+/**
+ * \class CPolicy
+ * Generic interface class for policy.
+ */
+class CPolicy
+{
+public:
+    virtual ~CPolicy() {};
+    virtual bool ApproveScript(const CScript&, txnouttype&) const { return true; };
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const { return true; };
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const { return true; };
+};
+
+/**
+ * \class CStandardPolicy
+ * Standard implementation of CPolicy.
+ */
+class CStandardPolicy : public CPolicy
+{
+public:
+    CStandardPolicy()
+    {};
+    virtual bool ApproveScript(const CScript&, txnouttype&) const;
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
+    /**
+     * Check transaction inputs to mitigate two
+     * potential denial-of-service attacks:
+     * 
+     * 1. scriptSigs with extra data stuffed into them,
+     *    not consumed by scriptPubKey (or P2SH script)
+     * 2. P2SH scripts with a crazy number of expensive
+     *    CHECKSIG/CHECKMULTISIG operations
+     *
+     * Check transaction inputs, and make sure any
+     * pay-to-script-hash transactions are evaluating IsStandard scripts
+     * 
+     * Why bother? To avoid denial-of-service attacks; an attacker
+     * can submit a standard HASH... OP_EQUAL transaction,
+     * which will get accepted into blocks. The redemption
+     * script can be anything; an attacker could use a very
+     * expensive-to-check-upon-redemption script like:
+     *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+     */
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+};
 
 #endif // BITCOIN_POLICY_H
