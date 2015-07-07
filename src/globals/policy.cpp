@@ -7,4 +7,4 @@
 
 #include "policy/policy.h"
 
-CStandardPolicy globalPolicy;
+Container<CPolicy> cGlobalPolicy;

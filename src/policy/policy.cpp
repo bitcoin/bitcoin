@@ -9,6 +9,7 @@
 
 #include "chainparams.h"
 #include "main.h"
+#include "templates.hpp"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -184,9 +185,23 @@ bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCa
 
 /** Policy Factory and related utility functions */
 
-void Policy::AppendHelpMessages(std::string& strUsage)
+CPolicy* Policy::Factory(const std::string& policy)
 {
-    const CStandardPolicy policy;
-    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), Policy::STANDARD));
-    AppendMessagesOpt(strUsage, policy.GetOptionsHelp());
+    if (policy == Policy::STANDARD)
+        return new CStandardPolicy(true, false);
+    throw std::runtime_error(strprintf(_("Unknown policy '%s'"), policy));    
+}
+
+CPolicy* Policy::Factory(const std::string& defaultPolicy, const std::map<std::string, std::string>& mapArgs)
+{
+    CPolicy* pPolicy = Policy::Factory(GetArg("-policy", defaultPolicy, mapArgs));
+    pPolicy->InitFromArgs(mapArgs);
+    return pPolicy;
+}
+
+void Policy::AppendHelpMessages(std::string& strUsage, const std::string& selectedPolicy)
+{
+    Container<CPolicy> cPolicy(Policy::Factory(selectedPolicy));
+    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), selectedPolicy));
+    AppendMessagesOpt(strUsage, cPolicy.Get().GetOptionsHelp());
 }

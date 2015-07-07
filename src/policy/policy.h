@@ -122,11 +122,21 @@ public:
 namespace Policy {
 
 /**
+ * Returns a new CPolicy* with the parameters specified. The caller has to delete the object.
+ * @param defaultPolicy the string selecting the policy.
+ * @param mapArgs [optional] a map with values for policy options (mapArgs["-policy"] overrides defaultPolicy).
+ * @return the newly created CPolicy*.
+ * @throws a std::runtime_error if the policy is not supported.
+ */
+CPolicy* Factory(const std::string& defaultPolicy, const std::map<std::string, std::string>& mapArgs);
+CPolicy* Factory(const std::string& policy);
+/**
  * Append a help string for the options of the selected policy.
  * @param strUsage a formatted HelpMessage string with policy options
  * is appended to this string
+ * @param selectedPolicy select a policy to show its options
  */
-void AppendHelpMessages(std::string& strUsage);
+void AppendHelpMessages(std::string& strUsage, const std::string& selectedPolicy);
 
 /** Supported policies */
 static const std::string STANDARD = "standard";

@@ -6,8 +6,10 @@
 #ifndef BITCOIN_GLOBALS_POLICY_H
 #define BITCOIN_GLOBALS_POLICY_H
 
-class CStandardPolicy;
+#include "templates.hpp"
 
-extern CStandardPolicy globalPolicy;
+class CPolicy;
+
+extern Container<CPolicy> cGlobalPolicy;
 
 #endif /*BITCOIN_GLOBALS_POLICY_H */
