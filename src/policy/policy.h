@@ -10,6 +10,7 @@
 #include "script/interpreter.h"
 #include "script/standard.h"
 
+#include <map>
 #include <string>
 
 class CCoinsViewCache;
@@ -50,6 +51,20 @@ class CPolicy
 {
 public:
     virtual ~CPolicy() {};
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const
+    {
+        std::vector<std::pair<std::string, std::string> > optionsHelp;
+        return optionsHelp;
+    }
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual void InitFromArgs(const std::map<std::string, std::string>& argMap) {};
     virtual bool ApproveScript(const CScript&, txnouttype&) const { return true; };
     /**
      * Check for standard transaction types
@@ -70,9 +85,16 @@ public:
  */
 class CStandardPolicy : public CPolicy
 {
+protected:
+    bool fIsBareMultisigStd;
+    bool fAcceptNonStdTxn;
 public:
-    CStandardPolicy()
+    CStandardPolicy(bool fIsBareMultisigStdIn=true, bool fAcceptNonStdTxnIn=false) :
+        fIsBareMultisigStd(fIsBareMultisigStdIn),
+        fAcceptNonStdTxn(fAcceptNonStdTxnIn)
     {};
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
+    virtual void InitFromArgs(const std::map<std::string, std::string>&);
     virtual bool ApproveScript(const CScript&, txnouttype&) const;
     virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
     /**
@@ -96,5 +118,19 @@ public:
      */
     virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
 };
+
+namespace Policy {
+
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ */
+void AppendHelpMessages(std::string& strUsage);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
 
 #endif // BITCOIN_POLICY_H
