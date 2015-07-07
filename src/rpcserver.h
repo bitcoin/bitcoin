@@ -240,15 +240,17 @@ extern json_spirit::Value omni_getactivedexsells(const json_spirit::Array& param
 extern json_spirit::Value omni_getactivecrowdsales(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getorderbook(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettrade(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value omni_sendrawtx(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getsto(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_listblocktransactions(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getallbalancesforaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettradehistoryforaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettradehistoryforpair(const json_spirit::Array& params, bool fHelp);
+
+/* Omni Core configuration calls */
 extern json_spirit::Value omni_setautocommit(const json_spirit::Array& params, bool fHelp);
 
 /* Omni Core transaction calls */
+extern json_spirit::Value omni_sendrawtx(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_send(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_senddexsell(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_senddexaccept(const json_spirit::Array& params, bool fHelp);
@@ -265,10 +267,12 @@ extern json_spirit::Value omni_sendrevoke(const json_spirit::Array& params, bool
 extern json_spirit::Value omni_sendclosecrowdsale(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendchangeissuer(const json_spirit::Array& params, bool fHelp);
 
-/* Omni Core hidden calls - primarily aliased calls for backwards compatibiltiy (not shown in help) */
-extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp);
+/* Omni Core hidden calls - development usage (not shown in help) */
 extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendalert(const json_spirit::Array& params, bool fHelp);
+
+/* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
+extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getinfo_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getallbalancesforid_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getbalance_MP(const json_spirit::Array& params, bool fHelp);
