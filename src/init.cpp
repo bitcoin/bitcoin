@@ -1131,7 +1131,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                             "Configuration file"); // allow translation of main text body while still allowing differing config file string
         msg += ": " + GetConfigFile().string() + "\n\n";
         msg += _("Would you like Omni Core to attempt to update your configuration file accordingly?");
-        bool fRet = uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
+        bool fRet = uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL | CClientUIInterface::BTN_ABORT);
         if (fRet) {
             // add txindex=1 to config file in GetConfigFile()
             boost::filesystem::path configPathInfo = GetConfigFile();
@@ -1146,8 +1146,11 @@ bool AppInit2(boost::thread_group& threadGroup)
             fprintf(fp, "\ntxindex=1\n");
             fflush(fp);
             fclose(fp);
-            return InitError(_("Your configuration file has been updated.\n\n"
-                               "Omni Core will now shutdown - please restart the client for your new configuration to take effect."));
+            std::string strUpdated = _(
+                    "Your configuration file has been updated.\n\n"
+                    "Omni Core will now shutdown - please restart the client for your new configuration to take effect.");
+            uiInterface.ThreadSafeMessageBox(strUpdated, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
+            StartShutdown();
         } else {
             return InitError(_("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown."));
         }
