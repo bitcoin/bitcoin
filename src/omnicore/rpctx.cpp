@@ -1022,7 +1022,7 @@ Value omni_sendalert(const Array& params, bool fHelp)
             "6. message              (string, required) the user-faced alert message\n"
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
-            "\nExamples\n"
+            "\nExamples:\n"
             + HelpExampleCli("omni_sendalert", "")
             + HelpExampleRpc("omni_sendalert", "")
         );

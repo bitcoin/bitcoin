@@ -483,7 +483,7 @@ Value omni_getproperty(const Array& params, bool fHelp)
             "  \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
             "  \"totaltokens\" : \"n.nnnnnnnn\"     (string) the total number of tokens in existence\n"
             "}\n"
-            "\nExamples\n"
+            "\nExamples:\n"
             + HelpExampleCli("omni_getproperty", "3")
             + HelpExampleRpc("omni_getproperty", "3")
         );
@@ -607,7 +607,7 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
             "    ...\n"
             "  ]\n"
             "}\n"
-            "\nExamples\n"
+            "\nExamples:\n"
             + HelpExampleCli("omni_getcrowdsale", "3 true")
             + HelpExampleRpc("omni_getcrowdsale", "3, true")
         );
@@ -809,7 +809,7 @@ Value omni_getgrants(const Array& params, bool fHelp)
             "    ...\n"
             "  ]\n"
             "}\n"
-            "\nExamples\n"
+            "\nExamples:\n"
             + HelpExampleCli("omni_getgrants", "31")
             + HelpExampleRpc("omni_getgrants", "31")
         );
@@ -1191,7 +1191,7 @@ Value omni_listblocktransactions(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
 
-            "\nExamples\n"
+            "\nExamples:\n"
             + HelpExampleCli("omni_listblocktransactions", "279007")
             + HelpExampleRpc("omni_listblocktransactions", "279007")
         );
@@ -1252,7 +1252,7 @@ Value omni_gettransaction(const Array& params, bool fHelp)
             "  \"type\" : \"type\",                  (string) the transaction type as string\n"
             "  [...]                             (mixed) other transaction type specific properties\n"
             "}\n"
-            "\nbExamples\n"
+            "\nbExamples:\n"
             + HelpExampleCli("omni_gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
             + HelpExampleRpc("omni_gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
