@@ -948,7 +948,7 @@ Dirección: %4
     </message>
     <message>
         <location line="+216"/>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <source>Can vary +/- %1 duff(s) per input.</source>
         <translation>Puede variar +/- %1 duff(s) por entrada.</translation>
     </message>
     <message>
