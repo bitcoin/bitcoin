@@ -46,7 +46,7 @@ Value omni_send(const Array& params, bool fHelp)
             "6. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_send", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"100.0\"")
@@ -107,7 +107,7 @@ Value omni_senddexsell(const Array& params, bool fHelp)
             "7. action               (number, required) the action to take: (1) new, (2) update, (3) cancel\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_senddexsell", "\"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"1.5\" \"0.75\" 25 \"0.0005\" 1")
@@ -192,7 +192,7 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
             "5. override             (boolean, optional) override minimum accept fee and payment window checks (use with caution!)\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
@@ -281,7 +281,7 @@ Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
             "14. issuerpercentage    (number, required) a percentage of tokens that will be granted to the issuer (default: 0)\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 1 \"100\" 1483228800 30 2")
@@ -350,7 +350,7 @@ Value omni_sendissuancefixed(const Array& params, bool fHelp)
             "10. amount              (string, required) the number of tokens to create\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendissuancefixed", "\"3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" \"1000000\"")
@@ -413,7 +413,7 @@ Value omni_sendissuancemanaged(const Array& params, bool fHelp)
             "9. data                 (string, optional) a description for the new tokens (can be \"\")\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendissuancemanaged", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\"")
@@ -464,13 +464,13 @@ Value omni_sendsto(const Array& params, bool fHelp)
             "\nCreate and broadcast a send-to-owners transaction.\n"
 
             "\nArguments:\n"
-            "1. fromaddress       (string, required) the address to send from\n"
-            "2. propertyid        (number, required) the identifier of the tokens to distribute\n"
-            "3. amount            (string, required) the amount to distribute\n"
-            "4. redeemaddress     (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. propertyid           (number, required) the identifier of the tokens to distribute\n"
+            "3. amount               (string, required) the amount to distribute\n"
+            "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendsto", "\"32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 3 \"5000\"")
@@ -524,7 +524,7 @@ Value omni_sendgrant(const Array& params, bool fHelp)
             "5. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendgrant", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"7000\"")
@@ -579,7 +579,7 @@ Value omni_sendrevoke(const Array& params, bool fHelp)
             "4. memo                 (string, optional) a text note attached to this transaction (none by default)\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendrevoke", "\"3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH\" \"\" 51 \"100\"")
@@ -632,7 +632,7 @@ Value omni_sendclosecrowdsale(const Array& params, bool fHelp)
             "2. propertyid           (number, required) the identifier of the crowdsale to close\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendclosecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 70")
@@ -749,7 +749,7 @@ Value omni_sendtrade(const Array& params, bool fHelp)
             "5. amountdesired        (string, required) the amount of tokens desired in exchange\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendtrade", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"250.0\" 1 \"10.0\"")
@@ -808,7 +808,7 @@ Value omni_sendcanceltradesbyprice(const Array& params, bool fHelp)
             "5. amountdesired        (string, required) the amount of tokens desired in exchange\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendcanceltradesbyprice", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 31 \"100.0\" 1 \"5.0\"")
@@ -865,7 +865,7 @@ Value omni_sendcanceltradesbypair(const Array& params, bool fHelp)
             "3. propertiddesired     (number, required) the identifier of the tokens desired in exchange\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendcanceltradesbypair", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1 31")
@@ -919,7 +919,7 @@ Value omni_sendcancelalltrades(const Array& params, bool fHelp)
             "2. ecosystem            (number, required) the ecosystem of the offers to cancel: (0) both, (1) main, (2) test\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendcancelalltrades", "\"3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR\" 1")
@@ -969,7 +969,7 @@ Value omni_sendchangeissuer(const Array& params, bool fHelp)
             "3. propertyid           (number, required) the identifier of the tokens\n"
 
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
             + HelpExampleCli("omni_sendchangeissuer", "\"1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu\" \"3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs\" 3")
@@ -1014,14 +1014,14 @@ Value omni_sendalert(const Array& params, bool fHelp)
             "\nCreates and broadcasts an Omni Core alert.\n"
             "\nNote: Omni Core ignores alerts from unauthorized sources.\n"
             "\nArguments:\n"
-            "1. fromaddress       (string, required) the address to send from\n"
-            "2. alerttype         (number, required) the alert type\n"
-            "3. expiryvalue       (number, required) the block when the alert expires\n"
-            "4. typecheck         (number, required) the transaction type to target\n"
-            "5. versioncheck      (number, required) the client version to target\n"
-            "6. message           (string, required) the user-faced alert message\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. alerttype            (number, required) the alert type\n"
+            "3. expiryvalue          (number, required) the block when the alert expires\n"
+            "4. typecheck            (number, required) the transaction type to target\n"
+            "5. versioncheck         (number, required) the client version to target\n"
+            "6. message              (string, required) the user-faced alert message\n"
             "\nResult:\n"
-            "\"hash\"               (string) the hex-encoded transaction hash\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
             "\nExamples\n"
             + HelpExampleCli("omni_sendalert", "")
             + HelpExampleRpc("omni_sendalert", "")
