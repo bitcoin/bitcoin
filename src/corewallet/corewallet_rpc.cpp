@@ -13,12 +13,16 @@
 #include "utilstrencodings.h"
 #include "utilmoneystr.h"
 
+#include <list>
+#include <algorithm>
 #include <string>
 
 #include "univalue/univalue.h"
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
 namespace CoreWallet
@@ -45,6 +49,30 @@ struct RPCDispatchEntry
     rpcfn_type actor;
 };
 
+enum ParamVTypes { VFLEX, VSTR, VNUM, VBOOL };
+
+struct RPCParamEntry
+{
+    bool mandatory;
+    std::string key;
+    enum ParamVTypes vtype;
+    std::string helptext;
+    std::string example;
+};
+
+const char *RPCTypeName(enum ParamVTypes t)
+{
+    switch (t) {
+        case VFLEX: return "not defined";
+        case VBOOL: return "bool";
+        case VSTR: return "string";
+        case VNUM: return "number";
+    }
+    
+    // not reached
+    return NULL;
+}
+
 //dispatch compatible rpc function definitions
 UniValue hdaddchain(const UniValue& params, bool fHelp);
 UniValue hdsetchain(const UniValue& params, bool fHelp);
@@ -61,7 +89,6 @@ UniValue createtx(const UniValue& params, bool fHelp);
 UniValue getbalance(const UniValue& params, bool fHelp);
     
 static const RPCDispatchEntry vDispatchEntries[] = {
-    { "getnewaddress",                    &getnewaddress },
     { "listaddresses",                    &listaddresses },
 
     { "hdaddchain",                       &hdaddchain },
@@ -105,6 +132,86 @@ Wallet* WalletFromParams(const UniValue& params)
     return wallet;
 }
 
+void AllowKeysInParams(const std::string &callname, const UniValue& params, bool forceHelp, Wallet *wallet, RPCParamEntry *allowedParams, const std::string &helptext) {
+    unsigned int i;
+
+    std::string errorPart = "";
+    for (i = 0; i < (sizeof(*allowedParams) / sizeof(RPCParamEntry)); i++)
+    {
+        RPCParamEntry *param = &allowedParams[i];
+
+        bool found = false;
+        bool typeCheck = false;
+        if (params.size() > 0 && params[0].isObject())
+        {
+            const UniValue& o = params[0].get_obj();
+            BOOST_FOREACH(const std::string &key, o.getKeys())
+            {
+                UniValue val = find_value(o, key);
+                std::string lowercaseKey = key;
+                boost::to_lower(lowercaseKey);
+                if (lowercaseKey == param->key)
+                {
+                    found = true;
+
+                    if (param->vtype == VSTR && val.isStr())
+                        typeCheck = true;
+                    if (param->vtype == VNUM && val.isNum())
+                        typeCheck = true;
+                    if (param->vtype == VBOOL && val.isBool())
+                        typeCheck = true;
+                    if (param->vtype == VFLEX)
+                        typeCheck = true;
+
+                    break;
+                }
+            }
+        }
+
+        if (param->mandatory && !found)
+            errorPart += "Parameter "+SanitizeString(param->key)+" not found but is required\n";
+
+        if (found && !typeCheck)
+            errorPart += "Parameter "+SanitizeString(param->key)+" has wrong type (TODO)\n";
+    }
+
+    //check if we have a unrecognized parameter
+    if (params.size() > 0 && params[0].isObject())
+    {
+        const UniValue& o = params[0].get_obj();
+        BOOST_FOREACH(const std::string &key, o.getKeys())
+        {
+            bool found = false;
+            unsigned int i;
+            for (i = 0; i < (sizeof(*allowedParams) / sizeof(RPCParamEntry)); i++)
+            {
+                RPCParamEntry *param = &allowedParams[i];
+                std::string lowercaseKey = key;
+                boost::to_lower(lowercaseKey);
+                if (param->key == lowercaseKey)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                errorPart += "Parameter "+SanitizeString(key)+" is unknown\n";
+        }
+    }
+
+    if (errorPart.size() > 0 || forceHelp)
+    {
+        std::string paramText = "";
+        unsigned int i;
+        for (i = 0; i < (sizeof(*allowedParams) / sizeof(RPCParamEntry)); i++)
+        {
+            RPCParamEntry *param = &allowedParams[i];
+            paramText += param->key+" ("+(param->mandatory ? "reuired" : "optional")+", "+RPCTypeName(param->vtype)+" "+param->helptext+"\n";
+        }
+        throw RPCHelpException(errorPart+"\n"+callname+"\n"+helptext+"\n"+paramText);
+    }
+}
+
 //! search in exiting json object for a key/value pair and returns value
 UniValue ValueFromParams(const UniValue& params, const std::string& key, UniValue::VType forceType = UniValue::VNULL)
 {
@@ -140,25 +247,6 @@ UniValue ValueFromParams(const UniValue& params, const std::string& key, UniValu
 ///////////////////////////
 // Keys/Addresses stack
 ///////////////////////////
-UniValue getnewaddress(const UniValue& params, bool fHelp)
-{
-    Wallet *wallet = WalletFromParams(params);
-    if (fHelp || !wallet)
-        throw RPCHelpException(
-                            "getnewaddress\n"
-                            "\nReturns a new non-deterministic Bitcoin address for receiving payments.\n"
-                            "\nResult:\n"
-                            "\"bitcoinaddress\"    (string) The new bitcoin address\n"
-                            "\nExamples:\n"
-                            + HelpExampleCli("getaddress", "")
-                            + HelpExampleRpc("getaddress", "")
-                            );
-    
-
-    //TODO: non deterministic single key generation
-
-    return NullUniValue;
-}
 
 UniValue listaddresses(const UniValue& params, bool fHelp)
 {
@@ -197,15 +285,14 @@ UniValue listaddresses(const UniValue& params, bool fHelp)
 UniValue addwallet(const UniValue& params, bool fHelp)
 {
     UniValue walletIDValue = ValueFromParams(params, "walletid");
-    if (fHelp || walletIDValue.isNull())
-        throw RPCHelpException(
-                             "addwallet walletid=<walletid>\n"
-                             "\nArguments:\n"
-                             "  \"walletid\"    (string, required) allowed characters: A-Za-z0-9._-\n"
-                             "\nExamples:\n"
-                             + HelpExampleCli("addwallet", "\"anotherwallet\"")
-                             + HelpExampleRpc("addwallet", "\"anotherwallet\"")
-                             );
+    static RPCParamEntry allowedParams[] = {
+        { true, "wallteid", VSTR, "allowed characters: A-Za-z0-9._-", "testwallet"}
+    };
+
+    AllowKeysInParams("addwallet", params, fHelp, NULL, allowedParams,
+                      "\nCreates a new wallet with given walletid.\n"
+                      "\nResult:\n"
+                      "\"bitcoinaddress\"    (string) The new bitcoin address\n");
 
     std::string walletID = walletIDValue.get_str();
     CoreWallet::GetManager()->AddNewWallet(walletID);
