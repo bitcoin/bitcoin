@@ -412,7 +412,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     Object obj;
     obj.push_back(Pair("version",       CLIENT_VERSION));
     obj.push_back(Pair("subversion",
-        FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>())));
+        FormatUserAgent(vUserAgentCodebases)));
     obj.push_back(Pair("protocolversion",PROTOCOL_VERSION));
     obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));

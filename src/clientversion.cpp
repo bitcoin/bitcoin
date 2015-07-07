@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include <boost/foreach.hpp>
+
 /**
  * Name of client reported in the 'version' message. Report the same name
  * for both bitcoind and bitcoin-core, to make it harder for attackers to
@@ -78,7 +80,7 @@ const std::string CLIENT_NAME("Satoshi");
 const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX);
 const std::string CLIENT_DATE(BUILD_DATE);
 
-static std::string FormatVersion(int nVersion)
+std::string FormatVersion(int nVersion)
 {
     if (nVersion % 100 == 0)
         return strprintf("%d.%d.%d", nVersion / 1000000, (nVersion / 10000) % 100, (nVersion / 100) % 100);
@@ -91,22 +93,46 @@ std::string FormatFullVersion()
     return CLIENT_BUILD;
 }
 
+BitcoinUserAgentCodebase::BitcoinUserAgentCodebase(const std::string strName, const std::string strVersion, const std::string strComment)
+: name(strName), version(strVersion) {
+    comments.push_back(strComment);
+}
+
+BitcoinUserAgentCodebase::BitcoinUserAgentCodebase(const std::string strName, const std::string strVersion, const std::vector<std::string> vstrComments)
+: name(strName), version(strVersion), comments(vstrComments) {
+}
+
+std::vector<BitcoinUserAgentCodebase> vUserAgentCodebases;
+
+static class UAInitialiser {
+public:
+    UAInitialiser() {
+        vUserAgentCodebases.push_back(BitcoinUserAgentCodebase(CLIENT_NAME, FormatVersion(CLIENT_VERSION)));
+        BitcoinUserAgentCodebase& core_codebase = vUserAgentCodebases[0];
+        core_codebase.comments.clear();
+        /*
+         * These lines should appear between arbitrary-ordered codebases to make patch application simpler.
+         */
+    }
+} UAInitialiser_instance;
+
 /** 
- * Format the subversion field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki) 
+ * Format the user-agent field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki)
  */
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
-{
+std::string FormatUserAgent(const std::vector<BitcoinUserAgentCodebase> codebases) {
     std::ostringstream ss;
     ss << "/";
-    ss << name << ":" << FormatVersion(nClientVersion);
-    if (!comments.empty())
-    {
-        std::vector<std::string>::const_iterator it(comments.begin());
-        ss << "(" << *it;
-        for(++it; it != comments.end(); ++it)
-            ss << "; " << *it;
-        ss << ")";
+    BOOST_FOREACH(const BitcoinUserAgentCodebase& codebase, codebases) {
+        ss << codebase.name << ":" << codebase.version;
+        if (!codebase.comments.empty())
+        {
+            std::vector<std::string>::const_iterator it(codebase.comments.begin());
+            ss << "(" << *it;
+            for(++it; it != codebase.comments.end(); ++it)
+                ss << "; " << *it;
+            ss << ")";
+        }
+        ss << "/";
     }
-    ss << "/";
     return ss.str();
 }
