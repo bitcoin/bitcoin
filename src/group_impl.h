@@ -461,7 +461,7 @@ static void secp256k1_gej_add_zinv_var(secp256k1_gej_t *r, const secp256k1_gej_t
 
 
 static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_ge_t *b) {
-    /* Operations: 7 mul, 5 sqr, 4 normalize, 22 mul_int/add/negate/cmov */
+    /* Operations: 7 mul, 5 sqr, 4 normalize, 21 mul_int/add/negate/cmov */
     static const secp256k1_fe_t fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_fe_t zz, u1, u2, s1, s2, t, tt, m, n, q, rr;
     secp256k1_fe_t m_alt, rr_alt;
@@ -540,8 +540,8 @@ static void secp256k1_gej_add_ge(secp256k1_gej_t *r, const secp256k1_gej_t *a, c
      * a nontrivial cube root of one. In either case, an alternate
      * non-indeterminate expression for lambda is (y1 - y2)/(x1 - x2),
      * so we set R/M equal to this. */
-    secp256k1_fe_negate(&rr_alt, &s2, 1);   /* rr = -Y2*Z1^3  */
-    secp256k1_fe_add(&rr_alt, &s1);         /* rr = Y1*Z2^3 - Y2*Z1^3 */
+    rr_alt = s1;
+    secp256k1_fe_mul_int(&rr_alt, 2);       /* rr = Y1*Z2^3 - Y2*Z1^3 (2) */
     secp256k1_fe_add(&m_alt, &u1);          /* Malt = X1*Z2^2 - X2*Z1^2 */
 
     secp256k1_fe_cmov(&rr_alt, &rr, !degenerate);
