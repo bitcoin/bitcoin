@@ -597,27 +597,18 @@ void StartRPCThreads()
         strAllowed += subnet.ToString() + " ";
     LogPrint("rpc", "Allowing RPC connections from: %s\n", strAllowed);
 
-    strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     if (mapArgs["-rpcpassword"] == "")
     {
-        unsigned char rand_pwd[32];
-        GetRandBytes(rand_pwd, 32);
-        uiInterface.ThreadSafeMessageBox(strprintf(
-            _("To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:\n"
-              "%s\n"
-              "It is recommended you use the following random password:\n"
-              "rpcuser=bitcoinrpc\n"
-              "rpcpassword=%s\n"
-              "(you do not need to remember this password)\n"
-              "The username and password MUST NOT be the same.\n"
-              "If the file does not exist, create it with owner-readable-only file permissions.\n"
-              "It is also recommended to set alertnotify so you are notified of problems;\n"
-              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
-                GetConfigFile().string(),
-                EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
-                "", CClientUIInterface::MSG_ERROR | CClientUIInterface::SECURE);
-        StartShutdown();
-        return;
+        LogPrintf("No rpcpassword set - using random cookie authentication\n");
+        if (!GenerateAuthCookie(&strRPCUserColonPass)) {
+            uiInterface.ThreadSafeMessageBox(
+                _("Error: A fatal internal error occured, see debug.log for details"), // Same message as AbortNode
+                "", CClientUIInterface::MSG_ERROR);
+            StartShutdown();
+            return;
+        }
+    } else {
+        strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
     }
 
     assert(rpc_io_service == NULL);
@@ -767,6 +758,8 @@ void StopRPCThreads()
             LogPrintf("%s: Warning: %s when cancelling timer", __func__, ec.message());
     }
     deadlineTimers.clear();
+
+    DeleteAuthCookie();
 
     rpc_io_service->stop();
     g_rpcSignals.Stopped();
