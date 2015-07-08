@@ -60,7 +60,9 @@ extern CActiveMasternode activeMasternode;
 bool IsSyncingMasternodeAssets();
 
 // get the Darksend chain depth for a given input
-int GetInputDarksendRounds(CTxIn in, int rounds=0);
+int GetRealInputDarksendRounds(CTxIn in, int rounds);
+// respect current settings
+int GetInputDarksendRounds(CTxIn in);
 
 /** Holds an Darksend input
  */
