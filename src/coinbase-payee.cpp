@@ -28,7 +28,7 @@ bool CCoinbasePayeeDB::Write(const CCoinbasePayee& objToSave)
 
     // serialize, checksum data up to that point, then append checksum
     CDataStream ssObj(SER_DISK, CLIENT_VERSION);
-    ssObj << strMagicMessage; // masternode cache file specific magic message
+    ssObj << strMagicMessage; // coinbase payee cache file specific magic message
     ssObj << FLATDATA(Params().MessageStart()); // network specific magic number
     ssObj << objToSave;
     uint256 hash = Hash(ssObj.begin(), ssObj.end());
@@ -102,13 +102,13 @@ CCoinbasePayeeDB::ReadResult CCoinbasePayeeDB::Read(CCoinbasePayee& objToLoad)
     unsigned char pchMsgTmp[4];
     std::string strMagicMessageTmp;
     try {
-        // de-serialize file header (masternode cache file specific magic message) and ..
+        // de-serialize file header (coinbase payee cache file specific magic message) and ..
         ssObj >> strMagicMessageTmp;
 
         // ... verify the message matches predefined one
         if (strMagicMessage != strMagicMessageTmp)
         {
-            error("%s : Invalid masternode cache magic message", __func__);
+            error("%s : Invalid coinbase payee cache magic message", __func__);
             return IncorrectMagicMessage;
         }
 
