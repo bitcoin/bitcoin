@@ -41,7 +41,7 @@ using namespace boost;
 #define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT        1444217600   //OFF
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT         1444217600   //OFF
 #define SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT          1444217600   //OFF
-
+    
 class CSporkMessage;
 class CSporkManager;
 

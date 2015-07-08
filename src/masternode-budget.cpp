@@ -83,7 +83,7 @@ void CBudgetManager::ResignInvalidProposals()
 
     CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
     if(pmn == NULL) {
-        LogPrintf("mprop - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
+        LogPrintf("CBudgetManager::ResignInvalidProposals  - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
         return;
     }
 
@@ -396,24 +396,7 @@ void DumpBudgets()
     int64_t nStart = GetTimeMillis();
 
     CBudgetDB mndb;
-    CBudgetManager tempbudget;
 
-    LogPrintf("Verifying budget.dat format...\n");
-    CBudgetDB::ReadResult readResult = mndb.Read(tempbudget);
-    // there was an error and it was not an error on file openning => do not proceed
-    if (readResult == CBudgetDB::FileError)
-        LogPrintf("Missing budget cache file - budget.dat, will try to recreate\n");
-    else if (readResult != CBudgetDB::Ok)
-    {
-        LogPrintf("Error reading budget.dat: ");
-        if(readResult == CBudgetDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-        {
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-            return;
-        }
-    }
     LogPrintf("Writting info to budget.dat...\n");
     mndb.Write(budget);
 
@@ -1276,6 +1259,7 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast()
     nBlockEnd = 0;
     nAmount = 0;
     nTime = 0;
+    fInvalid = false;
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
@@ -1287,6 +1271,7 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
     nBlockEnd = other.nBlockEnd;
     address = other.address;
     nAmount = other.nAmount;
+    fInvalid = false;
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn)
@@ -1303,6 +1288,8 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(CTxIn vinIn, std::string strP
 
     address = addressIn;
     nAmount = nAmountIn;
+
+    fInvalid = false;
 }
 
 bool CBudgetProposalBroadcast::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
@@ -1598,25 +1585,26 @@ bool CFinalizedBudget::IsValid()
 
 bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
-   /* BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
-    {
-        bool found = false;
-        BOOST_FOREACH(CTxOut out, txNew.vout)
-        {
-            if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue)
-                found = true;
-        }
+    // TODO:
+    // BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
+    // {
+    //     bool found = false;
+    //     BOOST_FOREACH(CTxOut out, txNew.vout)
+    //     {
+    //         if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue)
+    //             found = true;
+    //     }
 
-        if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED && !found){
+    //     if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED && !found){
 
-            CTxDestination address1;
-            ExtractDestination(payee.scriptPubKey, address1);
-            CBitcoinAddress address2(address1);
+    //         CTxDestination address1;
+    //         ExtractDestination(payee.scriptPubKey, address1);
+    //         CBitcoinAddress address2(address1);
 
-            LogPrintf("CMasternodePayments::IsTransactionValid - Missing required payment - %s:%d\n", address2.ToString().c_str(), payee.nValue);
-            return false;
-        }
-    }*/
+    //         LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s:%d\n", address2.ToString().c_str(), payee.nValue);
+    //         return false;
+    //     }
+    // }
 
     return true;
 }
