@@ -86,6 +86,7 @@ MinerCoinsDialog::~MinerCoinsDialog()
 void MinerCoinsDialog::on_sendButton_clicked()
 {
     Credits_CCoinsViewCache &credits_view = *credits_pcoinsTip;
+    Bitcoin_CCoinsViewCache &bitcoin_view = *bitcoin_pcoinsTip;
 
     if(!bitcredit_model || !bitcredit_model->getOptionsModel())
         return;
@@ -131,7 +132,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
 
 		// prepare transaction
 		Bitcredit_WalletModelTransaction transaction(recipients);
-		Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, credits_view);
+		Bitcredit_WalletModel::SendCoinsReturn prepareStatus = bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, credits_view, bitcoin_view);
 
 		// process prepareStatus and on error generate message shown to user
 		processSendCoinsReturn(prepareStatus,
@@ -185,7 +186,7 @@ void MinerCoinsDialog::on_sendButton_clicked()
 
 		// prepare transaction
 		Bitcredit_WalletModelTransaction transaction(recipients);
-		bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, credits_view);
+		bitcredit_model->prepareDepositTransaction(deposit_model, transaction, output, credits_view, bitcoin_view);
 
 		//Finalize it
 		Bitcredit_WalletModel::SendCoinsReturn sendStatus = deposit_model->storeDepositTransaction(bitcredit_model, transaction);

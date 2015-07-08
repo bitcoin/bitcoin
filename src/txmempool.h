@@ -8,8 +8,10 @@
 #include <list>
 
 #include "coins.h"
+#include "bitcoin_coins.h"
 #include "core.h"
 #include "sync.h"
+
 
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int BITCREDIT_MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -70,7 +72,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(Credits_CCoinsViewCache *pcoins) const;
+    void check(Credits_CCoinsViewCache *credits_pcoins, Bitcoin_CCoinsViewCache *bitcoin_pcoins) const;
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const Bitcredit_CTxMemPoolEntry &entry);

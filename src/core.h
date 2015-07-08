@@ -170,90 +170,6 @@ public:
     void print() const;
 };
 
-/** An output of a transaction.  It contains the public key that the next input
- * must be able to sign with to claim it.
- */
-class CTxOutClaim
-{
-public:
-    int64_t nValueOriginal;
-    int64_t nValueClaimable;
-    CScript scriptPubKey;
-
-    CTxOutClaim()
-    {
-        SetNull();
-    }
-
-    CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn);
-
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(nValueOriginal);
-        READWRITE(nValueClaimable);
-        READWRITE(scriptPubKey);
-
-        assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginal));
-        assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimable));
-        assert_with_stacktrace(nValueOriginal >= nValueClaimable, strprintf("CTxOutClaim() : valueOriginal less than valueClaimable: %d:%d", nValueOriginal, nValueClaimable));
-    )
-
-    void SetNull()
-    {
-        nValueOriginal = -1;
-        nValueClaimable = -1;
-        scriptPubKey.clear();
-    }
-
-    bool IsNull() const
-    {
-        return (nValueOriginal == -1);
-    }
-
-    uint256 GetHash() const;
-
-    friend bool operator==(const CTxOutClaim& a, const CTxOutClaim& b)
-    {
-        return (a.nValueOriginal       == b.nValueOriginal &&
-        		a.nValueClaimable       == b.nValueClaimable &&
-                a.scriptPubKey == b.scriptPubKey);
-    }
-
-    friend bool operator!=(const CTxOutClaim& a, const CTxOutClaim& b)
-    {
-        return !(a == b);
-    }
-
-    std::string ToString() const;
-    void print() const;
-};
-
-/*
- * Stores the two different levels of values before spending.
- * These two are used to calculate the difference between the
- * original and the claimable state
- */
-class ClaimSum
-{
-public:
-    int64_t nValueOriginalSum;
-    int64_t nValueClaimableSum;
-
-    ClaimSum()
-    {
-        nValueOriginalSum = 0;
-        nValueClaimableSum = 0;
-    }
-
-    void Validate() {
-    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalSum), strprintf("ClaimSum() : nOriginal out of range: %d", nValueOriginalSum));
-    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableSum), strprintf("ClaimSum() : nClaimable out of range: %d", nValueClaimableSum));
-
-    	assert(nValueOriginalSum >= nValueClaimableSum);
-    }
-};
-
-
 /** Tx types */
 enum
 {
@@ -396,37 +312,6 @@ public:
             uint64_t nVal = 0;
             READWRITE(VARINT(nVal));
             txout.nValue = DecompressAmount(nVal);
-        }
-        CScriptCompressor cscript(REF(txout.scriptPubKey));
-        READWRITE(cscript);
-    });)
-};
-
-/** wrapper for CTxOut that provides a more compact serialization */
-class CTxOutClaimCompressor
-{
-private:
-    CTxOutClaim &txout;
-
-public:
-    static uint64_t CompressAmount(uint64_t nAmount);
-    static uint64_t DecompressAmount(uint64_t nAmount);
-
-    CTxOutClaimCompressor(CTxOutClaim &txoutIn) : txout(txoutIn) { }
-
-    IMPLEMENT_SERIALIZE(({
-        if (!fRead) {
-            uint64_t nValOriginal = CompressAmount(txout.nValueOriginal);
-            READWRITE(VARINT(nValOriginal));
-            uint64_t nValClaimable = CompressAmount(txout.nValueClaimable);
-            READWRITE(VARINT(nValClaimable));
-        } else {
-            uint64_t nValOriginal = 0;
-            READWRITE(VARINT(nValOriginal));
-            txout.nValueOriginal = DecompressAmount(nValOriginal);
-            uint64_t nValClaimable = 0;
-            READWRITE(VARINT(nValClaimable));
-            txout.nValueClaimable = DecompressAmount(nValClaimable);
         }
         CScriptCompressor cscript(REF(txout.scriptPubKey));
         READWRITE(cscript);
@@ -710,9 +595,6 @@ public:
 
     // Byte offset within rev?????.dat where this block's undo data is stored
     unsigned int nUndoPos;
-
-    // Byte offset within cla?????.dat where this block's undo claim data is stored
-    unsigned int nUndoPosClaim;
 
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     uint256 nChainWork;

@@ -1511,7 +1511,7 @@ bool Credits_CWallet::CreateTransaction(Credits_CWallet *deposit_wallet, CScript
 }
 
 bool Credits_CWallet::CreateDepositTransaction(Credits_CWallet *deposit_wallet, const pair<CScript, int64_t> & send,
-                                Credits_CWalletTx& wtxNew, Credits_CReserveKey& depositSignatureKey, const int64_t & nTotalIn, std::string& strFailReason, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view)
+                                Credits_CWalletTx& wtxNew, Credits_CReserveKey& depositSignatureKey, const int64_t & nTotalIn, std::string& strFailReason, const Credits_COutput& coin, Credits_CCoinsViewCache &credits_view, Bitcoin_CCoinsViewCache &bitcoin_view)
 {
 	wtxNew.nTxType = TX_TYPE_DEPOSIT;
 
@@ -1574,7 +1574,7 @@ bool Credits_CWallet::CreateDepositTransaction(Credits_CWallet *deposit_wallet, 
 	//Input verification
     int64_t nClaimedCoins = 0;
     CValidationState state;
-    if (!Credits_CheckInputs(wtxNew, state, credits_view, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS)) {
+    if (!Credits_CheckInputs(wtxNew, state, credits_view, bitcoin_view, nClaimedCoins, true, MANDATORY_SCRIPT_VERIFY_FLAGS)) {
         strFailReason = _("Deposit inputs are not valid");
         return false;
     }
@@ -1642,7 +1642,7 @@ bool Credits_CWallet::ImportKeyFromBitcoinWallet (CTxDestination & address, Bitc
 	return true;
 }
 
-bool Credits_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Credits_CCoinsViewCache *claim_view, const vector<pair<CScript, int64_t> >& vecSend,
+bool Credits_CWallet::CreateClaimTransaction(Bitcoin_CWallet *bitcoin_wallet, Bitcoin_CCoinsViewCache *claim_view, const vector<pair<CScript, int64_t> >& vecSend,
                                 Credits_CWalletTx& wtxNew, Credits_CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl)
 {
 	wtxNew.nTxType = TX_TYPE_EXTERNAL_BITCOIN;

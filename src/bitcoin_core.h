@@ -76,6 +76,145 @@ public:
     void print() const;
 };
 
+/** An output of a transaction.  It contains the public key that the next input
+ * must be able to sign with to claim it.
+ */
+class Bitcoin_CTxOut
+{
+public:
+    int64_t nValueOriginal;
+    int64_t nValueClaimable;
+    CScript scriptPubKey;
+    int nValueOriginalHasBeenSpent;
+
+    Bitcoin_CTxOut()
+    {
+        SetNull();
+    }
+
+    Bitcoin_CTxOut(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn, int nValueOriginalHasBeenSpentIn);
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(nValueOriginal);
+        READWRITE(nValueClaimable);
+        READWRITE(scriptPubKey);
+        READWRITE(nValueOriginalHasBeenSpent);
+
+        assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginal), strprintf("Bitcoin_CTxOut() : valueOriginal out of range: %d", nValueOriginal));
+        assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimable), strprintf("Bitcoin_CTxOut() : valueClaimable out of range: %d", nValueClaimable));
+        assert_with_stacktrace(nValueOriginal >= nValueClaimable, strprintf("Bitcoin_CTxOut() : valueOriginal less than valueClaimable: %d:%d", nValueOriginal, nValueClaimable));
+    )
+
+    void SetNull()
+    {
+        nValueOriginal = -1;
+        nValueClaimable = -1;
+        scriptPubKey.clear();
+        nValueOriginalHasBeenSpent = -1;
+    }
+    void SetOriginalSpent(int nValueOriginalHasBeenSpentIn)
+    {
+        nValueOriginalHasBeenSpent = nValueOriginalHasBeenSpentIn;
+    }
+
+    bool IsNull() const
+    {
+        return nValueOriginal == -1;
+    }
+    bool IsOriginalSpent() const
+    {
+        return nValueOriginalHasBeenSpent == 1;
+    }
+
+    uint256 GetHash() const;
+
+    bool IsDust(int64_t nMinRelayTxFee) const
+    {
+        // "Dust" is defined in terms of Credits_CTransaction::nMinRelayTxFee,
+        // which has units satoshis-per-kilobyte.
+        // If you'd pay more than 1/3 in fees
+        // to spend something, then we consider it dust.
+        // A typical txout is 34 bytes big, and will
+        // need a CTxIn of at least 148 bytes to spend,
+        // so dust is a txout less than 546 satoshis
+        // with default nMinRelayTxFee.
+        return ((nValueOriginal*1000)/(3*((int)GetSerializeSize(SER_DISK,0)+148)) < nMinRelayTxFee);
+    }
+
+    friend bool operator==(const Bitcoin_CTxOut& a, const Bitcoin_CTxOut& b)
+    {
+        return (a.nValueOriginal       == b.nValueOriginal &&
+        		a.nValueClaimable       == b.nValueClaimable &&
+                a.scriptPubKey == b.scriptPubKey &&
+                a.nValueOriginalHasBeenSpent == b.nValueOriginalHasBeenSpent);
+    }
+
+    friend bool operator!=(const Bitcoin_CTxOut& a, const Bitcoin_CTxOut& b)
+    {
+        return !(a == b);
+    }
+
+    std::string ToString() const;
+    void print() const;
+};
+
+/*
+ * Stores the two different levels of values before spending.
+ * These two are used to calculate the difference between the
+ * original and the claimable state
+ */
+class ClaimSum
+{
+public:
+    int64_t nValueOriginalSum;
+    int64_t nValueClaimableSum;
+
+    ClaimSum()
+    {
+        nValueOriginalSum = 0;
+        nValueClaimableSum = 0;
+    }
+
+    void Validate() {
+    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalSum), strprintf("ClaimSum() : nOriginal out of range: %d", nValueOriginalSum));
+    	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableSum), strprintf("ClaimSum() : nClaimable out of range: %d", nValueClaimableSum));
+
+    	assert(nValueOriginalSum >= nValueClaimableSum);
+    }
+};
+
+/** wrapper for CTxOut that provides a more compact serialization */
+class Bitcoin_CTxOutCompressor
+{
+private:
+    Bitcoin_CTxOut &txout;
+
+public:
+    static uint64_t CompressAmount(uint64_t nAmount);
+    static uint64_t DecompressAmount(uint64_t nAmount);
+
+    Bitcoin_CTxOutCompressor(Bitcoin_CTxOut &txoutIn) : txout(txoutIn) { }
+
+    IMPLEMENT_SERIALIZE(({
+        if (!fRead) {
+            uint64_t nValOriginal = CompressAmount(txout.nValueOriginal);
+            READWRITE(VARINT(nValOriginal));
+            uint64_t nValClaimable = CompressAmount(txout.nValueClaimable);
+            READWRITE(VARINT(nValClaimable));
+        } else {
+            uint64_t nValOriginal = 0;
+            READWRITE(VARINT(nValOriginal));
+            txout.nValueOriginal = DecompressAmount(nValOriginal);
+            uint64_t nValClaimable = 0;
+            READWRITE(VARINT(nValClaimable));
+            txout.nValueClaimable = DecompressAmount(nValClaimable);
+        }
+        CScriptCompressor cscript(REF(txout.scriptPubKey));
+        READWRITE(cscript);
+        READWRITE(VARINT(txout.nValueOriginalHasBeenSpent));
+    });)
+};
 
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
@@ -125,6 +264,9 @@ public:
     // GetValueIn() is a method on CCoinsViewCache, because
     // inputs must be known to compute value in.
 
+    //If all outputs are unspendable, the corresponding coin will not be found in chainstate
+    bool HasSpendable() const;
+
     // Compute priority, given priority of inputs and (optionally) tx size
     double ComputePriority(double dPriorityInputs, unsigned int nTxSize=0) const;
 
@@ -151,60 +293,142 @@ public:
     void print() const;
 };
 
-
-/** Undo information for a CTxIn
- *
- *  Contains the prevout's CTxOut being spent, and if this was the
- *  last output of the affected transaction, its metadata as well
- *  (coinbase or not, height, transaction version)
- */
-class Bitcoin_CTxInUndoClaim
+class Bitcoin_CTransactionCompressed
 {
 public:
-    CTxOutClaim txout;         // the txout data before being spent
-    bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
-    unsigned int nHeight; // if the outpoint was the last unspent: its height
-    int nVersion;         // if the outpoint was the last unspent: its version
+    static const int CURRENT_VERSION=1;
+    int nVersion;
+	uint256 txHash;
+    int64_t valueOut;
+    std::vector<COutPoint> vin;
+    //Only holds info whether the out is spendable or not. 0 == unspendable, 1 == spendable
+    std::vector<bool> voutSpendable;
 
-    Bitcoin_CTxInUndoClaim() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    Bitcoin_CTxInUndoClaim(const CTxOutClaim &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    //Memory only
+    bool isCoinBase;
+   std::vector<CTxOut> vout;
+    bool isCreatedFromBlock;
+
+    Bitcoin_CTransactionCompressed(const Bitcoin_CTransaction &tx, bool isCoinBaseIn)
+    {
+        SetNull();
+
+		txHash = tx.GetHash();
+		valueOut = tx.GetValueOut();
+		isCoinBase = isCoinBaseIn;
+		for (unsigned int j = 0; j < tx.vin.size(); j++) {
+			vin.push_back(tx.vin[j].prevout);
+		}
+		for (unsigned int j = 0; j < tx.vout.size(); j++) {
+			voutSpendable.push_back(!tx.vout[j].scriptPubKey.IsUnspendable());
+			vout.push_back(tx.vout[j]);
+		}
+		isCreatedFromBlock = true;
+    }
+
+    Bitcoin_CTransactionCompressed()
+    {
+        SetNull();
+    }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const {
-        return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
-               (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
-               ::GetSerializeSize(CTxOutClaimCompressor(REF(txout)), nType, nVersion);
+        unsigned int nSize = 0;
+        // version
+        nSize += ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion);
+        nVersion = this->nVersion;
+        nSize += ::GetSerializeSize(txHash, nType, nVersion);
+        const uint64_t nValOut = Bitcoin_CTxOutCompressor::CompressAmount(valueOut);
+        nSize += ::GetSerializeSize(VARINT(nValOut), nType, nVersion);
+        nSize += ::GetSerializeSize(vin, nType, nVersion);
+    	//Size indicator
+    	unsigned int nSpendableSize = voutSpendable.size();
+        nSize += ::GetSerializeSize(VARINT(nSpendableSize), nType, nVersion);
+        //Bit array of spentness
+        nSize += nSpendableSize;
+        return nSize;
     }
 
     template<typename Stream>
     void Serialize(Stream &s, int nType, int nVersion) const {
-        ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion);
-        if (nHeight > 0)
-            ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
-        ::Serialize(s, CTxOutClaimCompressor(REF(txout)), nType, nVersion);
+        // version
+        ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
+        nVersion = this->nVersion;
+        ::Serialize(s, txHash, nType, nVersion);
+        const uint64_t nValOut = Bitcoin_CTxOutCompressor::CompressAmount(valueOut);
+        ::Serialize(s, VARINT(nValOut), nType, nVersion);
+        ::Serialize(s, vin, nType, nVersion);
+    	//Size indicator
+    	unsigned int nSpendableSize = voutSpendable.size();
+        ::Serialize(s, VARINT(nSpendableSize), nType, nVersion);
+        //Bit array of spentness
+        for (unsigned int b = 0; b*8 < nSpendableSize; b++) {
+            unsigned char output = 0;
+            for (unsigned int i = 0; i < 8 && b*8+i < nSpendableSize; i++) {
+            	output |= (voutSpendable[b*8+i] << i);
+            }
+            ::Serialize(s, output, nType, nVersion);
+        }
     }
 
     template<typename Stream>
     void Unserialize(Stream &s, int nType, int nVersion) {
-        unsigned int nCode = 0;
-        ::Unserialize(s, VARINT(nCode), nType, nVersion);
-        nHeight = nCode / 2;
-        fCoinBase = nCode & 1;
-        if (nHeight > 0)
-            ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
-        ::Unserialize(s, REF(CTxOutClaimCompressor(REF(txout))), nType, nVersion);
+        // version
+        ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
+        nVersion = this->nVersion;
+        ::Unserialize(s, txHash, nType, nVersion);
+        uint64_t nValOut = 0;
+        ::Unserialize(s, VARINT(nValOut), nType, nVersion);
+        valueOut = Bitcoin_CTxOutCompressor::DecompressAmount(nValOut);
+        ::Unserialize(s, vin, nType, nVersion);
+    	//Size indicator
+    	unsigned int nSpendableSize = 0;
+        ::Unserialize(s, VARINT(nSpendableSize), nType, nVersion);
+        //Bit array of spentness
+        for (unsigned int b = 0; b*8 < nSpendableSize; b++) {
+            unsigned char input = 0;
+            ::Unserialize(s, input, nType, nVersion);
+		   for(int i = 0; i < 8 && b*8+i < nSpendableSize; i++) {
+			   voutSpendable.push_back(input & (1 << i));
+		   }
+        }
     }
-};
 
-/** Undo information for a Bitcoin_CTransaction */
-class Bitcoin_CTxUndoClaim
-{
-public:
-    // undo information for all txins
-    std::vector<Bitcoin_CTxInUndoClaim> vprevout;
+    void SetNull()
+    {
+        nVersion = Bitcoin_CTransaction::CURRENT_VERSION;
+    	txHash = uint256(0);
+        valueOut = 0;
+        vin.clear();
+        voutSpendable.clear();
+        isCoinBase = false;
+        vout.clear();
+        isCreatedFromBlock = false;
+    }
 
-    IMPLEMENT_SERIALIZE(
-        READWRITE(vprevout);
-    )
+    const uint256& GetHash() const {
+    	return txHash;
+    }
+
+    bool IsCoinBase() const {
+    	return isCoinBase;
+    }
+
+    bool IsCreatedFromBlock() const {
+    	return isCreatedFromBlock;
+    }
+
+    int64_t GetValueOut() const {
+    	return valueOut;
+    }
+
+    bool HasSpendable() const {
+    	for (unsigned int i = 0; i < voutSpendable.size() ; i++) {
+    		if(voutSpendable[i]) {
+    			return true;
+    		}
+    	}
+        return false;
+    }
 };
 
 
@@ -217,18 +441,18 @@ public:
 class Bitcoin_CTxInUndo
 {
 public:
-    CTxOut txout;         // the txout data before being spent
+    Bitcoin_CTxOut txout;         // the txout data before being spent
     bool fCoinBase;       // if the outpoint was the last unspent: whether it belonged to a coinbase
     unsigned int nHeight; // if the outpoint was the last unspent: its height
     int nVersion;         // if the outpoint was the last unspent: its version
 
     Bitcoin_CTxInUndo() : txout(), fCoinBase(false), nHeight(0), nVersion(0) {}
-    Bitcoin_CTxInUndo(const CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
+    Bitcoin_CTxInUndo(const Bitcoin_CTxOut &txoutIn, bool fCoinBaseIn = false, unsigned int nHeightIn = 0, int nVersionIn = 0) : txout(txoutIn), fCoinBase(fCoinBaseIn), nHeight(nHeightIn), nVersion(nVersionIn) { }
 
     unsigned int GetSerializeSize(int nType, int nVersion) const {
         return ::GetSerializeSize(VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion) +
                (nHeight > 0 ? ::GetSerializeSize(VARINT(this->nVersion), nType, nVersion) : 0) +
-               ::GetSerializeSize(CTxOutCompressor(REF(txout)), nType, nVersion);
+               ::GetSerializeSize(Bitcoin_CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
     template<typename Stream>
@@ -236,7 +460,7 @@ public:
         ::Serialize(s, VARINT(nHeight*2+(fCoinBase ? 1 : 0)), nType, nVersion);
         if (nHeight > 0)
             ::Serialize(s, VARINT(this->nVersion), nType, nVersion);
-        ::Serialize(s, CTxOutCompressor(REF(txout)), nType, nVersion);
+        ::Serialize(s, Bitcoin_CTxOutCompressor(REF(txout)), nType, nVersion);
     }
 
     template<typename Stream>
@@ -247,11 +471,11 @@ public:
         fCoinBase = nCode & 1;
         if (nHeight > 0)
             ::Unserialize(s, VARINT(this->nVersion), nType, nVersion);
-        ::Unserialize(s, REF(CTxOutCompressor(REF(txout))), nType, nVersion);
+        ::Unserialize(s, REF(Bitcoin_CTxOutCompressor(REF(txout))), nType, nVersion);
     }
 };
 
-/** Undo information for a Credits_CTransaction */
+/** Undo information for a Bitcoin_CTransaction */
 class Bitcoin_CTxUndo
 {
 public:
@@ -379,6 +603,46 @@ public:
     std::vector<uint256> GetMerkleBranch(int nIndex) const;
     static uint256 CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMerkleBranch, int nIndex);
     void print() const;
+};
+
+class Bitcoin_CBlockCompressed
+{
+public:
+    std::vector<Bitcoin_CTransactionCompressed> vtx;
+
+    //Memory only, must be set on creation
+	uint256 blockHash;
+
+	Bitcoin_CBlockCompressed(const Bitcoin_CBlock &block)
+    {
+        SetNull();
+
+        for (unsigned int i = 0; i < block.vtx.size(); i++) {
+    		vtx.push_back(Bitcoin_CTransactionCompressed(block.vtx[i], i == 0));
+    	}
+        blockHash = block.GetHash();
+    }
+
+    Bitcoin_CBlockCompressed()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(vtx);
+    )
+
+    void SetNull()
+    {
+    	blockHash = uint256(0);
+        vtx.clear();
+    }
+
+    uint256 GetHash() const
+    {
+        return blockHash;
+    }
 };
 
 #endif

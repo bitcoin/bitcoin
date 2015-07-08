@@ -540,7 +540,7 @@ Value bitcoin_listaddressgroupings(const Array& params, bool fHelp)
         );
 
     Array jsonGroupings;
-    map<CTxDestination, int64_t> balances = bitcoin_pwalletMain->GetAddressBalances(credits_pcoinsTip);
+    map<CTxDestination, int64_t> balances = bitcoin_pwalletMain->GetAddressBalances(bitcoin_pcoinsTip);
     BOOST_FOREACH(set<CTxDestination> grouping, bitcoin_pwalletMain->GetAddressGroupings())
     {
         Array jsonGrouping;
@@ -2938,7 +2938,7 @@ Value bitcoin_getwalletinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("walletversion", bitcoin_pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(credits_pcoinsTip, mapClaimTxInPoints))));
+    obj.push_back(Pair("balance",       ValueFromAmount(bitcoin_pwalletMain->GetBalance(bitcoin_pcoinsTip, mapClaimTxInPoints))));
     obj.push_back(Pair("txcount",       (int)bitcoin_pwalletMain->mapWallet.size()));
     obj.push_back(Pair("keypoololdest", bitcoin_pwalletMain->GetOldestKeyPoolTime()));
     obj.push_back(Pair("keypoolsize",   (int)bitcoin_pwalletMain->GetKeyPoolSize()));

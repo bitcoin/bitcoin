@@ -63,27 +63,6 @@ void CTxOut::print() const
     LogPrintf("%s\n", ToString());
 }
 
-CTxOutClaim::CTxOutClaim(int64_t nValueOriginalIn, int64_t nValueClaimableIn, CScript scriptPubKeyIn)
-{
-	assert_with_stacktrace(Bitcoin_MoneyRange(nValueOriginalIn), strprintf("CTxOutClaim() : valueOriginal out of range: %d", nValueOriginalIn));
-	assert_with_stacktrace(Bitcoin_MoneyRange(nValueClaimableIn), strprintf("CTxOutClaim() : valueClaimable out of range: %d", nValueClaimableIn));
-	assert_with_stacktrace(nValueOriginalIn >= nValueClaimableIn, strprintf("CTxOutClaim() : valueOriginal less than valueClaimable: %d:%d", nValueOriginalIn, nValueClaimableIn));
-
-	nValueOriginal = nValueOriginalIn;
-	nValueClaimable = nValueClaimableIn;
-    scriptPubKey = scriptPubKeyIn;
-}
-
-std::string CTxOutClaim::ToString() const
-{
-    return strprintf("CTxOutClaim(nValueOriginal=%d.%08d, nValueClaimable=%d.%08d, scriptPubKey=%s(%s))", nValueOriginal / COIN, nValueOriginal % COIN, nValueClaimable / COIN, nValueClaimable % COIN, scriptPubKey.ToString().substr(0,30), HexStr(scriptPubKey.begin(), scriptPubKey.end(), false));
-}
-
-void CTxOutClaim::print() const
-{
-    LogPrintf("%s\n", ToString());
-}
-
 uint256 Credits_CTransaction::GetHash() const
 {
     return SerializeHash(*this, SER_GETHASH, CREDITS_PROTOCOL_VERSION);
@@ -179,51 +158,6 @@ uint64_t CTxOutCompressor::CompressAmount(uint64_t n)
 }
 
 uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
-{
-    // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
-    if (x == 0)
-        return 0;
-    x--;
-    // x = 10*(9*n + d - 1) + e
-    int e = x % 10;
-    x /= 10;
-    uint64_t n = 0;
-    if (e < 9) {
-        // x = 9*n + d - 1
-        int d = (x % 9) + 1;
-        x /= 9;
-        // x = n
-        n = x*10 + d;
-    } else {
-        n = x+1;
-    }
-    while (e) {
-        n *= 10;
-        e--;
-    }
-    return n;
-}
-
-uint64_t CTxOutClaimCompressor::CompressAmount(uint64_t n)
-{
-    if (n == 0)
-        return 0;
-    int e = 0;
-    while (((n % 10) == 0) && e < 9) {
-        n /= 10;
-        e++;
-    }
-    if (e < 9) {
-        int d = (n % 10);
-        assert(d >= 1 && d <= 9);
-        n /= 10;
-        return 1 + (n*9 + d - 1)*10 + e;
-    } else {
-        return 1 + (n - 1)*10 + 9;
-    }
-}
-
-uint64_t CTxOutClaimCompressor::DecompressAmount(uint64_t x)
 {
     // x = 0  OR  x = 1+10*(9*n + d - 1) + e  OR  x = 1+10*(n - 1) + 9
     if (x == 0)

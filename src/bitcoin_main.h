@@ -33,7 +33,7 @@
 #include <vector>
 
 class Bitcoin_CBlockIndex;
-class Bitcoin_CBlockUndoClaim;
+class Bitcoin_CBlockUndo;
 class CBloomFilter;
 class CInv;
 
@@ -140,8 +140,6 @@ bool Bitcoin_CheckDiskSpace(uint64_t nAdditionalBytes = 0);
 FILE* Bitcoin_OpenBlockFile(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Open an undo file (rev?????.dat) */
 FILE* Bitcoin_OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly = false);
-/** Open a claim  undo file (cla?????.dat) */
-FILE* Bitcoin_OpenUndoFileClaim(const CDiskBlockPos &pos, bool fReadOnly = false);
 /** Import blocks from an external file */
 bool Bitcoin_LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp = NULL);
 /** Initialize a new block tree database + block data on disk */
@@ -171,9 +169,10 @@ bool Bitcoin_GetTransaction(const uint256 &hash, Bitcoin_CTransaction &tx, uint2
 /** Find the best known block, and make it the tip of the block chain */
 bool Bitcoin_ActivateBestChain(CValidationState &state);
 /** Trim all old block files + undo files up to this block */
-bool Bitcoin_TrimBlockHistory(const Bitcoin_CBlockIndex * pTrimTo);
+bool Bitcoin_TrimBlockHistory();
+bool Bitcoin_TrimCompressedBlockHistory(CValidationState &state);
 /** Move the position of the claim tip (a structure similar to chainstate + undo) */
-bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Credits_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
+bool Bitcoin_AlignClaimTip(const Credits_CBlockIndex *expectedCurrentBlockIndex, const Credits_CBlockIndex *palignToBlockIndex, Bitcoin_CCoinsViewCache& view, CValidationState &state, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
 int64_t Bitcoin_GetBlockValue(int nHeight, int64_t nFees);
 unsigned int Bitcoin_GetNextWorkRequired(const Bitcoin_CBlockIndex* pindexLast, const Bitcoin_CBlockHeader *pblock);
 
@@ -247,9 +246,6 @@ bool Bitcoin_CheckInputs(const Bitcoin_CTransaction& tx, CValidationState &state
                  unsigned int flags = STANDARD_SCRIPT_VERIFY_FLAGS,
                  std::vector<Bitcoin_CScriptCheck> *pvChecks = NULL);
 
-// Apply the effects of this transaction on the UTXO set represented by view
-void Bitcoin_UpdateCoins(const Bitcoin_CTransaction& tx, CValidationState &state, Bitcoin_CCoinsViewCache &inputs, Bitcoin_CTxUndo &txundo,Credits_CCoinsViewCache &claim_inputs, Bitcoin_CTxUndoClaim &claim_txundo,  int nHeight, const uint256 &txhash);
-
 // Context-independent validity checks
 bool Bitcoin_CheckTransaction(const Bitcoin_CTransaction& tx, CValidationState& state);
 
@@ -265,76 +261,6 @@ class Bitcoin_CBlockUndo
 {
 public:
     std::vector<Bitcoin_CTxUndo> vtxundo; // for all but the coinbase
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(vtxundo);
-    )
-
-    bool WriteToDisk(FILE * writeToFile, CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
-    {
-        // Open history file to append
-        CAutoFile fileout = CAutoFile(writeToFile, SER_DISK, netParams->ClientVersion());
-        if (!fileout)
-            return error("Bitcoin: CBlockUndo::WriteToDisk : OpenUndoFile failed");
-
-        // Write index header
-        unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(netParams->MessageStart()) << nSize;
-
-        // Write undo data
-        long fileOutPos = ftell(fileout);
-        if (fileOutPos < 0)
-            return error("Bitcoin: CBlockUndo::WriteToDisk : ftell failed");
-        pos.nPos = (unsigned int)fileOutPos;
-        fileout << *this;
-
-        // calculate & write checksum
-        CHashWriter hasher(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
-        hasher << hashBlock;
-        hasher << *this;
-        fileout << hasher.GetHash();
-
-        // Flush stdio buffers and commit to disk before returning
-        fflush(fileout);
-        if (!Bitcoin_IsInitialBlockDownload())
-            FileCommit(fileout);
-
-        return true;
-    }
-
-    bool ReadFromDisk(FILE * readFromFile, const CDiskBlockPos &pos, const uint256 &hashBlock, CNetParams * netParams)
-    {
-        // Open history file to read
-        CAutoFile filein = CAutoFile(readFromFile, SER_DISK, netParams->ClientVersion());
-        if (!filein)
-            return error("Bitcoin: CBlockUndo::ReadFromDisk : OpenBlockFile failed");
-
-        // Read block
-        uint256 hashChecksum;
-        try {
-            filein >> *this;
-            filein >> hashChecksum;
-        }
-        catch (std::exception &e) {
-            return error("Bitcoin: %s : Deserialize or I/O error - %s", __func__, e.what());
-        }
-
-        // Verify checksum
-        CHashWriter hasher(SER_GETHASH, BITCOIN_PROTOCOL_VERSION);
-        hasher << hashBlock;
-        hasher << *this;
-        if (hashChecksum != hasher.GetHash())
-            return error("Bitcoin: CBlockUndo::ReadFromDisk : Checksum mismatch");
-
-        return true;
-    }
-};
-
-/** Undo information for a CBlock */
-class Bitcoin_CBlockUndoClaim
-{
-public:
-    std::vector<Bitcoin_CTxUndoClaim> vtxundo; // for all but the coinbase
 
     IMPLEMENT_SERIALIZE(
         READWRITE(vtxundo);
@@ -502,15 +428,16 @@ bool Bitcoin_ReadBlockFromDisk(Bitcoin_CBlock& block, const Bitcoin_CBlockIndex*
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
 /** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
-bool Bitcoin_DeleteBlockUndoClaimsFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
-bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, Credits_CCoinsViewCache& claim_coins, bool updateUndo, bool* pfClean = NULL);
-bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Credits_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims, bool* pfClean = NULL);
+bool Bitcoin_DeleteBlockUndoFromDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
+bool Bitcoin_DisconnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins,  bool updateUndo, bool* pfClean = NULL);
+bool Bitcoin_DisconnectBlockForClaim(Bitcoin_CBlockCompressed& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
 /** THIS FUNCTION MAY FAIL IF THE BITCOIN BLOCKCHAIN IS TRIMMED */
-bool Bitcoin_WriteBlockUndoClaimsToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
-bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, Credits_CCoinsViewCache& claim_coins, bool updateUndo, bool fJustCheck);
-bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Credits_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndoClaim> > &vBlockUndoClaims);
+bool Bitcoin_WriteBlockUndosToDisk(CValidationState& state, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
+bool Bitcoin_WriteChainState(CValidationState &state);
+bool Bitcoin_ConnectBlock(Bitcoin_CBlock& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, bool fJustCheck);
+bool Bitcoin_ConnectBlockForClaim(Bitcoin_CBlockCompressed& block, CValidationState& state, Bitcoin_CBlockIndex* pindex, Bitcoin_CCoinsViewCache& coins, bool updateUndo, std::vector<pair<Bitcoin_CBlockIndex*, Bitcoin_CBlockUndo> > &vBlockUndos);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool Bitcoin_AddToBlockIndex(Bitcoin_CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
@@ -549,7 +476,6 @@ public:
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nUndoPosClaim = 0;
         nChainWork = 0;
         nTx = 0;
         nChainTx = 0;
@@ -571,7 +497,6 @@ public:
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nUndoPosClaim = 0;
         nChainWork = 0;
         nTx = 0;
         nChainTx = 0;
@@ -599,15 +524,6 @@ public:
         if (nStatus & BLOCK_HAVE_UNDO) {
             ret.nFile = nFile;
             ret.nPos  = nUndoPos;
-        }
-        return ret;
-    }
-
-    CDiskBlockPos GetUndoPosClaim() const {
-        CDiskBlockPos ret;
-        if (nStatus & BLOCK_HAVE_UNDO_CLAIM) {
-            ret.nFile = nFile;
-            ret.nPos  = nUndoPosClaim;
         }
         return ret;
     }
@@ -714,14 +630,12 @@ public:
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));
-        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO | BLOCK_HAVE_UNDO_CLAIM))
+        if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)
             READWRITE(VARINT(nDataPos));
         if (nStatus & BLOCK_HAVE_UNDO)
             READWRITE(VARINT(nUndoPos));
-        if (nStatus & BLOCK_HAVE_UNDO_CLAIM)
-            READWRITE(VARINT(nUndoPosClaim));
 
         // block header
         READWRITE(this->nVersion);
