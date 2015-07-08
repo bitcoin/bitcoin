@@ -427,7 +427,8 @@ void CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
 
     if(mapFinalizedBudgets.count(finalizedBudget.GetHash()) && mapFinalizedBudgets[finalizedBudget.GetHash()].vin != finalizedBudget.vin) {
         //this finalized budget must have went invalid, so update the vin to the new one
-        LogPrintf("CBudgetManager::AddFinalizedBudget -- updated vin of invalid finalized budget (%s to %s)\n",
+        LogPrintf("CBudgetManager::AddFinalizedBudget -- updated vin of invalid finalized budget %s (%s to %s)\n",
+                  finalizedBudget.strBudgetName,
                   mapFinalizedBudgets[finalizedBudget.GetHash()].vin.prevout.ToStringShort(),
                   finalizedBudget.vin.prevout.ToStringShort());
         mapFinalizedBudgets[finalizedBudget.GetHash()].vin = finalizedBudget.vin;
@@ -448,7 +449,10 @@ void CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
 
     if(mapProposals.count(budgetProposal.GetHash()) && mapProposals[budgetProposal.GetHash()].vin != budgetProposal.vin) {
         //this budget proposal must have went invalid, so update the vin to the new one
-        LogPrintf("CBudgetManager::AddProposal -- updated vin of invalid budget proposal (%s to %s)\n", mapProposals[budgetProposal.GetHash()].vin.prevout.ToStringShort().c_str(), budgetProposal.vin.prevout.ToStringShort().c_str());
+        LogPrintf("CBudgetManager::AddProposal -- updated vin of invalid budget proposal %s (%s to %s)\n", 
+            budgetProposal.strProposalName,
+            mapProposals[budgetProposal.GetHash()].vin.prevout.ToStringShort().c_str(), 
+            budgetProposal.vin.prevout.ToStringShort().c_str());
         mapProposals[budgetProposal.GetHash()].vin = budgetProposal.vin;
         return;
     }
@@ -1119,7 +1123,7 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
 
 bool CBudgetProposal::IsValid(std::string& strError)
 {
-    if(GetYeas()+GetNays() < -(mnodeman.CountEnabled()/10)){
+    if(GetYeas()-GetNays() < -(mnodeman.CountEnabled()/10)){
          strError = "Active removal";
          return false;
     }
