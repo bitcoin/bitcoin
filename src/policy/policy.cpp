@@ -34,6 +34,17 @@
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
 
+CAmount CPolicy::GetMinAmount(const CTxOut& txout) const
+{
+    size_t nSize = txout.GetSerializeSize(SER_DISK,0) + 148u;
+    return 3 * minRelayTxFee.GetFee(nSize);
+}
+
+bool CPolicy::ApproveOutputAmount(const CTxOut& txout) const
+{
+    return txout.nValue >= GetMinAmount(txout);
+}
+
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
@@ -103,7 +114,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (!globalPolicy.ApproveOutputAmount(txout)) {
             reason = "dust";
             return false;
         }

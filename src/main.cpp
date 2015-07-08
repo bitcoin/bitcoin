@@ -68,6 +68,7 @@ bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
+CPolicy globalPolicy;
 
 CTxMemPool mempool(::minRelayTxFee);
 
