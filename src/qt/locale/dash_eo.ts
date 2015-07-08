@@ -1016,7 +1016,7 @@ Adreso: %4
     </message>
     <message>
         <location filename="../coincontroldialog.cpp" line="654"/>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <source>Can vary +/- %1 duff(s) per input.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
