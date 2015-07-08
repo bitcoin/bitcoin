@@ -123,6 +123,10 @@ public:
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();
         mapFinalizedBudgets.clear();
+        mapSeenMasternodeBudgetProposals.clear();
+        mapSeenMasternodeBudgetVotes.clear();
+        mapSeenFinalizedBudgets.clear();
+        mapSeenFinalizedBudgetVotes.clear();
     }
     void CheckAndRemove();
     std::string ToString() {return "not implemented";}
