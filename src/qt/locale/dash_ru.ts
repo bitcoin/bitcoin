@@ -979,7 +979,7 @@ Address: %4
     </message>
     <message>
         <location line="+216"/>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <source>Can vary +/- %1 duff(s) per input.</source>
         <translation>Может отличаться на +/- %1 сатоши на каждый вход.</translation>
     </message>
     <message>

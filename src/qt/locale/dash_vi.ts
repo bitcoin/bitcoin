@@ -948,7 +948,7 @@ Kiểu: %3
     </message>
     <message>
         <location line="+216"/>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <source>Can vary +/- %1 duff(s) per input.</source>
         <translation type="unfinished"/>
     </message>
     <message>

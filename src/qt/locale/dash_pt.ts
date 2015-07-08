@@ -948,8 +948,8 @@ Endereço: %4
     </message>
     <message>
         <location line="+216"/>
-        <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>Pode variar +/- %1 satoshi(s) por entrada.</translation>
+        <source>Can vary +/- %1 duff(s) per input.</source>
+        <translation>Pode variar +/- %1 duff(s) por entrada.</translation>
     </message>
     <message>
         <location line="+131"/>
