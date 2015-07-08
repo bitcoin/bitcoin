@@ -125,7 +125,7 @@ There have been many changes in this release to reduce the default memory usage
 of a node, among which:
 
 - Accurate UTXO cache size accounting (#6102); this makes the option `-dbcache`
-  precise, where is did a gross underestimation of memory usage before
+  precise where this grossly underestimated memory usage before
 - Reduce size of per-peer data structure (#6064 and others); this increases the
   number of connections that can be supported with the same amount of memory
 - Reduce the number of threads (#5964, #5679); lowers the amount of (esp.
