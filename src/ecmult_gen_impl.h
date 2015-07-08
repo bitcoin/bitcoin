@@ -156,6 +156,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context_t *ctx, cons
     unsigned char nonce32[32];
     secp256k1_rfc6979_hmac_sha256_t rng;
     int retry;
+    unsigned char keydata[64] = {0};
     if (!seed32) {
         /* When seed is NULL, reset the initial point and blinding value. */
         secp256k1_gej_set_ge(&ctx->initial, &secp256k1_ge_const_g);
@@ -168,7 +169,12 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context_t *ctx, cons
      *   and guards against weak or adversarial seeds.  This is a simpler and safer interface than
      *   asking the caller for blinding values directly and expecting them to retry on failure.
      */
-    secp256k1_rfc6979_hmac_sha256_initialize(&rng, seed32 ? seed32 : nonce32, 32, nonce32, 32, NULL, 0);
+    memcpy(keydata, nonce32, 32);
+    if (seed32) {
+        memcpy(keydata + 32, seed32, 32);
+    }
+    secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, seed32 ? 64 : 32);
+    memset(keydata, 0, sizeof(keydata));
     /* Retry for out of range results to achieve uniformity. */
     do {
         secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);

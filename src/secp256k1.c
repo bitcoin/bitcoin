@@ -86,9 +86,20 @@ int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const unsigned char *
 }
 
 static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+   unsigned char keydata[96];
    secp256k1_rfc6979_hmac_sha256_t rng;
    unsigned int i;
-   secp256k1_rfc6979_hmac_sha256_initialize(&rng, key32, 32, msg32, 32, (const unsigned char*)data, data != NULL ? 32 : 0);
+   /* We feed a byte array to the PRNG as input, consisting of:
+    * - the private key (32 bytes) and message (32 bytes), see RFC 6979 3.2d.
+    * - optionally 32 extra bytes of data, see RFC 6979 3.6 Additional Data.
+    */
+   memcpy(keydata, key32, 32);
+   memcpy(keydata + 32, msg32, 32);
+   if (data != NULL) {
+       memcpy(keydata + 64, data, 32);
+   }
+   secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, data != NULL ? 96 : 64);
+   memset(keydata, 0, sizeof(keydata));
    for (i = 0; i <= counter; i++) {
        secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
    }
