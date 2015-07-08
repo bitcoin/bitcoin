@@ -166,6 +166,9 @@ public:
 
     //!get a pubkey with given keyid for verifiying, etc.
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+
+    //!get a hdpubkey
+    bool GetHDPubKey(const CKeyID &address, CHDPubKey &pubkeyOut) const;
 };
 };  //end namespace
 #endif // BITCOIN_WALLET_HDKEYSTORE_H

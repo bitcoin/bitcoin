@@ -106,6 +106,21 @@ bool CHDKeyStore::LoadHDPubKey(const CHDPubKey &pubkey)
     return true;
 }
 
+bool CHDKeyStore::GetHDPubKey(const CKeyID &address, CHDPubKey &pubkeyOut) const
+{
+    LOCK(cs_KeyStore);
+    if (mapHDPubKeys.count(address) > 0)
+    {
+        std::map<CKeyID, CHDPubKey>::const_iterator mi = mapHDPubKeys.find(address);
+        if (mi != mapHDPubKeys.end())
+        {
+            pubkeyOut = mi->second;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CHDKeyStore::GetAvailableChainIDs(std::vector<HDChainID>& chainIDs)
 {
     LOCK(cs_KeyStore);
