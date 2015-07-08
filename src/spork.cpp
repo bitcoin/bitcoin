@@ -9,6 +9,7 @@
 #include "protocol.h"
 #include "spork.h"
 #include "main.h"
+#include "masternode-budget.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -88,6 +89,7 @@ bool IsSporkActive(int nSporkID)
         if(nSporkID == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) r = SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
+        if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
 
         if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -111,6 +113,7 @@ int GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) r = SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
+        if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
 
         if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -120,6 +123,10 @@ int GetSporkValue(int nSporkID)
 
 void ExecuteSpork(int nSporkID, int nValue)
 {
+    if(nSporkID == SPORK_11_RESET_BUDGET && nValue == 1){
+        budget.Clear();
+
+    }
 }
 
 
@@ -214,6 +221,7 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if(strName == "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT") return SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT;
     if(strName == "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT") return SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT;
     if(strName == "SPORK_10_MASTERNODE_PAY_NEWEST_NODES") return SPORK_10_MASTERNODE_PAY_NEWEST_NODES;
+    if(strName == "SPORK_11_RESET_BUDGET") return SPORK_11_RESET_BUDGET;
 
     return -1;
 }
@@ -227,6 +235,7 @@ std::string CSporkManager::GetSporkNameByID(int id)
     if(id == SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT) return "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT";
     if(id == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) return "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT";
     if(id == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) return "SPORK_10_MASTERNODE_PAY_NEWEST_NODES";
+    if(id == SPORK_11_RESET_BUDGET) return "SPORK_11_RESET_BUDGET";
 
     return "Unknown";
 }
