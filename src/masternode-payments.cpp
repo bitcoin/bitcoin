@@ -153,6 +153,12 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
     }
 }
 
+int CMasternodePayments::GetMinMasternodePaymentsProto() {
+    return IsSporkActive(SPORK_10_MASTERNODE_PAY_NEWEST_NODES)
+            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
+            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+}
+
 void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(IsInitialBlockDownload()) return;
@@ -409,7 +415,7 @@ bool CMasternodePaymentWinner::IsValid()
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
-    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, MIN_MNPAYMENTS_PROTO_VERSION);
+    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, GetMinMasternodePaymentsProto());
 
     if(n == -1)
     {
@@ -435,7 +441,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     //reference node - hybrid mode
 
     if(!IsReferenceNode(activeMasternode.vin)){
-        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNPAYMENTS_PROTO_VERSION);
+        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, GetMinMasternodePaymentsProto());
 
         if(n == -1)
         {

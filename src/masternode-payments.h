@@ -21,7 +21,6 @@ extern CMasternodePayments masternodePayments;
 extern std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
 extern std::map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
-static const int MIN_MNPAYMENTS_PROTO_VERSION = 70066;
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
 
@@ -200,6 +199,7 @@ public:
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
 
+    int GetMinMasternodePaymentsProto();
     void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);

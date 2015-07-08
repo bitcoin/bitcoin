@@ -385,12 +385,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(!mn.IsEnabled()) continue;
 
         // //check protocol version
-        if(IsSporkActive(SPORK_10_MASTERNODE_PAY_NEWEST_NODES)){
-            if(mn.protocolVersion < MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2) continue;
-        } else {
-            //support older versions for a period of time
-            if(mn.protocolVersion < MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1) continue;
-        }
+        if(mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list -- so let's skip it
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
