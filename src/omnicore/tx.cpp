@@ -899,9 +899,9 @@ int CMPTransaction::logicMath_MetaDExTrade()
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
                 __func__,
                 sender,
+                property,
                 FormatMP(property, nBalance),
-                FormatMP(property, nNewValue),
-                property);
+                FormatMP(property, nNewValue));
         return (PKT_ERROR_METADEX -25);
     }
 
@@ -1451,9 +1451,9 @@ int CMPTransaction::logicMath_RevokeTokens()
         PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
                 __func__,
                 sender,
+                property,
                 FormatMP(property, nBalance),
-                FormatMP(property, nValue),
-                property);
+                FormatMP(property, nValue));
         return (PKT_ERROR_TOKENS -25);
     }
 
