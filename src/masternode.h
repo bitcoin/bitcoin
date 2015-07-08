@@ -11,7 +11,6 @@
 #include "util.h"
 #include "base58.h"
 #include "main.h"
-#include "masternode.h"
 #include "timedata.h"
 
 #define MASTERNODE_NOT_PROCESSED               0 // initial state
