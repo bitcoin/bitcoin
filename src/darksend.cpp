@@ -387,11 +387,11 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 int randomizeList (int i) { return std::rand()%i;}
 
 // Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
-int GetInputDarksendRounds(CTxIn in, int rounds)
+int GetRealInputDarksendRounds(CTxIn in, int rounds)
 {
     static std::map<uint256, CMutableTransaction> mDenomWtxes;
 
-    if(rounds >= 17) return rounds;
+    if(rounds >= 16) return 15; // 16 rounds max
 
     uint256 hash = in.prevout.hash;
     unsigned int nout = in.prevout.n;
@@ -417,14 +417,14 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
         if(nout >= wtx.vout.size())
         {
             // should never actually hit this
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, -4);
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
             return -4;
         }
 
         if(pwalletMain->IsCollateralAmount(wtx.vout[nout].nValue))
         {
             mDenomWtxes[hash].vout[nout].nRounds = -3;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -432,7 +432,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
         if(/*rounds == 0 && */!pwalletMain->IsDenominatedAmount(wtx.vout[nout].nValue)) //NOT DENOM
         {
             mDenomWtxes[hash].vout[nout].nRounds = -2;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -445,7 +445,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
         if(!fAllDenoms)
         {
             mDenomWtxes[hash].vout[nout].nRounds = 0;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -456,7 +456,7 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
         {
             if(pwalletMain->IsMine(in2))
             {
-                int n = GetInputDarksendRounds(in2, rounds+1);
+                int n = GetRealInputDarksendRounds(in2, rounds+1);
                 // denom found, find the shortest chain or initially assign nShortest with the first found value
                 if(n >= 0 && (n < nShortest || nShortest == -10))
                 {
@@ -466,13 +466,19 @@ int GetInputDarksendRounds(CTxIn in, int rounds)
             }
         }
         mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
-                ? nShortest + 1 // good, we a +1 to the shortest one
+                ? (nShortest >= 15 ? 16 : nShortest + 1) // good, we a +1 to the shortest one but only 16 rounds max allowed
                 : 0;            // too bad, we are the fist one in that chain
-        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
         return mDenomWtxes[hash].vout[nout].nRounds;
     }
 
     return rounds-1;
+}
+
+// respect current settings
+int GetInputDarksendRounds(CTxIn in) {
+    int realDarksendRounds = GetRealInputDarksendRounds(in, 0);
+    return realDarksendRounds > nDarksendRounds ? nDarksendRounds : realDarksendRounds;
 }
 
 void CDarksendPool::Reset(){
