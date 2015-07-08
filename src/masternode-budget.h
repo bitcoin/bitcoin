@@ -41,7 +41,6 @@ void DumpBudgets();
 
 //Amount of blocks in a months period of time (using 2.6 minutes per)
 int GetBudgetPaymentCycleBlocks();
-void SubmitFinalBudget();
 
 /** Save Budget Manager (budget.dat)
  */
@@ -99,15 +98,14 @@ public:
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
 
-    void CleanUp();
-
     int64_t GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal*> GetBudget();
     std::vector<CBudgetProposal*> GetAllProposals();
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    void AddProposal(CBudgetProposal& prop);
-    void AddFinalizedBudget(CFinalizedBudget& prop);
+    void AddProposal(CBudgetProposal& budgetProposal);
+    void AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
+    void SubmitFinalBudget();
 
     bool UpdateProposal(CBudgetVote& vote, CNode* pfrom);
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom);
@@ -120,6 +118,7 @@ public:
     void ResignInvalidProposals();
     void CheckSignatureValidity();
 
+    void CheckOrphanVotes();
     void Clear(){
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();

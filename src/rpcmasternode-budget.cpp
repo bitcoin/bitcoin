@@ -125,14 +125,14 @@ Value mnbudget(const Array& params, bool fHelp)
             }
 
             //create the proposal incase we're the first to make it
-            CBudgetProposalBroadcast prop(pmn->vin, strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart);
-            if(!prop.Sign(keyMasternode, pubKeyMasternode)){
+            CBudgetProposalBroadcast budgetProposalBroadcast(pmn->vin, strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart);
+            if(!budgetProposalBroadcast.Sign(keyMasternode, pubKeyMasternode)){
                 return "Failure to sign.";
             }
-            mapSeenMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
-            prop.Relay();
+            mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+            budgetProposalBroadcast.Relay();
 
-            CBudgetVote vote(pmn->vin, prop.GetHash(), nVote);
+            CBudgetVote vote(pmn->vin, budgetProposalBroadcast.GetHash(), nVote);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 return "Failure to sign.";
             }
@@ -209,16 +209,16 @@ Value mnbudget(const Array& params, bool fHelp)
             return(" Error upon calling SetKey");
 
         //create the proposal incase we're the first to make it
-        CBudgetProposalBroadcast prop(activeMasternode.vin, strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart);
-        if(!prop.Sign(keyMasternode, pubKeyMasternode)){
+        CBudgetProposalBroadcast budgetProposalBroadcast(activeMasternode.vin, strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart);
+        if(!budgetProposalBroadcast.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
 
-        mapSeenMasternodeBudgetProposals.insert(make_pair(prop.GetHash(), prop));
-        prop.Relay();
-        budget.AddProposal(prop);
+        mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+        budgetProposalBroadcast.Relay();
+        budget.AddProposal(budgetProposalBroadcast);
 
-        CBudgetVote vote(activeMasternode.vin, prop.GetHash(), nVote);
+        CBudgetVote vote(activeMasternode.vin, budgetProposalBroadcast.GetHash(), nVote);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
@@ -235,39 +235,39 @@ Value mnbudget(const Array& params, bool fHelp)
         int64_t nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetBudget();
-        BOOST_FOREACH(CBudgetProposal* prop, winningProps)
+        BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
-            nTotalAllotted += prop->GetAllotted();
+            nTotalAllotted += pbudgetProposal->GetAllotted();
 
             CTxDestination address1;
-            ExtractDestination(prop->GetPayee(), address1);
+            ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
             Object bObj;
-            bObj.push_back(Pair("VoteCommand",  prop->GetVoteCommand().c_str()));
-            bObj.push_back(Pair("URL",  prop->GetURL()));
-            bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
-            bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)prop->GetTotalPaymentCount()));
-            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)prop->GetRemainingPaymentCount()));
+            bObj.push_back(Pair("VoteCommand",  pbudgetProposal->GetVoteCommand().c_str()));
+            bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
+            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
+            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
+            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
-            bObj.push_back(Pair("Ratio",  prop->GetRatio()));
-            bObj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
-            bObj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
-            bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
-            bObj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
+            bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
+            bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
+            bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
+            bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+            bObj.push_back(Pair("Alloted",  (int64_t)pbudgetProposal->GetAllotted()));
             bObj.push_back(Pair("TotalBudgetAlloted",  nTotalAllotted));
 
             std::string strError = "";
-            bObj.push_back(Pair("IsValid",  prop->IsValid(strError)));
-            bObj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
+            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("Owner",  pbudgetProposal->vin.prevout.ToStringShort().c_str()));
 
-            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {
-                bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
+            if(mapSeenMasternodeBudgetProposals.count(pbudgetProposal->GetHash())) {
+                bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[pbudgetProposal->GetHash()].SignatureValid()));
             }
 
-            resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
+            resultObj.push_back(Pair(pbudgetProposal->GetName().c_str(), bObj));
         }
 
         return resultObj;
@@ -279,38 +279,38 @@ Value mnbudget(const Array& params, bool fHelp)
         int64_t nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
-        BOOST_FOREACH(CBudgetProposal* prop, winningProps)
+        BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
-            nTotalAllotted += prop->GetAllotted();
+            nTotalAllotted += pbudgetProposal->GetAllotted();
 
             CTxDestination address1;
-            ExtractDestination(prop->GetPayee(), address1);
+            ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
             Object bObj;
-            bObj.push_back(Pair("VoteCommand",  prop->GetVoteCommand().c_str()));
-            bObj.push_back(Pair("URL",  prop->GetURL()));
-            bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
-            bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)prop->GetTotalPaymentCount()));
-            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)prop->GetRemainingPaymentCount()));
+            bObj.push_back(Pair("VoteCommand",  pbudgetProposal->GetVoteCommand().c_str()));
+            bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
+            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
+            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
+            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
-            bObj.push_back(Pair("Ratio",  prop->GetRatio()));
-            bObj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
-            bObj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
-            bObj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
-            bObj.push_back(Pair("Amount",  (int64_t)prop->GetAmount()));
+            bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
+            bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
+            bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
+            bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+            bObj.push_back(Pair("Amount",  (int64_t)pbudgetProposal->GetAmount()));
 
             std::string strError = "";
-            bObj.push_back(Pair("IsValid",  prop->IsValid(strError)));
-            bObj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
+            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("Owner",  pbudgetProposal->vin.prevout.ToStringShort().c_str()));
 
-            if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {
-                bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
+            if(mapSeenMasternodeBudgetProposals.count(pbudgetProposal->GetHash())) {
+                bObj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[pbudgetProposal->GetHash()].SignatureValid()));
             }
 
-            resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
+            resultObj.push_back(Pair(pbudgetProposal->GetName().c_str(), bObj));
         }
 
         return resultObj;
@@ -323,36 +323,36 @@ Value mnbudget(const Array& params, bool fHelp)
 
         std::string strProposalName = params[1].get_str();
 
-        CBudgetProposal* prop = budget.FindProposal(strProposalName);
+        CBudgetProposal* pbudgetProposal = budget.FindProposal(strProposalName);
 
-        if(prop == NULL) return "Unknown proposal name";
+        if(pbudgetProposal == NULL) return "Unknown proposal name";
 
         CTxDestination address1;
-        ExtractDestination(prop->GetPayee(), address1);
+        ExtractDestination(pbudgetProposal->GetPayee(), address1);
         CBitcoinAddress address2(address1);
 
         Object obj;
-        obj.push_back(Pair("VoteCommand",  prop->GetVoteCommand().c_str()));
-        obj.push_back(Pair("Name",  prop->GetName().c_str()));
-        obj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
-        obj.push_back(Pair("URL",  prop->GetURL().c_str()));
-        obj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
-        obj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-        obj.push_back(Pair("TotalPaymentCount",  (int64_t)prop->GetTotalPaymentCount()));
-        obj.push_back(Pair("RemainingPaymentCount",  (int64_t)prop->GetRemainingPaymentCount()));
+        obj.push_back(Pair("VoteCommand",  pbudgetProposal->GetVoteCommand().c_str()));
+        obj.push_back(Pair("Name",  pbudgetProposal->GetName().c_str()));
+        obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
+        obj.push_back(Pair("URL",  pbudgetProposal->GetURL().c_str()));
+        obj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
+        obj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
+        obj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
+        obj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
         obj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
-        obj.push_back(Pair("Ratio",  prop->GetRatio()));
-        obj.push_back(Pair("Yeas",  (int64_t)prop->GetYeas()));
-        obj.push_back(Pair("Nays",  (int64_t)prop->GetNays()));
-        obj.push_back(Pair("Abstains",  (int64_t)prop->GetAbstains()));
-        obj.push_back(Pair("Alloted",  (int64_t)prop->GetAllotted()));
+        obj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
+        obj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
+        obj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
+        obj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+        obj.push_back(Pair("Alloted",  (int64_t)pbudgetProposal->GetAllotted()));
 
         std::string strError = "";
-        obj.push_back(Pair("IsValid",  prop->IsValid(strError)));
-        obj.push_back(Pair("Owner",  prop->vin.prevout.ToStringShort().c_str()));
+        obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+        obj.push_back(Pair("Owner",  pbudgetProposal->vin.prevout.ToStringShort().c_str()));
 
-        if(mapSeenMasternodeBudgetProposals.count(prop->GetHash())) {
-            obj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[prop->GetHash()].SignatureValid()));
+        if(mapSeenMasternodeBudgetProposals.count(pbudgetProposal->GetHash())) {
+            obj.push_back(Pair("SignatureValid",  mapSeenMasternodeBudgetProposals[pbudgetProposal->GetHash()].SignatureValid()));
         }
 
 
@@ -368,12 +368,12 @@ Value mnbudget(const Array& params, bool fHelp)
 
         Object obj;
 
-        CBudgetProposal* prop = budget.FindProposal(strProposalName);
+        CBudgetProposal* pbudgetProposal = budget.FindProposal(strProposalName);
 
-        if(prop == NULL) return "Unknown proposal name";
+        if(pbudgetProposal == NULL) return "Unknown proposal name";
 
-        std::map<uint256, CBudgetVote>::iterator it = prop->mapVotes.begin();
-        while(it != prop->mapVotes.end()){
+        std::map<uint256, CBudgetVote>::iterator it = pbudgetProposal->mapVotes.begin();
+        while(it != pbudgetProposal->mapVotes.end()){
             obj.push_back(Pair((*it).second.vin.prevout.ToStringShort().c_str(),  (*it).second.GetVoteString().c_str()));
             it++;
         }
@@ -433,14 +433,14 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         {
             std::string strHash = params[i].get_str();
             uint256 hash(strHash);
-            CBudgetProposal* prop = budget.FindProposal(hash);
-            if(!prop){
+            CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
+            if(!pbudgetProposal){
                 return "Invalid proposal " + strHash + ". Please check the proposal hash";
             } else {
                 CTxBudgetPayment out;
                 out.nProposalHash = hash;
-                out.payee = prop->GetPayee();
-                out.nAmount = prop->GetAmount();
+                out.payee = pbudgetProposal->GetPayee();
+                out.nAmount = pbudgetProposal->GetAmount();
                 vecPayments.push_back(out);
             }
         }
@@ -453,19 +453,19 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return(" Error upon calling SetKey");
 
         //create the proposal incase we're the first to make it
-        CFinalizedBudgetBroadcast prop(activeMasternode.vin, strBudgetName, nBlockStart, vecPayments);
-        if(!prop.Sign(keyMasternode, pubKeyMasternode)){
+        CFinalizedBudgetBroadcast finalizedBudgetBroadcast(activeMasternode.vin, strBudgetName, nBlockStart, vecPayments);
+        if(!finalizedBudgetBroadcast.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
 
-        if(!prop.IsValid())
-            return "Invalid prop (are all the hashes correct?)";
+        if(!finalizedBudgetBroadcast.IsValid())
+            return "Invalid finalized budget broadcast (are all the hashes correct?)";
 
-        mapSeenFinalizedBudgets.insert(make_pair(prop.GetHash(), prop));
-        prop.Relay();
-        budget.AddFinalizedBudget(prop);
+        mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
+        finalizedBudgetBroadcast.Relay();
+        budget.AddFinalizedBudget(finalizedBudgetBroadcast);
 
-        CFinalizedBudgetVote vote(activeMasternode.vin, prop.GetHash());
+        CFinalizedBudgetVote vote(activeMasternode.vin, finalizedBudgetBroadcast.GetHash());
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             return "Failure to sign.";
         }
@@ -570,17 +570,17 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         Object resultObj;
 
         std::vector<CFinalizedBudget*> winningFbs = budget.GetFinalizedBudgets();
-        BOOST_FOREACH(CFinalizedBudget* prop, winningFbs)
+        BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
             Object bObj;
-            bObj.push_back(Pair("SubmittedBy",  prop->GetSubmittedBy().c_str()));
-            bObj.push_back(Pair("Hash",  prop->GetHash().ToString().c_str()));
-            bObj.push_back(Pair("BlockStart",  (int64_t)prop->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)prop->GetBlockEnd()));
-            bObj.push_back(Pair("Proposals",  prop->GetProposals().c_str()));
-            bObj.push_back(Pair("VoteCount",  (int64_t)prop->GetVoteCount()));
-            bObj.push_back(Pair("Status",  prop->GetStatus().c_str()));
-            resultObj.push_back(Pair(prop->GetName().c_str(), bObj));
+            bObj.push_back(Pair("SubmittedBy",  finalizedBudget->GetSubmittedBy().c_str()));
+            bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
+            bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockEnd()));
+            bObj.push_back(Pair("finalizedBudgetosals",  finalizedBudget->GetProposals().c_str()));
+            bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
+            bObj.push_back(Pair("Status",  finalizedBudget->GetStatus().c_str()));
+            resultObj.push_back(Pair(finalizedBudget->GetName().c_str(), bObj));
         }
 
         return resultObj;
