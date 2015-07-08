@@ -454,13 +454,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
 void CMasternodeBroadcast::Relay(bool fRequested)
 {
     CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
-
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv);
 }
 
 bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
@@ -587,11 +581,5 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
 void CMasternodePing::Relay()
 {
     CInv inv(MSG_MASTERNODE_PING, GetHash());
-
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv);
 }

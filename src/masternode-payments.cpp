@@ -516,13 +516,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 void CMasternodePaymentWinner::Relay()
 {
     CInv inv(MSG_MASTERNODE_WINNER, GetHash());
-
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv);
 }
 
 bool CMasternodePaymentWinner::SignatureValid()
