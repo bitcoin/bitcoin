@@ -537,4 +537,31 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     }
 }
 
+BOOST_AUTO_TEST_CASE(bloom_op_return)
+{
+    CMutableTransaction tx;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = 0*CENT;
+    vector<unsigned char> part2(ParseHex("9876543210"));
+    vector<unsigned char> part1(ParseHex("E0FF"));
+    tx.vout[0].scriptPubKey = CScript() << OP_RETURN << part1 << part2;
+
+    CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
+    filter.insert(part1);
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match tx hash with OP_RETURN");
+
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
+    filter.insert(ParseHex("E0FE"));
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Bloom filter matched wrong tx hash with OP_RETURN");
+
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
+    filter.insert(part2);
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match tx hash with OP_RETURN second argument");
+
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
+    filter.insert(ParseHex("9876543211"));
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Bloom filter matched wrong tx hash with OP_RETURN second argument");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
