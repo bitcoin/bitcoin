@@ -1315,12 +1315,7 @@ bool CBudgetProposalBroadcast::Sign(CKey& keyMasternode, CPubKey& pubKeyMasterno
 void CBudgetProposalBroadcast::Relay()
 {
     CInv inv(MSG_BUDGET_PROPOSAL, GetHash());
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
 bool CBudgetProposalBroadcast::SignatureValid()
@@ -1365,12 +1360,7 @@ CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteIn)
 void CBudgetVote::Relay()
 {
     CInv inv(MSG_BUDGET_VOTE, GetHash());
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
 bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
@@ -1673,12 +1663,7 @@ CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string s
 void CFinalizedBudgetBroadcast::Relay()
 {
     CInv inv(MSG_BUDGET_FINALIZED, GetHash());
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
 bool CFinalizedBudgetBroadcast::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
@@ -1742,12 +1727,7 @@ CFinalizedBudgetVote::CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn)
 void CFinalizedBudgetVote::Relay()
 {
     CInv inv(MSG_BUDGET_FINALIZED_VOTE, GetHash());
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
 bool CFinalizedBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
