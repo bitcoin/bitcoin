@@ -415,7 +415,7 @@ bool CMasternodePaymentWinner::IsValid()
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
-    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, GetMinMasternodePaymentsProto());
+    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, masternodePayments.GetMinMasternodePaymentsProto());
 
     if(n == -1)
     {
