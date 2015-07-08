@@ -42,6 +42,7 @@ namespace CoreWallet
     {
     public:
         static const int CURRENT_VERSION=1;
+
         int nVersion;
         std::string label;
         std::string purpose;
@@ -73,15 +74,17 @@ namespace CoreWallet
     {
     public:
         static const int CURRENT_VERSION=1;
+        static const uint8_t KEY_ORIGIN_UNSET         = 0x0000;
+        static const uint8_t KEY_ORIGIN_UNKNOWN       = 0x0001;
+        static const uint8_t KEY_ORIGIN_IMPORTED      = 0x0002;
+        static const uint8_t KEY_ORIGIN_UNENC_WALLET  = 0x0004;
+        static const uint8_t KEY_ORIGIN_ENC_WALLET    = 0x0008;
+
         int nVersion;
         int64_t nCreateTime; // 0 means unknown
+        uint8_t keyFlags;
         std::string label;
         std::string purpose;
-        
-        // BIP32 metadata.
-        CKeyID keyidParent;
-        uint32_t nDerivationIndex;
-        int nDepth;
         
         CKeyMetadata()
         {
@@ -89,7 +92,7 @@ namespace CoreWallet
         }
         CKeyMetadata(int64_t nCreateTime_)
         {
-            nVersion = CKeyMetadata::CURRENT_VERSION;
+            SetNull();
             nCreateTime = nCreateTime_;
         }
         
@@ -102,18 +105,29 @@ namespace CoreWallet
             READWRITE(nCreateTime);
             READWRITE(label);
             READWRITE(purpose);
-            READWRITE(keyidParent);
-            READWRITE(nDerivationIndex);
-            READWRITE(nDepth);
+            READWRITE(keyFlags);
         }
         
         void SetNull()
         {
             nVersion = CKeyMetadata::CURRENT_VERSION;
             nCreateTime = 0;
-            keyidParent = CKeyID();
-            nDerivationIndex = 0;
-            nDepth = 0;
+            keyFlags = KEY_ORIGIN_UNSET;
+        }
+
+        std::string KeyflagsAsString() const
+        {
+            std::string keyFlagsStr;
+            if (keyFlags & CKeyMetadata::KEY_ORIGIN_UNKNOWN)
+                keyFlagsStr = "unknown";
+            if (keyFlags & CKeyMetadata::KEY_ORIGIN_ENC_WALLET)
+                keyFlagsStr = "created_in_encrypted_wallet";
+            else if (keyFlags & CKeyMetadata::KEY_ORIGIN_UNENC_WALLET)
+                keyFlagsStr = "created_in_unencrypted_wallet";
+            if (keyFlags & CKeyMetadata::KEY_ORIGIN_IMPORTED)
+                keyFlagsStr = "imported";
+
+            return keyFlagsStr;
         }
     };
 

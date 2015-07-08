@@ -7,6 +7,7 @@
 #include "corewallet/corewallet.h"
 
 #include "base58.h"
+#include "chainparamsbase.h"
 #include "core_io.h"
 #include "pubkey.h"
 #include "rpcserver.h"
@@ -19,11 +20,10 @@
 
 #include "univalue/univalue.h"
 
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace CoreWallet
 {
@@ -49,7 +49,7 @@ struct RPCDispatchEntry
     rpcfn_type actor;
 };
 
-enum ParamVTypes { VFLEX, VSTR, VNUM, VBOOL };
+enum ParamVTypes { VFLEX, VSTR, VNUM, VARR, VOBJ, VBOOL };
 
 struct RPCParamEntry
 {
@@ -57,6 +57,7 @@ struct RPCParamEntry
     std::string key;
     enum ParamVTypes vtype;
     std::string helptext;
+    std::string defaultvalue;
     std::string example;
 };
 
@@ -67,10 +68,24 @@ const char *RPCTypeName(enum ParamVTypes t)
         case VBOOL: return "bool";
         case VSTR: return "string";
         case VNUM: return "number";
+        case VARR: return "array";
+        case VOBJ: return "object";
+
     }
     
     // not reached
     return NULL;
+}
+
+std::string HelpExampleCli(const std::string& methodname, const std::string& args)
+{
+    return "> bitcoin-cli " + methodname + " " + args + "\n";
+}
+
+std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
+{
+    return "> curl --user bitcoinrpc:<password> --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+    "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:"+boost::lexical_cast<std::string>(BaseParams().RPCPort())+"/corewallet\n";
 }
 
 //dispatch compatible rpc function definitions
@@ -117,8 +132,8 @@ static const RPCDispatchEntry vDispatchEntries[] = {
 //! try to filter out the desired wallet instance via given params
 Wallet* WalletFromParams(const UniValue& params)
 {
-    std::string walletID = ""; //"" stands for default wallet
-    if (params.size() > 0 && params[0].isObject()) //TODO also allow params at index position different the 0
+    std::string walletID = "";
+    if (params.size() > 0 && params[0].isObject())
     {
         const UniValue& o = params[0].get_obj();
         UniValue possibleValue = find_value(o, "walletid");
@@ -132,33 +147,42 @@ Wallet* WalletFromParams(const UniValue& params)
     return wallet;
 }
 
-void AllowKeysInParams(const std::string &callname, const UniValue& params, bool forceHelp, Wallet *wallet, RPCParamEntry *allowedParams, const std::string &helptext) {
+//Verifies given and expected parameters and form a help string if required
+void VerifyParams(const std::string &callname, const UniValue& params, bool forceHelp, RPCParamEntry *allowedParams, unsigned int aPsize, const std::string &helptext) {
     unsigned int i;
 
+    if (params.size() > 0 && (!params[0].isObject()))
+        throw RPCHelpException("Corewallet only supports key=value parameters");
+
     std::string errorPart = "";
-    for (i = 0; i < (sizeof(*allowedParams) / sizeof(RPCParamEntry)); i++)
+    for (i = 0; i < aPsize; i++)
     {
         RPCParamEntry *param = &allowedParams[i];
 
         bool found = false;
         bool typeCheck = false;
+        UniValue::VType hasType = UniValue::VNULL;
+
         if (params.size() > 0 && params[0].isObject())
         {
             const UniValue& o = params[0].get_obj();
             BOOST_FOREACH(const std::string &key, o.getKeys())
             {
                 UniValue val = find_value(o, key);
-                std::string lowercaseKey = key;
-                boost::to_lower(lowercaseKey);
-                if (lowercaseKey == param->key)
+                if (boost::to_lower_copy(key) == param->key)
                 {
                     found = true;
-
+                    hasType = val.getType();
                     if (param->vtype == VSTR && val.isStr())
                         typeCheck = true;
-                    if (param->vtype == VNUM && val.isNum())
-                        typeCheck = true;
-                    if (param->vtype == VBOOL && val.isBool())
+                    if (param->vtype == VNUM)
+                    {
+                        UniValue testVal(UniValue::VNUM);
+                        testVal.setNumStr(val.get_str()); //also allow VSTR if it can be converted to VNUM
+                        if (testVal.isNum())
+                            typeCheck = true;
+                    }
+                    if ( (param->vtype == VBOOL && val.isBool() ) || (val.isStr() && (boost::to_lower_copy(val.get_str()) == "true" || val.get_str() == "1")))
                         typeCheck = true;
                     if (param->vtype == VFLEX)
                         typeCheck = true;
@@ -172,7 +196,7 @@ void AllowKeysInParams(const std::string &callname, const UniValue& params, bool
             errorPart += "Parameter "+SanitizeString(param->key)+" not found but is required\n";
 
         if (found && !typeCheck)
-            errorPart += "Parameter "+SanitizeString(param->key)+" has wrong type (TODO)\n";
+            errorPart += "Parameter "+SanitizeString(param->key)+" has wrong type ('"+uvTypeName(hasType)+"' but should be '"+RPCTypeName(param->vtype)+"')\n";
     }
 
     //check if we have a unrecognized parameter
@@ -183,12 +207,10 @@ void AllowKeysInParams(const std::string &callname, const UniValue& params, bool
         {
             bool found = false;
             unsigned int i;
-            for (i = 0; i < (sizeof(*allowedParams) / sizeof(RPCParamEntry)); i++)
+            for (i = 0; i < aPsize; i++)
             {
                 RPCParamEntry *param = &allowedParams[i];
-                std::string lowercaseKey = key;
-                boost::to_lower(lowercaseKey);
-                if (param->key == lowercaseKey)
+                if (param->key == boost::to_lower_copy(key))
                 {
                     found = true;
                     break;
@@ -202,13 +224,28 @@ void AllowKeysInParams(const std::string &callname, const UniValue& params, bool
     if (errorPart.size() > 0 || forceHelp)
     {
         std::string paramText = "";
+        std::string keylistText = "";
+        std::string exampleCLIText = "";
+        std::string exampleRPCText = "";
+
         unsigned int i;
-        for (i = 0; i < (sizeof(*allowedParams) / sizeof(RPCParamEntry)); i++)
+        for (i = 0; i < aPsize; i++)
         {
+            if (paramText == "")
+                paramText = "Arguments:\n";
+
             RPCParamEntry *param = &allowedParams[i];
-            paramText += param->key+" ("+(param->mandatory ? "reuired" : "optional")+", "+RPCTypeName(param->vtype)+" "+param->helptext+"\n";
+            paramText += param->key+" ("+(param->mandatory ? "required" : "optional")+", "+RPCTypeName(param->vtype)+") "+param->helptext+"\n";
+
+            keylistText += (param->mandatory ? "" : "(") + param->key + (param->mandatory ? "" : ")");
+            exampleCLIText += param->key+"="+param->example+" ";
+            exampleRPCText += "\""+param->key+"\":"+(param->vtype == VSTR ? "\"" : "")+param->example+(param->vtype == VSTR ? "\"" : "")+" ";
         }
-        throw RPCHelpException(errorPart+"\n"+callname+"\n"+helptext+"\n"+paramText);
+        boost::trim_right(exampleCLIText);
+        boost::trim_right(exampleRPCText);
+
+        //generate the huge help string
+        throw RPCHelpException(errorPart+"\ncorewallet/"+callname+" "+keylistText+"\n"+boost::replace_all_copy(boost::replace_all_copy(helptext, "%args%", paramText), "%examples%", "Examples:\n"+HelpExampleCli(callname, exampleCLIText)+HelpExampleRpc(callname, "{"+exampleRPCText+"}")));
     }
 }
 
@@ -220,10 +257,14 @@ UniValue ValueFromParams(const UniValue& params, const std::string& key, UniValu
         const UniValue& o = params[0].get_obj();
         UniValue val = find_value(o, key);
         if (forceType == UniValue::VNUM && val.isStr())
+        {
             val.setNumStr(val.get_str()); //convert str to int
+            if (!val.isNum())
+                throw std::runtime_error("Parameter '"+SanitizeString(key)+"' is not numeric");
+        }
         if (forceType == UniValue::VBOOL)
         {
-            if (val.isStr() && ( val.get_str() == "true" || val.get_str() == "1" ))
+            if (val.isStr() && ( boost::to_lower_copy(val.get_str()) == "true" || val.get_str() == "1" ))
                 val.setBool(true);
             else
                 val.setBool(false);
@@ -250,31 +291,63 @@ UniValue ValueFromParams(const UniValue& params, const std::string& key, UniValu
 
 UniValue listaddresses(const UniValue& params, bool fHelp)
 {
+    VerifyParams( "listaddresses", params, fHelp, NULL, 0,
+                 "\nList all available addresses.\n"
+                 "%args%"
+                 "\nResult:\n"
+                 "[                     (json array of string)\n"
+                 "  \"bitcoinaddress\"  (string) a bitcoin address\n"
+                 "  ,...\n"
+                 "]\n"
+                 "\n%examples%"
+                 );
+
     Wallet *wallet = WalletFromParams(params);
-    if (fHelp || !wallet)
-        throw RPCHelpException(
-                            "listaddresses\n"
-                            "\nResult:\n"
-                            "[                     (json array of string)\n"
-                            "  \"bitcoinaddress\"  (string) a bitcoin address\n"
-                            "  ,...\n"
-                            "]\n"
-                            "\nExamples:\n"
-                            + HelpExampleCli("listaddresses", "")
-                            + HelpExampleRpc("listaddresses", "")
-                            );
+
     UniValue ret(UniValue::VARR);
 
     LOCK(wallet->cs_coreWallet);
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookMetadata)& item, wallet->mapAddressBook)
+    std::vector<CKeyID> alreadyAdded;
+
+    BOOST_FOREACH(const PAIRTYPE(CKeyID, CKeyMetadata)& item, wallet->mapKeyMetadata)
     {
-        const CBitcoinAddress& address = item.first;
-        const CAddressBookMetadata& metadata = item.second;
+        const CKeyID& keyID = item.first;
+        const CBitcoinAddress& address = CBitcoinAddress(keyID);
+
         UniValue obj(UniValue::VOBJ);
-        obj.push_back(Pair(address.ToString(), metadata.purpose));
+        obj.push_back(Pair("address", address.ToString()));
+
+        std::map<CTxDestination, CAddressBookMetadata>::const_iterator miAddr = wallet->mapAddressBook.find(keyID);
+        if (miAddr != wallet->mapAddressBook.end())
+        {
+            obj.push_back(Pair("addressbook", true));
+            obj.push_back(Pair("purpose", miAddr->second.purpose));
+        }
+        else
+            obj.push_back(Pair("addressbook", false));
+
+        CHDPubKey hdPubKey;
+        if (wallet->GetHDPubKey(keyID, hdPubKey))
+        {
+            obj.push_back(Pair("hd", true));
+            obj.push_back(Pair("chainpath", hdPubKey.chainPath));
+        }
+        else
+            obj.push_back(Pair("hd", false));
+
+        std::map<CKeyID, CKeyMetadata>::const_iterator miKMeta = wallet->mapKeyMetadata.find(keyID);
+        if (miKMeta != wallet->mapKeyMetadata.end())
+        {
+            obj.push_back(Pair("createtime", miKMeta->second.nCreateTime));
+            obj.push_back(Pair("keyflags", miKMeta->second.KeyflagsAsString()));
+        }
+        else
+            obj.push_back(Pair("missing_key_metadata", true));
+
+
         ret.push_back(obj);
+        alreadyAdded.push_back(keyID);
     }
-    
     return ret;
 }
 
@@ -284,15 +357,17 @@ UniValue listaddresses(const UniValue& params, bool fHelp)
 ///////////////////////////
 UniValue addwallet(const UniValue& params, bool fHelp)
 {
-    UniValue walletIDValue = ValueFromParams(params, "walletid");
     static RPCParamEntry allowedParams[] = {
-        { true, "wallteid", VSTR, "allowed characters: A-Za-z0-9._-", "testwallet"}
+        { true, "walletid", VSTR, "allowed characters: A-Za-z0-9._-", "", "testwallet"}
     };
 
-    AllowKeysInParams("addwallet", params, fHelp, NULL, allowedParams,
-                      "\nCreates a new wallet with given walletid.\n"
-                      "\nResult:\n"
-                      "\"bitcoinaddress\"    (string) The new bitcoin address\n");
+    VerifyParams( "addwallet", params, fHelp, allowedParams, 1,
+                  "\nCreates a new wallet with given walletid.\n"
+                  "%args%"
+                  "\n%examples%"
+                  );
+
+    UniValue walletIDValue = ValueFromParams(params, "walletid");
 
     std::string walletID = walletIDValue.get_str();
     CoreWallet::GetManager()->AddNewWallet(walletID);
@@ -301,24 +376,25 @@ UniValue addwallet(const UniValue& params, bool fHelp)
 
 UniValue listwallets(const UniValue& params, bool fHelp)
 {
-    if (fHelp)
-        throw RPCHelpException(
-                                 "listwallets\n"
-                                 "\nResult:\n"
-                                 "[                     (json array of string)\n"
-                                 "  \"mainWallet\"  (string) a wallet identifier\n"
-                                 "  \"anotherWallet\"\n"
-                                 "]\n"
-                                 "\nExamples:\n"
-                                 + HelpExampleCli("listwallets", "")
-                                 + HelpExampleRpc("listwallets", "")
-                                 );
+    VerifyParams( "listwallets", params, fHelp, NULL, 0,
+                  "\nList all available wallets.\n"
+                  "%args%"
+                  "\nResult:\n"
+                  "[\n"
+                  "  {\n"
+                  "      \"walletid\": \"<walletname>\"      (string) a wallet identifier\n"
+                  "  }\n"
+                  "]\n"
+                  "\n%examples%"
+                  );
     
     UniValue ret(UniValue::VARR);
     std::vector<std::string> vWalletIDs = CoreWallet::GetManager()->GetWalletIDs();
     BOOST_FOREACH(const std::string& walletID, vWalletIDs)
     {
-        ret.push_back(walletID);
+        UniValue wObj(UniValue::VOBJ);
+        wObj.push_back(Pair("wallteid", walletID));
+        ret.push_back(wObj);
     }
     
     return ret;
@@ -329,15 +405,16 @@ UniValue listwallets(const UniValue& params, bool fHelp)
 ///////////////////////////
 UniValue help(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() == 1)
-        throw RPCHelpException(
-                            "help ( \"command\" )\n"
-                            "\nList all commands, or get help for a specified command.\n"
-                            "\nArguments:\n"
-                            "1. \"command\"     (string, optional) The command to get help on\n"
-                            "\nResult:\n"
-                            "\"text\"     (string) The help text\n"
-                            );
+    static RPCParamEntry allowedParams[] = {
+        { true, "command", VSTR, "The command to get help on", "", "corewallet/listwallets"}
+    };
+    VerifyParams( "help", params, fHelp, allowedParams, 1,
+                 "\nList all commands, or get help for a specified command.\n"
+                 "%args%"
+                 "\nResult:\n"
+                 "\"text\"     (string) The help text\n"
+                 "\n%examples%"
+                 );
     
     std::string helpString = "\n== CoreWallet ==\n";
     UniValue value = ValueFromParams(params, "command");
@@ -391,32 +468,24 @@ const std::string hd_default_chainpath = "m/44'/0'/0'/c";
 
 UniValue hdaddchain(const UniValue& params, bool fHelp)
 {
-    if (fHelp)
-        throw std::runtime_error(
-                            "hdaddchain (<chainpath>|default) (<masterseed_hex>)\n"
-                            "\nAdds a HD/Bip32 chain \n"
-                            "\nArguments:\n"
-                            "1. chainpath        (string, optional, default="+hd_default_chainpath+") chainpath for hd wallet structure\n"
-                            "   m stands for master, c for internal/external key-switch, k stands for upcounting child key index"
-                            "2. masterseed_hex   (string/hex, optional) use this seed for master key generation\n"
-                            "\nResult\n"
-                            "{\n"
-                            "  \"seed_hex\" : \"<hexstr>\",  (string) seed used during master key generation (only if no masterseed hex was provided\n"
-                            "}\n"
-
-                            "\nExamples\n"
-                            + HelpExampleCli("hdaddchain", "set")
-                            + HelpExampleCli("hdaddchain", "set m/44'/0'/0'/c/k")
-                            + HelpExampleRpc("hdaddchain", "set m/44'/0'/0'/c/k")
-                            );
+    static RPCParamEntry allowedParams[] = {
+        { false, "chainpath", VSTR, "chainpath for hd wallet structure\nm stands for master, c for internal/external key-switch, k stands for upcounting child key index", "m/44h/0h/0h/c/k", "m/32h/c/k"},
+        { false, "seed", VSTR, "use this seed for master key generation", "", "abcdef..."},
+    };
+    VerifyParams("hdaddchain", params, fHelp, allowedParams, 2,
+                 "\nList all commands, or get help for a specified command.\n"
+                 "%args%"
+                 "\nResult\n"
+                 "{\n"
+                 "  \"seed_hex\" : \"<hexstr>\",  (string) seed used during master key generation (only if no masterseed hex was provided\n"
+                 "}\n"
+                 "\n%examples%"
+                 );
 
     UniValue result(UniValue::VOBJ);
-
     Wallet *wallet = WalletFromParams(params);
     UniValue chainpathParam = ValueFromParams(params, "chainpath");
     UniValue seedParam = ValueFromParams(params, "seed");
-
-    //EnsureWalletIsUnlocked();
 
     const unsigned int bip32MasterSeedLength = 32;
     CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
@@ -450,21 +519,17 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
 
 UniValue hdsetchain(const UniValue& params, bool fHelp)
 {
-    if (fHelp)
-        throw std::runtime_error(
-                            "hdsetchain <chainid>\n"
-                            "\nReturns some hd relevant information.\n"
-                            "\nArguments:\n"
-                            "1. \"chainid\"        (string|hex, required) chainid is a bitcoin hash of the master public key of the corresponding chain.\n"
-                            "\nExamples:\n"
-                            + HelpExampleCli("hdsetchain", "")
-                            + HelpExampleCli("hdgetinfo", "True")
-                            + HelpExampleRpc("hdgetinfo", "")
-                            );
+    static RPCParamEntry allowedParams[] = {
+        { true, "chainid", VSTR, "chainid is a bitcoin hash of the master public key of the corresponding chain.", "", "e2e658234be33a32ab60831d44190d397497aad0f45e6a2d59f69c3a34d4d9b6"}
+    };
+    VerifyParams("hdsetchain", params, fHelp, allowedParams, 1,
+                 "\nSet the active chains of key.\n"
+                 "%args%"
+                 "\n%examples%"
+                 );
 
     Wallet *wallet = WalletFromParams(params);
     UniValue chainIdParam = ValueFromParams(params, "chainid");
-
     HDChainID chainId;
     if (!chainIdParam.isStr() && !IsHex(chainIdParam.get_str()))
         throw std::runtime_error("Chain id format is invalid");
@@ -479,24 +544,19 @@ UniValue hdsetchain(const UniValue& params, bool fHelp)
 
 UniValue hdgetinfo(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
-        throw std::runtime_error(
-                            "hdgetinfo\n"
-                            "\nReturns some hd relevant information.\n"
-                            "\nArguments:\n"
-                            "{\n"
-                            "  \"chainid\" : \"<chainid>\",  string) A bitcoinhash of the master public key\n"
-                            "  \"creationtime\" : The creation time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
-                            "  \"chainpath\" : \"<keyschainpath>\",  string) The chainpath (like m/44'/0'/0'/c)\n"
-                            "}\n"
-                            "\nExamples:\n"
-                            + HelpExampleCli("hdgetinfo", "")
-                            + HelpExampleCli("hdgetinfo", "True")
-                            + HelpExampleRpc("hdgetinfo", "")
-                            );
+    VerifyParams("hdgetinfo", params, fHelp, NULL, 0,
+                 "\nReturns some hd relevant information.\n"
+                 "%args%"
+                 "\nResult\n"
+                 "{\n"
+                 "  \"chainid\": \"<chainid>\",           (string) A bitcoinhash of the master public key\n"
+                 "  \"creationtime\": <timestamp>,        (numeric) The creation time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+                 "  \"chainpath\": \"<keyschainpath>\",   (string) The chainpath (like m/44'/0'/0'/c)\n"
+                 "}\n"
+                 "\n%examples%"
+                 );
 
     Wallet *wallet = WalletFromParams(params);
-
     std::vector<HDChainID> chainIDs;
     if (!wallet->GetAvailableChainIDs(chainIDs))
         throw std::runtime_error("Could not load chain ids");
@@ -528,22 +588,21 @@ UniValue hdgetinfo(const UniValue& params, bool fHelp)
 
 UniValue hdgetaddress(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
-        throw std::runtime_error(
-                            "hdgetaddress (<childindex>)\n"
-                            "\nReturns a Bitcoin address for receiving payments.\n"
-                            "\nAutomatically uses the next available childindex if no index is given"
-                            "\nArguments:\n"
-                            "1. \"childindex\"        (numeric, optional) child key index. ATTENTION: automatic index counting will start at the highes available child key index\n"
-                            "{\n"
-                            "  \"address\" : \"<address>\",  string) The new bitcoin address\n"
-                            "  \"chainpath\" : \"<keyschainpath>\",  string) The used chainpath\n"
-                            "}\n"
-                            "\nExamples:\n"
-                            + HelpExampleCli("hdgetaddress", "")
-                            + HelpExampleCli("hdgetaddress", "100")
-                            + HelpExampleRpc("hdgetaddress", "")
-                            );
+    static RPCParamEntry allowedParams[] = {
+        { false, "index", VNUM, "child key index. ATTENTION: automatic index counting will start at the highes available child key index", "", "100"},
+        { false, "internal", VBOOL, "if true, the internal chain will be used for the new key", "", "false"}
+    };
+    VerifyParams("hdgetaddress", params, fHelp, allowedParams, 2,
+                 "\nReturns a Bitcoin address for receiving payments.\n"
+                 "Automatically uses the next available childindex if no index is given\n"
+                 "\n%args%"
+                 "\nResult\n"
+                 "{\n"
+                 "  \"address\" : \"<address>\",          (string) the new bitcoin address\n"
+                 "  \"chainpath\" : \"<keyschainpath>\",  (string) used chainpath\n"
+                 "}\n"
+                 "\n%examples%"
+                 );
 
     Wallet *wallet = WalletFromParams(params);
     UniValue childIndex = ValueFromParams(params, "index", UniValue::VNUM);
@@ -613,7 +672,6 @@ void WalletTxToJSON(const Wallet* wallet, const WalletTx& wtx, UniValue& entry)
 
 UniValue listtransactions(const UniValue& params, bool fHelp)
 {
-
     Wallet *wallet = WalletFromParams(params);
     
     LOCK(wallet->cs_coreWallet);
@@ -635,45 +693,36 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
 
 UniValue listunspent(const UniValue& params, bool fHelp)
 {
+    static RPCParamEntry allowedParams[] = {
+        { false, "minconf", VNUM, "The minimum confirmations to filter", "1", "2"},
+        { false, "maxconf", VNUM, "The maximum confirmations to filter", "9999999", "10"},
+        { false, "addresses", VARR, "A json array of bitcoin addresses to filter", "", "[\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\"]"},
+    };
+
+    VerifyParams("listunspent", params, fHelp, allowedParams, 3,
+                 "\nReturns array of unspent transaction outputs\n"
+                 "with between minconf and maxconf (inclusive) confirmations.\n"
+                 "Optionally filter to only include txouts paid to specified addresses.\n"
+                 "Results are an array of Objects, each of which has:\n"
+                 "{txid, vout, scriptPubKey, amount, confirmations}\n"
+                 "%args%"
+                 "\nResult\n"
+                 "[                   (array of json object)\n"
+                 "  {\n"
+                 "    \"txid\" : \"txid\",        (string) the transaction id \n"
+                 "    \"vout\" : n,               (numeric) the vout value\n"
+                 "    \"address\" : \"address\",  (string) the bitcoin address\n"
+                 "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+                 "    \"scriptPubKey\" : \"key\", (string) the script key\n"
+                 "    \"amount\" : x.xxx,         (numeric) the transaction amount in btc\n"
+                 "    \"confirmations\" : n       (numeric) The number of confirmations\n"
+                 "  }\n"
+                 "  ,...\n"
+                 "]\n"
+                 "\n%examples%"
+                 );
+
     Wallet *wallet = WalletFromParams(params);
-
-    if (fHelp)
-        throw std::runtime_error(
-                            "listunspent ( minconf maxconf  [\"address\",...] )\n"
-                            "\nReturns array of unspent transaction outputs\n"
-                            "with between minconf and maxconf (inclusive) confirmations.\n"
-                            "Optionally filter to only include txouts paid to specified addresses.\n"
-                            "Results are an array of Objects, each of which has:\n"
-                            "{txid, vout, scriptPubKey, amount, confirmations}\n"
-                            "\nArguments:\n"
-                            "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
-                            "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
-                            "3. \"addresses\"    (string) A json array of bitcoin addresses to filter\n"
-                            "    [\n"
-                            "      \"address\"   (string) bitcoin address\n"
-                            "      ,...\n"
-                            "    ]\n"
-                            "\nResult\n"
-                            "[                   (array of json object)\n"
-                            "  {\n"
-                            "    \"txid\" : \"txid\",        (string) the transaction id \n"
-                            "    \"vout\" : n,               (numeric) the vout value\n"
-                            "    \"address\" : \"address\",  (string) the bitcoin address\n"
-                            "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
-                            "    \"scriptPubKey\" : \"key\", (string) the script key\n"
-                            "    \"amount\" : x.xxx,         (numeric) the transaction amount in btc\n"
-                            "    \"confirmations\" : n       (numeric) The number of confirmations\n"
-                            "  }\n"
-                            "  ,...\n"
-                            "]\n"
-
-                            "\nExamples\n"
-                            + HelpExampleCli("listunspent", "")
-                            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
-                            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
-                            );
-
-    //RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM)(UniValue::VNUM)(UniValue::VARR));
 
     int nMinDepth = 1;
     UniValue minconf = ValueFromParams(params, "minconf", UniValue::VNUM);
@@ -749,26 +798,18 @@ UniValue listunspent(const UniValue& params, bool fHelp)
 
 UniValue getbalance(const UniValue& params, bool fHelp)
 {
-    if (fHelp)
-        throw std::runtime_error(
-                            "getbalance type=(all|available|unconfirmed|immature) includewatchonly=true\n"
-                            "\nIf account is not specified, returns the server's total available balance.\n"
-                            "If account is specified (DEPRECATED), returns the balance in the account.\n"
-                            "Note that the account \"\" is not the same as leaving the parameter out.\n"
-                            "The server total may be different to the balance in the default \"\" account.\n"
-                            "\nArguments:\n"
-                            "1. \"type\"      (string, optional) define the desired balance type \"\".\n"
-                            "1. includewatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
-                            "\nResult:\n"
-                            "amount              (numeric) The total amount in btc received for this account (or a object in case of type=all).\n"
-                            "\nExamples:\n"
-                            "\nThe total amount in the wallet\n"
-                            + HelpExampleCli("getbalance", "") +
-                            "\nThe total amount in the wallet at least 5 blocks confirmed\n"
-                            + HelpExampleCli("getbalance", "type=all includewatchonly=true") +
-                            "\nAs a json rpc call\n"
-                            + HelpExampleRpc("getbalance", "type=all")
-                            );
+    static RPCParamEntry allowedParams[] = {
+        { false, "type", VSTR, "define the desired balance type (confirmed, unconfirmed, immature, all)", "confirmed", "all"},
+        { false, "includewatchonly", VBOOL, "Also include balance in watchonly addresses (see 'importaddress')", "false", "true"},
+    };
+
+    VerifyParams("listunspent", params, fHelp, allowedParams, 2,
+                 "\nReturns the total available balance.\n"
+                 "%args%"
+                 "\nResult:\n"
+                 "amount              (numeric) The total amount in btc received for this account (or a object in case of type=all).\n"
+                 "\n%examples%"
+                 );
 
     Wallet *wallet = WalletFromParams(params);
     LOCK(wallet->cs_coreWallet);
@@ -797,13 +838,27 @@ UniValue getbalance(const UniValue& params, bool fHelp)
 
 UniValue createtx(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
-        throw std::runtime_error(
-                                 "createtx sendto=([{address0:amount}, {address1:amount}]) send=(1|0)\n"
-                                 "\nExamples:\n"
-                                 + HelpExampleCli("createtx", "{\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\":10.0}")
-                                 + HelpExampleRpc("createtx", "")
-                                 );
+    static RPCParamEntry allowedParams[] = {
+        { false, "sendto", VSTR, "object containing n bitcoin/value pairs", "", "{\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\":10.0}"},
+        { false, "send", VBOOL, "is set, the transaction will be broadcasted", "false", "true"},
+    };
+
+    VerifyParams("createtx", params, fHelp, allowedParams, 2,
+                 "\nCreates a new transaction with the options to directly broadcast the transaction (send=true).\n"
+                 "%args%"
+
+                 "\nResult\n"
+                 "[                   (array of json object)\n"
+                 "  {\n"
+                 "    \"hex\" : \"hex\",          (string) hex string of the raw transaction\n"
+                 "    \"fee\" : n,                (numeric) the fee used in the transaction\n"
+                 "    \"sent\" : true|false,      (boolean) will be set to true if transaction has been successfully broadcastet\n"
+                 "    \"txid\" : \"txid\",        (optional, string) the transaction id if the transaction has been broadcasted\n"
+                 "  }\n"
+                 "  ,...\n"
+                 "]\n"
+                 "\n%examples%"
+                 );
     
     Wallet *wallet = WalletFromParams(params);
     std::vector<std::pair<CBitcoinAddress, CAmount> > sendToList;

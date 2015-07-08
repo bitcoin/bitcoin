@@ -231,6 +231,8 @@ bool Wallet::HDGetChildPubKeyAtIndex(const HDChainID& chainIDIn, CPubKey &pubKey
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
 
+    mapKeyMetadata[newHdPubKey.pubkey.GetID()].keyFlags |= IsCrypted() ? CKeyMetadata::KEY_ORIGIN_ENC_WALLET : CKeyMetadata::KEY_ORIGIN_UNENC_WALLET;
+
     if (!LoadHDPubKey(newHdPubKey))
         throw std::runtime_error("CoreWallet::HDGetChildPubKeyAtIndex(): Add key to keystore failed!");
 

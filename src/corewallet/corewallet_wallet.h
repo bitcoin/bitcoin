@@ -63,7 +63,7 @@ public:
 
     mutable CCriticalSection cs_coreWallet; //main wallet lock
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata; //!map of all generated/derived keys
-    std::map<CTxDestination, CAddressBookMetadata> mapAddressBook; //!addressbook with a variant (CScript/CKeyID)
+    std::map<CTxDestination, CAddressBookMetadata> mapAddressBook; //!addressbook with a variant key (CScript/CKeyID)
     std::set<COutPoint> setLockedCoins; //! set for locking coins (in mem only)
 
     int64_t nTimeFirstKey; //!oldest key timestamp
