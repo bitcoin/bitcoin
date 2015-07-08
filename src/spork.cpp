@@ -185,13 +185,7 @@ bool CSporkManager::UpdateSpork(int nSporkID, int64_t nValue)
 void CSporkManager::Relay(CSporkMessage& msg)
 {
     CInv inv(MSG_SPORK, msg.GetHash());
-
-    vector<CInv> vInv;
-    vInv.push_back(inv);
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes){
-        pnode->PushMessage("inv", vInv);
-    }
+    RelayInv(inv);
 }
 
 bool CSporkManager::SetPrivKey(std::string strPrivKey)
