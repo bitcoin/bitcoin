@@ -283,3 +283,8 @@ std::string CScript::ToString() const
     }
     return str;
 }
+
+size_t CScript::DynamicMemoryUsage() const
+{
+    return memusage::DynamicUsage(*(static_cast<const std::vector<unsigned char>*>(this)));
+}
