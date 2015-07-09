@@ -212,6 +212,10 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_fe_inv(r, a);
 #elif defined(USE_FIELD_INV_NUM)
     secp256k1_num_t n, m;
+    static const secp256k1_fe_t negone = SECP256K1_FE_CONST(
+        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+        0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFC2E
+    );
     /* secp256k1 field prime, value p defined in "Standards for Efficient Cryptography" (SEC2) 2.7.1. */
     static const unsigned char prime[32] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
@@ -228,6 +232,10 @@ static void secp256k1_fe_inv_var(secp256k1_fe_t *r, const secp256k1_fe_t *a) {
     secp256k1_num_mod_inverse(&n, &n, &m);
     secp256k1_num_get_bin(b, 32, &n);
     VERIFY_CHECK(secp256k1_fe_set_b32(r, b));
+    /* Verify the result is the (unique) valid inverse using non-GMP code. */
+    secp256k1_fe_mul(&c, &c, r);
+    secp256k1_fe_add(&c, &negone);
+    CHECK(secp256k1_fe_normalizes_to_zero_var(&c));
 #else
 #error "Please select field inverse implementation"
 #endif
