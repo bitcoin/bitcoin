@@ -1176,23 +1176,6 @@
               <number>4</number>
              </property>
              <item>
-              <widget class="QCheckBox" name="checkBoxFreeTx">
-               <property name="text">
-                <string>Send as zero-fee transaction if possible</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelFreeTx">
-               <property name="text">
-                <string>(confirmation may take longer)</string>
-               </property>
-               <property name="margin">
-                <number>5</number>
-               </property>
-              </widget>
-             </item>
-             <item>
               <spacer name="horizontalSpacerFee5">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>

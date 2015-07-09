@@ -223,7 +223,7 @@ void FlushStateToDisk();
 void PruneAndFlush();
 
 /** (try to) add transaction to memory pool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
+bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx,
                         bool* pfMissingInputs, bool fRejectAbsurdFee=false);
 
 
@@ -260,7 +260,7 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 
-CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
+CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes);
 
 /** 
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
