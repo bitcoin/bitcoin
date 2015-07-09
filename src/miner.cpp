@@ -44,9 +44,8 @@ public:
     const CTransaction* ptx;
     set<uint256> setDependsOn;
     CFeeRate feeRate;
-    double dPriority;
 
-    COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0), dPriority(0)
+    COrphan(const CTransaction* ptxIn) : ptx(ptxIn), feeRate(0)
     {
     }
 };
@@ -55,28 +54,15 @@ uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
 // We want to sort transactions by priority and fee rate, so:
-typedef boost::tuple<double, CFeeRate, const CTransaction*> TxPriority;
+typedef boost::tuple<CFeeRate, const CTransaction*> TxPriority;
 class TxPriorityCompare
 {
-    bool byFee;
-
 public:
-    TxPriorityCompare(bool _byFee) : byFee(_byFee) { }
+    TxPriorityCompare(bool _byFee) { }
 
     bool operator()(const TxPriority& a, const TxPriority& b)
     {
-        if (byFee)
-        {
-            if (a.get<1>() == b.get<1>())
-                return a.get<0>() < b.get<0>();
-            return a.get<1>() < b.get<1>();
-        }
-        else
-        {
-            if (a.get<0>() == b.get<0>())
-                return a.get<1>() < b.get<1>();
-            return a.get<0>() < b.get<0>();
-        }
+        return a.get<0>() < b.get<0>();
     }
 };
 
@@ -119,11 +105,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
-
-    // How much of the block should be dedicated to high-priority transactions,
-    // included regardless of the fees they pay
-    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
-    nBlockPrioritySize = std::min(nBlockMaxSize, nBlockPrioritySize);
 
     // Minimum block size you want to create; block will be filled with free transactions
     // until there are no more or the block reaches this size:
@@ -211,29 +192,25 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
 
             if (porphan)
-            {
-                porphan->dPriority = dPriority;
                 porphan->feeRate = feeRate;
-            }
             else
-                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
+                vecPriority.push_back(TxPriority(feeRate, &mi->second.GetTx()));
         }
 
         // Collect transactions into block
         uint64_t nBlockSize = 1000;
         uint64_t nBlockTx = 0;
         int nBlockSigOps = 100;
-        bool fSortedByFee = (nBlockPrioritySize <= 0);
 
-        TxPriorityCompare comparer(fSortedByFee);
+        TxPriorityCompare comparer(true);
         std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 
         while (!vecPriority.empty())
         {
             // Take highest priority transaction off the priority queue:
-            double dPriority = vecPriority.front().get<0>();
-            CFeeRate feeRate = vecPriority.front().get<1>();
-            const CTransaction& tx = *(vecPriority.front().get<2>());
+            double dPriority = 0;
+            CFeeRate feeRate = vecPriority.front().get<0>();
+            const CTransaction& tx = *(vecPriority.front().get<1>());
 
             std::pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
             vecPriority.pop_back();
@@ -253,18 +230,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             double dPriorityDelta = 0;
             CAmount nFeeDelta = 0;
             mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-            if (fSortedByFee && (dPriorityDelta <= 0) && (nFeeDelta <= 0) && (feeRate < ::minRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
+            if ((dPriorityDelta <= 0) && (nFeeDelta <= 0) && (feeRate < ::minRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
-
-            // Prioritise by fee once past the priority size or we run out of high-priority
-            // transactions:
-            if (!fSortedByFee &&
-                ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
-            {
-                fSortedByFee = true;
-                comparer = TxPriorityCompare(fSortedByFee);
-                std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-            }
 
             if (!view.HaveInputs(tx))
                 continue;
@@ -309,7 +276,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                         porphan->setDependsOn.erase(hash);
                         if (porphan->setDependsOn.empty())
                         {
-                            vecPriority.push_back(TxPriority(porphan->dPriority, porphan->feeRate, porphan->ptx));
+                            vecPriority.push_back(TxPriority(porphan->feeRate, porphan->ptx));
                             std::push_heap(vecPriority.begin(), vecPriority.end(), comparer);
                         }
                     }
