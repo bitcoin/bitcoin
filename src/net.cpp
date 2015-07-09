@@ -36,6 +36,9 @@
 // Dump addresses to peers.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 
+// We add a random period time (0 to 3 seconds) before the feeler thread makes a connection to prevent synchronization. 
+#define FEELER_SLEEP_WINDOW 3
+
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
 #endif
@@ -55,6 +58,7 @@ using namespace std;
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
+    const int MAX_FEELER_CONNECTIONS = 1;
 
     struct ListenSocket {
         SOCKET socket;
@@ -101,6 +105,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
+static CSemaphore *semFeeler = NULL;
 boost::condition_variable messageHandlerCondition;
 
 // Signals for message handling
@@ -947,7 +952,7 @@ void ThreadSocketHandler()
                     if (nErr != WSAEWOULDBLOCK)
                         LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
                 }
-                else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
+                else if (nInbound >= nMaxConnections - (MAX_OUTBOUND_CONNECTIONS + MAX_FEELER_CONNECTIONS))
                 {
                     CloseSocket(hSocket);
                 }
@@ -1292,6 +1297,51 @@ void static ProcessOneShot()
     }
 }
 
+
+/** Feeler Connections
+ *
+ * Design goals:
+ *  * Increase the number of connectable addresses in the tried table.
+ *  * Ensure that good addresses are hard to evicted from the tried table.
+ *
+ * To that end:
+ *  * When an address inserted into tried would evict an existing address,
+ *    * test the to-be-evicted address using a feeler connection.
+ *    * if the to-be-evicted address is still online, do not evict it, otherwise replace it.
+ *  * When there are no tried collisions to resolve, choose a random address from new and attempt to connect to it.
+ *
+ */
+void ThreadFeelerConnection()
+{
+    while(true) {
+        MilliSleep(FEELER_INTERVAL * 1000);
+
+        CSemaphoreGrant grant(*semFeeler);
+        boost::this_thread::interruption_point();
+
+        addrman.ResolveCollisions();
+        CAddress addr = addrman.SelectTriedCollision();
+
+        // SelectTriedCollision returns an invalid address if it is empty.
+        if (! addr.IsValid()) {
+            bool onlyNew = true;
+            addr = addrman.Select(onlyNew);
+        } 
+
+        // Add small amount of random noise before connection to prevent syncronization.
+        int randsleep = GetRandInt(FEELER_SLEEP_WINDOW*1000);
+        MilliSleep(randsleep);
+
+        // If we selected an invalid address, restart.
+        if (!addr.IsValid() || IsLocal(addr) || IsLimited(addr))
+            continue;
+
+        bool fFeeler = true;
+        if (addr.IsValid())
+            OpenNetworkConnection(addr, &grant, NULL, false, fFeeler);
+    }
+}
+
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
@@ -1463,7 +1513,7 @@ void ThreadOpenAddedConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot)
+bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler)
 {
     //
     // Initiate outbound network connection
@@ -1487,6 +1537,8 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
     pnode->fNetworkNode = true;
     if (fOneShot)
         pnode->fOneShot = true;
+    if (fFeeler)
+        pnode->fFeeler = true;
 
     return true;
 }
@@ -1729,8 +1781,15 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (semOutbound == NULL) {
         // initialize semaphore
-        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, nMaxConnections);
+        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, nMaxConnections-MAX_FEELER_CONNECTIONS); 
         semOutbound = new CSemaphore(nMaxOutbound);
+        assert(nMaxOutbound >= 0);
+    }
+
+    if (semFeeler == NULL){
+        int nMaxFeeler = min(MAX_FEELER_CONNECTIONS, nMaxConnections-MAX_OUTBOUND_CONNECTIONS);
+        semFeeler = new CSemaphore(nMaxFeeler);
+        assert(nMaxFeeler >= 0);
     }
 
     if (pnodeLocalHost == NULL)
@@ -1756,6 +1815,9 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Initiate outbound connections from -addnode
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "addcon", &ThreadOpenAddedConnections));
 
+    // Initiate feeler connections
+    threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "openfeel", &ThreadFeelerConnection));
+
     // Initiate outbound connections
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "opencon", &ThreadOpenConnections));
 
@@ -1773,6 +1835,10 @@ bool StopNode()
     if (semOutbound)
         for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
             semOutbound->post();
+
+    if (semFeeler)
+        for (int i=0; i<MAX_FEELER_CONNECTIONS; i++)
+            semFeeler->post();
 
     if (fAddressesInitialized)
     {
@@ -1809,6 +1875,8 @@ public:
         vhListenSocket.clear();
         delete semOutbound;
         semOutbound = NULL;
+        delete semFeeler;
+        semFeeler = NULL;
         delete pnodeLocalHost;
         pnodeLocalHost = NULL;
 
@@ -2047,6 +2115,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nVersion = 0;
     strSubVer = "";
     fWhitelisted = false;
+    fFeeler = false;
     fOneShot = false;
     fClient = false; // set by version message
     fInbound = fInboundIn;

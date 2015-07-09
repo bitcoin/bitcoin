@@ -3825,6 +3825,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return false;
         }
 
+        if (pfrom->fFeeler) // Feeler connections exist only to verify address is online.
+            pfrom->fDisconnect = true;
+
         int64_t nTime;
         CAddress addrMe;
         CAddress addrFrom;

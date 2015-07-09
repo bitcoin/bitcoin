@@ -158,11 +158,16 @@ public:
 //! ... in at least this many days
 #define ADDRMAN_MIN_FAIL_DAYS 7
 
+//! how recent a successful connection should be before we allow an address to be evicted from tried
+#define ADDRMAN_REPLACEMENT_HOURS 4 
+
 //! the maximum percentage of nodes to return in a getaddr call
 #define ADDRMAN_GETADDR_MAX_PCT 23
 
 //! the maximum number of nodes to return in a getaddr call
 #define ADDRMAN_GETADDR_MAX 2500
+
+#define ADDRMAN_SET_TRIED_COLLISION_SIZE 10
 
 /** 
  * Stochastical (IP) address manager 
@@ -200,6 +205,9 @@ private:
     //! list of "new" buckets
     int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
 
+    //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discpline used to resolve these collisions.
+    std::set<int> setTriedCollisions;
+
 protected:
 
     //! Find an entry.
@@ -222,7 +230,7 @@ protected:
     void ClearNew(int nUBucket, int nUBucketPos);
 
     //! Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, int64_t nTime);
+    void Good_(const CService &addr, bool bTestBeforeEvict, int64_t nTime);
 
     //! Add an entry to the "new" table.
     bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
@@ -230,8 +238,14 @@ protected:
     //! Mark an entry as attempted to connect.
     void Attempt_(const CService &addr, int64_t nTime);
 
-    //! Select an address to connect to.
-    CAddrInfo Select_();
+    //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
+    CAddrInfo Select_(bool newOnly);
+
+    //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
+    void ResolveCollisions_();
+
+    //! Return a random to-be-evicted tried table address.
+    CAddrInfo SelectTriedCollision_();
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
@@ -508,12 +522,12 @@ public:
     }
 
     //! Mark an entry as accessible.
-    void Good(const CService &addr, int64_t nTime = GetAdjustedTime())
+    void Good(const CService &addr, bool bTestBeforeEvict = true, int64_t nTime = GetAdjustedTime())
     {
         {
             LOCK(cs);
             Check();
-            Good_(addr, nTime);
+            Good_(addr, bTestBeforeEvict, nTime);
             Check();
         }
     }
@@ -529,16 +543,39 @@ public:
         }
     }
 
+    //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
+    void ResolveCollisions(){
+         {
+            LOCK(cs);
+            Check();
+            ResolveCollisions_();
+            Check();
+        }       
+    }
+
+    //! Randomly select an address in tried that another address is attempting to evict. 
+    CAddrInfo SelectTriedCollision(){
+        CAddrInfo addrRet;
+        {
+            LOCK(cs);
+            Check();
+            addrRet = SelectTriedCollision_();
+            Check();
+        }
+        return addrRet;
+    }
+
     /**
      * Choose an address to connect to.
+     * If newOnly is set to true, only the new table is selected from.
      */
-    CAddrInfo Select()
+    CAddrInfo Select(bool newOnly = false)
     {
         CAddrInfo addrRet;
         {
             LOCK(cs);
             Check();
-            addrRet = Select_();
+            addrRet = Select_(newOnly);
             Check();
         }
         return addrRet;
@@ -567,6 +604,14 @@ public:
             Check();
         }
     }
+
+#ifdef __ADDRMAN_TEST__
+    void MakeDeterministic(){
+        // Ensure that bucket placement is always the same for testing purposes.
+        nKey.SetNull();
+    }
+#endif
+
 };
 
 #endif // BITCOIN_ADDRMAN_H
