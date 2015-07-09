@@ -203,6 +203,28 @@ struct CExtPubKey {
     void Encode(unsigned char code[74]) const;
     void Decode(const unsigned char code[74]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
+
+    unsigned int GetSerializeSize(int nType, int nVersion) const
+    {
+        return 75;
+    }
+    template <typename Stream>
+    void Serialize(Stream& s, int nType, int nVersion) const
+    {
+        unsigned int len = 74;
+        ::WriteCompactSize(s, len);
+        unsigned char code[74];
+        Encode(code);
+        s.write((const char *)&code[0], len);
+    }
+    template <typename Stream>
+    void Unserialize(Stream& s, int nType, int nVersion)
+    {
+        unsigned int len = ::ReadCompactSize(s);
+        unsigned char code[74];
+        s.read((char *)&code[0], len);
+        Decode(code);
+    }
 };
 
 #endif // BITCOIN_PUBKEY_H

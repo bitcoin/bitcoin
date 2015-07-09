@@ -10,7 +10,9 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/foreach.hpp>
 
 #include "univalue/univalue.h"
 
@@ -121,9 +123,43 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     map<string, string> mapRequestHeaders;
     mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
 
+    // Check if we access a non root endpoint
+    std::vector<std::string> vMethodParts;
+    boost::split(vMethodParts, strMethod, boost::is_any_of("/"));
+    std::string pathToAccess = "/";
+
+    UniValue paramsToUse = params;
+    std::string strMethodToUse = strMethod;
+    if (vMethodParts.size() == 2)
+    {
+        pathToAccess = "/"+vMethodParts.front();
+        strMethodToUse = vMethodParts.back();
+    }
+
+    //for legacy support, we only use json objects property list as JSON RPC param arg if we access a non root uri
+    if (pathToAccess != "/")
+    {
+        //convert key=value arguments to ["key":"value"] json object property list
+        paramsToUse = UniValue(UniValue::VARR);
+        UniValue argObj(UniValue::VOBJ);
+        for (unsigned int idx = 0; idx < params.size(); idx++) {
+            const UniValue& val = params[idx];
+            std::vector<std::string> strs;
+            std::string strVal = val.get_str();
+            size_t pos = strVal.find("=");
+            if (pos != std::string::npos)
+                argObj.push_back(Pair(strVal.substr(0, pos), strVal.substr(pos+1)));
+            else
+                paramsToUse.push_back(val);
+        }
+
+        if (!argObj.empty())
+            paramsToUse.push_back(argObj);
+    }
+
     // Send request
-    string strRequest = JSONRPCRequest(strMethod, params, 1);
-    string strPost = HTTPPost(strRequest, mapRequestHeaders);
+    string strRequest = JSONRPCRequest(strMethodToUse, paramsToUse, 1);
+    string strPost = HTTPPost(pathToAccess, strRequest, mapRequestHeaders);
     stream << strPost << std::flush;
 
     // Receive HTTP reply status

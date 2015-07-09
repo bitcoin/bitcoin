@@ -13,6 +13,7 @@
 #include "timedata.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
+#include "wallet/legacywallet.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
