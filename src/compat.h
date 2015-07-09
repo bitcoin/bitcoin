@@ -90,4 +90,12 @@ typedef u_int SOCKET;
 
 size_t strnlen_int( const char *start, size_t max_len);
 
+bool static inline IsSelectableSocket(SOCKET s) {
+#ifdef WIN32
+    return true;
+#else
+    return (s >= 0 && s < FD_SETSIZE);
+#endif
+}
+
 #endif // BITCOIN_COMPAT_H
