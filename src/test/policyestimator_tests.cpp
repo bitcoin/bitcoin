@@ -17,20 +17,15 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
     CTxMemPool mpool(CFeeRate(1000));
     CAmount basefee(2000);
-    double basepri = 1e6;
     CAmount deltaFee(100);
-    double deltaPri=5e5;
     std::vector<CAmount> feeV[2];
-    std::vector<double> priV[2];
 
     // Populate vectors of increasing fees or priorities
     for (int j = 0; j < 10; j++) {
         //V[0] is for fee transactions
         feeV[0].push_back(basefee * (j+1));
-        priV[0].push_back(0);
         //V[1] is for priority transactions
         feeV[1].push_back(CAmount(0));
-        priV[1].push_back(basepri * pow(10, j+1));
     }
 
     // Store the hashes of transactions that have been
@@ -63,7 +58,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 5; k++) { // add 4 fee txs for every priority tx
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(hash, CTxMemPoolEntry(tx, feeV[k/4][j], GetTime(), priV[k/4][j], blocknum, mpool.HasNoInputsOf(tx)));
+                mpool.addUnchecked(hash, CTxMemPoolEntry(tx, feeV[k/4][j], GetTime(), blocknum, mpool.HasNoInputsOf(tx)));
                 txHashes[j].push_back(hash);
             }
         }
@@ -92,7 +87,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
 
     std::vector<CAmount> origFeeEst;
-    std::vector<double> origPriEst;
     // Highest feerate is 10*baseRate and gets in all blocks,
     // second highest feerate is 9*baseRate and gets in 9/10 blocks = 90%,
     // third highest feerate is 8*base rate, and gets in 8/10 blocks = 80%,
@@ -101,15 +95,11 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // so estimateFee(2) should return 8*baseRate etc...
     for (int i = 1; i < 10;i++) {
         origFeeEst.push_back(mpool.estimateFee(i).GetFeePerK());
-        origPriEst.push_back(mpool.estimatePriority(i));
         if (i > 1) { // Fee estimates should be monotonically decreasing
             BOOST_CHECK(origFeeEst[i-1] <= origFeeEst[i-2]);
-            BOOST_CHECK(origPriEst[i-1] <= origPriEst[i-2]);
         }
         BOOST_CHECK(origFeeEst[i-1] < (10-i)*baseRate.GetFeePerK() + deltaFee);
         BOOST_CHECK(origFeeEst[i-1] > (10-i)*baseRate.GetFeePerK() - deltaFee);
-        BOOST_CHECK(origPriEst[i-1] < pow(10,10-i) * basepri + deltaPri);
-        BOOST_CHECK(origPriEst[i-1] > pow(10,10-i) * basepri - deltaPri);
     }
 
     // Mine 50 more blocks with no transactions happening, estimates shouldn't change
@@ -120,8 +110,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] + deltaFee);
         BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(mpool.estimatePriority(i) < origPriEst[i-1] + deltaPri);
-        BOOST_CHECK(mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
     }
 
 
@@ -132,7 +120,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 5; k++) { // add 4 fee txs for every priority tx
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(hash, CTxMemPoolEntry(tx, feeV[k/4][j], GetTime(), priV[k/4][j], blocknum, mpool.HasNoInputsOf(tx)));
+                mpool.addUnchecked(hash, CTxMemPoolEntry(tx, feeV[k/4][j], GetTime(), blocknum, mpool.HasNoInputsOf(tx)));
                 txHashes[j].push_back(hash);
             }
         }
@@ -141,7 +129,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
     }
 
     // Mine all those transactions
@@ -158,7 +145,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     block.clear();
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
     }
 
     // Mine 100 more blocks where everything is mined every block
@@ -168,7 +154,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             for (int k = 0; k < 5; k++) { // add 4 fee txs for every priority tx
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 uint256 hash = tx.GetHash();
-                mpool.addUnchecked(hash, CTxMemPoolEntry(tx, feeV[k/4][j], GetTime(), priV[k/4][j], blocknum, mpool.HasNoInputsOf(tx)));
+                mpool.addUnchecked(hash, CTxMemPoolEntry(tx, feeV[k/4][j], GetTime(), blocknum, mpool.HasNoInputsOf(tx)));
                 CTransaction btx;
                 if (mpool.lookup(hash, btx))
                     block.push_back(btx);
@@ -179,7 +165,6 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
     for (int i = 1; i < 9; i++) {
         BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(mpool.estimatePriority(i) < origPriEst[i-1] - deltaPri);
     }
 }
 

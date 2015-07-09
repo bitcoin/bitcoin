@@ -234,10 +234,7 @@ public:
     void removeTx(uint256 hash);
 
     /** Is this transaction likely included in a block because of its fee?*/
-    bool isFeeDataPoint(const CFeeRate &fee, double pri);
-
-    /** Is this transaction likely included in a block because of its priority?*/
-    bool isPriDataPoint(const CFeeRate &fee, double pri);
+    bool isFeeDataPoint(const CFeeRate &fee);
 
     /** Return a fee estimate */
     CFeeRate estimateFee(int confTarget);
@@ -253,7 +250,6 @@ public:
 
 private:
     CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main
-    double minTrackedPriority; //! Set to AllowFreeThreshold
     unsigned int nBestSeenHeight;
     struct TxStatsInfo
     {
@@ -271,6 +267,5 @@ private:
 
     /** Breakpoints to help determine whether a transaction was confirmed by priority or Fee */
     CFeeRate feeLikely, feeUnlikely;
-    double priLikely, priUnlikely;
 };
 #endif /*BITCOIN_POLICYESTIMATOR_H */
