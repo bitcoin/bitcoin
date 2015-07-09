@@ -1797,7 +1797,7 @@ void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
         if(!relayToAll && !pnode->fRelayTxes)
             continue;
 
-        pnode->PushMessage("txlreq", tx);
+        pnode->PushMessage("ix", tx);
     }
 
 }

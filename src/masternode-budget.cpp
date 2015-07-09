@@ -32,6 +32,73 @@ int GetBudgetPaymentCycleBlocks(){
     return 50;
 }
 
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, std::string& strError)
+{
+    return true;
+
+    CTransaction txCollateral;
+    uint256 hash;
+    if(!GetTransaction(nTxCollateralHash, txCollateral, hash, true)){
+        LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Can't find collateral tx %s\n", txCollateral.ToString().c_str());
+        return false;
+    }
+
+    if(txCollateral.vout.size() < 1) return false;
+    if(txCollateral.nLockTime != 0) return false;
+
+    int64_t nValueIn = 0;
+    int64_t nValueOut = 0;
+    bool missingTx = false;
+
+    BOOST_FOREACH(const CTxOut o, txCollateral.vout){
+        nValueOut += o.nValue;
+
+        if(!o.scriptPubKey.IsNormalPaymentScript()){
+            LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Invalid Script %s\n", txCollateral.ToString().c_str());
+            return false;
+        }
+    }
+
+    bool foundOpReturn = false;
+    BOOST_FOREACH(const CTxIn i, txCollateral.vin){
+        CTransaction tx2;
+        uint256 hash;
+        if(GetTransaction(i.prevout.hash, tx2, hash, true)){
+            if(tx2.vout.size() > i.prevout.n) {
+                nValueIn += tx2.vout[i.prevout.n].nValue;
+            }
+        } else{
+            missingTx = true;
+        }
+    }
+
+    if(!foundOpReturn){
+
+    }
+
+    if(missingTx){
+        if(fDebug) LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString().c_str());
+        return false;
+    }
+
+    //collateral transactions are required to pay out BUDGET_FEE_TX as a fee to the miners
+    if(nValueIn - nValueOut < BUDGET_FEE_TX) {
+        if(fDebug) LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
+        return false;
+    }
+
+    if(fDebug) LogPrintf("CBudgetProposalBroadcast::FeeTXValid %s\n", txCollateral.ToString().c_str());
+
+    CValidationState state;
+    if(!AcceptableInputs(mempool, state, txCollateral, true, NULL)){
+        if(fDebug) LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - didn't pass IsAcceptable\n");
+        return false;
+    }
+
+    return true;
+    return true;
+}
+
 void CBudgetManager::CheckOrphanVotes()
 {
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
@@ -53,154 +120,6 @@ void CBudgetManager::CheckOrphanVotes()
         }
     }
 }
-
-void CBudgetManager::ResignInvalidProposals()
-{
-    if(!fMasterNode){
-        CheckSignatureValidity();
-        return;
-    }
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return;
-
-    //pick a few masternodes responsible for this each cycle
-    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, pindexPrev->nHeight, MIN_BUDGET_PEER_PROTO_VERSION);
-
-    if(n == -1)
-    {
-        CheckSignatureValidity();
-        LogPrintf("CBudgetManager::ResignInvalidProposals - Unknown Masternode\n");
-        return;
-    }
-
-    if(n > 3)
-    {
-        CheckSignatureValidity();
-        LogPrintf("CBudgetManager::ResignInvalidProposals - Masternode not in the top %s\n", MIN_BUDGET_PEER_PROTO_VERSION);
-        return;
-    }
-
-    CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
-    if(pmn == NULL) {
-        LogPrintf("CBudgetManager::ResignInvalidProposals  - unknown masternode - vin:%s \n", pmn->vin.ToString().c_str());
-        return;
-    }
-
-    std::map<uint256, CBudgetProposal>::iterator it1 = mapProposals.begin();
-    while(it1 != mapProposals.end())
-    {
-        if(pmn->nVotedTimes+VOTE_PROP_INC > 100) return; //can't submit to the network anyway
-
-        CBudgetProposal* pbudgetProposal = &((*it1).second);
-
-        CBudgetProposalBroadcast budgetProposalBroadcast(*pbudgetProposal);
-        if(!budgetProposalBroadcast.SignatureValid()){
-            budgetProposalBroadcast.vin = activeMasternode.vin;
-
-            LogPrintf("CBudgetManager::ResignInvalidProposals -- proposal - resigning proposal\n");
-
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
-            std::string errorMessage;
-
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
-                LogPrintf("CBudgetManager::ResignInvalidProposals - Error upon calling SetKey");
-                return;
-            }
-
-            if(!budgetProposalBroadcast.Sign(keyMasternode, pubKeyMasternode)){
-                LogPrintf("CBudgetManager::ResignInvalidProposals - Failure to sign");
-                return;
-            }
-
-            std::string strError = "";
-            if(budgetProposalBroadcast.IsValid(strError)){
-                //delete if it exists and insert the new object
-                if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())) mapSeenMasternodeBudgetProposals.erase(budgetProposalBroadcast.GetHash());
-                mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
-
-                budgetProposalBroadcast.Relay();
-            } else {
-                LogPrintf("CBudgetManager::ResignInvalidProposals -- proposal - still invalid with new signature\n");
-            }
-        }
-        ++it1;
-    }
-
-    std::map<uint256, CFinalizedBudget>::iterator it2 = mapFinalizedBudgets.begin();
-    while(it2 != mapFinalizedBudgets.end()){
-        if(pmn->nVotedTimes+VOTE_PROP_INC > 100) return; //can't submit to the network anyway
-
-        CFinalizedBudget* pfinalizedBudget = &((*it2).second);
-        if(!pfinalizedBudget->IsValid()) continue;
-
-        CFinalizedBudgetBroadcast finalizedBudgetBroadcast(*pfinalizedBudget);
-        if(!finalizedBudgetBroadcast.SignatureValid()){
-            finalizedBudgetBroadcast.vin = activeMasternode.vin;
-
-            LogPrintf("CBudgetManager::ResignInvalidProposals -- finalized budget - resigning finalized budget\n");
-
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
-            std::string errorMessage;
-
-            if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
-                LogPrintf("CBudgetManager::ResignInvalidProposals - Error upon calling SetKey");
-                return;
-            }
-
-            if(!finalizedBudgetBroadcast.Sign(keyMasternode, pubKeyMasternode)){
-                LogPrintf("CBudgetManager::ResignInvalidProposals - Failure to sign");
-                return;
-            }
-
-            if(!finalizedBudgetBroadcast.IsValid()){
-
-                //delete if it exists and insert the new object
-                if(mapFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())) mapFinalizedBudgets.erase(finalizedBudgetBroadcast.GetHash());
-                mapFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
-
-                finalizedBudgetBroadcast.Relay();
-            } else {
-                LogPrintf("CBudgetManager::ResignInvalidProposals -- finalized budget - still invalid with new signature\n");
-            }
-        }
-        ++it2;
-    }
-}
-
-void CBudgetManager::CheckSignatureValidity()
-{
-    std::map<uint256, CBudgetProposal>::iterator it1 = mapProposals.begin();
-    while(it1 != mapProposals.end())
-    {
-        CBudgetProposal* pbudgetProposal = &((*it1).second);
-
-        CBudgetProposalBroadcast budgetProposalBroadcast(*pbudgetProposal);
-        if(!budgetProposalBroadcast.SignatureValid()){
-            if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())) {
-                mapSeenMasternodeBudgetProposals[budgetProposalBroadcast.GetHash()].fInvalid = true;
-            }
-        }
-        ++it1;
-    }
-
-    std::map<uint256, CFinalizedBudget>::iterator it2 = mapFinalizedBudgets.begin();
-    while(it2 != mapFinalizedBudgets.end())
-    {
-        CFinalizedBudget* pfinalizedBudget = &((*it2).second);
-
-        CFinalizedBudgetBroadcast finalizedBudgetBroadcast(*pfinalizedBudget);
-        if(!finalizedBudgetBroadcast.SignatureValid()){
-            if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())) {
-                mapSeenFinalizedBudgets[finalizedBudgetBroadcast.GetHash()].fInvalid = true;
-            }
-        }
-        ++it2;
-    }
-}
-
 
 void CBudgetManager::SubmitFinalBudget()
 {
@@ -238,11 +157,11 @@ void CBudgetManager::SubmitFinalBudget()
         LogPrintf("SubmitFinalBudget - Error upon calling SetKey\n");
     }
 
+    //create fee tx
+    uint256 hash = 0;
+
     //create the proposal incase we're the first to make it
-    CFinalizedBudgetBroadcast finalizedBudgetBroadcast(activeMasternode.vin, strBudgetName, nBlockStart, vecTxBudgetPayments);
-    if(!finalizedBudgetBroadcast.Sign(keyMasternode, pubKeyMasternode)){
-        LogPrintf("SubmitFinalBudget - Failure to sign.\n");
-    }
+    CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, hash);
 
     if(!finalizedBudgetBroadcast.IsValid()){
         LogPrintf("SubmitFinalBudget - Invalid finalized budget broadcast (are all the hashes correct?)\n");
@@ -408,13 +327,7 @@ void CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
     LOCK(cs);
     if(!finalizedBudget.IsValid()) return;
 
-    if(mapFinalizedBudgets.count(finalizedBudget.GetHash()) && mapFinalizedBudgets[finalizedBudget.GetHash()].vin != finalizedBudget.vin) {
-        //this finalized budget must have went invalid, so update the vin to the new one
-        LogPrintf("CBudgetManager::AddFinalizedBudget -- updated vin of invalid finalized budget %s (%s to %s)\n",
-                  finalizedBudget.strBudgetName,
-                  mapFinalizedBudgets[finalizedBudget.GetHash()].vin.prevout.ToStringShort(),
-                  finalizedBudget.vin.prevout.ToStringShort());
-        mapFinalizedBudgets[finalizedBudget.GetHash()].vin = finalizedBudget.vin;
+    if(mapFinalizedBudgets.count(finalizedBudget.GetHash())) {
         return;
     }
 
@@ -430,13 +343,7 @@ void CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
         return;
     }
 
-    if(mapProposals.count(budgetProposal.GetHash()) && mapProposals[budgetProposal.GetHash()].vin != budgetProposal.vin) {
-        //this budget proposal must have went invalid, so update the vin to the new one
-        LogPrintf("CBudgetManager::AddProposal -- updated vin of invalid budget proposal %s (%s to %s)\n", 
-            budgetProposal.strProposalName,
-            mapProposals[budgetProposal.GetHash()].vin.prevout.ToStringShort().c_str(), 
-            budgetProposal.vin.prevout.ToStringShort().c_str());
-        mapProposals[budgetProposal.GetHash()].vin = budgetProposal.vin;
+    if(mapProposals.count(budgetProposal.GetHash())) {
         return;
     }
 
@@ -761,8 +668,6 @@ void CBudgetManager::NewBlock()
         SubmitFinalBudget();
     }
 
-    ResignInvalidProposals();
-
     //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
     if(chainActive.Height() % 6 != 0) return;
 
@@ -813,30 +718,20 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> budgetProposalBroadcast;
 
         if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())){
-            //if this proposal went inactive, we'll update it with the new re-signature
-            if(!mapSeenMasternodeBudgetProposals[budgetProposalBroadcast.GetHash()].fInvalid){
-                return;
-            }
+            return;
         }
 
         //set time we first saw this prop
         budgetProposalBroadcast.nTime = GetAdjustedTime();
 
-        CMasternode* pmn = mnodeman.Find(budgetProposalBroadcast.vin);
-        if(pmn == NULL) {
-            if(fDebug) LogPrintf("mprop - unknown masternode - vin: %s\n", budgetProposalBroadcast.vin.ToString());
-            return;
-        }
-
-        if(!budgetProposalBroadcast.SignatureValid()){
-            LogPrintf("mprop - signature invalid\n");
-            Misbehaving(pfrom->GetId(), 20);
-            return;
-        }
-
         std::string strError = "";
+        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, strError)){
+            LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
+            return;
+        }
+
         if(!budgetProposalBroadcast.IsValid(strError)) {
-            LogPrintf("mprop - invalid budget proposal - %s\n", strError.c_str());
+            LogPrintf("mprop - invalid budget proposal - %s\n", strError);
             return;
         }
 
@@ -844,20 +739,12 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())) mapSeenMasternodeBudgetProposals.erase(budgetProposalBroadcast.GetHash());
         mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
 
-        if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
-            CBudgetProposal budgetProposal(budgetProposalBroadcast);
-            budget.AddProposal(budgetProposal);
-            budgetProposalBroadcast.Relay();
+        CBudgetProposal budgetProposal(budgetProposalBroadcast);
+        budget.AddProposal(budgetProposal);
+        budgetProposalBroadcast.Relay();
 
-            //can only do this six times a day on the network
-            if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes+=VOTE_PROP_INC;
-
-            //We might have active votes for this proposal that are valid now
-            CheckOrphanVotes();
-        } else {
-            LogPrintf("mvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
-            return;
-        }
+        //We might have active votes for this proposal that are valid now
+        CheckOrphanVotes();
     }
 
     if (strCommand == "mvote") { //Masternode Vote
@@ -881,7 +768,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-        if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
+        if(pmn->nVotedTimes < 100){
             budget.UpdateProposal(vote, pfrom);
             vote.Relay();
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
@@ -896,21 +783,12 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> finalizedBudgetBroadcast;
 
         if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())){
-            //if this budget went inactive, we'll update it with the new re-signature
-            if(!mapSeenFinalizedBudgets[finalizedBudgetBroadcast.GetHash()].fInvalid){
-                return;
-            }
-        }
-
-        CMasternode* pmn = mnodeman.Find(finalizedBudgetBroadcast.vin);
-        if(pmn == NULL) {
-            if(fDebug) LogPrintf("fbs - unknown masternode - vin: %s\n", finalizedBudgetBroadcast.vin.ToString());
             return;
         }
 
-        if(!finalizedBudgetBroadcast.SignatureValid()){
-            LogPrintf("fbs - signature invalid\n");
-            Misbehaving(pfrom->GetId(), 20);
+        std::string strError = "";
+        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, strError)){
+            LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.nFeeTXHash.ToString(), strError);
             return;
         }
 
@@ -923,19 +801,12 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())) mapSeenFinalizedBudgets.erase(finalizedBudgetBroadcast.GetHash());
         mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
 
-        if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
-            CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
-            budget.AddFinalizedBudget(finalizedBudget);
-            finalizedBudgetBroadcast.Relay();
+        CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
+        budget.AddFinalizedBudget(finalizedBudget);
+        finalizedBudgetBroadcast.Relay();
 
-            if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes+=VOTE_PROP_INC;
-
-            //we might have active votes for this budget that are now valid
-            CheckOrphanVotes();
-        } else {
-            LogPrintf("fbs - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
-            return;
-        }
+        //we might have active votes for this budget that are now valid
+        CheckOrphanVotes();
     }
 
     if (strCommand == "fbvote") { //Finalized Budget Vote
@@ -959,7 +830,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-        if(IsSyncingMasternodeAssets() || pmn->nVotedTimes < 100){
+        if(pmn->nVotedTimes < 100){
             budget.UpdateFinalizedBudget(vote, pfrom);
             vote.Relay();
             if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
@@ -1072,7 +943,6 @@ bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pf
 
 CBudgetProposal::CBudgetProposal()
 {
-    vin = CTxIn();
     strProposalName = "unknown";
     nBlockStart = 0;
     nBlockEnd = 0;
@@ -1080,9 +950,8 @@ CBudgetProposal::CBudgetProposal()
     nTime = 0;
 }
 
-CBudgetProposal::CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn)
+CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn)
 {
-    vin = vinIn;
     strProposalName = strProposalNameIn;
     strURL = strURLIn;
     nBlockStart = nBlockStartIn;
@@ -1090,11 +959,11 @@ CBudgetProposal::CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std
     address = addressIn;
     nAmount = nAmountIn;
     nTime = 0;
+    nFeeTXHash = nFeeTXHashIn;
 }
 
 CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
 {
-    vin = other.vin;
     strProposalName = other.strProposalName;
     strURL = other.strURL;
     nBlockStart = other.nBlockStart;
@@ -1102,6 +971,8 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
     address = other.address;
     nAmount = other.nAmount;
     nTime = other.nTime;
+    nFeeTXHash = other.nFeeTXHash;
+    mapVotes = other.mapVotes;
 }
 
 bool CBudgetProposal::IsValid(std::string& strError)
@@ -1252,31 +1123,28 @@ int CBudgetProposal::GetRemainingPaymentCount()
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast()
 {
-    vin = CTxIn();
     strProposalName = "unknown";
     strURL = "";
     nBlockStart = 0;
     nBlockEnd = 0;
     nAmount = 0;
     nTime = 0;
-    fInvalid = false;
+    nFeeTXHash = 0;
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
 {
-    vin = other.vin;
     strProposalName = other.strProposalName;
     strURL = other.strURL;
     nBlockStart = other.nBlockStart;
     nBlockEnd = other.nBlockEnd;
     address = other.address;
     nAmount = other.nAmount;
-    fInvalid = false;
+    nFeeTXHash = other.nFeeTXHash;
 }
 
-CBudgetProposalBroadcast::CBudgetProposalBroadcast(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn)
+CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)
 {
-    vin = vinIn;
     strProposalName = strProposalNameIn;
     strURL = strURLIn;
 
@@ -1289,55 +1157,13 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(CTxIn vinIn, std::string strP
     address = addressIn;
     nAmount = nAmountIn;
 
-    fInvalid = false;
-}
-
-bool CBudgetProposalBroadcast::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
-{
-    // Choose coins to use
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-
-    std::string errorMessage;
-    std::string strMessage = vin.prevout.ToStringShort() + strProposalName + strURL +  boost::lexical_cast<std::string>(nBlockStart) +
-        boost::lexical_cast<std::string>(nBlockEnd) + address.ToString() + boost::lexical_cast<std::string>(nAmount);
-
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode))
-        return(" Error upon calling SignMessage");
-
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage))
-        return(" Error upon calling VerifyMessage");
-
-    return true;
+    nFeeTXHash = nFeeTXHashIn;
 }
 
 void CBudgetProposalBroadcast::Relay()
 {
     CInv inv(MSG_BUDGET_PROPOSAL, GetHash());
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
-}
-
-bool CBudgetProposalBroadcast::SignatureValid()
-{
-    std::string errorMessage;
-
-    std::string strMessage = vin.prevout.ToStringShort() + strProposalName + strURL +  boost::lexical_cast<std::string>(nBlockStart) +
-        boost::lexical_cast<std::string>(nBlockEnd) + address.ToString() + boost::lexical_cast<std::string>(nAmount);
-
-    CMasternode* pmn = mnodeman.Find(vin);
-
-    if(pmn == NULL)
-    {
-        LogPrintf("CBudgetProposalBroadcast::SignatureValid() - Unknown Masternode - %s\n", vin.ToString().c_str());
-        return false;
-    }
-
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CBudgetProposalBroadcast::SignatureValid() - Verify message failed\n");
-        return false;
-    }
-
-    return true;
 }
 
 CBudgetVote::CBudgetVote()
@@ -1403,21 +1229,21 @@ bool CBudgetVote::SignatureValid()
 
 CFinalizedBudget::CFinalizedBudget()
 {
-    vin = CTxIn();
     strBudgetName = "";
     nBlockStart = 0;
     vecProposals.clear();
     mapVotes.clear();
+    nFeeTXHash = 0;
 }
 
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
 {
-    vin = other.vin;
     strBudgetName = other.strBudgetName;
     nBlockStart = other.nBlockStart;
     vecProposals = other.vecProposals;
     mapVotes = other.mapVotes;
+    nFeeTXHash = other.nFeeTXHash;
 }
 
 void CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote)
@@ -1472,11 +1298,6 @@ void CFinalizedBudget::AutoCheck()
             SubmitVote();
         }
 
-    }
-    // Feature : Masternodes can delegate finalized budgets to a 3rd party simply by adding this option to the configuration
-    else if (strBudgetMode == vin.prevout.ToStringShort())
-    {
-        SubmitVote();
     }
 }
 // If masternode voted for a proposal, but is now invalid -- remove the vote
@@ -1633,79 +1454,36 @@ void CFinalizedBudget::SubmitVote()
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
 {
-    vin = CTxIn();
     strBudgetName = "";
     nBlockStart = 0;
     vecProposals.clear();
     mapVotes.clear();
     vchSig.clear();
+    nFeeTXHash = 0;
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(const CFinalizedBudget& other)
 {
-    vin = other.vin;
     strBudgetName = other.strBudgetName;
     nBlockStart = other.nBlockStart;
     BOOST_FOREACH(CTxBudgetPayment out, other.vecProposals) vecProposals.push_back(out);
     mapVotes = other.mapVotes;
+    nFeeTXHash = other.nFeeTXHash;
 }
 
-CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn)
+CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn, uint256 nFeeTXHashIn)
 {
-    vin = vinIn;
-    printf("%s\n", vin.ToString().c_str());
     strBudgetName = strBudgetNameIn;
     nBlockStart = nBlockStartIn;
     BOOST_FOREACH(CTxBudgetPayment out, vecProposalsIn) vecProposals.push_back(out);
     mapVotes.clear();
+    nFeeTXHash = nFeeTXHashIn;
 }
 
 void CFinalizedBudgetBroadcast::Relay()
 {
     CInv inv(MSG_BUDGET_FINALIZED, GetHash());
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
-}
-
-bool CFinalizedBudgetBroadcast::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
-{
-    // Choose coins to use
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-
-    std::string errorMessage;
-    std::string strMessage = vin.prevout.ToStringShort() + strBudgetName + boost::lexical_cast<std::string>(nBlockStart);
-    BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals) strMessage += payment.nProposalHash.ToString().c_str();
-
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode))
-        return(" Error upon calling SignMessage");
-
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage))
-        return(" Error upon calling VerifyMessage");
-
-    return true;
-}
-
-bool CFinalizedBudgetBroadcast::SignatureValid()
-{
-    std::string errorMessage;
-
-    std::string strMessage = vin.prevout.ToStringShort() + strBudgetName + boost::lexical_cast<std::string>(nBlockStart);
-    BOOST_FOREACH(CTxBudgetPayment& payment, vecProposals) strMessage += payment.nProposalHash.ToString().c_str();
-
-    CMasternode* pmn = mnodeman.Find(vin);
-
-    if(pmn == NULL)
-    {
-        LogPrintf("CFinalizedBudgetBroadcast::SignatureValid() - Unknown Masternode\n");
-        return false;
-    }
-
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CFinalizedBudgetBroadcast::SignatureValid() - Verify message failed\n");
-        return false;
-    }
-
-    return true;
 }
 
 CFinalizedBudgetVote::CFinalizedBudgetVote()

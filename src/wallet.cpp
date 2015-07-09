@@ -10,6 +10,7 @@
 #include "checkpoints.h"
 #include "coincontrol.h"
 #include "net.h"
+#include "masternode-budget.h"
 #include "darksend.h"
 #include "keepass.h"
 #include "instantx.h"
@@ -1086,7 +1087,7 @@ void CWalletTx::RelayWalletTransaction(std::string strCommand)
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
 
-            if(strCommand == "txlreq"){
+            if(strCommand == "ix"){
                 mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 CreateNewLock(((CTransaction)*this));
                 RelayTransactionLockReq((CTransaction)*this, true);
@@ -1927,7 +1928,7 @@ bool CWallet::SelectCoinsWithoutDenomination(int64_t nTargetValue, set<pair<cons
     return (nValueRet >= nTargetValue);
 }
 
-bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string strReason)
+bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
 {
     /*
         To doublespend a collateral transaction, it will require a fee higher than this. So there's
@@ -1979,6 +1980,30 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
     return true;
 }
 
+bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useIX)
+{
+    // make our change address
+    CReserveKey reservekey(pwalletMain);
+
+    CScript scriptChange;
+    scriptChange << OP_RETURN << ToByteVector(hash);
+
+    int64_t nFeeRet = 0;
+    std::string strFail = "";
+    vector< pair<CScript, int64_t> > vecSend;
+    vecSend.push_back(make_pair(scriptChange, CENT));
+
+    CCoinControl *coinControl=NULL;
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, useIX, (CAmount)BUDGET_FEE_TX);
+    if(!success){
+        LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+
 bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAmounts)
 {
     BOOST_FOREACH(CTxIn i, vCoins){
@@ -1996,8 +2021,10 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 }
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nPayFee)
 {
+    if(useIX && nPayFee < CENT) nPayFee = CENT;
+
     CAmount nValue = 0;
     CAmount nFeeDelta = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
@@ -2023,7 +2050,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
         LOCK2(cs_main, cs_wallet);
         {
             nFeeRet = 0;
-            if(useIX) nFeeRet = CENT;
+            if(nPayFee!=0) nFeeRet = nPayFee;
             while (true)
             {
                 txNew.vin.clear();
@@ -2206,11 +2233,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 }
 
 bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nPayFee)
 {
     vector< pair<CScript, CAmount> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, useIX);
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, useIX, nPayFee);
 }
 
 /**

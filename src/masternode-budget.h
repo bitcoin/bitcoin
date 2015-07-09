@@ -13,7 +13,7 @@
 #include "base58.h"
 #include "masternode.h"
 #include <boost/lexical_cast.hpp>
-
+#include "init.h"
 
 using namespace std;
 
@@ -29,7 +29,8 @@ class CTxBudgetPayment;
 #define VOTE_ABSTAIN  0
 #define VOTE_YES      1
 #define VOTE_NO       2
-#define VOTE_PROP_INC       15 //how many "votes" to count for a new proposal
+
+static const int64_t BUDGET_FEE_TX = (0.5*COIN);
 
 extern std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
 extern std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
@@ -41,6 +42,9 @@ void DumpBudgets();
 
 //Amount of blocks in a months period of time (using 2.6 minutes per)
 int GetBudgetPaymentCycleBlocks();
+
+//Check the collateral transaction for the budget proposal/finalized budget
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, std::string& strError);
 
 /** Save Budget Manager (budget.dat)
  */
@@ -114,10 +118,6 @@ public:
     std::string GetRequiredPaymentsString(int64_t nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
-    //Have masternodes resign proposals with masternodes that have went inactive
-    void ResignInvalidProposals();
-    void CheckSignatureValidity();
-
     void CheckOrphanVotes();
     void Clear(){
         LogPrintf("Budget object cleared\n");
@@ -185,10 +185,10 @@ private:
 
 public:
     std::string strBudgetName;
-    CTxIn vin;
     int nBlockStart;
     std::vector<CTxBudgetPayment> vecProposals;
     map<uint256, CFinalizedBudgetVote> mapVotes;
+    uint256 nFeeTXHash;
 
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
@@ -204,7 +204,6 @@ public:
     std::string GetProposals();
     int GetBlockStart() {return nBlockStart;}
     int GetBlockEnd() {return nBlockStart + (int)(vecProposals.size()-1);}
-    std::string GetSubmittedBy() {return vin.prevout.ToStringShort();}
     int GetVoteCount() {return (int)mapVotes.size();}
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool GetProposalByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment)
@@ -236,13 +235,6 @@ public:
     string GetStatus();
 
     uint256 GetHash(){
-        /*
-            vin is not included on purpose
-                - Any masternode can make a proposal and the hashes should match regardless of who made it.
-                - Someone could hyjack a new proposal by changing the vin and the signature check will fail.
-                  However, the network will still propagate the correct version and the incorrect one will be rejected.
-        */
-
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strBudgetName;
         ss << nBlockStart;
@@ -258,7 +250,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(LIMITED_STRING(strBudgetName, 20));
-        READWRITE(vin);
+        READWRITE(nFeeTXHash);
         READWRITE(nBlockStart);
         READWRITE(vecProposals);
 
@@ -273,13 +265,10 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
-    bool fInvalid;
     CFinalizedBudgetBroadcast();
     CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
-    CFinalizedBudgetBroadcast(CTxIn& vinIn, std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn);
+    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn, uint256 nFeeTXHashIn);
 
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid();
     void Relay();
 
     ADD_SERIALIZE_METHODS;
@@ -289,10 +278,9 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         //for syncing with other clients
         READWRITE(LIMITED_STRING(strBudgetName, 20));
-        READWRITE(vin);
         READWRITE(nBlockStart);
         READWRITE(vecProposals);
-        READWRITE(vchSig);
+        READWRITE(nFeeTXHash);
     }
 };
 
@@ -354,19 +342,19 @@ public:
         This allows the proposal website to stay 100% decentralized
     */
     std::string strURL;
-    CTxIn vin;
     int nBlockStart;
     int nBlockEnd;
     int64_t nAmount;
     CScript address;
     int64_t nTime;
+    uint256 nFeeTXHash;
 
     map<uint256, CBudgetVote> mapVotes;
     //cache object
 
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(CTxIn vinIn, std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn);
+    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
 
     void Calculate();
     void AddOrUpdateVote(CBudgetVote& vote);
@@ -394,34 +382,9 @@ public:
     void SetAllotted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
     int64_t GetAllotted() {return nAlloted;}
 
-    std::string GetVoteCommand()
-    {
-        //c4 mnbudget vote one http://www.one.com/one.json 100 1000 xx9FwiqeRbuxBn5Sh3SNeoxmgpwQNSuMC4 1000 yes
-
-        int nPayments = GetTotalPaymentCount();
-
-        CTxDestination address1;
-        ExtractDestination(address, address1);
-        CBitcoinAddress address2(address1);
-
-
-        std::string strCommand = "dash-cli mnbudget vote " + strProposalName + " " + strURL + " " + boost::lexical_cast<std::string>(nPayments);
-        strCommand += " " + boost::lexical_cast<std::string>(nBlockStart) + " " + address2.ToString() + " " + boost::lexical_cast<std::string>(nAmount/COIN) + " yes|no";
-
-        return strCommand;
-    }
-
-
     void CleanAndRemove();
 
     uint256 GetHash(){
-        /*
-            vin is not included on purpose
-                - Any masternode can make a proposal and the hashes should match regardless of who made it.
-                - Someone could hyjack a new proposal by changing the vin and the signature check will fail.
-                  However, the network will still propagate the correct version and the incorrect one will be rejected.
-        */
-
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strProposalName;
         ss << strURL;
@@ -441,12 +404,12 @@ public:
         //for syncing with other clients
         READWRITE(LIMITED_STRING(strProposalName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
-        READWRITE(vin);
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
         READWRITE(address);
         READWRITE(nTime);
+        READWRITE(nFeeTXHash);
 
         //for saving to the serialized db
         READWRITE(mapVotes);
@@ -460,13 +423,10 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
-    bool fInvalid;
     CBudgetProposalBroadcast();
     CBudgetProposalBroadcast(const CBudgetProposal& other);
-    CBudgetProposalBroadcast(CTxIn vinIn, std::string strProposalNameIn, std::string strURL, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn);
+    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid();
     void Relay();
 
     ADD_SERIALIZE_METHODS;
@@ -477,12 +437,11 @@ public:
 
         READWRITE(LIMITED_STRING(strProposalName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
-        READWRITE(vin);
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
         READWRITE(address);
-        READWRITE(vchSig);
+        READWRITE(nFeeTXHash);
     }
 };
 
