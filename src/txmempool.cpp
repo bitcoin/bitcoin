@@ -311,6 +311,19 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid)
         vtxid.push_back((*mi).first);
 }
 
+void CTxMemPool::queryFees(vector<CFeeRate>& vfees)
+{
+    vfees.clear();
+
+    LOCK(cs);
+    vfees.reserve(mapTx.size());
+    for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+        CTxMemPoolEntry& mpe = (*mi).second;
+        CFeeRate rate(mpe.GetFee(), mpe.GetTxSize());
+        vfees.push_back(rate);
+    }
+}
+
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
 {
     LOCK(cs);

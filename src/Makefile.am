@@ -112,6 +112,7 @@ BITCOIN_CORE_H = \
   noui.h \
   policy/fees.h \
   policy/policy.h \
+  poolman.h \
   pow.h \
   primitives/block.h \
   primitives/transaction.h \
@@ -178,6 +179,7 @@ libbitcoin_server_a_SOURCES = \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
+  poolman.cpp \
   pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \

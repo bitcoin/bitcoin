@@ -120,6 +120,7 @@ public:
                         std::list<CTransaction>& conflicts, bool fCurrentEstimate = true);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
+    void queryFees(std::vector<CFeeRate>& vfees);
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);

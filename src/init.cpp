@@ -19,6 +19,7 @@
 #include "miner.h"
 #include "net.h"
 #include "policy/policy.h"
+#include "poolman.h"
 #include "rpcserver.h"
 #include "script/standard.h"
 #include "scheduler.h"
@@ -281,8 +282,11 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-datadir=<dir>", _("Specify data directory"));
     strUsage += HelpMessageOpt("-dbcache=<n>", strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache));
+    strUsage += HelpMessageOpt("-janitorinterval=<n>", _("Number of seconds between each mempool janitor run (default: 10 minutes, 0=disable)"));
     strUsage += HelpMessageOpt("-loadblock=<file>", _("Imports blocks from external blk000??.dat file") + " " + _("on startup"));
     strUsage += HelpMessageOpt("-maxorphantx=<n>", strprintf(_("Keep at most <n> unconnectable transactions in memory (default: %u)"), DEFAULT_MAX_ORPHAN_TRANSACTIONS));
+    strUsage += HelpMessageOpt("-mempoollowwater=<n>", _("When mempool TX bytes decreases below size <n>, set relay fee back to default; stop floating relay fee (default=-1=mempoolhighwater/2, 0=always float)"));
+    strUsage += HelpMessageOpt("-mempoolhighwater=<n>", _("When mempool TX bytes exceeds size <n>, increase relay fee (default=0=disabled)"));
     strUsage += HelpMessageOpt("-par=<n>", strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"),
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS));
 #ifndef WIN32
@@ -1446,6 +1450,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), GetArg("-genproclimit", 1), Params());
+
+    // start mempool janitor
+    InitTxMempoolJanitor(scheduler);
 
     // ********************************************************* Step 11: finished
 
