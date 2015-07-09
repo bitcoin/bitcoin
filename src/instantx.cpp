@@ -38,9 +38,9 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(IsInitialBlockDownload()) return;
 
-    if (strCommand == "txlreq")
+    if (strCommand == "ix")
     {
-        //LogPrintf("ProcessMessageInstantX::txlreq\n");
+        //LogPrintf("ProcessMessageInstantX::ix\n");
         CDataStream vMsg(vRecv);
         CTransaction tx;
         vRecv >> tx;
@@ -58,7 +58,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         BOOST_FOREACH(const CTxOut o, tx.vout){
             if(!o.scriptPubKey.IsNormalPaymentScript()){
-                LogPrintf("ProcessMessageInstantX::txlreq - Invalid Script %s\n", tx.ToString().c_str());
+                LogPrintf("ProcessMessageInstantX::ix - Invalid Script %s\n", tx.ToString().c_str());
                 return;
             }
         }
@@ -81,7 +81,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
             mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
 
-            LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request: %s %s : accepted %s\n",
+            LogPrintf("ProcessMessageInstantX::ix - Transaction Lock Request: %s %s : accepted %s\n",
                 pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
                 tx.GetHash().ToString().c_str()
             );
@@ -93,7 +93,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
             // can we get the conflicting transaction as proof?
 
-            LogPrintf("ProcessMessageInstantX::txlreq - Transaction Lock Request: %s %s : rejected %s\n",
+            LogPrintf("ProcessMessageInstantX::ix - Transaction Lock Request: %s %s : rejected %s\n",
                 pfrom->addr.ToString().c_str(), pfrom->cleanSubVer.c_str(),
                 tx.GetHash().ToString().c_str()
             );
@@ -110,7 +110,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 //we only care if we have a complete tx lock
                 if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
                     if(!CheckForConflictingLocks(tx)){
-                        LogPrintf("ProcessMessageInstantX::txlreq - Found Existing Complete IX Lock\n");
+                        LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
 
                         CValidationState state;
                         DisconnectBlockAndInputs(state, tx);
@@ -150,7 +150,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
                 if(mapUnknownVotes[ctx.vinMasternode.prevout.hash] > GetTime() &&
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] - GetAverageVoteTime() > 60*10){
-                        LogPrintf("ProcessMessageInstantX::txlreq - masternode is spamming transaction votes: %s %s\n",
+                        LogPrintf("ProcessMessageInstantX::ix - masternode is spamming transaction votes: %s %s\n",
                             ctx.vinMasternode.ToString().c_str(),
                             ctx.txHash.ToString().c_str()
                         );

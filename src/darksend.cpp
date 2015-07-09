@@ -2374,19 +2374,21 @@ void ThreadCheckDarkSendPool()
                                 if(pnode->HasFulfilledRequest("mnsync")) continue;
                                 pnode->FulfilledRequest("mnsync");
 
-                                LogPrintf("Successfully synced, asking for Masternode list and payment list\n");
-
                                 //request full mn list only if Masternodes.dat was updated quite a long time ago
                                 
                                 if(RequestedMasternodeAssets == 0 || RequestedMasternodeAssets == 1){   
+                                    LogPrintf("Successfully synced, asking for Masternode list\n");
                                     mnodeman.DsegUpdate(pnode);
                                     pnode->PushMessage("getsporks"); //get current network sporks
                                 }
 
-                                if(RequestedMasternodeAssets == 2 || RequestedMasternodeAssets == 3)
+                                if(RequestedMasternodeAssets == 2 || RequestedMasternodeAssets == 3){
+                                    LogPrintf("Successfully synced, asking for Masternode payee list\n");
                                     pnode->PushMessage("mnget"); //sync payees
+                                }
                                 
                                 if(RequestedMasternodeAssets == 4 || RequestedMasternodeAssets == 5){
+                                    LogPrintf("Successfully synced, asking for Masternode Budget votes / Finalized budgets\n");
                                     uint256 n = 0;
                                     pnode->PushMessage("mnvs", n); //sync masternode votes
                                 }

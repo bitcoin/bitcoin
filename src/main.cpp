@@ -3957,19 +3957,11 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_BUDGET_VOTE:
         return mapSeenMasternodeBudgetVotes.count(inv.hash);
     case MSG_BUDGET_PROPOSAL:
-        if(!mapSeenMasternodeBudgetProposals.count(inv.hash)){
-            return false;
-        } else {
-            return !mapSeenMasternodeBudgetProposals[inv.hash].fInvalid;
-        }
+        return mapSeenMasternodeBudgetProposals.count(inv.hash);
     case MSG_BUDGET_FINALIZED_VOTE:
         return mapSeenFinalizedBudgetVotes.count(inv.hash);
     case MSG_BUDGET_FINALIZED:
-        if(!mapSeenFinalizedBudgets.count(inv.hash)){
-            return false;
-        } else {
-            return !mapSeenFinalizedBudgets[inv.hash].fInvalid;
-        }
+        return mapSeenFinalizedBudgets.count(inv.hash);
     case MSG_MASTERNODE_ANNOUNCE:
         return mapSeenMasternodeBroadcast.count(inv.hash);
     case MSG_MASTERNODE_PING:
@@ -4111,7 +4103,7 @@ void static ProcessGetData(CNode* pfrom)
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << mapTxLockReq[inv.hash];
-                        pfrom->PushMessage("txlreq", ss);
+                        pfrom->PushMessage("ix", ss);
                         pushed = true;
                     }
                 }
