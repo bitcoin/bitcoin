@@ -538,8 +538,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
 
         // Priority
-        double mempoolEstimatePriority = mempool.estimatePriority(nTxConfirmTarget);
-        dPriority = dPriorityInputs / (nBytes - nBytesInputs + (nQuantityUncompressed * 29)); // 29 = 180 - 151 (uncompressed public keys are over the limit. max 151 bytes of the input are ignored for priority)
+        double mempoolEstimatePriority = 0;
+        dPriority = 0;
         sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority, mempoolEstimatePriority);
 
         // in the subtract fee from amount case, we can tell if zero change already and subtract the bytes, so that fee calculation afterwards is accurate
@@ -551,14 +551,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
 
         // Allow free?
-        double dPriorityNeeded = mempoolEstimatePriority;
-        if (dPriorityNeeded <= 0)
-            dPriorityNeeded = AllowFreeThreshold(); // not enough data, back to hard-coded
-        fAllowFree = (dPriority >= dPriorityNeeded);
-
-        if (fSendFreeTransactions)
-            if (fAllowFree && nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE)
-                nPayFee = 0;
+        fAllowFree = false;
 
         if (nPayAmount > 0)
         {
@@ -686,7 +679,7 @@ void CoinControlDialog::updateView()
     QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsTristate;
 
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
-    double mempoolEstimatePriority = mempool.estimatePriority(nTxConfirmTarget);
+    double mempoolEstimatePriority = 0;
 
     std::map<QString, std::vector<COutput> > mapCoins;
     model->listCoins(mapCoins);

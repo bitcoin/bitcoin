@@ -871,8 +871,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d > %d", nSigOps, MAX_STANDARD_TX_SIGOPS));
 
-        double dPriority = view.GetPriority(tx, chainActive.Height());
-        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
+        CTxMemPoolEntry entry(tx, nFees, GetTime(), chainActive.Height(), mempool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
         // Don't accept it if it can't get into a block
