@@ -627,12 +627,20 @@ Value getblocktemplate(const Array& params, bool fHelp)
             delete pblocktemplate;
             pblocktemplate = NULL;
         }
-        CScript scriptDummy = CScript() << OP_TRUE;
-        CScript scriptDummyDeposit = CScript() << OP_TRUE;
-        CScript scriptDummyDepositChange = CScript() << OP_TRUE;
-        CPubKey pubkeySigningKeyDeposit;
-        //TODO - Empty scriptDummy and depositSscriptDummy and CPubKey passed in here. Must be set later in this function
-        pblocktemplate = CreateNewBlock(scriptDummy, scriptDummyDeposit,  scriptDummyDepositChange, pubkeySigningKeyDeposit, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
+        //In bitcoin code, this section sets empty keys with CreateNewBlock instead of CreateNewBlockWithKey.
+        //We don't have that freedom here since the coinbase and deposits are linked toghether IF coinbase is used as deposit.
+        //The creation of the coinbase is also quite different from bitcoin coinbase since it has a block "locking" value in vin[0].hash.
+        //See block.RecalcLockHashAndMerkleRoot() for more info
+        //
+        //Coinbase and all other transactions can not be freely updated by miners participating in pools and pMiningKey must be set in this rpc call
+        //The dependencies are as follows:
+        //  - IF coinbase is used as deposit coinbase -> deposit -> hashMerkleRoot -> hashSigMerkleRoot
+        //  - ANY tx including coinbase and deposits -> hashMerkleRoot -> hashSigMerkleRoot
+        //The hashSigMerkleRoot means that transactions can not be freely replaced in the block without asking the depositors for a new signature of the hashMerkleRoot
+        //
+        //Note that the keys are not taken out of circulation here so it may happen that they are reused. It also means that the wallet(s) for the server
+        //which answers to the getblocktemplate calls are VERY important, since it holds keys to coin txouts
+        pblocktemplate = CreateNewBlockWithKey(*pMiningKey, *pDepositMiningKey, *pDepositChangeMiningKey, *pDepositSigningMiningKey, bitcredit_pwalletMain, deposit_pwalletMain, coinbaseDepositDisabled);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
