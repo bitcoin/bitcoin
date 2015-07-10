@@ -40,7 +40,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion)
     {
         READWRITE(FLATDATA(pchMessageStart));
         READWRITE(FLATDATA(pchCommand));
@@ -97,14 +97,14 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion)
     {
         if (ser_action.ForRead())
             Init();
-        if (nType & SER_DISK)
+        if (nType == SER_DISK)
             READWRITE(nVersion);
-        if ((nType & SER_DISK) ||
-            (nVersion >= CADDR_TIME_VERSION && !(nType & SER_GETHASH)))
+        if ((nType == SER_DISK) ||
+            (nVersion >= CADDR_TIME_VERSION && (nType == SER_NETWORK)))
             READWRITE(nTime);
         READWRITE(nServices);
         READWRITE(*(CService*)this);
@@ -129,7 +129,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream& s, Operation ser_action, SerializeType nType, int nVersion)
     {
         READWRITE(type);
         READWRITE(hash);

@@ -34,7 +34,7 @@ protected:
     vector_type vch;
     unsigned int nReadPos;
 public:
-    int nType;
+    SerializeType nType;
     int nVersion;
 
     typedef vector_type::allocator_type   allocator_type;
@@ -47,39 +47,39 @@ public:
     typedef vector_type::const_iterator   const_iterator;
     typedef vector_type::reverse_iterator reverse_iterator;
 
-    explicit CDataStream(int nTypeIn, int nVersionIn)
+    explicit CDataStream(SerializeType nTypeIn, int nVersionIn)
     {
         Init(nTypeIn, nVersionIn);
     }
 
-    CDataStream(const_iterator pbegin, const_iterator pend, int nTypeIn, int nVersionIn) : vch(pbegin, pend)
+    CDataStream(const_iterator pbegin, const_iterator pend, SerializeType nTypeIn, int nVersionIn) : vch(pbegin, pend)
     {
         Init(nTypeIn, nVersionIn);
     }
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1300
-    CDataStream(const char* pbegin, const char* pend, int nTypeIn, int nVersionIn) : vch(pbegin, pend)
+    CDataStream(const char* pbegin, const char* pend, SerializeType nTypeIn, int nVersionIn) : vch(pbegin, pend)
     {
         Init(nTypeIn, nVersionIn);
     }
 #endif
 
-    CDataStream(const vector_type& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
+    CDataStream(const vector_type& vchIn, SerializeType nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
         Init(nTypeIn, nVersionIn);
     }
 
-    CDataStream(const std::vector<char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
+    CDataStream(const std::vector<char>& vchIn, SerializeType nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
         Init(nTypeIn, nVersionIn);
     }
 
-    CDataStream(const std::vector<unsigned char>& vchIn, int nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
+    CDataStream(const std::vector<unsigned char>& vchIn, SerializeType nTypeIn, int nVersionIn) : vch(vchIn.begin(), vchIn.end())
     {
         Init(nTypeIn, nVersionIn);
     }
 
-    void Init(int nTypeIn, int nVersionIn)
+    void Init(SerializeType nTypeIn, int nVersionIn)
     {
         nReadPos = 0;
         nType = nTypeIn;
@@ -210,8 +210,8 @@ public:
     CDataStream* rdbuf()         { return this; }
     int in_avail()               { return size(); }
 
-    void SetType(int n)          { nType = n; }
-    int GetType()                { return nType; }
+    void SetType(SerializeType n)          { nType = n; }
+    SerializeType GetType()                { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion()             { return nVersion; }
     void ReadVersion()           { *this >> nVersion; }
@@ -262,7 +262,7 @@ public:
     }
 
     template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s, SerializeType nType, int nVersion) const
     {
         // Special case: stream << stream concatenates like stream += stream
         if (!vch.empty())
@@ -320,13 +320,13 @@ private:
     CAutoFile(const CAutoFile&);
     CAutoFile& operator=(const CAutoFile&);
 
-    int nType;
+    SerializeType nType;
     int nVersion;
 	
     FILE* file;	
 
 public:
-    CAutoFile(FILE* filenew, int nTypeIn, int nVersionIn)
+    CAutoFile(FILE* filenew, SerializeType nTypeIn, int nVersionIn)
     {
         file = filenew;
         nType = nTypeIn;
@@ -365,8 +365,8 @@ public:
     //
     // Stream subset
     //
-    void SetType(int n)          { nType = n; }
-    int GetType()                { return nType; }
+    void SetType(SerializeType n)          { nType = n; }
+    SerializeType GetType()                { return nType; }
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion()             { return nVersion; }
     void ReadVersion()           { *this >> nVersion; }
@@ -431,7 +431,7 @@ private:
     CBufferedFile(const CBufferedFile&);
     CBufferedFile& operator=(const CBufferedFile&);
 
-    int nType;
+    SerializeType nType;
     int nVersion;
 
     FILE *src;            // source file
@@ -461,7 +461,7 @@ protected:
     }
 
 public:
-    CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
+    CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, SerializeType nTypeIn, int nVersionIn) :
         nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
     {
         src = fileIn;
