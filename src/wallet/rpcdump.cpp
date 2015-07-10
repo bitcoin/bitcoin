@@ -181,20 +181,21 @@ UniValue importaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
             "importaddress \"address\" ( \"label\" rescan p2sh )\n"
-            "\nAdds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend.\n"
+            "\nAdds a script (in hex) or address that can be watched as if it were in your wallet but cannot be used to spend.\n"
             "\nArguments:\n"
-            "1. \"address\"          (string, required) The address\n"
+            "1. \"script\"           (string, required) The hex-encoded script (or address)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
+            "If you have the full public key, you should call importpublickey instead of this.\n"
             "\nExamples:\n"
-            "\nImport an address with rescan\n"
-            + HelpExampleCli("importaddress", "\"myaddress\"") +
+            "\nImport a script with rescan\n"
+            + HelpExampleCli("importaddress", "\"myscript\"") +
             "\nImport using a label without rescan\n"
-            + HelpExampleCli("importaddress", "\"myaddress\" \"testing\" false") +
+            + HelpExampleCli("importaddress", "\"myscript\" \"testing\" false") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("importaddress", "\"myaddress\", \"testing\", false")
+            + HelpExampleRpc("importaddress", "\"myscript\", \"testing\", false")
         );
 
     if (fPruneMode)
