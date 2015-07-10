@@ -44,6 +44,36 @@ supported and may break as soon as the older version attempts to reindex.
 This does not affect wallet forward or backward compatibility. There are no
 known problems when downgrading from 0.11.x to 0.10.x.
 
+Important information
+======================
+
+Transaction flooding
+---------------------
+
+At the time of this release, the P2P network is being flooded with low-fee
+transactions. This causes a ballooning of the mempool size.
+
+If this growth of the mempool causes problematic memory use on your node, it is
+possible to change a few configuration options to work around this. The growth
+of the mempool can be monitored with the RPC command `getmempoolinfo`.
+
+One is to increase the minimum transaction relay fee `minrelaytxfee`, which
+defaults to 0.00001. This will cause transactions with fewer BTC/kB fee to be
+rejected, and thus fewer transactions entering the mempool.
+
+The other is to restrict the relaying of free transactions with
+`limitfreerelay`. This option sets the number of kB/minute at which
+free transactions (with enough priority) will be accepted. It defaults to 15.
+Reducing this number reduces the speed at which the mempool can grow due
+to free transactions.
+
+For example, add the following to `bitcoin.conf`:
+
+    minrelaytxfee=0.00005 
+    limitfreerelay=5
+
+More robust solutions are being worked on for a follow-up release.
+
 Notable changes
 ===============
 
