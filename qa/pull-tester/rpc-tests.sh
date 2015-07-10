@@ -54,7 +54,6 @@ testScriptsExt=(
     'smartfees.py'
     'maxblocksinflight.py'
     'invalidblockrequest.py'
-    'rawtransactions.py'
 #    'forknotify.py'
     'p2p-acceptblock.py'
 );
