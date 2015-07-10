@@ -79,6 +79,7 @@ uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 CAddrMan addrman;
 int nMaxConnections = 125;
+int nWhiteConnections = 0;
 bool fAddressesInitialized = false;
 
 vector<CNode*> vNodes;
@@ -928,6 +929,7 @@ void ThreadSocketHandler()
                 SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
                 CAddress addr;
                 int nInbound = 0;
+                int nMaxInbound = nMaxConnections - MAX_OUTBOUND_CONNECTIONS;
 
                 if (hSocket != INVALID_SOCKET)
                     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
@@ -947,8 +949,14 @@ void ThreadSocketHandler()
                     if (nErr != WSAEWOULDBLOCK)
                         LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
                 }
-                else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
+                else if (nInbound >= nMaxInbound)
                 {
+                    LogPrint("net", "connection from %s dropped (full)\n", addr.ToString());
+                    CloseSocket(hSocket);
+                }
+                else if (!whitelisted && (nInbound >= (nMaxInbound - nWhiteConnections)))
+                {
+                    LogPrint("net", "connection from %s dropped (non-whitelisted)\n", addr.ToString());
                     CloseSocket(hSocket);
                 }
                 else if (CNode::IsBanned(addr) && !whitelisted)
@@ -961,6 +969,8 @@ void ThreadSocketHandler()
                     CNode* pnode = new CNode(hSocket, addr, "", true);
                     pnode->AddRef();
                     pnode->fWhitelisted = whitelisted;
+
+                    LogPrint("net", "connection from %s accepted\n", addr.ToString());
 
                     {
                         LOCK(cs_vNodes);
