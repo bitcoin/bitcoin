@@ -13,6 +13,7 @@
 #include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
+#include "consensus/consensus.h"
 #include "coins.h"
 #include "net.h"
 #include "primitives/block.h"
@@ -50,6 +51,8 @@ struct CNodeStateStats;
 static const bool DEFAULT_ALERTS = true;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+/** Default for -maxmempool, maximum bytes of transactions kept in memory */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 288 * MAX_BLOCK_SIZE; // 48 hours worth of blocks
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */

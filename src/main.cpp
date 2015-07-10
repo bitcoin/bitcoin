@@ -923,6 +923,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
+
+        pool.removeOldTransactions(GetTime());
+        pool.trimToMaxSize(chainActive.Height());
+        if (!pool.exists(hash))
+            return error("AcceptToMemoryPool: fee too small");
     }
 
     SyncWithWallets(tx, NULL);
