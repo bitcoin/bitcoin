@@ -34,6 +34,8 @@ inline bool AllowFree(double dPriority)
 
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
+/** Conservatively assume transactions use no more than 4x as much memory as their serialized size */
+static const unsigned int USAGE_TO_SIZE_RATIO = 4;
 
 class CTxMemPool;
 
@@ -41,7 +43,8 @@ class CTxMemPool;
  *
  * CTxMemPoolEntry stores data about the correponding transaction, as well
  * as data about all in-mempool transactions that depend on the transaction
- * ("descendant" transactions).
+ * ("descendant" transactions).  We track state for descendant transactions
+ * in order to make limiting the size of the mempool work better (see below).
  *
  * When a new entry is added to the mempool, we update the descendant state
  * (nCountWithDescendants, nSizeWithDescendants, and nFeesWithDescendants) for
@@ -83,7 +86,7 @@ public:
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
-    CAmount GetFee() const { return nFee; }
+    const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
@@ -103,6 +106,9 @@ public:
     uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
     uint64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
     CAmount GetFeesWithDescendants() const { return nFeesWithDescendants; }
+
+    // Calculate which feerate to use for an entry (avoiding division).
+    bool UseDescendantFeeRate() const { return (double)GetFeesWithDescendants() * GetTxSize() > (double)GetFee() * GetSizeWithDescendants(); }
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -137,17 +143,17 @@ struct mempoolentry_txid
     }
 };
 
-/** \class CompareTxMemPoolEntryByFee
+/** \class CompareTxMemPoolEntryByFeeRate
  *
  *  Sort an entry by max(feerate of entry's tx, feerate with all descendants).
  */
-class CompareTxMemPoolEntryByFee
+class CompareTxMemPoolEntryByFeeRate
 {
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
-        bool fUseADescendants = UseDescendantFeeRate(a);
-        bool fUseBDescendants = UseDescendantFeeRate(b);
+        bool fUseADescendants = a.UseDescendantFeeRate();
+        bool fUseBDescendants = b.UseDescendantFeeRate();
 
         double aFees = fUseADescendants ? a.GetFeesWithDescendants() : a.GetFee();
         double aSize = fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize();
@@ -163,14 +169,6 @@ public:
             return a.GetTime() >= b.GetTime();
         }
         return f1 < f2;
-    }
-
-    // Calculate which feerate to use for an entry (avoiding division).
-    bool UseDescendantFeeRate(const CTxMemPoolEntry &a)
-    {
-        double f1 = (double)a.GetFee() * a.GetSizeWithDescendants();
-        double f2 = (double)a.GetFeesWithDescendants() * a.GetTxSize();
-        return f2 > f1;
     }
 };
 
@@ -209,15 +207,23 @@ public:
  * an input of a transaction in the pool, it is dropped,
  * as are non-standard transactions.
  *
+ * Note: the term "descendant" refers to in-mempool transactions that depend on
+ * a given tx, while "ancestor" refers to in-mempool transactions that a given
+ * transaction depends on.
+ *
+ * Mempool limiting:
+ *
+ * The mempool's max memory usage can be specified with -maxmempool.
+ * TrimMempool is used to return a consistent set of transactions (all
+ * in mempool descendants are included) that can be evicted given a
+ * fee and size to use for the eviction. The logic for mempool limiting
+ * and this eviction code is described in AcceptToMemoryPool.
+ *
  * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:
  *
  * mapTx is a boost::multi_index that sorts the mempool on 2 criteria:
  * - transaction hash
  * - feerate [we use max(feerate of tx, feerate of tx with all descendants)]
- *
- * Note: the term "descendant" refers to in-mempool transactions that depend on
- * this one, while "ancestor" refers to in-mempool transactions that a given
- * transaction depends on.
  *
  * In order for the feerate sort to remain correct, we must update transactions
  * in the mempool when new descendants arrive.  To facilitate this, we track
@@ -227,14 +233,15 @@ public:
  * Usually when a new transaction is added to the mempool, it has no in-mempool
  * children (because any such children would be an orphan).  So in
  * addUnchecked(), we:
- * - update a new entry's setMemPoolParents to include all in-mempool parents
- * - update the new entry's direct parents to include the new tx as a child
+ * - update a new entry's mapLinks[].parents to include all in-mempool parents
+ * - update those in-mempool parents' maplinks[].children to include the new tx
+ *   as a child
  * - update all ancestors of the transaction to include the new tx's size/fee
  *
  * When a transaction is removed from the mempool, we must:
- * - update all in-mempool parents to not track the tx in setMemPoolChildren
+ * - update all in-mempool parents to not track the tx in mapLinks[].children
  * - update all ancestors to not include the tx's size/fees in descendant state
- * - update all in-mempool children to not include it as a parent
+ * - update all in-mempool children to not include it in mapLinks[].parents
  *
  * These happen in UpdateForRemoveFromMempool().  (Note that when removing a
  * transaction along with its descendants, we must calculate that set of
@@ -263,7 +270,9 @@ public:
  * Updating all in-mempool ancestors of a newly added transaction can be slow,
  * if no bound exists on how many in-mempool ancestors there may be.
  * CalculateMemPoolAncestors() takes configurable limits that are designed to
- * prevent these calculations from being too CPU intensive.
+ * prevent these calculations from being too CPU intensive, and for ensuring
+ * that transaction packages can't be too large for the eviction code to be
+ * able to properly function.  See comments below.
  *
  * Adding transactions from a disconnected block can be very time consuming,
  * because we don't have a way to limit the number of in-mempool descendants.
@@ -293,7 +302,7 @@ public:
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByFee
+                CompareTxMemPoolEntryByFeeRate
             >
         >
     > indexed_transaction_set;
@@ -327,6 +336,7 @@ private:
 public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
+    size_t bypassedUsage; //! Track cumulative memory usage of txs added to mempool during a reorg (while eviction is bypassed)
 
     CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
@@ -368,7 +378,16 @@ public:
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
 
-public:
+    /** TrimMempool will build a list of transactions (hashes) to remove until it reaches usageToTrim:
+     *  - No txs in setAncestors are removed.
+     *  - The total fees removed are not more than the feeToUse (minus any nFeesReserved).
+     *  - The feerate of what is removed is not better than the feerate of feeToUse/sizeToUse.
+     *  - maxPackageCount helps provide a bound on how many txs will be iterated over.
+     *  - The list returned in stage is consistent (if a parent is included, all its descendants are included as well).
+     *  - Returns true if it was able to remove enough txs to cover usageToTrim
+     */
+    bool TrimMempool(size_t usageToTrim, const setEntries &setAncestors, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
+		     uint64_t maxPackageCount, setEntries& stage);
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
      *  also be in the set.*/
@@ -428,6 +447,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 
 private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update

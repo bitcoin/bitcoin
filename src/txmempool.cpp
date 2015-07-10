@@ -308,6 +308,8 @@ void CTxMemPoolEntry::UpdateState(int64_t modifySize, CAmount modifyFee, int64_t
 CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
     nTransactionsUpdated(0)
 {
+    clear();
+
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
@@ -554,6 +556,7 @@ void CTxMemPool::clear()
     mapNextTx.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
+    bypassedUsage = 0;
     ++nTransactionsUpdated;
 }
 
@@ -760,6 +763,7 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
+    LOCK(cs);
     for (unsigned int i = 0; i < tx.vin.size(); i++)
         if (exists(tx.vin[i].prevout.hash))
             return false;
@@ -788,6 +792,131 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
     // Estimate the overhead of mapTx to be 9 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + cachedInnerUsage;
+}
+
+size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
+    setEntries s;
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) + entry.DynamicMemoryUsage() + (memusage::IncrementalDynamicUsage(mapNextTx) + memusage::IncrementalDynamicUsage(s)) * entry.GetTx().vin.size() + memusage::IncrementalDynamicUsage(mapLinks);
+}
+
+bool CTxMemPool::TrimMempool(size_t usageToTrim, const setEntries &setAncestors, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
+                             uint64_t maxPackageCount, setEntries& stage) {
+    size_t usageRemoved = 0;
+    CAmount nFeesRemoved = 0;
+    int fails = 0; // Number of packages explored that were not included in the stage.
+
+    // Before we've staged any transactions, the feerate sort and summary
+    // information in each CTxMemPoolEntry should be enough to know whether a
+    // package is evictable.
+    // After we've staged an entry, the package summary information is no longer
+    // enough to know whether a package is evictable, and we have to walk the
+    // chain of transactions to find out.
+    // Skip over packages whose length exceeds maxPackageCount, to bound the work
+    // we will do.
+    seed_insecure_rand();
+
+    // Iterate from lowest feerate package to highest in the mempool:
+    indexed_transaction_set::nth_index<1>::type::iterator it = mapTx.get<1>().begin();
+    while (usageRemoved < usageToTrim && it != mapTx.get<1>().end()) {
+        if (fails > 5) {
+            // Bail out after exploring 5 packages that weren't included
+            break;
+        }
+        if (insecure_rand()%4) {
+            // Only try 1/4 of the transactions so we don't get stuck on the same hard to evict chains
+            it++;
+            continue;
+        }
+        txiter hashiter = mapTx.project<0>(it); // convert to iterator on 0th index
+        if (setAncestors.count(hashiter)) {
+            // Move along to an entry this tx doesn't depend on
+            fails++;
+            it++;
+            continue;
+        }
+        if (stage.count(hashiter)) {
+            // If the transaction is already staged for deletion, we know its descendants are already processed, so skip it.
+            it++;
+            continue;
+        }
+        CAmount sortedFee = it->UseDescendantFeeRate() ? it->GetFeesWithDescendants() : it->GetFee();
+        size_t sortedSize = it->UseDescendantFeeRate() ? it->GetSizeWithDescendants() : it->GetTxSize();
+        if ((double)sortedFee * sizeToUse > (double)feeToUse * sortedSize) {
+            // If we've already iterated past all transactions with lower feeRate and lower package feeRate
+            // then we can't add anything else to evict.  Bail out.
+            break;
+        }
+        if (nFeesReserved + it->GetFeesWithDescendants() > feeToUse) {
+            // We know that even using our original available fees we couldn't evict this tx and its descendents
+            // so we can shortcut following the descendant trail.
+            // We can only test using our starting available fees, because although we may have already used
+            // some fees up evicting other tx's, its possible those are also counted in the descendants of the tx
+            // being considered.  (i.e. on a previous pass we picked up the same chain at a descendant)
+            fails++;
+            it++;
+            continue;
+        }
+        if (!stage.empty() && it->GetCountWithDescendants() > maxPackageCount) {
+            // This chain is long and could fail; bail out and look for
+            // something smaller.
+            fails++;
+            it++;
+            continue;
+        }
+
+        // Calculate the full descendant package for evaluation
+        setEntries setDescendants;
+        if (it->IsDirty()) {
+            // Dirty entries can always fail (they're not sorted in the right place), so
+            // limit the work we're willing to do.
+            if (!CalculateDescendants(hashiter, setDescendants, maxPackageCount)) {
+                // The descendant chain was actually too long
+                fails++;
+                it++;
+                continue;
+            }
+        } else {
+            CalculateDescendants(hashiter, setDescendants);
+        }
+
+        // Now determine if this package is evictable
+        bool evictPackage = true;
+        CAmount nowfee = 0;
+        size_t nowsize = 0;
+        size_t nowusage = 0;
+        BOOST_FOREACH(txiter descendant, setDescendants) {
+            // Skip over any descendants already staged for eviction
+            if (stage.count(descendant))
+                continue;
+            nowfee += descendant->GetFee();
+            if (nFeesReserved + nFeesRemoved + nowfee > feeToUse) {
+                // This pushes up to the total fees deleted too high
+                evictPackage = false;
+                break;
+            }
+            nowusage += GuessDynamicMemoryUsage(*descendant);
+            nowsize += descendant->GetTxSize();
+        }
+
+        if (evictPackage && (double)nowfee * sizeToUse <= (double)feeToUse * nowsize) {
+            // Ensure the new transaction's feerate is above that of the set
+            // we're removing.  This might not be the case even though we're
+            // iterating a mempool sorted by full package feerate.
+            // If we're trying to evict A-B-C-D, then C-D, might already be
+            // staged, and so what we are considering now is A-B, which
+            // might have too high a fee rate.
+            stage.insert(setDescendants.begin(), setDescendants.end());
+            nFeesRemoved += nowfee;
+            usageRemoved += nowusage;
+        } else {
+            fails++;
+        }
+        it++;
+    }
+    //We've added all we can.  Is it enough?
+    if (usageRemoved < usageToTrim)
+        return false;
+    return true;
 }
 
 void CTxMemPool::RemoveStaged(setEntries &stage) {

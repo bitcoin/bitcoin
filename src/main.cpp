@@ -206,6 +206,8 @@ namespace {
 
     /** Dirty block file entries. */
     set<int> setDirtyFileInfo;
+    /** Last timestamp we tried to use mempool reserve space to evict. */
+    int64_t lastReserveTrimTime = 0;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -778,6 +780,48 @@ static std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
+/**
+ * Mempool limiting:
+ * A maximum memory usage can be set using -maxmempool.
+ * This value is the hard cap, a threshold we try to never exceed.
+ * We set the soft cap equal to 50% of this value.  As long as we're
+ * below the soft cap, new transactions are accepted as long as they are valid
+ * and meet the base relay requirements.
+ *
+ * Once the mempool usage is above the soft cap, new transactions can try to
+ * enter the mempool by evicting existing transactions. In order for
+ * transaction A to evict a transaction B, it must also evict all of the
+ * in-mempool descendants of B.
+ * Let S be the set containing B and those descendant transactions; then we
+ * require:
+ * - feerate(A) > feerate(S).
+ *   We try to keep the highest fee rate transactions.
+ * - fees(A) > fees(S)
+ *   We can't allow total fees in the mempool to decrease without risking a DoS
+ *   vulnerability.  We use the minrelayfee to ensure that using relay
+ *   bandwidth incurs a cost, and allowing the fees in the mempool to decrease
+ *   could allow an attacker to relay transactions for free.
+ * - (fees(A) - fees(S)) > feerequired(A)
+ *   Any transaction must pay for its own relay, after accounting for the fees
+ *   of transactions being removed.
+ *
+ * This eviction code is run when calling TrimMempool().
+ *
+ * If a new transaction arrives when usage is above the softcap but is unable
+ * to enter by evicting existing transactions, then it has another chance to enter
+ * the mempool if its feerate is sufficiently high.  We take the usage between the
+ * soft cap and the hard cap, and divide it up into 75 bands.  Within
+ * a band, we accept transactions without evicting existing transactions if the
+ * feerate is above minrelayfee * 1.1^(n), where n is the band number.
+ *
+ * Once we're above the soft cap, we can use the existence of higher fee rate
+ * transactions in the aggregate to try to evict transactions as well.  The idea
+ * is that the eviction algorithm described above generally makes it difficult
+ * for small transactions, even with a high fee rate, to evict long low-fee
+ * rate chains, because the total fee is hard to exceed. Using the knowledge
+ * that we have known high-fee-rate transactions in the reserve space, we can
+ * use them in the aggregate to try to evict large packages of transactions.
+ */
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
@@ -879,7 +923,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, chainActive.Height());
 
-        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
+        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
         // Don't accept it if it can't get into a block
@@ -893,11 +937,131 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
-        // Continuously rate-limit free (really, very-low-fee) transactions
-        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
+        // Set an absolute cap on the size of the mempool (0 turns off mempool limiting) and reserve
+        // 50% of it to operate with the default minimum fee.  Divide the remaining 50% up into
+        // 75 bands of increasing required fee.  10% increase per band leads to over 1000x greater effective
+        // fee before the mempool hits the hard cap, which should be sufficiently future proof.
+        static const double bandIncrease = 1.1;
+        static const int numBands = 75;
+        size_t mempoolHardCap = std::max((int64_t)0, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+        size_t mempoolSoftCap = mempoolHardCap / 2;
+        size_t mempoolBandSize = (mempoolHardCap - mempoolSoftCap) / numBands;
+        size_t nLimitDescendants = GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+        size_t nLimitAncestors = GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        size_t nLimitAncestorSize = GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
+        // Using more than about 1/5 of our reserve space for a mempool trim will be inefficient
+        // so by default cap the largest transaction package at size corresponding to that so we will be able
+        // to effectively evict any package from the mempool if necessary.
+        size_t defaultDescendantSize = DEFAULT_DESCENDANT_SIZE_LIMIT;
+        if (mempoolHardCap)
+            defaultDescendantSize = std::min(defaultDescendantSize, (mempoolHardCap - mempoolSoftCap) / 1000 / 5 / USAGE_TO_SIZE_RATIO);
+        size_t nLimitDescendantSize = GetArg("-limitdescendantsize", defaultDescendantSize)*1000;
         {
+        LOCK(pool.cs); // Keep holding this lock for both stagedelete and setAncestors from calculation to use.
+        size_t curUsage = pool.DynamicMemoryUsage();
+
+        // Try to use excess relay fees paid by txs above the soft cap to trim in aggregate
+        // Assume trimGoal worth of transactions entered the mempool while the required
+        // fee was at least the fee rate of the band at the beginning of that size, and thus
+        // we can use that multiplier (-1 to pay for current relay) to evict transactions
+        if (mempoolHardCap && fLimitFree && curUsage > mempoolSoftCap) {
+            size_t excessUsage = curUsage - mempoolSoftCap;
+            int64_t timeNow = GetTime();
+            size_t trimGoal = 1000000; // Try to trim up to 1MB worth of memory usage at a time by default
+            if (timeNow % 10 == 0) {
+                // Try to trim a larger size on occasion.
+                // We want to try to use enough reserve size for the trim that we can
+                // match a maximum size descendant package.
+                // It doesn't really matter if it turns out 1MB is greater than
+                // nLimitDescendantSize * USAGE_TO_SIZE_RATIO (maxmempool < 10MB).
+                trimGoal = nLimitDescendantSize * USAGE_TO_SIZE_RATIO;
+            }
+            int payForOwnRelay = 0;
+            if (pool.bypassedUsage) {
+                // During a reorg, it doesn't make sense to be evicting anything from the mempool to make
+                // room for txs readded from disconnected blocks.  If however after the reorg, there is significant
+                // growth in mempool size it could temporarily impede new txs, so it makes sense to try to trim away
+                // any growth.  We're not worried about free relay in this case, so there is no exact restriction on
+                // what fee rate we can use for eviction, so just use the highest logical choice which is the fee rate
+                // of the current band.
+                trimGoal = std::min(pool.bypassedUsage, excessUsage);
+            }
+            else if (timeNow > lastReserveTrimTime && excessUsage > trimGoal) {
+                excessUsage -= trimGoal; // Calculate surplus fee at the beginning of the set of txs
+                payForOwnRelay = 1; // Use all but 1x multiple of min relay fee to try to evict
+                lastReserveTrimTime = timeNow;
+            }
+            else {
+                trimGoal = 0;
+            }
+            if (trimGoal) {
+                int bandNumber = excessUsage/mempoolBandSize + 1;
+                double relayMultiplier = pow(bandIncrease, bandNumber) - payForOwnRelay;
+                CFeeRate excessRate(relayMultiplier * ::minRelayTxFee.GetFeePerK());
+                size_t sizeToTrim = trimGoal / USAGE_TO_SIZE_RATIO;
+                CTxMemPool::setEntries noancestors;
+                CTxMemPool::setEntries txsToDelete;
+                pool.TrimMempool(trimGoal, noancestors, 0, sizeToTrim, excessRate.GetFee(sizeToTrim), nLimitDescendants, txsToDelete);
+                if (!txsToDelete.empty()) {
+                    size_t oldUsage = curUsage;
+                    size_t numDeleted = txsToDelete.size();
+                    pool.RemoveStaged(txsToDelete);
+                    curUsage = pool.DynamicMemoryUsage();
+                    LogPrint("mempool", "Removing %u transactions (%ld total usage) using periodic trim from reserve size\n", numDeleted, oldUsage - curUsage);
+                }
+            }
+        }
+
+        // Calculate in-mempool ancestors, up to a limit.
+        CTxMemPool::setEntries setAncestors;
+        std::string errString;
+        if (!pool.CalculateMemPoolAncestors(entry, setAncestors, nLimitAncestors, nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, errString)) {
+            return state.DoS(0, false, REJECT_NONSTANDARD, "too-long-mempool-chain", false, errString);
+        }
+
+        // If the predicted mempool usage is over the soft cap, TrimMempool
+        // will attempt to find appropriate transactions of lesser
+        // feerate to evict from the mempool.  If this fails and the mempool usage would be under
+        // the hardcap there is an opportunity for this transaction to enter the mempool anyway if
+        // it has a fee high enough to pass the increased minimum relay feerate of the band indicated
+        // by the mempool's current size.
+        size_t incrementalUsage = pool.GuessDynamicMemoryUsage(entry);
+        size_t expectedUsage = curUsage + incrementalUsage; // Track the expected resulting memory usage of the mempool.
+        CTxMemPool::setEntries stagedelete;
+        if (mempoolHardCap && fLimitFree && expectedUsage > mempoolSoftCap) {
+            if (nFees < ::minRelayTxFee.GetFee(nSize)) {
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee after soft cap", false,
+                                 strprintf("%d < %d", nFees, ::minRelayTxFee.GetFee(nSize)));
+            }
+            size_t trimGoal = std::min(expectedUsage - mempoolSoftCap, incrementalUsage);
+            uint64_t maxPackageCount = 50 + nSize/200;  // Be willing to explore longer chains for bigger replacement txs
+            if (!pool.TrimMempool(trimGoal, setAncestors, ::minRelayTxFee.GetFee(nSize), nSize, nFees, maxPackageCount, stagedelete)) {
+                if (expectedUsage > mempoolHardCap) {
+                    return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap", false,
+                                     strprintf("%u > %u", expectedUsage, mempoolHardCap));
+                } else {
+                    int bandNumber = (expectedUsage - mempoolSoftCap)/mempoolBandSize + 1;
+                    double relayMultiplier = pow(bandIncrease, bandNumber);
+                    if (nFees < relayMultiplier * ::minRelayTxFee.GetFee(nSize)) {
+                        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap", false,
+                                         strprintf("Mult: %.1f - %ld < %ld", relayMultiplier, nFees, relayMultiplier * ::minRelayTxFee.GetFee(nSize)));
+                    } else {
+                        // The fee rate of this transaction is high enough to enter into the reserve space
+                        // If stagedelete is non-empty at this point, it has only been populated with sets of transactions
+                        // that each have lower fee-rate than this transaction.  As such, it is safe to also still delete
+                        // the partial eviction set, as the effective fee rate for any remaining part of the transaction
+                        // would only have been higher than the original fee rate, and still passed the test for reserve space.
+                        LogPrint("mempool", "Tx %s (%ld fee, %u bytes) eligible for reserve space at usage of %lu and mult of %.1f\n",
+                                 tx.GetHash().ToString().substr(0,10).c_str(), nFees, nSize, expectedUsage, relayMultiplier);
+                    }
+                }
+            }
+        }
+        else if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
+        {
+            // Continuously rate-limit free (really, very-low-fee) transactions
+            // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+            // be annoying or make others' transactions take longer to confirm.
             static CCriticalSection csFreeLimiter;
             static double dFreeCount;
             static int64_t nLastTime;
@@ -921,17 +1085,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 REJECT_HIGHFEE, "absurdly-high-fee",
                 strprintf("%d > %d", nFees, ::minRelayTxFee.GetFee(nSize) * 10000));
 
-        // Calculate in-mempool ancestors, up to a limit.
-        CTxMemPool::setEntries setAncestors;
-        size_t nLimitAncestors = GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
-        size_t nLimitAncestorSize = GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
-        size_t nLimitDescendants = GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
-        size_t nLimitDescendantSize = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT)*1000;
-        std::string errString;
-        if (!pool.CalculateMemPoolAncestors(entry, setAncestors, nLimitAncestors, nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, errString)) {
-            return state.DoS(0, false, REJECT_NONSTANDARD, "too-long-mempool-chain", false, errString);
-        }
-
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
@@ -952,8 +1105,25 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 __func__, hash.ToString(), FormatStateMessage(state));
         }
 
+        // Delete staged transactions to actually make space in mempool
+        if (!stagedelete.empty()) {
+            size_t oldUsage = curUsage;
+            size_t numDeleted = stagedelete.size();
+            pool.RemoveStaged(stagedelete);
+            curUsage = pool.DynamicMemoryUsage();
+            LogPrint("mempool", "Removing %u transactions (%ld total usage) from the mempool to make space for %s\n", numDeleted, oldUsage - curUsage, tx.GetHash().ToString());
+        }
+        if (!fLimitFree) {
+            // We let these transactions in without respecting mempool limits.
+            // Track freely added size and trim mempool later so reserve space hasn't caused min fee to go too high
+            pool.bypassedUsage += incrementalUsage;
+        } else {
+            // We would have trimmed for it if necessary.
+            pool.bypassedUsage = 0;
+        }
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+        }
     }
 
     SyncWithWallets(tx, NULL);
@@ -4286,10 +4456,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
 
-            LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u)\n",
-                pfrom->id,
-                tx.GetHash().ToString(),
-                mempool.size());
+            LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txs %.2f M usage)\n",
+                     pfrom->id,
+                     tx.GetHash().ToString(),
+                     mempool.size(),
+                     (double)mempool.DynamicMemoryUsage()/1000000);
 
             // Recursively process any orphan transactions that depended on this one
             set<NodeId> setMisbehaving;
