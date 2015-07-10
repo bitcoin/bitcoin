@@ -96,6 +96,7 @@ BITCOIN_CORE_H = \
   core_io.h \
   eccryptoverify.h \
   ecwrapper.h \
+  globals/policy.h \
   hash.h \
   init.h \
   key.h \
@@ -136,6 +137,7 @@ BITCOIN_CORE_H = \
   support/pagelocker.h \
   sync.h \
   threadsafety.h \
+  templates.hpp \
   timedata.h \
   tinyformat.h \
   txdb.h \
@@ -169,6 +171,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  globals/policy.cpp \
   init.cpp \
   leveldbwrapper.cpp \
   main.cpp \
