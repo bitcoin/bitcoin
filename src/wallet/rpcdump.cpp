@@ -237,6 +237,63 @@ UniValue importaddress(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue importpubkey(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 1 || params.size() > 4)
+        throw runtime_error(
+            "importpubkey \"pubkey\" ( \"label\" rescan )\n"
+            "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend.\n"
+            "\nArguments:\n"
+            "1. \"pubkey\"           (string, required) The hex-encoded public key\n"
+            "2. \"label\"            (string, optional, default=\"\") An optional label\n"
+            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "\nNote: This call can take minutes to complete if rescan is true.\n"
+            "\nExamples:\n"
+            "\nImport a public key with rescan\n"
+            + HelpExampleCli("importpubkey", "\"mypubkey\"") +
+            "\nImport using a label without rescan\n"
+            + HelpExampleCli("importpubkey", "\"mypubkey\" \"testing\" false") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("importpubkey", "\"mypubkey\", \"testing\", false")
+        );
+
+    if (fPruneMode)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Importing public keys is disabled in pruned mode");
+
+    string strLabel = "";
+    if (params.size() > 1)
+        strLabel = params[1].get_str();
+
+    // Whether to perform rescan after import
+    bool fRescan = true;
+    if (params.size() > 2)
+        fRescan = params[2].get_bool();
+
+    if (!IsHex(params[0].get_str()))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey must be a hex string");
+    std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+    CPubKey pubKey(data.begin(), data.end());
+    if (!pubKey.IsFullyValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey is not a valid public key");
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    ImportAddress(CBitcoinAddress(pubKey.GetID()), strLabel);
+    ImportScript(GetScriptForRawPubKey(pubKey), strLabel, false);
+
+    if (fRescan)
+    {
+        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+        pwalletMain->ReacceptWalletTransactions();
+    }
+
+    return NullUniValue;
+}
+
+
 UniValue importwallet(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
