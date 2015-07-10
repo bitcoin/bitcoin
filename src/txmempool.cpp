@@ -440,15 +440,37 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::DynamicUsage(mapTx) + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
 }
 
+namespace memusage {
+
+template<typename X>
+static inline size_t IncrementalDynamicUsage(const std::set<X>& s)
+{
+    return MallocUsage(sizeof(stl_tree_node<X>));
+}
+
+template<typename X, typename Y>
+static inline size_t IncrementalDynamicUsage(const std::map<X, Y>& m)
+{
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y> >));
+}
+
+} // namespace memusage
+
+size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const
+{
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
+}
+
 void CTxMemPool::ClearStaged()
 {
     stage.clear();
     nStageFeesRemoved = 0;
 }
 
-bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, bool fLimitFree, const CCoinsViewCache& view)
+bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, bool& fReplacementAccepted, bool fLimitFree, const CCoinsViewCache& view)
 {
     ClearStaged();
+    fReplacementAccepted = true;
     bool fSpendConflicts = false;
     // Check for conflicts with in-memory transactions
     {
@@ -462,10 +484,16 @@ bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, CValidationState& st
     uint256 hash = tx.GetHash();
     const CAmount nFees = toadd.GetFee();
     const size_t nSize = toadd.GetTxSize();
+    size_t sizelimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    size_t expsize = DynamicMemoryUsage() + GuessDynamicMemoryUsage(toadd); // Track the expected resulting memory usage of the mempool.
 
     if (fSpendConflicts) {
         // Disable replacement feature for now
         return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "replacement-rejected-conflicts");
+    }
+    if (expsize > sizelimit) {
+        // Reject all size replacements for now
+        fReplacementAccepted = false;
     }
 
     if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize) + nStageFeesRemoved) {

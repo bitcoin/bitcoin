@@ -18,6 +18,8 @@ class CValidationState;
 
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
 
 /**
  * CTxMemPool stores these:
@@ -141,7 +143,7 @@ public:
      *  - The transactions have to be removed from the mempool to accept toadd (due to spend conflicts and/or insufficient space in the mempool). 
      * @returns false if the new entry is rejected.
      */
-    bool StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, bool fLimitFree, const CCoinsViewCache& view);
+    bool StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, bool& fReplacementAccepted, bool fLimitFree, const CCoinsViewCache& view);
     void RemoveStaged(const uint256& txHash);
 
     unsigned long size()
@@ -175,6 +177,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 

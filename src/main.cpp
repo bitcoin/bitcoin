@@ -838,10 +838,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransa
         unsigned int nSize = entry.GetTxSize();
 
         // Try to make space in mempool
-        if (!pool.StageReplace(entry, state, fLimitFree, view)) {
+        bool fReplacementAccepted = true;
+        if (!pool.StageReplace(entry, state, fReplacementAccepted, fLimitFree, view)) {
             pool.ClearStaged();
             return txChecksCache.RejectTx(hash, state, GetAdjustedTime());
         }
+        if (!fReplacementAccepted && !GetBoolArg("-relaybeyondmempool", true))
+            return globalTxChecksCache.RejectTx(hash, state, GetAdjustedTime(), 0, REJECT_INSUFFICIENTFEE, "replacement-rejected-full-mempool");
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
             return error("AcceptToMemoryPool: absurdly high fees %s, %d > %d",
