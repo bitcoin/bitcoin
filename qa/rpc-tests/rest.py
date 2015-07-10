@@ -284,5 +284,22 @@ class RESTTest (BitcoinTestFramework):
         json_obj = json.loads(json_string)
         assert_equal(json_obj['bestblockhash'], bb_hash)
 
+        #check input param sanity
+        # check string sanity and limits
+        response_header = http_get_call(url.hostname, url.port, '/rest/headers/1000000000000000/'+bb_hash+self.FORMAT_SEPARATOR+"bin", True)
+        assert_equal(response_header.status, 400)
+        response_header_str = response_header.read()
+        assert_equal("Invalid input parameter (wrong size)" in response_header_str, True)
+        
+        #check input hex check
+        response = http_get_call(url.hostname, url.port, '/rest/block/0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e220z'+self.FORMAT_SEPARATOR+"bin", True) #using a non hex hash
+        response_str = response.read()
+        assert_equal("Invalid input parameter (wrong type)" in response_str, True)
+        
+        #check string sanity (tx)
+        response = http_get_call(url.hostname, url.port, '/rest/tx/0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e220z'+self.FORMAT_SEPARATOR+"bin", True)
+        response_str = response.read()
+        assert_equal("Invalid input parameter (wrong type)" in response_str, True)
+        
 if __name__ == '__main__':
     RESTTest ().main ()
