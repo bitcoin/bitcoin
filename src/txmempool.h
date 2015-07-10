@@ -387,7 +387,7 @@ public:
      * all inputs are in the mapNextTx array). If sanity-checking is turned off,
      * check does nothing.
      */
-    void check(const CCoinsViewCache *pcoins) const;
+    void check(const CCoinsViewCache *pcoins, unsigned int nBlockHeight) const;
     void setSanityCheck(double dFrequency = 1.0) { nCheckFrequency = dFrequency * 4294967295.0; }
 
     // addUnchecked must updated state for all ancestors of a given transaction,
@@ -550,10 +550,10 @@ private:
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
 protected:
-    CTxMemPool &mempool;
+    const CTxMemPool &mempool;
 
 public:
-    CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn);
+    CCoinsViewMemPool(CCoinsView *baseIn, const CTxMemPool &mempoolIn);
     bool GetCoins(const uint256 &txid, CCoins &coins) const;
     bool HaveCoins(const uint256 &txid) const;
 };

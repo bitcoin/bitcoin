@@ -2091,7 +2091,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
 {
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, chainActive.Height());
     // Read block from disk.
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete, consensusParams))
@@ -2128,7 +2128,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
     // block that were added back and cleans up the mempool state.
     mempool.UpdateTransactionsFromBlock(vHashUpdate);
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, pindexDelete->pprev->nHeight);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -2152,7 +2152,7 @@ static int64_t nTimePostConnect = 0;
 bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CBlock *pblock) {
     const CChainParams& chainparams = Params();
     assert(pindexNew->pprev == chainActive.Tip());
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, chainActive.Height());
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     CBlock block;
@@ -2189,7 +2189,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CB
     // Remove conflicting transactions from the mempool.
     list<CTransaction> txConflicted;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, !IsInitialBlockDownload());
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, pindexNew->nHeight);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
     // Tell wallet about transactions that went from mempool
@@ -4390,7 +4390,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
-            mempool.check(pcoinsTip);
+            mempool.check(pcoinsTip, chainActive.Height());
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
 
@@ -4446,7 +4446,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         assert(recentRejects);
                         recentRejects->insert(orphanHash);
                     }
-                    mempool.check(pcoinsTip);
+                    mempool.check(pcoinsTip, chainActive.Height());
                 }
             }
 
