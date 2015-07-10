@@ -3029,7 +3029,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
         mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
         LimitMempoolSize(mempool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
     }
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, chainActive.Height());
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -5604,7 +5604,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         mapAlreadyAskedFor.erase(inv.hash);
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs)) {
-            mempool.check(pcoinsTip);
+            mempool.check(pcoinsTip, chainActive.Height());
             RelayTransaction(tx, connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
                 vWorkQueue.emplace_back(inv.hash, i);
@@ -5670,7 +5670,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                             recentRejects->insert(orphanHash);
                         }
                     }
-                    mempool.check(pcoinsTip);
+                    mempool.check(pcoinsTip, chainActive.Height());
                 }
             }
 
