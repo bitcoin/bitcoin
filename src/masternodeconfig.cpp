@@ -2,6 +2,7 @@
 #include "net.h"
 #include "masternodeconfig.h"
 #include "util.h"
+#include "ui_interface.h"
 #include <base58.h>
 
 CMasternodeConfig masternodeConfig;
@@ -12,12 +13,14 @@ void CMasternodeConfig::add(std::string alias, std::string ip, std::string privK
 }
 
 bool CMasternodeConfig::read(std::string& strErr) {
+    int linenumber = 1;
+
     boost::filesystem::ifstream streamConfig(GetMasternodeConfigFile());
     if (!streamConfig.good()) {
         return true; // No masternode.conf file is OK
     }
 
-    for(std::string line; std::getline(streamConfig, line); )
+    for(std::string line; std::getline(streamConfig, line); linenumber++)
     {
         if(line.empty()) {
             continue;
@@ -28,7 +31,8 @@ bool CMasternodeConfig::read(std::string& strErr) {
             iss.str(line);
             iss.clear();
             if (!(iss >> alias >> ip >> privKey >> txHash >> outputIndex)) {
-                strErr = "Could not parse masternode.conf line: " + line;
+                strErr = _("Could not parse masternode.conf") + "\n" +
+                        strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"";
                 streamConfig.close();
                 return false;
             }
@@ -36,12 +40,16 @@ bool CMasternodeConfig::read(std::string& strErr) {
 
         if(Params().NetworkID() == CBaseChainParams::MAIN) {
             if(CService(ip).GetPort() != 9999) {
-                strErr = "Invalid port detected in masternode.conf: " + line + " (must be 9999 for mainnet)";
+                strErr = _("Invalid port detected in masternode.conf") + "\n" +
+                        strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"" + "\n" +
+                        _("(must be 9999 for mainnet)");
                 streamConfig.close();
                 return false;
             }
         } else if(CService(ip).GetPort() == 9999) {
-            strErr = "Invalid port detected in masternode.conf: " + line + " (9999 must be only on mainnet)";
+            strErr = _("Invalid port detected in masternode.conf") + "\n" +
+                    strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"" + "\n" +
+                    _(" (9999 could be used only on mainnet)");
             streamConfig.close();
             return false;
         }
