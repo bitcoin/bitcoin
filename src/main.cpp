@@ -879,24 +879,31 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount nFees = nValueIn-nValueOut;
         double dPriority = view.GetPriority(tx, chainActive.Height());
 
-        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), mempool.HasNoInputsOf(tx));
+        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
+
+        // Try to make space in mempool
+        std::set<uint256> stagedelete;
+        CAmount nFeesDeleted = 0;
+        if (!pool.StageTrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, entry, stagedelete, nFeesDeleted)) {
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
+        }
 
         // Don't accept it if it can't get into a block
         CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
         if (fLimitFree && nFees < txMinFee)
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
-                strprintf("%d < %d", nFees, txMinFee));
+                strprintf("%d < %d", nFees, txMinFee + nFeesDeleted));
 
         // Require that free transactions have sufficient priority to be mined in the next block.
-        if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
+        if (GetBoolArg("-relaypriority", true) && nFees - nFeesDeleted < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
         // Continuously rate-limit free (really, very-low-fee) transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
+        if (fLimitFree && nFees - nFeesDeleted < ::minRelayTxFee.GetFee(nSize))
         {
             static CCriticalSection csFreeLimiter;
             static double dFreeCount;
@@ -939,6 +946,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         {
             return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
+        }
+
+        // Delete staged transactions to actually make space in mempool
+        if (!stagedelete.empty()) {
+            LogPrint("mempool", "Removing %u transactions (%d fees) from the mempool to make space for %s\n", stagedelete.size(), nFeesDeleted, tx.GetHash().ToString());
+            pool.RemoveStaged(stagedelete);
         }
 
         // Store transaction in memory
