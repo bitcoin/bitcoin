@@ -45,7 +45,6 @@ private:
     size_t nTxSize; //! ... and avoid recomputing tx size
     size_t nModSize; //! ... and modified size for priority
     size_t nUsageSize; //! ... and total memory usage
-    CFeeRate feeRate; //! ... and fee per kB
     int64_t nTime; //! Local time when entering the mempool
     double dPriority; //! Priority when entering the mempool
     unsigned int nHeight; //! Chain height when entering the mempool
@@ -59,8 +58,7 @@ public:
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
-    CAmount GetFee() const { return nFee; }
-    CFeeRate GetFeeRate() const { return feeRate; }
+    const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
@@ -78,14 +76,18 @@ struct mempoolentry_txid
     }
 };
 
-class CompareTxMemPoolEntryByFee
+class CompareTxMemPoolEntryByFeeRate
 {
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
-        if (a.GetFeeRate() == b.GetFeeRate())
+        // Avoid a division by rewriting (a/b > c/d) as (a*d > c*b).
+        double f1 = (double)a.GetFee() * b.GetTxSize();
+        double f2 = (double)b.GetFee() * a.GetTxSize();
+        if (f1 == f2) {
             return a.GetTime() < b.GetTime();
-        return a.GetFeeRate() > b.GetFeeRate();
+        }
+        return f1 > f2;
     }
 };
 
@@ -134,7 +136,7 @@ public:
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByFee
+                CompareTxMemPoolEntryByFeeRate
             >
         >
     > indexed_transaction_set;
@@ -157,6 +159,7 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
+    void removeUnchecked(const uint256& hash);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
@@ -177,6 +180,16 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
+
+    /** Build a list of transaction (hashes) to remove such that:
+     *  - The list is consistent (if a parent is included, all its dependencies are included as well).
+     *  - No dependencies of toadd are removed.
+     *  - The total fees removed are not more than the fees added by toadd.
+     *  - The feerate of what is removed is not better than the feerate of toadd.
+     *  - Removing said list will reduce the DynamicMemoryUsage after adding toadd, below sizelimit.
+     */
+    bool StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeeRemoved);
+    void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()
     {
@@ -209,6 +222,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 
