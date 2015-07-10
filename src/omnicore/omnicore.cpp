@@ -461,38 +461,54 @@ static void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
         std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale)
 {
     // Weeks in seconds
-    int128_t weeks_sec_ = 604800L;
+    int128_t weeks_sec_(604800);
 
     // Precision for all non-bitcoin values (bonus percentages, for example)
-    int128_t precision_ = 1000000000000L;
+    int128_t precision_(1000000000000LL);
 
     // Precision for all percentages (10/100 = 10%)
-    int128_t percentage_precision = 100L;
+    int128_t percentage_precision(100);
 
     // Calculate the bonus seconds
     int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
 
     // Calculate the whole number of weeks to apply bonus
-    int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_ + ((bonusSeconds_ % weeks_sec_) * precision_) / weeks_sec_;
+    int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_;
+    weeks_ += ((bonusSeconds_ % weeks_sec_) * precision_) / weeks_sec_;
 
     // Calculate the earlybird percentage to be applied
     int128_t ebPercentage_ = weeks_ * bonusPerc;
 
     // Calcluate the bonus percentage to apply up to percentage_precision number of digits
-    int128_t bonusPercentage_ = (ebPercentage_ + (precision_ * percentage_precision)) / percentage_precision;
+    int128_t bonusPercentage_ = (precision_ * percentage_precision);
+    bonusPercentage_ += ebPercentage_;
+    bonusPercentage_ /= percentage_precision;
 
     // Calculate the bonus percentage for the issuer
-    int128_t issuerPercentage_ = int128_t(issuerPerc) * precision_ / percentage_precision;
+    int128_t issuerPercentage_(issuerPerc);
+    issuerPercentage_ *= precision_;
+    issuerPercentage_ /= percentage_precision;
 
     // Precision for bitcoin amounts (satoshi)
-    int128_t satoshi_precision_ = 100000000;
+    int128_t satoshi_precision_(100000000L);
 
     // Total tokens including remainders
-    cpp_int createdTokens = cpp_int(amtTransfer) * cpp_int(numProps) * cpp_int(bonusPercentage_);
-    cpp_int issuerTokens = (createdTokens / (satoshi_precision_ * precision_)) * (issuerPercentage_ / 100) * precision_;
+    cpp_int createdTokens(amtTransfer);
+    createdTokens *= cpp_int(numProps);
+    createdTokens *= cpp_int(bonusPercentage_);
 
-    cpp_int createdTokens_int = createdTokens / (precision_ * satoshi_precision_);
-    cpp_int issuerTokens_int = issuerTokens / (precision_ * satoshi_precision_ * 100);
+    cpp_int issuerTokens = createdTokens / satoshi_precision_;
+    issuerTokens /= precision_;
+    issuerTokens *= (issuerPercentage_ / 100);
+    issuerTokens *= precision_;
+
+    cpp_int createdTokens_int = createdTokens / precision_;
+    createdTokens_int /= satoshi_precision_;
+
+    cpp_int issuerTokens_int = issuerTokens / precision_;
+    issuerTokens_int /= satoshi_precision_;
+    issuerTokens_int /= 100;
+
     cpp_int newTotalCreated = totalTokens + createdTokens_int + issuerTokens_int;
 
     if (newTotalCreated > MAX_INT_8_BYTES) {
@@ -500,10 +516,14 @@ static void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
         cpp_int created = createdTokens_int + issuerTokens_int;
 
         // Calcluate the ratio of tokens for what we can create and apply it
-        cpp_int ratio = (created * precision_ * satoshi_precision_) / maxCreatable;
+        cpp_int ratio = created * precision_;
+        ratio *= satoshi_precision_;
+        ratio /= maxCreatable;
 
         // The tokens for the issuer
-        issuerTokens_int = (issuerTokens_int * precision_ * satoshi_precision_) / ratio;
+        issuerTokens_int = issuerTokens_int * precision_;
+        issuerTokens_int *= satoshi_precision_;
+        issuerTokens_int /= ratio;
 
         // The tokens for the user
         createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int;
@@ -4408,6 +4428,13 @@ int CMPTransaction::logicMath_SimpleSend()
                 calculateFundraiser(nValue, sp.early_bird, sp.deadline, blockTime,
                         sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
                         tokens, close_crowdsale);
+
+                if (msc_debug_sp) {
+                    PrintToLog("%s(): granting via crowdsale to user: %s %d (%s)",
+                            __func__, FormatMP(property, tokens.first), property, strMPProperty(property));
+                    PrintToLog("%s(): granting via crowdsale to issuer: %s %d (%s)",
+                            __func__, FormatMP(property, tokens.second), property, strMPProperty(property));
+                }
 
                 // Update the crowdsale object
                 pcrowdsale->incTokensUserCreated(tokens.first);
