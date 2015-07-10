@@ -50,8 +50,6 @@ public:
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
 
-    /** Used if GenerateBitcoins is called with a negative number of threads */
-    int DefaultMinerThreads() const { return nMinerThreads; }
     const CBlock& GenesisBlock() const { return genesis; }
     bool RequireRPCPassword() const { return fRequireRPCPassword; }
     /** Make miner wait to have peers to avoid wasting work */
@@ -79,7 +77,6 @@ protected:
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
-    int nMinerThreads;
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];

@@ -542,13 +542,8 @@ void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainpar
 {
     static boost::thread_group* minerThreads = NULL;
 
-    if (nThreads < 0) {
-        // In regtest threads defaults to 1
-        if (Params().DefaultMinerThreads())
-            nThreads = Params().DefaultMinerThreads();
-        else
-            nThreads = GetNumCores();
-    }
+    if (nThreads < 0)
+        nThreads = GetNumCores();
 
     if (minerThreads != NULL)
     {
