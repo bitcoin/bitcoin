@@ -1,13 +1,14 @@
+// Copyright (c) 2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <algorithm>
 #include <vector>
-#include "poolman.h"
-#include "main.h"
-#include "util.h"
 #include "amount.h"
+#include "main.h"
+#include "poolman.h"
+#include "util.h"
 #include "utiltime.h"
-
-using namespace std;
 
 static int64_t PoolmanLowWater, PoolmanHighWater;
 static bool janitorInit = false;
@@ -51,7 +52,7 @@ void TxMempoolJanitor()
     floatingFee = true;
 
     // get sorted list of fees in mempool
-    vector<CFeeRate> vfees;
+    std::vector<CFeeRate> vfees;
     mempool.queryFees(vfees);
     std::sort(vfees.begin(), vfees.end());
     std::reverse(vfees.begin(), vfees.end());
@@ -91,6 +92,6 @@ void InitTxMempoolJanitor(CScheduler& scheduler)
 
     // start mempool janitor
     if (janitorInterval > 0)
-        scheduler.scheduleEvery(&TxMempoolJanitor, janitorInterval * 1000);
+        scheduler.scheduleEvery(&TxMempoolJanitor, janitorInterval);
 }
 
