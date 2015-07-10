@@ -125,6 +125,8 @@ class TxnMallTest(BitcoinTestFramework):
 
         # Reconnect the split network, and sync chain:
         connect_nodes(self.nodes[1], 2)
+        self.nodes[2].sendrawtransaction(fund_bar_tx["hex"])
+        self.nodes[2].sendrawtransaction(tx2["hex"])
         self.nodes[2].generate(1)  # Mine another block to make sure we sync
         sync_blocks(self.nodes)
 
@@ -136,7 +138,7 @@ class TxnMallTest(BitcoinTestFramework):
         # Verify expected confirmations
         assert_equal(tx1["confirmations"], -1)
         assert_equal(tx1_clone["confirmations"], 2)
-        assert_equal(tx2["confirmations"], 0)
+        assert_equal(tx2["confirmations"], 1)
 
         # Check node0's total balance; should be same as before the clone, + 100 BTC for 2 matured,
         # less possible orphaned matured subsidy
