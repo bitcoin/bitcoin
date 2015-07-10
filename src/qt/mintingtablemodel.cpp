@@ -403,7 +403,7 @@ double MintingTableModel::getDayToMint(KernelRecord *wtx) const
 QString MintingTableModel::formatDayToMint(KernelRecord *wtx) const
 {
     double prob = getDayToMint(wtx);
-    return QString::number(prob, 'f', 2) + "%";
+    return QString::number(prob, 'f', 6) + "%";
 }
 
 QString MintingTableModel::formatTxAddress(const KernelRecord *wtx, bool tooltip) const
