@@ -77,7 +77,7 @@ for Debian 7 (Wheezy) and later:
  Add the following line to /etc/apt/sources.list,
  replacing [mirror] with any official debian mirror.
 
-	deb http://[mirror]/debian/ oldstable main
+	deb http://[mirror]/debian/ oldoldstable main
 
 To enable the change run
 
