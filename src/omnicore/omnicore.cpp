@@ -4430,9 +4430,9 @@ int CMPTransaction::logicMath_SimpleSend()
                         tokens, close_crowdsale);
 
                 if (msc_debug_sp) {
-                    PrintToLog("%s(): granting via crowdsale to user: %s %d (%s)",
+                    PrintToLog("%s(): granting via crowdsale to user: %s %d (%s)\n",
                             __func__, FormatMP(property, tokens.first), property, strMPProperty(property));
-                    PrintToLog("%s(): granting via crowdsale to issuer: %s %d (%s)",
+                    PrintToLog("%s(): granting via crowdsale to issuer: %s %d (%s)\n",
                             __func__, FormatMP(property, tokens.second), property, strMPProperty(property));
                 }
 

@@ -18,9 +18,6 @@ void InitDebugLogLevels();
 /** Scrolls log file, if it's getting too big. */
 void ShrinkDebugLog();
 
-// Log files
-extern const std::string INFO_FILENAME;
-
 // Debug flags
 extern bool msc_debug_parser_data;
 extern bool msc_debug_parser;

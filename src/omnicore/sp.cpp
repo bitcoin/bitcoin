@@ -495,10 +495,15 @@ void CMPCrowd::insertDatabase(const uint256& txHash, const std::vector<int64_t>&
     txFundraiserData.insert(std::make_pair(txHash, txData));
 }
 
+std::string CMPCrowd::toString(const std::string& address) const
+{
+    return strprintf("%34s : id=%u=%X; prop=%u, value= %li, deadline: %s (%lX)", address, propertyId, propertyId,
+        property_desired, nValue, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
+}
+
 void CMPCrowd::print(const std::string& address, FILE* fp) const
 {
-    fprintf(fp, "%34s : id=%u=%X; prop=%u, value= %li, deadline: %s (%lX)\n", address.c_str(), propertyId, propertyId,
-        property_desired, nValue, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline).c_str(), deadline);
+    fprintf(fp, "%s\n", toString(address).c_str());
 }
 
 void CMPCrowd::saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& addr) const
@@ -573,26 +578,6 @@ bool mastercore::isCrowdsaleActive(uint32_t propertyId)
         if (foundPropertyId == propertyId) return true;
     }
     return false;
-}
-
-// save info from the crowdsale that's being erased
-void mastercore::dumpCrowdsaleInfo(const std::string& address, const CMPCrowd& crowd, bool bExpired)
-{
-    boost::filesystem::path pathInfo = GetDataDir() / INFO_FILENAME;
-    FILE* fp = fopen(pathInfo.string().c_str(), "a");
-
-    if (!fp) {
-        PrintToLog("\nPROBLEM writing %s, errno= %d\n", INFO_FILENAME, errno);
-        return;
-    }
-
-    fprintf(fp, "\n%s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-    fprintf(fp, "\nCrowdsale ended: %s\n", bExpired ? "Expired" : "Was closed");
-
-    crowd.print(address, fp);
-
-    fflush(fp);
-    fclose(fp);
 }
 
 // calculates and returns fundraiser bonus, issuer premine, and total tokens
@@ -731,9 +716,14 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
     if (it != my_crowds.end()) {
         const CMPCrowd& crowdsale = it->second;
-        PrintToLog("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
 
-        dumpCrowdsaleInfo(address, crowdsale);
+        PrintToLog("%s(): ERASING MAXED OUT CROWDSALE from address=%s, at block %d (timestamp: %d), SP: %d (%s)\n",
+            __func__, address, block, blockTime, crowdsale.getPropertyId(), strMPProperty(crowdsale.getPropertyId()));
+
+        if (msc_debug_sp) {
+            PrintToLog("%s(): %s\n", __func__, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime));
+            PrintToLog("%s(): %s\n", __func__, crowdsale.toString(address));
+        }
 
         // get sp from data struct
         CMPSPInfo::Entry sp;
@@ -759,6 +749,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
     if (pBlockIndex == NULL) return 0;
 
     const int64_t blockTime = pBlockIndex->GetBlockTime();
+    const int blockHeight = pBlockIndex->nHeight;
     unsigned int how_many_erased = 0;
     CrowdMap::iterator my_it = my_crowds.begin();
 
@@ -767,10 +758,13 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
         const CMPCrowd& crowdsale = my_it->second;
 
         if (blockTime > crowdsale.getDeadline()) {
-            PrintToLog("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
+            PrintToLog("%s(): ERASING EXPIRED CROWDSALE from address=%s, at block %d (timestamp: %d), SP: %d (%s)\n",
+                __func__, address, blockHeight, blockTime, crowdsale.getPropertyId(), strMPProperty(crowdsale.getPropertyId()));
 
-            // TODO: dump the info about this crowdsale being delete into a TXT file (JSON perhaps)
-            dumpCrowdsaleInfo(address, crowdsale, true);
+            if (msc_debug_sp) {
+                PrintToLog("%s(): %s\n", __func__, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", blockTime));
+                PrintToLog("%s(): %s\n", __func__, crowdsale.toString(address));
+            }
 
             // get sp from data struct
             CMPSPInfo::Entry sp;
