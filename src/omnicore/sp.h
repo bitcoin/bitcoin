@@ -225,9 +225,6 @@ int64_t calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundra
 void eraseMaxedCrowdsale(const std::string& address, int64_t blockTime, int block);
 
 unsigned int eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex);
-
-// TODO: depreciate
-void dumpCrowdsaleInfo(const std::string& address, const CMPCrowd& crowd, bool bExpired = false);
 }
 
 

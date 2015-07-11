@@ -575,26 +575,6 @@ bool mastercore::isCrowdsaleActive(uint32_t propertyId)
     return false;
 }
 
-// save info from the crowdsale that's being erased
-void mastercore::dumpCrowdsaleInfo(const std::string& address, const CMPCrowd& crowd, bool bExpired)
-{
-    boost::filesystem::path pathInfo = GetDataDir() / INFO_FILENAME;
-    FILE* fp = fopen(pathInfo.string().c_str(), "a");
-
-    if (!fp) {
-        PrintToLog("\nPROBLEM writing %s, errno= %d\n", INFO_FILENAME, errno);
-        return;
-    }
-
-    fprintf(fp, "\n%s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-    fprintf(fp, "\nCrowdsale ended: %s\n", bExpired ? "Expired" : "Was closed");
-
-    crowd.print(address, fp);
-
-    fflush(fp);
-    fclose(fp);
-}
-
 // calculates and returns fundraiser bonus, issuer premine, and total tokens
 // propType : divisible/indiv
 // bonusPerc: bonus percentage
@@ -731,9 +711,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
     if (it != my_crowds.end()) {
         const CMPCrowd& crowdsale = it->second;
-        PrintToLog("%s() FOUND MAXED OUT CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
-
-        dumpCrowdsaleInfo(address, crowdsale);
+        PrintToLog("%s(): FOUND MAXED OUT CROWDSALE from address=%s, erasing...\n", __func__, address);
 
         // get sp from data struct
         CMPSPInfo::Entry sp;
@@ -767,10 +745,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
         const CMPCrowd& crowdsale = my_it->second;
 
         if (blockTime > crowdsale.getDeadline()) {
-            PrintToLog("%s() FOUND EXPIRED CROWDSALE from address= '%s', erasing...\n", __FUNCTION__, address);
-
-            // TODO: dump the info about this crowdsale being delete into a TXT file (JSON perhaps)
-            dumpCrowdsaleInfo(address, crowdsale, true);
+            PrintToLog("%s(): FOUND EXPIRED CROWDSALE from address=%s, erasing...\n", __func__, address);
 
             // get sp from data struct
             CMPSPInfo::Entry sp;
