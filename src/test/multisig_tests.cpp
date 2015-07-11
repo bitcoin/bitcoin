@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
 BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 {
-    const CPolicy testPolicy;
+    const CStandardPolicy testPolicy;
     CKey key[4];
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);

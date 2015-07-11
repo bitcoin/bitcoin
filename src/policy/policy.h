@@ -10,6 +10,7 @@
 #include "script/interpreter.h"
 #include "script/standard.h"
 
+#include <map>
 #include <string>
 
 class CCoinsViewCache;
@@ -48,20 +49,90 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
  */
 class CPolicy
 {
-    bool ApproveScript(const CScript&, txnouttype&) const;
 public:
-    bool ApproveScript(const CScript&) const;
+    virtual ~CPolicy() {};
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const
+    {
+        std::vector<std::pair<std::string, std::string> > optionsHelp;
+        return optionsHelp;
+    }
+    /**
+     * @param argMap a map with options to read from.
+     * @return a formatted HelpMessage string with the policy options
+     */
+    virtual void InitFromArgs(const std::map<std::string, std::string>& argMap) {};
+    virtual bool ApproveScript(const CScript& scriptPubKey) const { return true; };
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-    bool ApproveTx(const CTransaction& tx, std::string& reason) const;
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const { return true; };
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-    bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const { return true; };
 };
+
+/**
+ * \class CStandardPolicy
+ * Standard implementation of CPolicy.
+ */
+class CStandardPolicy : public CPolicy
+{
+protected:
+    bool fIsBareMultisigStd;
+    bool fAcceptNonStdTxn;
+
+    bool ApproveScript(const CScript&, txnouttype&) const;
+public:
+    CStandardPolicy(
+                    bool fIsBareMultisigStdIn=true, 
+                    bool fAcceptNonStdTxnIn=false
+                    );
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
+    virtual void InitFromArgs(const std::map<std::string, std::string>&);
+    virtual bool ApproveScript(const CScript& scriptPubKey) const;
+    virtual bool ApproveTx(const CTransaction& tx, std::string& reason) const;
+    /**
+     * Check transaction inputs to mitigate two
+     * potential denial-of-service attacks:
+     * 
+     * 1. scriptSigs with extra data stuffed into them,
+     *    not consumed by scriptPubKey (or P2SH script)
+     * 2. P2SH scripts with a crazy number of expensive
+     *    CHECKSIG/CHECKMULTISIG operations
+     *
+     * Check transaction inputs, and make sure any
+     * pay-to-script-hash transactions are evaluating IsStandard scripts
+     * 
+     * Why bother? To avoid denial-of-service attacks; an attacker
+     * can submit a standard HASH... OP_EQUAL transaction,
+     * which will get accepted into blocks. The redemption
+     * script can be anything; an attacker could use a very
+     * expensive-to-check-upon-redemption script like:
+     *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+     */
+    virtual bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+};
+
+namespace Policy {
+
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ */
+void AppendHelpMessages(std::string& strUsage);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
 
 #endif // BITCOIN_POLICY_H

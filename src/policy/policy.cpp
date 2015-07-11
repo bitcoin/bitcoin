@@ -7,6 +7,7 @@
 
 #include "policy/policy.h"
 
+#include "chainparams.h"
 #include "main.h"
 #include "tinyformat.h"
 #include "util.h"
@@ -14,27 +15,33 @@
 
 #include <boost/foreach.hpp>
 
-    /**
-     * Check transaction inputs to mitigate two
-     * potential denial-of-service attacks:
-     * 
-     * 1. scriptSigs with extra data stuffed into them,
-     *    not consumed by scriptPubKey (or P2SH script)
-     * 2. P2SH scripts with a crazy number of expensive
-     *    CHECKSIG/CHECKMULTISIG operations
-     *
-     * Check transaction inputs, and make sure any
-     * pay-to-script-hash transactions are evaluating IsStandard scripts
-     * 
-     * Why bother? To avoid denial-of-service attacks; an attacker
-     * can submit a standard HASH... OP_EQUAL transaction,
-     * which will get accepted into blocks. The redemption
-     * script can be anything; an attacker could use a very
-     * expensive-to-check-upon-redemption script like:
-     *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
-     */
+/** CStandardPolicy initialization */
 
-bool CPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
+std::vector<std::pair<std::string, std::string> > CStandardPolicy::GetOptionsHelp() const
+{
+    std::vector<std::pair<std::string, std::string> > optionsHelp;
+    optionsHelp.push_back(std::make_pair("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), fIsBareMultisigStd)));
+    optionsHelp.push_back(std::make_pair("-acceptnonstdtxn", strprintf(_("Relay and mine \"non-standard\" transactions (testnet/regtest only; default: %u)"), Params(CBaseChainParams::MAIN).RequireStandard())));
+    return optionsHelp;
+}
+
+void CStandardPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", fIsBareMultisigStd, mapArgs);
+    fAcceptNonStdTxn = GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard(), mapArgs);
+    if (fAcceptNonStdTxn && Params().RequireStandard())
+        throw std::runtime_error(strprintf(_("%s: acceptnonstdtxn is not currently supported for %s chain."), __func__, Params().NetworkIDString()));
+}
+
+CStandardPolicy::CStandardPolicy(bool fIsBareMultisigStdIn, bool fAcceptNonStdTxnIn) :
+    fIsBareMultisigStd(fIsBareMultisigStdIn),
+    fAcceptNonStdTxn(fAcceptNonStdTxnIn)
+{
+}
+
+/** CStandardPolicy implementation */
+
+bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
@@ -54,15 +61,15 @@ bool CPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) 
     return whichType != TX_NONSTANDARD;
 }
 
-bool CPolicy::ApproveScript(const CScript& scriptPubKey) const
+bool CStandardPolicy::ApproveScript(const CScript& scriptPubKey) const
 {
     txnouttype whichType;
     return ApproveScript(scriptPubKey, whichType);
 }
 
-bool CPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
+bool CStandardPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
 {
-    if (!fRequireStandard)
+    if (fAcceptNonStdTxn)
         return true;
 
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
@@ -127,9 +134,9 @@ bool CPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
     return true;
 }
 
-bool CPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
+bool CStandardPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
-    if (!fRequireStandard)
+    if (fAcceptNonStdTxn)
         return true;
 
     if (tx.IsCoinBase())
@@ -187,4 +194,13 @@ bool CPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& map
     }
 
     return true;
+}
+
+/** Policy Factory and related utility functions */
+
+void Policy::AppendHelpMessages(std::string& strUsage)
+{
+    const CStandardPolicy policy;
+    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), Policy::STANDARD));
+    AppendMessagesOpt(strUsage, policy.GetOptionsHelp());
 }

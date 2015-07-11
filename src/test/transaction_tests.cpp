@@ -288,7 +288,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
 BOOST_AUTO_TEST_CASE(test_Get)
 {
-    const CPolicy testPolicy;
+    const CStandardPolicy testPolicy;
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
-    const CPolicy testPolicy;
+    const CStandardPolicy testPolicy;
     LOCK(cs_main);
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
