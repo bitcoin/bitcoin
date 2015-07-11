@@ -767,7 +767,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.DoS(0,
-                         error("AcceptToMemoryPool: nonstandard transaction: %s", reason),
+                         error("AcceptToMemoryPool: nonstandard transaction: %s, txhash: %s",
+                               reason, tx.GetHash().ToString().c_str()),
                          REJECT_NONSTANDARD, reason);
 
     // Only accept nLockTime-using transactions that can be mined in the next

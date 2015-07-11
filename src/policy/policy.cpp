@@ -114,6 +114,11 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         reason = "multi-op-return";
         return false;
     }
+    // all OP_RETURN is not permitted
+    if (nDataOut == tx.vout.size()) {
+        reason = "all-op-return";
+        return false;
+    }
 
     return true;
 }
