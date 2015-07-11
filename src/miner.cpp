@@ -285,7 +285,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            // Note that flags: we don't want to set mempool/IsStandard()
+            // Note that flags: we don't want to set mempool/CPolicy::ApproveScript()
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
             CValidationState state;
