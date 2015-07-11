@@ -34,11 +34,11 @@
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
+bool IsStandard(const CScript& scriptPubKey, CValidationState& state, txnouttype& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
-    if (!Solver(scriptPubKey, whichType, vSolutions))
-        return false;
+    if (!Solver(scriptPubKey, whichType, vSolutions) || whichType == TX_NONSTANDARD)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "scriptpubkey-unkown-pattern");
 
     if (whichType == TX_MULTISIG)
     {
@@ -46,30 +46,26 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
         unsigned char n = vSolutions.back()[0];
         // Support up to x-of-3 multisig txns as standard
         if (n < 1 || n > 3)
-            return false;
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptpubkey-multisig-n-outofrange");
         if (m < 1 || m > n)
-            return false;
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptpubkey-multisig-m-outofrange");
     }
 
-    return whichType != TX_NONSTANDARD;
+    return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, CValidationState& state)
 {
-    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
-        reason = "version";
-        return false;
-    }
+    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "version");
 
     // Extremely large transactions with lots of inputs can cost the network
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
     unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-    if (sz >= MAX_STANDARD_TX_SIZE) {
-        reason = "tx-size";
-        return false;
-    }
+    if (sz >= MAX_STANDARD_TX_SIZE)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "tx-size");
 
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
@@ -80,45 +76,35 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         // future-proofing. That's also enough to spend a 20-of-20
         // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
         // considered standard)
-        if (txin.scriptSig.size() > 1650) {
-            reason = "scriptsig-size";
-            return false;
-        }
-        if (!txin.scriptSig.IsPushOnly()) {
-            reason = "scriptsig-not-pushonly";
-            return false;
-        }
+        if (txin.scriptSig.size() > 1650)
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptsig-size");
+
+        if (!txin.scriptSig.IsPushOnly())
+            return state.DoS(0, false, REJECT_NONSTANDARD, "scriptsig-not-pushonly");
     }
 
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
-            reason = "scriptpubkey";
+        if (!IsStandard(txout.scriptPubKey, state, whichType))
             return false;
-        }
 
         if (whichType == TX_NULL_DATA)
             nDataOut++;
-        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
-            reason = "bare-multisig";
-            return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
-            reason = "dust";
-            return false;
-        }
+        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd))
+            return state.DoS(0, false, REJECT_NONSTANDARD, "bare-multisig");
+        else if (txout.IsDust(::minRelayTxFee))
+            return state.DoS(0, false, REJECT_NONSTANDARD, "dust");
     }
 
     // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
-        reason = "multi-op-return";
-        return false;
-    }
+    if (nDataOut > 1)
+        return state.DoS(0, false, REJECT_NONSTANDARD, "multi-op-return");
 
     return true;
 }
 
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool AreInputsStandard(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -132,10 +118,10 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // get the scriptPubKey corresponding to this input:
         const CScript& prevScript = prev.scriptPubKey;
         if (!Solver(prevScript, whichType, vSolutions))
-            return false;
+            return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-prev-scriptpubkey-unkown-pattern");
         int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
         if (nArgsExpected < 0)
-            return false;
+            return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-prev-scriptpubkey-no-args-expected");
 
         // Transactions with extra stuff in their scriptSigs are
         // non-standard. Note that this EvalScript() call will
@@ -145,12 +131,12 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // and this method isn't called.
         std::vector<std::vector<unsigned char> > stack;
         if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
-            return false;
+            return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-scriptsig-eval-fail");
 
         if (whichType == TX_SCRIPTHASH)
         {
             if (stack.empty())
-                return false;
+                return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-scriptsig-p2sh-invalid");
             CScript subscript(stack.back().begin(), stack.back().end());
             std::vector<std::vector<unsigned char> > vSolutions2;
             txnouttype whichType2;
@@ -158,7 +144,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             {
                 int tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
                 if (tmpExpected < 0)
-                    return false;
+                    return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-scriptsig-p2sh-invalid");
                 nArgsExpected += tmpExpected;
             }
             else
@@ -166,12 +152,15 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 // Any other Script with less than 15 sigops OK:
                 unsigned int sigops = subscript.GetSigOpCount(true);
                 // ... extra data left on the stack after execution is OK, too:
-                return (sigops <= MAX_P2SH_SIGOPS);
+                if (sigops > MAX_P2SH_SIGOPS)
+                    return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-scriptsig-p2sh-toolong");
+                else 
+                    return true;
             }
         }
 
         if (stack.size() != (unsigned int)nArgsExpected)
-            return false;
+            return state.DoS(0, false, REJECT_NONSTANDARD, "txinputs-scriptsig-non-empty-stack");
     }
 
     return true;
