@@ -2024,8 +2024,6 @@ bool static DisconnectTip(CValidationState &state) {
     mempool.check(pcoinsTip);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
-    // Recalculate priorities of mempool transactions
-    mempool.recalcPriorities(pindexDelete->nHeight);
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
@@ -2087,8 +2085,6 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
-    // Recalculate priorities of mempool transactions
-    mempool.recalcPriorities(pindexNew->nHeight+1);
     // Tell wallet about transactions that went from mempool
     // to conflicted:
     BOOST_FOREACH(const CTransaction &tx, txConflicted) {

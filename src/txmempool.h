@@ -45,7 +45,6 @@ private:
     CFeeRate feeRate; //! ... and fee per kB
     int64_t nTime; //! Local time when entering the mempool
     double dPriority; //! Priority when entering the mempool
-    double dCurrentPriority; //! Priority at next block height
     unsigned int nHeight; //! Chain height when entering the mempool
     bool hadNoDependencies; //! Not dependent on any other txs when it entered the mempool
 
@@ -57,14 +56,12 @@ public:
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
-    double GetCurrentPriority() const { return dCurrentPriority; }
     CAmount GetFee() const { return nFee; }
     CFeeRate GetFeeRate() const { return feeRate; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
-    void recalcCurrentPriority (unsigned int height) { dCurrentPriority = GetPriority(height); }
 };
 
 // extracts a TxMemPoolEntry's transaction hash
@@ -77,24 +74,13 @@ struct mempoolentry_txid
     }
 };
 
-class CompareTxMemPoolEntryByPriority
-{
-public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
-    {
-        if (a.GetCurrentPriority() == b.GetCurrentPriority())
-            return a.GetFeeRate() > b.GetFeeRate();
-        return a.GetCurrentPriority() > b.GetCurrentPriority();
-    }
-};
-
 class CompareTxMemPoolEntryByFee
 {
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
         if (a.GetFeeRate() == b.GetFeeRate())
-            return a.GetCurrentPriority() > b.GetCurrentPriority();
+            return a.GetTime() < b.GetTime();
         return a.GetFeeRate() > b.GetFeeRate();
     }
 };
@@ -143,11 +129,6 @@ public:
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByFee
-            >,
-            // sorted by priority
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByPriority
             >
         >
     > indexed_transaction_set;
@@ -178,7 +159,6 @@ public:
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);
-    void recalcPriorities(unsigned int nBlockHeight);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
     /**

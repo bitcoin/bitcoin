@@ -18,8 +18,7 @@
 using namespace std;
 
 CTxMemPoolEntry::CTxMemPoolEntry():
-    nFee(0), nTxSize(0), nModSize(0), nTime(0), dPriority(0.0),
-    dCurrentPriority(0.0), hadNoDependencies(false)
+    nFee(0), nTxSize(0), nModSize(0), nTime(0), dPriority(0.0), hadNoDependencies(false)
 {
     nHeight = MEMPOOL_HEIGHT;
 }
@@ -27,8 +26,7 @@ CTxMemPoolEntry::CTxMemPoolEntry():
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _dPriority,
                                  unsigned int _nHeight, bool poolHasNoInputsOf):
-    tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority),
-    dCurrentPriority(_dPriority), nHeight(_nHeight),
+    tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight),
     hadNoDependencies(poolHasNoInputsOf)
 {
     nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
@@ -107,29 +105,6 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
     return true;
-}
-
-
-struct update_priority
-{
-    update_priority (unsigned int h) : height(h) {}
-
-    void operator() (CTxMemPoolEntry &e)
-    {
-        e.recalcCurrentPriority(height);
-    }
-private:
-    unsigned int height;
-};
-
-void CTxMemPool::recalcPriorities(unsigned int nBlockHeight)
-{
-    LOCK(cs);
-    for (indexed_transaction_set::nth_index<0>::type::iterator it = mapTx.begin();
-         it != mapTx.end(); it++)
-    {
-        mapTx.modify(it, update_priority(nBlockHeight));
-    }
 }
 
 
