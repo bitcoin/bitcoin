@@ -196,6 +196,7 @@ public:
     void insertDatabase(const uint256& txHash, const std::vector<int64_t>& txData);
     std::map<uint256, std::vector<int64_t> > getDatabase() const { return txFundraiserData; }
 
+    std::string toString(const std::string& address) const;
     void print(const std::string& address, FILE* fp = stdout) const;
     void saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& addr) const;
 };
