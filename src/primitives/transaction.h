@@ -7,6 +7,7 @@
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
+#include "memusage.h"
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -48,6 +49,8 @@ public:
     }
 
     std::string ToString() const;
+
+    size_t DynamicMemoryUsage() const { return 0; }
 };
 
 /** An input of a transaction.  It contains the location of the previous
@@ -96,6 +99,8 @@ public:
     }
 
     std::string ToString() const;
+
+    size_t DynamicMemoryUsage() const { return scriptSig.DynamicMemoryUsage(); }
 };
 
 /** An output of a transaction.  It contains the public key that the next input
@@ -166,6 +171,8 @@ public:
     }
 
     std::string ToString() const;
+
+    size_t DynamicMemoryUsage() const { return scriptPubKey.DynamicMemoryUsage(); }
 };
 
 struct CMutableTransaction;
@@ -249,6 +256,8 @@ public:
     }
 
     std::string ToString() const;
+
+    size_t DynamicMemoryUsage() const;
 };
 
 /** A mutable version of CTransaction. */
