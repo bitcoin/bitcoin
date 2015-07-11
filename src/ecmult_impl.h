@@ -220,6 +220,7 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_scalar_t *a, int w) 
     int set_bits = 0;
     int bit = 0;
     int sign = 1;
+    int carry = 0;
 
     if (secp256k1_scalar_get_bits(&s, 255, 1)) {
         secp256k1_scalar_negate(&s, &s);
@@ -229,26 +230,28 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_scalar_t *a, int w) 
     while (bit < 256) {
         int now;
         int word;
-        if (secp256k1_scalar_get_bits(&s, bit, 1) == 0) {
+        if (secp256k1_scalar_get_bits(&s, bit, 1) == (unsigned int)carry) {
             bit++;
             continue;
         }
+
+        now = w;
+        if (now > 256 - bit) {
+            now = 256 - bit;
+        }
+
+        word = secp256k1_scalar_get_bits_var(&s, bit, now) + carry;
+
+        carry = (word >> (w-1)) & 1;
+        word -= carry << w;
+
         while (set_bits < bit) {
             wnaf[set_bits++] = 0;
         }
-        now = w;
-        if (bit + now > 256) {
-            now = 256 - bit;
-        }
-        word = secp256k1_scalar_get_bits_var(&s, bit, now);
-        if (word & (1 << (w-1))) {
-            secp256k1_scalar_add_bit(&s, bit + w);
-            wnaf[set_bits++] = sign * (word - (1 << w));
-        } else {
-            wnaf[set_bits++] = sign * word;
-        }
+        wnaf[set_bits++] = sign * word;
         bit += now;
     }
+    VERIFY_CHECK(carry == 0);
     return set_bits;
 }
 
