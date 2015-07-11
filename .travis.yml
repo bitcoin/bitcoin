@@ -17,6 +17,7 @@ env:
     - SDK_URL=https://s3.amazonaws.com/ci.omnicore.private/depends-sources/sdks
     - WINEDEBUG=fixme-all
     - RUN_OMNIJ_TESTS=false
+    - RUN_WIN_TESTS=false
 sudo: false
 cache:
   ccache: true
@@ -28,7 +29,7 @@ cache:
 matrix:
   fast_finish: true
   include:
-    - compiler: ": bitcoind"
+    - compiler: ": omnicored DDEBUG_LOCKORDER"
       env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat CPPFLAGS=-DDEBUG_LOCKORDER"
       addons:
         apt:
@@ -37,7 +38,7 @@ matrix:
     - compiler: ": 64-bit"
       env: HOST=x86_64-unknown-linux-gnu RUN_OMNIJ_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat"
     - compiler: ": Win64"
-      env: HOST=x86_64-w64-mingw32 GOAL="deploy" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
+      env: HOST=x86_64-w64-mingw32 RUN_OMNIJ_TESTS=true RUN_WIN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
       addons:
         apt:
           packages:
@@ -45,10 +46,30 @@ matrix:
             - gcc-mingw-w64-x86-64
             - g++-mingw-w64-x86-64
             - binutils-mingw-w64-x86-64
+            - mingw-w64-dev
+            - wine
+            - bc
+    - compiler: ": 32-bit + dash"
+      env: HOST=i686-pc-linux-gnu RUN_OMNIJ_TESTS=true RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat" USE_SHELL="/bin/dash"
+      addons:
+        apt:
+          packages:
+            - g++-multilib
+            - bc
+    - compiler: ": Win32"
+      env: HOST=i686-w64-mingw32 RUN_OMNIJ_TESTS=true RUN_WIN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
+      addons:
+        apt:
+          packages:
+            - nsis
+            - gcc-mingw-w64-i686
+            - g++-mingw-w64-i686
+            - binutils-mingw-w64-i686
+            - mingw-w64-dev
             - wine
             - bc
     - compiler: ": Cross-Mac"
-      env: HOST=x86_64-apple-darwin11 BITCOIN_CONFIG="--enable-reduce-exports" OSX_SDK=10.7 GOAL="deploy"
+      env: HOST=x86_64-apple-darwin11 OSX_SDK=10.7 GOAL="deploy"
       addons:
         apt:
           packages:
@@ -58,23 +79,6 @@ matrix:
             - libbz2-dev
             - zlib1g-dev
             - libcap-dev
-    - compiler: ": 32-bit + dash"
-      env: HOST=i686-pc-linux-gnu RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat" USE_SHELL="/bin/dash"
-      addons:
-        apt:
-          packages:
-            - g++-multilib
-            - bc
-    - compiler: ": Win32"
-      env: HOST=i686-w64-mingw32 GOAL="install" BITCOIN_CONFIG="--enable-gui" MAKEJOBS="-j2"
-      addons:
-        apt:
-          packages:
-            - gcc-mingw-w64-i686
-            - g++-mingw-w64-i686
-            - binutils-mingw-w64-i686
-            - wine
-            - bc
 
 before_install:
     - mkdir -p depends/SDKs depends/sdk-sources
@@ -99,4 +103,5 @@ script:
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
     - if [ "$RUN_TESTS" = "true" ]; then make check; fi
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.sh; fi
+    - if [ "$RUN_WIN_TESTS" = "true" ]; then $(which wine) src/test/test_omnicore.exe; fi
     - if [ "$RUN_OMNIJ_TESTS" = "true" ]; then qa/pull-tester/omnicore-rpc-tests.sh; fi

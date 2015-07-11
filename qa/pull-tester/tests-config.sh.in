@@ -11,6 +11,10 @@ EXEEXT="@EXEEXT@"
 @BUILD_BITCOIN_UTILS_TRUE@ENABLE_UTILS=1
 @BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=1
 
-REAL_BITCOIND="$BUILDDIR/src/omnicored${EXEEXT}"
-REAL_BITCOINCLI="$BUILDDIR/src/omnicore-cli${EXEEXT}"
-
+if [ "x${EXEEXT}" = "x.exe" ]; then
+    REAL_BITCOIND="$(which wine) $BUILDDIR/src/omnicored${EXEEXT}"
+    REAL_BITCOINCLI="$(which wine) $BUILDDIR/src/omnicore-cli${EXEEXT}"
+else
+    REAL_BITCOIND="$BUILDDIR/src/omnicored${EXEEXT}"
+    REAL_BITCOINCLI="$BUILDDIR/src/omnicore-cli${EXEEXT}"
+fi
