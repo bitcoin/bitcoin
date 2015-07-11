@@ -34,7 +34,7 @@
      *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
      */
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
+bool CPolicy::ApproveScript(const CScript& scriptPubKey, txnouttype& whichType) const
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     if (!Solver(scriptPubKey, whichType, vSolutions))
@@ -54,8 +54,17 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
     return whichType != TX_NONSTANDARD;
 }
 
-bool IsStandardTx(const CTransaction& tx, std::string& reason)
+bool CPolicy::ApproveScript(const CScript& scriptPubKey) const
 {
+    txnouttype whichType;
+    return ApproveScript(scriptPubKey, whichType);
+}
+
+bool CPolicy::ApproveTx(const CTransaction& tx, std::string& reason) const
+{
+    if (!fRequireStandard)
+        return true;
+
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
         return false;
@@ -93,7 +102,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     unsigned int nDataOut = 0;
     txnouttype whichType;
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
+        if (!ApproveScript(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
@@ -118,8 +127,11 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     return true;
 }
 
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool CPolicy::ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const
 {
+    if (!fRequireStandard)
+        return true;
+
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
 

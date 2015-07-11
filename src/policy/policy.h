@@ -42,17 +42,26 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
+/**
+ * \class CPolicy
+ * Generic interface class for policy.
+ */
+class CPolicy
+{
+    bool ApproveScript(const CScript&, txnouttype&) const;
+public:
+    bool ApproveScript(const CScript&) const;
     /**
      * Check for standard transaction types
      * @return True if all outputs (scriptPubKeys) use only standard transaction forms
      */
-bool IsStandardTx(const CTransaction& tx, std::string& reason);
+    bool ApproveTx(const CTransaction& tx, std::string& reason) const;
     /**
      * Check for standard transaction types
      * @param[in] mapInputs    Map of previous transactions that have outputs we're spending
      * @return True if all inputs (scriptSigs) use only standard transaction forms
      */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+    bool ApproveTxInputs(const CTransaction& tx, const CCoinsViewCache& mapInputs) const;
+};
 
 #endif // BITCOIN_POLICY_H
