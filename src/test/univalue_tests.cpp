@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
 }
 
 static const char *json1 =
-"[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian\"}}]";
+"[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian http://test.com\"}}]";
 
 BOOST_AUTO_TEST_CASE(univalue_readwrite)
 {

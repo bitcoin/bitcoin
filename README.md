@@ -58,6 +58,10 @@ lots of money.
 Developers are strongly encouraged to write unit tests for new code, and to
 submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
 
+There are also regression and integration tests of the RPC interface, written
+in Python, that are run automatically on the build server.
+These tests can be run with: `qa/pull-tester/rpc-tests.sh`
+
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
 used for manual QA testing — a link to them will appear in a comment on the

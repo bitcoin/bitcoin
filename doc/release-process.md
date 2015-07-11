@@ -25,7 +25,7 @@ Release Process
 
 ###update gitian
 
- In order to take advantage of the new caching features in gitian, be sure to update to a recent version (e9741525c or higher is recommended)
+ In order to take advantage of the new caching features in gitian, be sure to update to a recent version (`e9741525c` or later is recommended)
 
 ###perform gitian builds
 
@@ -66,22 +66,21 @@ Release Process
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	./bin/gsign --signer $SIGNER --release ${VERSION}-win --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
-	mv build/out/bitcoin-*.zip ../
-	mv build/out/bitcoin-*-win64-setup.exe inputs/bitcoin-win64-setup.exe
-	mv build/out/bitcoin-*-win32-setup.exe inputs/bitcoin-win32-setup.exe
+	./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+	mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
+	mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
-	mv build/out/bitcoin-*-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
+	mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
 	mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
 	popd
   Build output expected:
 
   1. source tarball (bitcoin-${VERSION}.tar.gz)
-  2. linux 32-bit and 64-bit binaries dist tarballs (bitcoin-${VERSION}-linux[32|64].tar.gz)
-  3. windows 32-bit and 64-bit unsigned installers and dist zips (bitcoin-${VERSION}-win[32|64]-setup.exe, bitcoin-${VERSION}-win[32|64].zip)
-  4. OSX unsigned installer (bitcoin-${VERSION}-osx-unsigned.dmg)
-  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
+  2. linux 32-bit and 64-bit dist tarballs (bitcoin-${VERSION}-linux[32|64].tar.gz)
+  3. windows 32-bit and 64-bit unsigned installers and dist zips (bitcoin-${VERSION}-win[32|64]-setup-unsigned.exe, bitcoin-${VERSION}-win[32|64].zip)
+  4. OSX unsigned installer and dist tarball (bitcoin-${VERSION}-osx-unsigned.dmg, bitcoin-${VERSION}-osx64.tar.gz)
+  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|{win,osx}-unsigned>/(your gitian key)/
 
 ###Next steps:
 
@@ -89,7 +88,7 @@ Commit your signature to gitian.sigs:
 
 	pushd gitian.sigs
 	git add ${VERSION}-linux/${SIGNER}
-	git add ${VERSION}-win/${SIGNER}
+	git add ${VERSION}-win-unsigned/${SIGNER}
 	git add ${VERSION}-osx-unsigned/${SIGNER}
 	git commit -a
 	git push  # Assuming you can push to the gitian.sigs tree
@@ -112,8 +111,8 @@ Commit your signature to gitian.sigs:
 	pushd ./gitian-builder
 	./bin/gbuild -i --commit signature=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	mv build/out/bitcoin-win64-setup-signed.exe ../bitcoin-${VERSION}-win64-setup.exe
-	mv build/out/bitcoin-win32-setup-signed.exe ../bitcoin-${VERSION}-win32-setup.exe
+	mv build/out/bitcoin-*win64-setup.exe ../bitcoin-${VERSION}-win64-setup.exe
+	mv build/out/bitcoin-*win32-setup.exe ../bitcoin-${VERSION}-win32-setup.exe
 	popd
 
 Commit your signature for the signed OSX/Windows binaries:

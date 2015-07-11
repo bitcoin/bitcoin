@@ -28,6 +28,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
+
 /**
  * Settings
  */
@@ -376,6 +378,9 @@ public:
         return (GetDebit(filter) > 0);
     }
 
+    // True if only scriptSigs are different
+    bool IsEquivalentTo(const CWalletTx& tx) const;
+
     bool IsTrusted() const;
 
     bool WriteToDisk(CWalletDB *pwalletdb);
@@ -680,6 +685,13 @@ public:
         }
     }
 
+    void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
+    void ResetRequestCount(const uint256 &hash)
+    {
+        LOCK(cs_wallet);
+        mapRequestCount[hash] = 0;
+    };
+    
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // setKeyPool
@@ -735,7 +747,7 @@ public:
 };
 
 /** A key allocated from the key pool. */
-class CReserveKey
+class CReserveKey : public CReserveScript
 {
 protected:
     CWallet* pwallet;
@@ -756,6 +768,7 @@ public:
     void ReturnKey();
     bool GetReservedKey(CPubKey &pubkey);
     void KeepKey();
+    void KeepScript() { KeepKey(); }
 };
 
 
