@@ -982,6 +982,16 @@ bool CBudgetProposal::IsValid(std::string& strError)
          return false;
     }
 
+    if(nBlockStart < 0) {
+        strError = "Invalid Proposal";
+        return false;
+    }
+
+    if(address == CScript()) {
+        strError = "Invalid Payment Address";
+        return false;
+    }
+
     //if proposal doesn't gain traction within 2 weeks, remove it
     // nTime not being saved correctly
     // if(nTime + (60*60*24*2) < GetAdjustedTime()) {
