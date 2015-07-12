@@ -37,6 +37,7 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     CTransaction txCollateral;
     uint256 hash;
     if(!GetTransaction(nTxCollateralHash, txCollateral, hash, true)){
+        strError = "Can't find collateral tx %s\n", txCollateral.ToString().c_str();
         LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Can't find collateral tx %s\n", txCollateral.ToString().c_str());
         return false;
     }
@@ -50,14 +51,24 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     bool foundOpReturn = false;
     BOOST_FOREACH(const CTxOut o, txCollateral.vout){
         if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
-            LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Invalid Script %s\n", txCollateral.ToString().c_str());
+            strError = "Invalid Script";
+            LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Invalid Script %s\n", txCollateral.ToString());
             return false;
         }
         if(o.scriptPubKey == findScript && o.nValue >= BUDGET_FEE_TX) foundOpReturn = true;
 
     }
     if(!foundOpReturn){
-        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Couldn't find opReturn %s\n", txCollateral.ToString().c_str());
+        strError = "Couldn't find opReturn";
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Couldn't find opReturn %s\n", txCollateral.ToString());
+        return false;
+    }
+
+    CTxIn in(COutPoint(txCollateral.GetHash(), 0));
+    int conf = GetInputAgeIX(txCollateral.GetHash(), in);
+    if(conf < BUDGET_FEE_CONFIRMATIONS){
+        strError = "Collateral requires at least 6 confirmations - " + boost::lexical_cast<std::string>(conf) + " confirmations ";
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Collateral requires at least 6 confirmations - %s - %d confirmations\n", txCollateral.GetHash().ToString(), conf);
         return false;
     }
 
@@ -91,13 +102,11 @@ void CBudgetManager::SubmitFinalBudget()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
-
     int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
     if(nSubmittedFinalBudget >= nBlockStart) return;
     if(nBlockStart - pindexPrev->nHeight > 100) return;
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
-
     std::string strBudgetName = "main";
     std::vector<CTxBudgetPayment> vecTxBudgetPayments;
 
@@ -113,7 +122,6 @@ void CBudgetManager::SubmitFinalBudget()
         LogPrintf("SubmitFinalBudget - Found No Proposals For Period\n");
         return;
     }
-    nSubmittedFinalBudget = nBlockStart;
 
     CPubKey pubKeyMasternode;
     CKey keyMasternode;
@@ -128,10 +136,24 @@ void CBudgetManager::SubmitFinalBudget()
 
     //create fee tx
     CTransaction tx;
-    if(!pwalletMain->GetBudgetSystemCollateralTX(tx, tempBudget.GetHash(), true)){
-        LogPrintf("SubmitFinalBudget - Can't make collateral transaction\n");
+    if(!mapCollateral.count(tempBudget.GetHash())){
+        if(!pwalletMain->GetBudgetSystemCollateralTX(tx, tempBudget.GetHash(), true)){
+            LogPrintf("SubmitFinalBudget - Can't make collateral transaction\n");
+            return;
+        }
+        mapCollateral.insert(make_pair(tempBudget.GetHash(), tx));
+    } else {
+        tx = mapCollateral[tempBudget.GetHash()];
+    }
+
+    CTxIn in(COutPoint(tx.GetHash(), 0));
+    int conf = GetInputAgeIX(tx.GetHash(), in);
+    if(conf < BUDGET_FEE_CONFIRMATIONS+1){
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Collateral requires at least 6 confirmations - %s - %d confirmations\n", tx.GetHash().ToString(), conf);
         return;
     }
+
+    nSubmittedFinalBudget = nBlockStart;
 
     //create the proposal incase we're the first to make it
     CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, tx.GetHash());

@@ -849,30 +849,6 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
     return nSigOps;
 }
 
-/*
-int GetInputAge(CTxIn& vin)
-{
-    // Fetch previous transactions (inputs):
-    CCoinsView viewDummy;
-    CCoinsViewCache view(viewDummy);
-    {
-        LOCK(mempool.cs);
-        CCoinsViewCache &viewChain = *pcoinsTip;
-        CCoinsViewMemPool viewMempool(viewChain, mempool);
-        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
-
-        const uint256& prevHash = vin.prevout.hash;
-        CCoins coins;
-        view.GetCoins(prevHash, coins); // this is certainly allowed to fail
-        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
-    }
-
-    if(!view.HaveCoins(vin.prevout.hash)) return -1;
-
-    const CCoins &coins = view.GetCoins(vin.prevout.hash);
-
-    return (chainActive.Tip()->nHeight+1) - coins.nHeight;
-}*/
 int GetInputAge(CTxIn& vin)
 {
     CCoinsView viewDummy;
@@ -883,13 +859,34 @@ int GetInputAge(CTxIn& vin)
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
         const CCoins* coins = view.AccessCoins(vin.prevout.hash);
-        if (coins)
+
+        if (coins){
+            if(coins->nHeight < 0) return 0;
             return (chainActive.Tip()->nHeight+1) - coins->nHeight;
+        }
         else
             return -1;
     }
 }
 
+int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
+{    
+    int sigs = 0;
+    int nResult = GetInputAge(vin);
+    if(nResult < 0) nResult = 0;
+
+    if (nResult < 6){
+        std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
+        if (i != mapTxLocks.end()){
+            sigs = (*i).second.CountSignatures();
+        }
+        if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+            return nInstantXDepth+nResult;
+        }
+    }
+
+    return -1;
+}
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {

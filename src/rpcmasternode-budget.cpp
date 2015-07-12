@@ -439,79 +439,10 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 "mnbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
                 "\nAvailable commands:\n"
-                "  suggest     - Suggest a budget to be paid\n"
                 "  vote-many   - Vote on a finalized budget\n"
                 "  vote        - Vote on a finalized budget\n"
                 "  show        - Show existing finalized budgets\n"
                 );
-
-    if(strCommand == "suggest")
-    {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        if(!pindexPrev)
-            return "Must be synced to suggest";
-
-        if (params.size() < 3)
-            throw runtime_error("Correct usage of suggest is 'mnfinalbudget suggest BUDGET_NAME PROPNAME [PROP2 PROP3 PROP4]'");
-
-        std::string strBudgetName = params[1].get_str();
-        if(strBudgetName.size() > 20)
-            return "Invalid budget name, limit of 20 characters.";
-
-        int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
-
-        std::vector<CTxBudgetPayment> vecPayments;
-        for(int i = 2; i < (int)params.size(); i++)
-        {
-            std::string strHash = params[i].get_str();
-            uint256 hash(strHash);
-            CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
-            if(!pbudgetProposal){
-                return "Invalid proposal " + strHash + ". Please check the proposal hash";
-            } else {
-                CTxBudgetPayment out;
-                out.nProposalHash = hash;
-                out.payee = pbudgetProposal->GetPayee();
-                out.nAmount = pbudgetProposal->GetAmount();
-                vecPayments.push_back(out);
-            }
-        }
-
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
-        std::string errorMessage;
-
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            return("Masternode signing error, could not set key correctly");
-
-        //create transaction
-        uint256 hash = 0;
-
-        //create the proposal incase we're the first to make it
-        CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecPayments, hash);
-
-        if(!finalizedBudgetBroadcast.IsValid())
-            return "Invalid finalized budget broadcast (are all the hashes correct?)";
-
-        mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
-        finalizedBudgetBroadcast.Relay();
-        budget.AddFinalizedBudget(finalizedBudgetBroadcast);
-
-        CFinalizedBudgetVote vote(activeMasternode.vin, finalizedBudgetBroadcast.GetHash());
-        if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-            return "Failure to sign.";
-        }
-
-        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-        vote.Relay();
-        budget.UpdateFinalizedBudget(vote, NULL);
-
-        return "success";
-
-    }
 
     if(strCommand == "vote-many")
     {
