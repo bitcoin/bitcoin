@@ -4768,7 +4768,7 @@ bool SendMessages(CNode* pto)
         }
 
         if (pto->nNextClearSetKnown < nNowMicros) {
-            pto->setAddrKnown.clear();
+            pto->addrKnown.clear();
             pto->nNextClearSetKnown = nNowMicros + 1000 * (int64_t)GetRand(12 * 60 * 60 * 1000);
         }
 
