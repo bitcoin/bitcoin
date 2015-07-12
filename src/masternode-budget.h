@@ -31,6 +31,7 @@ class CTxBudgetPayment;
 #define VOTE_NO       2
 
 static const int64_t BUDGET_FEE_TX = (0.5*COIN);
+static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 
 extern std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
 extern std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
@@ -78,6 +79,9 @@ class CBudgetManager
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
+
+    //hold txes until they mature enough to use
+    map<uint256, CTransaction> mapCollateral;
 
 public:
     // keep track of the scanning errors I've seen
