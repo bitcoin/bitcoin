@@ -88,27 +88,21 @@ Value mnbudget(const Array& params, bool fHelp)
 
         // Parse Dash address
         CScript scriptPubKey = GetScriptForDestination(address.Get());
-
         CAmount nAmount = AmountFromValue(params[6]);
-
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
-        std::string errorMessage;
-
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            return(" Error upon calling SetKey");
 
         //*************************************************************************
 
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, 0);
-        std::string strCommand = "tx";
+        std::string cmd = "tx";
         bool useIX = true;
-        if (params.size() > 7)
+
+        if (params.size() > 7){
             useIX = (params[7].get_str() == "true" ? true : false);
+        }
 
         if(useIX)
         {
-            strCommand = "ix";
+            cmd = "ix";
         }
 
         CWalletTx wtx;
@@ -117,7 +111,7 @@ Value mnbudget(const Array& params, bool fHelp)
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, strCommand);
+        pwalletMain->CommitTransaction(wtx, reservekey, cmd);
 
         return wtx.GetHash().ToString().c_str();
 
@@ -172,23 +166,14 @@ Value mnbudget(const Array& params, bool fHelp)
 
         // Parse Dash address
         CScript scriptPubKey = GetScriptForDestination(address.Get());
-
         CAmount nAmount = AmountFromValue(params[6]);
-
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
-        std::string errorMessage;
-
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            return(" Error upon calling SetKey");
-
         uint256 hash = ParseHashV(params[7], "parameter 1");
 
         //create the proposal incase we're the first to make it
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(hash ,strError)){
+        if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError)){
             return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
         }
 
@@ -500,7 +485,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         std::string errorMessage;
 
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            return(" Error upon calling SetKey");
+            return("Masternode signing error, could not set key correctly");
 
         //create transaction
         uint256 hash = 0;
@@ -555,7 +540,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             CKey keyMasternode;
 
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
-                printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
+                printf(" Masternode signing error, could not set key correctly %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }

@@ -32,10 +32,8 @@ int GetBudgetPaymentCycleBlocks(){
     return 50;
 }
 
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, std::string& strError)
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError)
 {
-    return true;
-
     CTransaction txCollateral;
     uint256 hash;
     if(!GetTransaction(nTxCollateralHash, txCollateral, hash, true)){
@@ -46,56 +44,23 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, std::string& strError)
     if(txCollateral.vout.size() < 1) return false;
     if(txCollateral.nLockTime != 0) return false;
 
-    int64_t nValueIn = 0;
-    int64_t nValueOut = 0;
-    bool missingTx = false;
+    CScript findScript;
+    findScript << OP_RETURN << ToByteVector(nExpectedHash);
 
+    bool foundOpReturn = false;
     BOOST_FOREACH(const CTxOut o, txCollateral.vout){
-        nValueOut += o.nValue;
-
-        if(!o.scriptPubKey.IsNormalPaymentScript()){
+        if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
             LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Invalid Script %s\n", txCollateral.ToString().c_str());
             return false;
         }
-    }
+        if(o.scriptPubKey == findScript && o.nValue >= BUDGET_FEE_TX) foundOpReturn = true;
 
-    bool foundOpReturn = false;
-    BOOST_FOREACH(const CTxIn i, txCollateral.vin){
-        CTransaction tx2;
-        uint256 hash;
-        if(GetTransaction(i.prevout.hash, tx2, hash, true)){
-            if(tx2.vout.size() > i.prevout.n) {
-                nValueIn += tx2.vout[i.prevout.n].nValue;
-            }
-        } else{
-            missingTx = true;
-        }
     }
-
     if(!foundOpReturn){
-
-    }
-
-    if(missingTx){
-        if(fDebug) LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString().c_str());
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Couldn't find opReturn %s\n", txCollateral.ToString().c_str());
         return false;
     }
 
-    //collateral transactions are required to pay out BUDGET_FEE_TX as a fee to the miners
-    if(nValueIn - nValueOut < BUDGET_FEE_TX) {
-        if(fDebug) LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
-        return false;
-    }
-
-    if(fDebug) LogPrintf("CBudgetProposalBroadcast::FeeTXValid %s\n", txCollateral.ToString().c_str());
-
-    CValidationState state;
-    if(!AcceptableInputs(mempool, state, txCollateral, true, NULL)){
-        if(fDebug) LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - didn't pass IsAcceptable\n");
-        return false;
-    }
-
-    return true;
     return true;
 }
 
@@ -734,7 +699,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         budgetProposalBroadcast.nTime = GetAdjustedTime();
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, strError)){
+        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError)){
             LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
             return;
         }
@@ -794,7 +759,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, strError)){
+        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError)){
             LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.nFeeTXHash.ToString(), strError);
             return;
         }
