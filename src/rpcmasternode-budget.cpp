@@ -50,8 +50,8 @@ Value mnbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        if (params.size() != 8 && params.size() != 9)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget prepare PROPOSAL-NAME URL PAYMENT_COUNT BLOCK_START DASH_ADDRESS DASH_AMOUNT YES|NO|ABSTAIN [USE_IX(TRUE|FALSE)]'");
+        if (params.size() != 7 && params.size() != 8)
+            throw runtime_error("Correct usage of prepare is 'mnbudget prepare proposal-name url payment_count block_start dash_address dash_amount [use_ix(true|false)]'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
@@ -90,12 +90,6 @@ Value mnbudget(const Array& params, bool fHelp)
         CScript scriptPubKey = GetScriptForDestination(address.Get());
 
         CAmount nAmount = AmountFromValue(params[6]);
-        std::string strVote = params[7].get_str().c_str();
-
-        if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
-        int nVote = VOTE_ABSTAIN;
-        if(strVote == "yes") nVote = VOTE_YES;
-        if(strVote == "no") nVote = VOTE_NO;
 
         CPubKey pubKeyMasternode;
         CKey keyMasternode;
@@ -109,8 +103,8 @@ Value mnbudget(const Array& params, bool fHelp)
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, 0);
         std::string strCommand = "tx";
         bool useIX = true;
-        if (params.size() > 8)
-            useIX = (params[8].get_str() == "true" ? true : false);
+        if (params.size() > 7)
+            useIX = (params[7].get_str() == "true" ? true : false);
 
         if(useIX)
         {
@@ -137,8 +131,8 @@ Value mnbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        if (params.size() != 9)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget submit PROPOSAL-NAME URL PAYMENT_COUNT BLOCK_START DASH_ADDRESS DASH_AMOUNT YES|NO|ABSTAIN FEE_TX'");
+        if (params.size() != 8)
+            throw runtime_error("Correct usage of submit is 'mnbudget submit proposal-name url payment_count block_start dash_address dash_amount fee_tx'");
 
         // Check these inputs the same way we check the vote commands:
         // **********************************************************
@@ -180,12 +174,6 @@ Value mnbudget(const Array& params, bool fHelp)
         CScript scriptPubKey = GetScriptForDestination(address.Get());
 
         CAmount nAmount = AmountFromValue(params[6]);
-        std::string strVote = params[7].get_str().c_str();
-
-        if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
-        int nVote = VOTE_ABSTAIN;
-        if(strVote == "yes") nVote = VOTE_YES;
-        if(strVote == "no") nVote = VOTE_NO;
 
         CPubKey pubKeyMasternode;
         CKey keyMasternode;
@@ -194,7 +182,7 @@ Value mnbudget(const Array& params, bool fHelp)
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return(" Error upon calling SetKey");
 
-        uint256 hash = ParseHashV(params[8], "parameter 1");
+        uint256 hash = ParseHashV(params[7], "parameter 1");
 
         //create the proposal incase we're the first to make it
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
@@ -221,7 +209,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 3)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many PROPOSAL-HASH YES|NO|ABSTAIN'");
+            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many proposal-hash yes|no'");
 
         uint256 hash = ParseHashV(params[1], "parameter 1");
         std::string strVote = params[2].get_str().c_str();
@@ -280,7 +268,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 3)
-            throw runtime_error("Correct usage of vote is 'mnbudget vote PROPOSAL-HASH YES|NO|ABSTAIN'");
+            throw runtime_error("Correct usage of vote is 'mnbudget vote proposal-hash yes|no'");
 
         uint256 hash = ParseHashV(params[1], "parameter 1");
         std::string strVote = params[2].get_str().c_str();
