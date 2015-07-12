@@ -1,6 +1,7 @@
 *.sublime-project
 *.sublime-workspace
 todo.txt
+reset-files.bash
 
 *.tar.gz
 
