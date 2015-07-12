@@ -198,6 +198,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
+        budget.AddProposal(budgetProposalBroadcast);
 
         return budgetProposalBroadcast.GetHash().ToString().c_str();
 
@@ -255,6 +256,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
             mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
+            budget.UpdateProposal(vote, NULL);
 
             success++;
         }

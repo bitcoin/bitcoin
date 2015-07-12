@@ -2360,6 +2360,7 @@ void ThreadCheckDarkSendPool()
         if(c % 5 == 0 && RequestedMasternodeAssets <= 5){
             bool fIsInitialDownload = IsInitialBlockDownload();
             if(!fIsInitialDownload) {
+        
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev != NULL) {
                     if(pindexPrev->nTime > GetAdjustedTime() - 60)
@@ -2368,11 +2369,13 @@ void ThreadCheckDarkSendPool()
                         LOCK(cs_vNodes);
                         BOOST_FOREACH(CNode* pnode, vNodes)
                         {
-                            if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {
-
-                                //keep track of who we've asked for the list
-                                if(pnode->HasFulfilledRequest("mnsync")) continue;
-                                pnode->FulfilledRequest("mnsync");
+                            if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {        
+                                bool IsLocal = pnode->addr.IsRFC1918() || pnode->addr.IsLocal();
+                                if(!IsLocal) {
+                                    //keep track of who we've asked for the list
+                                    if(pnode->HasFulfilledRequest("mnsync")) continue;
+                                    pnode->FulfilledRequest("mnsync");
+                                }
 
                                 //request full mn list only if Masternodes.dat was updated quite a long time ago
                                 

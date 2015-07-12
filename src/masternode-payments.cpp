@@ -166,10 +166,13 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
     if (strCommand == "mnget") { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
-        if(pfrom->HasFulfilledRequest("mnget")) {
-            LogPrintf("mnget - peer already asked me for the list\n");
-            Misbehaving(pfrom->GetId(), 20);
-            return;
+        bool IsLocal = pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal();
+        if(!IsLocal){
+            if(pfrom->HasFulfilledRequest("mnget")) {
+                LogPrintf("mnget - peer already asked me for the list\n");
+                Misbehaving(pfrom->GetId(), 20);
+                return;
+            }
         }
 
         pfrom->FulfilledRequest("mnget");
