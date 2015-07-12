@@ -472,14 +472,12 @@ void TransactionView::computeSum()
         return;
     QModelIndexList selection = transactionView->selectionModel()->selectedRows();
 
-    if(!selection.isEmpty()){
-        foreach (QModelIndex index, selection){
-            amount += index.data(TransactionTableModel::AmountRole).toLongLong();
-        }
-        QString strAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, amount, true, BitcoinUnits::separatorAlways));
-        if (amount < 0) strAmount = "<span style='color:red;'>" + strAmount + "</span>";
-        emit trxAmount(strAmount);
+    foreach (QModelIndex index, selection){
+        amount += index.data(TransactionTableModel::AmountRole).toLongLong();
     }
+    QString strAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, amount, true, BitcoinUnits::separatorAlways));
+    if (amount < 0) strAmount = "<span style='color:red;'>" + strAmount + "</span>";
+    emit trxAmount(strAmount);
 }
 
 void TransactionView::openThirdPartyTxUrl(QString url)
