@@ -15,6 +15,7 @@
 #include "coincontrol.h"
 #include "init.h"
 #include "main.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "wallet/wallet.h"
 

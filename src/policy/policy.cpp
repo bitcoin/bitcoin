@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "main.h"
+#include "policy/fees.h"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"

@@ -30,6 +30,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+class CFeeRate;
+
 /**
  * Settings
  */
