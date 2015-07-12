@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
+    <width>954</width>
     <height>500</height>
    </rect>
   </property>
@@ -431,7 +431,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>12</number>
+      <number>13</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>
@@ -461,7 +461,7 @@
      </column>
      <column>
       <property name="text">
-       <string>Darksend Rounds</string>
+       <string>DS Rounds</string>
       </property>
      </column>
      <column>
