@@ -17,8 +17,8 @@
     one party without comprimising the security of InstantX
     (1000/2150.0)**15 = 1.031e-05
 */
-#define INSTANTX_SIGNATURES_REQUIRED           15
-#define INSTANTX_SIGNATURES_TOTAL              20
+#define INSTANTX_SIGNATURES_REQUIRED           5
+#define INSTANTX_SIGNATURES_TOTAL              10
 
 using namespace std;
 using namespace boost;
@@ -27,7 +27,7 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70086;
+static const int MIN_INSTANTX_PROTO_VERSION = 70087;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransaction> mapTxLockReqRejected;
