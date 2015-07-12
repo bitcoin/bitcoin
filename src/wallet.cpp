@@ -2001,10 +2001,10 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useI
     int64_t nFeeRet = 0;
     std::string strFail = "";
     vector< pair<CScript, int64_t> > vecSend;
-    vecSend.push_back(make_pair(scriptChange, CENT));
+    vecSend.push_back(make_pair(scriptChange, BUDGET_FEE_TX));
 
     CCoinControl *coinControl=NULL;
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, useIX, (CAmount)BUDGET_FEE_TX);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, useIX, (CAmount)0);
     if(!success){
         LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail.c_str());
         return false;
