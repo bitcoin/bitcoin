@@ -359,26 +359,31 @@ void OverviewPage::updateDarksendProgress()
     // progress of denominating
     float denomPart = 0;
     // mixing progress of denominated balance
-    float anonPart = 0;
+    float anonNormPart = 0;
+    // completeness of full amount anonimization
+    float anonFullPart = 0;
 
     int64_t denominatedBalance = pwalletMain->GetDenominatedBalance() + nDenominatedUnconfirmedBalance;
     denomPart = (float)denominatedBalance / nMaxToAnonymize;
     denomPart = denomPart > 1 ? 1 : denomPart;
 
-    anonPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / nMaxToAnonymize;
-    // if anonPart is > 1 then we are done, make denomPart equal 1 too
-    anonPart = anonPart > 1 ? (denomPart = 1, 1) : anonPart;
+    anonNormPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / nMaxToAnonymize;
+    anonNormPart = anonNormPart > 1 ? 1 : anonNormPart;
+
+    anonFullPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
+    anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
 
     // apply some weights to them (sum should be <=100) and calculate the whole progress
     denomPart = ceilf((denomPart * 20) * 100) / 100;
-    anonPart = ceilf((anonPart * 80) * 100) / 100;
-    float progress = denomPart + anonPart;
+    anonNormPart = ceilf((anonNormPart * 50) * 100) / 100;
+    anonFullPart = ceilf((anonFullPart * 30) * 100) / 100;
+    float progress = denomPart + anonNormPart + anonFullPart;
     if(progress >= 100) progress = 100;
 
     ui->darksendProgress->setValue(progress);
 
-    QString strToolPip = tr("Progress: %1% (%2% + %3%; denominated inputs have %4 of %n rounds on average)", "", nDarksendRounds)
-            .arg(progress).arg(denomPart).arg(anonPart).arg(pwalletMain->GetAverageAnonymizedRounds());
+    QString strToolPip = tr("Progress: %1% (%2% + %3% + %4%; denominated inputs have %5 of %n rounds on average)", "", nDarksendRounds)
+            .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart).arg(pwalletMain->GetAverageAnonymizedRounds());
     ui->darksendProgress->setToolTip(strToolPip);
 }
 
