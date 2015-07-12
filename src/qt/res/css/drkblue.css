@@ -873,7 +873,7 @@ padding-right:5px;
 QWidget .QFrame#frameDarksend #formLayoutWidget .QProgressBar#darksendProgress { /* Darksend Completion */
 border: 1px solid #818181;
 border-radius: 1px;
-margin-right:35px;
+margin-right:43px;
 text-align: right;
 color:#818181;
 }
