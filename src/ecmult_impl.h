@@ -213,21 +213,28 @@ static void secp256k1_ecmult_context_clear(secp256k1_ecmult_context_t *ctx) {
  *  - each wnaf[i] is either 0, or an odd integer between -(1<<(w-1) - 1) and (1<<(w-1) - 1)
  *  - two non-zero entries in wnaf are separated by at least w-1 zeroes.
  *  - the number of set values in wnaf is returned. This number is at most 256, and at most one more
- *  - than the number of bits in the (absolute value) of the input.
+ *    than the number of bits in the (absolute value) of the input.
  */
-static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_scalar_t *a, int w) {
+static int secp256k1_ecmult_wnaf(int *wnaf, int len, const secp256k1_scalar_t *a, int w) {
     secp256k1_scalar_t s = *a;
-    int set_bits = 0;
+    int last_set_bit = -1;
     int bit = 0;
     int sign = 1;
     int carry = 0;
+
+    VERIFY_CHECK(wnaf != NULL);
+    VERIFY_CHECK(0 <= len && len <= 256);
+    VERIFY_CHECK(a != NULL);
+    VERIFY_CHECK(2 <= w && w <= 31);
+
+    memset(wnaf, 0, len * sizeof(wnaf[0]));
 
     if (secp256k1_scalar_get_bits(&s, 255, 1)) {
         secp256k1_scalar_negate(&s, &s);
         sign = -1;
     }
 
-    while (bit < 256) {
+    while (bit < len) {
         int now;
         int word;
         if (secp256k1_scalar_get_bits(&s, bit, 1) == (unsigned int)carry) {
@@ -236,8 +243,8 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_scalar_t *a, int w) 
         }
 
         now = w;
-        if (now > 256 - bit) {
-            now = 256 - bit;
+        if (now > len - bit) {
+            now = len - bit;
         }
 
         word = secp256k1_scalar_get_bits_var(&s, bit, now) + carry;
@@ -245,14 +252,18 @@ static int secp256k1_ecmult_wnaf(int *wnaf, const secp256k1_scalar_t *a, int w) 
         carry = (word >> (w-1)) & 1;
         word -= carry << w;
 
-        while (set_bits < bit) {
-            wnaf[set_bits++] = 0;
-        }
-        wnaf[set_bits++] = sign * word;
+        wnaf[bit] = sign * word;
+        last_set_bit = bit;
+
         bit += now;
     }
-    VERIFY_CHECK(carry == 0);
-    return set_bits;
+#ifdef VERIFY
+    CHECK(carry == 0);
+    while (bit < 256) {
+        CHECK(secp256k1_scalar_get_bits(&s, bit++, 1) == 0);
+    } 
+#endif
+    return last_set_bit + 1;
 }
 
 static void secp256k1_ecmult(const secp256k1_ecmult_context_t *ctx, secp256k1_gej_t *r, const secp256k1_gej_t *a, const secp256k1_scalar_t *na, const secp256k1_scalar_t *ng) {
@@ -275,7 +286,7 @@ static void secp256k1_ecmult(const secp256k1_ecmult_context_t *ctx, secp256k1_ge
 #else
     int wnaf_na[256];
     int bits_na;
-    int wnaf_ng[257];
+    int wnaf_ng[256];
     int bits_ng;
 #endif
     int i;
@@ -286,8 +297,8 @@ static void secp256k1_ecmult(const secp256k1_ecmult_context_t *ctx, secp256k1_ge
     secp256k1_scalar_split_lambda_var(&na_1, &na_lam, na);
 
     /* build wnaf representation for na_1 and na_lam. */
-    bits_na_1   = secp256k1_ecmult_wnaf(wnaf_na_1,   &na_1,   WINDOW_A);
-    bits_na_lam = secp256k1_ecmult_wnaf(wnaf_na_lam, &na_lam, WINDOW_A);
+    bits_na_1   = secp256k1_ecmult_wnaf(wnaf_na_1,   130, &na_1,   WINDOW_A);
+    bits_na_lam = secp256k1_ecmult_wnaf(wnaf_na_lam, 130, &na_lam, WINDOW_A);
     VERIFY_CHECK(bits_na_1 <= 130);
     VERIFY_CHECK(bits_na_lam <= 130);
     bits = bits_na_1;
@@ -296,7 +307,7 @@ static void secp256k1_ecmult(const secp256k1_ecmult_context_t *ctx, secp256k1_ge
     }
 #else
     /* build wnaf representation for na. */
-    bits_na     = secp256k1_ecmult_wnaf(wnaf_na,     na,      WINDOW_A);
+    bits_na     = secp256k1_ecmult_wnaf(wnaf_na,     256, na,      WINDOW_A);
     bits = bits_na;
 #endif
 
@@ -321,8 +332,8 @@ static void secp256k1_ecmult(const secp256k1_ecmult_context_t *ctx, secp256k1_ge
     secp256k1_scalar_split_128(&ng_1, &ng_128, ng);
 
     /* Build wnaf representation for ng_1 and ng_128 */
-    bits_ng_1   = secp256k1_ecmult_wnaf(wnaf_ng_1,   &ng_1,   WINDOW_G);
-    bits_ng_128 = secp256k1_ecmult_wnaf(wnaf_ng_128, &ng_128, WINDOW_G);
+    bits_ng_1   = secp256k1_ecmult_wnaf(wnaf_ng_1,   129, &ng_1,   WINDOW_G);
+    bits_ng_128 = secp256k1_ecmult_wnaf(wnaf_ng_128, 129, &ng_128, WINDOW_G);
     if (bits_ng_1 > bits) {
         bits = bits_ng_1;
     }
@@ -330,7 +341,7 @@ static void secp256k1_ecmult(const secp256k1_ecmult_context_t *ctx, secp256k1_ge
         bits = bits_ng_128;
     }
 #else
-    bits_ng     = secp256k1_ecmult_wnaf(wnaf_ng,     ng,      WINDOW_G);
+    bits_ng     = secp256k1_ecmult_wnaf(wnaf_ng,     256, ng,      WINDOW_G);
     if (bits_ng > bits) {
         bits = bits_ng;
     }

@@ -1374,7 +1374,7 @@ void test_wnaf(const secp256k1_scalar_t *number, int w) {
     int bits;
     secp256k1_scalar_set_int(&x, 0);
     secp256k1_scalar_set_int(&two, 2);
-    bits = secp256k1_ecmult_wnaf(wnaf, number, w);
+    bits = secp256k1_ecmult_wnaf(wnaf, 256, number, w);
     CHECK(bits <= 256);
     for (i = bits-1; i >= 0; i--) {
         int v = wnaf[i];
