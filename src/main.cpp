@@ -4849,13 +4849,20 @@ bool SendMessages(CNode* pto)
         {
             LOCK(pto->cs_inventory);
 
+            // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
             BOOST_FOREACH(const CInv& inv, pto->vBlockInventoryToSend) {
-                // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
                 if (pto->setInventoryKnown.insert(inv).second) {
                     vInv.push_back(inv);
-                    pto->PushMessage("inv", vInv);
-                    vInv.clear();
+                    if (vInv.size() >= 1000) {
+                        pto->PushMessage("inv", vInv);
+                        vInv.clear();
+                    }
                 }
+            }
+            
+            if (!vInv.empty()) {
+                pto->PushMessage("inv", vInv);
+                vInv.clear();
             }
         }
 
@@ -4908,8 +4915,10 @@ bool SendMessages(CNode* pto)
             pto->vInventoryToSend = vInvWait;
         }
 
-        if (!vInv.empty())
+        if (!vInv.empty()) {
             pto->PushMessage("inv", vInv);
+            vInv.clear();
+        }
 
         if (pto->nNextInvSend < nNowMicros)
             pto->nNextInvSend = nNowMicros + GetRand(10 * 1000000);
