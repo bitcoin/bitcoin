@@ -345,6 +345,7 @@ public:
 
     std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
 
+    bool GetBudgetSystemCollateralTX(CTransaction& tx, uint256 hash, bool useIX);
     bool GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useIX);
 
     bool IsDenominated(const CTxIn &txin) const;

@@ -126,6 +126,7 @@ void CBudgetManager::SubmitFinalBudget()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
+
     int nBlockStart = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
     if(nSubmittedFinalBudget >= nBlockStart) return;
     if(nBlockStart - pindexPrev->nHeight > 100) return;
@@ -155,26 +156,34 @@ void CBudgetManager::SubmitFinalBudget()
 
     if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
         LogPrintf("SubmitFinalBudget - Error upon calling SetKey\n");
+        return;
     }
 
+    CFinalizedBudgetBroadcast tempBudget(strBudgetName, nBlockStart, vecTxBudgetPayments, 0);
+
     //create fee tx
-    uint256 hash = 0;
+    CTransaction tx;
+    if(!pwalletMain->GetBudgetSystemCollateralTX(tx, tempBudget.GetHash(), true)){
+        LogPrintf("SubmitFinalBudget - Can't make collateral transaction\n");
+        return;
+    }
 
     //create the proposal incase we're the first to make it
-    CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, hash);
+    CFinalizedBudgetBroadcast finalizedBudgetBroadcast(strBudgetName, nBlockStart, vecTxBudgetPayments, tx.GetHash());
 
     if(!finalizedBudgetBroadcast.IsValid()){
         LogPrintf("SubmitFinalBudget - Invalid finalized budget broadcast (are all the hashes correct?)\n");
+        return;
     }
 
     mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
     finalizedBudgetBroadcast.Relay();
     budget.AddFinalizedBudget(finalizedBudgetBroadcast);
 
-
     CFinalizedBudgetVote vote(activeMasternode.vin, finalizedBudgetBroadcast.GetHash());
     if(!vote.Sign(keyMasternode, pubKeyMasternode)){
         LogPrintf("SubmitFinalBudget - Failure to sign.\n");
+        return;
     }
 
     mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
@@ -696,19 +705,19 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     LOCK(cs_budget);
 
     if (strCommand == "mnvs") { //Masternode vote sync
+        uint256 nProp;
+        vRecv >> nProp;
+
         bool IsLocal = pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal();
-        if(!IsLocal){
+        if(!IsLocal && nProp == 0){
             if(pfrom->HasFulfilledRequest("mnvs")) {
                 LogPrintf("mnvs - peer already asked me for the list\n");
                 Misbehaving(pfrom->GetId(), 20);
                 return;
             }
+            pfrom->FulfilledRequest("mnvs");
         }
 
-        uint256 nProp;
-        vRecv >> nProp;
-
-        pfrom->FulfilledRequest("mnvs");
         budget.Sync(pfrom, nProp);
         LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString());
     }
@@ -735,8 +744,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        //delete if it exists and insert the new object
-        if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())) mapSeenMasternodeBudgetProposals.erase(budgetProposalBroadcast.GetHash());
         mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
 
         CBudgetProposal budgetProposal(budgetProposalBroadcast);
@@ -797,8 +804,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        //delete if it exists and insert the new object
-        if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())) mapSeenFinalizedBudgets.erase(finalizedBudgetBroadcast.GetHash());
         mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
 
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
@@ -1398,7 +1403,7 @@ bool CFinalizedBudget::IsValid()
     if(vecProposals.size() > 100) return false;
     if(strBudgetName == "") return false;
     if(nBlockStart == 0) return false;
-
+    if(nFeeTXHash == 0) return false;
 
     //can only pay out 10% of the possible coins (min value of coins)
     if(GetTotalPayout() > budget.GetTotalBudget(nBlockStart)) return false;
