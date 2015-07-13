@@ -1512,14 +1512,22 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_pubkey_create(ctx, pubkey, &pubkeylen, privkey, (secp256k1_rand32() & 3) != 0) == 1);
     if (secp256k1_rand32() & 1) {
         unsigned char pubkey2[65] = {0};
-        int pubkey2len = pubkeylen;
+        unsigned char pubkey3RE[33] = {0};
+        int pubkey2len = pubkeylen, pubkey3len = pubkeylen;
+
         /* Decompress into a new array */
         CHECK(secp256k1_ec_pubkey_decompress(ctx, pubkey, pubkey2, &pubkey2len));
+
+        /* Compress into a new array */
+        CHECK(secp256k1_ec_pubkey_compress(ctx, pubkey, pubkey3RE, &pubkey3len));
+
         /* Check that the key was changed iff it was originally compressed */
         if (pubkeylen == 65) {
-            CHECK(memcmp(pubkey, pubkey2, 65) == 0);
+            CHECK(memcmp(pubkey, pubkey2, 65) == 0);         /* Values should be the same */
+            CHECK(memcmp(pubkey3RE, pubkey, 33) != 0);       /* Means it should have been compressed */
         } else {
-            CHECK(memcmp(pubkey, pubkey2, 65) != 0);
+            CHECK(memcmp(pubkey, pubkey2, 65) != 0);         /* Should have been decompressed */
+            CHECK(memcmp(pubkey3RE, pubkey, 33) == 0);       /* Therefore compressed key should equal initial pubkey */
         }
         /* Decompress in place */
         CHECK(secp256k1_ec_pubkey_decompress(ctx, pubkey, pubkey, &pubkeylen));
