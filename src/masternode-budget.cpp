@@ -2,6 +2,9 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "main.h"
+#include "init.h"
+
 #include "masternode-budget.h"
 #include "masternode.h"
 #include "darksend.h"
@@ -137,11 +140,19 @@ void CBudgetManager::SubmitFinalBudget()
     //create fee tx
     CTransaction tx;
     if(!mapCollateral.count(tempBudget.GetHash())){
-        if(!pwalletMain->GetBudgetSystemCollateralTX(tx, tempBudget.GetHash(), true)){
+        CWalletTx wtx;
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), true)){
             LogPrintf("SubmitFinalBudget - Can't make collateral transaction\n");
             return;
         }
-        mapCollateral.insert(make_pair(tempBudget.GetHash(), tx));
+        
+        // make our change address
+        CReserveKey reservekey(pwalletMain);
+        //send the tx to the network
+        pwalletMain->CommitTransaction(wtx, reservekey, "ix");
+
+        mapCollateral.insert(make_pair(tempBudget.GetHash(), (CTransaction)wtx));
+        tx = (CTransaction)wtx;
     } else {
         tx = mapCollateral[tempBudget.GetHash()];
     }
