@@ -40,6 +40,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         #prepare some coins for multiple *rawtransaction commands
         self.nodes[2].generate(1)
+        self.sync_all()
         self.nodes[0].generate(101)
         self.sync_all()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5);
