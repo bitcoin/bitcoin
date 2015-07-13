@@ -25,7 +25,7 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     watchOnlyFilter(WatchOnlyFilter_All),
     minAmount(0),
     limitRows(-1),
-    showInactive(true)
+    showInactive(false)
 {
 }
 
@@ -41,7 +41,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
     int status = index.data(TransactionTableModel::StatusRole).toInt();
 
-    if(!showInactive && status == TransactionStatus::Conflicted)
+    if(!showInactive && status == TransactionStatus::Conflicted && type == TransactionRecord::Other)
         return false;
     if(!(TYPE(type) & typeFilter))
         return false;

@@ -177,6 +177,14 @@ namespace {
     set<int> setDirtyFileInfo;
 } // anon namespace
 
+// Bloom filter to limit respend relays to one
+static const unsigned int MAX_DOUBLESPEND_BLOOM = 100000;
+static CBloomFilter doubleSpendFilter;
+void InitRespendFilter() {
+    seed_insecure_rand();
+    doubleSpendFilter = CBloomFilter(MAX_DOUBLESPEND_BLOOM, 0.01, insecure_rand(), BLOOM_UPDATE_NONE);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Registration of network node signals.
@@ -747,6 +755,40 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
     return nMinFee;
 }
 
+// Exponentially limit the rate of nSize flow to nLimit.  nLimit unit is thousands-per-minute.
+bool RateLimitExceeded(double& dCount, int64_t& nLastTime, int64_t nLimit, unsigned int nSize)
+{
+    static CCriticalSection csLimiter;
+    int64_t nNow = GetTime();
+
+    LOCK(csLimiter);
+
+    dCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+    nLastTime = nNow;
+    if (dCount >= nLimit*10*1000)
+        return true;
+    dCount += nSize;
+    return false;
+}
+
+static bool RespendRelayExceeded(const CTransaction& doubleSpend)
+{
+    // Apply an independent rate limit to double-spend relays
+    static double dRespendCount;
+    static int64_t nLastRespendTime;
+    static int64_t nRespendLimit = GetArg("-limitrespendrelay", 100);
+    unsigned int nSize = ::GetSerializeSize(doubleSpend, SER_NETWORK, PROTOCOL_VERSION);
+
+    if (RateLimitExceeded(dRespendCount, nLastRespendTime, nRespendLimit, nSize))
+    {
+        LogPrint("mempool", "Double-spend relay rejected by rate limiter\n");
+        return true;
+    }
+
+    LogPrint("mempool", "Rate limit dRespendCount: %g => %g\n", dRespendCount, dRespendCount+nSize);
+
+    return false;
+}
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
@@ -783,17 +825,27 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         return false;
 
     // Check for conflicts with in-memory transactions
+    bool fRespend = false;
+    COutPoint relayForOutpoint;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         COutPoint outpoint = tx.vin[i].prevout;
+        // A respend is a tx that conflicts with a member of the pool
         if (pool.mapNextTx.count(outpoint))
         {
-            // Disable replacement feature for now
-            return false;
+            fRespend = true;
+            // Relay only one tx per respent outpoint, but not if tx is equivalent to pool member
+            if (!doubleSpendFilter.contains(outpoint) && !tx.IsEquivalentTo(*pool.mapNextTx[outpoint].ptx))
+            {
+                relayForOutpoint = outpoint;
+                break;
+            }
         }
     }
+    if (fRespend && (relayForOutpoint.IsNull() || RespendRelayExceeded(tx)))
+        return false;
     }
 
     {
@@ -876,23 +928,16 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // be annoying or make others' transactions take longer to confirm.
         if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
         {
-            static CCriticalSection csFreeLimiter;
             static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
+            static int64_t nLastFreeTime;
+            static int64_t nFreeLimit = GetArg("-limitfreerelay", 15);
 
-            LOCK(csFreeLimiter);
-
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
             // At default rate it would take over a month to fill 1GB
-            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
-                return state.DoS(0, error("AcceptToMemoryPool: free transaction rejected by rate limiter"),
+            if (RateLimitExceeded(dFreeCount, nLastFreeTime, nFreeLimit, nSize))
+                return state.DoS(0, error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
                                  REJECT_INSUFFICIENTFEE, "rate limited free transaction");
+
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
         }
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
@@ -921,13 +966,24 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
         }
 
-        // Store transaction in memory
-        pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
+        if (fRespend)
+        {
+            // Clear the filter on average every MAX_DOUBLE_SPEND_BLOOM insertions
+            if (insecure_rand()%MAX_DOUBLESPEND_BLOOM == 0)
+                doubleSpendFilter.clear();
+            doubleSpendFilter.insert(relayForOutpoint);
+            RelayTransaction(tx);
+        }
+        else
+        {
+            // Store transaction in memory
+            pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
+        }
     }
 
-    SyncWithWallets(tx, NULL);
+    SyncWithWallets(tx, NULL, fRespend);
 
-    return true;
+    return !fRespend;
 }
 
 /** Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock */
@@ -2027,7 +2083,7 @@ bool static DisconnectTip(CValidationState &state) {
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, NULL);
+        SyncWithWallets(tx, NULL, false);
     }
     return true;
 }
@@ -2088,11 +2144,11 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     // Tell wallet about transactions that went from mempool
     // to conflicted:
     BOOST_FOREACH(const CTransaction &tx, txConflicted) {
-        SyncWithWallets(tx, NULL);
+        SyncWithWallets(tx, NULL, false);
     }
     // ... and about transactions that got confirmed:
     BOOST_FOREACH(const CTransaction &tx, pblock->vtx) {
-        SyncWithWallets(tx, pblock);
+        SyncWithWallets(tx, pblock, false);
     }
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;

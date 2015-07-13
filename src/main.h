@@ -112,6 +112,9 @@ extern CBlockIndex *pindexBestHeader;
 /** Minimum disk space required - used in CheckDiskSpace() */
 static const uint64_t nMinDiskSpace = 52428800;
 
+/** Initialize respend bloom filter **/
+void InitRespendFilter();
+
 /** Pruning-related variables and constants */
 /** True if any block files have ever been pruned. */
 extern bool fHavePruned;

@@ -21,6 +21,7 @@ testScripts=(
     'mempool_resurrect_test.py'
     'txn_doublespend.py --mineblock'
     'txn_clone.py'
+    'txn_doublespendrelay.py'
     'getchaintips.py'
     'rawtransactions.py'
     'rest.py'
