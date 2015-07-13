@@ -1958,10 +1958,10 @@ int input_msc_balances_string(const std::string& s)
         int64_t acceptReserved = boost::lexical_cast<int64_t>(curBalance[2]);
         int64_t metadexReserved = boost::lexical_cast<int64_t>(curBalance[3]);
 
-        update_tally_map(strAddress, propertyId, balance, BALANCE);
-        update_tally_map(strAddress, propertyId, sellReserved, SELLOFFER_RESERVE);
-        update_tally_map(strAddress, propertyId, acceptReserved, ACCEPT_RESERVE);
-        update_tally_map(strAddress, propertyId, metadexReserved, METADEX_RESERVE);
+        if (balance) update_tally_map(strAddress, propertyId, balance, BALANCE);
+        if (sellReserved) update_tally_map(strAddress, propertyId, sellReserved, SELLOFFER_RESERVE);
+        if (acceptReserved) update_tally_map(strAddress, propertyId, acceptReserved, ACCEPT_RESERVE);
+        if (metadexReserved) update_tally_map(strAddress, propertyId, metadexReserved, METADEX_RESERVE);
     }
 
     return 0;
