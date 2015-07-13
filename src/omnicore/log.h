@@ -23,6 +23,7 @@ extern const std::string INFO_FILENAME;
 
 // Debug flags
 extern bool msc_debug_parser_data;
+extern bool msc_debug_parser_readonly;
 extern bool msc_debug_parser;
 extern bool msc_debug_verbose;
 extern bool msc_debug_verbose2;

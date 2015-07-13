@@ -929,8 +929,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         return -1;
     }
 
-    PrintToLog("____________________________________________________________________________________________________________________________________\n");
-    PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    if (!bRPConly || msc_debug_parser_readonly) {
+        PrintToLog("____________________________________________________________________________________________________________________________________\n");
+        PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    }
 
     // now save output addresses & scripts for later use
     // also determine if there is a multisig in there, if so = Class B
@@ -1201,8 +1203,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         if (strDataAddress.empty()) // an empty Data Address here means it is not Class A valid and should be defaulted to a BTC payment
         {
             // this must be the BTC payment - validate (?)
-            PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
-            PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            if (!bRPConly || msc_debug_parser_readonly) {
+                PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+                PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            }
 
             // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
 
@@ -1216,7 +1220,9 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                         const std::string strAddress = CBitcoinAddress(dest).ToString();
 
                         if (exodus_address == strAddress) continue;
-                        PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
+                        if (!bRPConly || msc_debug_parser_readonly) {
+                            PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
+                        }
 
                         // check everything & pay BTC for the property we are buying here...
                         if (bRPConly) count = 55555; // no real way to validate a payment during simple RPC call
@@ -1380,8 +1386,11 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     if (omniClass == NO_MARKER) {
         return -1; // No Exodus/Omni marker, thus not a valid Omni transaction
     }
-    PrintToLog("____________________________________________________________________________________________________________________________________\n");
-    PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+
+    if (!bRPConly || msc_debug_parser_readonly) {
+        PrintToLog("____________________________________________________________________________________________________________________________________\n");
+        PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    }
 
     // Add previous transaction inputs to the cache
     if (!FillTxInputCache(wtx)) {
@@ -1599,8 +1608,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
         } else {
             // ### BTC PAYMENT FOR DEX HANDLING ###
-            PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
-            PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            if (!bRPConly || msc_debug_parser_readonly) {
+                PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+                PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            }
             // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
             int count = 0;
             for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
@@ -1611,7 +1622,9 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                         continue;
                     }
                     std::string strAddress = address.ToString();
-                    PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(wtx.vout[n].nValue));
+                    if (!bRPConly || msc_debug_parser_readonly) {
+                        PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(wtx.vout[n].nValue));
+                    }
                     // check everything & pay BTC for the property we are buying here...
                     if (bRPConly) count = 55555;  // no real way to validate a payment during simple RPC call
                     else if (0 == DEx_payment(wtx.GetHash(), n, strAddress, strSender, wtx.vout[n].nValue, nBlock)) ++count;
