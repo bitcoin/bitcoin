@@ -598,8 +598,7 @@ void StartRPCThreads()
     LogPrint("rpc", "Allowing RPC connections from: %s\n", strAllowed);
 
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
-    if (((mapArgs["-rpcpassword"] == "") ||
-         (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
+    if (mapArgs["-rpcpassword"] == "")
     {
         unsigned char rand_pwd[32];
         GetRandBytes(rand_pwd, 32);
