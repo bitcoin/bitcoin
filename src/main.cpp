@@ -718,33 +718,23 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree)
+static bool AllowBelowMinRelayFee(CTxMemPool& pool, const uint256& hash, unsigned int nBytes)
 {
-    {
-        LOCK(mempool.cs);
-        uint256 hash = tx.GetHash();
-        double dPriorityDelta = 0;
-        CAmount nFeeDelta = 0;
-        mempool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
-        if (dPriorityDelta > 0 || nFeeDelta > 0)
-            return 0;
-    }
+    bool fAllowFree = true;
+    double dPriorityDelta = 0;
+    CAmount nFeeDelta = 0;
+    pool.ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+    if (dPriorityDelta > 0 || nFeeDelta > 0)
+        return true;
 
-    CAmount nMinFee = ::minRelayTxFee.GetFee(nBytes);
+    // There is a free transaction area in blocks created by most miners,
+    // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+    //   to be considered to fall into this category. We don't want to encourage sending
+    //   multiple transactions instead of one big transaction to avoid fees.
+    if (fAllowFree && nBytes < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
+        return true;
 
-    if (fAllowFree)
-    {
-        // There is a free transaction area in blocks created by most miners,
-        // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
-        //   to be considered to fall into this category. We don't want to encourage sending
-        //   multiple transactions instead of one big transaction to avoid fees.
-        if (nBytes < (DEFAULT_BLOCK_PRIORITY_SIZE - 1000))
-            nMinFee = 0;
-    }
-
-    if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
-    return nMinFee;
+    return false;
 }
 
 
@@ -854,7 +844,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize)) {
 
         // Don't accept it if it can't get into a block
-            if (GetMinRelayFee(tx, nSize, true) != 0)
+            if (!AllowBelowMinRelayFee(pool, hash, nSize))
             return state.DoS(0, error("AcceptToMemoryPool: not enough fees %s, %d < %d",
                                       hash.ToString(), nFees, ::minRelayTxFee.GetFee(nSize)),
                              REJECT_INSUFFICIENTFEE, "insufficient fee");
