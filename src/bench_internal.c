@@ -229,7 +229,7 @@ void bench_ecmult_wnaf(void* arg) {
     bench_inv_t *data = (bench_inv_t*)arg;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_ecmult_wnaf(data->wnaf, &data->scalar_x, WINDOW_A);
+        secp256k1_ecmult_wnaf(data->wnaf, 256, &data->scalar_x, WINDOW_A);
         secp256k1_scalar_add(&data->scalar_x, &data->scalar_x, &data->scalar_y);
     }
 }
