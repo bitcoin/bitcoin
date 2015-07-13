@@ -21,10 +21,10 @@ typedef struct {
 /* Unpacks a constant into a overlapping multi-limbed FE element. */
 #define SECP256K1_FE_CONST_INNER(d7, d6, d5, d4, d3, d2, d1, d0) { \
     (d0) | ((uint64_t)(d1) & 0xFFFFFUL) << 32, \
-    ((d1) >> 20) | ((uint64_t)(d2)) << 12 | ((uint64_t)(d3) & 0xFFUL) << 44, \
-    ((d3) >> 8) | ((uint64_t)(d4) & 0xFFFFFFFUL) << 24, \
-    ((d4) >> 28) | ((uint64_t)(d5)) << 4 | ((uint64_t)(d6) & 0xFFFFUL) << 36, \
-    ((d6) >> 16) | ((uint64_t)(d7)) << 16 \
+    ((uint64_t)(d1) >> 20) | ((uint64_t)(d2)) << 12 | ((uint64_t)(d3) & 0xFFUL) << 44, \
+    ((uint64_t)(d3) >> 8) | ((uint64_t)(d4) & 0xFFFFFFFUL) << 24, \
+    ((uint64_t)(d4) >> 28) | ((uint64_t)(d5)) << 4 | ((uint64_t)(d6) & 0xFFFFUL) << 36, \
+    ((uint64_t)(d6) >> 16) | ((uint64_t)(d7)) << 16 \
 }
 
 #ifdef VERIFY
