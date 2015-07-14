@@ -195,7 +195,7 @@ void PaymentServerTests::paymentServerTests()
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
     QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
-    foreach (const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
+    Q_FOREACH (const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest))
             QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);

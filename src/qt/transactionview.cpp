@@ -341,11 +341,11 @@ void TransactionView::exportClicked()
     writer.addColumn(tr("ID"), 0, TransactionTableModel::TxIDRole);
 
     if(!writer.write()) {
-        emit message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
+        Q_EMIT message(tr("Exporting Failed"), tr("There was an error trying to save the transaction history to %1.").arg(filename),
             CClientUIInterface::MSG_ERROR);
     }
     else {
-        emit message(tr("Exporting Successful"), tr("The transaction history was successfully saved to %1.").arg(filename),
+        Q_EMIT message(tr("Exporting Successful"), tr("The transaction history was successfully saved to %1.").arg(filename),
             CClientUIInterface::MSG_INFORMATION);
     }
 }

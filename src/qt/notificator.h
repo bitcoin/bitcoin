@@ -40,7 +40,7 @@ public:
         Critical        /**< An error occurred */
     };
 
-public slots:
+public Q_SLOTS:
     /** Show notification message.
        @param[in] cls    general message class
        @param[in] title  title shown with message

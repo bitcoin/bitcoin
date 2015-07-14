@@ -65,7 +65,7 @@ private:
 
     QProgressDialog *progressDialog;
 
-public slots:
+public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
@@ -105,7 +105,7 @@ public slots:
     /** Show progress dialog e.g. for rescan */
     void showProgress(const QString &title, int nProgress);
 
-signals:
+Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
     /**  Fired when a message should be reported to the user */
