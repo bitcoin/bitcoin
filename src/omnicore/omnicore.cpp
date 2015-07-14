@@ -17,6 +17,7 @@
 #include "omnicore/persistence.h"
 #include "omnicore/rules.h"
 #include "omnicore/script.h"
+#include "omnicore/seedblocks.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
@@ -1809,15 +1810,17 @@ static int msc_initial_scan(int nFirstBlock)
             nNow = GetTime();
         }
 
-        CBlock block;
-        if (!ReadBlockFromDisk(block, pblockindex)) break;
-
         unsigned int nTxNum = 0;
         mastercore_handler_block_begin(nBlock, pblockindex);
 
-        BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-            if (0 == mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) nFound++;
-            ++nTxNum;
+        if (!SkipBlock(nBlock)) {
+            CBlock block;
+            if (!ReadBlockFromDisk(block, pblockindex)) break;
+
+            BOOST_FOREACH(const CTransaction&tx, block.vtx) {
+                if (0 == mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) nFound++;
+                ++nTxNum;
+            }
         }
 
         nTotal += nTxNum;
