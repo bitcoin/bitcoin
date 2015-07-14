@@ -33,7 +33,7 @@ public:
 protected:
     bool eventFilter(QObject *object, QEvent *event);
 
-private slots:
+private Q_SLOTS:
     /* enable OK button */
     void enableOkButton();
     /* disable OK button */
@@ -48,7 +48,7 @@ private slots:
     void clearStatusLabel();
     void doProxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
 
-signals:
+Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
 
 private:
