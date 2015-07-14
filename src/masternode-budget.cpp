@@ -40,8 +40,8 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     CTransaction txCollateral;
     uint256 nBlockHash;
     if(!GetTransaction(nTxCollateralHash, txCollateral, nBlockHash, true)){
-        strError = "Can't find collateral tx %s\n", txCollateral.ToString().c_str();
-        LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Can't find collateral tx %s\n", txCollateral.ToString().c_str());
+        strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
         return false;
     }
 
@@ -54,16 +54,16 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     bool foundOpReturn = false;
     BOOST_FOREACH(const CTxOut o, txCollateral.vout){
         if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
-            strError = "Invalid Script";
-            LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Invalid Script %s\n", txCollateral.ToString());
+            strError = strprintf("Invalid Script %s", txCollateral.ToString());
+            LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
             return false;
         }
         if(o.scriptPubKey == findScript && o.nValue >= BUDGET_FEE_TX) foundOpReturn = true;
 
     }
     if(!foundOpReturn){
-        strError = "Couldn't find opReturn";
-        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Couldn't find opReturn %s\n", txCollateral.ToString());
+        strError = strprintf("Couldn't find opReturn %s", txCollateral.ToString());
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
         return false;
     }
 
@@ -79,8 +79,8 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     }
 
     if(conf < BUDGET_FEE_CONFIRMATIONS){
-        strError = "Collateral requires at least 6 confirmations - " + boost::lexical_cast<std::string>(conf) + " confirmations ";
-        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Collateral requires at least 6 confirmations - %s - %d confirmations\n", txCollateral.GetHash().ToString(), conf);
+        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", BUDGET_FEE_CONFIRMATIONS, conf);
+        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s - %d confirmations\n", strError, conf);
         return false;
     }
 
