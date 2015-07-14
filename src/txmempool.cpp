@@ -150,6 +150,7 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
             totalTxSize -= mapTx[hash].GetTxSize();
             cachedInnerUsage -= mapTx[hash].DynamicMemoryUsage();
             mapTx.erase(hash);
+            mapDeltas.erase(hash);
             nTransactionsUpdated++;
             minerPolicyEstimator->removeTx(hash);
         }
@@ -217,7 +218,6 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
         std::list<CTransaction> dummy;
         remove(tx, dummy, false);
         removeConflicts(tx, conflicts);
-        ClearPrioritisation(tx.GetHash());
     }
     // After the txs in the new block have been removed from the mempool, update policy estimates
     minerPolicyEstimator->processBlock(nBlockHeight, entries, fCurrentEstimate);
@@ -393,12 +393,6 @@ void CTxMemPool::ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount
     const std::pair<double, CAmount> &deltas = pos->second;
     dPriorityDelta += deltas.first;
     nFeeDelta += deltas.second;
-}
-
-void CTxMemPool::ClearPrioritisation(const uint256 hash)
-{
-    LOCK(cs);
-    mapDeltas.erase(hash);
 }
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
