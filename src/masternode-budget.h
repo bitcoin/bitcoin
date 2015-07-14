@@ -188,6 +188,7 @@ private:
     bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
 
 public:
+    bool fValid;
     std::string strBudgetName;
     int nBlockStart;
     std::vector<CTxBudgetPayment> vecProposals;
@@ -295,6 +296,7 @@ public:
 class CFinalizedBudgetVote
 {
 public:
+    bool fValid; //if the vote is currently valid / counted
     CTxIn vin;
     uint256 nBudgetHash;
     int64_t nTime;
@@ -339,6 +341,7 @@ private:
     int64_t nAlloted;
 
 public:
+    bool fValid;
     std::string strProposalName;
 
     /*
@@ -456,6 +459,7 @@ public:
 class CBudgetVote
 {
 public:
+    bool fValid; //if the vote is currently valid / counted
     CTxIn vin;
     uint256 nProposalHash;
     int nVote;
