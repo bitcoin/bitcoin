@@ -67,13 +67,13 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
         return false;
     }
 
-    int conf = -1;
+    int conf = GetIXConfirmations(nTxCollateralHash);
     if (nBlockHash != 0) {
         BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
         if (mi != mapBlockIndex.end() && (*mi).second) {
             CBlockIndex* pindex = (*mi).second;
             if (chainActive.Contains(pindex)) {
-                conf =  GetIXConfirmations(nTxCollateralHash) + (1 + chainActive.Height() - pindex->nHeight);
+                conf += (1 + chainActive.Height() - pindex->nHeight);
             }
         }
     }
