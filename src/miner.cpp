@@ -19,7 +19,6 @@
 #ifdef ENABLE_WALLET
 #include "wallet.h"
 #endif
-#include "masternodeman.h"
 #include "masternode-payments.h"
 
 #include <boost/thread.hpp>

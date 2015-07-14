@@ -267,6 +267,9 @@ public:
  */
 class CDarksendPool
 {
+private:
+    mutable CCriticalSection cs_darksend;
+
 public:
     enum messages {
         ERR_ALREADY_HAVE,

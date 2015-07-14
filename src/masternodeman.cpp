@@ -12,8 +12,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
-CCriticalSection cs_process_message;
-
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
@@ -84,7 +82,7 @@ bool CMasternodeDB::Write(const CMasternodeMan& mnodemanToSave)
     return true;
 }
 
-CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
+CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad, bool fDryRun)
 {
     int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
@@ -159,8 +157,11 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad)
         return IncorrectFormat;
     }
 
-    mnodemanToLoad.CheckAndRemove(); // clean out expired
     LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("  %s\n", mnodemanToLoad.ToString());
+    LogPrintf("Masternode manager - cleaning....\n");
+    if(!fDryRun) mnodemanToLoad.CheckAndRemove(true);
+    LogPrintf("Masternode manager - result:\n");
     LogPrintf("  %s\n", mnodemanToLoad.ToString());
 
     return Ok;
@@ -174,7 +175,7 @@ void DumpMasternodes()
     CMasternodeMan tempMnodeman;
 
     LogPrintf("Verifying mncache.dat format...\n");
-    CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman);
+    CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman, true);
     // there was an error and it was not an error on file openning => do not proceed
     if (readResult == CMasternodeDB::FileError)
         LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
@@ -223,24 +224,22 @@ void CMasternodeMan::Check()
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
-        
-        // // if it matches our Masternode privkey, then we've been remotely activated
-        // if(mn.pubkey2 == activeMasternode.pubKeyMasternode && mn.protocolVersion == PROTOCOL_VERSION){
-        //     activeMasternode.EnableHotColdMasterNode(mn.vin, mn.addr);
-        // }
     }
 }
 
-void CMasternodeMan::CheckAndRemove()
+void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
 {
     LOCK(cs);
 
     Check();
 
-    //remove inactive
+    //remove inactive and outdated
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
-        if((*it).activeState == CMasternode::MASTERNODE_REMOVE || (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT || (*it).protocolVersion < nMasternodeMinProtocol){
+        if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
+                (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
+                (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
+                (*it).protocolVersion < nMasternodeMinProtocol) {
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
@@ -576,14 +575,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     if (strCommand == "mnb") { //Masternode Broadcast
         CMasternodeBroadcast mnb;
-        bool fRequested; //specifically requested?
-        vRecv >> mnb >> fRequested;
+        vRecv >> mnb;
 
         if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) return; //seen
         mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
 
         int nDoS = 0;
-        if(!mnb.CheckAndUpdate(nDoS, fRequested)){
+        if(!mnb.CheckAndUpdate(nDoS)){
 
             if(nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
@@ -600,15 +598,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(fDebug) LogPrintf("mnb - Got NEW Masternode entry %s\n", mnb.addr.ToString().c_str());
-
         // make sure it's still unspent
         //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-        if(mnb.CheckInputsAndAdd(nDoS, fRequested)) {
+        if(mnb.CheckInputsAndAdd(nDoS)) {
             // use this as a peer
             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
         } else {
-            LogPrintf("mnb - Rejected Masternode entry %s\n", mnb.addr.ToString().c_str());
+            LogPrintf("mnb - Rejected Masternode entry %s\n", mnb.addr.ToString());
 
             if (nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
@@ -619,22 +615,22 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodePing mnp;
         vRecv >> mnp;
 
+        if(fDebug) LogPrintf("mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
+
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing[mnp.GetHash()] = mnp;
 
         int nDoS = 0;
-        if(mnp.CheckAndUpdate(nDoS))
-        {
-            //successful, we're done
+        if(mnp.CheckAndUpdate(nDoS)) return;
+
+        if(nDoS > 0) {
+            // if anything significant failed, mark that node and return
+            Misbehaving(pfrom->GetId(), nDoS);
             return;
-        } else { 
-            //failure
-            if(nDoS > 0)
-                Misbehaving(pfrom->GetId(), nDoS);
         }
 
-        if(fDebug) LogPrintf("mnp - Couldn't find Masternode entry %s\n", mnp.vin.ToString().c_str());
-
+        // we wasn't able to accept mnp but nothing significant happened,
+        // we might just have to ask for a masternode entry once
         std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(mnp.vin.prevout);
         if (i != mWeAskedForMasternodeListEntry.end())
         {
@@ -644,7 +640,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // ask for the mnb info once from the node that sent mnp
 
-        LogPrintf("mnp - Asking source node for missing entry %s\n", mnp.vin.ToString().c_str());
+        LogPrintf("mnp - Asking source node for missing entry, vin: %s\n", mnp.vin.ToString());
         pfrom->PushMessage("dseg", mnp.vin);
         int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
         mWeAskedForMasternodeListEntry[mnp.vin.prevout] = askAgain;
@@ -677,27 +673,24 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
             if(mn.addr.IsRFC1918()) continue; //local network
 
-            bool fRequested = true;
             if(mn.IsEnabled()) {
                 if(fDebug) LogPrintf("dseg - Sending Masternode entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                     ss.reserve(1000);
                     ss << CMasternodeBroadcast(mn);
-                    ss << fRequested;
                     pfrom->PushMessage("mnb", ss);
                 } else if (vin == mn.vin) {
                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                     ss.reserve(1000);
                     ss << CMasternodeBroadcast(mn);
-                    ss << fRequested;
                     pfrom->PushMessage("mnb", ss);
 
                     LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString().c_str());
                     return;
                 }
+                i++;
             }
-            i++;
         }
 
         LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString().c_str());

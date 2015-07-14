@@ -22,8 +22,6 @@
 using namespace std;
 using namespace boost;
 
-CCriticalSection cs_darksend;
-
 // The main object for accessing Darksend
 CDarksendPool darkSendPool;
 // A helper object for signing messages from Masternodes
