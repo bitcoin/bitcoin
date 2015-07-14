@@ -14,6 +14,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/filesystem.hpp>
 
 #include "univalue/univalue.h"
 
@@ -164,5 +165,14 @@ std::string JSONRPCRequest(const std::string& strMethod, const UniValue& params,
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
 UniValue JSONRPCError(int code, const std::string& message);
+
+/** Get name of RPC authentication cookie file */
+boost::filesystem::path GetAuthCookieFile();
+/** Generate a new RPC authentication cookie and write it to disk */
+bool GenerateAuthCookie(std::string *cookie_out);
+/** Read the RPC authentication cookie from disk */
+bool GetAuthCookie(std::string *cookie_out);
+/** Delete RPC authentication cookie from disk */
+void DeleteAuthCookie();
 
 #endif // BITCOIN_RPCPROTOCOL_H
