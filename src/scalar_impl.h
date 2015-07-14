@@ -240,12 +240,16 @@ static void secp256k1_scalar_inverse_var(secp256k1_scalar_t *r, const secp256k1_
 #elif defined(USE_SCALAR_INV_NUM)
     unsigned char b[32];
     secp256k1_num_t n, m;
-    secp256k1_scalar_get_b32(b, x);
+    secp256k1_scalar_t t = *x;
+    secp256k1_scalar_get_b32(b, &t);
     secp256k1_num_set_bin(&n, b, 32);
     secp256k1_scalar_order_get_num(&m);
     secp256k1_num_mod_inverse(&n, &n, &m);
     secp256k1_num_get_bin(b, 32, &n);
     secp256k1_scalar_set_b32(r, b, NULL);
+    /* Verify that the inverse was computed correctly, without GMP code. */
+    secp256k1_scalar_mul(&t, &t, r);
+    CHECK(secp256k1_scalar_is_one(&t));
 #else
 #error "Please select scalar inverse implementation"
 #endif
