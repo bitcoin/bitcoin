@@ -593,7 +593,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         CBudgetProposal* pbudgetProposal = &((*it2).second);
 
         //prop start/end should be inside this period
-        if(pbudgetProposal->nBlockStart <= nBlockStart && pbudgetProposal->nBlockEnd >= nBlockEnd && pbudgetProposal->GetYeas()-pbudgetProposal->GetNays() > mnodeman.CountEnabled()/10)
+        if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart && pbudgetProposal->nBlockEnd >= nBlockEnd && pbudgetProposal->GetYeas()-pbudgetProposal->GetNays() > mnodeman.CountEnabled()/10)
         {
             if(nTotalBudget == nBudgetAllocated){
                 pbudgetProposal->SetAllotted(0);
