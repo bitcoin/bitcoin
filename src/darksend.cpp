@@ -2363,7 +2363,7 @@ void ThreadCheckDarkSendPool()
         
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev != NULL) {
-                    if(pindexPrev->nTime > GetAdjustedTime() - 60)
+                    if(pindexPrev->nTime > GetAdjustedTime() - 600)
                     {
 
                         LOCK(cs_vNodes);

@@ -888,6 +888,22 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
     return -1;
 }
 
+int GetIXConfirmations(uint256 nTXHash)
+{    
+    int sigs = 0;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
+    if (i != mapTxLocks.end()){
+        sigs = (*i).second.CountSignatures();
+    }
+    if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+        return nInstantXDepth;
+    }
+
+    return 0;
+}
+
+
 bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 {
     // Basic checks that don't depend on any context
