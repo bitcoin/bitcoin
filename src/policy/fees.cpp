@@ -6,6 +6,7 @@
 #include "policy/fees.h"
 
 #include "amount.h"
+#include "consensus/validation.h"
 #include "primitives/transaction.h"
 #include "streams.h"
 #include "txmempool.h"
@@ -526,4 +527,42 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein)
     feeStats.Read(filein);
     priStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
+}
+
+bool CBlockPolicyEstimator::AllowFreeTx(const CTxMemPoolEntry& toadd, CValidationState& state, const double& dViewPriority) const
+{
+    const size_t nSize = toadd.GetTxSize();
+
+    // There is a free transaction area in blocks created by most miners,
+    // * If we are relaying we allow transactions up to DEFAULT_BLOCK_PRIORITY_SIZE - 1000
+    //   to be considered to fall into this category. We don't want to encourage sending
+    //   multiple transactions instead of one big transaction to avoid fees.
+    if (nSize >= DEFAULT_BLOCK_PRIORITY_SIZE - 1000)
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee");
+
+    // Require that free transactions have sufficient priority to be mined in the next block.
+    if (GetBoolArg("-relaypriority", true) && !AllowFree(dViewPriority))
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
+
+    // Continuously rate-limit free (really, very-low-fee) transactions
+    // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+    // be annoying or make others' transactions take longer to confirm.
+    static CCriticalSection csFreeLimiter;
+    static double dFreeCount;
+    static int64_t nLastTime;
+    int64_t nNow = GetTime();
+
+    LOCK(csFreeLimiter);
+
+    // Use an exponentially decaying ~10-minute window:
+    dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+    nLastTime = nNow;
+    // -limitfreerelay unit is thousand-bytes-per-minute
+    // At default rate it would take over a month to fill 1GB
+    if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
+    LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+    dFreeCount += nSize;
+
+    return true;
 }
