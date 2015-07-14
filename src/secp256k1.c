@@ -285,6 +285,21 @@ int secp256k1_ec_pubkey_decompress(const secp256k1_context_t* ctx, const unsigne
     return ret;
 }
 
+int secp256k1_ec_pubkey_compress(const secp256k1_context_t* ctx, const unsigned char *pubkeyin, unsigned char *pubkeyout, int *pubkeylen) {
+    secp256k1_ge_t p;
+    int ret = 0;
+    DEBUG_CHECK(pubkeyin != NULL);
+    DEBUG_CHECK(pubkeyout != NULL);
+    DEBUG_CHECK(pubkeylen != NULL);
+    (void)ctx;
+
+    if (secp256k1_eckey_pubkey_parse(&p, pubkeyin, *pubkeylen)) {
+        ret = secp256k1_eckey_pubkey_serialize(&p, pubkeyout, pubkeylen, 1);
+    }
+
+    return ret;
+}
+
 int secp256k1_ec_privkey_tweak_add(const secp256k1_context_t* ctx, unsigned char *seckey, const unsigned char *tweak) {
     secp256k1_scalar_t term;
     secp256k1_scalar_t sec;

@@ -260,10 +260,27 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
   int compressed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
+/** Compress a public key.
+ * In:     ctx:       pointer to a context object (cannot be NULL)
+ *         pubkeyin:  pointer to a 33-byte or 65-byte public key (cannot be NULL)
+ * Out:    pubkeyout: pointer to a 33-byte array to put the compressed public key (cannot be NULL)
+ *                    May alias pubkeyin.
+ *         pubkeylen: pointer to the size of the public key pointed to by pubkeyin (cannot be NULL)
+ *                    It will be updated to reflect the size of the public key in pubkeyout.
+ * Returns: 0: pubkeyin was invalid
+ *          1: pubkeyin was valid, and pubkeyout is its compressed version
+ */
+SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_compress(
+  const secp256k1_context_t* ctx,
+  const unsigned char *pubkeyin,
+  unsigned char *pubkeyout,
+  int *pubkeylen
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
 /** Decompress a public key.
  * In:     ctx:       pointer to a context object (cannot be NULL)
- * In:     pubkeyin:  pointer to a 33-byte or 65-byte public key (cannot be NULL)
- * In/Out: pubkeyout: pointer to a 65-byte array to put the decompressed public key (cannot be NULL)
+ *         pubkeyin:  pointer to a 33-byte or 65-byte public key (cannot be NULL)
+ * Out:    pubkeyout: pointer to a 65-byte array to put the decompressed public key (cannot be NULL)
  *                    May alias pubkeyin.
  *         pubkeylen: pointer to the size of the public key pointed to by pubkeyin (cannot be NULL)
  *                    It will be updated to reflect the size of the public key in pubkeyout.
