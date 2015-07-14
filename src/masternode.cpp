@@ -73,8 +73,7 @@ CMasternode::CMasternode()
     sig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
-    lastMnping = 0;
-    lastTimeSeen = 0;
+    lastPing = CMasternodePing();
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -96,8 +95,7 @@ CMasternode::CMasternode(const CMasternode& other)
     sig = other.sig;
     activeState = other.activeState;
     sigTime = other.sigTime;
-    lastMnping = other.lastMnping;
-    lastTimeSeen = other.lastTimeSeen;
+    lastPing = other.lastPing;
     cacheInputAge = other.cacheInputAge;
     cacheInputAgeBlock = other.cacheInputAgeBlock;
     unitTest = other.unitTest;
@@ -107,29 +105,6 @@ CMasternode::CMasternode(const CMasternode& other)
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
     nVotedTimes = other.nVotedTimes;
-}
-
-CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn)
-{
-    LOCK(cs);
-    vin = newVin;
-    addr = newAddr;
-    pubkey = newPubkey;
-    pubkey2 = newPubkey2;
-    sig = newSig;
-    activeState = MASTERNODE_ENABLED;
-    sigTime = newSigTime;
-    lastMnping = 0;
-    lastTimeSeen = 0;
-    cacheInputAge = 0;
-    cacheInputAgeBlock = 0;
-    unitTest = false;
-    allowFreeTx = true;
-    protocolVersion = protocolVersionIn;
-    nLastDsq = 0;
-    nScanningErrorCount = 0;
-    nLastScanningErrorBlockHeight = 0;
-    nVotedTimes = 0;
 }
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
@@ -142,8 +117,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     sig = mnb.sig;
     activeState = MASTERNODE_ENABLED;
     sigTime = mnb.sigTime;
-    lastMnping = 0;
-    lastTimeSeen = 0;
+    lastPing = mnb.lastPing;
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -165,6 +139,11 @@ void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     sig = mnb.sig;
     protocolVersion = mnb.protocolVersion;
     addr = mnb.addr;
+    int nDoS = 0;
+    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS))) {
+        lastPing = mnb.lastPing;
+        mapSeenMasternodePing[lastPing.GetHash()] = lastPing;
+    }
 }
 
 //
@@ -201,12 +180,12 @@ void CMasternode::Check()
     if(activeState == MASTERNODE_VIN_SPENT) return;
 
 
-    if(!UpdatedWithin(MASTERNODE_REMOVAL_SECONDS)){
+    if(!IsPingedWithin(MASTERNODE_REMOVAL_SECONDS)){
         activeState = MASTERNODE_REMOVE;
         return;
     }
 
-    if(!UpdatedWithin(MASTERNODE_EXPIRATION_SECONDS)){
+    if(!IsPingedWithin(MASTERNODE_EXPIRATION_SECONDS)){
         activeState = MASTERNODE_EXPIRED;
         return;
     }
@@ -260,8 +239,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     sig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
-    lastMnping = 0;
-    lastTimeSeen = 0;
+    lastPing = CMasternodePing();
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -280,8 +258,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     sig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
-    lastMnping = 0;
-    lastTimeSeen = 0;
+    lastPing = CMasternodePing();
     cacheInputAge = 0;
     cacheInputAgeBlock = 0;
     unitTest = false;
@@ -292,32 +269,32 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     nLastScanningErrorBlockHeight = 0;
 }
 
-CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& other)
+CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
 {
-    vin = other.vin;
-    addr = other.addr;
-    pubkey = other.pubkey;
-    pubkey2 = other.pubkey2;
-    sig = other.sig;
-    activeState = other.activeState;
-    sigTime = other.sigTime;
-    lastMnping = other.lastMnping;
-    lastTimeSeen = other.lastTimeSeen;
-    cacheInputAge = other.cacheInputAge;
-    cacheInputAgeBlock = other.cacheInputAgeBlock;
-    unitTest = other.unitTest;
-    allowFreeTx = other.allowFreeTx;
-    protocolVersion = other.protocolVersion;
-    nLastDsq = other.nLastDsq;
-    nScanningErrorCount = other.nScanningErrorCount;
-    nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
+    vin = mn.vin;
+    addr = mn.addr;
+    pubkey = mn.pubkey;
+    pubkey2 = mn.pubkey2;
+    sig = mn.sig;
+    activeState = mn.activeState;
+    sigTime = mn.sigTime;
+    lastPing = mn.lastPing;
+    cacheInputAge = mn.cacheInputAge;
+    cacheInputAgeBlock = mn.cacheInputAgeBlock;
+    unitTest = mn.unitTest;
+    allowFreeTx = mn.allowFreeTx;
+    protocolVersion = mn.protocolVersion;
+    nLastDsq = mn.nLastDsq;
+    nScanningErrorCount = mn.nScanningErrorCount;
+    nLastScanningErrorBlockHeight = mn.nLastScanningErrorBlockHeight;
 }
 
-bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
+bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
 {
     // make sure signature isn't in the future (past is OK)
     if (sigTime > GetAdjustedTime() + 60 * 60) {
-        LogPrintf("mnb - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
+        LogPrintf("mnb - Signature rejected, too far into the future %s\n", vin.ToString());
+        nDos = 1;
         return false;
     }
 
@@ -367,35 +344,39 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos, bool fRequested)
     //search existing Masternode list, this is where we update existing Masternodes with new mnb broadcasts
     CMasternode* pmn = mnodeman.Find(vin);
 
-    // if we are masternode but with undefined vin and this mnb is ours (matches our Masternode privkey) then just skip this part
-    if(pmn != NULL && !(fMasterNode && activeMasternode.vin == CTxIn() && pubkey2 == activeMasternode.pubKeyMasternode))
-    {
-        // if Requested, we don't want to update this info
-        if(fRequested) { Relay(false); return true;}
+    // no such masternode or it's not enabled already, nothing to update
+    if(pmn == NULL || (pmn != NULL && !pmn->IsEnabled())) return true;
 
-        // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
-        //   after that they just need to match
-        if(pmn->pubkey == pubkey && !pmn->UpdatedWithin(MASTERNODE_MIN_MNB_SECONDS)){
-            pmn->UpdateLastSeen();
-
-            if(pmn->sigTime < sigTime){ //take the newest entry
-                LogPrintf("mnb - Got updated entry for %s\n", addr.ToString().c_str());
-
-                pmn->UpdateFromNewBroadcast((*this));
-
-                pmn->Check();
-                if(pmn->IsEnabled()) {
-                    Relay(fRequested);
-                }
-            }
-        }
+    // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
+    //   after that they just need to match
+    if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS)) {
+        //take the newest entry
+        LogPrintf("mnb - Got updated entry for %s\n", addr.ToString().c_str());
+        pmn->UpdateFromNewBroadcast((*this));
+        pmn->Check();
+        if(pmn->IsEnabled()) Relay();
     }
 
     return true;
 }
 
-bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
+bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 {
+    // we are a masternode with the same vin (i.e. already activated) and this mnb is ours (matches our Masternode privkey)
+    // so nothing to do here for us
+    if(fMasterNode && vin.prevout == activeMasternode.vin.prevout && pubkey2 == activeMasternode.pubKeyMasternode)
+        return true;
+
+    // search existing Masternode list
+    CMasternode* pmn = mnodeman.Find(vin);
+
+    if(pmn != NULL) {
+        // nothing to do here if we already know about this masternode and it's enabled
+        if(pmn->IsEnabled()) return true;
+        // if it's not enabled, remove old MN first and continue
+        else mnodeman.Remove(pmn->vin);
+    }
+
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
     CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
@@ -427,9 +408,8 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
             }
         }
 
-        // add our Masternode
-        CMasternode mn((*this));
-        mn.UpdateLastSeen(lastTimeSeen);
+        LogPrintf("mnb - Got NEW Masternode entry %s %s\n", addr.ToString(), vin.ToString());
+        CMasternode mn(*this);
         mnodeman.Add(mn);
 
         // if it matches our Masternode privkey, then we've been remotely activated
@@ -440,7 +420,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
         bool isLocal = addr.IsRFC1918() || addr.IsLocal();
         if(Params().NetworkID() == CBaseChainParams::REGTEST) isLocal = false;
 
-        if(!fRequested && !isLocal) Relay(fRequested);
+        if(!isLocal) Relay();
 
         return true;
     } else {
@@ -451,7 +431,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS, bool fRequested)
     return false;
 }
 
-void CMasternodeBroadcast::Relay(bool fRequested)
+void CMasternodeBroadcast::Relay()
 {
     CInv inv(MSG_MASTERNODE_ANNOUNCE, GetHash());
     RelayInv(inv);
@@ -484,13 +464,17 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 CMasternodePing::CMasternodePing()
 {
     vin = CTxIn();
-    blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
+    blockHash = uint256(0);
+    sigTime = 0;
+    vchSig = std::vector<unsigned char>();
 }
 
 CMasternodePing::CMasternodePing(CTxIn& newVin)
 {
     vin = newVin;
     blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
+    sigTime = GetAdjustedTime();
+    vchSig = std::vector<unsigned char>();
 }
 
 
@@ -518,62 +502,70 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 bool CMasternodePing::CheckAndUpdate(int& nDos)
 {
     if (sigTime > GetAdjustedTime() + 60 * 60) {
-        LogPrintf("mnping - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
+        LogPrintf("CMasternodePing::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
+        nDos = 1;
         return false;
     }
 
     if (sigTime <= GetAdjustedTime() - 60 * 60) {
-        LogPrintf("mnping - Signature rejected, too far into the past %s - %d %d \n", vin.ToString().c_str(), sigTime, GetAdjustedTime());
+        LogPrintf("CMasternodePing::CheckAndUpdate - Signature rejected, too far into the past %s - %d %d \n", vin.ToString().c_str(), sigTime, GetAdjustedTime());
+        nDos = 1;
         return false;
     }
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn != NULL && pmn->protocolVersion >= nMasternodeMinProtocol)
+    if(pmn != NULL && pmn->IsEnabled() && pmn->protocolVersion >= nMasternodeMinProtocol)
     {
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
-        // take this only if it's newer and last ping was more then MASTERNODE_MIN_MNP_SECONDS ago
-        if(sigTime - pmn->lastMnping > MASTERNODE_MIN_MNP_SECONDS-60)
+        // update only if there is no known ping for this masternode or
+        // last ping was more then MASTERNODE_MIN_MNP_SECONDS-60 ago comparing to this one
+        if(!pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 60, sigTime))
         {
             std::string strMessage = vin.ToString() + blockHash.ToString() + boost::lexical_cast<std::string>(sigTime);
 
             std::string errorMessage = "";
             if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage))
             {
-                LogPrintf("mnping - Got bad Masternode address signature %s\n", vin.ToString());
+                LogPrintf("CMasternodePing::CheckAndUpdate - Got bad Masternode address signature %s\n", vin.ToString());
                 nDos = 33;
                 return false;
             }
-
-            pmn->lastMnping = sigTime;
 
             BlockMap::iterator mi = mapBlockIndex.find(blockHash);
             if (mi != mapBlockIndex.end() && (*mi).second)
             {
                 if((*mi).second->nHeight < chainActive.Height() - 24)
                 {
-                    LogPrintf("mnping - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
+                    LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
                     // Do nothing here (no Masternode update, no mnping relay)
                     // Let this node to be visible but fail to accept mnping
 
                     return false;
                 }
             } else {
-                if (fDebug) LogPrintf("mnping - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
+                if (fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
                 // maybe we stuck so we shouldn't ban this node, just fail to accept it
                 // TODO: or should we also request this block?
 
                 return false;
             }
 
-            pmn->UpdateLastSeen();
+            pmn->lastPing = *this;
+
             pmn->Check();
             if(!pmn->IsEnabled()) return false;
+
+            if(fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode ping accepted, vin: %s\n", vin.ToString());
 
             Relay();
             return true;
         }
+        if(fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode ping arrived too early, vin: %s\n", vin.ToString());
+        nDos = 1;
+        return false;
     }
+    if(fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Couldn't find compatible Masternode entry, vin: %s\n", vin.ToString());
 
     return false;
 }
