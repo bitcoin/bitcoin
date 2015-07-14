@@ -49,7 +49,7 @@ public:
 
     CMasternodeDB();
     bool Write(const CMasternodeMan &mnodemanToSave);
-    ReadResult Read(CMasternodeMan& mnodemanToLoad);
+    ReadResult Read(CMasternodeMan& mnodemanToLoad, bool fDryRun = false);
 };
 
 class CMasternodeMan
@@ -57,6 +57,9 @@ class CMasternodeMan
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
+
+    // critical section to protect the inner data structures specifically on messaging
+    mutable CCriticalSection cs_process_message;
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
@@ -93,7 +96,7 @@ public:
     void Check();
 
     /// Check all Masternodes and remove inactive
-    void CheckAndRemove();
+    void CheckAndRemove(bool forceExpiredRemoval = false);
 
     /// Clear Masternode vector
     void Clear();

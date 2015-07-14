@@ -4180,11 +4180,9 @@ void static ProcessGetData(CNode* pfrom)
 
                 if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
                     if(mapSeenMasternodeBroadcast.count(inv.hash)){
-                        bool fRequested = false; // Requested full masternode list
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << mapSeenMasternodeBroadcast[inv.hash];
-                        ss << fRequested;
                         pfrom->PushMessage("mnb", ss);
                         pushed = true;
                     }
@@ -4192,11 +4190,9 @@ void static ProcessGetData(CNode* pfrom)
 
                 if (!pushed && inv.type == MSG_MASTERNODE_PING) {
                     if(mapSeenMasternodePing.count(inv.hash)){
-                        bool fRequested = false; // Requested full masternode list
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << mapSeenMasternodePing[inv.hash];
-                        ss << fRequested;
                         pfrom->PushMessage("mnp", ss);
                         pushed = true;
                     }

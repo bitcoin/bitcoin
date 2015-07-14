@@ -199,21 +199,13 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
-        if(activeMasternode.status != MASTERNODE_REMOTELY_ENABLED && activeMasternode.status != MASTERNODE_IS_CAPABLE){
-            activeMasternode.status = MASTERNODE_NOT_PROCESSED; // TODO: consider better way
-            std::string errorMessage;
+        if(activeMasternode.status != MASTERNODE_STARTED){
+            activeMasternode.status = MASTERNODE_INITIAL; // TODO: consider better way
             activeMasternode.ManageStatus();
             pwalletMain->Lock();
         }
 
-        if(activeMasternode.status == MASTERNODE_REMOTELY_ENABLED) return "masternode started remotely";
-        if(activeMasternode.status == MASTERNODE_INPUT_TOO_NEW) return "masternode input must have at least 15 confirmations";
-        if(activeMasternode.status == MASTERNODE_STOPPED) return "masternode is stopped";
-        if(activeMasternode.status == MASTERNODE_IS_CAPABLE) return "successfully started masternode";
-        if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode: " + activeMasternode.notCapableReason;
-        if(activeMasternode.status == MASTERNODE_SYNC_IN_PROCESS) return "sync in process. Must wait until client is synced to start.";
-
-        return "unknown";
+        return activeMasternode.GetStatus();
     }
 
     if (strCommand == "start-alias")
@@ -330,12 +322,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeMasternode.status == MASTERNODE_REMOTELY_ENABLED) return "masternode started remotely";
-        if(activeMasternode.status == MASTERNODE_INPUT_TOO_NEW) return "masternode input must have at least 15 confirmations";
-        if(activeMasternode.status == MASTERNODE_IS_CAPABLE) return "successfully started masternode";
-        if(activeMasternode.status == MASTERNODE_STOPPED) return "masternode is stopped";
-        if(activeMasternode.status == MASTERNODE_NOT_CAPABLE) return "not capable masternode: " + activeMasternode.notCapableReason;
-        if(activeMasternode.status == MASTERNODE_SYNC_IN_PROCESS) return "sync in process. Must wait until client is synced to start.";
+        if(activeMasternode.status != MASTERNODE_INITIAL) return activeMasternode.GetStatus();
 
         CTxIn vin = CTxIn();
         CPubKey pubkey = CScript();
@@ -369,8 +356,10 @@ Value masternode(const Array& params, bool fHelp)
             obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
             obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString().c_str()));
             obj.push_back(Pair("pubkey",        address2.ToString().c_str()));
-            obj.push_back(Pair("lastseen",      (int64_t)winner->lastTimeSeen));
-            obj.push_back(Pair("activeseconds", (int64_t)(winner->lastTimeSeen - winner->sigTime)));
+            obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
+                                                        (int64_t)winner->lastPing.sigTime));
+            obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
+                                                        (int64_t)(winner->lastPing.sigTime - winner->sigTime)));
             return obj;
         }
 
@@ -498,6 +487,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "                                    additional matches in some modes are also available\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
+                "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
                 "  full           - Print info in format 'status protocol pubkey IP lastseen activeseconds lastpaid'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
@@ -526,7 +516,7 @@ Value masternodelist(const Array& params, bool fHelp)
             std::string strVin = mn.vin.prevout.ToStringShort();
             if (strMode == "activeseconds") {
                 if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,       (int64_t)(mn.lastTimeSeen - mn.sigTime)));
+                obj.push_back(Pair(strVin,       (int64_t)(mn.lastPing.sigTime - mn.sigTime)));
             } else if (strMode == "full") {
                 CScript pubkey;
                 pubkey = GetScriptForDestination(mn.pubkey.GetID());
@@ -543,8 +533,8 @@ Value masternodelist(const Array& params, bool fHelp)
                                mn.protocolVersion << " " <<
                                address2.ToString() << " " <<
                                mn.addr.ToString() << " " <<
-                               mn.lastTimeSeen << " " << setw(8) <<
-                               (mn.lastTimeSeen - mn.sigTime) << " " <<
+                               mn.lastPing.sigTime << " " << setw(8) <<
+                               (mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.GetLastPaid();
                 std::string output = stringStream.str();
                 stringStream << " " << strVin;
@@ -553,7 +543,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 obj.push_back(Pair(addrStream.str(), output));
             } else if (strMode == "lastseen") {
                 if(strFilter !="" && strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,       (int64_t)mn.lastTimeSeen));
+                obj.push_back(Pair(strVin,       (int64_t)mn.lastPing.sigTime));
             } else if (strMode == "protocol") {
                 if(strFilter !="" && strFilter != boost::lexical_cast<std::string>(mn.protocolVersion) &&
                     strVin.find(strFilter) == string::npos) continue;
