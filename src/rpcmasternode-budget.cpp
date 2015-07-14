@@ -318,6 +318,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("fValid",  (int64_t)pbudgetProposal->fValid));
 
             resultObj.push_back(Pair(pbudgetProposal->GetName().c_str(), bObj));
         }
