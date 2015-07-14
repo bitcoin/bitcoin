@@ -2333,27 +2333,6 @@ void ThreadCheckDarkSendPool()
         MilliSleep(1000);
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
 
-        darkSendPool.CheckTimeout();
-        darkSendPool.CheckForCompleteQueue();
-
-        if(c % 60 == 0)
-        {
-            LOCK(cs_main);
-            /*
-                cs_main is required for doing CMasternode.Check because something
-                is modifying the coins view without a mempool lock. It causes
-                segfaults from this code without the cs_main lock.
-            */
-            mnodeman.CheckAndRemove();
-            mnodeman.ProcessMasternodeConnections();
-            masternodePayments.CleanPaymentList();
-            CleanTransactionLocksList();
-        }
-
-        if(c % MASTERNODE_PING_SECONDS == 0) activeMasternode.ManageStatus();
-
-        if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
-
         //try to sync the Masternode list and payment list every 5 seconds from at least 3 nodes
         if(c % 5 == 0 && RequestedMasternodeAssets <= 5){
             bool fIsInitialDownload = IsInitialBlockDownload();
@@ -2401,18 +2380,43 @@ void ThreadCheckDarkSendPool()
                     }
                 }
             }
-        } else if(c % 60 == 0 && RequestedMasternodeAssets == 3){
-            RequestedMasternodeAssets = MASTERNODE_LIST_SYNCED; //done syncing
+        } else if((c % 60 == 0 && RequestedMasternodeAssets >= 5 && RequestedMasternodeAssets < MASTERNODE_LIST_SYNCED) || //done syncing
+                  (c % (5 * 60) == 0 && RequestedMasternodeAssets < 5)) { //couldn't find 5 peers in 5 minutes
+            RequestedMasternodeAssets = MASTERNODE_LIST_SYNCED;
+            c = 1; // reset counter
         }
 
-        if(c % 60 == 0){
-            //if we've used 1/5 of the Masternode list, then clear the list.
-            if((int)vecMasternodesUsed.size() > (int)mnodeman.size() / 5)
-                vecMasternodesUsed.clear();
-        }
+        if(RequestedMasternodeAssets == MASTERNODE_LIST_SYNCED) {
+            if(c % MASTERNODE_PING_SECONDS == 1) activeMasternode.ManageStatus(); // activate right after sync
 
-        if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 6 == 0){
-            darkSendPool.DoAutomaticDenominating();
+            if(c % 60 == 0)
+            {
+                LOCK(cs_main);
+                /*
+                    cs_main is required for doing CMasternode.Check because something
+                    is modifying the coins view without a mempool lock. It causes
+                    segfaults from this code without the cs_main lock.
+                */
+                mnodeman.CheckAndRemove();
+                mnodeman.ProcessMasternodeConnections();
+                masternodePayments.CleanPaymentList();
+                CleanTransactionLocksList();
+            }
+
+            if(c % 60 == 0){
+                //if we've used 1/5 of the Masternode list, then clear the list.
+                if((int)vecMasternodesUsed.size() > (int)mnodeman.size() / 5)
+                    vecMasternodesUsed.clear();
+            }
+
+            if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
+
+            darkSendPool.CheckTimeout();
+            darkSendPool.CheckForCompleteQueue();
+
+            if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 6 == 0){
+                darkSendPool.DoAutomaticDenominating();
+            }
         }
     }
 }
