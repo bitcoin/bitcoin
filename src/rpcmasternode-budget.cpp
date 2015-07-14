@@ -327,12 +327,18 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "show")
     {
+        std::string strShow = "valid";
+        if (params.size() == 2)
+            std::string strProposalName = params[1].get_str();
+
         Object resultObj;
         int64_t nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
+            if(strShow == "valid" && !pbudgetProposal->fValid) continue;
+
             nTotalAllotted += pbudgetProposal->GetAllotted();
 
             CTxDestination address1;
@@ -342,6 +348,7 @@ Value mnbudget(const Array& params, bool fHelp)
             Object bObj;
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString().c_str()));
             bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
             bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
@@ -355,7 +362,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
-
+            bObj.push_back(Pair("fValid",  (int64_t)pbudgetProposal->fValid));
 
             resultObj.push_back(Pair(pbudgetProposal->GetName().c_str(), bObj));
         }
@@ -381,6 +388,7 @@ Value mnbudget(const Array& params, bool fHelp)
         Object obj;
         obj.push_back(Pair("Name",  pbudgetProposal->GetName().c_str()));
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
+        obj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString().c_str()));
         obj.push_back(Pair("URL",  pbudgetProposal->GetURL().c_str()));
         obj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
         obj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
@@ -395,6 +403,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         std::string strError = "";
         obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+        obj.push_back(Pair("fValid",  (int64_t)pbudgetProposal->fValid));
 
         return obj;
     }
