@@ -15,6 +15,8 @@
 
 #if defined(HAVE_ENDIAN_H)
 #include <endian.h>
+#elif defined(HAVE_SYS_ENDIAN_H)
+#include <sys/endian.h>
 #endif
 
 #if defined(WORDS_BIGENDIAN)
