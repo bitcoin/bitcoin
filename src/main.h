@@ -234,8 +234,8 @@ bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransact
                         bool* pfMissingInputs, bool fRejectInsaneFee=false, bool ignoreFees=false);
 
 int GetInputAge(CTxIn& vin);
-// get age + lock confirmations
 int GetInputAgeIX(uint256 nTXHash, CTxIn& vin);
+int GetIXConfirmations(uint256 nTXHash);
 
 struct CNodeStateStats {
     int nMisbehavior;

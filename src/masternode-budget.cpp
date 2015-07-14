@@ -38,8 +38,8 @@ int GetBudgetPaymentCycleBlocks(){
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError)
 {
     CTransaction txCollateral;
-    uint256 hash;
-    if(!GetTransaction(nTxCollateralHash, txCollateral, hash, true)){
+    uint256 nBlockHash;
+    if(!GetTransaction(nTxCollateralHash, txCollateral, nBlockHash, true)){
         strError = "Can't find collateral tx %s\n", txCollateral.ToString().c_str();
         LogPrintf ("CBudgetProposalBroadcast::FeeTXValid - Can't find collateral tx %s\n", txCollateral.ToString().c_str());
         return false;
@@ -67,8 +67,17 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
         return false;
     }
 
-    CTxIn in(COutPoint(txCollateral.GetHash(), 0));
-    int conf = GetInputAgeIX(txCollateral.GetHash(), in);
+    int conf = -1;
+    if (nBlockHash != 0) {
+        BlockMap::iterator mi = mapBlockIndex.find(nBlockHash);
+        if (mi != mapBlockIndex.end() && (*mi).second) {
+            CBlockIndex* pindex = (*mi).second;
+            if (chainActive.Contains(pindex)) {
+                conf =  GetIXConfirmations(nTxCollateralHash) + (1 + chainActive.Height() - pindex->nHeight);
+            }
+        }
+    }
+
     if(conf < BUDGET_FEE_CONFIRMATIONS){
         strError = "Collateral requires at least 6 confirmations - " + boost::lexical_cast<std::string>(conf) + " confirmations ";
         LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - Collateral requires at least 6 confirmations - %s - %d confirmations\n", txCollateral.GetHash().ToString(), conf);
