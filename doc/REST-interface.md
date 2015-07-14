@@ -9,7 +9,7 @@ Supported API
 ####Transactions
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
-Given a transaction hash: returns a transaction, in binary, hex-encoded binary or JSON formats.
+Given a transaction hash: returns a transaction, in binary, hex-encoded binary, or JSON formats.
 
 For full TX query capability, one must enable the transaction index via "txindex=1" command line / configuration option.
 
