@@ -13,15 +13,11 @@
 #include "main.h"
 #include "timedata.h"
 
-#define MASTERNODE_NOT_PROCESSED               0 // initial state
-#define MASTERNODE_IS_CAPABLE                  1
-#define MASTERNODE_NOT_CAPABLE                 2
-#define MASTERNODE_STOPPED                     3
-#define MASTERNODE_INPUT_TOO_NEW               4
-#define MASTERNODE_PORT_NOT_OPEN               6
-#define MASTERNODE_PORT_OPEN                   7
-#define MASTERNODE_SYNC_IN_PROCESS             8
-#define MASTERNODE_REMOTELY_ENABLED            9
+#define MASTERNODE_INITIAL                     0 // initial state
+#define MASTERNODE_SYNC_IN_PROCESS             1
+#define MASTERNODE_INPUT_TOO_NEW               2
+#define MASTERNODE_NOT_CAPABLE                 3
+#define MASTERNODE_STARTED                     4
 
 #define MASTERNODE_MIN_CONFIRMATIONS           15
 #define MASTERNODE_MIN_MNP_SECONDS             (30*60)
@@ -38,6 +34,75 @@ class CMasternodePing;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
 bool GetBlockHash(uint256& hash, int nBlockHeight);
+
+
+//
+// The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
+//
+
+class CMasternodePing
+{
+public:
+
+    CTxIn vin;
+    uint256 blockHash;
+    int64_t sigTime; //mnb message times
+    std::vector<unsigned char> vchSig;
+    //removed stop
+
+    CMasternodePing();
+    CMasternodePing(CTxIn& newVin);
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin);
+        READWRITE(blockHash);
+        READWRITE(sigTime);
+        READWRITE(vchSig);
+    }
+
+    bool CheckAndUpdate(int& nDos);
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    void Relay();
+
+    uint256 GetHash(){
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << sigTime;
+        return ss.GetHash();
+    }
+
+    void swap(CMasternodePing& first, CMasternodePing& second) // nothrow
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two classes,
+        // the two classes are effectively swapped
+        swap(first.vin, second.vin);
+        swap(first.blockHash, second.blockHash);
+        swap(first.sigTime, second.sigTime);
+        swap(first.vchSig, second.vchSig);
+    }
+
+    CMasternodePing& operator=(CMasternodePing from)
+    {
+        swap(*this, from);
+        return *this;
+    }
+    friend bool operator==(const CMasternodePing& a, const CMasternodePing& b)
+    {
+        return a.vin == b.vin && a.blockHash == b.blockHash;
+    }
+    friend bool operator!=(const CMasternodePing& a, const CMasternodePing& b)
+    {
+        return !(a == b);
+    }
+
+};
+
 
 //
 // The Masternode Class. For managing the Darksend process. It contains the input of the 1000DRK, signature to prove
@@ -64,9 +129,7 @@ public:
     CPubKey pubkey2;
     std::vector<unsigned char> sig;
     int activeState;
-    int64_t sigTime; //mnb message times
-    int64_t lastMnping;
-    int64_t lastTimeSeen;
+    int64_t sigTime; //mnb message time
     int cacheInputAge;
     int cacheInputAgeBlock;
     bool unitTest;
@@ -76,11 +139,12 @@ public:
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
     int nVotedTimes;
-    
+    CMasternodePing lastPing;
+
+
     CMasternode();
     CMasternode(const CMasternode& other);
-    CMasternode(const CMasternodeBroadcast& other);
-    CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn);
+    CMasternode(const CMasternodeBroadcast& mnb);
 
 
     void swap(CMasternode& first, CMasternode& second) // nothrow
@@ -97,8 +161,7 @@ public:
         swap(first.sig, second.sig);
         swap(first.activeState, second.activeState);
         swap(first.sigTime, second.sigTime);
-        swap(first.lastMnping, second.lastMnping);
-        swap(first.lastTimeSeen, second.lastTimeSeen);
+        swap(first.lastPing, second.lastPing);
         swap(first.cacheInputAge, second.cacheInputAge);
         swap(first.cacheInputAgeBlock, second.cacheInputAgeBlock);
         swap(first.unitTest, second.unitTest);
@@ -138,10 +201,9 @@ public:
             READWRITE(pubkey2);
             READWRITE(sig);
             READWRITE(sigTime);
-            READWRITE(lastTimeSeen);
             READWRITE(protocolVersion);
             READWRITE(activeState);
-            READWRITE(lastMnping);
+            READWRITE(lastPing);
             READWRITE(cacheInputAge);
             READWRITE(cacheInputAgeBlock);
             READWRITE(unitTest);
@@ -156,15 +218,6 @@ public:
 
     void UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
 
-    void UpdateLastSeen(int64_t override=0)
-    {
-        if(override == 0){
-            lastTimeSeen = GetAdjustedTime();
-        } else {
-            lastTimeSeen = override;
-        }
-    }
-
     inline uint64_t SliceHash(uint256& hash, int slice)
     {
         uint64_t n = 0;
@@ -174,16 +227,23 @@ public:
 
     void Check();
 
-    bool UpdatedWithin(int seconds)
+    bool IsBroadcastedWithin(int seconds)
     {
-        // LogPrintf("UpdatedWithin %d, %d --  %d \n", GetAdjustedTime() , lastTimeSeen, (GetAdjustedTime() - lastTimeSeen) < seconds);
+        return (GetAdjustedTime() - sigTime) < seconds;
+    }
 
-        return (GetAdjustedTime() - lastTimeSeen) < seconds;
+    bool IsPingedWithin(int seconds, int64_t now = -1)
+    {
+        now == -1 ? now = GetAdjustedTime() : now;
+        return (lastPing == CMasternodePing())
+                ? false
+                : now - lastPing.sigTime < seconds;
     }
 
     void Disable()
     {
-        lastTimeSeen = 0;
+        sigTime = 0;
+        lastPing = CMasternodePing();
     }
 
     bool IsEnabled()
@@ -229,12 +289,12 @@ class CMasternodeBroadcast : public CMasternode
 public:
     CMasternodeBroadcast();
     CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubKey newPubkey, CPubKey newPubkey2, int protocolVersionIn);
-    CMasternodeBroadcast(const CMasternode& other);
+    CMasternodeBroadcast(const CMasternode& mn);
 
-    bool CheckAndUpdate(int& nDoS, bool fRequested);
-    bool CheckInputsAndAdd(int& nDos, bool fRequested);
+    bool CheckAndUpdate(int& nDoS);
+    bool CheckInputsAndAdd(int& nDos);
     bool Sign(CKey& keyCollateralAddress);
-    void Relay(bool fRequested);
+    void Relay();
 
     ADD_SERIALIZE_METHODS;
 
@@ -246,8 +306,8 @@ public:
         READWRITE(pubkey2);
         READWRITE(sig);
         READWRITE(sigTime);
-        READWRITE(lastTimeSeen);
         READWRITE(protocolVersion);
+        READWRITE(lastPing);
     }
 
     uint256 GetHash(){
@@ -259,43 +319,4 @@ public:
 
 };
 
-
-//
-// The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
-//
-
-class CMasternodePing
-{
-public:
-
-    CTxIn vin;
-    uint256 blockHash;
-    std::vector<unsigned char> vchSig;
-    int64_t sigTime; //mnb message times
-    //removed stop
-
-    CMasternodePing();
-    CMasternodePing(CTxIn& newVin);
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(vin);
-        READWRITE(blockHash);
-        READWRITE(sigTime);
-        READWRITE(vchSig);
-    }
-
-    bool CheckAndUpdate(int& nDos);
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    void Relay();
-
-    uint256 GetHash(){
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
-        ss << sigTime;
-        return ss.GetHash();
-    }
-};
 #endif

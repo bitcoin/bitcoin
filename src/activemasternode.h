@@ -16,6 +16,20 @@
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
 {
+private:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+
+    /// Ping Masternode
+    bool SendMasternodePing(std::string& errorMessage);
+
+    /// Register any Masternode
+    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &retErrorMessage);
+
+    /// Get 1000DRK input that can be used for the Masternode
+    bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
+    bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
+
 public:
 	// Initialized by init.cpp
 	// Keys for the main Masternode
@@ -30,29 +44,21 @@ public:
 
     CActiveMasternode()
     {        
-        status = MASTERNODE_NOT_PROCESSED;
+        status = MASTERNODE_INITIAL;
     }
 
     /// Manage status of main Masternode
     void ManageStatus(); 
-
-    /// Ping for main Masternode
-    bool Mnping(std::string& errorMessage); 
-    /// Ping for any Masternode
-    bool Mnping(CTxIn vin, CService service, CKey key, CPubKey pubKey, std::string &retErrorMessage); 
+    std::string GetStatus();
 
     /// Register remote Masternode
     bool Register(std::string strService, std::string strKey, std::string txHash, std::string strOutputIndex, std::string& errorMessage); 
-    /// Register any Masternode
-    bool Register(CTxIn vin, CService service, CKey key, CPubKey pubKey, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &retErrorMessage); 
 
     /// Get 1000DRK input that can be used for the Masternode
     bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
-    bool GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex);
     vector<COutput> SelectCoinsMasternode();
-    bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
 
-    /// Enable hot wallet mode (run a Masternode with no funds)
+    /// Enable cold wallet mode (run a Masternode with no funds)
     bool EnableHotColdMasterNode(CTxIn& vin, CService& addr);
 };
 
