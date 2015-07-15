@@ -1,4 +1,5 @@
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 
 #include "chainparams.h"
 #include "script/standard.h"

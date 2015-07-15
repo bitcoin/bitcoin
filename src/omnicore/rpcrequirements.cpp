@@ -3,6 +3,7 @@
 #include "omnicore/dex.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/utilsbitcoin.h"
 
 #include "amount.h"
 #include "main.h"

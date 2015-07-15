@@ -19,6 +19,7 @@
 #include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/utilsbitcoin.h"
 
 #include "amount.h"
 #include "init.h"

@@ -15,6 +15,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/pending.h"
+#include "omnicore/utilsbitcoin.h"
 
 // Boost includes
 #include <boost/lexical_cast.hpp>

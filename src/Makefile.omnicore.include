@@ -17,12 +17,14 @@ OMNICORE_H = \
   omnicore/rpctx.h \
   omnicore/rpctxobject.h \
   omnicore/rpcvalues.h \
+  omnicore/rules.h \
   omnicore/script.h \
   omnicore/sp.h \
   omnicore/sto.h \
   omnicore/tally.h \
   omnicore/tx.h \
   omnicore/utils.h \
+  omnicore/utilsbitcoin.h \
   omnicore/version.h \
   omnicore/walletcache.h
 
@@ -44,12 +46,14 @@ OMNICORE_CPP = \
   omnicore/rpctx.cpp \
   omnicore/rpctxobject.cpp \
   omnicore/rpcvalues.cpp \
+  omnicore/rules.cpp \
   omnicore/script.cpp \
   omnicore/sp.cpp \
   omnicore/sto.cpp \
   omnicore/tally.cpp \
   omnicore/tx.cpp \
   omnicore/utils.cpp \
+  omnicore/utilsbitcoin.cpp \
   omnicore/version.cpp \
   omnicore/walletcache.cpp
 

@@ -17,6 +17,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 #include "omnicore/pending.h"
+#include "omnicore/utilsbitcoin.h"
 
 #include <stdint.h>
 #include <map>

@@ -19,6 +19,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/pending.h"
+#include "omnicore/utilsbitcoin.h"
 
 #include "main.h"
 #include "sync.h"

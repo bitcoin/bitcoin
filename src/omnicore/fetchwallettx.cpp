@@ -1,7 +1,9 @@
 // The fetch functions provide a sorted list of transaction hashes ordered by block, position in block and position in wallet including STO receipts
 #include "omnicore/fetchwallettx.h"
+
 #include "omnicore/omnicore.h"
 #include "omnicore/pending.h"
+#include "omnicore/utilsbitcoin.h"
 
 #include "init.h"
 #include "wallet.h"
