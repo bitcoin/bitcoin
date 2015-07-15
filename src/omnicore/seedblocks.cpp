@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+const int MAX_SEED_BLOCK = 365219;
+
 static std::set<int> GetBlockList()
 {
     int64_t nTimeStart = GetTimeMicros();
@@ -48,7 +50,7 @@ bool SkipBlock(int nBlock)
         return false;
     }
     // Scan all blocks, which are not in the list:
-    if (nBlock > 365219) {
+    if (nBlock > MAX_SEED_BLOCK) {
         return false;
     }
     // Otherwise check, if the block is in the list:
