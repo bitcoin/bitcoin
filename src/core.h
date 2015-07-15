@@ -333,6 +333,128 @@ public:
     )
 };
 
+/**
+ * Encapsulate a block version.  This takes care of building it up
+ * from a base version, the modifier flags (like auxpow) and
+ * also the auxpow chain ID.
+ */
+class CBlockVersion
+{
+
+private:
+
+    /* Modifiers to the version.  */
+    static const int32_t VERSION_AUXPOW = (1 << 8);
+
+    /** Bits above are reserved for the auxpow chain ID.  */
+    static const int32_t VERSION_CHAIN_START = (1 << 16);
+
+    /** The version as integer.  Should not be accessed directly.  */
+    int32_t nVersion;
+
+public:
+
+    inline CBlockVersion()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(this->nVersion);
+    )
+
+    inline void SetNull()
+    {
+        nVersion = 0;
+    }
+
+    /**
+     * Extract the base version (without modifiers and chain ID).
+     * @return The base version./
+     */
+    inline int32_t GetBaseVersion() const
+    {
+        return nVersion % VERSION_AUXPOW;
+    }
+
+    /**
+     * Set the base version (apart from chain ID and auxpow flag) to
+     * the one given.  This should only be called when auxpow is not yet
+     * set, to initialise a block!
+     * @param nBaseVersion The base version.
+     */
+    void SetBaseVersion(int32_t nBaseVersion);
+
+    /**
+     * Extract the chain ID.
+     * @return The chain ID encoded in the version.
+     */
+    inline int32_t GetChainId() const
+    {
+        return nVersion / VERSION_CHAIN_START;
+    }
+
+    /**
+     * Set the chain ID.  This is used for the test suite.
+     * @param ch The chain ID to set.
+     */
+    inline void SetChainId(int32_t chainId)
+    {
+        nVersion %= VERSION_CHAIN_START;
+        nVersion |= chainId * VERSION_CHAIN_START;
+    }
+
+    /**
+     * Extract the full version.  Used for RPC results and debug prints.
+     * @return The full version.
+     */
+    inline int32_t GetFullVersion() const
+    {
+        return nVersion;
+    }
+
+    /**
+     * Set the genesis block version.  This must be a literal write
+     * through, to get the correct historic version.
+     * @param nGenesisVersion The version to set.
+     */
+    inline void SetGenesisVersion(int32_t nGenesisVersion)
+    {
+        nVersion = nGenesisVersion;
+    }
+
+    /**
+     * Check if the auxpow flag is set in the version.
+     * @return True iff this block version is marked as auxpow.
+     */
+    inline bool IsAuxpow() const
+    {
+        return nVersion & VERSION_AUXPOW;
+    }
+
+    /**
+     * Set the auxpow flag.  This is used for testing.
+     * @param auxpow Whether to mark auxpow as true.
+     */
+    inline void SetAuxpow (bool auxpow)
+    {
+        if (auxpow)
+            nVersion |= VERSION_AUXPOW;
+        else
+            nVersion &= ~VERSION_AUXPOW;
+    }
+
+    /**
+     * Check whether this is a "legacy" block without chain ID.
+     * @return True iff it is.
+     */
+    inline bool IsLegacy() const
+    {
+        return nVersion == 1;
+    }
+
+};
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -341,19 +463,19 @@ public:
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
+class CPureBlockHeader
 {
 public:
     // header
     static const int CURRENT_VERSION=2;
-    int nVersion;
+    CBlockVersion nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
 
-    CBlockHeader()
+    CPureBlockHeader()
     {
         SetNull();
     }
@@ -361,7 +483,7 @@ public:
     IMPLEMENT_SERIALIZE
     (
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
+        nVersion = this->nVersion.GetBaseVersion();
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
@@ -371,7 +493,7 @@ public:
 
     void SetNull()
     {
-        nVersion = CBlockHeader::CURRENT_VERSION;
+        nVersion.SetNull();
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
         nTime = 0;
@@ -392,6 +514,55 @@ public:
     }
 };
 
+/** Nodes collect new transactions into a block, hash them into a hash tree,
+ * and scan through nonce values to make the block's hash satisfy proof-of-work
+ * requirements.  When they solve the proof-of-work, they broadcast the block
+ * to everyone and the block is added to the block chain.  The first transaction
+ * in the block is a special one that creates a new coin owned by the creator
+ * of the block.
+ */
+class CBlockHeader : public CPureBlockHeader
+{
+public:
+
+    // auxpow (if this is a merge-minded block)
+    //boost::shared_ptr<CAuxPow> auxpow;
+
+    CBlockHeader()
+    {
+        SetNull();
+    }
+
+    IMPLEMENT_SERIALIZE
+    (
+        READWRITE(*(CPureBlockHeader*)this);
+        nVersion = this->nVersion.GetBaseVersion();
+
+        if (this->nVersion.IsAuxpow())
+        {
+            /*
+            if (fRead)
+                auxpow.reset (new CAuxPow());
+            assert(auxpow);
+            READWRITE(*auxpow);
+            */
+        } else if (fRead)
+            {}//auxpow.reset();
+    )
+
+    void SetNull()
+    {
+        CPureBlockHeader::SetNull();
+        //auxpow.reset();
+    }
+
+    /**
+     * Set the block's auxpow (or unset it).  This takes care of updating
+     * the version accordingly.
+     * @param apow Pointer to the auxpow to use or NULL.
+     */
+    //void SetAuxpow (CAuxPow* apow);
+};
 
 class CBlock : public CBlockHeader
 {

@@ -722,7 +722,7 @@ public:
     unsigned int nStatus;
 
     // block header
-    int nVersion;
+    CBlockVersion nVersion;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
@@ -745,7 +745,7 @@ public:
         nStatus = 0;
         nSequenceId = 0;
 
-        nVersion       = 0;
+        nVersion.SetNull();
         hashMerkleRoot = 0;
         nTime          = 0;
         nBits          = 0;
@@ -794,6 +794,10 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
+
+        /* FIXME: Read auxpow from disk when necessary.  */
+        assert (!nVersion.IsAuxpow());
+
         block.nVersion       = nVersion;
         if (pprev)
             block.hashPrevBlock = pprev->GetBlockHash();

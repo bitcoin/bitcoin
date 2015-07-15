@@ -386,7 +386,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
     tmp;
     memset(&tmp, 0, sizeof(tmp));
 
-    tmp.block.nVersion       = pblock->nVersion;
+    tmp.block.nVersion       = pblock->nVersion.GetFullVersion();
     tmp.block.hashPrevBlock  = pblock->hashPrevBlock;
     tmp.block.hashMerkleRoot = pblock->hashMerkleRoot;
     tmp.block.nTime          = pblock->nTime;

@@ -212,10 +212,33 @@ uint64_t CTxOutCompressor::DecompressAmount(uint64_t x)
     return n;
 }
 
-uint256 CBlockHeader::GetHash() const
+void CBlockVersion::SetBaseVersion(int32_t nBaseVersion)
 {
-    return Hash(BEGIN(nVersion), END(nNonce));
+    assert(nBaseVersion >= 1 && nBaseVersion < VERSION_AUXPOW);
+    assert(!IsAuxpow());
+    const int32_t nChainId = 20;//Params ().GetConsensus ().nAuxpowChainId;
+    nVersion = nBaseVersion | (nChainId * VERSION_CHAIN_START);
 }
+
+uint256 CPureBlockHeader::GetHash() const
+{
+    return SerializeHash(*this);
+}
+
+/*
+void CBlockHeader::SetAuxpow (CAuxPow* apow)
+{
+    if (apow)
+    {
+        auxpow.reset(apow);
+        nVersion.SetAuxpow(true);
+    } else
+    {
+        auxpow.reset();
+        nVersion.SetAuxpow(false);
+    }
+}
+*/
 
 uint256 CBlock::BuildMerkleTree() const
 {
@@ -271,7 +294,7 @@ void CBlock::print() const
 {
     LogPrintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
         GetHash().ToString(),
-        nVersion,
+        nVersion.GetFullVersion(),
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
