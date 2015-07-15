@@ -40,7 +40,7 @@ public:
     QString getAddress() const;
     void setAddress(const QString &address);
 
-public slots:
+public Q_SLOTS:
     void accept();
 
 private:
