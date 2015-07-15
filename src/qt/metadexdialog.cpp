@@ -16,6 +16,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/parse_string.h"
 #include "omnicore/pending.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
