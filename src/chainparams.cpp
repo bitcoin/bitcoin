@@ -104,6 +104,9 @@ public:
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
 
+        // Tuesday April 5th, 2016 at 3pm UTC
+        nFullRbfActivationTime = 1459868400;
+
         checkpointData = (Checkpoints::CCheckpointData) {
             boost::assign::map_list_of
             ( 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d"))
@@ -173,6 +176,9 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
+
+        // Full-RBF always active on testnet/regtest
+        nFullRbfActivationTime = 1;
 
         checkpointData = (Checkpoints::CCheckpointData) {
             boost::assign::map_list_of
