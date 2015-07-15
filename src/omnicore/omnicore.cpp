@@ -1853,20 +1853,73 @@ int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTr
  * the RPC status, as well as the splash screen progress label, are updated.
  *
  * @see msc_initial_scan()
- *
- * @param nFirst[in]    The first block
- * @param nCurrent[in]  The current block
- * @param nLast[in]     The last block
  */
-static void ReportScanProgress(int nFirst, int nCurrent, int nLast)
+class ProgressReporter
 {
-    double dProgress = 100.0 * (nCurrent - nFirst) / (nLast - nFirst);
-    std::string strProgress = strprintf(
-            "Still scanning.. at block %d of %d. Progress: %.2f %%", nCurrent, nLast, dProgress);
+private:
+    const CBlockIndex* m_pblockFirst;
+    const CBlockIndex* m_pblockLast;
+    const int64_t m_timeStart;
 
-    PrintToConsole(strProgress + "\n");
-    uiInterface.InitMessage(strProgress);
-}
+    /** Returns the estimated remaining time in milliseconds. */
+    int64_t estimateRemainingTime(double progress) const
+    {
+        int64_t timeSinceStart = GetTimeMillis() - m_timeStart;
+
+        double timeRemaining = 3600000.0; // 1 hour
+        if (progress > 0.0 && timeSinceStart > 0) {
+            timeRemaining = (100.0 - progress) / progress * timeSinceStart;
+        }
+
+        return static_cast<int64_t>(timeRemaining);
+    }
+
+    /** Converts a time span to a human readable string. */
+    std::string remainingTimeAsString(int64_t remainingTime) const
+    {
+        int64_t secondsTotal = 0.001 * remainingTime;
+        int64_t hours = secondsTotal / 3600;
+        int64_t minutes = secondsTotal / 60;
+        int64_t seconds = secondsTotal % 60;
+
+        if (hours > 0) {
+            return strprintf("%d:%02d:%02d hours", hours, minutes, seconds);
+        } else if (minutes > 0) {
+            return strprintf("%d:%02d minutes", minutes, seconds);
+        } else {
+            return strprintf("%d seconds", seconds);
+        }
+    }
+
+public:
+    ProgressReporter(const CBlockIndex* pblockFirst, const CBlockIndex* pblockLast)
+    : m_pblockFirst(pblockFirst), m_pblockLast(pblockLast), m_timeStart(GetTimeMillis())
+    {
+    }
+
+    /** Prints the current progress to the console and notifies the UI. */
+    void update(const CBlockIndex* pblockNow) const
+    {
+        int nLastBlock = m_pblockLast->nHeight;
+        int nCurrentBlock = pblockNow->nHeight;
+        unsigned int nFirst = m_pblockFirst->nChainTx;
+        unsigned int nCurrent = pblockNow->nChainTx;
+        unsigned int nLast = m_pblockLast->nChainTx;
+
+        double dProgress = 100.0 * (nCurrent - nFirst) / (nLast - nFirst);
+        int64_t nRemainingTime = estimateRemainingTime(dProgress);
+
+        std::string strProgress = strprintf(
+                "Still scanning.. at block %d of %d. Progress: %.2f %%, about %s remaining..\n",
+                nCurrentBlock, nLastBlock, dProgress, remainingTimeAsString(nRemainingTime));
+        std::string strProgressUI = strprintf(
+                "Still scanning.. at block %d of %d.\nProgress: %.2f %% (about %s remaining)",
+                nCurrentBlock, nLastBlock, dProgress, remainingTimeAsString(nRemainingTime));
+
+        PrintToConsole(strProgress);
+        uiInterface.InitMessage(strProgressUI);
+    }
+};
 
 /**
  * Scans the blockchain for meta transactions.
@@ -1889,6 +1942,7 @@ static void ReportScanProgress(int nFirst, int nCurrent, int nLast)
  */
 static int msc_initial_scan(int nFirstBlock)
 {
+    int nTimeBetweenProgressReports = GetArg("-omniprogressfrequency", 30);  // seconds
     int64_t nNow = GetTime();
     unsigned int nTotal = 0;
     unsigned int nFound = 0;
@@ -1899,16 +1953,14 @@ static int msc_initial_scan(int nFirstBlock)
     if (nFirstBlock < 0 || nLastBlock < nFirstBlock) return -1;
     PrintToConsole("Scanning for transactions in block %d to block %d..\n", nFirstBlock, nLastBlock);
 
+    // used to print the progress to the console and notifies the UI
+    ProgressReporter progressReporter(chainActive[nFirstBlock], chainActive[nLastBlock]);
+
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
         if (ShutdownRequested()) {
             PrintToLog("Shutdown requested, stop scan at block %d of %d\n", nBlock, nLastBlock);
             break;
-        }
-
-        if (GetTime() >= nNow + 30) { // seconds
-            ReportScanProgress(nFirstBlock, nBlock, nLastBlock);
-            nNow = GetTime();
         }
 
         CBlockIndex* pblockindex = chainActive[nBlock];
@@ -1917,6 +1969,11 @@ static int msc_initial_scan(int nFirstBlock)
 
         if (msc_debug_exo) PrintToLog("%s(%d; max=%d):%s, line %d, file: %s\n",
             __FUNCTION__, nBlock, nLastBlock, strBlockHash, __LINE__, __FILE__);
+
+        if (GetTime() >= nNow + nTimeBetweenProgressReports) {
+            progressReporter.update(pblockindex);
+            nNow = GetTime();
+        }
 
         CBlock block;
         if (!ReadBlockFromDisk(block, pblockindex)) break;
