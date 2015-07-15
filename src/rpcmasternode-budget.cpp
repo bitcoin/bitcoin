@@ -95,7 +95,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, 0);
 
         std::string strError = "";
-        if(!budgetProposalBroadcast.IsValid(strError))
+        if(!budgetProposalBroadcast.IsValid(strError, false))
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
 
         std::string cmd = "tx";

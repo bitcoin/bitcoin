@@ -1000,7 +1000,7 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
     fValid = true;
 }
 
-bool CBudgetProposal::IsValid(std::string& strError)
+bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
 {
     if(GetYeas()-GetNays() < -(mnodeman.CountEnabled()/10)){
          strError = "Active removal";
@@ -1017,8 +1017,10 @@ bool CBudgetProposal::IsValid(std::string& strError)
         return false;
     }
 
-    if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
-        return false;
+    if(fCheckCollateral){
+        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
+            return false;
+        }
     }
 
     //if proposal doesn't gain traction within 2 weeks, remove it
@@ -1422,7 +1424,7 @@ std::string CFinalizedBudget::GetStatus()
     return retBadHashes + retBadPayeeOrAmount;
 }
 
-bool CFinalizedBudget::IsValid()
+bool CFinalizedBudget::IsValid(bool fCheckCollateral)
 {
     //must be the correct block for payment to happen (once a month)
     if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) return false;
@@ -1436,8 +1438,10 @@ bool CFinalizedBudget::IsValid()
     if(GetTotalPayout() > budget.GetTotalBudget(nBlockStart)) return false;
 
     std::string strError = "";
-    if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
-        return false;
+    if(fCheckCollateral){
+        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
+            return false;
+        }
     }
 
     //TODO: if N cycles old, invalid, invalid
