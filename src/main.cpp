@@ -154,6 +154,12 @@ namespace {
      */
     map<uint256, NodeId> mapBlockSource;
 
+    /**
+     * Transactions that were recently rejected by AcceptToMemoryPool. These are not rerequested
+     * if they are inv'ed to us again in the next 15 mins. Proteced by cs_main.
+     */
+    limitedmap<uint256, int64_t> mapRecentRejects(MAX_RECENT_REJECTS);
+
     /** Blocks that are in flight, and that are in the queue to be downloaded. Protected by cs_main. */
     struct QueuedBlock {
         uint256 hash;
@@ -3658,8 +3664,17 @@ bool static AlreadyHave(const CInv& inv)
         {
             bool txInMap = false;
             txInMap = mempool.exists(inv.hash);
-            return txInMap || mapOrphanTransactions.count(inv.hash) ||
-                pcoinsTip->HaveCoins(inv.hash);
+
+            bool txRecentlyRejected = false;
+            limitedmap<uint256, int64_t>::const_iterator it = mapRecentRejects.find(inv.hash);
+            if (it != mapRecentRejects.end()) {
+                // If rejected in last 15 mins, don't need again
+                if (it->second + 15*60 > GetTime())
+                    txRecentlyRejected = true;
+            }
+
+            return txInMap || txRecentlyRejected ||
+                mapOrphanTransactions.count(inv.hash) || pcoinsTip->HaveCoins(inv.hash);
         }
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash);
@@ -4259,6 +4274,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // Probably non-standard or insufficient fee/priority
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanHash.ToString());
                         vEraseQueue.push_back(orphanHash);
+                        mapRecentRejects.insert(make_pair(orphanHash, GetTime()));
                     }
                     mempool.check(pcoinsTip);
                 }
@@ -4276,11 +4292,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             unsigned int nEvicted = LimitOrphanTxSize(nMaxOrphanTx);
             if (nEvicted > 0)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
-        } else if (pfrom->fWhitelisted) {
-            // Always relay transactions received from whitelisted peers, even
-            // if they are already in the mempool (allowing the node to function
-            // as a gateway for nodes hidden behind it).
-            RelayTransaction(tx);
+        } else {
+            if (!mempool.exists(tx.GetHash()))
+                mapRecentRejects.insert(make_pair(tx.GetHash(), GetTime()));
+            if (pfrom->fWhitelisted) {
+                // Always relay transactions received from whitelisted peers, even
+                // if they are already in the mempool (allowing the node to function
+                // as a gateway for nodes hidden behind it).
+                RelayTransaction(tx);
+            }
         }
         int nDoS = 0;
         if (state.IsInvalid(nDoS))
