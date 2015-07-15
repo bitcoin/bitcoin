@@ -158,7 +158,7 @@ bool CMPTransaction::interpret_TransactionType()
     version = txVersion;
     type = txType;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t------------------------------\n");
         PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(multi));
         PrintToLog("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
@@ -179,7 +179,7 @@ bool CMPTransaction::interpret_SimpleSend()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
     }
@@ -199,7 +199,7 @@ bool CMPTransaction::interpret_SendToOwners()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
     }
@@ -225,7 +225,7 @@ bool CMPTransaction::interpret_TradeOffer()
     swapByteOrder64(amount_desired);
     swapByteOrder64(min_fee);
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
         PrintToLog("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
@@ -249,7 +249,7 @@ bool CMPTransaction::interpret_AcceptOfferBTC()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
     }
@@ -275,7 +275,7 @@ bool CMPTransaction::interpret_MetaDExTrade()
 
     action = CMPTransaction::ADD; // depreciated
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
         PrintToLog("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
@@ -303,7 +303,7 @@ bool CMPTransaction::interpret_MetaDExCancelPrice()
 
     action = CMPTransaction::CANCEL_AT_PRICE; // depreciated
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
         PrintToLog("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
@@ -329,7 +329,7 @@ bool CMPTransaction::interpret_MetaDExCancelPair()
     desired_value = 0; // depreciated
     action = CMPTransaction::CANCEL_ALL_FOR_PAIR; // depreciated
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\tdesired property: %d (%s)\n", desired_property, strMPProperty(desired_property));
     }
@@ -352,7 +352,7 @@ bool CMPTransaction::interpret_MetaDExCancelEcosystem()
     desired_value = 0; // depreciated
     action = CMPTransaction::CANCEL_EVERYTHING; // depreciated
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", (int)ecosystem);
     }
 
@@ -387,7 +387,7 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
     p += 8;
     nNewValue = nValue;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", ecosystem);
         PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
         PrintToLog("\tprev property id: %d\n", prev_prop_id);
@@ -443,7 +443,7 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
     memcpy(&early_bird, p++, 1);
     memcpy(&percentage, p++, 1);
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", ecosystem);
         PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
         PrintToLog("\tprev property id: %d\n", prev_prop_id);
@@ -476,7 +476,7 @@ bool CMPTransaction::interpret_CloseCrowdsale()
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
     }
 
@@ -507,7 +507,7 @@ bool CMPTransaction::interpret_CreatePropertyManaged()
     memcpy(url, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(url)-1)); i++;
     memcpy(data, spstr[i].c_str(), std::min(spstr[i].length(), sizeof(data)-1)); i++;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", ecosystem);
         PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
         PrintToLog("\tprev property id: %d\n", prev_prop_id);
@@ -538,7 +538,7 @@ bool CMPTransaction::interpret_GrantTokens()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
     }
@@ -558,7 +558,7 @@ bool CMPTransaction::interpret_RevokeTokens()
     swapByteOrder64(nValue);
     nNewValue = nValue;
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
     }
@@ -575,7 +575,7 @@ bool CMPTransaction::interpret_ChangeIssuer()
     memcpy(&property, &pkt[4], 4);
     swapByteOrder32(property);
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
     }
 
@@ -592,7 +592,7 @@ bool CMPTransaction::interpret_Alert()
     std::string spstr(p);
     memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t           alert: %s\n", alertString);
     }
 

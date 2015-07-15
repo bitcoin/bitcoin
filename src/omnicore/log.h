@@ -47,6 +47,7 @@ extern bool msc_debug_metadex1;
 extern bool msc_debug_metadex2;
 extern bool msc_debug_metadex3;
 extern bool msc_debug_packets;
+extern bool msc_debug_packets_readonly;
 extern bool msc_debug_walletcache;
 
 /* When we switch to C++11, this can be switched to variadic templates instead

@@ -1373,6 +1373,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 // RETURNS: >0 if 1 or more payments have been made
 static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime)
 {
+    assert(bRPConly == mp_tx.isRpcOnly());
+
     // Fallback to legacy parsing, if OP_RETURN isn't enabled:
     if (!IsAllowedOutputType(TX_NULL_DATA, nBlock)) {
         return legacy::parseTransaction(bRPConly, wtx, nBlock, idx, mp_tx, nTime);
@@ -2818,11 +2820,13 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
     // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
     PendingDelete(tx.GetHash());
 
-    CMPTransaction mp_obj;
     // save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)
     int interp_ret = -555555, pop_ret;
 
     if (nBlock < nWaterlineBlock) return -1; // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
+
+    CMPTransaction mp_obj;
+    mp_obj.unlockLogic();
 
     pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime());
     if (0 == pop_ret) {
@@ -4285,8 +4289,13 @@ const std::vector<unsigned char> GetOmMarker()
  //
 int CMPTransaction::interpretPacket()
 {
+    if (rpcOnly) {
+        PrintToLog("%s(): ERROR: attempt to execute logic in RPC mode\n", __func__);
+        return (PKT_ERROR -1);
+    }
+
     if (!interpret_Transaction()) {
-        return -98765;
+        return (PKT_ERROR -2);
     }
 
     LOCK(cs_tally);
