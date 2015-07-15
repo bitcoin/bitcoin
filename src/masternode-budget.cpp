@@ -749,16 +749,11 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         //set time we first saw this prop
         budgetProposalBroadcast.nTime = GetAdjustedTime();
 
+        mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(strError)) {
             LogPrintf("mprop - invalid budget proposal - %s\n", strError);
-            return;
-        }
-
-        mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
-
-        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError)){
-            LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
             return;
         }
 
@@ -818,12 +813,12 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
+
         if(!finalizedBudgetBroadcast.IsValid()) {
             LogPrintf("fbs - invalid finalized budget\n");
             return;
         }
-
-        mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
 
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
         budget.AddFinalizedBudget(finalizedBudget);
@@ -1019,6 +1014,10 @@ bool CBudgetProposal::IsValid(std::string& strError)
 
     if(address == CScript()) {
         strError = "Invalid Payment Address";
+        return false;
+    }
+
+    if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
         return false;
     }
 
@@ -1435,6 +1434,11 @@ bool CFinalizedBudget::IsValid()
 
     //can only pay out 10% of the possible coins (min value of coins)
     if(GetTotalPayout() > budget.GetTotalBudget(nBlockStart)) return false;
+
+    std::string strError = "";
+    if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
+        return false;
+    }
 
     //TODO: if N cycles old, invalid, invalid
 
