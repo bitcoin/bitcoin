@@ -23,19 +23,20 @@
 #define ECMULT_CONST_TABLE_GET_GE(r,pre,n,w) do { \
     int m; \
     int abs_n = (n) * (((n) > 0) * 2 - 1); \
+    int idx_n = abs_n / 2; \
     secp256k1_fe_t neg_y; \
     VERIFY_CHECK(((n) & 1) == 1); \
     VERIFY_CHECK((n) >= -((1 << ((w)-1)) - 1)); \
     VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
-    for (m = 1; m < (1 << ((w) - 1)); m += 2) { \
+    VERIFY_SETUP(secp256k1_fe_clear(&(r)->x)); \
+    VERIFY_SETUP(secp256k1_fe_clear(&(r)->y)); \
+    for (m = 0; m < ECMULT_TABLE_SIZE(w); m++) { \
         /* This loop is used to avoid secret data in array indices. See
          * the comment in ecmult_gen_impl.h for rationale. */ \
-        secp256k1_fe_cmov(&(r)->x, &(pre)[(m - 1) / 2].x, m == abs_n); \
-        secp256k1_fe_cmov(&(r)->y, &(pre)[(m - 1) / 2].y, m == abs_n); \
+        secp256k1_fe_cmov(&(r)->x, &(pre)[m].x, m == idx_n); \
+        secp256k1_fe_cmov(&(r)->y, &(pre)[m].y, m == idx_n); \
     } \
     (r)->infinity = 0; \
-    secp256k1_fe_normalize_weak(&(r)->x); \
-    secp256k1_fe_normalize_weak(&(r)->y); \
     secp256k1_fe_negate(&neg_y, &(r)->y, 1); \
     secp256k1_fe_cmov(&(r)->y, &neg_y, (n) != abs_n); \
 } while(0)
@@ -164,6 +165,9 @@ static void secp256k1_ecmult_const(secp256k1_gej_t *r, const secp256k1_ge_t *a, 
      */
     secp256k1_gej_set_ge(r, a);
     secp256k1_ecmult_odd_multiples_table_globalz_windowa(pre_a, &Z, r);
+    for (i = 0; i < ECMULT_TABLE_SIZE(WINDOW_A); i++) {
+        secp256k1_fe_normalize_weak(&pre_a[i].y);
+    }
 #ifdef USE_ENDOMORPHISM
     for (i = 0; i < ECMULT_TABLE_SIZE(WINDOW_A); i++) {
         secp256k1_ge_mul_lambda(&pre_a_lam[i], &pre_a[i]);
