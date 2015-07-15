@@ -57,6 +57,7 @@ testScriptsExt=(
     'invalidblockrequest.py'
 #    'forknotify.py'
     'p2p-acceptblock.py'
+    'mempool_packages.py'
 );
 
 #if [ "x$ENABLE_ZMQ" = "x1" ]; then
