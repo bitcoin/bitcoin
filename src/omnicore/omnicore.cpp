@@ -112,8 +112,8 @@ std::set<uint32_t> global_wallet_property_list;
  */
 bool autoCommit = true;
 
+//! Number of "Dev MSC" of the last processed block
 static int64_t exodus_prev = 0;
-static int64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
 
@@ -578,37 +578,57 @@ unsigned short version_TopAllowed;
 // 10) need a locking mechanism between Core & Qt -- to retrieve the tally, for instance, this and similar to this: LOCK(wallet->cs_wallet);
 //
 
-int64_t calculate_and_update_devmsc(unsigned int nTime)
+/**
+ * Calculates and updates the "development mastercoins".
+ *
+ * For every 10 MSC sold during the Exodus period, 1 additional "Dev MSC" was generated,
+ * which are being awarded to the Exodus address slowly over the years.
+ *
+ * @see The "Dev MSC" specification:
+ * https://github.com/OmniLayer/spec#development-mastercoins-dev-msc-previously-reward-mastercoins
+ *
+ * Note:
+ * If timestamps are out of order, then previously vested "Dev MSC" are not voided.
+ *
+ * @param nTime  The timestamp of the block to update the "Dev MSC" for
+ * @return The number of "Dev MSC" generated
+ */
+static int64_t calculate_and_update_devmsc(unsigned int nTime)
 {
-//do nothing if before end of fundraiser
-if (nTime < 1377993874) return -9919;
+    // do nothing if before end of fundraiser
+    if (nTime < 1377993874) return 0;
 
-// taken mainly from msc_validate.py: def get_available_reward(height, c)
-int64_t devmsc = 0;
-int64_t exodus_delta;
-// spec constants:
-const int64_t all_reward = 5631623576222;
-const double seconds_in_one_year = 31556926;
-const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
-const double years = seconds_passed/seconds_in_one_year;
-const double part_available = 1 - pow(0.5, years);
-const double available_reward=all_reward * part_available;
+    // taken mainly from msc_validate.py: def get_available_reward(height, c)
+    int64_t devmsc = 0;
+    int64_t exodus_delta = 0;
+    // spec constants:
+    const int64_t all_reward = 5631623576222;
+    const double seconds_in_one_year = 31556926;
+    const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
+    const double years = seconds_passed / seconds_in_one_year;
+    const double part_available = 1 - pow(0.5, years);
+    const double available_reward = all_reward * part_available;
 
-  devmsc = rounduint64(available_reward);
-  exodus_delta = devmsc - exodus_prev;
+    devmsc = rounduint64(available_reward);
+    exodus_delta = devmsc - exodus_prev;
 
-  if (msc_debug_exo) PrintToLog("devmsc=%lu, exodus_prev=%lu, exodus_delta=%ld\n", devmsc, exodus_prev, exodus_delta);
+    if (msc_debug_exo) PrintToLog("devmsc=%d, exodus_prev=%d, exodus_delta=%d\n", devmsc, exodus_prev, exodus_delta);
 
-  // skip if a block's timestamp is older than that of a previous one!
-  if (0>exodus_delta) return 0;
+    // skip if a block's timestamp is older than that of a previous one!
+    if (0 > exodus_delta) return 0;
 
-  // sanity check that devmsc isn't an impossible value
-  if (devmsc > all_reward || 0 > devmsc) return -9918;
+    // sanity check that devmsc isn't an impossible value
+    if (devmsc > all_reward || 0 > devmsc) {
+        PrintToLog("%s(): ERROR: insane number of Dev MSC (nTime=%d, exodus_prev=%d, devmsc=%d)\n", __func__, nTime, exodus_prev, devmsc);
+        return 0;
+    }
 
-  update_tally_map(exodus_address, OMNI_PROPERTY_MSC, exodus_delta, BALANCE);
-  exodus_prev = devmsc;
+    if (exodus_delta > 0) {
+        update_tally_map(exodus_address, OMNI_PROPERTY_MSC, exodus_delta, BALANCE);
+        exodus_prev = devmsc;
+    }
 
-  return devmsc;
+    return exodus_delta;
 }
 
 uint32_t mastercore::GetNextPropertyId(bool maineco)
@@ -2750,8 +2770,10 @@ int mastercore_init()
 
     // collect the real Exodus balances available at the snapshot time
     // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
-    exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-    PrintToLog("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+    if (msc_debug_exo) {
+        int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+        PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
+    }
 
     // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
     p_txlistdb->setLastAlert(nWaterlineBlock);
@@ -2759,8 +2781,8 @@ int mastercore_init()
     msc_initial_scan(nWaterlineBlock);
 
     // display Exodus balance
-    exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-    PrintToLog("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+    int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+    PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
 
     PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
     PrintToConsole("Omni Core initialization completed\n");
@@ -4178,8 +4200,8 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
 
     if (msc_debug_exo) {
-        PrintToLog("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
-            devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
+        int64_t balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+        PrintToLog("devmsc for block %d: %d, Exodus balance: %d\n", nBlockNow, devmsc, FormatDivisibleMP(balance));
     }
 
     // check the alert status, do we need to do anything else here?
