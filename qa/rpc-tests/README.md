@@ -12,10 +12,6 @@ Base class for new regression tests.
 ### [test_framework/util.py](test_framework/util.py)
 Generally useful functions.
 
-Bash-based tests, to be ported to Python:
------------------------------------------
-- conflictedbalance.sh : More testing of malleable transaction handling
-
 Notes
 =====
 
