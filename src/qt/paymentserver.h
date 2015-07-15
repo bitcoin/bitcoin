@@ -98,7 +98,7 @@ public:
     // Verify the payment request amount is valid
     static bool verifyAmount(const CAmount& requestAmount);
 
-signals:
+Q_SIGNALS:
     // Fired when a valid payment request is received
     void receivedPaymentRequest(SendCoinsRecipient);
 
@@ -108,7 +108,7 @@ signals:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 
-public slots:
+public Q_SLOTS:
     // Signal this when the main window's UI is ready
     // to display payment requests to the user
     void uiReady();
@@ -119,7 +119,7 @@ public slots:
     // Handle an incoming URI, URI with local file scheme or file
     void handleURIOrFile(const QString& s);
 
-private slots:
+private Q_SLOTS:
     void handleURIConnection();
     void netRequestFinished(QNetworkReply*);
     void reportSslErrors(QNetworkReply*, const QList<QSslError> &);
