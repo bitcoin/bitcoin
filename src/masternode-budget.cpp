@@ -1596,3 +1596,15 @@ bool CFinalizedBudgetVote::SignatureValid()
 
     return true;
 }
+
+std::string CBudgetManager::ToString() const
+{
+    std::ostringstream info;
+
+    info << "Proposals: " << (int)mapProposals.size() <<
+            ", Budgets: " << (int)mapFinalizedBudgets.size();
+
+    return info.str();
+}
+
+
