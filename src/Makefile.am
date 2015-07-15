@@ -169,6 +169,8 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/blockverify.cpp \
+  consensus/txverify.cpp \
   init.cpp \
   leveldbwrapper.cpp \
   main.cpp \
