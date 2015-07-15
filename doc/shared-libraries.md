@@ -32,7 +32,7 @@ The interface is defined in the C header `bitcoinconsensus.h` located in  `src/s
 - `bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG` - Enforce strict DER ([BIP66](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki)) compliance
 
 ##### Errors
-- `bitcoinconsensus_ERR_OK`
+- `bitcoinconsensus_ERR_OK` - No errors with input parameters *(see the return value of `bitcoinconsensus_verify_script` for the verification status)*
 - `bitcoinconsensus_ERR_TX_INDEX` - An invalid index for `txTo`
 - `bitcoinconsensus_ERR_TX_SIZE_MISMATCH` - `txToLen` did not match with the size of `txTo`
 - `bitcoinconsensus_ERR_DESERIALIZE` - An error deserializing `txTo`
