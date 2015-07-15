@@ -499,6 +499,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "                   (can be additionally filtered, partial match)\n"
                 "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
                 "  lastpaid       - The last time a node was paid on the network\n"
+                "  votes          - The amount of times this node has voted recently\n"
                 );
     }
 
@@ -570,6 +571,10 @@ Value masternodelist(const Array& params, bool fHelp)
                 if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,      (int64_t)mn.GetLastPaid()));
+            } else if(strMode == "votes"){
+                if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
+                    strVin.find(strFilter) == string::npos) continue;
+                obj.push_back(Pair(strVin,      (int64_t)mn.nVotedTimes));
             }
         }
     }
