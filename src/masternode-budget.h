@@ -133,7 +133,7 @@ public:
         mapSeenFinalizedBudgetVotes.clear();
     }
     void CheckAndRemove();
-    std::string ToString() {return "not implemented";}
+    std::string ToString() const;
 
 
     ADD_SERIALIZE_METHODS;
