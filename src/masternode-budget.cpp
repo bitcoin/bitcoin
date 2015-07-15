@@ -9,6 +9,7 @@
 #include "masternode.h"
 #include "darksend.h"
 #include "masternodeman.h"
+#include "masternode-sync.h"
 #include "util.h"
 #include "addrman.h"
 #include <boost/filesystem.hpp>
@@ -726,15 +727,12 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         uint256 nProp;
         vRecv >> nProp;
 
-        bool IsLocal = pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal();
-        if(!IsLocal && nProp == 0){
-            if(pfrom->HasFulfilledRequest("mnvs")) {
-                LogPrintf("mnvs - peer already asked me for the list\n");
-                Misbehaving(pfrom->GetId(), 20);
-                return;
-            }
-            pfrom->FulfilledRequest("mnvs");
+        if(pfrom->HasFulfilledRequest("mnvs")) {
+            LogPrintf("mnvs - peer already asked me for the list\n");
+            Misbehaving(pfrom->GetId(), 20);
+            return;
         }
+        pfrom->FulfilledRequest("mnvs");
 
         budget.Sync(pfrom, nProp);
         LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString());
@@ -752,11 +750,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         budgetProposalBroadcast.nTime = GetAdjustedTime();
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError)){
-            LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
-            return;
-        }
-
         if(!budgetProposalBroadcast.IsValid(strError)) {
             LogPrintf("mprop - invalid budget proposal - %s\n", strError);
             return;
@@ -764,9 +757,15 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
 
+        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError)){
+            LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
+            return;
+        }
+
         CBudgetProposal budgetProposal(budgetProposalBroadcast);
         budget.AddProposal(budgetProposal);
         budgetProposalBroadcast.Relay();
+        masternodeSync.AddedBudgetItem();
 
         //We might have active votes for this proposal that are valid now
         CheckOrphanVotes();
@@ -786,17 +785,19 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+
         if(!vote.SignatureValid()){
             LogPrintf("mvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
-        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(pmn->nVotedTimes < 100){
             budget.UpdateProposal(vote, pfrom);
             vote.Relay();
-            if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
+            if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
+            masternodeSync.AddedBudgetItem();
         } else {
             LogPrintf("mvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
@@ -827,6 +828,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
         budget.AddFinalizedBudget(finalizedBudget);
         finalizedBudgetBroadcast.Relay();
+        masternodeSync.AddedBudgetItem();
 
         //we might have active votes for this budget that are now valid
         CheckOrphanVotes();
@@ -856,7 +858,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(pmn->nVotedTimes < 100){
             budget.UpdateFinalizedBudget(vote, pfrom);
             vote.Relay();
-            if(!IsSyncingMasternodeAssets()) pmn->nVotedTimes++;
+            if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
+            masternodeSync.AddedBudgetItem();
         } else {
             LogPrintf("fbvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;

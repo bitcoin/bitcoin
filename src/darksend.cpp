@@ -35,12 +35,6 @@ map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
 
-// Count peers we've requested the list from
-int RequestedMasternodeAssets = 0;
-bool IsSyncingMasternodeAssets(){
-    return RequestedMasternodeAssets != MASTERNODE_LIST_SYNCED;
-}
-
 /* *** BEGIN DARKSEND MAGIC - DASH **********
     Copyright (c) 2014-2015, Dash Developers
         eduffield - evan@dashpay.io
@@ -2333,59 +2327,6 @@ void ThreadCheckDarkSendPool()
         MilliSleep(1000);
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
 
-        //try to sync the Masternode list and payment list every 5 seconds from at least 3 nodes
-        if(c % 5 == 0 && RequestedMasternodeAssets <= 5){
-            bool fIsInitialDownload = IsInitialBlockDownload();
-            if(!fIsInitialDownload) {
-        
-                CBlockIndex* pindexPrev = chainActive.Tip();
-                if(pindexPrev != NULL) {
-                    if(pindexPrev->nTime > GetAdjustedTime() - 600)
-                    {
-
-                        LOCK(cs_vNodes);
-                        BOOST_FOREACH(CNode* pnode, vNodes)
-                        {
-                            if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) {        
-                                bool IsLocal = pnode->addr.IsRFC1918() || pnode->addr.IsLocal();
-                                if(!IsLocal) {
-                                    //keep track of who we've asked for the list
-                                    if(pnode->HasFulfilledRequest("mnsync")) continue;
-                                    pnode->FulfilledRequest("mnsync");
-                                }
-
-                                //request full mn list only if Masternodes.dat was updated quite a long time ago
-                                
-                                if(RequestedMasternodeAssets == 0 || RequestedMasternodeAssets == 1){   
-                                    LogPrintf("Successfully synced, asking for Masternode list\n");
-                                    mnodeman.DsegUpdate(pnode);
-                                    pnode->PushMessage("getsporks"); //get current network sporks
-                                }
-
-                                if(RequestedMasternodeAssets == 2 || RequestedMasternodeAssets == 3){
-                                    LogPrintf("Successfully synced, asking for Masternode payee list\n");
-                                    pnode->PushMessage("mnget"); //sync payees
-                                }
-                                
-                                if(RequestedMasternodeAssets == 4 || RequestedMasternodeAssets == 5){
-                                    LogPrintf("Successfully synced, asking for Masternode Budget votes / Finalized budgets\n");
-                                    uint256 n = 0;
-                                    pnode->PushMessage("mnvs", n); //sync masternode votes
-                                }
-
-                                RequestedMasternodeAssets++;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        } else if((c % 60 == 0 && RequestedMasternodeAssets >= 5 && RequestedMasternodeAssets < MASTERNODE_LIST_SYNCED) || //done syncing
-                  (c % (5 * 60) == 0 && RequestedMasternodeAssets < 5)) { //couldn't find 5 peers in 5 minutes
-            RequestedMasternodeAssets = MASTERNODE_LIST_SYNCED;
-            c = 1; // reset counter
-        }
-
         if(c % 60 == 0){
             //if we've used 90% of the Masternode list then drop all the oldest.
             int nThreshold = (int)(mnodeman.CountEnabled() * 0.9);
@@ -2396,7 +2337,9 @@ void ThreadCheckDarkSendPool()
             }
         }
 
-        if(RequestedMasternodeAssets == MASTERNODE_LIST_SYNCED) {
+        masternodeSync.Process();
+
+        if(masternodeSync.IsSynced()) {
             if(c % MASTERNODE_PING_SECONDS == 1) activeMasternode.ManageStatus(); // activate right after sync
 
             if(c % 60 == 0)

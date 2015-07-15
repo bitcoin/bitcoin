@@ -110,6 +110,7 @@ BITCOIN_CORE_H = \
   masternode.h \
   masternode-payments.h \
   masternode-budget.h \
+  masternode-sync.h \
   masternodeman.h \
   masternodeconfig.h \
   merkleblock.h \
@@ -284,6 +285,7 @@ libbitcoin_common_a_SOURCES = \
   darksend-relay.cpp \
   masternode.cpp \
   masternode-budget.cpp \
+  masternode-sync.cpp \
   masternode-payments.cpp \
   masternodeman.cpp \
   masternodeconfig.cpp \
