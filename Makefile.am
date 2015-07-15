@@ -43,7 +43,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsecp256k1.pc
 
 libsecp256k1_la_SOURCES = src/secp256k1.c
-libsecp256k1_la_CPPFLAGS = -I$(top_srcdir)/include $(SECP_INCLUDES)
+libsecp256k1_la_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src $(SECP_INCLUDES)
 libsecp256k1_la_LIBADD = $(SECP_LIBS)
 
 
@@ -68,14 +68,14 @@ endif
 if USE_TESTS
 noinst_PROGRAMS += tests
 tests_SOURCES = src/tests.c
-tests_CPPFLAGS = -DVERIFY $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
+tests_CPPFLAGS = -DVERIFY -I$(top_srcdir)/src $(SECP_INCLUDES) $(SECP_TEST_INCLUDES)
 tests_LDADD = $(SECP_LIBS) $(SECP_TEST_LIBS)
 tests_LDFLAGS = -static
 TESTS = tests
 endif
 
 if USE_ECMULT_STATIC_PRECOMPUTATION
-CPPFLAGS_FOR_BUILD +=-I.
+CPPFLAGS_FOR_BUILD +=-I$(top_srcdir)/
 CFLAGS_FOR_BUILD += -Wall -Wextra -Wno-unused-function
 
 gen_context_OBJECTS = gen_context.o
@@ -92,4 +92,4 @@ src/ecmult_static_context.h: gen_context
 	./gen_context
 endif
 
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
