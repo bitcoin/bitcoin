@@ -63,6 +63,12 @@ $(package)_config_opts += -qt-libpng
 $(package)_config_opts += -qt-libjpeg
 $(package)_config_opts += -qt-zlib
 $(package)_config_opts += -qt-pcre
+$(package)_config_opts += -no-pulseaudio
+$(package)_config_opts += -no-openvg
+$(package)_config_opts += -no-xrender
+$(package)_config_opts += -no-alsa
+$(package)_config_opts += -no-mtdev
+$(package)_config_opts += -no-kms
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin  = -xplatform macx-clang-linux
@@ -116,6 +122,7 @@ endef
 define $(package)_preprocess_cmds
   sed -i.old "s|updateqm.commands = \$$$$\$$$$LRELEASE|updateqm.commands = $($(package)_extract_dir)/qttools/bin/lrelease|" qttranslations/translations/translations.pro && \
   sed -i.old "s/src_plugins.depends = src_sql src_xml src_network/src_plugins.depends = src_xml src_network/" qtbase/src/src.pro && \
+  sed -i.old "s|X11/extensions/XIproto.h|X11/X.h|" qtbase/src/plugins/platforms/xcb/qxcbxsettings.cpp && \
   sed -i.old 's/if \[ "$$$$XPLATFORM_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/if \[ "$$$$BUILD_ON_MAC" = "yes" \]; then xspecvals=$$$$(macSDKify/' qtbase/configure && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/Info.plist.lib qtbase/mkspecs/macx-clang-linux/ &&\
@@ -136,7 +143,6 @@ define $(package)_config_cmds
   export PKG_CONFIG_SYSROOT_DIR=/ && \
   export PKG_CONFIG_LIBDIR=$(host_prefix)/lib/pkgconfig && \
   export PKG_CONFIG_PATH=$(host_prefix)/share/pkgconfig  && \
-  export CPATH=$(host_prefix)/include && \
   ./configure $($(package)_config_opts) && \
   $(MAKE) sub-src-clean && \
   cd ../qttranslations && ../qtbase/bin/qmake qttranslations.pro -o Makefile && \
@@ -145,7 +151,6 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  export CPATH=$(host_prefix)/include && \
   $(MAKE) -C src $(addprefix sub-,$($(package)_qt_libs)) && \
   $(MAKE) -C ../qttools/src/linguist/lrelease && \
   $(MAKE) -C ../qttranslations
