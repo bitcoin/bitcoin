@@ -20,7 +20,7 @@ env:
     - FIELD=32bit     ENDOMORPHISM=yes
     - BIGNUM=no
     - BIGNUM=no       ENDOMORPHISM=yes
-    - BIGNUM=no       STATICPRECOMPUTATION=yes
+    - BIGNUM=no       STATICPRECOMPUTATION=no
     - BUILD=distcheck
     - EXTRAFLAGS=CFLAGS=-DDETERMINISTIC
 matrix:
