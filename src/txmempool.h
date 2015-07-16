@@ -188,7 +188,7 @@ public:
      *  - The feerate of what is removed is not better than the feerate of toadd.
      *  - Removing said list will reduce the DynamicMemoryUsage after adding toadd, below sizelimit.
      */
-    bool StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeeRemoved);
+    bool StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesReserved, CAmount& nFeeRemoved);
     void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()

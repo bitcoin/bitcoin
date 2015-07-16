@@ -446,13 +446,13 @@ size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 5 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
 }
 
-bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved) {
+bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage,
+                                 CAmount& nFeesReserved, CAmount& nFeesRemoved) {
     size_t nSizeRemoved = 0;
     std::set<uint256> protect;
     BOOST_FOREACH(const CTxIn& in, toadd.GetTx().vin) {
         protect.insert(in.prevout.hash);
     }
-
     size_t expsize = DynamicMemoryUsage() + GuessDynamicMemoryUsage(toadd); // Track the expected resulting memory usage of the mempool.
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
     int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
@@ -496,7 +496,7 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
             }
             const CTxMemPoolEntry* origTx = &*mapTx.find(hashnow);
             nowfee += origTx->GetFee();
-            if (nFeesRemoved + nowfee > toadd.GetFee()) {
+            if (nFeesReserved + nFeesRemoved + nowfee > toadd.GetFee()) {
                 // If this pushes up to the total fees deleted too high, we're done with 'hash'.
                 good = false;
                 break;
