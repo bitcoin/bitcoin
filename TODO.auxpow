@@ -1,6 +1,3 @@
-* Test setgenerate with new versions, should still be accepted by the
-  old client.  Needs testnet/regtest.
-
 * Add getauxblock RPC call.
 
 * Test it with auxpow.py-based script.

@@ -530,6 +530,7 @@ public:
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
+bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex);
 
 
 /** Functions for validating blocks and updating the block tree */
@@ -735,22 +736,7 @@ public:
         return ret;
     }
 
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-
-        /* FIXME: Read auxpow from disk when necessary.  */
-        assert (!nVersion.IsAuxpow());
-
-        block.nVersion       = nVersion;
-        if (pprev)
-            block.hashPrevBlock = pprev->GetBlockHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        return block;
-    }
+    CBlockHeader GetBlockHeader() const;
 
     uint256 GetBlockHash() const
     {
