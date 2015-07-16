@@ -944,9 +944,6 @@ bool SkipBlock(int nBlock)
     if (nBlock > MAX_SEED_BLOCK) {
         return false;
     }
-    if (nBlock < 260000) {
-        return false;
-    }
     // Otherwise check, if the block is in the list:
     return (blockList.find(nBlock) == blockList.end());
 }
