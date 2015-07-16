@@ -668,54 +668,6 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, CCoinsViewCache& inputs)
     return nSigOps;
 }
 
-int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
-{
-    AssertLockHeld(cs_main);
-    CBlock blockTmp;
-
-    if (pblock == NULL) {
-        CCoins coins;
-        if (pcoinsTip->GetCoins(GetHash(), coins)) {
-            CBlockIndex *pindex = chainActive[coins.nHeight];
-            if (pindex) {
-                if (!ReadBlockFromDisk(blockTmp, pindex))
-                    return 0;
-                pblock = &blockTmp;
-            }
-        }
-    }
-
-    if (pblock) {
-        // Update the tx's hashBlock
-        hashBlock = pblock->GetHash();
-
-        // Locate the transaction
-        for (nIndex = 0; nIndex < (int)pblock->vtx.size(); nIndex++)
-            if (pblock->vtx[nIndex] == *(CTransaction*)this)
-                break;
-        if (nIndex == (int)pblock->vtx.size())
-        {
-            vMerkleBranch.clear();
-            nIndex = -1;
-            LogPrintf("ERROR: SetMerkleBranch() : couldn't find tx in block\n");
-            return 0;
-        }
-
-        // Fill in merkle branch
-        vMerkleBranch = pblock->GetMerkleBranch(nIndex);
-    }
-
-    // Is the tx in a block that's in the main chain
-    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi == mapBlockIndex.end())
-        return 0;
-    CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    return chainActive.Height() - pindex->nHeight + 1;
-}
-
 
 
 
@@ -959,56 +911,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 
-int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
-{
-    if (hashBlock == 0 || nIndex == -1)
-        return 0;
-    AssertLockHeld(cs_main);
-
-    // Find the block it claims to be in
-    map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi == mapBlockIndex.end())
-        return 0;
-    CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    // Make sure the merkle branch connects to this block
-    if (!fMerkleVerified)
-    {
-        if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != pindex->hashMerkleRoot)
-            return 0;
-        fMerkleVerified = true;
-    }
-
-    pindexRet = pindex;
-    return chainActive.Height() - pindex->nHeight + 1;
-}
-
-int CMerkleTx::GetDepthInMainChain(CBlockIndex* &pindexRet) const
-{
-    AssertLockHeld(cs_main);
-    int nResult = GetDepthInMainChainINTERNAL(pindexRet);
-    if (nResult == 0 && !mempool.exists(GetHash()))
-        return -1; // Not in chain, not in mempool
-
-    return nResult;
-}
-
-int CMerkleTx::GetBlocksToMaturity() const
-{
-    if (!IsCoinBase())
-        return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
-}
-
-
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
-{
-    CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL);
-}
-
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock, bool fAllowSlow)
@@ -1125,7 +1027,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits))
+    if (!CheckProofOfWork(block))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -1287,7 +1189,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return bnNew.GetCompact();
 }
 
-bool CheckProofOfWork(uint256 hash, unsigned int nBits)
+static bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 {
     CBigNum bnTarget;
     bnTarget.SetCompact(nBits);
@@ -1299,6 +1201,45 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     // Check proof of work matches claimed amount
     if (hash > bnTarget.getuint256())
         return error("CheckProofOfWork() : hash doesn't match nBits");
+
+    return true;
+}
+
+bool CheckProofOfWork(const CBlockHeader& block)
+{
+    /* Except for legacy blocks with full version 1, ensure that
+       the chain ID is correct.  Legacy blocks are not allowed since
+       the merge-mining start, which is checked in AcceptBlock
+       where the height is known.  */
+    if (!block.nVersion.IsLegacy()
+          && block.nVersion.GetChainId() != Params().AuxpowChainId())
+        return error("%s : block does not have our chain ID"
+                     " (got %d, expected %d, full nVersion %d)",
+                     __func__, block.nVersion.GetChainId(),
+                     Params().AuxpowChainId(), block.nVersion.GetFullVersion());
+
+    /* If there is no auxpow, just check the block hash.  */
+    if (!block.auxpow)
+    {
+        if (block.nVersion.IsAuxpow())
+            return error("%s : no auxpow on block with auxpow version",
+                         __func__);
+
+        if (!CheckProofOfWork(block.GetHash(), block.nBits))
+            return error("%s : non-AUX proof of work failed", __func__);
+
+        return true;
+    }
+
+    /* We have auxpow.  Check it.  */
+
+    if (!block.nVersion.IsAuxpow())
+        return error("%s : auxpow on block with non-auxpow version", __func__);
+
+    if (!block.auxpow->check(block.GetHash(), block.nVersion.GetChainId()))
+        return error("%s : AUX POW is not valid", __func__);
+    if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits))
+        return error("%s : AUX proof of work failed", __func__);
 
     return true;
 }
@@ -2300,7 +2241,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                          REJECT_INVALID, "bad-blk-length");
 
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
+    if (fCheckPOW && !CheckProofOfWork(block))
         return state.DoS(50, error("CheckBlock() : proof of work failed"),
                          REJECT_INVALID, "high-hash");
 
@@ -2372,6 +2313,18 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp)
             return state.DoS(10, error("AcceptBlock() : prev block not found"), 0, "bad-prevblk");
         pindexPrev = (*mi).second;
         nHeight = pindexPrev->nHeight+1;
+
+        /* Disallow legacy blocks after merge-mining start.  Reject auxpow
+           blocks before the start.  */
+        const int nHeight = pindexPrev->nHeight+1;
+        const bool allowAuxpow = (nHeight >= Params().AuxpowStartHeight());
+        if (allowAuxpow && block.nVersion.IsLegacy())
+            return state.DoS(100, error("%s : legacy block after auxpow start",
+                                        __func__),
+                             REJECT_INVALID, "late-legacy-block");
+        if (!allowAuxpow && block.nVersion.IsAuxpow())
+            return state.DoS(100, error("%s : auxpow block found too early", __func__),
+                             REJECT_INVALID, "auxpow-too-early");
 
         // Check proof of work
         if (block.nBits != GetNextWorkRequired(pindexPrev, &block))

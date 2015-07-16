@@ -218,8 +218,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!pindexNew->CheckIndex())
-                    return error("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString());
+                /* Disable PoW checking here.  The index alone does not
+                   contain enough data to check auxpow.  */
 
                 pcursor->Next();
             } else {

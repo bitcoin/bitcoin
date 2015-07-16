@@ -157,7 +157,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle);
 /** Run an instance of the script checking thread */
 void ThreadScriptCheck();
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
-bool CheckProofOfWork(uint256 hash, unsigned int nBits);
+bool CheckProofOfWork(const CBlockHeader& block);
 /** Calculate the minimum amount of work a received block needs, without knowing its direct parent */
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime);
 /** Get the number of active peers */
@@ -422,62 +422,6 @@ public:
         std::swap(nFlags, check.nFlags);
         std::swap(nHashType, check.nHashType);
     }
-};
-
-/** A transaction with a merkle branch linking it to the block chain. */
-class CMerkleTx : public CTransaction
-{
-private:
-    int GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const;
-
-public:
-    uint256 hashBlock;
-    std::vector<uint256> vMerkleBranch;
-    int nIndex;
-
-    // memory only
-    mutable bool fMerkleVerified;
-
-
-    CMerkleTx()
-    {
-        Init();
-    }
-
-    CMerkleTx(const CTransaction& txIn) : CTransaction(txIn)
-    {
-        Init();
-    }
-
-    void Init()
-    {
-        hashBlock = 0;
-        nIndex = -1;
-        fMerkleVerified = false;
-    }
-
-
-    IMPLEMENT_SERIALIZE
-    (
-        nSerSize += SerReadWrite(s, *(CTransaction*)this, nType, nVersion, ser_action);
-        nVersion = this->nVersion;
-        READWRITE(hashBlock);
-        READWRITE(vMerkleBranch);
-        READWRITE(nIndex);
-    )
-
-
-    int SetMerkleBranch(const CBlock* pblock=NULL);
-
-    // Return depth of transaction in blockchain:
-    // -1  : not in blockchain, and not in memory pool (conflicted transaction)
-    //  0  : in memory pool, waiting to be included in a block
-    // >=1 : this many blocks deep in the main chain
-    int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
-    int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
-    bool IsInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChainINTERNAL(pindexRet) > 0; }
-    int GetBlocksToMaturity() const;
-    bool AcceptToMemoryPool(bool fLimitFree=true);
 };
 
 
@@ -825,11 +769,6 @@ public:
         if (bnTarget <= 0)
             return 0;
         return (CBigNum(1)<<256) / (bnTarget+1);
-    }
-
-    bool CheckIndex() const
-    {
-        return CheckProofOfWork(GetBlockHash(), nBits);
     }
 
     enum { nMedianTimeSpan=11 };

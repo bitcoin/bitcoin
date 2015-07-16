@@ -119,6 +119,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     txNew.vout.resize(1);
     txNew.vout[0].scriptPubKey = scriptPubKeyIn;
 
+    // Initialise the block version.
+    pblock->nVersion.SetBaseVersion(CBlockHeader::CURRENT_VERSION);
+
     // Add our coinbase tx as first transaction
     pblock->vtx.push_back(txNew);
     pblocktemplate->vTxFees.push_back(-1); // updated at end

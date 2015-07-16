@@ -5,6 +5,7 @@
 
 #include "core.h"
 
+#include "chainparams.h"
 #include "util.h"
 
 std::string COutPoint::ToString() const
@@ -216,7 +217,7 @@ void CBlockVersion::SetBaseVersion(int32_t nBaseVersion)
 {
     assert(nBaseVersion >= 1 && nBaseVersion < VERSION_AUXPOW);
     assert(!IsAuxpow());
-    const int32_t nChainId = 20;//Params ().GetConsensus ().nAuxpowChainId;
+    const int32_t nChainId = Params().AuxpowChainId();
     nVersion = nBaseVersion | (nChainId * VERSION_CHAIN_START);
 }
 
@@ -225,7 +226,6 @@ uint256 CPureBlockHeader::GetHash() const
     return SerializeHash(*this);
 }
 
-/*
 void CBlockHeader::SetAuxpow (CAuxPow* apow)
 {
     if (apow)
@@ -238,7 +238,6 @@ void CBlockHeader::SetAuxpow (CAuxPow* apow)
         nVersion.SetAuxpow(false);
     }
 }
-*/
 
 uint256 CBlock::BuildMerkleTree() const
 {
