@@ -90,6 +90,8 @@ BUILT_SOURCES = src/ecmult_static_context.h
 
 src/ecmult_static_context.h: gen_context
 	./gen_context
+
+CLEANFILES = gen_context src/ecmult_static_context.h
 endif
 
 EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
