@@ -24,7 +24,7 @@ using namespace boost;
     - This would result in old clients getting confused about which spork is for what
 */
 #define SPORK_START                                           10001
-#define SPORK_END                                             10010
+#define SPORK_END                                             10011
 
 #define SPORK_2_INSTANTX                                      10001
 #define SPORK_3_INSTANTX_BLOCK_FILTERING                      10002
@@ -34,6 +34,7 @@ using namespace boost;
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT                 10008
 #define SPORK_10_MASTERNODE_PAY_NEWEST_NODES                  10009
 #define SPORK_11_RESET_BUDGET                                 10010
+#define SPORK_12_RECONSIDER_BLOCKS                            10011
 
 #define SPORK_2_INSTANTX_DEFAULT                              978307200   //2001-1-1
 #define SPORK_3_INSTANTX_BLOCK_FILTERING_DEFAULT              1424217600  //2015-2-18
@@ -43,6 +44,7 @@ using namespace boost;
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT         1444217600   //OFF
 #define SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT          1444217600   //OFF
 #define SPORK_11_RESET_BUDGET_DEFAULT                         0
+#define SPORK_12_RECONSIDER_BLOCKS_DEFAULT                    0
     
 class CSporkMessage;
 class CSporkManager;

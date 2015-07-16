@@ -90,6 +90,7 @@ bool IsSporkActive(int nSporkID)
         if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
         if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
+        if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
 
         if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -114,6 +115,7 @@ int GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) r = SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT;
         if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
         if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
+        if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
 
         if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -125,7 +127,33 @@ void ExecuteSpork(int nSporkID, int nValue)
 {
     if(nSporkID == SPORK_11_RESET_BUDGET && nValue == 1){
         budget.Clear();
+    }
 
+    //correct fork via spork technology
+    if(nSporkID == SPORK_12_RECONSIDER_BLOCKS && nValue > 0) {
+        LogPrintf("Spork::ExecuteSpork -- Reconcider Last %d Blocks\n", nValue);
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        int count = 0;
+
+        for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
+            count++;
+            if(count >= nValue) return;
+
+            CValidationState state;
+            {
+                LOCK(cs_main);
+
+                LogPrintf("Spork::ExecuteSpork -- Reconcider %s\n", pindexPrev->phashBlock->ToString());
+                ReconsiderBlock(state, pindexPrev);
+            }
+
+            if (state.IsValid()) {
+                ActivateBestChain(state);
+            }
+
+            if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
+            pindexPrev = pindexPrev->pprev;
+        }
     }
 }
 
@@ -222,6 +250,7 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if(strName == "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT") return SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT;
     if(strName == "SPORK_10_MASTERNODE_PAY_NEWEST_NODES") return SPORK_10_MASTERNODE_PAY_NEWEST_NODES;
     if(strName == "SPORK_11_RESET_BUDGET") return SPORK_11_RESET_BUDGET;
+    if(strName == "SPORK_12_RECONSIDER_BLOCKS") return SPORK_12_RECONSIDER_BLOCKS;
 
     return -1;
 }
@@ -236,6 +265,7 @@ std::string CSporkManager::GetSporkNameByID(int id)
     if(id == SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT) return "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT";
     if(id == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) return "SPORK_10_MASTERNODE_PAY_NEWEST_NODES";
     if(id == SPORK_11_RESET_BUDGET) return "SPORK_11_RESET_BUDGET";
+    if(id == SPORK_12_RECONSIDER_BLOCKS) return "SPORK_12_RECONSIDER_BLOCKS";
 
     return "Unknown";
 }
