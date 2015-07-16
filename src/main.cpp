@@ -888,6 +888,22 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
+        // The fees required to accept this transaction start with the fees required to accept it on its own
+        CAmount nFeesRequired = 0;
+        if (fLimitFree) {
+            nFeesRequired = GetMinRelayFee(tx, nSize, true);
+            if (nFees < nFeesRequired)
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
+                                 strprintf("%d < %d", nFees, nFeesRequired));
+        }
+        // If we are not relaying low priority free transactions, then if this tx doesn't have sufficient priority
+        // it must have minRelayTxFee
+        if (GetBoolArg("-relaypriority", true) && nFeesRequired < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
+            nFeesRequired =  ::minRelayTxFee.GetFee(nSize);
+            if (nFees < nFeesRequired)
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
+        }
+
         // If the predicted mempool usage is under the softcap, StageTrimToSize will return success.
         // Otherwise StageTrimToSize will attempt to find appropriate transactions of lesser
         // feerate to evict from the mempool.  If this fails and the mempool usage would be under
@@ -899,7 +915,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         size_t capstep = (hardcap - softcap) / 10;
         std::set<uint256> stagedelete;
         CAmount nFeesDeleted = 0;
-        if (!pool.StageTrimToSize(softcap, entry, stagedelete, nFeesDeleted)) {
+        if (!pool.StageTrimToSize(softcap, entry, nFeesRequired, stagedelete, nFeesDeleted)) {
             size_t expsize = pool.DynamicMemoryUsage() + pool.GuessDynamicMemoryUsage(entry);
             if (expsize > hardcap) {
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap");
@@ -918,17 +934,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                     LogPrint("mempool", "Tx %s entering reserve space size/fee %ld %ld at usage of %5.2f and mult of %d\n",tx.GetHash().ToString().substr(0,10).c_str(),nSize,nFees, expsize, relayMult);
                 }
             }
-        }
-
-        // Don't accept it if it can't get into a block
-        CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
-        if (fLimitFree && nFees < txMinFee)
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
-                strprintf("%d < %d", nFees, txMinFee + nFeesDeleted));
-
-        // Require that free transactions have sufficient priority to be mined in the next block.
-        if (GetBoolArg("-relaypriority", true) && nFees - nFeesDeleted < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
         // Continuously rate-limit free (really, very-low-fee) transactions
