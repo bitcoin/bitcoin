@@ -927,7 +927,8 @@ static std::set<int> GetBlockList()
     }
 
     int64_t nTime = GetTimeMicros() - nTimeStart;
-    PrintToConsole("%s(): to insert %d elements: %.4f ms\n", __func__, blockList.size(), 0.001 * nTime);
+    PrintToLog("%s(): seed block filter active - only %d blocks will be parsed during initial scan [loading time: %.4f ms]\n",
+                   __func__, blockList.size(), 0.001 * nTime);
 
     return blockList;
 }
