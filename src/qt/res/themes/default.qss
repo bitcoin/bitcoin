@@ -239,3 +239,16 @@ QScrollArea * {
 QDialog#SendCoinsDialog QLabel#labelBalance {
     margin-bottom: 0px;
 }
+
+QFrame#SendCoinsEntry {
+    border: 1px solid #008000;
+}
+
+/* Multisig Page */
+QFrame#MultisigAddressEntry {
+    border: 1px solid #008000;
+}
+
+QFrame#MultisigInputEntry {
+    border: 1px solid #008000;
+}
