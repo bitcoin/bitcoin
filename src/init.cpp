@@ -1457,6 +1457,12 @@ bool AppInit2(boost::thread_group& threadGroup)
 
 
     fMasterNode = GetBoolArg("-masternode", false);
+
+    if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
+        return InitError("Enabling Masternode support requires turning on transaction indexing."
+                  "Please add txindex=1 to your configuration and start with --reindex=1");
+    }
+
     if(fMasterNode) {
         LogPrintf("IS DARKSEND MASTER NODE\n");
         strMasterNodeAddr = GetArg("-masternodeaddr", "");
