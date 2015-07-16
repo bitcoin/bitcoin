@@ -1791,6 +1791,9 @@ static int msc_initial_scan(int nFirstBlock)
     // used to print the progress to the console and notifies the UI
     ProgressReporter progressReporter(chainActive[nFirstBlock], chainActive[nLastBlock]);
 
+    // check if using seed block filter should be disabled
+    bool seedBlockFilterEnabled = GetBoolArg("-omniseedblockfilter", true);
+
     for (nBlock = nFirstBlock; nBlock <= nLastBlock; ++nBlock)
     {
         if (ShutdownRequested()) {
@@ -1813,7 +1816,7 @@ static int msc_initial_scan(int nFirstBlock)
         unsigned int nTxNum = 0;
         mastercore_handler_block_begin(nBlock, pblockindex);
 
-        if (!SkipBlock(nBlock)) {
+        if (!seedBlockFilterEnabled || !SkipBlock(nBlock)) {
             CBlock block;
             if (!ReadBlockFromDisk(block, pblockindex)) break;
 
