@@ -1457,28 +1457,32 @@ bool CFinalizedBudget::IsValid(bool fCheckCollateral)
 
 bool CFinalizedBudget::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
-    // TODO:
-    // BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
-    // {
-    //     bool found = false;
-    //     BOOST_FOREACH(CTxOut out, txNew.vout)
-    //     {
-    //         if(payee.scriptPubKey == out.scriptPubKey && payee.nValue == out.nValue)
-    //             found = true;
-    //     }
+    int i = nBlockHeight - GetBlockStart();
+    if(i < 0) {
+        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - height:%d : start:%d\n", nBlockHeight, GetBlockStart());
+        return false;
+    }
 
-    //     if(payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED && !found){
+    if(i > (int)vecProposals.size()-1) {
+        LogPrintf("CFinalizedBudget::IsTransactionValid - Invalid block - i:%d : size:%d\n", i, (int)vecProposals.size()-1);
+        return false;
+    }
 
-    //         CTxDestination address1;
-    //         ExtractDestination(payee.scriptPubKey, address1);
-    //         CBitcoinAddress address2(address1);
+    bool found = false;
+    BOOST_FOREACH(CTxOut out, txNew.vout)
+    {
+        if(vecProposals[i].payee == out.scriptPubKey && vecProposals[i].nAmount == out.nValue)
+            found = true;
+    }
+    if(!found) {
+        CTxDestination address1;
+        ExtractDestination(vecProposals[i].payee, address1);
+        CBitcoinAddress address2(address1);
 
-    //         LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s:%d\n", address2.ToString().c_str(), payee.nValue);
-    //         return false;
-    //     }
-    // }
-
-    return true;
+        LogPrintf("CFinalizedBudget::IsTransactionValid - Missing required payment - %s:%d\n", address2.ToString().c_str(), vecProposals[i].nAmount);
+    }
+    
+    return found;
 }
 
 void CFinalizedBudget::SubmitVote()
