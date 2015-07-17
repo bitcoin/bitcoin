@@ -29,3 +29,16 @@ std::string CFeeRate::ToString() const
 {
     return strprintf("%d.%08d BTC/kB", nSatoshisPerK / COIN, nSatoshisPerK % COIN);
 }
+
+void CFeeRate::ApplyFactor(double& factor, const CAmount& min)
+{
+    CAmount old = nSatoshisPerK;
+    nSatoshisPerK = old * factor + 0.5;
+    if (nSatoshisPerK < min) {
+        nSatoshisPerK = min;
+        factor = 1.0;
+    } else {
+        factor *= old;
+        factor /= nSatoshisPerK;
+    }
+}

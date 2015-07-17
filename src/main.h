@@ -105,6 +105,7 @@ extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
+extern CAmount defminRelayTxFee;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 

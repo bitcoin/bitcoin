@@ -67,6 +67,7 @@ uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
+CAmount defminRelayTxFee = 1000;
 CFeeRate minRelayTxFee = CFeeRate(1000);
 
 CTxMemPool mempool(::minRelayTxFee);
@@ -198,6 +199,11 @@ namespace {
 
     /** Dirty block file entries. */
     set<int> setDirtyFileInfo;
+
+    /** Multiplier for minimum relay fee. */
+    double dRelayFeeMultiplier = 1.0;
+    /** Last timestamp of minimum relay fee update. */
+    int64_t nRelayFeeMultiplierTimestamp = 0;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -959,6 +965,25 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
+
+        // Adjust relay fee.
+        int64_t nNow = GetTimeMicros();
+        if (nRelayFeeMultiplierTimestamp == 0) {
+            nRelayFeeMultiplierTimestamp = nNow;
+        } else if (nNow > nRelayFeeMultiplierTimestamp + 1000000) { // Update feerate at most once per second
+            double cap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000.0;
+            double usage = std::max(cap * 0.5, pool.DynamicMemoryUsage() * 1.0); // Compute usage, clamped to [cap/2...cap].
+            double aimed = cap * 0.707106781; // Aim for the multiplicative average in between (cap/sqrt(2)).
+            double factor = usage / aimed;
+            if (!stagedelete.empty()) {
+                // When the hard cap limitation is being used, instead converge towards the feerate of transactions actually being accepted.
+                double factor2 = nFees / (double)minRelayTxFee.GetFee(entry.GetTxSize());
+                factor = std::max(factor, factor2);
+            }
+            dRelayFeeMultiplier *= pow(factor, (nNow - nRelayFeeMultiplierTimestamp) / (1000000.0 * 60 * 60)); // Spread adjustment effects over one hour.
+            minRelayTxFee.ApplyFactor(dRelayFeeMultiplier, defminRelayTxFee);
+            nRelayFeeMultiplierTimestamp = nNow;
+        }
     }
 
     SyncWithWallets(tx, NULL);
