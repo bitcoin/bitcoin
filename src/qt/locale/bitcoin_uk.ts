@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Це ваша нова Bitcoin адреса для отримування платежів. Рекомендовано використовувати нову адресу для кожної транзакції.</translation>
+        <translation>Це ваша нова Bitcoin адреса для отримання платежів. Рекомендовано використовувати нову адресу для кожної транзакції.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -244,7 +244,7 @@
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>Транзакції</translation>
+        <translation>&amp;Транзакції</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -396,7 +396,7 @@
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Про Bitcoin Core</translation>
+        <translation>П&amp;ро Bitcoin Core</translation>
     </message>
     <message>
         <source>Modify configuration options for Bitcoin Core</source>
@@ -416,7 +416,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Параметри командного рядка</translation>
+        <translation>П&amp;араметри командного рядка</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
@@ -424,7 +424,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n активне з'єднання з мережею</numerusform><numerusform>%n активні з'єднання з мережею</numerusform><numerusform>%n активних з'єднань з мережею Bitcoin</numerusform></translation>
+        <translation><numerusform>%n активне з'єднання з мережею Bitcoin</numerusform><numerusform>%n активні з'єднання з мережею Bitcoin</numerusform><numerusform>%n активних з'єднань з мережею Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -556,7 +556,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Кількість:</translation>
+        <translation>Сума:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -628,11 +628,11 @@
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати суму</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Копіювати ID транзакції </translation>
+        <translation>Скопіювати ID транзакції </translation>
     </message>
     <message>
         <source>Lock unspent</source>
@@ -644,31 +644,31 @@
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати кількість</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>Копіювати комісію</translation>
+        <translation>Скопіювати комісію</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Копіювати після комісії</translation>
+        <translation>Скопіювати після комісії</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Копіювати байти</translation>
+        <translation>Скопіювати байти</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation>Копіювати пріорітет</translation>
+        <translation>Скопіювати пріорітет</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Копіювати пил</translation>
+        <translation>Скопіювати пил</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Копіювати решту</translation>
+        <translation>Скопіювати решту</translation>
     </message>
     <message>
         <source>highest</source>
@@ -716,7 +716,7 @@
     </message>
     <message>
         <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
-        <translation>Ця позначка стане червоною, якщо розмір транзакції перевищить 1000 байт.</translation>
+        <translation>Ця позначка стане червоною, якщо розмір транзакції перевищить 1000 байтів.</translation>
     </message>
     <message>
         <source>This label turns red if the priority is smaller than "medium".</source>
@@ -962,7 +962,7 @@
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Кількість потоків сценарію перевірки</translation>
+        <translation>Кількість потоків &amp;сценарію перевірки</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -1002,7 +1002,7 @@
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>Скинути параметри</translation>
+        <translation>С&amp;кинути параметри</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1524,11 +1524,11 @@
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>Відкрити</translation>
+        <translation>&amp;Відкрити</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>Консоль</translation>
+        <translation>&amp;Консоль</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1706,11 +1706,11 @@
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Скопіювати URI</translation>
+        <translation>&amp;Скопіювати URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Скопіювати адресу</translation>
+        <translation>Скопіювати &amp;адресу</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
@@ -1860,7 +1860,7 @@
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Якщо оплата користувача встановлюється в 1000 Satoshi і розмір передачі всього 250 байт, то "за кілобайт" платить тільки 250 Satoshi, в той час як "всього щонайменше" платить 1000 satoshis. Для передач більших, ніж кілобайт обоє платять за кілобайт.</translation>
+        <translation>Якщо комісія встановлюється в 1000 сатоші і розмір транзакції лише 250 байтів, то опція "за кілобайт" встановлює комісію в 250 сатоші, в той час, як "всього щонайменше" - в 1000 сатоші. Для транзакцій більших за кілобайт в обох випадках буде знято комісію за кілобайт.</translation>
     </message>
     <message>
         <source>Hide</source>
@@ -1872,7 +1872,7 @@
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Оплата тільки мінімальних зборів є прийнятною до тих пір, як обсяг транзакцій там є меншим аніж простору в блоках. Але майте на увазі, що це може анулювати транзакцію, якщо попит на Bitcoin транзакції стане значно більшим, ніж мережа зможе обробити.</translation>
+        <translation>Оплата тільки мінімальної комісії є прийнятною, допоки обсяг транзакцій є меншим простору в блоках. Але майте на увазі, що це може анулювати транзакцію, якщо попит на Bitcoin транзакції стане більшим, ніж мережа зможе обробити.</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -1888,7 +1888,7 @@
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Розумна оплата ще не ініціалізована. Це звичайно займає кілька блоків...)</translation>
+        <translation>(Розумну оплату ще не ініціалізовано. Це, зазвичай, триває кілька блоків...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -1956,7 +1956,7 @@
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Копіювати суму</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -2020,7 +2020,7 @@
     </message>
     <message>
         <source>Pay only the minimum fee of %1</source>
-        <translation>Платити тільки мінімальний збір у розмірі %1</translation>
+        <translation>Платити тільки мінімальну комісію у розмірі %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2213,7 +2213,7 @@
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>Перевірити повідомлення</translation>
+        <translation>П&amp;еревірити повідомлення</translation>
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
@@ -2229,7 +2229,7 @@
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Перевірити повідомлення</translation>
+        <translation>Пере&amp;вірити повідомлення</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -2434,7 +2434,7 @@
     </message>
     <message>
         <source>Inputs</source>
-        <translation>витрати</translation>
+        <translation>Входи</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2647,11 +2647,11 @@
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати суму</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Копіювати ID транзакції </translation>
+        <translation>Скопіювати ID транзакції </translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2898,7 +2898,7 @@
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
-        <translation>Підключитись лише до вказаного вузла</translation>
+        <translation>Підключитись лише до вказаного вузла/вузлів</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -2970,7 +2970,7 @@
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Підключити тільки до вузлів в мережі &lt;net&gt; (ipv4, ipv6 або onion)</translation>
+        <translation>Підключатися тільки до вузлів в мережі &lt;net&gt; (ipv4, ipv6 або onion)</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3071,6 +3071,10 @@
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Якщо параметр paytxfee не встановлено, включити комісію для отримання перших підтверджень транзакцій протягом n блоків (типово: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: «%s» ( плата повинна бути, принаймні %s, щоб запобігти зависанню транзакцій)</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
@@ -3206,7 +3210,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: '%s'</translation>
+        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: «%s»</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

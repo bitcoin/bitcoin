@@ -871,12 +871,20 @@
         <translation>&amp;Hálózat</translation>
     </message>
     <message>
+        <source>Expert</source>
+        <translation>szakértő</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>A Bitcoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>&amp;UPnP port-feltérképezés</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Csatlakozás a Bitcoin hálózatához SOCKS5 proxyn keresztül</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -2057,12 +2065,20 @@
         <translation>Tárca ellenőrzése...</translation>
     </message>
     <message>
+        <source>Wallet options:</source>
+        <translation>Tárca beállítások:</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Az adatbázist újra kell építeni -reindex használatával (módosítás -tindex).</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Adatkönyvtár kiválasztása induláskor (alapbeállítás: 0)</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Hiba az adatbázis olvasásakor, leállítás</translation>
     </message>
     <message>
         <source>Information</source>

@@ -2851,7 +2851,7 @@
     </message>
     <message>
         <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
-        <translation>警告: 請檢查你的網路連線狀況，收到了 %d 個區塊在過去 %d 小時內生產出來(預期是 %d 個)</translation>
+        <translation>警告: 請檢查你的網路連線狀況，收到了 %d 個區塊是在過去 %d 小時內生產出來(預期是 %d 個)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>

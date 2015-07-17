@@ -2849,6 +2849,14 @@
         <translation>Kann auf diesem Computer nicht an %s binden, da Bitcoin Core wahrscheinlich bereits gestartet wurde.</translation>
     </message>
     <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>Warnung: Es wurde eine ungewöhnlich hohe Anzahl Blöcke erzeugt, %d Blöcke wurden in den letzten %d Stunden empfangen (%d wurden erwartet).</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>Warnung: Überprüpfen Sie ihre Netzwerkverbindung, %d Blöcke wurden in den letzten %d Stunden empfangen (%d wurden erwartet).</translation>
+    </message>
+    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert festgelegt! Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
     </message>

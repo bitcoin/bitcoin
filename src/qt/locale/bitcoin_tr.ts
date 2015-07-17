@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Adresi ya da etiketi düzenlemek için sağ düğme ile tıklayınız.</translation>
+        <translation>Adres veya etiketi düzenlemek için sağ tıklayınız.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Şu anda seçili olan adresi sistem panosuna kopyala</translation>
+        <translation>Seçili adresi panoya kopyala</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Güncel sekmedeki verileri bir dosyaya aktar</translation>
+        <translation>Açık olan sekmedeki verileri bir dosyaya aktar</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -1323,7 +1323,7 @@
     </message>
     <message>
         <source>Ping Time</source>
-        <translation>Ping Zamanı</translation>
+        <translation>Ping Süresi</translation>
     </message>
 </context>
 <context>
@@ -1492,7 +1492,7 @@
     </message>
     <message>
         <source>Connection Time</source>
-        <translation>Bağlantı Zamanı</translation>
+        <translation>Bağlantı Süresi</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -1512,7 +1512,7 @@
     </message>
     <message>
         <source>Ping Time</source>
-        <translation>Ping Zamanı</translation>
+        <translation>Ping Süresi</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -2843,6 +2843,14 @@
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Bu bilgisayarda %s unsuruna bağlanılamadı. Bitcoin Çekirdeği muhtemelen hâlihazırda çalışmaktadır.</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>İKAZ: anormal yüksek sayıda blok oluşturulmuştur, %d blok son %d saat içinde alınmıştır (%d bekleniyordu)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>İKAZ: ağ bağlantınızı kontrol ediniz, %d blok son %d saat içinde alınmıştır (%d bekleniyordu)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
