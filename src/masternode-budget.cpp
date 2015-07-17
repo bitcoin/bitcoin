@@ -967,6 +967,10 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom)
 
     if(!mapProposals.count(vote.nProposalHash)){
         if(pfrom){
+            // only ask for missing items after our syncing process is complete -- 
+            //   otherwise we'll think a full sync succeeded when they return a result
+            if(!masternodeSync.IsSynced()) return false;
+
             LogPrintf("CBudgetManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nProposalHash.ToString());
             mapOrphanMasternodeBudgetVotes[vote.nProposalHash] = vote;
 
@@ -990,6 +994,10 @@ bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pf
 
     if(!mapFinalizedBudgets.count(vote.nBudgetHash)){
         if(pfrom){
+            // only ask for missing items after our syncing process is complete -- 
+            //   otherwise we'll think a full sync succeeded when they return a result
+            if(!masternodeSync.IsSynced()) return false;
+
             LogPrintf("CBudgetManager::UpdateFinalizedBudget - Unknown Finalized Proposal %s, asking for source budget\n", vote.nBudgetHash.ToString());
             mapOrphanFinalizedBudgetVotes[vote.nBudgetHash] = vote;
 
