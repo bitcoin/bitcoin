@@ -199,8 +199,8 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
-        if(activeMasternode.status != MASTERNODE_STARTED){
-            activeMasternode.status = MASTERNODE_INITIAL; // TODO: consider better way
+        if(activeMasternode.status != ACTIVE_MASTERNODE_STARTED){
+            activeMasternode.status = ACTIVE_MASTERNODE_INITIAL; // TODO: consider better way
             activeMasternode.ManageStatus();
             pwalletMain->Lock();
         }
@@ -322,7 +322,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeMasternode.status != MASTERNODE_INITIAL) return activeMasternode.GetStatus();
+        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL) return activeMasternode.GetStatus();
 
         CTxIn vin = CTxIn();
         CPubKey pubkey = CScript();
