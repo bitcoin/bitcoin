@@ -5,22 +5,14 @@
 #ifndef MASTERNODE_SYNC_H
 #define MASTERNODE_SYNC_H
 
-#include "main.h"
-#include "sync.h"
-#include "net.h"
-#include "key.h"
-#include "masternodeman.h"
-#include "util.h"
-#include "base58.h"
-
-using namespace std;
-
 #define MASTERNODE_INITIAL                0
 #define MASTERNODE_SPORK_SETTINGS         1
 #define MASTERNODE_SYNC_LIST              2
 #define MASTERNODE_SYNC_MNW               3
 #define MASTERNODE_SYNC_BUDGET            4
 #define MASTERNODE_LIST_SYNCED            999
+
+#define MASTERNODE_SYNC_TIMEOUT           5
 
 class CMasternodeSync;
 extern CMasternodeSync masternodeSync;
@@ -32,7 +24,6 @@ extern CMasternodeSync masternodeSync;
 class CMasternodeSync
 {
 public:
-    int c;
     int64_t lastMasternodeList;
     int64_t lastMasternodeWinner;
     int64_t lastBudgetItem;

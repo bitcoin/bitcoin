@@ -2327,16 +2327,7 @@ void ThreadCheckDarkSendPool()
         MilliSleep(1000);
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
 
-        if(c % 60 == 0){
-            //if we've used 90% of the Masternode list then drop all the oldest.
-            int nThreshold = (int)(mnodeman.CountEnabled() * 0.9);
-            if(fDebug) LogPrintf("Checking vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
-            while((int)vecMasternodesUsed.size() > nThreshold){
-                vecMasternodesUsed.erase(vecMasternodesUsed.begin());
-                if(fDebug) LogPrintf("  vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
-            }
-        }
-
+        // try to sync from all available nodes (up to 3 or until MASTERNODE_SYNC_TIMEOUT) one step at a time
         masternodeSync.Process();
 
         if(masternodeSync.IsSynced()) {
@@ -2354,12 +2345,14 @@ void ThreadCheckDarkSendPool()
                 mnodeman.ProcessMasternodeConnections();
                 masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
-            }
 
-            if(c % 60 == 0){
-                //if we've used 1/5 of the Masternode list, then clear the list.
-                if((int)vecMasternodesUsed.size() > (int)mnodeman.size() / 5)
-                    vecMasternodesUsed.clear();
+                //if we've used 90% of the Masternode list then drop all the oldest.
+                int nThreshold = (int)(mnodeman.CountEnabled() * 0.9);
+                if(fDebug) LogPrintf("Checking vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
+                while((int)vecMasternodesUsed.size() > nThreshold){
+                    vecMasternodesUsed.erase(vecMasternodesUsed.begin());
+                    if(fDebug) LogPrintf("  vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
+                }
             }
 
             if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
