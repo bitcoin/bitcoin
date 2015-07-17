@@ -13,12 +13,6 @@
 #include "main.h"
 #include "timedata.h"
 
-#define MASTERNODE_INITIAL                     0 // initial state
-#define MASTERNODE_SYNC_IN_PROCESS             1
-#define MASTERNODE_INPUT_TOO_NEW               2
-#define MASTERNODE_NOT_CAPABLE                 3
-#define MASTERNODE_STARTED                     4
-
 #define MASTERNODE_MIN_CONFIRMATIONS           15
 #define MASTERNODE_MIN_MNP_SECONDS             (30*60)
 #define MASTERNODE_MIN_MNB_SECONDS             (5*60)
