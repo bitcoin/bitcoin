@@ -13,7 +13,6 @@
 #include "rpcserver.h"
 #include "utilmoneystr.h"
 
-#include <boost/lexical_cast.hpp>
 #include <fstream>
 using namespace json_spirit;
 using namespace std;
@@ -51,7 +50,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 7 && params.size() != 8)
-            throw runtime_error("Correct usage of prepare is 'mnbudget prepare proposal-name url payment_count block_start dash_address dash_amount [use_ix(true|false)]'");
+            throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address dash_amount [use_ix(true|false)]'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
@@ -66,15 +65,15 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Invalid payment count, must be more than zero.";
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()*(nPaymentCount+1);
+        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks() * (nPaymentCount + 1);
 
         int nBlockStart = params[4].get_int();
         if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-            int nNext = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
-            return "Invalid block start - must be a budget cycle block. Next valid block: " + boost::lexical_cast<std::string>(nNext);
+            int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
         }
 
-        int nBlockEnd = nBlockStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount);
+        int nBlockEnd = nBlockStart + GetBudgetPaymentCycleBlocks() * nPaymentCount;
 
         if(nBlockStart < nBlockMin)
             return "Invalid payment count, must be more than current height.";
@@ -98,17 +97,8 @@ Value mnbudget(const Array& params, bool fHelp)
         if(!budgetProposalBroadcast.IsValid(strError, false))
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
 
-        std::string cmd = "tx";
         bool useIX = true;
-
-        if (params.size() > 7){
-            useIX = (params[7].get_str() == "true" ? true : false);
-        }
-
-        if(useIX)
-        {
-            cmd = "ix";
-        }
+        if (params.size() > 7) useIX = params[7].get_bool();
 
         CWalletTx wtx;
         pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), useIX);
@@ -116,9 +106,9 @@ Value mnbudget(const Array& params, bool fHelp)
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, cmd);
+        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
 
-        return wtx.GetHash().ToString().c_str();
+        return wtx.GetHash().ToString();
 
     }
 
@@ -131,7 +121,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 8)
-            throw runtime_error("Correct usage of submit is 'mnbudget submit proposal-name url payment_count block_start dash_address dash_amount fee_tx'");
+            throw runtime_error("Correct usage is 'mnbudget submit proposal-name url payment_count block_start dash_address dash_amount fee_tx'");
 
         // Check these inputs the same way we check the vote commands:
         // **********************************************************
@@ -149,12 +139,12 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Invalid payment count, must be more than zero.";
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()*(nPaymentCount+1);
+        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks() * (nPaymentCount + 1);
 
         int nBlockStart = params[4].get_int();
         if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-            int nNext = pindexPrev->nHeight-(pindexPrev->nHeight % GetBudgetPaymentCycleBlocks())+GetBudgetPaymentCycleBlocks();
-            return "Invalid block start - must be a budget cycle block. Next valid block: " + boost::lexical_cast<std::string>(nNext);
+            int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
         }
 
         int nBlockEnd = nBlockStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount);
@@ -190,7 +180,7 @@ Value mnbudget(const Array& params, bool fHelp)
         budgetProposalBroadcast.Relay();
         budget.AddProposal(budgetProposalBroadcast);
 
-        return budgetProposalBroadcast.GetHash().ToString().c_str();
+        return budgetProposalBroadcast.GetHash().ToString();
 
     }
 
@@ -200,10 +190,10 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 3)
-            throw runtime_error("Correct usage of vote-many is 'mnbudget vote-many proposal-hash yes|no'");
+            throw runtime_error("Correct usage is 'mnbudget vote-many proposal-hash yes|no'");
 
         uint256 hash = ParseHashV(params[1], "parameter 1");
-        std::string strVote = params[2].get_str().c_str();
+        std::string strVote = params[2].get_str();
 
         if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
         int nVote = VOTE_ABSTAIN;
@@ -213,7 +203,7 @@ Value mnbudget(const Array& params, bool fHelp)
         int success = 0;
         int failed = 0;
 
-        Object resultObj;
+        Object resultsObj;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
@@ -225,23 +215,33 @@ Value mnbudget(const Array& params, bool fHelp)
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
+            Object statusObj;
+
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
-                printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
                 failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
             CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
             if(pmn == NULL)
             {
-                printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
                 failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
             CBudgetVote vote(pmn->vin, hash, nVote);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-                return "Failure to sign.";
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Failure to sign."));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
             }
 
             mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
@@ -249,9 +249,15 @@ Value mnbudget(const Array& params, bool fHelp)
             budget.UpdateProposal(vote, NULL);
 
             success++;
+            statusObj.push_back(Pair("result", "success"));
+            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
-        return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
+        Object returnObj;
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("detail", resultsObj));
+
+        return returnObj;
     }
 
     if(strCommand == "vote")
@@ -260,10 +266,10 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 3)
-            throw runtime_error("Correct usage of vote is 'mnbudget vote proposal-hash yes|no'");
+            throw runtime_error("Correct usage is 'mnbudget vote proposal-hash yes|no'");
 
         uint256 hash = ParseHashV(params[1], "parameter 1");
-        std::string strVote = params[2].get_str().c_str();
+        std::string strVote = params[2].get_str();
 
         if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
         int nVote = VOTE_ABSTAIN;
@@ -275,7 +281,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::string errorMessage;
 
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            return(" Error upon calling SetKey");
+            return "Error upon calling SetKey";
 
         CBudgetVote vote(activeMasternode.vin, hash, nVote);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
@@ -285,12 +291,14 @@ Value mnbudget(const Array& params, bool fHelp)
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         budget.UpdateProposal(vote, NULL);
+
+        return "Voted successfully";
     }
 
     if(strCommand == "projection")
     {
         Object resultObj;
-        int64_t nTotalAllotted = 0;
+        CAmount nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetBudget();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
@@ -303,24 +311,24 @@ Value mnbudget(const Array& params, bool fHelp)
 
             Object bObj;
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
-            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
             bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
             bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
-            bObj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
+            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
             bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
             bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
             bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
-            bObj.push_back(Pair("Alloted",  (int64_t)pbudgetProposal->GetAllotted()));
-            bObj.push_back(Pair("TotalBudgetAlloted",  nTotalAllotted));
+            bObj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
+            bObj.push_back(Pair("TotalBudgetAlloted",  ValueFromAmount(nTotalAllotted)));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
-            bObj.push_back(Pair("fValid",  (int64_t)pbudgetProposal->fValid));
+            bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
-            resultObj.push_back(Pair(pbudgetProposal->GetName().c_str(), bObj));
+            resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
         }
 
         return resultObj;
@@ -348,24 +356,24 @@ Value mnbudget(const Array& params, bool fHelp)
 
             Object bObj;
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
-            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
-            bObj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString().c_str()));
+            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
+            bObj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
             bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
             bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
-            bObj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
+            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
             bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
             bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
             bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
-            bObj.push_back(Pair("Amount",  (int64_t)pbudgetProposal->GetAmount()));
+            bObj.push_back(Pair("Amount",  ValueFromAmount(pbudgetProposal->GetAmount())));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
-            bObj.push_back(Pair("fValid",  (int64_t)pbudgetProposal->fValid));
+            bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
-            resultObj.push_back(Pair(pbudgetProposal->GetName().c_str(), bObj));
+            resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
         }
 
         return resultObj;
@@ -374,7 +382,7 @@ Value mnbudget(const Array& params, bool fHelp)
     if(strCommand == "getinfo")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage of getinfo is 'mnbudget getinfo profilename'");
+            throw runtime_error("Correct usage is 'mnbudget getinfo profilename'");
 
         std::string strProposalName = params[1].get_str();
 
@@ -387,24 +395,24 @@ Value mnbudget(const Array& params, bool fHelp)
         CBitcoinAddress address2(address1);
 
         Object obj;
-        obj.push_back(Pair("Name",  pbudgetProposal->GetName().c_str()));
-        obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString().c_str()));
-        obj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString().c_str()));
-        obj.push_back(Pair("URL",  pbudgetProposal->GetURL().c_str()));
+        obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
+        obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
+        obj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString()));
+        obj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
         obj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
         obj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
         obj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
         obj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
-        obj.push_back(Pair("PaymentAddress",   address2.ToString().c_str()));
+        obj.push_back(Pair("PaymentAddress",   address2.ToString()));
         obj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
         obj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
         obj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
         obj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
-        obj.push_back(Pair("Alloted",  (int64_t)pbudgetProposal->GetAllotted()));
+        obj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
 
         std::string strError = "";
         obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
-        obj.push_back(Pair("fValid",  (int64_t)pbudgetProposal->fValid));
+        obj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
         return obj;
     }
@@ -412,7 +420,7 @@ Value mnbudget(const Array& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage of getvotes is 'mnbudget getinfo profilename'");
+            throw runtime_error("Correct usage is 'mnbudget getinfo profilename'");
 
         std::string strProposalName = params[1].get_str();
 
@@ -426,11 +434,11 @@ Value mnbudget(const Array& params, bool fHelp)
         while(it != pbudgetProposal->mapVotes.end()){
 
             Object bObj;
-            bObj.push_back(Pair("Vote",  (*it).second.GetVoteString().c_str()));
+            bObj.push_back(Pair("Vote",  (*it).second.GetVoteString()));
             bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
-            bObj.push_back(Pair("fValid",  (int64_t)(*it).second.fValid));
+            bObj.push_back(Pair("fValid",  (*it).second.fValid));
 
-            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort().c_str(), bObj));
+            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort(), bObj));
 
             it++;
         }
@@ -458,7 +466,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "suggest" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "show"))
         throw runtime_error(
-                "mnbudget \"command\"... ( \"passphrase\" )\n"
+                "mnfinalbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
                 "\nAvailable commands:\n"
                 "  vote-many   - Vote on a finalized budget\n"
@@ -472,7 +480,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 2)
-            throw runtime_error("Correct usage of vote-many is 'mnfinalbudget vote-many BUDGET_HASH'");
+            throw runtime_error("Correct usage is 'mnfinalbudget vote-many BUDGET_HASH'");
 
         std::string strHash = params[1].get_str();
         uint256 hash(strHash);
@@ -480,7 +488,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         int success = 0;
         int failed = 0;
 
-        Object resultObj;
+        Object resultsObj;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
@@ -492,17 +500,23 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
+            Object statusObj;
+
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
-                printf(" Masternode signing error, could not set key correctly %s\n", mne.getAlias().c_str());
                 failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
             CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
             if(pmn == NULL)
             {
-                printf("Can't find masternode by pubkey for %s\n", mne.getAlias().c_str());
                 failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
@@ -510,6 +524,9 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             CFinalizedBudgetVote vote(pmn->vin, hash);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Failure to sign."));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
@@ -518,9 +535,15 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             budget.UpdateFinalizedBudget(vote, NULL);
 
             success++;
+            statusObj.push_back(Pair("result", "success"));
+            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
-        return("Voted successfully " + boost::lexical_cast<std::string>(success) + " time(s) and failed " + boost::lexical_cast<std::string>(failed) + " time(s).");
+        Object returnObj;
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("detail", resultsObj));
+
+        return returnObj;
     }
 
     if(strCommand == "vote")
@@ -529,7 +552,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 2)
-            throw runtime_error("Correct usage of vote is 'mnfinalbudget vote BUDGET_HASH'");
+            throw runtime_error("Correct usage is 'mnfinalbudget vote BUDGET_HASH'");
 
         std::string strHash = params[1].get_str();
         uint256 hash(strHash);
@@ -539,7 +562,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         std::string errorMessage;
 
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            return(" Error upon calling SetKey");
+            return "Error upon calling SetKey";
 
         CFinalizedBudgetVote vote(activeMasternode.vin, hash);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
@@ -561,14 +584,14 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
             Object bObj;
-            bObj.push_back(Pair("FeeTX",  finalizedBudget->nFeeTXHash.ToString().c_str()));
-            bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString().c_str()));
+            bObj.push_back(Pair("FeeTX",  finalizedBudget->nFeeTXHash.ToString()));
+            bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)finalizedBudget->GetBlockEnd()));
-            bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals().c_str()));
+            bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals()));
             bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
-            bObj.push_back(Pair("Status",  finalizedBudget->GetStatus().c_str()));
-            resultObj.push_back(Pair(finalizedBudget->GetName().c_str(), bObj));
+            bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
+            resultObj.push_back(Pair(finalizedBudget->GetName(), bObj));
         }
 
         return resultObj;
