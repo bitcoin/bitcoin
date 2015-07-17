@@ -105,6 +105,12 @@ static inline size_t DynamicUsage(const std::set<X>& s)
 }
 
 template<typename X>
+static inline size_t IncrementalDynamicUsage(const std::set<X>& s)
+{
+    return MallocUsage(sizeof(stl_tree_node<X>));
+}
+
+template<typename X>
 static inline size_t RecursiveDynamicUsage(const std::set<X>& v)
 {
     size_t usage = DynamicUsage(v);
@@ -118,6 +124,12 @@ template<typename X, typename Y>
 static inline size_t DynamicUsage(const std::map<X, Y>& m)
 {
     return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y> >)) * m.size();
+}
+
+template<typename X, typename Y>
+static inline size_t IncrementalDynamicUsage(const std::map<X, Y>& m)
+{
+    return MallocUsage(sizeof(stl_tree_node<std::pair<const X, Y> >));
 }
 
 template<typename X, typename Y>
