@@ -26,8 +26,8 @@ extern std::map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
 void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool IsReferenceNode(CTxIn& vin);
-bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight);
-std::string GetRequiredPaymentsString(int64_t nBlockHeight);
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
+std::string GetRequiredPaymentsString(int nBlockHeight);
 bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue);
 void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
 
