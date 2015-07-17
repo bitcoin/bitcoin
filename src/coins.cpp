@@ -83,7 +83,7 @@ CCoinsMap::const_iterator CCoinsViewCache::FetchCoins(const uint256 &txid) const
         // version as fresh.
         ret->second.flags = CCoinsCacheEntry::FRESH;
     }
-    cachedCoinsUsage += memusage::DynamicUsage(ret->second.coins);
+    cachedCoinsUsage += ret->second.coins.DynamicMemoryUsage();
     return ret;
 }
 
@@ -110,7 +110,7 @@ CCoinsModifier CCoinsViewCache::ModifyCoins(const uint256 &txid) {
             ret.first->second.flags = CCoinsCacheEntry::FRESH;
         }
     } else {
-        cachedCoinUsage = memusage::DynamicUsage(ret.first->second.coins);
+        cachedCoinUsage = ret.first->second.coins.DynamicMemoryUsage();
     }
     // Assume that whenever ModifyCoins is called, the entry will be modified.
     ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
@@ -159,7 +159,7 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                     assert(it->second.flags & CCoinsCacheEntry::FRESH);
                     CCoinsCacheEntry& entry = cacheCoins[it->first];
                     entry.coins.swap(it->second.coins);
-                    cachedCoinsUsage += memusage::DynamicUsage(entry.coins);
+                    cachedCoinsUsage += entry.coins.DynamicMemoryUsage();
                     entry.flags = CCoinsCacheEntry::DIRTY | CCoinsCacheEntry::FRESH;
                 }
             } else {
@@ -167,13 +167,13 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                     // The grandparent does not have an entry, and the child is
                     // modified and being pruned. This means we can just delete
                     // it from the parent.
-                    cachedCoinsUsage -= memusage::DynamicUsage(itUs->second.coins);
+                    cachedCoinsUsage -= itUs->second.coins.DynamicMemoryUsage();
                     cacheCoins.erase(itUs);
                 } else {
                     // A normal modification.
-                    cachedCoinsUsage -= memusage::DynamicUsage(itUs->second.coins);
+                    cachedCoinsUsage -= itUs->second.coins.DynamicMemoryUsage();
                     itUs->second.coins.swap(it->second.coins);
-                    cachedCoinsUsage += memusage::DynamicUsage(itUs->second.coins);
+                    cachedCoinsUsage += itUs->second.coins.DynamicMemoryUsage();
                     itUs->second.flags |= CCoinsCacheEntry::DIRTY;
                 }
             }
@@ -261,6 +261,6 @@ CCoinsModifier::~CCoinsModifier()
         cache.cacheCoins.erase(it);
     } else {
         // If the coin still exists after the modification, add the new usage
-        cache.cachedCoinsUsage += memusage::DynamicUsage(it->second.coins);
+        cache.cachedCoinsUsage += it->second.coins.DynamicMemoryUsage();
     }
 }
