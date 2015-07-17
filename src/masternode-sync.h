@@ -5,12 +5,12 @@
 #ifndef MASTERNODE_SYNC_H
 #define MASTERNODE_SYNC_H
 
-#define MASTERNODE_INITIAL                0
-#define MASTERNODE_SPORK_SETTINGS         1
+#define MASTERNODE_SYNC_INITIAL           0
+#define MASTERNODE_SYNC_SPORKS            1
 #define MASTERNODE_SYNC_LIST              2
 #define MASTERNODE_SYNC_MNW               3
 #define MASTERNODE_SYNC_BUDGET            4
-#define MASTERNODE_LIST_SYNCED            999
+#define MASTERNODE_SYNC_FINISHED          999
 
 #define MASTERNODE_SYNC_TIMEOUT           5
 

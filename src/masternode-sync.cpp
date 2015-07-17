@@ -17,13 +17,13 @@ CMasternodeSync::CMasternodeSync()
     lastMasternodeList = 0;
     lastMasternodeWinner = 0;
     lastBudgetItem = 0;
-    RequestedMasternodeAssets = MASTERNODE_INITIAL;
+    RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
     RequestedMasternodeAttempt = 0;
 }
 
 bool CMasternodeSync::IsSynced()
 {
-    return (RequestedMasternodeAssets == MASTERNODE_LIST_SYNCED);
+    return (RequestedMasternodeAssets == MASTERNODE_SYNC_FINISHED);
 }
 
 void CMasternodeSync::AddedMasternodeList()
@@ -45,10 +45,10 @@ void CMasternodeSync::GetNextAsset()
 {
     switch(RequestedMasternodeAssets)
     {
-        case(MASTERNODE_INITIAL):
-            RequestedMasternodeAssets = MASTERNODE_SPORK_SETTINGS;
+        case(MASTERNODE_SYNC_INITIAL):
+            RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
-        case(MASTERNODE_SPORK_SETTINGS):
+        case(MASTERNODE_SYNC_SPORKS):
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             break;
         case(MASTERNODE_SYNC_LIST):
@@ -58,7 +58,7 @@ void CMasternodeSync::GetNextAsset()
             RequestedMasternodeAssets = MASTERNODE_SYNC_BUDGET;
             break;
         case(MASTERNODE_SYNC_BUDGET):
-            RequestedMasternodeAssets = MASTERNODE_LIST_SYNCED;
+            RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             break;
     }
     RequestedMasternodeAttempt = 0;
@@ -75,7 +75,7 @@ void CMasternodeSync::Process()
     if(fDebug) LogPrintf("CMasternodeSync::Process() - RequestedMasternodeAssets %d c %d\n", RequestedMasternodeAssets, c);
 
     //request full mn list only if Masternodes.dat was updated quite a long time ago
-    if(RequestedMasternodeAssets == MASTERNODE_INITIAL) GetNextAsset();
+    if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return;
@@ -86,7 +86,7 @@ void CMasternodeSync::Process()
         if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION)
         {
 
-            if(RequestedMasternodeAssets == MASTERNODE_SPORK_SETTINGS){
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
                 if(pnode->HasFulfilledRequest("getspork")) continue;
                 pnode->FulfilledRequest("getspork");
 

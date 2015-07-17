@@ -13,6 +13,12 @@
 #include "darksend.h"
 #include "masternode.h"
 
+#define ACTIVE_MASTERNODE_INITIAL                     0 // initial state
+#define ACTIVE_MASTERNODE_SYNC_IN_PROCESS             1
+#define ACTIVE_MASTERNODE_INPUT_TOO_NEW               2
+#define ACTIVE_MASTERNODE_NOT_CAPABLE                 3
+#define ACTIVE_MASTERNODE_STARTED                     4
+
 // Responsible for activating the Masternode and pinging the network
 class CActiveMasternode
 {
@@ -44,7 +50,7 @@ public:
 
     CActiveMasternode()
     {        
-        status = MASTERNODE_INITIAL;
+        status = ACTIVE_MASTERNODE_INITIAL;
     }
 
     /// Manage status of main Masternode
