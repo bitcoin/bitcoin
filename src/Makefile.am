@@ -90,6 +90,7 @@ BITCOIN_CORE_H = \
   compat.h \
   compressor.h \
   core_io.h \
+  core_memusage.h \
   crypter.h \
   darksend.h \
   darksend-relay.h \

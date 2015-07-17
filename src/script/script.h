@@ -6,7 +6,6 @@
 #ifndef BITCOIN_SCRIPT_SCRIPT_H
 #define BITCOIN_SCRIPT_SCRIPT_H
 
-#include "memusage.h"
 #include "crypto/common.h"
 
 #include <assert.h>
@@ -606,8 +605,6 @@ public:
         // The default std::vector::clear() does not release memory.
         std::vector<unsigned char>().swap(*this);
     }
-
-    size_t DynamicMemoryUsage() const;
 };
 
 #endif // BITCOIN_SCRIPT_SCRIPT_H
