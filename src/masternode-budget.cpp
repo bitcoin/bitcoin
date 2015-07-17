@@ -772,6 +772,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if (strCommand == "mvote") { //Masternode Vote
         CBudgetVote vote;
         vRecv >> vote;
+        vote.fValid = true;
 
         if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
             return;
@@ -835,6 +836,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     if (strCommand == "fbvote") { //Finalized Budget Vote
         CFinalizedBudgetVote vote;
         vRecv >> vote;
+        vote.fValid = true;
 
         if(mapSeenFinalizedBudgetVotes.count(vote.GetHash())){
             return;
