@@ -203,7 +203,7 @@ public:
     double GetScore();
     bool HasMinimumRequiredSupport();
 
-    bool IsValid(bool fCheckCollateral=true);
+    bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
     std::string GetName() {return strBudgetName; }
     std::string GetProposals();

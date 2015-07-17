@@ -16,9 +16,10 @@
 using namespace std;
 
 #define MASTERNODE_INITIAL                0
-#define MASTERNODE_SYNC_LIST              1
-#define MASTERNODE_SYNC_MNW               2
-#define MASTERNODE_SYNC_BUDGET            3
+#define MASTERNODE_SPORK_SETTINGS         1
+#define MASTERNODE_SYNC_LIST              2
+#define MASTERNODE_SYNC_MNW               3
+#define MASTERNODE_SYNC_BUDGET            4
 #define MASTERNODE_LIST_SYNCED            999
 
 class CMasternodeSync;

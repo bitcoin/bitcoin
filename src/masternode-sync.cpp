@@ -48,6 +48,9 @@ void CMasternodeSync::GetNextAsset()
     switch(RequestedMasternodeAssets)
     {
         case(MASTERNODE_INITIAL):
+            RequestedMasternodeAssets = MASTERNODE_SPORK_SETTINGS;
+            break;
+        case(MASTERNODE_SPORK_SETTINGS):
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             break;
         case(MASTERNODE_SYNC_LIST):
@@ -79,6 +82,21 @@ void CMasternodeSync::Process()
         {
             if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) 
             {
+
+                if(RequestedMasternodeAssets == MASTERNODE_SPORK_SETTINGS){
+                    if(pnode->HasFulfilledRequest("getspork")) continue;
+                    pnode->FulfilledRequest("getspork");
+
+                    if(RequestedMasternodeAttempt <= 2){
+                        pnode->PushMessage("getsporks"); //get current network sporks
+                        if(RequestedMasternodeAttempt == 2) GetNextAsset();
+                        RequestedMasternodeAttempt++;
+                    }
+                    return;
+                }
+
+                if(IsInitialBlockDownload()) return;
+
                 if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST){
                     if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - 5){ //hasn't received a new item in the last five seconds, so we'll move to the 
                         GetNextAsset();
@@ -88,7 +106,7 @@ void CMasternodeSync::Process()
                     if(pnode->HasFulfilledRequest("mnsync")) continue;
                     pnode->FulfilledRequest("mnsync");
 
-                    if((lastMasternodeList == 0 || lastMasternodeList > GetTime() - 5) && RequestedMasternodeAttempt <= 2){
+                    if((lastMasternodeList == 0 || lastMasternodeList > GetTime() - 5) && RequestedMasternodeAttempt <= 4){
                         mnodeman.DsegUpdate(pnode);
                         pnode->PushMessage("getsporks"); //get current network sporks
                         AddedMasternodeList();
@@ -106,7 +124,7 @@ void CMasternodeSync::Process()
                     if(pnode->HasFulfilledRequest("mnwsync")) continue;
                     pnode->FulfilledRequest("mnwsync");
 
-                    if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - 5) && RequestedMasternodeAttempt <= 4){
+                    if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - 5) && RequestedMasternodeAttempt <= 6){
                         pnode->PushMessage("mnget"); //sync payees
                         AddedMasternodeWinner();
                         RequestedMasternodeAttempt++;
@@ -123,7 +141,7 @@ void CMasternodeSync::Process()
                     if(pnode->HasFulfilledRequest("busync")) continue;
                     pnode->FulfilledRequest("busync");
 
-                    if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - 5) && RequestedMasternodeAttempt <= 6){
+                    if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - 5) && RequestedMasternodeAttempt <= 8){
                         uint256 n = 0;
 
                         pnode->PushMessage("mnvs", n); //sync masternode votes
