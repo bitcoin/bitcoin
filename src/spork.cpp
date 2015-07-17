@@ -91,6 +91,7 @@ bool IsSporkActive(int nSporkID)
         if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
         if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
         if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
+        if(nSporkID == SPORK_13_ENABLE_SUPERBLOCKS) r = SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT;
 
         if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -116,6 +117,7 @@ int GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) r = SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT;
         if(nSporkID == SPORK_11_RESET_BUDGET) r = SPORK_11_RESET_BUDGET_DEFAULT;
         if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
+        if(nSporkID == SPORK_13_ENABLE_SUPERBLOCKS) r = SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT;
 
         if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
@@ -251,6 +253,7 @@ int CSporkManager::GetSporkIDByName(std::string strName)
     if(strName == "SPORK_10_MASTERNODE_PAY_NEWEST_NODES") return SPORK_10_MASTERNODE_PAY_NEWEST_NODES;
     if(strName == "SPORK_11_RESET_BUDGET") return SPORK_11_RESET_BUDGET;
     if(strName == "SPORK_12_RECONSIDER_BLOCKS") return SPORK_12_RECONSIDER_BLOCKS;
+    if(strName == "SPORK_13_ENABLE_SUPERBLOCKS") return SPORK_13_ENABLE_SUPERBLOCKS;
 
     return -1;
 }
@@ -266,6 +269,7 @@ std::string CSporkManager::GetSporkNameByID(int id)
     if(id == SPORK_10_MASTERNODE_PAY_NEWEST_NODES) return "SPORK_10_MASTERNODE_PAY_NEWEST_NODES";
     if(id == SPORK_11_RESET_BUDGET) return "SPORK_11_RESET_BUDGET";
     if(id == SPORK_12_RECONSIDER_BLOCKS) return "SPORK_12_RECONSIDER_BLOCKS";
+    if(id == SPORK_13_ENABLE_SUPERBLOCKS) return "SPORK_13_ENABLE_SUPERBLOCKS";
 
     return "Unknown";
 }
