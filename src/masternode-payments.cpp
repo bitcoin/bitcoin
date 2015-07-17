@@ -40,11 +40,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
 
     //are these blocks even enabled?
     if(!IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
-        if(block.vtx[0].GetValueOut() > nExpectedValue) {
-            return false;
-        } else {
-            return true;
-        }
+        return block.vtx[0].GetValueOut() > nExpectedValue;
     }
 
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
@@ -66,7 +62,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
     return true;
 }
 
-bool IsBlockPayeeValid(const CTransaction& txNew, int64_t nBlockHeight)
+bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 {
     //check if it's a budget block
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
@@ -113,7 +109,7 @@ void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
     }
 }
 
-std::string GetRequiredPaymentsString(int64_t nBlockHeight)
+std::string GetRequiredPaymentsString(int nBlockHeight)
 {
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
         return budget.GetRequiredPaymentsString(nBlockHeight);
