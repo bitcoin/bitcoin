@@ -3,10 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
-#include "init.h"
-
 #include "masternode-sync.h"
 #include "masternode.h"
+#include "masternodeman.h"
 #include "util.h"
 #include "addrman.h"
 
@@ -15,11 +14,10 @@ CMasternodeSync masternodeSync;
 
 CMasternodeSync::CMasternodeSync()
 {
-    c = 0;
     lastMasternodeList = 0;
     lastMasternodeWinner = 0;
     lastBudgetItem = 0;
-    RequestedMasternodeAssets = 0;
+    RequestedMasternodeAssets = MASTERNODE_INITIAL;
     RequestedMasternodeAttempt = 0;
 }
 
@@ -63,11 +61,18 @@ void CMasternodeSync::GetNextAsset()
             RequestedMasternodeAssets = MASTERNODE_LIST_SYNCED;
             break;
     }
+    RequestedMasternodeAttempt = 0;
 }
 
-void CMasternodeSync::Process() 
+void CMasternodeSync::Process()
 {
+    static int c = 0;
+
     if(IsSynced()) return;
+
+    if(c++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
+
+    if(fDebug) LogPrintf("CMasternodeSync::Process() - RequestedMasternodeAssets %d c %d\n", RequestedMasternodeAssets, c);
 
     //request full mn list only if Masternodes.dat was updated quite a long time ago
     if(RequestedMasternodeAssets == MASTERNODE_INITIAL) GetNextAsset();
@@ -75,84 +80,79 @@ void CMasternodeSync::Process()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return;
 
-    //try to sync the Masternode list and payment list every 5 seconds from at least 3 nodes
-    if(c % 5 == 0){
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION)
         {
-            if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION) 
-            {
 
-                if(RequestedMasternodeAssets == MASTERNODE_SPORK_SETTINGS){
-                    if(pnode->HasFulfilledRequest("getspork")) continue;
-                    pnode->FulfilledRequest("getspork");
+            if(RequestedMasternodeAssets == MASTERNODE_SPORK_SETTINGS){
+                if(pnode->HasFulfilledRequest("getspork")) continue;
+                pnode->FulfilledRequest("getspork");
 
-                    if(RequestedMasternodeAttempt <= 2){
-                        pnode->PushMessage("getsporks"); //get current network sporks
-                        if(RequestedMasternodeAttempt == 2) GetNextAsset();
-                        RequestedMasternodeAttempt++;
-                    }
-                    return;
+                if(RequestedMasternodeAttempt <= 2){
+                    pnode->PushMessage("getsporks"); //get current network sporks
+                    if(RequestedMasternodeAttempt == 2) GetNextAsset();
+                    RequestedMasternodeAttempt++;
                 }
-
-                if(IsInitialBlockDownload()) return;
-
-                if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST){
-                    if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - 5){ //hasn't received a new item in the last five seconds, so we'll move to the 
-                        GetNextAsset();
-                        return;
-                    }
-
-                    if(pnode->HasFulfilledRequest("mnsync")) continue;
-                    pnode->FulfilledRequest("mnsync");
-
-                    if((lastMasternodeList == 0 || lastMasternodeList > GetTime() - 5) && RequestedMasternodeAttempt <= 4){
-                        mnodeman.DsegUpdate(pnode);
-                        pnode->PushMessage("getsporks"); //get current network sporks
-                        AddedMasternodeList();
-                        RequestedMasternodeAttempt++;
-                    }
-                    return;
-                }
-
-                if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW){
-                    if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - 5){ //hasn't received a new item in the last five seconds, so we'll move to the 
-                        GetNextAsset();
-                        return;
-                    }
-
-                    if(pnode->HasFulfilledRequest("mnwsync")) continue;
-                    pnode->FulfilledRequest("mnwsync");
-
-                    if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - 5) && RequestedMasternodeAttempt <= 6){
-                        pnode->PushMessage("mnget"); //sync payees
-                        AddedMasternodeWinner();
-                        RequestedMasternodeAttempt++;
-                    }
-                    return;
-                }
-                
-                if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
-                    if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - 5){ //hasn't received a new item in the last five seconds, so we'll move to the 
-                        GetNextAsset();
-                        return;
-                    }
-
-                    if(pnode->HasFulfilledRequest("busync")) continue;
-                    pnode->FulfilledRequest("busync");
-
-                    if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - 5) && RequestedMasternodeAttempt <= 8){
-                        uint256 n = 0;
-
-                        pnode->PushMessage("mnvs", n); //sync masternode votes
-                        AddedBudgetItem();
-                        RequestedMasternodeAttempt++;
-                    }
-                    return;
-                }
-
+                return;
             }
+
+            if(IsInitialBlockDownload()) return;
+
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST){
+                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
+
+                if(pnode->HasFulfilledRequest("mnsync")) continue;
+                pnode->FulfilledRequest("mnsync");
+
+                if((lastMasternodeList == 0 || lastMasternodeList > GetTime() - MASTERNODE_SYNC_TIMEOUT)
+                        && RequestedMasternodeAttempt <= 2){
+                    mnodeman.DsegUpdate(pnode);
+                    RequestedMasternodeAttempt++;
+                }
+                return;
+            }
+
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW){
+                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
+
+                if(pnode->HasFulfilledRequest("mnwsync")) continue;
+                pnode->FulfilledRequest("mnwsync");
+
+                if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - MASTERNODE_SYNC_TIMEOUT)
+                        && RequestedMasternodeAttempt <= 2){
+                    pnode->PushMessage("mnget"); //sync payees
+                    RequestedMasternodeAttempt++;
+                }
+                return;
+            }
+
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
+                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
+
+                if(pnode->HasFulfilledRequest("busync")) continue;
+                pnode->FulfilledRequest("busync");
+
+                if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - MASTERNODE_SYNC_TIMEOUT)
+                        && RequestedMasternodeAttempt <= 2){
+                    uint256 n = 0;
+
+                    pnode->PushMessage("mnvs", n); //sync masternode votes
+                    RequestedMasternodeAttempt++;
+                }
+                return;
+            }
+
         }
     }
-    c++;
 }
