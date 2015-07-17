@@ -2031,12 +2031,14 @@ bool CWallet::ConvertList(std::vector<CTxIn> vCoins, std::vector<int64_t>& vecAm
 }
 
 bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nPayFee)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nFeePay)
 {
-    if(useIX && nPayFee < CENT) nPayFee = CENT;
+    if(useIX && nFeePay < CENT) nFeePay = CENT;
 
     CAmount nValue = 0;
     CAmount nFeeDelta = 0;
+    int nAttemptsToLowerFee = 0;
+
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
     {
         if (nValue < 0)
@@ -2060,7 +2062,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
         LOCK2(cs_main, cs_wallet);
         {
             nFeeRet = 0;
-            if(nPayFee!=0) nFeeRet = nPayFee;
+            if(nFeePay > 0) nFeeRet = nFeePay;
             while (true)
             {
                 txNew.vin.clear();
@@ -2161,8 +2163,10 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     CTxOut newTxOut(nChange, scriptChange);
 
                     // Never create dust outputs; if we would, just
-                    // add the dust to the fee.
-                    if (newTxOut.IsDust(::minRelayTxFee))
+                    // add the dust to the fee
+                    // OR if we didn't try to lower fees yet,
+                    // let's see what fee we can get if there is no change
+                    if (newTxOut.IsDust(::minRelayTxFee) || nAttemptsToLowerFee == 0)
                     {
                         nFeeRet += nChange;
                         nChange = 0;
@@ -2217,7 +2221,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                         break;
                 }
 
-                CAmount nFeeNeeded = GetMinimumFee(nBytes, nTxConfirmTarget, mempool);
+                CAmount nFeeNeeded = max(nFeePay, GetMinimumFee(nBytes, nTxConfirmTarget, mempool));
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
@@ -2227,11 +2231,18 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     return false;
                 }
 
-                if (nFeeRet == nFeeNeeded || (nFeeRet > nFeeNeeded && (nFeeDelta > 0 || useIX || coin_type == ONLY_DENOMINATED)))
-                    break; // Done, enough fee included.
+                if (nFeeRet == nFeeNeeded || // Done, enough fee included
+                        (nFeeRet > nFeeNeeded && (nAttemptsToLowerFee > 1 || coin_type == ONLY_DENOMINATED)))
+                    break;
 
-                if (nFeeRet > nFeeNeeded)
-                    nFeeDelta = nFeeRet - nFeeNeeded + 1; // Try to lower fee
+                if (nFeeRet > nFeeNeeded) {
+                    // Try to lower fee
+                    nAttemptsToLowerFee++;
+                    nFeeDelta = nFeeRet - nFeeNeeded;
+                }
+                else {
+                    nFeeDelta = 0; //not enough fee so no delta too
+                }
 
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
@@ -2243,11 +2254,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
 }
 
 bool CWallet::CreateTransaction(CScript scriptPubKey, const CAmount& nValue,
-                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nPayFee)
+                                CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, std::string& strFailReason, const CCoinControl* coinControl, AvailableCoinsType coin_type, bool useIX, CAmount nFeePay)
 {
     vector< pair<CScript, CAmount> > vecSend;
     vecSend.push_back(make_pair(scriptPubKey, nValue));
-    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, useIX, nPayFee);
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, strFailReason, coinControl, coin_type, useIX, nFeePay);
 }
 
 /**
