@@ -1,6 +1,6 @@
-* Add getauxblock RPC call.
-
 * Test it with auxpow.py-based script.
+
+* Test also submission of auxpow before auxpow start.
 
 NOTE:  Auxpow as implemented leads to an "immediate softfork".  Old clients
 will happily accept blocks with auxpow-version even if they do not have
