@@ -68,7 +68,16 @@ void CMasternodeSync::Process()
 {
     static int c = 0;
 
-    if(IsSynced()) return;
+    if(IsSynced()) {
+        /* 
+            Resync if we lose all masternodes from sleep/wake or failure to sync originally
+        */
+        if(mnodeman.CountEnabled() == 0) {
+            RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
+            RequestedMasternodeAttempt = 0;
+        }
+        return;
+    }
 
     if(c++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
 
