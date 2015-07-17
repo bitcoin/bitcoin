@@ -424,7 +424,14 @@ Value mnbudget(const Array& params, bool fHelp)
 
         std::map<uint256, CBudgetVote>::iterator it = pbudgetProposal->mapVotes.begin();
         while(it != pbudgetProposal->mapVotes.end()){
-            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort().c_str(),  (*it).second.GetVoteString().c_str()));
+
+            Object bObj;
+            bObj.push_back(Pair("Vote",  (*it).second.GetVoteString().c_str()));
+            bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
+            bObj.push_back(Pair("fValid",  (int64_t)(*it).second.fValid));
+
+            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort().c_str(), bObj));
+
             it++;
         }
 
