@@ -30,7 +30,7 @@ class CTxBudgetPayment;
 #define VOTE_YES      1
 #define VOTE_NO       2
 
-static const int64_t BUDGET_FEE_TX = (0.5*COIN);
+static const CAmount BUDGET_FEE_TX = (0.5*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 
 extern std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
@@ -41,7 +41,7 @@ extern std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
 extern CBudgetManager budget;
 void DumpBudgets();
 
-//Amount of blocks in a months period of time (using 2.6 minutes per)
+// Define amount of blocks in budget payment cycle
 int GetBudgetPaymentCycleBlocks();
 
 //Check the collateral transaction for the budget proposal/finalized budget
@@ -67,7 +67,7 @@ public:
 
     CBudgetDB();
     bool Write(const CBudgetManager &objToSave);
-    ReadResult Read(CBudgetManager& objToLoad);
+    ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
 };
 
 
@@ -106,7 +106,7 @@ public:
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
     std::pair<std::string, std::string> GetVotes(std::string strProposalName);
 
-    int64_t GetTotalBudget(int nHeight);
+    CAmount GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal*> GetBudget();
     std::vector<CBudgetProposal*> GetAllProposals();
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
@@ -119,8 +119,8 @@ public:
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom);
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    std::string GetRequiredPaymentsString(int64_t nBlockHeight);
-    void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
+    std::string GetRequiredPaymentsString(int nBlockHeight);
+    void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
 
     void CheckOrphanVotes();
     void Clear(){
@@ -156,7 +156,7 @@ class CTxBudgetPayment
 public:
     uint256 nProposalHash;
     CScript payee;
-    int64_t nAmount;
+    CAmount nAmount;
 
     CTxBudgetPayment() {
         payee = CScript();
@@ -191,7 +191,7 @@ public:
     bool fValid;
     std::string strBudgetName;
     int nBlockStart;
-    std::vector<CTxBudgetPayment> vecProposals;
+    std::vector<CTxBudgetPayment> vecBudgetPayments;
     map<uint256, CFinalizedBudgetVote> mapVotes;
     uint256 nFeeTXHash;
 
@@ -208,31 +208,31 @@ public:
     std::string GetName() {return strBudgetName; }
     std::string GetProposals();
     int GetBlockStart() {return nBlockStart;}
-    int GetBlockEnd() {return nBlockStart + (int)(vecProposals.size()-1);}
+    int GetBlockEnd() {return nBlockStart + (int)(vecBudgetPayments.size() - 1);}
     int GetVoteCount() {return (int)mapVotes.size();}
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
-    bool GetProposalByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment)
+    bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment)
     {
         int i = nBlockHeight - GetBlockStart();
         if(i < 0) return false;
-        if(i > (int)vecProposals.size()-1) return false;
-        payment = vecProposals[i];
+        if(i > (int)vecBudgetPayments.size() - 1) return false;
+        payment = vecBudgetPayments[i];
         return true;
     }
-    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, int64_t& nAmount)
+    bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount)
     {
         int i = nBlockHeight - GetBlockStart();
         if(i < 0) return false;
-        if(i > (int)vecProposals.size()-1) return false;
-        payee = vecProposals[i].payee;
-        nAmount = vecProposals[i].nAmount;
+        if(i > (int)vecBudgetPayments.size() - 1) return false;
+        payee = vecBudgetPayments[i].payee;
+        nAmount = vecBudgetPayments[i].nAmount;
         return true;
     }
 
     //check to see if we should vote on this
     void AutoCheck();
     //total dash paid out by this budget
-    int64_t GetTotalPayout();
+    CAmount GetTotalPayout();
     //vote on this finalized budget as a masternode
     void SubmitVote();
 
@@ -243,7 +243,7 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strBudgetName;
         ss << nBlockStart;
-        ss << vecProposals;
+        ss << vecBudgetPayments;
 
         uint256 h1 = ss.GetHash();
         return h1;
@@ -257,7 +257,7 @@ public:
         READWRITE(LIMITED_STRING(strBudgetName, 20));
         READWRITE(nFeeTXHash);
         READWRITE(nBlockStart);
-        READWRITE(vecProposals);
+        READWRITE(vecBudgetPayments);
 
         READWRITE(mapVotes);
     }
@@ -272,7 +272,7 @@ private:
 public:
     CFinalizedBudgetBroadcast();
     CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
-    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecProposalsIn, uint256 nFeeTXHashIn);
+    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
 
     void Relay();
 
@@ -284,7 +284,7 @@ public:
         //for syncing with other clients
         READWRITE(LIMITED_STRING(strBudgetName, 20));
         READWRITE(nBlockStart);
-        READWRITE(vecProposals);
+        READWRITE(vecBudgetPayments);
         READWRITE(nFeeTXHash);
     }
 };
@@ -338,7 +338,7 @@ class CBudgetProposal
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
-    int64_t nAlloted;
+    CAmount nAlloted;
 
 public:
     bool fValid;
@@ -351,7 +351,7 @@ public:
     std::string strURL;
     int nBlockStart;
     int nBlockEnd;
-    int64_t nAmount;
+    CAmount nAmount;
     CScript address;
     int64_t nTime;
     uint256 nFeeTXHash;
@@ -384,10 +384,10 @@ public:
     int GetYeas();
     int GetNays();
     int GetAbstains();
-    int64_t GetAmount() {return nAmount;}
+    CAmount GetAmount() {return nAmount;}
 
-    void SetAllotted(int64_t nAllotedIn) {nAlloted = nAllotedIn;}
-    int64_t GetAllotted() {return nAlloted;}
+    void SetAllotted(CAmount nAllotedIn) {nAlloted = nAllotedIn;}
+    CAmount GetAllotted() {return nAlloted;}
 
     void CleanAndRemove();
 
