@@ -18,7 +18,7 @@ static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context_t *ct
     ctx->prec = NULL;
 }
 
-static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *ctx) {
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *ctx, const callback_t* cb) {
 #ifndef USE_ECMULT_STATIC_PRECOMPUTATION
     secp256k1_ge_t prec[1024];
     secp256k1_gej_t gj;
@@ -30,7 +30,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *c
         return;
     }
 #ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-    ctx->prec = (secp256k1_ge_storage_t (*)[64][16])checked_malloc(sizeof(*ctx->prec));
+    ctx->prec = (secp256k1_ge_storage_t (*)[64][16])checked_malloc(cb, sizeof(*ctx->prec));
 
     /* get the generator */
     secp256k1_gej_set_ge(&gj, &secp256k1_ge_const_g);
@@ -72,7 +72,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *c
                 secp256k1_gej_add_var(&numsbase, &numsbase, &nums_gej, NULL);
             }
         }
-        secp256k1_ge_set_all_gej_var(1024, prec, precj);
+        secp256k1_ge_set_all_gej_var(1024, prec, precj, cb);
     }
     for (j = 0; j < 64; j++) {
         for (i = 0; i < 16; i++) {
@@ -80,6 +80,7 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context_t *c
         }
     }
 #else
+    (void)cb;
     ctx->prec = (secp256k1_ge_storage_t (*)[64][16])secp256k1_ecmult_static_context;
 #endif
     secp256k1_ecmult_gen_blind(ctx, NULL);
@@ -90,14 +91,15 @@ static int secp256k1_ecmult_gen_context_is_built(const secp256k1_ecmult_gen_cont
 }
 
 static void secp256k1_ecmult_gen_context_clone(secp256k1_ecmult_gen_context_t *dst,
-                                               const secp256k1_ecmult_gen_context_t *src) {
+                                               const secp256k1_ecmult_gen_context_t *src, const callback_t* cb) {
     if (src->prec == NULL) {
         dst->prec = NULL;
     } else {
 #ifndef USE_ECMULT_STATIC_PRECOMPUTATION
-        dst->prec = (secp256k1_ge_storage_t (*)[64][16])checked_malloc(sizeof(*dst->prec));
+        dst->prec = (secp256k1_ge_storage_t (*)[64][16])checked_malloc(cb, sizeof(*dst->prec));
         memcpy(dst->prec, src->prec, sizeof(*dst->prec));
 #else
+        (void)cb;
         dst->prec = src->prec;
 #endif
         dst->initial = src->initial;

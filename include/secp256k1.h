@@ -74,6 +74,37 @@ void secp256k1_context_destroy(
   secp256k1_context_t* ctx
 ) SECP256K1_ARG_NONNULL(1);
 
+/** Set a callback function to be called when an illegal argument is passed to
+ *  an API call. The philosophy is that these shouldn't be dealt with through a
+ *  specific return value, as calling code should not have branches to deal with
+ *  the case that this code itself is broken.
+ *  On the other hand, during debug stage, one would want to be informed about
+ *  such mistakes, and the default (crashing) may be inadvisable.
+ *  When this callback is triggered, the API function called is guaranteed not
+ *  to cause a crash, though its return value and output arguments are
+ *  undefined.
+ */
+void secp256k1_context_set_illegal_callback(
+  secp256k1_context_t* ctx,
+  void (*fun)(const char* message, void* data),
+  void* data
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+
+/** Set a callback function to be called when an internal consistency check
+ *  fails. The default is crashing.
+ *  This can only trigger in case of a hardware failure, miscompilation,
+ *  memory corruption, serious bug in the library, or other error would can
+ *  otherwise result in undefined behaviour. It will not trigger due to mere
+ *  incorrect usage of the API (see secp256k1_context_set_illegal_callback
+ *  for that). After this callback returns, anything may happen, including
+ *  crashing.
+ */
+void secp256k1_context_set_error_callback(
+  secp256k1_context_t* ctx,
+  void (*fun)(const char* message, void* data),
+  void* data
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+
 /** Data type to hold a parsed and valid public key.
     This data type should be considered opaque to the user, and only created
     through API functions. It is not guaranteed to be compatible between
