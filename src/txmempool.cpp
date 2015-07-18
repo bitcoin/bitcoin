@@ -438,12 +438,12 @@ bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
-    // Estimate the overhead of mapTx to be 6 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
-    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 6 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
+    // Estimate the overhead of mapTx to be 9 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
 }
 
 size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
-    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 6 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
 }
 
 bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeesRemoved) {
@@ -541,4 +541,26 @@ void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
     BOOST_FOREACH(const uint256& hash, stage) {
         removeUnchecked(hash);
     }
+}
+
+int CTxMemPool::Expire(int64_t time) {
+    indexed_transaction_set::nth_index<2>::type::iterator it = mapTx.get<2>().begin();
+    std::set<uint256> toremove;
+    int ret = 0;
+    while (it != mapTx.get<2>().end() && it->GetTime() < time) {
+        toremove.insert(it->GetTx().GetHash());
+        it++;
+    }
+    while (!toremove.empty()) {
+        std::set<uint256>::iterator ite = toremove.begin();
+        std::map<COutPoint, CInPoint>::iterator iter = mapNextTx.lower_bound(COutPoint(*ite, 0));
+        while (iter != mapNextTx.end() && iter->first.hash == *ite) {
+            toremove.insert(iter->second.ptx->GetHash());
+            iter++;
+        }
+        ret++;
+        removeUnchecked(*ite);
+        toremove.erase(ite);
+    }
+    return ret;
 }
