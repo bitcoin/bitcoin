@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(univalue_constructor)
 
     double vd = -7.21;
     UniValue v7(vd);
-    BOOST_CHECK(v7.isReal());
+    BOOST_CHECK(v7.isNum());
     BOOST_CHECK_EQUAL(v7.getValStr(), "-7.21");
 
     string vs("yawn");
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(univalue_set)
     BOOST_CHECK_EQUAL(v.getValStr(), "zum");
 
     BOOST_CHECK(v.setFloat(-1.01));
-    BOOST_CHECK(v.isReal());
+    BOOST_CHECK(v.isNum());
     BOOST_CHECK_EQUAL(v.getValStr(), "-1.01");
 
     BOOST_CHECK(v.setInt((int)1023));
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     objTypes["distance"] = UniValue::VNUM;
     objTypes["time"] = UniValue::VNUM;
     objTypes["calories"] = UniValue::VNUM;
-    objTypes["temperature"] = UniValue::VREAL;
+    objTypes["temperature"] = UniValue::VNUM;
     objTypes["cat1"] = UniValue::VNUM;
     objTypes["cat2"] = UniValue::VNUM;
     BOOST_CHECK(obj.checkObject(objTypes));

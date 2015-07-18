@@ -61,13 +61,6 @@ string UniValue::write(unsigned int prettyIndent,
     case VSTR:
         s += "\"" + json_escape(val) + "\"";
         break;
-    case VREAL:
-        {
-            std::stringstream ss;
-            ss << std::showpoint << std::fixed << std::setprecision(8) << get_real();
-            s += ss.str();
-        }
-        break;
     case VNUM:
         s += val;
         break;
