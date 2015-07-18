@@ -523,7 +523,7 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight){
     /*
         If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
-    if(nHighestCount > mnodeman.CountEnabled()/20) return true;
+    if(nHighestCount > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/20) return true;
 
     return false;
 }
@@ -551,7 +551,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     /*
         If budget doesn't have 5% of the network votes, then we should pay a masternode instead
     */
-    if(nHighestCount < mnodeman.CountEnabled()/20) return false;
+    if(nHighestCount < mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/20) return false;
 
     // check the highest finalized budgets (+/- 10% to assist in consensus)
 
@@ -560,7 +560,7 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
-        if(pfinalizedBudget->GetVoteCount() > nHighestCount - mnodeman.CountEnabled()/10){
+        if(pfinalizedBudget->GetVoteCount() > nHighestCount - mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
             if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
                 if(pfinalizedBudget->IsTransactionValid(txNew, nBlockHeight)){
                     return true;
@@ -636,7 +636,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         //prop start/end should be inside this period
         if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart &&
                 pbudgetProposal->nBlockEnd >= nBlockEnd &&
-                pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled()/10)
+                pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)
         {
             if(nTotalBudget == nBudgetAllocated){
                 pbudgetProposal->SetAllotted(0);
@@ -1070,7 +1070,7 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
 
 bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
 {
-    if(GetNays() - GetYeas() > mnodeman.CountEnabled()/10){
+    if(GetNays() - GetYeas() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
          strError = "Active removal";
          return false;
     }
@@ -1094,7 +1094,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     //if proposal doesn't gain traction within 2 weeks, remove it
     // nTime not being saved correctly
     // if(nTime + (60*60*24*2) < GetAdjustedTime()) {
-    //     if(GetYeas()-GetNays() < (mnodeman.CountEnabled()/10)) {
+    //     if(GetYeas()-GetNays() < (mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)) {
     //         strError = "Not enough support";
     //         return false;
     //     }

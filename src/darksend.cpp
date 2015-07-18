@@ -80,7 +80,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         if(sessionUsers == 0) {
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
                 LogPrintf("dsa -- last dsq too recent, must wait. %s \n", pfrom->addr.ToString().c_str());
                 errorID = ERR_RECENT;
                 pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
@@ -139,7 +139,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             if(fDebug) LogPrintf("dsq last %d last2 %d count %d\n", pmn->nLastDsq, pmn->nLastDsq + mnodeman.size()/5, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
                 if(fDebug) LogPrintf("dsq -- Masternode sending too many dsq messages. %s \n", pmn->addr.ToString().c_str());
                 return;
             }
@@ -1679,7 +1679,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
             }
 
             if(pmn->nLastDsq != 0 &&
-                pmn->nLastDsq + mnodeman.CountMasternodesAboveProtocol(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
+                pmn->nLastDsq + mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)/5 > mnodeman.nDsqCount){
                 i++;
                 continue;
             }
@@ -2348,7 +2348,7 @@ void ThreadCheckDarkSendPool()
                 CleanTransactionLocksList();
 
                 //if we've used 90% of the Masternode list then drop all the oldest.
-                int nThreshold = (int)(mnodeman.CountEnabled() * 0.9);
+                int nThreshold = (int)(mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION) * 0.9);
                 if(fDebug) LogPrintf("Checking vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
                 while((int)vecMasternodesUsed.size() > nThreshold){
                     vecMasternodesUsed.erase(vecMasternodesUsed.begin());
