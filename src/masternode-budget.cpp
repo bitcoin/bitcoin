@@ -722,6 +722,8 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 
 void CBudgetManager::NewBlock()
 {
+    if(!masternodeSync.IsSynced()) return;
+    
     CheckAndRemove();
 
     if (strBudgetMode == "suggest") { //suggest the budget we see
