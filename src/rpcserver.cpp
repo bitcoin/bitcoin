@@ -120,7 +120,7 @@ void RPCTypeCheckObj(const UniValue& o,
 
 CAmount AmountFromValue(const UniValue& value)
 {
-    if (!value.isReal() && !value.isNum())
+    if (!value.isNum())
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number");
     CAmount amount;
     if (!ParseFixedPoint(value.getValStr(), 8, &amount))
