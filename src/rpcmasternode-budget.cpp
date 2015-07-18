@@ -50,7 +50,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 7 && params.size() != 8)
-            throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address dash_amount [use_ix(true|false)]'");
+            throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address monthly_payment_dash [use_ix(true|false)]'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
@@ -121,7 +121,7 @@ Value mnbudget(const Array& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         if (params.size() != 8)
-            throw runtime_error("Correct usage is 'mnbudget submit proposal-name url payment_count block_start dash_address dash_amount fee_tx'");
+            throw runtime_error("Correct usage is 'mnbudget submit proposal-name url payment_count block_start dash_address monthly_payment_dash fee_tx'");
 
         // Check these inputs the same way we check the vote commands:
         // **********************************************************
@@ -321,6 +321,8 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
             bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
             bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+            bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
+            bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
             bObj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
             bObj.push_back(Pair("TotalBudgetAlloted",  ValueFromAmount(nTotalAllotted)));
 
@@ -367,7 +369,8 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
             bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
             bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
-            bObj.push_back(Pair("Amount",  ValueFromAmount(pbudgetProposal->GetAmount())));
+            bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
+            bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
@@ -408,8 +411,9 @@ Value mnbudget(const Array& params, bool fHelp)
         obj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
         obj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
         obj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
-        obj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
-
+        obj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
+        obj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
+        
         std::string strError = "";
         obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
         obj.push_back(Pair("fValid",  pbudgetProposal->fValid));
