@@ -289,19 +289,7 @@ void CMasternodeMan::Clear()
     nDsqCount = 0;
 }
 
-int CMasternodeMan::CountEnabled()
-{
-    int i = 0;
-
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.Check();
-        if(mn.IsEnabled()) i++;
-    }
-
-    return i;
-}
-
-int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
+int CMasternodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
 
@@ -390,7 +378,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //make sure it has as many confirmations as there are masternodes
-        if(mn.GetMasternodeInputAge() < CountEnabled()) continue;
+        if(mn.GetMasternodeInputAge() < CountEnabled(masternodePayments.GetMinMasternodePaymentsProto())) continue;
 
         if(pOldestMasternode == NULL || pOldestMasternode->SecondsSincePayment() < mn.SecondsSincePayment()){
             pOldestMasternode = &mn;

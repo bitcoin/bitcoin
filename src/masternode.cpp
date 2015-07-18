@@ -78,7 +78,7 @@ CMasternode::CMasternode()
     cacheInputAgeBlock = 0;
     unitTest = false;
     allowFreeTx = true;
-    protocolVersion = MIN_PEER_PROTO_VERSION;
+    protocolVersion = PROTOCOL_VERSION;
     nLastDsq = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
@@ -244,7 +244,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     cacheInputAgeBlock = 0;
     unitTest = false;
     allowFreeTx = true;
-    protocolVersion = MIN_PEER_PROTO_VERSION;
+    protocolVersion = PROTOCOL_VERSION;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
 }

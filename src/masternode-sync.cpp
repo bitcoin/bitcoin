@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "masternode-sync.h"
+#include "masternode-payments.h"
 #include "masternode.h"
 #include "masternodeman.h"
 #include "util.h"
