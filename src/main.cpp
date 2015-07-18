@@ -3262,9 +3262,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     if(!fLiteMode){
         if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
-            CScript payee;
-            CTxIn vin;
-            coinbasePayee.ProcessBlockCoinbaseTX(pblock->vtx[0], pblock->nTime);
+            if(fMasternode || activeMasternode.status == ACTIVE_MASTERNODE_STARTED) coinbasePayee.BuildIndex(true);
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();

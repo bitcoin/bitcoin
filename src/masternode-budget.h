@@ -198,7 +198,7 @@ public:
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
 
-    void CleanAndRemove();
+    void CleanAndRemove(bool fSignatureCheck);
     void AddOrUpdateVote(CFinalizedBudgetVote& vote);
     double GetScore();
     bool HasMinimumRequiredSupport();
@@ -306,7 +306,7 @@ public:
     CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid();
+    bool SignatureValid(bool fSignatureCheck);
     void Relay();
 
     uint256 GetHash(){
@@ -389,7 +389,7 @@ public:
     void SetAllotted(CAmount nAllotedIn) {nAlloted = nAllotedIn;}
     CAmount GetAllotted() {return nAlloted;}
 
-    void CleanAndRemove();
+    void CleanAndRemove(bool fSignatureCheck);
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
@@ -470,7 +470,7 @@ public:
     CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid();
+    bool SignatureValid(bool fSignatureCheck);
     void Relay();
 
     std::string GetVoteString() {

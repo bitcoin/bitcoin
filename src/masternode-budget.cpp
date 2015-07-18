@@ -582,7 +582,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end())
     {
-        (*it).second.CleanAndRemove();
+        (*it).second.CleanAndRemove(false);
 
         CBudgetProposal* pbudgetProposal = &((*it).second);
         vBudgetProposalRet.push_back(pbudgetProposal);
@@ -608,7 +608,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
-        (*it).second.CleanAndRemove();
+        (*it).second.CleanAndRemove(false);
         vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYeas()));
         ++it;
     }
@@ -739,8 +739,6 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 void CBudgetManager::NewBlock()
 {
     if(!masternodeSync.IsSynced()) return;
-    
-    CheckAndRemove();
 
     if (strBudgetMode == "suggest") { //suggest the budget we see
         SubmitFinalBudget();
@@ -749,6 +747,7 @@ void CBudgetManager::NewBlock()
     //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
     if(chainActive.Height() % 6 != 0) return;
 
+    CheckAndRemove();
     mnodeman.DecrementVotedTimes();
 
     //remove invalid votes once in a while (we have to check the signatures and validity of every vote, somewhat CPU intensive)
@@ -764,13 +763,13 @@ void CBudgetManager::NewBlock()
 
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
     while(it2 != mapProposals.end()){
-        (*it2).second.CleanAndRemove();
+        (*it2).second.CleanAndRemove(false);
         ++it2;
     }
 
     std::map<uint256, CFinalizedBudget>::iterator it3 = mapFinalizedBudgets.begin();
     while(it3 != mapFinalizedBudgets.end()){
-        (*it3).second.CleanAndRemove();
+        (*it3).second.CleanAndRemove(false);
         ++it3;
     }
 }
@@ -842,7 +841,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
 
-        if(!vote.SignatureValid()){
+        if(!vote.SignatureValid(true)){
             LogPrintf("mvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
@@ -904,7 +903,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(!vote.SignatureValid()){
+        if(!vote.SignatureValid(true)){
             LogPrintf("fbvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
@@ -1125,12 +1124,12 @@ void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
 }
 
 // If masternode voted for a proposal, but is now invalid -- remove the vote
-void CBudgetProposal::CleanAndRemove()
+void CBudgetProposal::CleanAndRemove(bool fSignatureCheck)
 {
     std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
 
     while(it != mapVotes.end()) {
-        (*it).second.fValid = (*it).second.SignatureValid();
+        (*it).second.fValid = (*it).second.SignatureValid(fSignatureCheck);
         ++it;
     }
 }
@@ -1317,7 +1316,7 @@ bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     return true;
 }
 
-bool CBudgetVote::SignatureValid()
+bool CBudgetVote::SignatureValid(bool fSignatureCheck)
 {
     std::string errorMessage;
     std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
@@ -1329,6 +1328,8 @@ bool CBudgetVote::SignatureValid()
         LogPrintf("CBudgetVote::SignatureValid() - Unknown Masternode - %s\n", vin.ToString());
         return false;
     }
+
+    if(!fSignatureCheck) return true;
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
         LogPrintf("CBudgetVote::SignatureValid() - Verify message failed\n");
@@ -1413,12 +1414,12 @@ void CFinalizedBudget::AutoCheck()
     }
 }
 // If masternode voted for a proposal, but is now invalid -- remove the vote
-void CFinalizedBudget::CleanAndRemove()
+void CFinalizedBudget::CleanAndRemove(bool fSignatureCheck)
 {
     std::map<uint256, CFinalizedBudgetVote>::iterator it = mapVotes.begin();
 
     while(it != mapVotes.end()) {
-        (*it).second.fValid = (*it).second.SignatureValid();
+        (*it).second.fValid = (*it).second.SignatureValid(fSignatureCheck);
         ++it;
     }
 }
@@ -1650,7 +1651,7 @@ bool CFinalizedBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     return true;
 }
 
-bool CFinalizedBudgetVote::SignatureValid()
+bool CFinalizedBudgetVote::SignatureValid(bool fSignatureCheck)
 {
     std::string errorMessage;
 
@@ -1663,6 +1664,8 @@ bool CFinalizedBudgetVote::SignatureValid()
         LogPrintf("CFinalizedBudgetVote::SignatureValid() - Unknown Masternode\n");
         return false;
     }
+
+    if(!fSignatureCheck) return true;
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
         LogPrintf("CFinalizedBudgetVote::SignatureValid() - Verify message failed\n");
