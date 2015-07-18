@@ -17,7 +17,7 @@
 
 #include "chainparamsseeds.h"
 
-const std::map<std::string, uint256> CChainParams::supportedChains =
+std::map<std::string, uint256> CChainParams::supportedChains =
     boost::assign::map_list_of
     ( "main", uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"))
     ( "test", uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"))
@@ -310,6 +310,7 @@ public:
         CScript scriptDestination(CScript() << OP_TRUE);
         genesis = CreateGenesisBlock(strNetworkID.c_str(), scriptDestination, 1296688602, 0, 0x2007ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
+        CChainParams::supportedChains[strNetworkID] = consensus.hashGenesisBlock;
 
         nDefaultPort = 28333;
         nPruneAfterHeight = 100000;
