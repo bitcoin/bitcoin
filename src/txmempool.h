@@ -218,12 +218,15 @@ public:
  * in mempool descendants are included) that can be evicted given a
  * fee and size to use for the eviction. The logic for mempool limiting
  * and this eviction code is described in AcceptToMemoryPool.
+ * There is also functionality for removing old transactions from
+ * the mempool, via the Expire() function.
  *
  * CTxMemPool::mapTx, and CTxMemPoolEntry bookkeeping:
  *
- * mapTx is a boost::multi_index that sorts the mempool on 2 criteria:
+ * mapTx is a boost::multi_index that sorts the mempool on 3 criteria:
  * - transaction hash
  * - feerate [we use max(feerate of tx, feerate of tx with all descendants)]
+ * - time in mempool
  *
  * In order for the feerate sort to remain correct, we must update transactions
  * in the mempool when new descendants arrive.  To facilitate this, we track
@@ -303,6 +306,11 @@ public:
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByFeeRate
+            >,
+            // sorted by entry time
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByEntryTime
             >
         >
     > indexed_transaction_set;
@@ -415,6 +423,9 @@ public:
      *    look up parents from mapLinks. Must be true for entries not in the mempool
      */
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents = true);
+
+    /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
+    int Expire(int64_t time);
 
     unsigned long size()
     {
