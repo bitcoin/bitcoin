@@ -2036,8 +2036,6 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
     if(useIX && nFeePay < CENT) nFeePay = CENT;
 
     CAmount nValue = 0;
-    CAmount nFeeDelta = 0;
-    int nAttemptsToLowerFee = 0;
 
     BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
     {
@@ -2069,7 +2067,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 txNew.vout.clear();
                 wtxNew.fFromMe = true;
 
-                CAmount nTotalValue = nValue + nFeeRet + nFeeDelta;
+                CAmount nTotalValue = nValue + nFeeRet;
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const PAIRTYPE(CScript, CAmount)& s, vecSend)
@@ -2163,10 +2161,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     CTxOut newTxOut(nChange, scriptChange);
 
                     // Never create dust outputs; if we would, just
-                    // add the dust to the fee
-                    // OR if we didn't try to lower fees yet,
-                    // let's see what fee we can get if there is no change
-                    if (newTxOut.IsDust(::minRelayTxFee) || nAttemptsToLowerFee == 0)
+                    // add the dust to the fee.
+                    if (newTxOut.IsDust(::minRelayTxFee))
                     {
                         nFeeRet += nChange;
                         nChange = 0;
@@ -2231,18 +2227,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     return false;
                 }
 
-                if (nFeeRet == nFeeNeeded || // Done, enough fee included
-                        (nFeeRet > nFeeNeeded && (nAttemptsToLowerFee > 1 || coin_type == ONLY_DENOMINATED)))
+                if (nFeeRet >= nFeeNeeded) // Done, enough fee included
                     break;
-
-                if (nFeeRet > nFeeNeeded) {
-                    // Try to lower fee
-                    nAttemptsToLowerFee++;
-                    nFeeDelta = nFeeRet - nFeeNeeded;
-                }
-                else {
-                    nFeeDelta = 0; //not enough fee so no delta too
-                }
 
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
