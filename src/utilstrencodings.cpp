@@ -464,11 +464,12 @@ bool ParseDouble(const std::string& str, double *out)
         return false;
     if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
         return false;
-    char *endp = NULL;
-    errno = 0; // strtod will not set errno if valid
-    double n = strtod(str.c_str(), &endp);
-    if(out) *out = n;
-    return endp && *endp == 0 && !errno;
+    std::istringstream text(str);
+    text.imbue(std::locale::classic());
+    double result;
+    text >> result;
+    if(out) *out = result;
+    return text.eof() && !text.fail();
 }
 
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
