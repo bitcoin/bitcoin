@@ -145,10 +145,10 @@ Value masternode(const Array& params, bool fHelp)
                 "  start        - Start masternode configured in dash.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
                 "  start-many   - Start all masternodes configured in masternode.conf\n"
+                "  status       - Print masternode status information\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
                 "  winners      - Print list of masternode winners\n"
-                "  status       - Print masternode status information\n"
                 );
 
     if (strCommand == "list")
@@ -163,6 +163,25 @@ Value masternode(const Array& params, bool fHelp)
         return "Show budgets";
     }
 
+    if(strCommand == "connect")
+    {
+        std::string strAddress = "";
+        if (params.size() == 2){
+            strAddress = params[1].get_str();
+        } else {
+            throw runtime_error(
+                "Masternode address required\n");
+        }
+
+        CService addr = CService(strAddress);
+
+        if(ConnectNode((CAddress)addr, NULL, true)){
+            return "successfully connected";
+        } else {
+            return "error connecting";
+        }
+    }
+
     if (strCommand == "count")
     {
         if (params.size() > 2){
@@ -175,6 +194,51 @@ Value masternode(const Array& params, bool fHelp)
             if(params[1] == "both") return strprintf("%d / %d", mnodeman.CountEnabled(), mnodeman.size());
         }
         return mnodeman.size();
+    }
+
+    if (strCommand == "current")
+    {
+        CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
+        if(winner) {
+            Object obj;
+            CScript pubkey;
+            pubkey = GetScriptForDestination(winner->pubkey.GetID());
+            CTxDestination address1;
+            ExtractDestination(pubkey, address1);
+            CBitcoinAddress address2(address1);
+
+            obj.push_back(Pair("IP:port",       winner->addr.ToString()));
+            obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
+            obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString()));
+            obj.push_back(Pair("pubkey",        address2.ToString()));
+            obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
+                                                        (int64_t)winner->lastPing.sigTime));
+            obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
+                                                        (int64_t)(winner->lastPing.sigTime - winner->sigTime)));
+            return obj;
+        }
+
+        return "unknown";
+    }
+
+    if (strCommand == "debug")
+    {
+        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL) return activeMasternode.GetStatus();
+
+        CTxIn vin = CTxIn();
+        CPubKey pubkey = CScript();
+        CKey key;
+        bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
+        if(!found){
+            return "Missing masternode input, please look at the documentation for instructions on masternode creation";
+        } else {
+            return "No problems were found";
+        }
+    }
+
+    if(strCommand == "enforce")
+    {
+        return (uint64_t)enforceMasternodePaymentsTime;
     }
 
     if (strCommand == "start")
@@ -314,50 +378,10 @@ Value masternode(const Array& params, bool fHelp)
         return returnObj;
     }
 
-    if (strCommand == "debug")
-    {
-        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL) return activeMasternode.GetStatus();
-
-        CTxIn vin = CTxIn();
-        CPubKey pubkey = CScript();
-        CKey key;
-        bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
-        if(!found){
-            return "Missing masternode input, please look at the documentation for instructions on masternode creation";
-        } else {
-            return "No problems were found";
-        }
-    }
-
     if (strCommand == "create")
     {
 
         return "Not implemented yet, please look at the documentation for instructions on masternode creation";
-    }
-
-    if (strCommand == "current")
-    {
-        CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
-        if(winner) {
-            Object obj;
-            CScript pubkey;
-            pubkey = GetScriptForDestination(winner->pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
-
-            obj.push_back(Pair("IP:port",       winner->addr.ToString()));
-            obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
-            obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString()));
-            obj.push_back(Pair("pubkey",        address2.ToString()));
-            obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
-                                                        (int64_t)winner->lastPing.sigTime));
-            obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
-                                                        (int64_t)(winner->lastPing.sigTime - winner->sigTime)));
-            return obj;
-        }
-
-        return "unknown";
     }
 
     if (strCommand == "genkey")
@@ -366,42 +390,6 @@ Value masternode(const Array& params, bool fHelp)
         secret.MakeNewKey(false);
 
         return CBitcoinSecret(secret).ToString();
-    }
-
-    if (strCommand == "winners")
-    {
-        Object obj;
-
-        for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
-        {
-            obj.push_back(Pair(strprintf("%d", nHeight),       GetRequiredPaymentsString(nHeight)));
-        }
-
-        return obj;
-    }
-
-    if(strCommand == "enforce")
-    {
-        return (uint64_t)enforceMasternodePaymentsTime;
-    }
-
-    if(strCommand == "connect")
-    {
-        std::string strAddress = "";
-        if (params.size() == 2){
-            strAddress = params[1].get_str();
-        } else {
-            throw runtime_error(
-                "Masternode address required\n");
-        }
-
-        CService addr = CService(strAddress);
-
-        if(ConnectNode((CAddress)addr, NULL, true)){
-            return "successfully connected";
-        } else {
-            return "error connecting";
-        }
     }
 
     if(strCommand == "list-conf")
@@ -455,6 +443,18 @@ Value masternode(const Array& params, bool fHelp)
         mnObj.push_back(Pair("pubKeyMasternode", address2.ToString()));
         mnObj.push_back(Pair("notCapableReason", activeMasternode.notCapableReason));
         return mnObj;
+    }
+
+    if (strCommand == "winners")
+    {
+        Object obj;
+
+        for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
+        {
+            obj.push_back(Pair(strprintf("%d", nHeight),       GetRequiredPaymentsString(nHeight)));
+        }
+
+        return obj;
     }
 
     return Value::null;
