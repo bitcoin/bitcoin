@@ -171,7 +171,11 @@ void CBudgetManager::SubmitFinalBudget()
 
     CTxIn in(COutPoint(tx.GetHash(), 0));
     int conf = GetInputAgeIX(tx.GetHash(), in);
-    if(conf < BUDGET_FEE_CONFIRMATIONS){
+    /*
+        Wait will we have 1 extra confirmation, otherwise some clients might reject this feeTX
+        -- This function is tied to NewBlock, so we will propagate this budget while the block is also propagating
+    */
+    if(conf < BUDGET_FEE_CONFIRMATIONS+1){
         LogPrintf ("CBudgetManager::SubmitFinalBudget - Collateral requires at least %d confirmations - %s - %d confirmations\n", BUDGET_FEE_CONFIRMATIONS, tx.GetHash().ToString(), conf);
         return;
     }
