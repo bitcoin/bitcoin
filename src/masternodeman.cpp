@@ -618,10 +618,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        // only ask for missing items after our syncing process is complete -- 
-        //   otherwise we'll think a full sync succeeded when they return a result
-        if(!masternodeSync.IsSynced()) return;
-
         //search existing Masternode list, if it's known -- don't ask for the mnb
         CMasternode* pmn = mnodeman.Find(mnp.vin);
         if(pmn != NULL) return;
