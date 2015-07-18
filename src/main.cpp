@@ -3261,8 +3261,8 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         return error("%s : ActivateBestChain failed", __func__);
 
     if(!fLiteMode){
-        if (!fImporting && !fReindex && chainActive.Height() > Checkpoints::GetTotalBlocksEstimate()){
-            if(fMasternode || activeMasternode.status == ACTIVE_MASTERNODE_STARTED) coinbasePayee.BuildIndex(true);
+        if (masternodeSync.IsSynced()){
+            if(fMasterNode || activeMasternode.status == ACTIVE_MASTERNODE_STARTED) coinbasePayee.BuildIndex(true);
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();
