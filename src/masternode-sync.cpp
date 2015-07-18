@@ -107,7 +107,8 @@ void CMasternodeSync::Process()
                 return;
             }
 
-            if(IsInitialBlockDownload()) return;
+            //don't begin syncing until we're at a recent block
+            if(pindexPrev->nTime + 600 < GetTime()) return;
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST){
                 if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
