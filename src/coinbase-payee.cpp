@@ -175,7 +175,7 @@ void CCoinbasePayee::BuildIndex(bool bForced)
         LogPrintf("CCoinbasePayee::BuildIndex - coinbase cache exists, skipping BuildIndex\n");
         return;
     } else if(bForced) {
-        LogPrintf("CCoinbasePayee::BuildIndex - Rebuilding coinbase cache\n");
+        if(fDebug) LogPrintf("CCoinbasePayee::BuildIndex - Rebuilding coinbase cache\n");
         mapPaidTime.clear();
     }
 
@@ -209,6 +209,7 @@ void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nT
 
     BOOST_FOREACH(CTxOut out, txCoinbase.vout){
         uint256 h = GetScriptHash(out.scriptPubKey);
+        LogPrintf("CCoinbasePayee::ProcessBlockCoinbaseTX - %s - %d\n", h.ToString(), nTime);
         if(mapPaidTime.count(h)){
             if(mapPaidTime[h] < nTime) {
                 mapPaidTime[h] = nTime;

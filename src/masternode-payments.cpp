@@ -205,8 +205,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
             return;
         }
 
-        if(!winner.IsValid()){
-            LogPrintf("mnw - invalid message\n");
+        std::string strError = "";
+        if(!winner.IsValid(strError)){
+            LogPrintf("mnw - invalid message - %s\n", strError);
             return;
         }
 
@@ -422,7 +423,7 @@ bool IsReferenceNode(CTxIn& vin)
     return false;
 }
 
-bool CMasternodePaymentWinner::IsValid()
+bool CMasternodePaymentWinner::IsValid(std::string& strError)
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
