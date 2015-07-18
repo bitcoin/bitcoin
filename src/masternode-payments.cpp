@@ -64,6 +64,10 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
 
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 {
+    if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
+        return true;
+    }
+
     //check if it's a budget block
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
         if(budget.IsTransactionValid(txNew, nBlockHeight)){
