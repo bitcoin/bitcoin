@@ -505,16 +505,25 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
 }
 
 bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight){
+    int nHighestCount = -1;
+
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
-        if(nBlockHeight >= pfinalizedBudget->GetBlockStart() && nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
-            return true;
+        if(pfinalizedBudget->GetVoteCount() > nHighestCount && 
+            nBlockHeight >= pfinalizedBudget->GetBlockStart() && 
+            nBlockHeight <= pfinalizedBudget->GetBlockEnd()){
+            nHighestCount = pfinalizedBudget->GetVoteCount();
         }
 
         ++it;
     }
+
+    /*
+        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
+    */
+    if(nHighestCount > mnodeman.CountEnabled()/20) return true;
 
     return false;
 }
@@ -539,7 +548,10 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
         ++it;
     }
 
-    if(nHighestCount < mnodeman.CountEnabled()/20) return true;
+    /*
+        If budget doesn't have 5% of the network votes, then we should pay a masternode instead
+    */
+    if(nHighestCount < mnodeman.CountEnabled()/20) return false;
 
     // check the highest finalized budgets (+/- 10% to assist in consensus)
 
