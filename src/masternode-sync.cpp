@@ -97,7 +97,7 @@ void CMasternodeSync::Process()
     {
 
         //set to synced
-        if(Params().NetworkID() == CBaseChainParams::REGTEST && c >= 10) {
+        if(Params().NetworkID() == CBaseChainParams::REGTEST && tick >= 10) {
             LogPrintf("CMasternodeSync::Process - Sync has finished\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             RequestedMasternodeAttempt = 0;
@@ -116,7 +116,7 @@ void CMasternodeSync::Process()
         }
 
         //don't begin syncing until we're almost at a recent block
-        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight || pindexPrev->nTime + 600 < GetTime()) return;
+        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;
 
         if (pnode->nVersion >= nMasternodeMinProtocol) {
 
