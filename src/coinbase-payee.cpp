@@ -200,7 +200,30 @@ void CCoinbasePayee::BuildIndex(bool bForced)
     return;
 }
 
-void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nTime)
+// Reprocess the last 120 blocks and overwrite the lastpaid times (incase we switch chains)
+// TODO : Keep track of the block hashes and reprocess until we find one we've processed
+void CCoinbasePayee::ReprocessChain()
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    int count = 0;
+
+    for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
+        count++;
+        if(count > 120) return;
+
+        CBlock block;
+        if (ReadBlockFromDisk(block, pindexPrev)) {
+            ProcessBlockCoinbaseTX(block.vtx[0], block.nTime, true);
+        }
+
+        if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
+        pindexPrev = pindexPrev->pprev;
+    }
+
+    return;
+}
+
+void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nTime, bool fOverwrite)
 {
     if (!txCoinbase.IsCoinBase()){
         LogPrintf("ERROR: CCoinbasePayee::ProcessBlockCoinbaseTX - tx is not coinbase\n");
@@ -209,12 +232,12 @@ void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nT
 
     BOOST_FOREACH(CTxOut out, txCoinbase.vout){
         uint256 h = GetScriptHash(out.scriptPubKey);
-        LogPrintf("CCoinbasePayee::ProcessBlockCoinbaseTX - %s - %d\n", h.ToString(), nTime);
+        if(fDebug) LogPrintf("CCoinbasePayee::ProcessBlockCoinbaseTX - %s - %d\n", h.ToString(), nTime);
         if(mapPaidTime.count(h)){
-            if(mapPaidTime[h] < nTime) {
+            if(mapPaidTime[h] < nTime || fOverwrite) {
                 mapPaidTime[h] = nTime;
             } else {
-                LogPrintf("CCoinbasePayee::ProcessBlockCoinbaseTX - not updated -- %s - %d\n", h.ToString(), nTime);
+                if(fDebug) LogPrintf("CCoinbasePayee::ProcessBlockCoinbaseTX - not updated -- %s - %d\n", h.ToString(), nTime);
             }
         } else {
             mapPaidTime[h] = nTime;

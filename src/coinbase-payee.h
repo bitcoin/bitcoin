@@ -70,7 +70,8 @@ public:
     }
 
     void BuildIndex(bool bForced=false);
-    void ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nTime);
+    void ReprocessChain();
+    void ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nTime, bool fOverwrite=false);
     int64_t GetLastPaid(CScript& pubkey);
     void CleanUp();
 

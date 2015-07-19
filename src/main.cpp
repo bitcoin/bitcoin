@@ -3264,7 +3264,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         if (masternodeSync.IsSynced()){
             CScript payee;
             CTxIn vin;
-            coinbasePayee.ProcessBlockCoinbaseTX(pblock->vtx[0], pblock->nTime);
+            coinbasePayee.ReprocessChain();
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();
