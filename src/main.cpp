@@ -3262,7 +3262,9 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     if(!fLiteMode){
         if (masternodeSync.IsSynced()){
-            if(fMasterNode || activeMasternode.status == ACTIVE_MASTERNODE_STARTED) coinbasePayee.BuildIndex(true);
+            CScript payee;
+            CTxIn vin;
+            coinbasePayee.ProcessBlockCoinbaseTX(pblock->vtx[0], pblock->nTime);
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();
