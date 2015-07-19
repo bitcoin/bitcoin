@@ -1526,6 +1526,7 @@ static bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const CO
 
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean)
 {
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     assert(pindex->GetBlockHash() == view.GetBestBlock());
 
     if (pfClean)
@@ -1583,6 +1584,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
+
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("DisconnectBlock_ms", diff.total_milliseconds(), 1.0f);
     statsClient.gauge("transactions.txCacheSize", view.GetCacheSize(), 1.0f);
 
     if (pfClean) {
@@ -1695,6 +1700,7 @@ static int64_t nTimeTotal = 0;
 
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     const CChainParams& chainparams = Params();
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
@@ -1868,6 +1874,10 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     int64_t nTime4 = GetTimeMicros(); nTimeCallbacks += nTime4 - nTime3;
     LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeCallbacks * 0.000001);
+
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("ConnectBlock_ms", diff.total_milliseconds(), 1.0f);
 
     return true;
 }
@@ -2287,6 +2297,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
  * that is already loaded (to avoid loading it again from disk).
  */
 bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     const CChainParams& chainParams = Params();
@@ -2330,6 +2341,10 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
         }
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex();
+
+    boost::posix_time::ptime finish = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::time_duration diff = finish - start;
+    statsClient.timing("ActivateBestChain_ms", diff.total_milliseconds(), 1.0f);
 
     // Write changes periodically to disk, after relay.
     if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC)) {
