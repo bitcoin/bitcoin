@@ -71,7 +71,12 @@ void CMasternodeSync::GetNextAsset()
 
 void CMasternodeSync::Process()
 {
-    static int c = 0;
+    static int tick = 0;
+
+    if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
+
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return;
 
     if(IsSynced()) {
         /* 
@@ -79,19 +84,13 @@ void CMasternodeSync::Process()
         */
         if(mnodeman.CountEnabled() == 0) {
             RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
-            GetNextAsset();
-        }
-        return;
+        } else
+            return;
     }
 
-    if(c++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
-
-    if(fDebug) LogPrintf("CMasternodeSync::Process() - RequestedMasternodeAssets %d c %d\n", RequestedMasternodeAssets, c);
+    if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
 
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return;
 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
@@ -116,8 +115,8 @@ void CMasternodeSync::Process()
             return;
         }
 
-        //don't begin syncing until we're at a recent block
-        if(pindexPrev->nHeight < pindexBestHeader->nHeight) return;
+        //don't begin syncing until we're almost at a recent block
+        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight || pindexPrev->nTime + 600 < GetTime()) return;
 
         if (pnode->nVersion >= nMasternodeMinProtocol) {
 
