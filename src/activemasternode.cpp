@@ -171,6 +171,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
         pmn->lastPing = mnp;
         mapSeenMasternodePing[mnp.GetHash()] = mnp;
         mnp.Relay();
+
         return true;
     }
     else

@@ -562,7 +562,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
             return true;
         }
         if(fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode ping arrived too early, vin: %s\n", vin.ToString());
-        nDos = 1;
+        //nDos = 1; //disable, this is happening frequently and causing banned peers
         return false;
     }
     if(fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Couldn't find compatible Masternode entry, vin: %s\n", vin.ToString());

@@ -229,6 +229,7 @@ public:
     bool IsPingedWithin(int seconds, int64_t now = -1)
     {
         now == -1 ? now = GetAdjustedTime() : now;
+
         return (lastPing == CMasternodePing())
                 ? false
                 : now - lastPing.sigTime < seconds;

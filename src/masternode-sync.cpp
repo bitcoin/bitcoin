@@ -58,6 +58,7 @@ void CMasternodeSync::GetNextAsset()
             RequestedMasternodeAssets = MASTERNODE_SYNC_BUDGET;
             break;
         case(MASTERNODE_SYNC_BUDGET):
+            LogPrintf("CMasternodeSync::GetNextAsset - Sync has finished\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             break;
     }
@@ -94,6 +95,12 @@ void CMasternodeSync::Process()
     {
         if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION)
         {
+            //set to syned
+            if(Params().NetworkID() == CBaseChainParams::REGTEST && c >= 10) {
+                LogPrintf("CMasternodeSync::Process - Sync has finished\n");
+                RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
+                RequestedMasternodeAttempt = 0;
+            }
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
                 if(pnode->HasFulfilledRequest("getspork")) continue;
