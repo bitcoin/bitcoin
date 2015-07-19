@@ -8,6 +8,7 @@
 #include "hash.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "random.h"
 #include "streams.h"
 
 #include <math.h>
@@ -121,6 +122,12 @@ void CBloomFilter::clear()
     isEmpty = true;
 }
 
+void CBloomFilter::reset(unsigned int nNewTweak)
+{
+    clear();
+    nTweak = nNewTweak;
+}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
@@ -217,7 +224,8 @@ CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate, 
     // inserted, so at least one always contains the last nElements
     // inserted.
     nBloomSize = nElements * 2;
-    nInsertions = 0;
+
+    reset(nTweak);
 }
 
 void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
@@ -254,9 +262,12 @@ bool CRollingBloomFilter::contains(const uint256& hash) const
     return contains(data);
 }
 
-void CRollingBloomFilter::clear()
+void CRollingBloomFilter::reset(unsigned int nNewTweak)
 {
-    b1.clear();
-    b2.clear();
+    if (!nNewTweak)
+        nNewTweak = GetRand(std::numeric_limits<unsigned int>::max());
+
+    b1.reset(nNewTweak);
+    b2.reset(nNewTweak);
     nInsertions = 0;
 }
