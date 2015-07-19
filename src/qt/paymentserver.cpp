@@ -11,6 +11,7 @@
 #include "base58.h"
 #include "chainparams.h"
 #include "main.h"
+#include "policy/policy.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "wallet/wallet.h"
@@ -527,6 +528,7 @@ bool PaymentServer::readPaymentRequestFromFile(const QString& filename, PaymentR
 
 bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, SendCoinsRecipient& recipient)
 {
+    const CPolicy& policy = globalPolicy;
     if (!optionsModel)
         return false;
 
@@ -589,7 +591,7 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
 
         // Extract and check amounts
         CTxOut txOut(sendingTo.second, sendingTo.first);
-        if (txOut.IsDust(::minRelayTxFee)) {
+        if (!policy.ApproveOutputAmount(txOut)) {
             Q_EMIT message(tr("Payment request error"), tr("Requested payment amount of %1 is too small (considered dust).")
                 .arg(BitcoinUnits::formatWithUnit(optionsModel->getDisplayUnit(), sendingTo.second)),
                 CClientUIInterface::MSG_ERROR);

@@ -9,6 +9,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
+#include "policy/fees.h"
 #include "main.h"
 #include "miner.h"
 #include "net.h"

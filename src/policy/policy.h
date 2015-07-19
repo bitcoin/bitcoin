@@ -42,6 +42,25 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
+/**
+ * \class CPolicy
+ * Generic interface class for policy.
+ */
+class CPolicy
+{
+public:
+    /**
+     * @param txout the CTxOut being considered
+     * @return the minimum acceptable nValue for this CTxOut.
+     */
+    CAmount GetMinAmount(const CTxOut& txout) const;
+    /**
+     * @param txout the CTxOut being considered
+     * @return True if the CTxOut has an acceptable nValue.
+     */
+    bool ApproveOutputAmount(const CTxOut& txout) const;
+};
+
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
     /**
      * Check for standard transaction types
