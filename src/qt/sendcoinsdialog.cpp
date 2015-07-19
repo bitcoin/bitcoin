@@ -54,6 +54,14 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
 
     // Dash specific
+    QSettings settings;
+    if (!settings.contains("bUseDarkSend"))
+        settings.setValue("bUseDarkSend", false);
+    if (!settings.contains("bUseInstantX"))
+        settings.setValue("bUseInstantX", false);
+        
+    bool useDarkSend = settings.value("bUseDarkSend").toBool();
+    bool useInstantX = settings.value("bUseInstantX").toBool();
     if(fLiteMode) {
         ui->checkUseDarksend->setChecked(false);
         ui->checkUseDarksend->setVisible(false);
@@ -61,6 +69,13 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
         CoinControlDialog::coinControl->useDarkSend = false;
         CoinControlDialog::coinControl->useInstantX = false;
     }
+    else{
+        ui->checkUseDarksend->setChecked(useDarkSend);
+        ui->checkInstantX->setChecked(useInstantX);
+        CoinControlDialog::coinControl->useDarkSend = useDarkSend;
+        CoinControlDialog::coinControl->useInstantX = useInstantX;
+    }
+    
     connect(ui->checkUseDarksend, SIGNAL(stateChanged ( int )), this, SLOT(updateDisplayUnit()));
     connect(ui->checkInstantX, SIGNAL(stateChanged ( int )), this, SLOT(updateInstantX()));
 
@@ -91,7 +106,6 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->labelCoinControlChange->addAction(clipboardChangeAction);
 
     // init transaction fee section
-    QSettings settings;
     if (!settings.contains("fFeeSectionMinimized"))
         settings.setValue("fFeeSectionMinimized", true);
     if (!settings.contains("nFeeRadio") && settings.contains("nTransactionFee") && settings.value("nTransactionFee").toLongLong() > 0) // compatibility
@@ -110,6 +124,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
         settings.setValue("fPayOnlyMinFee", false);
     if (!settings.contains("fSendFreeTransactions"))
         settings.setValue("fSendFreeTransactions", false);
+
     ui->groupFee->setId(ui->radioSmartFee, 0);
     ui->groupFee->setId(ui->radioCustomFee, 1);
     ui->groupFee->button((int)std::max(0, std::min(1, settings.value("nFeeRadio").toInt())))->setChecked(true);
@@ -120,7 +135,7 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->customFee->setValue(settings.value("nTransactionFee").toLongLong());
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     ui->checkBoxFreeTx->setChecked(settings.value("fSendFreeTransactions").toBool());
-    minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
+    minimizeFeeSection(settings.value("bDarksendChecked").toBool());
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *clientModel)
@@ -533,11 +548,12 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
     if(model && model->getOptionsModel())
     {
 	    uint64_t bal = 0;
-
+        QSettings settings;
+        settings.setValue("bUseDarkSend", ui->checkUseDarksend->isChecked());
 	    if(ui->checkUseDarksend->isChecked()) {
-		bal = anonymizedBalance;
+		    bal = anonymizedBalance;
 	    } else {
-		bal = balance;
+		    bal = balance;
 	    }
 
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), bal));
@@ -557,6 +573,8 @@ void SendCoinsDialog::updateDisplayUnit()
 
 void SendCoinsDialog::updateInstantX()
 {
+    QSettings settings;
+    settings.setValue("bUseInstantX", ui->checkInstantX->isChecked());
     CoinControlDialog::coinControl->useInstantX = ui->checkInstantX->isChecked();
     coinControlUpdateLabels();
 }
