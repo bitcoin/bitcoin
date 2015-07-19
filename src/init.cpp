@@ -1567,7 +1567,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     */
 
     darkSendPool.InitCollateralAddress();
-    coinbasePayee.BuildIndex();
+    coinbasePayee.BuildIndex(true);
+    coinbasePayee.ReprocessChain();
 
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 
