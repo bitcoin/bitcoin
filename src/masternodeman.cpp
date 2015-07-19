@@ -634,6 +634,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         //   otherwise we'll think a full sync succeeded when they return a result
         if(!masternodeSync.IsSynced()) return;
 
+        //search existing Masternode list, if it's known -- don't ask for the mnb
+        CMasternode* pmn = mnodeman.Find(mnp.vin);
+        if(pmn != NULL) return;
+
         // we wasn't able to accept mnp but nothing significant happened,
         // we might just have to ask for a masternode entry once
         std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(mnp.vin.prevout);
