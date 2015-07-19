@@ -20,7 +20,7 @@ fi
 
 rm -rf ${TEMPDIR} && mkdir -p ${TEMPDIR}
 tar -C ${TEMPDIR} -xf ${UNSIGNED}
-tar -C ${TEMPDIR} -xf ${SIGNATURE}
+cp -rf "${SIGNATURE}"/* ${TEMPDIR}
 
 if [ -z "${PAGESTUFF}" ]; then
   PAGESTUFF=${TEMPDIR}/pagestuff

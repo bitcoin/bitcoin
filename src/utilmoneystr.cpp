@@ -11,7 +11,7 @@
 
 using namespace std;
 
-string FormatMoney(const CAmount& n, bool fPlus)
+std::string FormatMoney(const CAmount& n)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
@@ -29,8 +29,6 @@ string FormatMoney(const CAmount& n, bool fPlus)
 
     if (n < 0)
         str.insert((unsigned int)0, 1, '-');
-    else if (fPlus && n > 0)
-        str.insert((unsigned int)0, 1, '+');
     return str;
 }
 

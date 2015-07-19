@@ -50,8 +50,10 @@ void CScheduler::serviceQueue()
                 // Keep waiting until timeout
             }
 #else
+            // Some boost versions have a conflicting overload of wait_until that returns void.
+            // Explicitly use a template here to avoid hitting that overload.
             while (!shouldStop() && !taskQueue.empty() &&
-                   newTaskScheduled.wait_until(lock, taskQueue.begin()->first) != boost::cv_status::timeout) {
+                   newTaskScheduled.wait_until<>(lock, taskQueue.begin()->first) != boost::cv_status::timeout) {
                 // Keep waiting until timeout
             }
 #endif

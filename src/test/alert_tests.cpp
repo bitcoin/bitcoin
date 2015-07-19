@@ -201,7 +201,6 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
 {
     // Test PartitionCheck
     CCriticalSection csDummy;
-    CChain chainDummy;
     CBlockIndex indexDummy[100];
     CChainParams& params = Params(CBaseChainParams::MAIN);
     int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
@@ -220,17 +219,16 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
         // Other members don't matter, the partition check code doesn't
         // use them
     }
-    chainDummy.SetTip(&indexDummy[99]);
 
     // Test 1: chain with blocks every nPowTargetSpacing seconds,
     // as normal, no worries:
-    PartitionCheck(falseFunc, csDummy, chainDummy, nPowTargetSpacing);
+    PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(strMiscWarning.empty());
 
     // Test 2: go 3.5 hours without a block, expect a warning:
     now += 3*60*60+30*60;
     SetMockTime(now);
-    PartitionCheck(falseFunc, csDummy, chainDummy, nPowTargetSpacing);
+    PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(!strMiscWarning.empty());
     BOOST_TEST_MESSAGE(std::string("Got alert text: ")+strMiscWarning);
     strMiscWarning = "";
@@ -239,7 +237,7 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     // code:
     now += 60*10;
     SetMockTime(now);
-    PartitionCheck(falseFunc, csDummy, chainDummy, nPowTargetSpacing);
+    PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(strMiscWarning.empty());
 
     // Test 4: get 2.5 times as many blocks as expected:
@@ -248,7 +246,7 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     int64_t quickSpacing = nPowTargetSpacing*2/5;
     for (int i = 0; i < 100; i++) // Tweak chain timestamps:
         indexDummy[i].nTime = now - (100-i)*quickSpacing;
-    PartitionCheck(falseFunc, csDummy, chainDummy, nPowTargetSpacing);
+    PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(!strMiscWarning.empty());
     BOOST_TEST_MESSAGE(std::string("Got alert text: ")+strMiscWarning);
     strMiscWarning = "";

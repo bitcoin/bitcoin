@@ -49,7 +49,7 @@ static const char *escapes[256] = {
 	NULL,
 	NULL,
 	NULL,
-	"\\/",
+	NULL,
 	NULL,
 	NULL,
 	NULL,

@@ -19,6 +19,7 @@ namespace Ui {
 }
 
 QT_BEGIN_NAMESPACE
+class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
 
@@ -45,7 +46,7 @@ protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
 
-private slots:
+private Q_SLOTS:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
     /** open the debug.log from the current datadir */
@@ -57,8 +58,10 @@ private slots:
     void resizeEvent(QResizeEvent *event);
     void showEvent(QShowEvent *event);
     void hideEvent(QHideEvent *event);
+    /** Show custom context menu on Peers tab */
+    void showMenu(const QPoint& point);
 
-public slots:
+public Q_SLOTS:
     void clear();
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
@@ -73,8 +76,10 @@ public slots:
     void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
     /** Handle updated peer information */
     void peerLayoutChanged();
+    /** Disconnect a selected node on the Peers tab */
+    void disconnectSelectedNode();
 
-signals:
+Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
     void cmdRequest(const QString &command);
@@ -85,6 +90,8 @@ private:
     void setTrafficGraphRange(int mins);
     /** show detailed information on ui about selected node */
     void updateNodeDetail(const CNodeCombinedStats *stats);
+    /** clear the selected node */
+    void clearSelectedNode();
 
     enum ColumnWidths
     {
@@ -98,6 +105,7 @@ private:
     QStringList history;
     int historyPtr;
     NodeId cachedNodeid;
+    QMenu *contextMenu;
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H
