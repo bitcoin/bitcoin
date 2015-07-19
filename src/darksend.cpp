@@ -2331,7 +2331,8 @@ void ThreadCheckDarkSendPool()
         masternodeSync.Process();
 
         if(masternodeSync.IsSynced()) {
-            if(c % MASTERNODE_PING_SECONDS == 1) activeMasternode.ManageStatus(); // activate right after sync
+            //check if we should active or ping every few minutes
+            if(c % MASTERNODE_PING_SECONDS == 1) activeMasternode.ManageStatus();
 
             if(c % 60 == 0)
             {
