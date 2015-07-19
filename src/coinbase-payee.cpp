@@ -213,6 +213,8 @@ void CCoinbasePayee::ProcessBlockCoinbaseTX(CTransaction& txCoinbase, int64_t nT
         if(mapPaidTime.count(h)){
             if(mapPaidTime[h] < nTime) {
                 mapPaidTime[h] = nTime;
+            } else {
+                LogPrintf("CCoinbasePayee::ProcessBlockCoinbaseTX - not updated -- %s - %d\n", h.ToString(), nTime);
             }
         } else {
             mapPaidTime[h] = nTime;
@@ -233,14 +235,14 @@ int64_t CCoinbasePayee::GetLastPaid(CScript& pubkey)
 
 void CCoinbasePayee::CleanUp()
 {
-    std::map<uint256, int64_t>::iterator it = mapPaidTime.begin();
-    while(it != mapPaidTime.end())
-    {
-        //keep 30 days of history
-        if((*it).second < GetAdjustedTime() - (60*60*24*30)) {
-            mapPaidTime.erase(it++);
-        } else {
-            ++it;
-        }
-    }
+    // std::map<uint256, int64_t>::iterator it = mapPaidTime.begin();
+    // while(it != mapPaidTime.end())
+    // {
+    //     //keep 30 days of history
+    //     if((*it).second < GetAdjustedTime() - (60*60*24*30)) {
+    //         mapPaidTime.erase(it++);
+    //     } else {
+    //         ++it;
+    //     }
+    // }
 }
