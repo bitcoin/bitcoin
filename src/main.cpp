@@ -3261,13 +3261,14 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         return error("%s : ActivateBestChain failed", __func__);
 
     if(!fLiteMode){
-        if (masternodeSync.IsSynced()){
+        if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST) {
             CScript payee;
             CTxIn vin;
             coinbasePayee.ReprocessChain();
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
-            budget.NewBlock();
+            if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_BUDGET)
+                budget.NewBlock();
         }
     }
 
