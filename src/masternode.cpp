@@ -409,7 +409,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
             }
         }
 
-        LogPrintf("mnb - Got NEW Masternode entry %s %s\n", addr.ToString(), vin.ToString());
+        LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
         CMasternode mn(*this);
         mnodeman.Add(mn);
 
@@ -513,6 +513,8 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
         nDos = 1;
         return false;
     }
+
+    if(fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
