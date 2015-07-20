@@ -11,7 +11,6 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
-#include "coinbase-payee.h"
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
@@ -3264,7 +3263,6 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST) {
             CScript payee;
             CTxIn vin;
-            coinbasePayee.ReprocessChain();
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_BUDGET)

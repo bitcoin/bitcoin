@@ -176,6 +176,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
     if (strCommand == "mnget") { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
+        int nCountNeeded;
+        vRecv >> nCountNeeded;
+
         if(pfrom->HasFulfilledRequest("mnget")) {
             LogPrintf("mnget - peer already asked me for the list\n");
             Misbehaving(pfrom->GetId(), 20);
@@ -183,7 +186,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
         
         pfrom->FulfilledRequest("mnget");
-        masternodePayments.Sync(pfrom);
+        masternodePayments.Sync(pfrom, nCountNeeded);
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
@@ -200,8 +203,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
            return;
         }
 
-        if(winner.nBlockHeight < chainActive.Tip()->nHeight - 10 || winner.nBlockHeight > chainActive.Tip()->nHeight+20){
-            LogPrintf("mnw - winner out of range - Height %d bestHeight %d\n", winner.nBlockHeight, chainActive.Tip()->nHeight);
+        int nFirstBlock = (masternodeSync.IsSynced() ? (chainActive.Tip()->nHeight - (mnodeman.CountEnabled()*1.1)) : chainActive.Tip()->nHeight - 10);
+        if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > chainActive.Tip()->nHeight+20){
+            LogPrintf("mnw - winner out of range - FirstBlock %d Height %d bestHeight %d\n", nFirstBlock, winner.nBlockHeight, chainActive.Tip()->nHeight);
             return;
         }
 
@@ -270,7 +274,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
     mnpayee = GetScriptForDestination(mn.pubkey.GetID());
 
     CScript payee;
-    for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+10; h++){
+    for(int64_t h = pindexPrev->nHeight-1; h <= pindexPrev->nHeight+11; h++){
         if(h == nNotBlockHeight) continue;
         if(mapMasternodeBlocks.count(h)){
             if(mapMasternodeBlocks[h].GetPayee(payee)){
@@ -548,7 +552,6 @@ bool CMasternodePaymentWinner::SignatureValid()
                     boost::lexical_cast<std::string>(nBlockHeight) +
                     payee.ToString();
 
-
         std::string errorMessage = "";
         if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
             return error("CMasternodePaymentWinner::SignatureValid() - Got bad Masternode address signature %s \n", vinMasternode.ToString().c_str());
@@ -560,16 +563,19 @@ bool CMasternodePaymentWinner::SignatureValid()
     return false;
 }
 
-void CMasternodePayments::Sync(CNode* node)
+void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
 {
     LOCK(cs_masternodepayments);
 
     if(chainActive.Tip() == NULL) return;
 
+    int nCount = (mnodeman.CountEnabled()*1.1);
+    if(nCountNeeded > nCount) nCountNeeded = nCount;
+
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
         CMasternodePaymentWinner winner = (*it).second;
-        if(winner.nBlockHeight >= chainActive.Tip()->nHeight-10 && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
+        if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
             node->PushMessage("mnw", winner);
         ++it;
     }

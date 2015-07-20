@@ -101,19 +101,23 @@ void CMasternodeSync::Process()
             LogPrintf("CMasternodeSync::Process - Sync has finished\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             RequestedMasternodeAttempt = 0;
-        }
+        } else if(Params().NetworkID() != CBaseChainParams::REGTEST) {
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
+                if(pnode->HasFulfilledRequest("getspork")) continue;
+                pnode->FulfilledRequest("getspork");
 
-        if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
-            if(pnode->HasFulfilledRequest("getspork")) continue;
-            pnode->FulfilledRequest("getspork");
-
-            if(RequestedMasternodeAttempt <= 2){
-                pnode->PushMessage("getsporks"); //get current network sporks
-                if(RequestedMasternodeAttempt == 2) GetNextAsset();
-                RequestedMasternodeAttempt++;
+                if(RequestedMasternodeAttempt <= 2){
+                    pnode->PushMessage("getsporks"); //get current network sporks
+                    if(RequestedMasternodeAttempt == 2) GetNextAsset();
+                    RequestedMasternodeAttempt++;
+                }
+                return;
             }
+        } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) {
+            GetNextAsset();
             return;
         }
+
 
         //don't begin syncing until we're almost at a recent block
         if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;
@@ -127,6 +131,14 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // If it's already more then MASTERNODE_SYNC_TIMEOUT seconds passed since we asked
+                // and we still have nothing, assume there is nothing to sync but give it another
+                // MASTERNODE_SYNC_TIMEOUT seconds until we move further
+                static int64_t lastTimeAsked = 0;
+                if(lastMasternodeList == 0  && lastTimeAsked  > 0 && lastTimeAsked < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                        lastMasternodeList = GetTime();
+                }
+
                 if(pnode->HasFulfilledRequest("mnsync")) continue;
                 pnode->FulfilledRequest("mnsync");
 
@@ -134,6 +146,7 @@ void CMasternodeSync::Process()
                         && RequestedMasternodeAttempt <= 2){
                     mnodeman.DsegUpdate(pnode);
                     RequestedMasternodeAttempt++;
+                    lastTimeAsked = GetTime();
                 }
                 return;
             }
@@ -144,13 +157,23 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // If it's already more then MASTERNODE_SYNC_TIMEOUT seconds passed since we asked
+                // and we still have nothing, assume there is nothing to sync but give it another
+                // MASTERNODE_SYNC_TIMEOUT seconds until we move further
+                static int64_t lastTimeAsked = 0;
+                if(lastMasternodeWinner == 0  && lastTimeAsked  > 0 && lastTimeAsked < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                        lastMasternodeWinner = GetTime();
+                }
+
                 if(pnode->HasFulfilledRequest("mnwsync")) continue;
                 pnode->FulfilledRequest("mnwsync");
 
                 if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - MASTERNODE_SYNC_TIMEOUT)
                         && RequestedMasternodeAttempt <= 2){
-                    pnode->PushMessage("mnget"); //sync payees
+                    int nCountNeeded = (mnodeman.CountEnabled()*1.1);
+                    pnode->PushMessage("mnget", nCountNeeded); //sync payees
                     RequestedMasternodeAttempt++;
+                    lastTimeAsked = GetTime();
                 }
                 return;
             }
@@ -164,15 +187,23 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // If it's already more then MASTERNODE_SYNC_TIMEOUT seconds passed since we asked
+                // and we still have nothing, assume there is nothing to sync but give it another
+                // MASTERNODE_SYNC_TIMEOUT seconds until we move further
+                static int64_t lastTimeAsked = 0;
+                if(lastBudgetItem == 0  && lastTimeAsked  > 0 && lastTimeAsked < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                        lastBudgetItem = GetTime();
+                }
+
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
                 if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - MASTERNODE_SYNC_TIMEOUT)
                         && RequestedMasternodeAttempt <= 2){
                     uint256 n = 0;
-
                     pnode->PushMessage("mnvs", n); //sync masternode votes
                     RequestedMasternodeAttempt++;
+                    lastTimeAsked = GetTime();
                 }
                 return;
             }

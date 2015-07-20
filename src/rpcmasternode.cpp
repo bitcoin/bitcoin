@@ -450,9 +450,15 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "winners")
     {
+        int nLast = 10;
+
+        if (params.size() >= 2){
+            nLast = params[1].get_int();
+        }
+
         Object obj;
 
-        for(int nHeight = chainActive.Tip()->nHeight-10; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
+        for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
             obj.push_back(Pair(strprintf("%d", nHeight),       GetRequiredPaymentsString(nHeight)));
         }
