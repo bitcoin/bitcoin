@@ -85,7 +85,7 @@ bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
 
 void CDarkSendRelay::Relay()
 {
-    int nCount = std::min(mnodeman.CountEnabled(), 20);
+    int nCount = std::min(mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION), 20);
     int nRank1 = (rand() % nCount)+1; 
     int nRank2 = (rand() % nCount)+1; 
 

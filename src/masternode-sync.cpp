@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "masternode-sync.h"
+#include "masternode-payments.h"
 #include "masternode.h"
 #include "masternodeman.h"
 #include "util.h"
@@ -46,6 +47,9 @@ void CMasternodeSync::GetNextAsset()
     switch(RequestedMasternodeAssets)
     {
         case(MASTERNODE_SYNC_INITIAL):
+            lastMasternodeList = 0;
+            lastMasternodeWinner = 0;
+            lastBudgetItem = 0;
             RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
@@ -67,7 +71,12 @@ void CMasternodeSync::GetNextAsset()
 
 void CMasternodeSync::Process()
 {
-    static int c = 0;
+    static int tick = 0;
+
+    if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
+
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return;
 
     if(IsSynced()) {
         /* 
@@ -75,49 +84,44 @@ void CMasternodeSync::Process()
         */
         if(mnodeman.CountEnabled() == 0) {
             RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
-            RequestedMasternodeAttempt = 0;
-        }
-        return;
+        } else
+            return;
     }
 
-    if(c++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
+    if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
 
-    if(fDebug) LogPrintf("CMasternodeSync::Process() - RequestedMasternodeAssets %d c %d\n", RequestedMasternodeAssets, c);
-
-    //request full mn list only if Masternodes.dat was updated quite a long time ago
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return;
 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        if (pnode->nVersion >= MIN_POOL_PEER_PROTO_VERSION)
-        {
-            //set to syned
-            if(Params().NetworkID() == CBaseChainParams::REGTEST && c >= 10) {
-                LogPrintf("CMasternodeSync::Process - Sync has finished\n");
-                RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
-                RequestedMasternodeAttempt = 0;
+
+        //set to synced
+        if(Params().NetworkID() == CBaseChainParams::REGTEST && tick >= 10) {
+            LogPrintf("CMasternodeSync::Process - Sync has finished\n");
+            RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
+            RequestedMasternodeAttempt = 0;
+        }
+
+        if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
+            if(pnode->HasFulfilledRequest("getspork")) continue;
+            pnode->FulfilledRequest("getspork");
+
+            if(RequestedMasternodeAttempt <= 2){
+                pnode->PushMessage("getsporks"); //get current network sporks
+                if(RequestedMasternodeAttempt == 2) GetNextAsset();
+                RequestedMasternodeAttempt++;
             }
+            return;
+        }
 
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
-                if(pnode->HasFulfilledRequest("getspork")) continue;
-                pnode->FulfilledRequest("getspork");
+        //don't begin syncing until we're almost at a recent block
+        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;
 
-                if(RequestedMasternodeAttempt <= 2){
-                    pnode->PushMessage("getsporks"); //get current network sporks
-                    if(RequestedMasternodeAttempt == 2) GetNextAsset();
-                    RequestedMasternodeAttempt++;
-                }
-                return;
-            }
+        if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 
-            //don't begin syncing until we're at a recent block
-            if(pindexPrev->nTime + 600 < GetTime()) return;
-
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST){
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
+                if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
                 if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
@@ -134,7 +138,7 @@ void CMasternodeSync::Process()
                 return;
             }
 
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW){
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
@@ -150,6 +154,9 @@ void CMasternodeSync::Process()
                 }
                 return;
             }
+        }
+
+        if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
