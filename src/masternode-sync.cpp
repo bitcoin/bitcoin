@@ -131,6 +131,14 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // If it's already more then MASTERNODE_SYNC_TIMEOUT seconds passed since we asked
+                // and we still have nothing, assume there is nothing to sync but give it another
+                // MASTERNODE_SYNC_TIMEOUT seconds until we move further
+                static int64_t lastTimeAsked = 0;
+                if(lastMasternodeList == 0  && lastTimeAsked  > 0 && lastTimeAsked < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                        lastMasternodeList = GetTime();
+                }
+
                 if(pnode->HasFulfilledRequest("mnsync")) continue;
                 pnode->FulfilledRequest("mnsync");
 
@@ -138,6 +146,7 @@ void CMasternodeSync::Process()
                         && RequestedMasternodeAttempt <= 2){
                     mnodeman.DsegUpdate(pnode);
                     RequestedMasternodeAttempt++;
+                    lastTimeAsked = GetTime();
                 }
                 return;
             }
@@ -148,6 +157,14 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // If it's already more then MASTERNODE_SYNC_TIMEOUT seconds passed since we asked
+                // and we still have nothing, assume there is nothing to sync but give it another
+                // MASTERNODE_SYNC_TIMEOUT seconds until we move further
+                static int64_t lastTimeAsked = 0;
+                if(lastMasternodeWinner == 0  && lastTimeAsked  > 0 && lastTimeAsked < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                        lastMasternodeWinner = GetTime();
+                }
+
                 if(pnode->HasFulfilledRequest("mnwsync")) continue;
                 pnode->FulfilledRequest("mnwsync");
 
@@ -156,6 +173,7 @@ void CMasternodeSync::Process()
                     int nCountNeeded = (mnodeman.CountEnabled()*1.1);
                     pnode->PushMessage("mnget", nCountNeeded); //sync payees
                     RequestedMasternodeAttempt++;
+                    lastTimeAsked = GetTime();
                 }
                 return;
             }
@@ -169,15 +187,23 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // If it's already more then MASTERNODE_SYNC_TIMEOUT seconds passed since we asked
+                // and we still have nothing, assume there is nothing to sync but give it another
+                // MASTERNODE_SYNC_TIMEOUT seconds until we move further
+                static int64_t lastTimeAsked = 0;
+                if(lastBudgetItem == 0  && lastTimeAsked  > 0 && lastTimeAsked < GetTime() - MASTERNODE_SYNC_TIMEOUT) {
+                        lastBudgetItem = GetTime();
+                }
+
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
                 if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - MASTERNODE_SYNC_TIMEOUT)
                         && RequestedMasternodeAttempt <= 2){
                     uint256 n = 0;
-
                     pnode->PushMessage("mnvs", n); //sync masternode votes
                     RequestedMasternodeAttempt++;
+                    lastTimeAsked = GetTime();
                 }
                 return;
             }
