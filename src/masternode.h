@@ -57,7 +57,7 @@ public:
         READWRITE(vchSig);
     }
 
-    bool CheckAndUpdate(int& nDos);
+    bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true);
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     void Relay();
 
