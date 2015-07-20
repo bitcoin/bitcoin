@@ -142,6 +142,8 @@ CCoinbasePayeeDB::ReadResult CCoinbasePayeeDB::Read(CCoinbasePayee& objToLoad)
 
 void DumpCoinbasePayees()
 {
+    return; //disable the cache
+
     int64_t nStart = GetTimeMillis();
 
     CCoinbasePayeeDB mndb;

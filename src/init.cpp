@@ -1441,19 +1441,20 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    CCoinbasePayeeDB payeedb;
-    CCoinbasePayeeDB::ReadResult readResult3 = payeedb.Read(coinbasePayee);
+    // Disable loading the coinbase cache
+    // CCoinbasePayeeDB payeedb;
+    // CCoinbasePayeeDB::ReadResult readResult3 = payeedb.Read(coinbasePayee);
     
-    if (readResult3 == CCoinbasePayeeDB::FileError)
-        LogPrintf("Missing payee cache - coinbase-payee.dat, will try to recreate\n");
-    else if (readResult3 != CCoinbasePayeeDB::Ok)
-    {
-        LogPrintf("Error reading coinbase-payee.dat: ");
-        if(readResult3 == CCoinbasePayeeDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
+    // if (readResult3 == CCoinbasePayeeDB::FileError)
+    //     LogPrintf("Missing payee cache - coinbase-payee.dat, will try to recreate\n");
+    // else if (readResult3 != CCoinbasePayeeDB::Ok)
+    // {
+    //     LogPrintf("Error reading coinbase-payee.dat: ");
+    //     if(readResult3 == CCoinbasePayeeDB::IncorrectFormat)
+    //         LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+    //     else
+    //         LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    // }
 
 
     fMasterNode = GetBoolArg("-masternode", false);
