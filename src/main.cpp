@@ -19,6 +19,7 @@
 #include "policy/policy.h"
 #include "pow.h"
 #include "txdb.h"
+#include "txcheckcache.h"
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "undo.h"
@@ -75,6 +76,8 @@ struct COrphanTx {
     CTransaction tx;
     NodeId fromPeer;
 };
+
+CTxChecksCache globalTxChecksCache;
 map<uint256, COrphanTx> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 void EraseOrphansFor(NodeId peer);
@@ -718,13 +721,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectAbsurdFee)
+static bool ApproveTxPreFees(const CTransaction& tx, CValidationState& state)
 {
-    AssertLockHeld(cs_main);
-    if (pfMissingInputs)
-        *pfMissingInputs = false;
-
     if (!CheckTransaction(tx, state))
         return error("AcceptToMemoryPool: CheckTransaction failed");
 
@@ -736,9 +734,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
-        return state.DoS(0,
-                         error("AcceptToMemoryPool: nonstandard transaction: %s", reason),
-                         REJECT_NONSTANDARD, reason);
+    {
+        LogPrintf("Rejected tx %s: IsStandardTx: %s", __func__, reason);
+        return state.DoS(0, false, REJECT_NONSTANDARD, reason);
+    }
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
@@ -746,15 +745,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (!CheckFinalTx(tx))
         return state.DoS(0, error("AcceptToMemoryPool: non-final"),
                          REJECT_NONSTANDARD, "non-final");
+    return true;
+}
 
-    // is it already in the memory pool?
+static bool ApproveTxCalculateFees(const CTransaction& tx, CValidationState& state, CTxMemPool& pool, CCoinsViewCache& view, CAmount& nFees, CCoinsView& dummy)
+{
     uint256 hash = tx.GetHash();
-    if (pool.exists(hash))
-        return false;
-
-    {
-        CCoinsView dummy;
-        CCoinsViewCache view(&dummy);
         {
         LOCK(pool.cs);
         CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
@@ -762,16 +758,14 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // do we already have it?
         if (view.HaveCoins(hash))
-            return false;
+            return state.DoS(0, false, REJECT_INVALID, "confirmed-tx");
 
         // do all inputs exist?
         // Note that this does not check for the presence of actual outputs (see the next check for that),
         // and only helps with filling in pfMissingInputs (to determine missing vs spent).
         BOOST_FOREACH(const CTxIn txin, tx.vin) {
             if (!view.HaveCoins(txin.prevout.hash)) {
-                if (pfMissingInputs)
-                    *pfMissingInputs = true;
-                return false;
+                return state.DoS(0, false, REJECT_NONSTANDARD, "missing-inputs");
             }
         }
 
@@ -782,13 +776,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         view.SetBackend(dummy);
         }
 
-        CAmount nFees;
         if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees))
             return error("%s: Consensus::CheckTxInputs: %s", __func__, state.GetRejectReason());
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (fRequireStandard && !AreInputsStandard(tx, view))
-            return error("AcceptToMemoryPool: nonstandard transaction input");
+        if (fRequireStandard && !AreInputsStandard(tx, view)) {
+            state.DoS(0, false, REJECT_NONSTANDARD, "nonstandard-inputs");
+            LogPrintf("Rejected by local policy: %s: AreInputsStandard: %s", __func__, state.GetRejectReason());
+            return false;
+        }
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
@@ -803,15 +799,48 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                                    hash.ToString(), nSigOps, MAX_STANDARD_TX_SIGOPS),
                              REJECT_NONSTANDARD, "bad-txns-too-many-sigops");
 
+    return true;
+}
+
+bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState& state, const CTransaction& tx, bool fLimitFree, bool* pfMissingInputs, bool fRejectAbsurdFee)
+{
+    CTxChecksCache& txChecksCache = globalTxChecksCache;
+    AssertLockHeld(cs_main);
+    if (pfMissingInputs)
+        *pfMissingInputs = false;
+
+    uint256 hash = tx.GetHash();
+    bool fWasAcceptedOnce = txChecksCache.WasAcceptedOnce(hash);
+
+    // has already been rejected?
+    if (!fWasAcceptedOnce && txChecksCache.RejectedPermanently(hash, state))
+        return false;
+
+    // is it already in the memory pool?
+    if (pool.exists(hash))
+        return false;
+
+    if (!fWasAcceptedOnce && !ApproveTxPreFees(tx, state)) {
+        return txChecksCache.RejectTx(hash, state, GetAdjustedTime());
+    }
+
+    CCoinsView dummy;
+    CCoinsViewCache view(&dummy);
+    CAmount nFees = 0;
+    if (!ApproveTxCalculateFees(tx, state, pool, view, nFees, dummy)) {
+        if (pfMissingInputs && state.GetRejectReason() == "missing-inputs")
+            *pfMissingInputs = true;
+        return txChecksCache.RejectTx(hash, state, GetAdjustedTime());
+    }
+
         double dPriority = view.GetPriority(tx, chainActive.Height());
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
         // Try to make space in mempool
         if (!pool.StageReplace(entry, state, fLimitFree, view)) {
-            LogPrintf("%s: CTxMemPool::StageReplace: %s (txHash %s)", __func__, state.GetRejectReason(), hash.ToString());
             pool.ClearStaged();
-            return false;
+            return txChecksCache.RejectTx(hash, state, GetAdjustedTime());
         }
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
@@ -821,8 +850,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+        if (!fWasAcceptedOnce && !CheckInputsScripts(tx, state, view, STANDARD_SCRIPT_VERIFY_FLAGS, true))
         {
+            txChecksCache.RejectTx(hash, state, GetAdjustedTime());
             return error("AcceptToMemoryPool: ConnectInputs failed %s", hash.ToString());
         }
 
@@ -835,8 +865,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // There is a similar check in CreateNewBlock() to prevent creating
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
-        if (!CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+        if (!fWasAcceptedOnce && !CheckInputsScripts(tx, state, view, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
         {
+            txChecksCache.RejectTx(hash, state, GetAdjustedTime());
             return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
         }
 
@@ -844,8 +875,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         pool.RemoveStaged(hash);
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
-    }
-
+    txChecksCache.AcceptTx(hash, GetAdjustedTime());
     SyncWithWallets(tx, NULL);
 
     return true;

@@ -140,6 +140,7 @@ BITCOIN_CORE_H = \
   timedata.h \
   tinyformat.h \
   txdb.h \
+  txcheckcache.h \
   txmempool.h \
   ui_interface.h \
   uint256.h \
@@ -190,6 +191,7 @@ libbitcoin_server_a_SOURCES = \
   script/sigcache.cpp \
   timedata.cpp \
   txdb.cpp \
+  txcheckcache.cpp \
   txmempool.cpp \
   validationinterface.cpp \
   $(BITCOIN_CORE_H)
