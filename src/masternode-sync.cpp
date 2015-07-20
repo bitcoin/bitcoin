@@ -101,19 +101,23 @@ void CMasternodeSync::Process()
             LogPrintf("CMasternodeSync::Process - Sync has finished\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             RequestedMasternodeAttempt = 0;
-        }
+        } else if(Params().NetworkID() != CBaseChainParams::REGTEST) {
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
+                if(pnode->HasFulfilledRequest("getspork")) continue;
+                pnode->FulfilledRequest("getspork");
 
-        if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
-            if(pnode->HasFulfilledRequest("getspork")) continue;
-            pnode->FulfilledRequest("getspork");
-
-            if(RequestedMasternodeAttempt <= 2){
-                pnode->PushMessage("getsporks"); //get current network sporks
-                if(RequestedMasternodeAttempt == 2) GetNextAsset();
-                RequestedMasternodeAttempt++;
+                if(RequestedMasternodeAttempt <= 2){
+                    pnode->PushMessage("getsporks"); //get current network sporks
+                    if(RequestedMasternodeAttempt == 2) GetNextAsset();
+                    RequestedMasternodeAttempt++;
+                }
+                return;
             }
+        } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) {
+            GetNextAsset();
             return;
         }
+
 
         //don't begin syncing until we're almost at a recent block
         if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;

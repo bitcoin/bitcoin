@@ -518,9 +518,10 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
-    fRequireEnabled = (fRequireEnabled && pmn->IsEnabled()) || !fRequireEnabled;
-    if(pmn != NULL && fRequireEnabled && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
+    if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
     {
+        if (fRequireEnabled && !pmn->IsEnabled()) return false;
+
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
         // update only if there is no known ping for this masternode or
         // last ping was more then MASTERNODE_MIN_MNP_SECONDS-60 ago comparing to this one
