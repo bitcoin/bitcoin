@@ -302,7 +302,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(protocolVersion < nMasternodeMinProtocol) {
+    if(protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
         LogPrintf("mnb - ignoring outdated Masternode %s protocol version %d\n", vin.ToString().c_str(), protocolVersion);
         return false;
     }
@@ -516,7 +516,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn != NULL && pmn->IsEnabled() && pmn->protocolVersion >= nMasternodeMinProtocol)
+    if(pmn != NULL && pmn->IsEnabled() && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
     {
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
         // update only if there is no known ping for this masternode or

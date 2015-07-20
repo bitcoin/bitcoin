@@ -118,7 +118,7 @@ void CMasternodeSync::Process()
         //don't begin syncing until we're almost at a recent block
         if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;
 
-        if (pnode->nVersion >= nMasternodeMinProtocol) {
+        if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
@@ -137,9 +137,7 @@ void CMasternodeSync::Process()
                 }
                 return;
             }
-        }
 
-        if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();

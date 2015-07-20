@@ -239,7 +239,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
-                (*it).protocolVersion < nMasternodeMinProtocol) {
+                (*it).protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
@@ -292,6 +292,7 @@ void CMasternodeMan::Clear()
 int CMasternodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -378,7 +379,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //make sure it has as many confirmations as there are masternodes
-        if(mn.GetMasternodeInputAge() < CountEnabled(masternodePayments.GetMinMasternodePaymentsProto())) continue;
+        if(mn.GetMasternodeInputAge() < CountEnabled()) continue;
 
         if(pOldestMasternode == NULL || pOldestMasternode->SecondsSincePayment() < mn.SecondsSincePayment()){
             pOldestMasternode = &mn;

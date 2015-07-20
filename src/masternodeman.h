@@ -101,7 +101,7 @@ public:
     /// Clear Masternode vector
     void Clear();
 
-    int CountEnabled(int protocolVersion = nMasternodeMinProtocol);
+    int CountEnabled(int protocolVersion = -1);
 
     void DsegUpdate(CNode* pnode);
 
