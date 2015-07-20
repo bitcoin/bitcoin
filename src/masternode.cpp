@@ -4,7 +4,6 @@
 
 #include "masternode.h"
 #include "masternodeman.h"
-#include "coinbase-payee.h"
 #include "darksend.h"
 #include "util.h"
 #include "sync.h"
@@ -210,7 +209,7 @@ int64_t CMasternode::SecondsSincePayment() {
     CScript pubkeyScript;
     pubkeyScript = GetScriptForDestination(pubkey.GetID());
 
-    int64_t sec = (GetAdjustedTime() - coinbasePayee.GetLastPaid(pubkeyScript));
+    int64_t sec = (GetAdjustedTime() - GetLastPaid());
     int64_t month = 60*60*24*30;
     if(sec < month) return sec; //if it's less than 30 days, give seconds
 
@@ -224,10 +223,26 @@ int64_t CMasternode::SecondsSincePayment() {
 }
 
 int64_t CMasternode::GetLastPaid() {
-    CScript pubkeyScript;
-    pubkeyScript = GetScriptForDestination(pubkey.GetID());
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return false;
 
-    return coinbasePayee.GetLastPaid(pubkeyScript);
+    CScript mnpayee;
+    mnpayee = GetScriptForDestination(pubkey.GetID());
+
+    for(int64_t h = pindexPrev->nHeight-mnodeman.CountEnabled()*0.95; h <= pindexPrev->nHeight+10; h++){
+        if(mapMasternodeBlocks.count(h)){
+            /*
+                Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
+                to converge on the same payees quickly, then keep the same schedule.
+            */
+            if(mapMasternodeBlocks[h].HasPayeeWithVotes(mnpayee, 2)){
+                int64_t nTimeEstimate = pindexPrev->nTime - (pindexPrev->nHeight - h)*2.6;
+                return nTimeEstimate;
+            }
+        }
+    }
+
+    return 0;
 }
 
 CMasternodeBroadcast::CMasternodeBroadcast()
@@ -518,9 +533,10 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
-    fRequireEnabled = (fRequireEnabled && pmn->IsEnabled()) || !fRequireEnabled;
-    if(pmn != NULL && fRequireEnabled && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
+    if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
     {
+        if (fRequireEnabled && !pmn->IsEnabled()) return false;
+
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
         // update only if there is no known ping for this masternode or
         // last ping was more then MASTERNODE_MIN_MNP_SECONDS-60 ago comparing to this one
