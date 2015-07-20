@@ -13,6 +13,10 @@
 #include "primitives/transaction.h"
 #include "sync.h"
 
+#undef foreach
+#include "boost/multi_index_container.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+
 class CAutoFile;
 
 inline double AllowFreeThreshold()
@@ -54,12 +58,37 @@ public:
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
-    CAmount GetFee() const { return nFee; }
+    const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
+};
+
+// extracts a TxMemPoolEntry's transaction hash
+struct mempoolentry_txid
+{
+    typedef uint256 result_type;
+    result_type operator() (const CTxMemPoolEntry &entry) const
+    {
+        return entry.GetTx().GetHash();
+    }
+};
+
+class CompareTxMemPoolEntryByFeeRate
+{
+public:
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
+    {
+        // Avoid a division by rewriting (a/b > c/d) as (a*d > c*b).
+        double f1 = (double)a.GetFee() * b.GetTxSize();
+        double f2 = (double)b.GetFee() * a.GetTxSize();
+        if (f1 == f2) {
+            return a.GetTime() < b.GetTime();
+        }
+        return f1 > f2;
+    }
 };
 
 class CBlockPolicyEstimator;
@@ -99,8 +128,21 @@ private:
     uint64_t cachedInnerUsage; //! sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
 public:
+    typedef boost::multi_index_container<
+        CTxMemPoolEntry,
+        boost::multi_index::indexed_by<
+            // sorted by txid
+            boost::multi_index::ordered_unique<mempoolentry_txid>,
+            // sorted by fee rate
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByFeeRate
+            >
+        >
+    > indexed_transaction_set;
+
     mutable CCriticalSection cs;
-    std::map<uint256, CTxMemPoolEntry> mapTx;
+    indexed_transaction_set mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
@@ -117,6 +159,7 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
+    void removeUnchecked(const uint256& hash);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
@@ -137,6 +180,16 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
+
+    /** Build a list of transaction (hashes) to remove such that:
+     *  - The list is consistent (if a parent is included, all its dependencies are included as well).
+     *  - No dependencies of toadd are removed.
+     *  - The total fees removed are not more than the fees added by toadd.
+     *  - The feerate of what is removed is not better than the feerate of toadd.
+     *  - Removing said list will reduce the DynamicMemoryUsage after adding toadd, below sizelimit.
+     */
+    bool StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, std::set<uint256>& stage, CAmount& nFeeRemoved);
+    void RemoveStaged(std::set<uint256>& stage);
 
     unsigned long size()
     {
@@ -169,6 +222,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 
