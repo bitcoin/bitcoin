@@ -13,7 +13,6 @@
 #include "addrman.h"
 #include "amount.h"
 #include "checkpoints.h"
-#include "coinbase-payee.h"
 #include "compat/sanity.h"
 #include "key.h"
 #include "main.h"
@@ -172,7 +171,6 @@ void PrepareShutdown()
     StopNode();
     DumpMasternodes();
     DumpBudgets();
-    DumpCoinbasePayees();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -1437,22 +1435,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
-    // Disable loading the coinbase cache
-    // CCoinbasePayeeDB payeedb;
-    // CCoinbasePayeeDB::ReadResult readResult3 = payeedb.Read(coinbasePayee);
-    
-    // if (readResult3 == CCoinbasePayeeDB::FileError)
-    //     LogPrintf("Missing payee cache - coinbase-payee.dat, will try to recreate\n");
-    // else if (readResult3 != CCoinbasePayeeDB::Ok)
-    // {
-    //     LogPrintf("Error reading coinbase-payee.dat: ");
-    //     if(readResult3 == CCoinbasePayeeDB::IncorrectFormat)
-    //         LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-    //     else
-    //         LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    // }
-
-
     fMasterNode = GetBoolArg("-masternode", false);
 
     if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
@@ -1564,8 +1546,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     */
 
     darkSendPool.InitCollateralAddress();
-    coinbasePayee.BuildIndex(true);
-    coinbasePayee.ReprocessChain();
 
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 

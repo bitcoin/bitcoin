@@ -97,6 +97,15 @@ public:
         return (nVotes > -1);
     }
 
+    bool HasPayeeWithVotes(CScript payee, int nVotesReq)
+    {
+        BOOST_FOREACH(CMasternodePayee& p, vecPayments){
+            if(p.nVotes > nVotesReq && p.scriptPubKey == payee) return true;
+        }
+
+        return false;
+    }
+
     bool IsTransactionValid(const CTransaction& txNew);
     std::string GetRequiredPaymentsString();
 
@@ -191,7 +200,7 @@ public:
     bool AddWinningMasternode(CMasternodePaymentWinner& winner);
     bool ProcessBlock(int nBlockHeight);
 
-    void Sync(CNode* node);
+    void Sync(CNode* node, int nCountNeeded);
     void CleanPaymentList();
     int LastPayment(CMasternode& mn);
 

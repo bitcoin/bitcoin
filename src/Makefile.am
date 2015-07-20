@@ -91,7 +91,6 @@ BITCOIN_CORE_H = \
   primitives/block.h \
   primitives/transaction.h \
   core_io.h \
-  coinbase-payee.h \
   crypter.h \
   darksend.h \
   darksend-relay.h \
@@ -178,7 +177,6 @@ libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
-  coinbase-payee.cpp \
   chain.cpp \
   checkpoints.cpp \
   init.cpp \
@@ -279,7 +277,6 @@ libbitcoin_common_a_SOURCES = \
   allocators.cpp \
   amount.cpp \
   base58.cpp \
-  coinbase-payee.cpp \
   chainparams.cpp \
   darksend.cpp \
   darksend-relay.cpp \
