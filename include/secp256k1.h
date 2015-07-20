@@ -74,25 +74,70 @@ void secp256k1_context_destroy(
   secp256k1_context_t* ctx
 ) SECP256K1_ARG_NONNULL(1);
 
+/** Data type to hold a parsed and valid public key.
+    This data type should be considered opaque to the user, and only created
+    through API functions. It is not guaranteed to be compatible between
+    different implementations. If you need to convert to a format suitable
+    for storage or transmission, use secp256k1_ec_pubkey_serialize and
+    secp256k1_ec_pubkey_parse.
+ */
+typedef struct {
+  unsigned char data[64];
+} secp256k1_pubkey_t;
+
+/** Parse a variable-length public key into the pubkey object.
+ *  Returns: 1 if the public key was fully valid.
+ *           0 if the public key could not be parsed or is invalid.
+ *  In:  ctx:      a secp256k1 context object.
+ *       input:    pointer to a serialized public key
+ *       inputlen: length of the array pointed to by input
+ *  Out: pubkey:   pointer to a pubkey object. If 1 is returned, it is set to a
+ *                 parsed version of input. If not, its value is undefined.
+ *  This function supports parsing compressed (33 bytes, header byte 0x02 or
+ *  0x03), uncompressed (65 bytes, header byte 0x04), or hybrid (65 bytes, header
+ *  byte 0x06 or 0x07) format public keys.
+ */
+SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
+  const secp256k1_context_t* ctx,
+  secp256k1_pubkey_t* pubkey,
+  const unsigned char *input,
+  int inputlen
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
+/** Serialize a pubkey object into a serialized byte sequence.
+ *  Returns: 1 always.
+ *  In:   ctx:        a secp256k1 context object.
+ *        pubkey:     a pointer to a secp256k1_pubkey_t containing an initialized
+ *                    public key.
+ *        compressed: whether to serialize in compressed format.
+ *  Out:  output:     a pointer to a 65-byte (if compressed==0) or 33-byte (if
+ *                    compressed==1) byte array to place the serialized key in.
+ *        outputlen:  a pointer to an integer which will contain the serialized
+ *                    size.
+ */
+int secp256k1_ec_pubkey_serialize(
+  const secp256k1_context_t* ctx,
+  unsigned char *output,
+  int *outputlen,
+  const secp256k1_pubkey_t* pubkey,
+  int compressed
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
 /** Verify an ECDSA signature.
  *  Returns: 1: correct signature
- *           0: incorrect signature
- *          -1: invalid public key
- *          -2: invalid signature
+ *           0: incorrect or unparseable signature
  * In:       ctx:       a secp256k1 context object, initialized for verification.
  *           msg32:     the 32-byte message hash being verified (cannot be NULL)
  *           sig:       the signature being verified (cannot be NULL)
  *           siglen:    the length of the signature
- *           pubkey:    the public key to verify with (cannot be NULL)
- *           pubkeylen: the length of pubkey
+ *           pubkey:    pointer to an initialized public key to verify with (cannot be NULL)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
   const secp256k1_context_t* ctx,
   const unsigned char *msg32,
   const unsigned char *sig,
   int siglen,
-  const unsigned char *pubkey,
-  int pubkeylen
+  const secp256k1_pubkey_t *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(5);
 
 /** A pointer to a function to deterministically generate a nonce.
@@ -123,7 +168,6 @@ extern const secp256k1_nonce_function_t secp256k1_nonce_function_rfc6979;
 
 /** A default safe nonce generation function (currently equal to secp256k1_nonce_function_rfc6979). */
 extern const secp256k1_nonce_function_t secp256k1_nonce_function_default;
-
 
 /** Create an ECDSA signature.
  *  Returns: 1: signature created
@@ -202,20 +246,16 @@ int secp256k1_ecdsa_sign_compact(
  *  In:      ctx:        pointer to a context object, initialized for verification (cannot be NULL)
  *           msg32:      the 32-byte message hash assumed to be signed (cannot be NULL)
  *           sig64:      signature as 64 byte array (cannot be NULL)
- *           compressed: whether to recover a compressed or uncompressed pubkey
  *           recid:      the recovery id (0-3, as returned by ecdsa_sign_compact)
- *  Out:     pubkey:     pointer to a 33 or 65 byte array to put the pubkey (cannot be NULL)
- *           pubkeylen:  pointer to an int that will contain the pubkey length (cannot be NULL)
+ *  Out:     pubkey:     pointer to the recoved public key (cannot be NULL)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover_compact(
   const secp256k1_context_t* ctx,
   const unsigned char *msg32,
   const unsigned char *sig64,
-  unsigned char *pubkey,
-  int *pubkeylen,
-  int compressed,
+  secp256k1_pubkey_t *pubkey,
   int recid
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA secret key.
  *  Returns: 1: secret key is valid
@@ -228,71 +268,18 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
   const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
-/** Just validate a public key.
- *  Returns: 1: public key is valid
- *           0: public key is invalid
- *  In:      ctx:       pointer to a context object (cannot be NULL)
- *           pubkey:    pointer to a 33-byte or 65-byte public key (cannot be NULL).
- *           pubkeylen: length of pubkey
- */
-SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_verify(
-  const secp256k1_context_t* ctx,
-  const unsigned char *pubkey,
-  int pubkeylen
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
-
 /** Compute the public key for a secret key.
  *  In:     ctx:        pointer to a context object, initialized for signing (cannot be NULL)
- *          compressed: whether the computed public key should be compressed
  *          seckey:     pointer to a 32-byte private key (cannot be NULL)
- *  Out:    pubkey:     pointer to a 33-byte (if compressed) or 65-byte (if uncompressed)
- *                      area to store the public key (cannot be NULL)
- *          pubkeylen:  pointer to int that will be updated to contains the pubkey's
- *                      length (cannot be NULL)
+ *  Out:    pubkey:     pointer to the created public key (cannot be NULL)
  *  Returns: 1: secret was valid, public key stores
  *           0: secret was invalid, try again
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
   const secp256k1_context_t* ctx,
-  unsigned char *pubkey,
-  int *pubkeylen,
-  const unsigned char *seckey,
-  int compressed
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
-
-/** Compress a public key.
- * In:     ctx:       pointer to a context object (cannot be NULL)
- *         pubkeyin:  pointer to a 33-byte or 65-byte public key (cannot be NULL)
- * Out:    pubkeyout: pointer to a 33-byte array to put the compressed public key (cannot be NULL)
- *                    May alias pubkeyin.
- *         pubkeylen: pointer to the size of the public key pointed to by pubkeyin (cannot be NULL)
- *                    It will be updated to reflect the size of the public key in pubkeyout.
- * Returns: 0: pubkeyin was invalid
- *          1: pubkeyin was valid, and pubkeyout is its compressed version
- */
-SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_compress(
-  const secp256k1_context_t* ctx,
-  const unsigned char *pubkeyin,
-  unsigned char *pubkeyout,
-  int *pubkeylen
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
-
-/** Decompress a public key.
- * In:     ctx:       pointer to a context object (cannot be NULL)
- *         pubkeyin:  pointer to a 33-byte or 65-byte public key (cannot be NULL)
- * Out:    pubkeyout: pointer to a 65-byte array to put the decompressed public key (cannot be NULL)
- *                    May alias pubkeyin.
- *         pubkeylen: pointer to the size of the public key pointed to by pubkeyin (cannot be NULL)
- *                    It will be updated to reflect the size of the public key in pubkeyout.
- * Returns: 0: pubkeyin was invalid
- *          1: pubkeyin was valid, and pubkeyout is its decompressed version
- */
-SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_decompress(
-  const secp256k1_context_t* ctx,
-  const unsigned char *pubkeyin,
-  unsigned char *pubkeyout,
-  int *pubkeylen
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+  secp256k1_pubkey_t *pubkey,
+  const unsigned char *seckey
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Export a private key in DER format.
  * In: ctx: pointer to a context object, initialized for signing (cannot be NULL)
@@ -325,10 +312,9 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
   const secp256k1_context_t* ctx,
-  unsigned char *pubkey,
-  int pubkeylen,
+  secp256k1_pubkey_t *pubkey,
   const unsigned char *tweak
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a private key by multiplying it with tweak. */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
@@ -342,10 +328,9 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
   const secp256k1_context_t* ctx,
-  unsigned char *pubkey,
-  int pubkeylen,
+  secp256k1_pubkey_t *pubkey,
   const unsigned char *tweak
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Updates the context randomization.
  *  Returns: 1: randomization successfully updated
