@@ -332,7 +332,12 @@ void TransactionView::changedAmount(const QString &amount)
     if(!transactionProxyModel)
         return;
     CAmount amount_parsed = 0;
-    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), amount, &amount_parsed))
+
+    // Replace "," by "." so BitcoinUnits::parse will not fail for users entering "," as decimal separator
+    QString newAmount = amount;
+    newAmount.replace(QString(","), QString("."));
+
+    if(BitcoinUnits::parse(model->getOptionsModel()->getDisplayUnit(), newAmount, &amount_parsed))
     {
         transactionProxyModel->setMinAmount(amount_parsed);
     }
