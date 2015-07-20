@@ -241,6 +241,29 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
                 (*it).protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+
+            //erase all of the broadcasts we've seen from this vin
+            // -- if we missed a few pings and the node was removed, this will allow is to get it back without them 
+            //    sending a brand new mnb
+            map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
+            while(it3 != mapSeenMasternodeBroadcast.end()){
+                if((*it3).second.vin == (*it).vin){
+                    mapSeenMasternodeBroadcast.erase(it3++);
+                } else {
+                    ++it3;
+                }
+            }
+
+            // allow us to ask for this masternode again if we see another ping
+            map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
+            while(it2 != mWeAskedForMasternodeListEntry.end()){
+                if((*it2).first == (*it).vin.prevout){
+                    mWeAskedForMasternodeListEntry.erase(it2++);
+                } else {
+                    ++it2;
+                }
+            }
+
             it = vMasternodes.erase(it);
         } else {
             ++it;
