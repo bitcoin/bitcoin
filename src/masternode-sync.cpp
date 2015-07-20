@@ -153,7 +153,8 @@ void CMasternodeSync::Process()
 
                 if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - MASTERNODE_SYNC_TIMEOUT)
                         && RequestedMasternodeAttempt <= 2){
-                    pnode->PushMessage("mnget"); //sync payees
+                    int nCountNeeded = (mnodeman.CountEnabled()*1.1);
+                    pnode->PushMessage("mnget", nCountNeeded); //sync payees
                     RequestedMasternodeAttempt++;
                 }
                 return;
