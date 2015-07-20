@@ -1,0 +1,11 @@
+[Unit]
+Description=Novacoin daemon serivce
+After=network.target
+
+[Service]
+Type=simple
+User=novacoin
+ExecStart=/opt/novacoin/novacoind
+
+[Install]
+WantedBy=multi-user.target
