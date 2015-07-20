@@ -1073,7 +1073,7 @@
         <rect>
          <x>10</x>
          <y>90</y>
-         <width>221</width>
+         <width>301</width>
          <height>23</height>
         </rect>
        </property>
@@ -1092,7 +1092,7 @@
         <rect>
          <x>10</x>
          <y>140</y>
-         <width>221</width>
+         <width>301</width>
          <height>23</height>
         </rect>
        </property>
@@ -1111,7 +1111,7 @@
         <rect>
          <x>10</x>
          <y>190</y>
-         <width>221</width>
+         <width>301</width>
          <height>23</height>
         </rect>
        </property>
@@ -1130,7 +1130,7 @@
         <rect>
          <x>10</x>
          <y>240</y>
-         <width>221</width>
+         <width>301</width>
          <height>23</height>
         </rect>
        </property>
@@ -1149,7 +1149,7 @@
         <rect>
          <x>10</x>
          <y>290</y>
-         <width>221</width>
+         <width>301</width>
          <height>23</height>
         </rect>
        </property>
@@ -1188,9 +1188,9 @@
       <widget class="QLabel" name="label_repair_salvage">
        <property name="geometry">
         <rect>
-         <x>250</x>
+         <x>330</x>
          <y>80</y>
-         <width>471</width>
+         <width>411</width>
          <height>41</height>
         </rect>
        </property>
@@ -1204,9 +1204,9 @@
       <widget class="QLabel" name="label_repair_rescan">
        <property name="geometry">
         <rect>
-         <x>250</x>
+         <x>330</x>
          <y>129</y>
-         <width>471</width>
+         <width>411</width>
          <height>41</height>
         </rect>
        </property>
@@ -1220,9 +1220,9 @@
       <widget class="QLabel" name="label_repair_zap1">
        <property name="geometry">
         <rect>
-         <x>250</x>
+         <x>330</x>
          <y>179</y>
-         <width>471</width>
+         <width>411</width>
          <height>41</height>
         </rect>
        </property>
@@ -1236,9 +1236,9 @@
       <widget class="QLabel" name="label_repair_zap2">
        <property name="geometry">
         <rect>
-         <x>250</x>
+         <x>330</x>
          <y>229</y>
-         <width>471</width>
+         <width>411</width>
          <height>41</height>
         </rect>
        </property>
@@ -1252,9 +1252,9 @@
       <widget class="QLabel" name="label_repair_upgrade">
        <property name="geometry">
         <rect>
-         <x>250</x>
+         <x>330</x>
          <y>279</y>
-         <width>471</width>
+         <width>411</width>
          <height>41</height>
         </rect>
        </property>
@@ -1293,7 +1293,7 @@
         <rect>
          <x>10</x>
          <y>340</y>
-         <width>221</width>
+         <width>301</width>
          <height>23</height>
         </rect>
        </property>
@@ -1304,14 +1304,17 @@
       <widget class="QLabel" name="label_repair_reindex">
        <property name="geometry">
         <rect>
-         <x>250</x>
+         <x>330</x>
          <y>330</y>
-         <width>471</width>
+         <width>411</width>
          <height>41</height>
         </rect>
        </property>
        <property name="text">
         <string>-reindex: Rebuild block chain index from current blk000??.dat files.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </widget>
