@@ -21,8 +21,6 @@
 #include <stdint.h>
 #include <string>
 
-using namespace std;
-
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
     AssertLockHeld(cs_main);
@@ -243,14 +241,14 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "<b>" + tr("Transaction ID") + ":</b> " + TransactionRecord::formatSubTxId(wtx.GetHash(), rec->idx) + "<br>";
 
     // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-    Q_FOREACH (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
+    Q_FOREACH (const PAIRTYPE(std::string, std::string)& r, wtx.vOrderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
 
     //
     // PaymentRequest info:
     //
-    Q_FOREACH (const PAIRTYPE(string, string)& r, wtx.vOrderForm)
+    Q_FOREACH (const PAIRTYPE(std::string, std::string)& r, wtx.vOrderForm)
     {
         if (r.first == "PaymentRequest")
         {
