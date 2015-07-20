@@ -271,6 +271,17 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
     map<COutPoint, int64_t>::iterator it2 = mWeAskedForMasternodeListEntry.begin();
     while(it2 != mWeAskedForMasternodeListEntry.end()){
         if((*it2).second < GetTime()){
+            //erase all of the broadcasts we've seen from this vin
+            // -- if we missed a few pings and the node was removed, this will allow is to get it back without them 
+            //    sending a brand new mnb
+            map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
+            while(it3 != mapSeenMasternodeBroadcast.end()){
+                if((*it3).second.vin.prevout == (*it2).first){
+                    mapSeenMasternodeBroadcast.erase(it3++);
+                } else {
+                    ++it3;
+                }
+            }
             mWeAskedForMasternodeListEntry.erase(it2++);
         } else {
             ++it2;
