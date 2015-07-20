@@ -140,7 +140,7 @@ void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     protocolVersion = mnb.protocolVersion;
     addr = mnb.addr;
     int nDoS = 0;
-    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS))) {
+    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
         lastPing = mnb.lastPing;
         mapSeenMasternodePing[lastPing.GetHash()] = lastPing;
     }
@@ -500,7 +500,7 @@ bool CMasternodePing::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     return true;
 }
 
-bool CMasternodePing::CheckAndUpdate(int& nDos)
+bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
 {
     if (sigTime > GetAdjustedTime() + 60 * 60) {
         LogPrintf("CMasternodePing::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
@@ -516,7 +516,8 @@ bool CMasternodePing::CheckAndUpdate(int& nDos)
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn != NULL && pmn->IsEnabled() && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
+    fRequireEnabled = (fRequireEnabled && pmn->IsEnabled()) || !fRequireEnabled;
+    if(pmn != NULL && fRequireEnabled && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
     {
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
         // update only if there is no known ping for this masternode or
