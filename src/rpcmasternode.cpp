@@ -136,7 +136,7 @@ Value masternode(const Array& params, bool fHelp)
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'enabled', 'both')\n"
+                "  count        - Print number of all known masternodes (optional: 'ds', 'enabled', 'all')\n"
                 "  current      - Print info on current masternode winner\n"
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
@@ -190,8 +190,11 @@ Value masternode(const Array& params, bool fHelp)
         }
         if (params.size() == 2)
         {
+            if(params[1] == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
             if(params[1] == "enabled") return mnodeman.CountEnabled();
-            if(params[1] == "both") return strprintf("%d / %d", mnodeman.CountEnabled(), mnodeman.size());
+            if(params[1] == "all") return strprintf("%d / %d / %d",
+                                                    mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION),
+                                                    mnodeman.CountEnabled(), mnodeman.size());
         }
         return mnodeman.size();
     }

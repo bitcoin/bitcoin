@@ -239,7 +239,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
-                (*it).protocolVersion < nMasternodeMinProtocol) {
+                (*it).protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
             if(fDebug) LogPrintf("CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
             it = vMasternodes.erase(it);
         } else {
@@ -289,21 +289,10 @@ void CMasternodeMan::Clear()
     nDsqCount = 0;
 }
 
-int CMasternodeMan::CountEnabled()
+int CMasternodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
-
-    BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-        mn.Check();
-        if(mn.IsEnabled()) i++;
-    }
-
-    return i;
-}
-
-int CMasternodeMan::CountMasternodesAboveProtocol(int protocolVersion)
-{
-    int i = 0;
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -629,10 +618,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             Misbehaving(pfrom->GetId(), nDoS);
             return;
         }
-
-        // only ask for missing items after our syncing process is complete -- 
-        //   otherwise we'll think a full sync succeeded when they return a result
-        if(!masternodeSync.IsSynced()) return;
 
         //search existing Masternode list, if it's known -- don't ask for the mnb
         CMasternode* pmn = mnodeman.Find(mnp.vin);

@@ -101,9 +101,7 @@ public:
     /// Clear Masternode vector
     void Clear();
 
-    int CountEnabled();
-
-    int CountMasternodesAboveProtocol(int protocolVersion);
+    int CountEnabled(int protocolVersion = -1);
 
     void DsegUpdate(CNode* pnode);
 

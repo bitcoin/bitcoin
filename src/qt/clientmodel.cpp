@@ -69,7 +69,8 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    return QString::number((int)mnodeman.CountEnabled()) + " / " + QString::number((int)mnodeman.size());
+    return QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)) +
+            " / " + QString::number((int)mnodeman.CountEnabled()) + " / " + QString::number((int)mnodeman.size());
 }
 
 int ClientModel::getNumBlocks() const
