@@ -96,7 +96,7 @@ bool static inline IsSelectableSocket(SOCKET s) {
 #ifdef WIN32
     return true;
 #else
-    return (s >= 0 && s < FD_SETSIZE);
+    return (s < FD_SETSIZE);
 #endif
 }
 
