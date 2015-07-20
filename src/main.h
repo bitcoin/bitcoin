@@ -50,6 +50,10 @@ struct CNodeStateStats;
 static const bool DEFAULT_ALERTS = true;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
+/** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
+static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 48;
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
@@ -103,6 +107,7 @@ extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
+extern CAmount defminRelayTxFee;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 

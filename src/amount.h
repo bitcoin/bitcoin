@@ -57,6 +57,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nSatoshisPerK);
     }
+
+    void ApplyFactor(double& factor, const CAmount& minPerK);
 };
 
 #endif //  BITCOIN_AMOUNT_H
