@@ -53,8 +53,10 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
 
         // Empty, provably prunable, data-carrying output
-        if (GetBoolArg("-datacarrier", true))
-            mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
+        if (GetBoolArg("-datacarrier", true)) {
+                mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA << OP_SMALLDATA));
+                mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
+        }
         mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN));
     }
 
@@ -77,6 +79,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         opcodetype opcode1, opcode2;
         vector<unsigned char> vch1, vch2;
+        size_t datacarrierbytes = 0;
 
         // Compare
         CScript::const_iterator pc1 = script1.begin();
@@ -143,7 +146,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             else if (opcode2 == OP_SMALLDATA)
             {
                 // small pushdata, <= nMaxDatacarrierBytes
-                if (vch1.size() > nMaxDatacarrierBytes)
+                datacarrierbytes += vch1.size();
+                if (datacarrierbytes > nMaxDatacarrierBytes)
                     break;
             }
             else if (opcode1 != opcode2 || vch1 != vch2)
