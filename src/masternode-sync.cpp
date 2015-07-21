@@ -174,8 +174,14 @@ void CMasternodeSync::Process()
                     CBlockIndex* pindexPrev = chainActive.Tip();
                     if(pindexPrev == NULL) return;
 
+                    int nMnCount = mnodeman.CountEnabled()*1.1;
                     int nCountNeeded = (pindexPrev->nHeight - masternodePayments.GetNewestBlock());
-                    if(mnodeman.CountEnabled()*1.1 < nCountNeeded) nCountNeeded = mnodeman.CountEnabled()*1.1;
+                    int nHaveBlocks = (pindexPrev->nHeight - masternodePayments.GetOldestBlock());
+                    if(nHaveBlocks < nMnCount || nCountNeeded > nMnCount) { 
+                        //We have less blocks than there are masternodes, we need more history
+                        // - or our cache is old
+                        nCountNeeded = nMnCount;
+                    }
 
                     pnode->PushMessage("mnget", nCountNeeded); //sync payees
                     RequestedMasternodeAttempt++;
