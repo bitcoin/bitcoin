@@ -18,8 +18,6 @@ class CMasternodePaymentWinner;
 class CMasternodeBlockPayees;
 
 extern CMasternodePayments masternodePayments;
-extern std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
-extern std::map<uint256, CMasternodeBlockPayees> mapMasternodeBlocks;
 
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
@@ -30,6 +28,31 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
 std::string GetRequiredPaymentsString(int nBlockHeight);
 bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue);
 void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
+
+void DumpMasternodePayments();
+
+/** Save Masternode Payment Data (mnpayments.dat)
+ */
+class CMasternodePaymentDB
+{
+private:
+    boost::filesystem::path pathDB;
+    std::string strMagicMessage;
+public:
+    enum ReadResult {
+        Ok,
+        FileError,
+        HashReadError,
+        IncorrectHash,
+        IncorrectMagicMessage,
+        IncorrectMagicNumber,
+        IncorrectFormat
+    };
+
+    CMasternodePaymentDB();
+    bool Write(const CMasternodePayments &objToSave);
+    ReadResult Read(CMasternodePayments& objToLoad, bool fDryRun = false);
+};
 
 class CMasternodePayee
 {
@@ -191,10 +214,17 @@ private:
     int nLastBlockHeight;
 
 public:
+    std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
+    std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
 
     CMasternodePayments() {
         nSyncedFromPeer = 0;
         nLastBlockHeight = 0;
+    }
+
+    void Clear() {
+        mapMasternodeBlocks.clear();
+        mapMasternodePayeeVotes.clear();
     }
 
     bool AddWinningMasternode(CMasternodePaymentWinner& winner);
@@ -212,8 +242,18 @@ public:
     void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees);
+    std::string ToString() const;
+    int GetNewestBlock();
 
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(mapMasternodePayeeVotes);
+        READWRITE(mapMasternodeBlocks);
+    }
 };
+
 
 
 #endif
