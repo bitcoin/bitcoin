@@ -785,12 +785,15 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         uint256 nProp;
         vRecv >> nProp;
 
-        if(pfrom->HasFulfilledRequest("mnvs")) {
-            LogPrintf("mnvs - peer already asked me for the list\n");
-            Misbehaving(pfrom->GetId(), 20);
-            return;
+
+        if(Params().NetworkID() == CBaseChainParams::MAIN){
+            if(pfrom->HasFulfilledRequest("mnvs")) {
+                LogPrintf("mnvs - peer already asked me for the list\n");
+                Misbehaving(pfrom->GetId(), 20);
+                return;
+            }
+            pfrom->FulfilledRequest("mnvs");
         }
-        pfrom->FulfilledRequest("mnvs");
 
         Sync(pfrom, nProp);
         LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString());
