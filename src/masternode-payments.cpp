@@ -324,9 +324,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 }
 
 int CMasternodePayments::GetMinMasternodePaymentsProto() {
-    return IsSporkActive(SPORK_10_MASTERNODE_PAY_NEWEST_NODES)
-            ? MIN_MASTERNODE_PAYMENT_PROTO_VERSION_2
-            : MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1;
+    return MIN_MNW_PEER_PROTO_VERSION;
 }
 
 void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -593,17 +591,28 @@ bool CMasternodePaymentWinner::IsValid(std::string& strError)
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
-    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, masternodePayments.GetMinMasternodePaymentsProto());
+    CMasternode* pmn = mnodeman.Find(vinMasternode);
 
-    if(n == -1)
+    if(!pmn)
     {
-        LogPrintf("CMasternodePaymentWinner::IsValid - Unknown Masternode - %s\n", vinMasternode.ToString().c_str());
+        strError = strprintf("Unknown Masternode %s", vinMasternode.prevout.ToStringShort());
+        LogPrintf ("CMasternodePaymentWinner::IsValid - %s\n", strError);
         return false;
     }
 
+    if(pmn->protocolVersion < GetMinMasternodePaymentsProto())
+    {
+        strError = strprintf("Masternode protocol too old %d - req %d", pmn->protocolVersion, GetMinMasternodePaymentsProto());
+        LogPrintf ("CMasternodePaymentWinner::IsValid - %s\n", strError);
+        return false;
+    }
+
+    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, masternodePayments.GetMinMasternodePaymentsProto());
+
     if(n > MNPAYMENTS_SIGNATURES_TOTAL)
     {
-        LogPrintf("CMasternodePaymentWinner::IsValid - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, n);
+        strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, n);
+        LogPrintf ("CMasternodePaymentWinner::IsValid - %s\n", strError);
         return false;
     }
 
