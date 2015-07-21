@@ -453,7 +453,7 @@ Value masternode(const Array& params, bool fHelp)
         int nLast = 10;
 
         if (params.size() >= 2){
-            nLast = params[1].get_int();
+            nLast = atoi(params[1].get_str());
         }
 
         Object obj;

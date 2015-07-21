@@ -763,6 +763,26 @@ std::string CMasternodePayments::ToString() const
 }
 
 
+
+int CMasternodePayments::GetOldestBlock()
+{
+    LOCK(cs_masternodepayments);
+
+    int nOldestBlock = std::numeric_limits<int>::max();
+
+    std::map<int, CMasternodeBlockPayees>::iterator it = mapMasternodeBlocks.begin();
+    while(it != mapMasternodeBlocks.end()) {
+        if((*it).first < nOldestBlock) {
+            nOldestBlock = (*it).first;
+        }
+        it++;
+    }
+
+    return nOldestBlock;
+}
+
+
+
 int CMasternodePayments::GetNewestBlock()
 {
     LOCK(cs_masternodepayments);
