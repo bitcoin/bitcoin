@@ -600,9 +600,9 @@ bool CMasternodePaymentWinner::IsValid(std::string& strError)
         return false;
     }
 
-    if(pmn->protocolVersion < GetMinMasternodePaymentsProto())
+    if(pmn->protocolVersion < masternodePayments.GetMinMasternodePaymentsProto())
     {
-        strError = strprintf("Masternode protocol too old %d - req %d", pmn->protocolVersion, GetMinMasternodePaymentsProto());
+        strError = strprintf("Masternode protocol too old %d - req %d", pmn->protocolVersion, masternodePayments.GetMinMasternodePaymentsProto());
         LogPrintf ("CMasternodePaymentWinner::IsValid - %s\n", strError);
         return false;
     }
