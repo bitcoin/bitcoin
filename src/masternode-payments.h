@@ -123,7 +123,7 @@ public:
     bool HasPayeeWithVotes(CScript payee, int nVotesReq)
     {
         BOOST_FOREACH(CMasternodePayee& p, vecPayments){
-            if(p.nVotes > nVotesReq && p.scriptPubKey == payee) return true;
+            if(p.nVotes >= nVotesReq && p.scriptPubKey == payee) return true;
         }
 
         return false;

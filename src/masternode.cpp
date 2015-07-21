@@ -237,17 +237,30 @@ int64_t CMasternode::GetLastPaid() {
     // use a deterministic offset to break a tie -- 2.5 minutes
     int64_t nOffset = hash.GetCompact(false) % 150; 
 
-    for(int64_t h = pindexPrev->nHeight-mnodeman.CountEnabled()*0.95; h <= pindexPrev->nHeight+10; h++){
-        if(masternodePayments.mapMasternodeBlocks.count(h)){
+    if (chainActive.Tip() == NULL) return false;
+
+    const CBlockIndex *BlockReading = chainActive.Tip();
+
+    int nMnCount = mnodeman.CountEnabled()*1.1;
+    int n = 0;
+    for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
+        if(n >= nMnCount){
+            return 0;
+        }
+        n++;
+
+        if(masternodePayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
             /*
                 Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
                 to converge on the same payees quickly, then keep the same schedule.
             */
-            if(masternodePayments.mapMasternodeBlocks[h].HasPayeeWithVotes(mnpayee, 2)){
-                int64_t nTimeEstimate = pindexPrev->nTime - (pindexPrev->nHeight - h)*2.5;
-                return nTimeEstimate + nOffset;
+            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
+                return BlockReading->nTime + nOffset;
             }
         }
+
+        if (BlockReading->pprev == NULL) { assert(BlockReading); break; }
+        BlockReading = BlockReading->pprev;
     }
 
     return 0;
