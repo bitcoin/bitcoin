@@ -229,6 +229,14 @@ int64_t CMasternode::GetLastPaid() {
     CScript mnpayee;
     mnpayee = GetScriptForDestination(pubkey.GetID());
 
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << vin;
+    ss << sigTime;
+    uint256 hash =  ss.GetHash();
+
+    // use a deterministic offset to break a tie -- 2.5 minutes
+    int64_t nOffset = hash.GetCompact(false) % 150; 
+
     for(int64_t h = pindexPrev->nHeight-mnodeman.CountEnabled()*0.95; h <= pindexPrev->nHeight+10; h++){
         if(masternodePayments.mapMasternodeBlocks.count(h)){
             /*
@@ -236,8 +244,8 @@ int64_t CMasternode::GetLastPaid() {
                 to converge on the same payees quickly, then keep the same schedule.
             */
             if(masternodePayments.mapMasternodeBlocks[h].HasPayeeWithVotes(mnpayee, 2)){
-                int64_t nTimeEstimate = pindexPrev->nTime - (pindexPrev->nHeight - h)*2.6;
-                return nTimeEstimate;
+                int64_t nTimeEstimate = pindexPrev->nTime - (pindexPrev->nHeight - h)*2.5;
+                return nTimeEstimate + nOffset;
             }
         }
     }
