@@ -170,7 +170,13 @@ void CMasternodeSync::Process()
 
                 if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - MASTERNODE_SYNC_TIMEOUT)
                         && RequestedMasternodeAttempt <= 2){
-                    int nCountNeeded = (mnodeman.CountEnabled()*1.1);
+
+                    CBlockIndex* pindexPrev = chainActive.Tip();
+                    if(pindexPrev == NULL) return;
+
+                    int nCountNeeded = (pindexPrev->nHeight - masternodePayments.GetNewestBlock());
+                    if(mnodeman.CountEnabled()*1.1 < nCountNeeded) nCountNeeded = mnodeman.CountEnabled()*1.1;
+
                     pnode->PushMessage("mnget", nCountNeeded); //sync payees
                     RequestedMasternodeAttempt++;
                     lastTimeAsked = GetTime();

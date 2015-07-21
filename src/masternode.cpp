@@ -230,12 +230,12 @@ int64_t CMasternode::GetLastPaid() {
     mnpayee = GetScriptForDestination(pubkey.GetID());
 
     for(int64_t h = pindexPrev->nHeight-mnodeman.CountEnabled()*0.95; h <= pindexPrev->nHeight+10; h++){
-        if(mapMasternodeBlocks.count(h)){
+        if(masternodePayments.mapMasternodeBlocks.count(h)){
             /*
                 Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
                 to converge on the same payees quickly, then keep the same schedule.
             */
-            if(mapMasternodeBlocks[h].HasPayeeWithVotes(mnpayee, 2)){
+            if(masternodePayments.mapMasternodeBlocks[h].HasPayeeWithVotes(mnpayee, 2)){
                 int64_t nTimeEstimate = pindexPrev->nTime - (pindexPrev->nHeight - h)*2.6;
                 return nTimeEstimate;
             }
