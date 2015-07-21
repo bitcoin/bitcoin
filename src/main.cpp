@@ -888,11 +888,36 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx));
         unsigned int nSize = entry.GetTxSize();
 
-        // Try to make space in mempool
+        // If the predicted mempool usage is under the softcap, StageTrimToSize will return success.
+        // Otherwise StageTrimToSize will attempt to find appropriate transactions of lesser
+        // feerate to evict from the mempool.  If this fails and the mempool usage would be under
+        // the hardcap there is an opportunity for this transaction to enter the mempool anyway if
+        // it has a fee high enough to pass an increased minimum relay feerate.  The are 10 bands
+        // of doubling the effective minimum feerate between the softcap and hardcap.
+        size_t softcap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 700000;
+        size_t hardcap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+        size_t capstep = (hardcap - softcap) / 10;
         std::set<uint256> stagedelete;
         CAmount nFeesDeleted = 0;
-        if (!pool.StageTrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, entry, stagedelete, nFeesDeleted)) {
-            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
+        if (!pool.StageTrimToSize(softcap, entry, stagedelete, nFeesDeleted)) {
+            size_t expsize = pool.DynamicMemoryUsage() + pool.GuessDynamicMemoryUsage(entry);
+            if (expsize > hardcap) {
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap");
+            } else {
+                assert(expsize > softcap);
+                int rateZone = (expsize - softcap)/capstep + 1;
+                int relayMult = 1 << rateZone;
+                if (nFees < relayMult * ::minRelayTxFee.GetFee(nSize)) {
+                    return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap");
+                } else {
+                    // The fee rate of this transaction is high enough to enter into the reserve space
+                    // If stagedelete is non-empty at this point, it has only been populated with sets of transactions
+                    // that each have lower fee-rate than this transaction.  As such, it is safe to also still delete
+                    // the partial eviction set, as the effective fee rate for any remaining part of the transaction
+                    // would only have been higher than the original fee rate, and still passed the test for reserve space.
+                    LogPrint("mempool", "Tx %s entering reserve space size/fee %ld %ld at usage of %5.2f and mult of %d\n",tx.GetHash().ToString().substr(0,10).c_str(),nSize,nFees, expsize, relayMult);
+                }
+            }
         }
 
         // Don't accept it if it can't get into a block

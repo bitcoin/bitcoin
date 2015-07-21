@@ -453,11 +453,13 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
         protect.insert(in.prevout.hash);
     }
 
-    size_t expsize = DynamicMemoryUsage() + GuessDynamicMemoryUsage(toadd); // Track the expected resulting memory usage of the mempool.
+    size_t incUsage = GuessDynamicMemoryUsage(toadd);
+    size_t expsize = DynamicMemoryUsage() + incUsage; // Track the expected resulting memory usage of the mempool.
+    size_t usageRemoved = 0;
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
     int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
     // Iterate from lowest feerate to highest feerate in the mempool:
-    while (expsize > sizelimit && it != mapTx.get<1>().rend()) {
+    while (expsize > sizelimit && usageRemoved < incUsage && it != mapTx.get<1>().rend()) {
         const uint256& hash = it->GetTx().GetHash();
         if (stage.count(hash)) {
             // If the transaction is already staged for deletion, we know its descendants are already processed, so skip it.
@@ -524,6 +526,7 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
             stage.insert(now.begin(), now.end());
             nFeesRemoved += nowfee;
             nSizeRemoved += nowsize;
+	    usageRemoved += nowusage;
             expsize -= nowusage;
         } else {
             fails += iternow;
