@@ -132,15 +132,17 @@ class CHashWriter
 {
 private:
     CHash256 ctx;
+    size_t nBytesHashed;
 
 public:
     int nType;
     int nVersion;
 
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
+    CHashWriter(int nTypeIn, int nVersionIn) : nBytesHashed(0), nType(nTypeIn), nVersion(nVersionIn) {}
 
     CHashWriter& write(const char *pch, size_t size) {
         ctx.Write((const unsigned char*)pch, size);
+        nBytesHashed += size;
         return (*this);
     }
 
@@ -149,6 +151,9 @@ public:
         uint256 result;
         ctx.Finalize((unsigned char*)&result);
         return result;
+    }
+    size_t GetNumBytesHashed() const {
+        return nBytesHashed;
     }
 
     template<typename T>

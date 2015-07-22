@@ -32,6 +32,7 @@
 
 #include <boost/unordered_map.hpp>
 
+class ValidationResourceTracker;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -344,7 +345,8 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * instead of being performed inline.
  */
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
+                 unsigned int flags, bool cacheStore, ValidationResourceTracker* resourceTracker,
+                 std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
@@ -392,12 +394,51 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
 bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL, bool useExistingLockPoints = false);
 
 /**
+ * Class that keeps track of number of signature operations
+ * and bytes hashed to compute signature hashes.
+ */
+class ValidationResourceTracker
+{
+private:
+    mutable CCriticalSection cs;
+    uint64_t nSigops;
+    const uint64_t nMaxSigops;
+    uint64_t nSighashBytes;
+    const uint64_t nMaxSighashBytes;
+
+public:
+    ValidationResourceTracker(uint64_t nMaxSigopsIn, uint64_t nMaxSighashBytesIn) :
+                             nSigops(0), nMaxSigops(nMaxSigopsIn),
+                             nSighashBytes(0), nMaxSighashBytes(nMaxSighashBytesIn) { }
+
+    bool IsWithinLimits() const {
+        LOCK(cs);
+        return (nSigops <= nMaxSigops && nSighashBytes <= nMaxSighashBytes);
+    }
+    bool Update(const uint256& txid, uint64_t nSigopsIn, uint64_t nSighashBytesIn) {
+        LOCK(cs);
+        nSigops += nSigopsIn;
+        nSighashBytes += nSighashBytesIn;
+        return (nSigops <= nMaxSigops && nSighashBytes <= nMaxSighashBytes);
+    }
+    uint64_t GetSigOps() const {
+        LOCK(cs);
+        return nSigops;
+    }
+    uint64_t GetSighashBytes() const {
+        LOCK(cs);
+        return nSighashBytes;
+    }
+};
+
+/**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction 
  */
 class CScriptCheck
 {
 private:
+    ValidationResourceTracker* resourceTracker;
     CScript scriptPubKey;
     const CTransaction *ptxTo;
     unsigned int nIn;
@@ -406,14 +447,15 @@ private:
     ScriptError error;
 
 public:
-    CScriptCheck(): ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
-    CScriptCheck(const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
-        scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
+    CScriptCheck(): resourceTracker(NULL), ptxTo(0), nIn(0), nFlags(0), cacheStore(false), error(SCRIPT_ERR_UNKNOWN_ERROR) {}
+    CScriptCheck(ValidationResourceTracker* resourceTrackerIn, const CCoins& txFromIn, const CTransaction& txToIn, unsigned int nInIn, unsigned int nFlagsIn, bool cacheIn) :
+        resourceTracker(resourceTrackerIn), scriptPubKey(txFromIn.vout[txToIn.vin[nInIn].prevout.n].scriptPubKey),
         ptxTo(&txToIn), nIn(nInIn), nFlags(nFlagsIn), cacheStore(cacheIn), error(SCRIPT_ERR_UNKNOWN_ERROR) { }
 
     bool operator()();
 
     void swap(CScriptCheck &check) {
+        std::swap(resourceTracker, check.resourceTracker);
         scriptPubKey.swap(check.scriptPubKey);
         std::swap(ptxTo, check.ptxTo);
         std::swap(nIn, check.nIn);

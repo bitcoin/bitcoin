@@ -68,6 +68,12 @@ void CTxMemPoolEntry::UpdateLockPoints(const LockPoints& lp)
     lockPoints = lp;
 }
 
+void CTxMemPoolEntry::UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t _runtimeSighashBytes)
+{
+    runtimeSigOpCount = _runtimeSigOpCount;
+    runtimeSighashBytes = _runtimeSighashBytes;
+}
+
 // Update the given tx for any in-mempool descendants.
 // Assumes that setMemPoolChildren is correct for the given tx and all
 // descendants.

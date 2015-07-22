@@ -86,6 +86,8 @@ private:
     CAmount inChainInputValue; //! Sum of all txin values that are already in blockchain
     bool spendsCoinbase; //! keep track of transactions that spend a coinbase
     unsigned int sigOpCount; //! Legacy sig ops plus P2SH sig op count
+    uint64_t runtimeSigOpCount; //! Runtime signature operation count
+    uint64_t runtimeSighashBytes; //! Runtime bytes hashed for signature operations
     int64_t feeDelta; //! Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints; //! Track the height and time at which tx was final
 
@@ -117,6 +119,8 @@ public:
     unsigned int GetHeight() const { return entryHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
     unsigned int GetSigOpCount() const { return sigOpCount; }
+    uint64_t GetRuntimeSigOpCount() const { return runtimeSigOpCount; }
+    uint64_t GetRuntimeSighashBytes() const { return runtimeSighashBytes; }
     int64_t GetModifiedFee() const { return nFee + feeDelta; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
     const LockPoints& GetLockPoints() const { return lockPoints; }
@@ -128,6 +132,8 @@ public:
     void UpdateFeeDelta(int64_t feeDelta);
     // Update the LockPoints after a reorg
     void UpdateLockPoints(const LockPoints& lp);
+    // Update runtime validation resource usage
+    void UpdateRuntimeSigOps(uint64_t _runtimeSigOpCount, uint64_t _runtimeSighashBytes);
 
     /** We can set the entry to be dirty if doing the full calculation of in-
      *  mempool descendants will be too expensive, which can potentially happen
