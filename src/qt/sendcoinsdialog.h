@@ -45,7 +45,7 @@ public:
     void pasteEntry(const SendCoinsRecipient &rv);
     bool handlePaymentRequest(const SendCoinsRecipient &recipient);
 
-public slots:
+public Q_SLOTS:
     void clear();
     void reject();
     void accept();
@@ -62,13 +62,13 @@ private:
     bool fFeeMinimized;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
-    // of a message and message flags for use in emit message().
+    // of a message and message flags for use in Q_EMIT message().
     // Additional parameter msgArg can be used via .arg(msgArg).
     void processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg = QString());
     void minimizeFeeSection(bool fMinimize);
     void updateFeeMinimizedLabel();
 
-private slots:
+private Q_SLOTS:
     void on_sendButton_clicked();
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
@@ -93,7 +93,7 @@ private slots:
     void updateSmartFeeLabel();
     void updateGlobalFeeVariables();
 
-signals:
+Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
 };

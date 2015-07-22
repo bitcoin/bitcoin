@@ -30,7 +30,7 @@ public:
     static void cleanup();
     void handleDockIconClickEvent();
 
-signals:
+Q_SIGNALS:
     void dockIconClicked();
 
 private:
