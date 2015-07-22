@@ -206,6 +206,8 @@ namespace {
 
     /** Dirty block file entries. */
     set<int> setDirtyFileInfo;
+    /** Last timestamp we tried to use mempool reserve space to evict. */
+    int64_t lastSurplusTrimTime = 0;
 } // anon namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -992,6 +994,25 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
+
+        // Try to use excess relay fees paid by txs above the soft cap to trim in aggregate
+        int64_t timeNow = GetTime();
+        size_t curUsage = pool.DynamicMemoryUsage();
+        size_t trimGoal = 1000000; //Try to trim up to 1MB worth of transactions at a time
+        if (curUsage > softcap + trimGoal && timeNow > lastSurplusTrimTime) {
+            // Require at least 1M at highest fee rate we'll try to trim at, and try to trim 1MB
+            lastSurplusTrimTime = timeNow;
+            int rateZone = (curUsage - softcap - trimGoal)/capstep + 1;
+            int rateMultForTrim = 1 << rateZone;
+            std::set<uint256> stageTrimDelete;
+            if (pool.SurplusTrim(rateMultForTrim-1, minRelayTxFee, trimGoal, stageTrimDelete)) {
+                size_t oldUsage = curUsage;
+                size_t txsToDelete = stageTrimDelete.size();
+                pool.RemoveStaged(stageTrimDelete);
+                curUsage = pool.DynamicMemoryUsage();
+                LogPrint("mempool", "Removing %u transactions (%ld total usage) using periodic trim from reserve size\n", txsToDelete, oldUsage - curUsage);
+            }
+        }
     }
 
     SyncWithWallets(tx, NULL);

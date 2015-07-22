@@ -455,15 +455,23 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
 
     size_t incUsage = GuessDynamicMemoryUsage(toadd);
     size_t expsize = DynamicMemoryUsage() + incUsage; // Track the expected resulting memory usage of the mempool.
-    if (expsize > sizelimit) {
-        size_t sizeToTrim = std::min(expsize - sizelimit, incUsage);
-        return TrimMempool(sizeToTrim, protect, nFeesReserved, toadd.GetTxSize(), toadd.GetFee(), stage, nFeesRemoved);
-    } else
+    if (expsize <= sizelimit) {
         return true;
+    }
+    size_t sizeToTrim = std::min(expsize - sizelimit, incUsage);
+    return TrimMempool(sizeToTrim, protect, nFeesReserved, toadd.GetTxSize(), toadd.GetFee(), true, stage, nFeesRemoved);
+}
+
+bool CTxMemPool::SurplusTrim(int multiplier, CFeeRate minRelayRate, size_t usageToTrim, std::set<uint256>& stage) {
+    CFeeRate excessRate(multiplier * minRelayRate.GetFeePerK());
+    std::set<uint256> noprotect;
+    CAmount nFeesRemoved = 0;
+    size_t sizeToTrim = usageToTrim / 4;  //Conservatively assume we have transactions at least 1/4 the size of the mempool space they've taken
+    return TrimMempool(usageToTrim, noprotect, 0, sizeToTrim, excessRate.GetFee(sizeToTrim), false, stage, nFeesRemoved);
 }
 
 bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
-                             std::set<uint256>& stage, CAmount &nFeesRemoved) {
+                             bool mustTrimAllSize, std::set<uint256>& stage, CAmount &nFeesRemoved) {
     size_t usageRemoved = 0;
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
     int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
@@ -483,7 +491,7 @@ bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmo
         if ((double)it->GetFee() * sizeToUse > (double)feeToUse * it->GetTxSize()) {
             // If the transaction's feerate is worse than what we're looking for, nothing else we will iterate over
             // could improve the staged set. If we don't have an acceptable solution by now, bail out.
-            return false;
+            break;
         }
         std::deque<uint256> todo; // List of hashes that we still need to process (descendants of 'hash').
         std::set<uint256> now; // Set of hashes that will need to be added to stage if 'hash' is included.
@@ -503,7 +511,8 @@ bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmo
             }
             iternow++; // We only count transactions we actually had to go find in the mempool.
             if (iternow + fails > 20) {
-                return false;
+                good = false;
+                break;
             }
             const CTxMemPoolEntry* origTx = &*mapTx.find(hashnow);
             nowfee += origTx->GetFee();
@@ -539,13 +548,17 @@ bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmo
             fails += iternow;
             if (fails > 10) {
                 // Bail out after traversing 32 transactions that are not acceptable.
-                return false;
+                break;
             }
         }
         it++;
     }
+    //We've added all we can.  Is it enough?
+    if (mustTrimAllSize && usageRemoved < sizeToTrim)
+        return false;
+    if (stage.empty() && sizeToTrim > 0)
+        return false;
     return true;
-
 }
 
 void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
