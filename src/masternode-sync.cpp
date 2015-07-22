@@ -174,7 +174,7 @@ void CMasternodeSync::Process()
                     CBlockIndex* pindexPrev = chainActive.Tip();
                     if(pindexPrev == NULL) return;
 
-                    int nMnCount = mnodeman.CountEnabled()*1.1;
+                    int nMnCount = mnodeman.CountEnabled()*2;
                     int nCountNeeded = (pindexPrev->nHeight - masternodePayments.GetNewestBlock());
                     int nHaveBlocks = (pindexPrev->nHeight - masternodePayments.GetOldestBlock());
                     if(nHaveBlocks < nMnCount || nCountNeeded > nMnCount) { 

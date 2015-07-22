@@ -241,7 +241,7 @@ int64_t CMasternode::GetLastPaid() {
 
     const CBlockIndex *BlockReading = chainActive.Tip();
 
-    int nMnCount = mnodeman.CountEnabled()*1.1;
+    int nMnCount = mnodeman.CountEnabled()*2;
     int n = 0;
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
         if(n >= nMnCount){
