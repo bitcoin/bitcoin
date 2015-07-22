@@ -365,7 +365,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
            return;
         }
 
-        int nFirstBlock = (masternodeSync.IsSynced() ? (chainActive.Tip()->nHeight - (mnodeman.CountEnabled()*1.1)) : chainActive.Tip()->nHeight - 10);
+        int nFirstBlock = chainActive.Tip()->nHeight - (mnodeman.CountEnabled()*2);
         if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > chainActive.Tip()->nHeight+20){
             LogPrintf("mnw - winner out of range - FirstBlock %d Height %d bestHeight %d\n", nFirstBlock, winner.nBlockHeight, chainActive.Tip()->nHeight);
             return;
@@ -427,6 +427,8 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
     return false;
 }
 
+// Is this masternode scheduled to get paid soon? 
+// -- Only look ahead up to 7 blocks to allow for propagation
 bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
@@ -436,7 +438,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
     mnpayee = GetScriptForDestination(mn.pubkey.GetID());
 
     CScript payee;
-    for(int64_t h = pindexPrev->nHeight-1; h <= pindexPrev->nHeight+11; h++){
+    for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+7; h++){
         if(h == nNotBlockHeight) continue;
         if(mapMasternodeBlocks.count(h)){
             if(mapMasternodeBlocks[h].GetPayee(payee)){
@@ -564,7 +566,8 @@ void CMasternodePayments::CleanPaymentList()
 
     if(chainActive.Tip() == NULL) return;
 
-    int nLimit = std::max(((int)mnodeman.size())*2, 1000);
+    //keep up to five cycles for historical sake
+    int nLimit = std::max(((int)mnodeman.size())*5, 1000);
 
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
@@ -742,7 +745,7 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
 
     if(chainActive.Tip() == NULL) return;
 
-    int nCount = (mnodeman.CountEnabled()*1.1);
+    int nCount = (mnodeman.CountEnabled()*2);
     if(nCountNeeded > nCount) nCountNeeded = nCount;
 
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();

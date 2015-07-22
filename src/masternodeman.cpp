@@ -29,6 +29,7 @@ struct CompareValueOnly
         return t1.first < t2.first;
     }
 };
+
 struct CompareValueOnlyMN
 {
     bool operator()(const pair<int64_t, CMasternode>& t1,
@@ -384,11 +385,19 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
     return NULL;
 }
 
+// 
+// Deterministically select the oldest/best masternode to pay on the network
+//
 CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight)
 {
     LOCK(cs);
 
-    CMasternode *pOldestMasternode = NULL;
+    CMasternode *pBestMasternode = NULL;
+    std::vector<pair<int64_t, CTxIn> > vecMasternodeLastPaid;
+
+    /*
+        Make a vector with all of the last paid times
+    */
 
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
@@ -398,18 +407,37 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         // //check protocol version
         if(mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
 
-        //it's in the list -- so let's skip it
+        //it's in the list (up to 7 entries ahead of current block to allow propagation) -- so let's skip it
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //make sure it has as many confirmations as there are masternodes
         if(mn.GetMasternodeInputAge() < CountEnabled()) continue;
 
-        if(pOldestMasternode == NULL || pOldestMasternode->SecondsSincePayment() < mn.SecondsSincePayment()){
-            pOldestMasternode = &mn;
-        }
+        vecMasternodeLastPaid.push_back(make_pair(mn.SecondsSincePayment(), mn.vin));
     }
 
-    return pOldestMasternode;
+    // Sort them low to high
+    sort(vecMasternodeLastPaid.rbegin(), vecMasternodeLastPaid.rend(), CompareValueOnly());
+
+    // Look at 1/10 of the oldest nodes (by last payment), calculate their scores and pay the best one
+    //  -- This doesn't look at who is being paid in the +7-10 blocks, allowing for double payments very rarely
+    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*3 --(chance per block * chances before IsScheduled will fire)
+    int nTenthNetwork = mnodeman.CountEnabled()/10;
+    int nCount = 0; 
+    uint256 nHigh = 0;
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeLastPaid){
+        CMasternode* pmn = mnodeman.Find(s.second);
+        if(!pmn) break;
+
+        uint256 n = pmn->CalculateScore(1, nBlockHeight-100);
+        if(n > nHigh){
+            nHigh = n;
+            pBestMasternode = pmn;
+        }
+        nCount++;
+        if(nCount >= nTenthNetwork) break;
+    }
+    return pBestMasternode;
 }
 
 CMasternode *CMasternodeMan::FindRandom()
@@ -682,7 +710,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                     }
                 }
                 int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
-
                 mAskedUsForMasternodeList[pfrom->addr] = askAgain;
             }
         } //else, asking for a specific node which is ok
