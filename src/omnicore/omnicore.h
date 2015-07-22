@@ -40,9 +40,7 @@ int const MAX_STATE_HISTORY = 50;
 // maximum numeric values from the spec:
 #define MAX_INT_8_BYTES (9223372036854775807UL)
 
-// what should've been in the Exodus address for this block if none were spent
-#define DEV_MSC_BLOCK_290629 (1743358325718)
-
+// maximum size of string fields
 #define SP_STRING_FIELD_LEN 256
 
 // Omni Layer Transaction Class

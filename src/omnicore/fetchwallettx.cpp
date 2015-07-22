@@ -62,7 +62,9 @@ std::map<std::string,uint256> FetchWalletOmniTransactions(int count, int startBl
         mySTOReceipts = s_stolistdb->getMySTOReceipts("");
     }
     std::vector<std::string> vecReceipts;
-    boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), boost::token_compress_on);
+    if (!mySTOReceipts.empty()) {
+        boost::split(vecReceipts, mySTOReceipts, boost::is_any_of(","), boost::token_compress_on);
+    }
     for (size_t i = 0; i < vecReceipts.size(); i++) {
         std::vector<std::string> svstr;
         boost::split(svstr, vecReceipts[i], boost::is_any_of(":"), boost::token_compress_on);

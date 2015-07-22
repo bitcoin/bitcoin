@@ -23,6 +23,7 @@ static const long LOG_SHRINKSIZE  = 50000000; // 50 MB
 
 // Debug flags
 bool msc_debug_parser_data        = 0;
+bool msc_debug_parser_readonly    = 0;
 bool msc_debug_parser             = 0;
 bool msc_debug_verbose            = 0;
 bool msc_debug_verbose2           = 0;
@@ -48,6 +49,8 @@ bool msc_debug_metadex2           = 0;
 bool msc_debug_metadex3           = 0;
 //! Print transaction fields, when interpreting packets
 bool msc_debug_packets            = 1;
+//! Print transaction fields, when interpreting packets (in RPC mode)
+bool msc_debug_packets_readonly   = 0;
 bool msc_debug_walletcache        = 0;
 
 /**
@@ -218,6 +221,7 @@ void InitDebugLogLevels()
 
     for (std::vector<std::string>::const_iterator it = debugLevels.begin(); it != debugLevels.end(); ++it) {
         if (*it == "parser_data") msc_debug_parser_data = true;
+        if (*it == "parser_readonly") msc_debug_parser_readonly = true;
         if (*it == "parser") msc_debug_parser = true;
         if (*it == "verbose") msc_debug_verbose = true;
         if (*it == "verbose2") msc_debug_verbose2 = true;
@@ -241,11 +245,13 @@ void InitDebugLogLevels()
         if (*it == "metadex2") msc_debug_metadex2 = true;
         if (*it == "metadex3") msc_debug_metadex3 = true;
         if (*it == "packets") msc_debug_packets = true;
+        if (*it == "packets_readonly") msc_debug_packets_readonly = true;
         if (*it == "walletcache") msc_debug_walletcache = true;
         if (*it == "none" || *it == "all") {
             bool allDebugState = false;
             if (*it == "all") allDebugState = true;
             msc_debug_parser_data = allDebugState;
+            msc_debug_parser_readonly = allDebugState;
             msc_debug_parser = allDebugState;
             msc_debug_verbose = allDebugState;
             msc_debug_verbose2 = allDebugState;
@@ -269,6 +275,7 @@ void InitDebugLogLevels()
             msc_debug_metadex2 = allDebugState;
             msc_debug_metadex3 = allDebugState;
             msc_debug_packets =  allDebugState;
+            msc_debug_packets_readonly =  allDebugState;
             msc_debug_walletcache = allDebugState;
         }
     }
