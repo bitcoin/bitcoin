@@ -448,7 +448,6 @@ size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
 
 bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, CAmount nFeesReserved,
                                  std::set<uint256>& stage, CAmount& nFeesRemoved) {
-    size_t nSizeRemoved = 0;
     std::set<uint256> protect;
     BOOST_FOREACH(const CTxIn& in, toadd.GetTx().vin) {
         protect.insert(in.prevout.hash);
@@ -456,11 +455,20 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
 
     size_t incUsage = GuessDynamicMemoryUsage(toadd);
     size_t expsize = DynamicMemoryUsage() + incUsage; // Track the expected resulting memory usage of the mempool.
+    if (expsize > sizelimit) {
+        size_t sizeToTrim = std::min(expsize - sizelimit, incUsage);
+        return TrimMempool(sizeToTrim, protect, nFeesReserved, toadd.GetTxSize(), toadd.GetFee(), stage, nFeesRemoved);
+    } else
+        return true;
+}
+
+bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
+                             std::set<uint256>& stage, CAmount &nFeesRemoved) {
     size_t usageRemoved = 0;
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
     int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
     // Iterate from lowest feerate to highest feerate in the mempool:
-    while (expsize > sizelimit && usageRemoved < incUsage && it != mapTx.get<1>().rend()) {
+    while (usageRemoved < sizeToTrim && it != mapTx.get<1>().rend()) {
         const uint256& hash = it->GetTx().GetHash();
         if (stage.count(hash)) {
             // If the transaction is already staged for deletion, we know its descendants are already processed, so skip it.
@@ -472,9 +480,9 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
             it++;
             continue;
         }
-        if (CompareTxMemPoolEntryByFeeRate()(*it, toadd)) {
-            // If the transaction's feerate is worse than what we're looking for, we have processed everything in the mempool
-            // that could improve the staged set. If we don't have an acceptable solution by now, bail out.
+        if ((double)it->GetFee() * sizeToUse > (double)feeToUse * it->GetTxSize()) {
+            // If the transaction's feerate is worse than what we're looking for, nothing else we will iterate over
+            // could improve the staged set. If we don't have an acceptable solution by now, bail out.
             return false;
         }
         std::deque<uint256> todo; // List of hashes that we still need to process (descendants of 'hash').
@@ -499,7 +507,7 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
             }
             const CTxMemPoolEntry* origTx = &*mapTx.find(hashnow);
             nowfee += origTx->GetFee();
-            if (nFeesReserved + nFeesRemoved + nowfee > toadd.GetFee()) {
+            if (nFeesReserved + nFeesRemoved + nowfee > feeToUse) {
                 // If this pushes up to the total fees deleted too high, we're done with 'hash'.
                 good = false;
                 break;
@@ -519,16 +527,14 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
                 iter++;
             }
         }
-        if (good && (double)nowfee * toadd.GetTxSize() > (double)toadd.GetFee() * nowsize) {
+        if (good && (double)nowfee * sizeToUse > (double)feeToUse * nowsize) {
             // The new transaction's feerate is below that of the set we're removing.
             good = false;
         }
         if (good) {
             stage.insert(now.begin(), now.end());
             nFeesRemoved += nowfee;
-            nSizeRemoved += nowsize;
-	    usageRemoved += nowusage;
-            expsize -= nowusage;
+            usageRemoved += nowusage;
         } else {
             fails += iternow;
             if (fails > 10) {
@@ -539,6 +545,7 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
         it++;
     }
     return true;
+
 }
 
 void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
