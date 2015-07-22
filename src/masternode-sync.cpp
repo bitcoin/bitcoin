@@ -106,11 +106,10 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("getspork")) continue;
                 pnode->FulfilledRequest("getspork");
 
-                if(RequestedMasternodeAttempt <= 2){
-                    pnode->PushMessage("getsporks"); //get current network sporks
-                    if(RequestedMasternodeAttempt == 2) GetNextAsset();
-                    RequestedMasternodeAttempt++;
-                }
+                pnode->PushMessage("getsporks"); //get current network sporks
+                if(RequestedMasternodeAttempt >= 2) GetNextAsset();
+                RequestedMasternodeAttempt++;
+                
                 return;
             }
         } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) {
