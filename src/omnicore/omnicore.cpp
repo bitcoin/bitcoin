@@ -575,29 +575,31 @@ void CheckWalletUpdate(bool forceUpdate)
     uiInterface.OmniBalanceChanged();
 }
 
-int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
+int TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_t amountInvested, int nBlock, unsigned int nTime)
 {
-  if ((nBlock >= GENESIS_BLOCK && nBlock <= LAST_EXODUS_BLOCK) || (isNonMainNet()))
-  { //Exodus Fundraiser start/end blocks
-    int deadline_timeleft=1377993600-nTime;
-    double bonus= 1 + std::max( 0.10 * deadline_timeleft / (60 * 60 * 24 * 7), 0.0 );
+    const int secondsPerWeek = 60 * 60 * 24 * 7;
 
-    if (isNonMainNet())
-    {
-      bonus = 1;
+    if (nBlock >= GENESIS_BLOCK && nBlock <= LAST_EXODUS_BLOCK || isNonMainNet()) {
+        int deadlineTimeleft = 1377993600 - nTime;
+        double bonusPercentage = 0.10 * deadlineTimeleft / secondsPerWeek;
+        double bonus = 1.0 + std::max(bonusPercentage, 0.0);
 
-      if (sender == exodus_address) return 1; // sending from Exodus should not be fundraising anything
+        if (isNonMainNet()) {
+            bonus = 1;
+            // TODO: seems useless, if limited to non-mainnet; should be removed
+            if (sender == exodus_address) return 1; // sending from Exodus should not be fundraising anything
+        }
+
+        int64_t amountGenerated = round(100 * amountInvested * bonus);
+        if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
+
+        // TODO: return result, grant somewhere else
+        update_tally_map(sender, OMNI_PROPERTY_MSC, amountGenerated, BALANCE);
+        update_tally_map(sender, OMNI_PROPERTY_TMSC, amountGenerated, BALANCE);
+
+        return 0;
     }
-
-    uint64_t msc_tot= round( 100 * ExodusHighestValue * bonus ); 
-    if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %lu.%08lu\n",wtx.GetHash().ToString(), msc_tot / COIN, msc_tot % COIN);
- 
-    update_tally_map(sender, OMNI_PROPERTY_MSC, msc_tot, BALANCE);
-    update_tally_map(sender, OMNI_PROPERTY_TMSC, msc_tot, BALANCE);
-
-    return 0;
-  }
-  return -1;
+    return -1;
 }
 
 /**
