@@ -122,7 +122,7 @@ bool CHDKeyStore::GetAvailableChainIDs(std::vector<HDChainID>& chainIDs)
             chainIDs.push_back(it->first);
         }
     }
-    
+
     return true;
 }
 
@@ -159,7 +159,7 @@ bool CHDKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
 bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
 {
     //this methode required no locking
-    
+
     std::string chainPath = hdPubKey.chainPath;
     std::vector<std::string> pathFragments;
     boost::split(pathFragments, chainPath, boost::is_any_of("/"));

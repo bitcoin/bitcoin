@@ -2456,7 +2456,7 @@ m = master key
 c stands for internal/external chain switch
   c=0 for external addresses
   c=1 for internal addresses
-  
+
 example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/0 for the first external key
 example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/0 for the first internal key
 example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/1 for the second external key
@@ -2740,15 +2740,15 @@ UniValue hdsendtoaddress(const UniValue& params, bool fHelp)
         wtx.mapValue["comment"] = params[2].get_str();
     if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3].get_str();
-    
+
     bool fSubtractFeeFromAmount = false;
     if (params.size() > 4)
         fSubtractFeeFromAmount = params[4].get_bool();
-    
+
     EnsureWalletIsUnlocked();
-    
+
     SendMoneyHD(address.Get(), nAmount, fSubtractFeeFromAmount, wtx);
-    
+
     return wtx.GetHash().GetHex();
 }
 
