@@ -790,7 +790,7 @@ public:
 
 
     //!adds a hd chain of keys to the wallet
-    bool HDSetChainPath(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, bool overwrite = false);
+    bool HDAddHDChain(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, std::string &xprivOut, std::string &xpubOut, bool overwrite = false);
 
     //!gets a child key from the internal or external chain at given index
     bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, unsigned int nIndex, bool internal = false);

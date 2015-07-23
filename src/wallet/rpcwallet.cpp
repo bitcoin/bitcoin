@@ -2546,10 +2546,21 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
         fGenerateMasterSeed = false;
     }
 
-    pwalletMain->HDSetChainPath(chainPath, fGenerateMasterSeed, vSeed, chainId);
+    std::string xpubOut;
+    std::string xprivOut;
+
+    pwalletMain->HDAddHDChain(chainPath, fGenerateMasterSeed, vSeed, chainId, xprivOut, xpubOut);
     if (fGenerateMasterSeed)
         result.push_back(Pair("seed_hex", HexStr(vSeed)));
+
+    result.push_back(Pair("extended_master_pubkey", xpubOut));
+    result.push_back(Pair("extended_master_privkey", xprivOut));
     result.push_back(Pair("chainid", chainId.GetHex()));
+
+    memory_cleanse(&vSeed[0], bip32MasterSeedLength);
+    memory_cleanse(&xprivOut[0], xpubOut.size());
+    memory_cleanse(&xpubOut[0], xpubOut.size());
+
     return result;
 }
 

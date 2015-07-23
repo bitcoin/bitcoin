@@ -164,7 +164,6 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
     std::vector<std::string> pathFragments;
     boost::split(pathFragments, chainPath, boost::is_any_of("/"));
 
-    LogPrintf("hdwallet", "derive key %s\n", chainPath);
     CExtKey extKey;
     CExtKey parentKey;
     BOOST_FOREACH(std::string fragment, pathFragments)
@@ -203,7 +202,6 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
         }
     }
     keyOut = parentKey.key;
-    LogPrintf("hdwallet", "derived key with adr: %s\n", CBitcoinAddress(keyOut.GetPubKey().GetID()).ToString());
     return true;
 }
 
