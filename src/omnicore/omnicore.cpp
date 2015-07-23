@@ -2654,11 +2654,6 @@ int mastercore_init()
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
 
-    // legacy code, setting to pre-genesis-block
-    static int snapshotHeight = GENESIS_BLOCK - 1;
-    if (isNonMainNet()) snapshotHeight = START_TESTNET_BLOCK - 1;
-    if (RegTest()) snapshotHeight = START_REGTEST_BLOCK - 1;
-
     ++mastercoreInitialized;
 
     nWaterlineBlock = load_most_relevant_state();
@@ -2672,6 +2667,9 @@ int mastercore_init()
         // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
         clear_all_state();
     }
+
+    // legacy code, setting to pre-genesis-block
+    int snapshotHeight = ConsensusParams().GENESIS_BLOCK - 1;
 
     if (nWaterlineBlock < snapshotHeight) {
         nWaterlineBlock = snapshotHeight;
@@ -4056,9 +4054,7 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
         s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight - 1);
         reorgRecoveryMaxHeight = 0;
 
-        nWaterlineBlock = GENESIS_BLOCK - 1;
-        if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
-        if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
+        nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
 
         int best_state_block = load_most_relevant_state();
         if (best_state_block < 0) {

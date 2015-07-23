@@ -60,7 +60,7 @@ static const ConsensusCheckpoint vCheckpoints[] = {
 /** A mapping of transaction types, versions and the blocks at which they are enabled.
  */
 static const int txRestrictionsRules[][3] = {
-    {MSC_TYPE_SIMPLE_SEND,                GENESIS_BLOCK,          MP_TX_PKT_V0},
+    {MSC_TYPE_SIMPLE_SEND,                MSC_SEND_BLOCK,         MP_TX_PKT_V0},
     {MSC_TYPE_TRADE_OFFER,                MSC_DEX_BLOCK,          MP_TX_PKT_V1},
     {MSC_TYPE_ACCEPT_OFFER_BTC,           MSC_DEX_BLOCK,          MP_TX_PKT_V0},
     {MSC_TYPE_CREATE_PROPERTY_FIXED,      MSC_SP_BLOCK,           MP_TX_PKT_V0},

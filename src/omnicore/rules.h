@@ -10,18 +10,12 @@ class uint256;
 
 namespace mastercore
 {
-//! Starting block for parsing in regtest mode
-const int START_REGTEST_BLOCK = 5;
 //! Block to enable the Exodus fundraiser address in regtest mode
 const int MONEYMAN_REGTEST_BLOCK = 101;
-//! Starting block for parsing on testnet
-const int START_TESTNET_BLOCK = 263000;
 //! Block to enable the Exodus fundraiser address on testnet
 const int MONEYMAN_TESTNET_BLOCK = 270775;
-//! First block of the Exodus fundraiser
-const int GENESIS_BLOCK = 249498;
-//! Last block of the Exodus fundraiser
-const int LAST_EXODUS_BLOCK = 255365;
+//! Block to enable simple send transactions
+const int MSC_SEND_BLOCK = 249498;
 //! Block to enable DEx transactions
 const int MSC_DEX_BLOCK = 290630;
 //! Block to enable smart property transactions
