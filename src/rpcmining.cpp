@@ -153,15 +153,10 @@ UniValue generate(const UniValue& params, bool fHelp)
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
-        {
+        do {
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
-        }
-        while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            // Yes, there is a chance every nonce could fail to satisfy the -regtest
-            // target -- 1 in 2^(2^32). That ain't gonna happen.
-            ++pblock->nNonce;
-        }
+        } while (!GenerateProof(pblock, Params().GetConsensus()));
         CValidationState state;
         if (!ProcessNewBlock(state, NULL, pblock, true, NULL))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
