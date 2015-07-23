@@ -83,6 +83,15 @@ void CMasternodeSync::Process()
             Resync if we lose all masternodes from sleep/wake or failure to sync originally
         */
         if(mnodeman.CountEnabled() == 0) {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes)
+            {
+                pnode->ClearFulfilledRequest("getspork");
+                pnode->ClearFulfilledRequest("mnsync");
+                pnode->ClearFulfilledRequest("mnwsync");
+                pnode->ClearFulfilledRequest("busync");
+            }
+
             RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
         } else
             return;
