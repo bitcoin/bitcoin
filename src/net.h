@@ -631,6 +631,18 @@ public:
         return false;
     }
 
+    void ClearFulfilledRequest(std::string strRequest)
+    {
+        std::vector<std::string>::iterator it = vecRequestsFulfilled.begin();
+        while(it != vecRequestsFulfilled.end()){
+            if((*it) == strRequest) {
+                vecRequestsFulfilled.erase(it);
+                return;
+            }
+            ++it;
+        }
+    }
+
     void FulfilledRequest(std::string strRequest)
     {
         if(HasFulfilledRequest(strRequest)) return;
