@@ -2322,8 +2322,6 @@ void ThreadCheckDarkSendPool()
 
     while (true)
     {
-        c++;
-
         MilliSleep(1000);
         //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
 
@@ -2331,7 +2329,11 @@ void ThreadCheckDarkSendPool()
         masternodeSync.Process();
 
         if(masternodeSync.IsSynced()) {
-            //check if we should active or ping every few minutes
+
+            c++;
+
+            // check if we should activate or ping every few minutes,
+            // start right after sync is considered to be done
             if(c % MASTERNODE_PING_SECONDS == 1) activeMasternode.ManageStatus();
 
             if(c % 60 == 0)
