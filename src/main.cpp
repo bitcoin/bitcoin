@@ -3265,8 +3265,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
             CTxIn vin;
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
-            if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_BUDGET)
-                budget.NewBlock();
+            budget.NewBlock();
         }
     }
 

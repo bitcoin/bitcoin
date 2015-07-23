@@ -1473,9 +1473,6 @@ bool AppInit2(boost::thread_group& threadGroup)
             }
         }
 
-        //get the mode of budget voting for this masternode
-        strBudgetMode = GetArg("-budgetvotemode", "auto");
-
         strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()){
             std::string errorMessage;
@@ -1493,8 +1490,10 @@ bool AppInit2(boost::thread_group& threadGroup)
         } else {
             return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
         }
-
     }
+    
+    //get the mode of budget voting for this masternode
+    strBudgetMode = GetArg("-budgetvotemode", "auto");
 
     if(GetBoolArg("-mnconflock", true)) {
         LogPrintf("Locking Masternodes:\n");

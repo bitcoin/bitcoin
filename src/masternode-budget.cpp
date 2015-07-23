@@ -138,15 +138,6 @@ void CBudgetManager::SubmitFinalBudget()
         return;
     }
 
-    CPubKey pubKeyMasternode;
-    CKey keyMasternode;
-    std::string errorMessage;
-
-    if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode)){
-        LogPrintf("CBudgetManager::SubmitFinalBudget - Error upon calling SetKey\n");
-        return;
-    }
-
     CFinalizedBudgetBroadcast tempBudget(strBudgetName, nBlockStart, vecTxBudgetPayments, 0);
 
     //create fee tx
@@ -194,16 +185,6 @@ void CBudgetManager::SubmitFinalBudget()
     mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
     finalizedBudgetBroadcast.Relay();
     budget.AddFinalizedBudget(finalizedBudgetBroadcast);
-
-    CFinalizedBudgetVote vote(activeMasternode.vin, finalizedBudgetBroadcast.GetHash());
-    if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-        LogPrintf("CBudgetManager::SubmitFinalBudget - Failure to sign.\n");
-        return;
-    }
-
-    mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-    vote.Relay();
-    budget.UpdateFinalizedBudget(vote, NULL);
 }
 
 //
@@ -738,7 +719,7 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 
 void CBudgetManager::NewBlock()
 {
-    if(!masternodeSync.IsSynced()) return;
+    if (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_BUDGET) return;
 
     if (strBudgetMode == "suggest") { //suggest the budget we see
         SubmitFinalBudget();
