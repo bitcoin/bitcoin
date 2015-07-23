@@ -146,12 +146,16 @@ public:
 
     K GetKey() {
         K ret;
-        ret.Decode(&vchData[0], &vchData[Size]);
+        ret.Decode(&vchData[0]);
         return ret;
     }
 
     CBitcoinExtKeyBase(const K &key) {
         SetKey(key);
+    }
+
+    CBitcoinExtKeyBase(const std::string& strBase58c) {
+        SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
     }
 
     CBitcoinExtKeyBase() {}
