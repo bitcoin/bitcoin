@@ -933,13 +933,15 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid && (nProp == 0 || (*it1).first == nProp)){
-            pfrom->PushMessage("mprop", ((*it1).second));
+            CInv inv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash());
+            RelayInv(inv);
         
             //send votes
             std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
             while(it2 != pbudgetProposal->mapVotes.end()){
                 if((*it2).second.fValid){
-                    pfrom->PushMessage("mvote", ((*it2).second));
+                    CInv inv(MSG_BUDGET_VOTE, (*it2).second.GetHash());
+                    RelayInv(inv);
                 }
                 ++it2;
             }
@@ -952,13 +954,15 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
         if(pfinalizedBudget && pfinalizedBudget->fValid && (nProp == 0 || (*it3).first == nProp)){
-            pfrom->PushMessage("fbs", ((*it3).second));
+            CInv inv(MSG_BUDGET_FINALIZED, (*it3).second.GetHash());
+            RelayInv(inv);
 
             //send votes
             std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
             while(it4 != pfinalizedBudget->mapVotes.end()){
                 if((*it4).second.fValid)
-                    pfrom->PushMessage("fbvote", ((*it4).second));
+                    CInv inv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash());
+                    RelayInv(inv);
                 ++it4;
             }
         }

@@ -352,7 +352,8 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
-        LOCK(cs_masternodepayments);
+        // disabled due to locking issues
+        //LOCK(cs_masternodepayments);
 
         //this is required in litemodef
         CMasternodePaymentWinner winner;
@@ -751,8 +752,10 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
         CMasternodePaymentWinner winner = (*it).second;
-        if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20)
-            node->PushMessage("mnw", winner);
+        if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20) {
+            CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
+            RelayInv(inv);
+        }
         ++it;
     }
 }
