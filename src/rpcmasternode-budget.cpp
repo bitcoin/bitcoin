@@ -76,7 +76,7 @@ Value mnbudget(const Array& params, bool fHelp)
         int nBlockEnd = nBlockStart + GetBudgetPaymentCycleBlocks() * nPaymentCount;
 
         if(nBlockStart < nBlockMin)
-            return "Invalid payment count, must be more than current height.";
+            return "Invalid block start, must be more than current height.";
 
         if(nBlockEnd < pindexPrev->nHeight)
             return "Invalid ending block, starting block + (payment_cycle*payments) must be more than current height.";
@@ -98,7 +98,11 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
 
         bool useIX = true;
-        if (params.size() > 7) useIX = params[7].get_bool();
+        if (params.size() > 7) {
+            if(params[7].get_str() != "false" && params[7].get_str() != "true")
+                return "Invalid use_ix, must be true or false";
+            useIX = params[7].get_str() == "true" ? true : false;
+        }
 
         CWalletTx wtx;
         pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), useIX);
