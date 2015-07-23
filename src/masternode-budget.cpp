@@ -1215,7 +1215,11 @@ int CBudgetProposal::GetTotalPaymentCount()
 
 int CBudgetProposal::GetRemainingPaymentCount()
 {
-    return (GetBlockEndCycle() - GetBlockCurrentCycle()) / GetBudgetPaymentCycleBlocks();
+    // If this budget starts in the future, this value will be wrong
+    int nPayments = (GetBlockEndCycle() - GetBlockCurrentCycle()) / GetBudgetPaymentCycleBlocks();
+    int nTotal = (GetBlockEndCycle() - GetBlockStartCycle()) / GetBudgetPaymentCycleBlocks();
+    // Take the lowest value
+    return (nPayments <= nTotal ? nPayments : nTotal);
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast()
