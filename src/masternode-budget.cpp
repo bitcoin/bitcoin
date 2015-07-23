@@ -1079,7 +1079,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         TODO: There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
     */
     if(address.IsPayToScriptHash()) {
-        strError = "Multisig is not currently supported."
+        strError = "Multisig is not currently supported.";
         return false;
     }
 
