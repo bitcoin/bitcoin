@@ -399,6 +399,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         Make a vector with all of the last paid times
     */
 
+    int nMnCount = CountEnabled();
     BOOST_FOREACH(CMasternode &mn, vMasternodes)
     {
         mn.Check();
@@ -410,8 +411,11 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
+        //it's too new, wait for a cycle
+        if(mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
+
         //make sure it has as many confirmations as there are masternodes
-        if(mn.GetMasternodeInputAge() < CountEnabled()) continue;
+        if(mn.GetMasternodeInputAge() < nMnCount) continue;
 
         vecMasternodeLastPaid.push_back(make_pair(mn.SecondsSincePayment(), mn.vin));
     }
