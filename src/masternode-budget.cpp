@@ -139,6 +139,11 @@ void CBudgetManager::SubmitFinalBudget()
     }
 
     CFinalizedBudgetBroadcast tempBudget(strBudgetName, nBlockStart, vecTxBudgetPayments, 0);
+    if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
+        LogPrintf("CBudgetManager::SubmitFinalBudget - Budget already exists - %s\n", tempBudget.GetHash().ToString());    
+        nSubmittedFinalBudget = pindexPrev->nHeight;
+        return; //already exists
+    }
 
     //create fee tx
     CTransaction tx;
