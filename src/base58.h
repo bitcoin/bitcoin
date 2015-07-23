@@ -153,6 +153,10 @@ public:
         SetKey(key);
     }
 
+    CBitcoinExtKeyBase(const std::string& strBase58c) {
+        SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
+    }
+
     CBitcoinExtKeyBase() {}
 };
 
