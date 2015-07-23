@@ -95,28 +95,35 @@ void CMasternodeSync::Process()
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-
-        //set to synced
-        if(Params().NetworkID() == CBaseChainParams::REGTEST && tick >= 10) {
-            LogPrintf("CMasternodeSync::Process - Sync has finished\n");
-            RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
-            RequestedMasternodeAttempt = 0;
-        } else if(Params().NetworkID() != CBaseChainParams::REGTEST) {
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
-                if(pnode->HasFulfilledRequest("getspork")) continue;
-                pnode->FulfilledRequest("getspork");
-
+        if(Params().NetworkID() == CBaseChainParams::REGTEST){
+            if(RequestedMasternodeAttempt <= 2) {
                 pnode->PushMessage("getsporks"); //get current network sporks
-                if(RequestedMasternodeAttempt >= 2) GetNextAsset();
-                RequestedMasternodeAttempt++;
-                
-                return;
+            } else if(RequestedMasternodeAttempt < 4) {
+                mnodeman.DsegUpdate(pnode); 
+            } else if(RequestedMasternodeAttempt < 6) {
+                int nMnCount = mnodeman.CountEnabled()*2;
+                pnode->PushMessage("mnget", nMnCount); //sync payees
+                uint256 n = 0;
+                pnode->PushMessage("mnvs", n); //sync masternode votes
+            } else {
+                printf("finished\n");
+                RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
-        } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS) {
-            GetNextAsset();
+            RequestedMasternodeAttempt++;
             return;
         }
 
+        //set to synced
+        if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
+            if(pnode->HasFulfilledRequest("getspork")) continue;
+            pnode->FulfilledRequest("getspork");
+
+            pnode->PushMessage("getsporks"); //get current network sporks
+            if(RequestedMasternodeAttempt >= 2) GetNextAsset();
+            RequestedMasternodeAttempt++;
+            
+            return;
+        }
 
         //don't begin syncing until we're almost at a recent block
         if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;
@@ -168,21 +175,13 @@ void CMasternodeSync::Process()
                 pnode->FulfilledRequest("mnwsync");
 
                 if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - MASTERNODE_SYNC_TIMEOUT)
-                        && RequestedMasternodeAttempt <= 2){
+                        && RequestedMasternodeAttempt <= 4){
 
                     CBlockIndex* pindexPrev = chainActive.Tip();
                     if(pindexPrev == NULL) return;
 
                     int nMnCount = mnodeman.CountEnabled()*2;
-                    int nCountNeeded = (pindexPrev->nHeight - masternodePayments.GetNewestBlock());
-                    int nHaveBlocks = (pindexPrev->nHeight - masternodePayments.GetOldestBlock());
-                    if(nHaveBlocks < nMnCount || nCountNeeded > nMnCount) { 
-                        //We have less blocks than there are masternodes, we need more history
-                        // - or our cache is old
-                        nCountNeeded = nMnCount;
-                    }
-
-                    pnode->PushMessage("mnget", nCountNeeded); //sync payees
+                    pnode->PushMessage("mnget", nMnCount); //sync payees
                     RequestedMasternodeAttempt++;
                     lastTimeAsked = GetTime();
                 }
@@ -210,7 +209,7 @@ void CMasternodeSync::Process()
                 pnode->FulfilledRequest("busync");
 
                 if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - MASTERNODE_SYNC_TIMEOUT)
-                        && RequestedMasternodeAttempt <= 2){
+                        && RequestedMasternodeAttempt <= 4){
                     uint256 n = 0;
                     pnode->PushMessage("mnvs", n); //sync masternode votes
                     RequestedMasternodeAttempt++;
