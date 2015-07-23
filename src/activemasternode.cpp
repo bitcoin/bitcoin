@@ -17,13 +17,15 @@ void CActiveMasternode::ManageStatus()
     if (fDebug) LogPrintf("CActiveMasternode::ManageStatus() - Begin\n");
 
     //need correct blocks to send ping
-    if(IsInitialBlockDownload()) {
+    if(!masternodeSync.IsSynced()) {
         status = ACTIVE_MASTERNODE_SYNC_IN_PROCESS;
-        LogPrintf("CActiveMasternode::ManageStatus() - Sync in progress. Must wait until sync is complete to start Masternode.\n");
+        LogPrintf("CActiveMasternode::ManageStatus() - %s\n", GetStatus());
         return;
     }
 
-    if(status == ACTIVE_MASTERNODE_INITIAL || status == ACTIVE_MASTERNODE_SYNC_IN_PROCESS) {
+    if(status == ACTIVE_MASTERNODE_SYNC_IN_PROCESS) status = ACTIVE_MASTERNODE_INITIAL;
+
+    if(status == ACTIVE_MASTERNODE_INITIAL) {
         CMasternode *pmn;
         pmn = mnodeman.Find(pubKeyMasternode);
         if(pmn != NULL) {
@@ -82,9 +84,9 @@ void CActiveMasternode::ManageStatus()
         if(GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-                notCapableReason = strprintf("Input must have least %d confirmations - %d confirmations", MASTERNODE_MIN_CONFIRMATIONS, GetInputAge(vin));
-                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 status = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
+                notCapableReason = strprintf("%s - %d confirmations", GetStatus(), GetInputAge(vin));
+                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
 
@@ -126,11 +128,11 @@ void CActiveMasternode::ManageStatus()
 
 std::string CActiveMasternode::GetStatus() {
     switch (status) {
-    case ACTIVE_MASTERNODE_INITIAL: return "node just started, not yet activated";
-    case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "sync in process. Must wait until client is synced to start";
-    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return "masternode input must have at least 15 confirmations";
-    case ACTIVE_MASTERNODE_NOT_CAPABLE: return "not capable masternode: " + notCapableReason;
-    case ACTIVE_MASTERNODE_STARTED: return "masternode successfully started";
+    case ACTIVE_MASTERNODE_INITIAL: return "Node just started, not yet activated";
+    case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Masternode";
+    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Masternode input must have at least %d confirmations", MASTERNODE_MIN_CONFIRMATIONS);
+    case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable masternode: " + notCapableReason;
+    case ACTIVE_MASTERNODE_STARTED: return "Masternode successfully started";
     default: return "unknown";
     }
 }
@@ -193,8 +195,8 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
     CKey keyMasternode;
 
     //need correct blocks to send ping
-    if(IsInitialBlockDownload()) {
-        errorMessage = "Sync in progress. Must wait until sync is complete to start Masternode.";
+    if(!masternodeSync.IsSynced()) {
+        errorMessage = GetStatus();
         LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
         return false;
     }
