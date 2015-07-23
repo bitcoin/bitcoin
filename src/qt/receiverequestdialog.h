@@ -32,7 +32,7 @@ public:
     explicit QRImageWidget(QWidget *parent = 0);
     QImage exportImage();
 
-public Q_SLOTS:
+public slots:
     void saveImage();
     void copyImage();
 
@@ -55,7 +55,7 @@ public:
     void setModel(OptionsModel *model);
     void setInfo(const SendCoinsRecipient &info);
 
-private Q_SLOTS:
+private slots:
     void on_btnCopyURI_clicked();
     void on_btnCopyAddress_clicked();
 

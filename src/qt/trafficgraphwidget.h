@@ -27,7 +27,7 @@ public:
 protected:
     void paintEvent(QPaintEvent *);
 
-public Q_SLOTS:
+public slots:
     void updateRates();
     void setGraphRangeMins(int mins);
     void clear();

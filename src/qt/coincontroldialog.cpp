@@ -30,6 +30,7 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 
+using namespace std;
 QList<CAmount> CoinControlDialog::payAmounts;
 CCoinControl* CoinControlDialog::coinControl = new CCoinControl();
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
@@ -117,7 +118,7 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     // (un)select all
     connect(ui->pushButtonSelectAll, SIGNAL(clicked()), this, SLOT(buttonSelectAllClicked()));
 
-    // change coin control first column label due Qt4 bug.
+    // change coin control first column label due Qt4 bug. 
     // see https://github.com/bitcoin/bitcoin/issues/5716
     ui->treeWidget->headerItem()->setText(COLUMN_CHECKBOX, QString());
 
@@ -441,7 +442,7 @@ QString CoinControlDialog::getPriorityLabel(double dPriority, double mempoolEsti
 // shows count of locked unspent outputs
 void CoinControlDialog::updateLabelLocked()
 {
-    std::vector<COutPoint> vOutpts;
+    vector<COutPoint> vOutpts;
     model->listLockedCoins(vOutpts);
     if (vOutpts.size() > 0)
     {
@@ -460,13 +461,13 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     CAmount nPayAmount = 0;
     bool fDust = false;
     CMutableTransaction txDummy;
-    Q_FOREACH(const CAmount &amount, CoinControlDialog::payAmounts)
+    foreach(const CAmount &amount, CoinControlDialog::payAmounts)
     {
         nPayAmount += amount;
 
         if (amount > 0)
         {
-            CTxOut txout(amount, (CScript)std::vector<unsigned char>(24, 0));
+            CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             if (txout.IsDust(::minRelayTxFee))
                fDust = true;
@@ -486,12 +487,13 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     int nQuantityUncompressed   = 0;
     bool fAllowFree             = false;
 
-    std::vector<COutPoint> vCoinControl;
-    std::vector<COutput>   vOutputs;
+    vector<COutPoint> vCoinControl;
+    vector<COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
-    BOOST_FOREACH(const COutput& out, vOutputs) {
+    BOOST_FOREACH(const COutput& out, vOutputs)
+    {
         // unselect already spent, very unlikely scenario, this could happen
         // when selected are spent elsewhere, like rpc or another computer
         uint256 txhash = out.tx->GetHash();
@@ -567,7 +569,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < CENT)
             {
-                CTxOut txout(nChange, (CScript)std::vector<unsigned char>(24, 0));
+                CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
                 if (txout.IsDust(::minRelayTxFee))
                 {
                     if (CoinControlDialog::fSubtractFeeFromAmount) // dust-change will be raised until no dust
@@ -686,10 +688,11 @@ void CoinControlDialog::updateView()
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
     double mempoolEstimatePriority = mempool.estimatePriority(nTxConfirmTarget);
 
-    std::map<QString, std::vector<COutput> > mapCoins;
+    map<QString, vector<COutput> > mapCoins;
     model->listCoins(mapCoins);
 
-    BOOST_FOREACH(const PAIRTYPE(QString, std::vector<COutput>)& coins, mapCoins) {
+    BOOST_FOREACH(PAIRTYPE(QString, vector<COutput>) coins, mapCoins)
+    {
         QTreeWidgetItem *itemWalletAddress = new QTreeWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         QString sWalletAddress = coins.first;
@@ -716,7 +719,8 @@ void CoinControlDialog::updateView()
         double dPrioritySum = 0;
         int nChildren = 0;
         int nInputSum = 0;
-        BOOST_FOREACH(const COutput& out, coins.second) {
+        BOOST_FOREACH(const COutput& out, coins.second)
+        {
             int nInputSize = 0;
             nSum += out.tx->vout[out.i].nValue;
             nChildren++;

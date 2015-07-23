@@ -22,6 +22,7 @@ static void initJsonEscape()
 {
     escapes[(int)'"'] = "\\\"";
     escapes[(int)'\\'] = "\\\\";
+    escapes[(int)'/'] = "\\/";
     escapes[(int)'\b'] = "\\b";
     escapes[(int)'\f'] = "\\f";
     escapes[(int)'\n'] = "\\n";

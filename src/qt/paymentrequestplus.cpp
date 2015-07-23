@@ -19,6 +19,8 @@
 #include <QDebug>
 #include <QSslCertificate>
 
+using namespace std;
+
 class SSLVerifyError : public std::runtime_error
 {
 public:
@@ -47,7 +49,7 @@ bool PaymentRequestPlus::parse(const QByteArray& data)
     return true;
 }
 
-bool PaymentRequestPlus::SerializeToString(std::string* output) const
+bool PaymentRequestPlus::SerializeToString(string* output) const
 {
     return paymentRequest.SerializeToString(output);
 }

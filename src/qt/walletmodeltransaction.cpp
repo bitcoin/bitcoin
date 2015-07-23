@@ -81,7 +81,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
 CAmount WalletModelTransaction::getTotalTransactionAmount()
 {
     CAmount totalTransactionAmount = 0;
-    Q_FOREACH(const SendCoinsRecipient &rcp, recipients)
+    foreach(const SendCoinsRecipient &rcp, recipients)
     {
         totalTransactionAmount += rcp.amount;
     }

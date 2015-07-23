@@ -21,10 +21,10 @@ public:
 
     QString getURI();
 
-protected Q_SLOTS:
+protected slots:
     void accept();
 
-private Q_SLOTS:
+private slots:
     void on_selectFileButton_clicked();
 
 private:

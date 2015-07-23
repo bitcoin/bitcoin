@@ -70,9 +70,9 @@ public:
         // Manually recompute the dynamic usage of the whole data, and compare it.
         size_t ret = memusage::DynamicUsage(cacheCoins);
         for (CCoinsMap::iterator it = cacheCoins.begin(); it != cacheCoins.end(); it++) {
-            ret += it->second.coins.DynamicMemoryUsage();
+            ret += memusage::DynamicUsage(it->second.coins);
         }
-        BOOST_CHECK_EQUAL(DynamicMemoryUsage(), ret);
+        BOOST_CHECK_EQUAL(memusage::DynamicUsage(*this), ret);
     }
 
 };

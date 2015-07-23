@@ -79,7 +79,6 @@ uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 CAddrMan addrman;
 int nMaxConnections = 125;
-int nWhiteConnections = 0;
 bool fAddressesInitialized = false;
 
 vector<CNode*> vNodes;
@@ -333,15 +332,6 @@ CNode* FindNode(const CNetAddr& ip)
     return NULL;
 }
 
-CNode* FindNode(const CSubNet& subNet)
-{
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    if (subNet.Match((CNetAddr)pnode->addr))
-        return (pnode);
-    return NULL;
-}
-
 CNode* FindNode(const std::string& addrName)
 {
     LOCK(cs_vNodes);
@@ -386,12 +376,6 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed))
     {
-        if (!IsSelectableSocket(hSocket)) {
-            LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
-            CloseSocket(hSocket);
-            return NULL;
-        }
-
         addrman.Attempt(addrConnect);
 
         // Add node
@@ -450,15 +434,12 @@ void CNode::PushVersion()
 
 
 
-banmap_t CNode::setBanned;
+std::map<CNetAddr, int64_t> CNode::setBanned;
 CCriticalSection CNode::cs_setBanned;
-bool CNode::setBannedIsDirty;
 
 void CNode::ClearBanned()
 {
-    LOCK(cs_setBanned);
     setBanned.clear();
-    setBannedIsDirty = true;
 }
 
 bool CNode::IsBanned(CNetAddr ip)
@@ -466,114 +447,25 @@ bool CNode::IsBanned(CNetAddr ip)
     bool fResult = false;
     {
         LOCK(cs_setBanned);
-        for (banmap_t::iterator it = setBanned.begin(); it != setBanned.end(); it++)
-        {
-            CSubNet subNet = (*it).first;
-            CBanEntry banEntry = (*it).second;
-
-            if(subNet.Match(ip) && GetTime() < banEntry.nBanUntil)
-                fResult = true;
-        }
-    }
-    return fResult;
-}
-
-bool CNode::IsBanned(CSubNet subnet)
-{
-    bool fResult = false;
-    {
-        LOCK(cs_setBanned);
-        banmap_t::iterator i = setBanned.find(subnet);
+        std::map<CNetAddr, int64_t>::iterator i = setBanned.find(ip);
         if (i != setBanned.end())
         {
-            CBanEntry banEntry = (*i).second;
-            if (GetTime() < banEntry.nBanUntil)
+            int64_t t = (*i).second;
+            if (GetTime() < t)
                 fResult = true;
         }
     }
     return fResult;
 }
 
-void CNode::Ban(const CNetAddr& addr, const BanReason &banReason, int64_t bantimeoffset, bool sinceUnixEpoch) {
-    CSubNet subNet(addr);
-    Ban(subNet, banReason, bantimeoffset, sinceUnixEpoch);
-}
-
-void CNode::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t bantimeoffset, bool sinceUnixEpoch) {
-    CBanEntry banEntry(GetTime());
-    banEntry.banReason = banReason;
-    if (bantimeoffset <= 0)
+bool CNode::Ban(const CNetAddr &addr) {
+    int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
     {
-        bantimeoffset = GetArg("-bantime", 60*60*24); // Default 24-hour ban
-        sinceUnixEpoch = false;
+        LOCK(cs_setBanned);
+        if (setBanned[addr] < banTime)
+            setBanned[addr] = banTime;
     }
-    banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
-
-
-    LOCK(cs_setBanned);
-    if (setBanned[subNet].nBanUntil < banEntry.nBanUntil)
-        setBanned[subNet] = banEntry;
-
-    setBannedIsDirty = true;
-}
-
-bool CNode::Unban(const CNetAddr &addr) {
-    CSubNet subNet(addr);
-    return Unban(subNet);
-}
-
-bool CNode::Unban(const CSubNet &subNet) {
-    LOCK(cs_setBanned);
-    if (setBanned.erase(subNet))
-    {
-        setBannedIsDirty = true;
-        return true;
-    }
-    return false;
-}
-
-void CNode::GetBanned(banmap_t &banMap)
-{
-    LOCK(cs_setBanned);
-    banMap = setBanned; //create a thread safe copy
-}
-
-void CNode::SetBanned(const banmap_t &banMap)
-{
-    LOCK(cs_setBanned);
-    setBanned = banMap;
-    setBannedIsDirty = true;
-}
-
-void CNode::SweepBanned()
-{
-    int64_t now = GetTime();
-
-    LOCK(cs_setBanned);
-    banmap_t::iterator it = setBanned.begin();
-    while(it != setBanned.end())
-    {
-        CBanEntry banEntry = (*it).second;
-        if(now > banEntry.nBanUntil)
-        {
-            setBanned.erase(it++);
-            setBannedIsDirty = true;
-        }
-        else
-            ++it;
-    }
-}
-
-bool CNode::BannedSetIsDirty()
-{
-    LOCK(cs_setBanned);
-    return setBannedIsDirty;
-}
-
-void CNode::SetBannedSetDirty(bool dirty)
-{
-    LOCK(cs_setBanned); //reuse setBanned lock for the isDirty flag
-    setBannedIsDirty = dirty;
+    return true;
 }
 
 
@@ -935,7 +827,6 @@ void ThreadSocketHandler()
                 SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
                 CAddress addr;
                 int nInbound = 0;
-                int nMaxInbound = nMaxConnections - MAX_OUTBOUND_CONNECTIONS;
 
                 if (hSocket != INVALID_SOCKET)
                     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr))
@@ -955,19 +846,8 @@ void ThreadSocketHandler()
                     if (nErr != WSAEWOULDBLOCK)
                         LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
                 }
-                else if (!IsSelectableSocket(hSocket))
+                else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
                 {
-                    LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToString());
-                    CloseSocket(hSocket);
-                }
-                else if (nInbound >= nMaxInbound)
-                {
-                    LogPrint("net", "connection from %s dropped (full)\n", addr.ToString());
-                    CloseSocket(hSocket);
-                }
-                else if (!whitelisted && (nInbound >= (nMaxInbound - nWhiteConnections)))
-                {
-                    LogPrint("net", "connection from %s dropped (non-whitelisted)\n", addr.ToString());
                     CloseSocket(hSocket);
                 }
                 else if (CNode::IsBanned(addr) && !whitelisted)
@@ -980,8 +860,6 @@ void ThreadSocketHandler()
                     CNode* pnode = new CNode(hSocket, addr, "", true);
                     pnode->AddRef();
                     pnode->fWhitelisted = whitelisted;
-
-                    LogPrint("net", "connection from %s accepted\n", addr.ToString());
 
                     {
                         LOCK(cs_vNodes);
@@ -1282,17 +1160,6 @@ void DumpAddresses()
 
     LogPrint("net", "Flushed %d addresses to peers.dat  %dms\n",
            addrman.size(), GetTimeMillis() - nStart);
-}
-
-void DumpData()
-{
-    DumpAddresses();
-
-    if (CNode::BannedSetIsDirty())
-    {
-        DumpBanlist();
-        CNode::SetBannedSetDirty(false);
-    }
 }
 
 void static ProcessOneShot()
@@ -1608,13 +1475,6 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
         LogPrintf("%s\n", strError);
         return false;
     }
-    if (!IsSelectableSocket(hListenSocket))
-    {
-        strError = "Error: Couldn't create a listenable socket for incoming connections";
-        LogPrintf("%s\n", strError);
-        return false;
-    }
-
 
 #ifndef WIN32
 #ifdef SO_NOSIGPIPE
@@ -1740,17 +1600,6 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (!adb.Read(addrman))
             LogPrintf("Invalid or missing peers.dat; recreating\n");
     }
-
-    //try to read stored banlist
-    CBanDB bandb;
-    banmap_t banmap;
-    if (!bandb.Read(banmap))
-        LogPrintf("Invalid or missing banlist.dat; recreating\n");
-
-    CNode::SetBanned(banmap); //thread save setter
-    CNode::SetBannedSetDirty(false); //no need to write down just read or nonexistent data
-    CNode::SweepBanned(); //sweap out unused entries
-
     LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
            addrman.size(), GetTimeMillis() - nStart);
     fAddressesInitialized = true;
@@ -1791,7 +1640,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "msghand", &ThreadMessageHandler));
 
     // Dump network addresses
-    scheduler.scheduleEvery(&DumpData, DUMP_ADDRESSES_INTERVAL);
+    scheduler.scheduleEvery(&DumpAddresses, DUMP_ADDRESSES_INTERVAL);
 }
 
 bool StopNode()
@@ -1804,7 +1653,7 @@ bool StopNode()
 
     if (fAddressesInitialized)
     {
-        DumpData();
+        DumpAddresses();
         fAddressesInitialized = false;
     }
 
@@ -2008,11 +1857,11 @@ bool CAddrDB::Read(CAddrMan& addr)
         return error("%s: Failed to open file %s", __func__, pathAddr.string());
 
     // use file size to size memory buffer
-    uint64_t fileSize = boost::filesystem::file_size(pathAddr);
-    uint64_t dataSize = 0;
+    int fileSize = boost::filesystem::file_size(pathAddr);
+    int dataSize = fileSize - sizeof(uint256);
     // Don't try to resize to a negative number if file is small
-    if (fileSize >= sizeof(uint256))
-        dataSize = fileSize - sizeof(uint256);
+    if (dataSize < 0)
+        dataSize = 0;
     vector<unsigned char> vchData;
     vchData.resize(dataSize);
     uint256 hashIn;
@@ -2183,10 +2032,8 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         Fuzz(GetArg("-fuzzmessagestest", 10));
 
     if (ssSend.size() == 0)
-    {
-        LEAVE_CRITICAL_SECTION(cs_vSend);
         return;
-    }
+
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
@@ -2209,120 +2056,4 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         SocketSendData(this);
 
     LEAVE_CRITICAL_SECTION(cs_vSend);
-}
-
-//
-// CBanDB
-//
-
-CBanDB::CBanDB()
-{
-    pathBanlist = GetDataDir() / "banlist.dat";
-}
-
-bool CBanDB::Write(const banmap_t& banSet)
-{
-    // Generate random temporary filename
-    unsigned short randv = 0;
-    GetRandBytes((unsigned char*)&randv, sizeof(randv));
-    std::string tmpfn = strprintf("banlist.dat.%04x", randv);
-
-    // serialize banlist, checksum data up to that point, then append csum
-    CDataStream ssBanlist(SER_DISK, CLIENT_VERSION);
-    ssBanlist << FLATDATA(Params().MessageStart());
-    ssBanlist << banSet;
-    uint256 hash = Hash(ssBanlist.begin(), ssBanlist.end());
-    ssBanlist << hash;
-
-    // open temp output file, and associate with CAutoFile
-    boost::filesystem::path pathTmp = GetDataDir() / tmpfn;
-    FILE *file = fopen(pathTmp.string().c_str(), "wb");
-    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
-        return error("%s: Failed to open file %s", __func__, pathTmp.string());
-
-    // Write and commit header, data
-    try {
-        fileout << ssBanlist;
-    }
-    catch (const std::exception& e) {
-        return error("%s: Serialize or I/O error - %s", __func__, e.what());
-    }
-    FileCommit(fileout.Get());
-    fileout.fclose();
-
-    // replace existing banlist.dat, if any, with new banlist.dat.XXXX
-    if (!RenameOver(pathTmp, pathBanlist))
-        return error("%s: Rename-into-place failed", __func__);
-
-    return true;
-}
-
-bool CBanDB::Read(banmap_t& banSet)
-{
-    // open input file, and associate with CAutoFile
-    FILE *file = fopen(pathBanlist.string().c_str(), "rb");
-    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-        return error("%s: Failed to open file %s", __func__, pathBanlist.string());
-
-    // use file size to size memory buffer
-    uint64_t fileSize = boost::filesystem::file_size(pathBanlist);
-    uint64_t dataSize = 0;
-    // Don't try to resize to a negative number if file is small
-    if (fileSize >= sizeof(uint256))
-        dataSize = fileSize - sizeof(uint256);
-    vector<unsigned char> vchData;
-    vchData.resize(dataSize);
-    uint256 hashIn;
-
-    // read data and checksum from file
-    try {
-        filein.read((char *)&vchData[0], dataSize);
-        filein >> hashIn;
-    }
-    catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
-    }
-    filein.fclose();
-
-    CDataStream ssBanlist(vchData, SER_DISK, CLIENT_VERSION);
-
-    // verify stored checksum matches input data
-    uint256 hashTmp = Hash(ssBanlist.begin(), ssBanlist.end());
-    if (hashIn != hashTmp)
-        return error("%s: Checksum mismatch, data corrupted", __func__);
-
-    unsigned char pchMsgTmp[4];
-    try {
-        // de-serialize file header (network specific magic number) and ..
-        ssBanlist >> FLATDATA(pchMsgTmp);
-
-        // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
-            return error("%s: Invalid network magic number", __func__);
-        
-        // de-serialize address data into one CAddrMan object
-        ssBanlist >> banSet;
-    }
-    catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s", __func__, e.what());
-    }
-    
-    return true;
-}
-
-void DumpBanlist()
-{
-    int64_t nStart = GetTimeMillis();
-
-    CNode::SweepBanned(); //clean unused entires (if bantime has expired)
-
-    CBanDB bandb;
-    banmap_t banmap;
-    CNode::GetBanned(banmap);
-    bandb.Write(banmap);
-
-    LogPrint("net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
-             banmap.size(), GetTimeMillis() - nStart);
 }

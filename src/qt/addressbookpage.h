@@ -45,7 +45,7 @@ public:
     void setModel(AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
 
-public Q_SLOTS:
+public slots:
     void done(int retval);
 
 private:
@@ -59,7 +59,7 @@ private:
     QAction *deleteAction; // to be able to explicitly disable it
     QString newAddressToSelect;
 
-private Q_SLOTS:
+private slots:
     /** Delete currently selected address entry */
     void on_deleteAddress_clicked();
     /** Create a new address for receiving coins and / or add a new address book entry */
@@ -80,7 +80,7 @@ private Q_SLOTS:
     /** New entry/entries were added to address table */
     void selectNewAddress(const QModelIndex &parent, int begin, int /*end*/);
 
-Q_SIGNALS:
+signals:
     void sendCoins(QString addr);
 };
 

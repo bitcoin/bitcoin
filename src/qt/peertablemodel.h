@@ -68,7 +68,7 @@ public:
     void sort(int column, Qt::SortOrder order);
     /*@}*/
 
-public Q_SLOTS:
+public slots:
     void refresh();
 
 private:

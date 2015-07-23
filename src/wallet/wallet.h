@@ -28,8 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
-
 /**
  * Settings
  */
@@ -378,9 +376,6 @@ public:
         return (GetDebit(filter) > 0);
     }
 
-    // True if only scriptSigs are different
-    bool IsEquivalentTo(const CWalletTx& tx) const;
-
     bool IsTrusted() const;
 
     bool WriteToDisk(CWalletDB *pwalletdb);
@@ -630,9 +625,8 @@ public:
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason);
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
-                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend,
+                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     static CFeeRate minTxFee;
@@ -685,13 +679,6 @@ public:
         }
     }
 
-    void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
-    void ResetRequestCount(const uint256 &hash)
-    {
-        LOCK(cs_wallet);
-        mapRequestCount[hash] = 0;
-    };
-    
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // setKeyPool
@@ -747,7 +734,7 @@ public:
 };
 
 /** A key allocated from the key pool. */
-class CReserveKey : public CReserveScript
+class CReserveKey
 {
 protected:
     CWallet* pwallet;
@@ -768,7 +755,6 @@ public:
     void ReturnKey();
     bool GetReservedKey(CPubKey &pubkey);
     void KeepKey();
-    void KeepScript() { KeepKey(); }
 };
 
 

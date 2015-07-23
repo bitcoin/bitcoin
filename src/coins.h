@@ -7,7 +7,6 @@
 #define BITCOIN_COINS_H
 
 #include "compressor.h"
-#include "core_memusage.h"
 #include "memusage.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -258,7 +257,8 @@ public:
     size_t DynamicMemoryUsage() const {
         size_t ret = memusage::DynamicUsage(vout);
         BOOST_FOREACH(const CTxOut &out, vout) {
-            ret += RecursiveDynamicUsage(out.scriptPubKey);
+            const std::vector<unsigned char> *script = &out.scriptPubKey;
+            ret += memusage::DynamicUsage(*script);
         }
         return ret;
     }

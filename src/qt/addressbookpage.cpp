@@ -254,7 +254,8 @@ void AddressBookPage::done(int retval)
     // Figure out which address was selected, and return it
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
-    Q_FOREACH (const QModelIndex& index, indexes) {
+    foreach (QModelIndex index, indexes)
+    {
         QVariant address = table->model()->data(index);
         returnValue = address.toString();
     }

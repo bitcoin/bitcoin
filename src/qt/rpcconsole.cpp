@@ -60,10 +60,10 @@ class RPCExecutor : public QObject
 {
     Q_OBJECT
 
-public Q_SLOTS:
+public slots:
     void request(const QString &command);
 
-Q_SIGNALS:
+signals:
     void reply(int category, const QString &command);
 };
 
@@ -95,7 +95,7 @@ bool parseCommandLine(std::vector<std::string> &args, const std::string &strComm
         STATE_ESCAPE_DOUBLEQUOTED
     } state = STATE_EATING_SPACES;
     std::string curarg;
-    Q_FOREACH(char ch, strCommand)
+    foreach(char ch, strCommand)
     {
         switch(state)
         {
@@ -158,7 +158,7 @@ void RPCExecutor::request(const QString &command)
     std::vector<std::string> args;
     if(!parseCommandLine(args, command.toStdString()))
     {
-        Q_EMIT reply(RPCConsole::CMD_ERROR, QString("Parse error: unbalanced ' or \""));
+        emit reply(RPCConsole::CMD_ERROR, QString("Parse error: unbalanced ' or \""));
         return;
     }
     if(args.empty())
@@ -180,7 +180,7 @@ void RPCExecutor::request(const QString &command)
         else
             strPrint = result.write(2);
 
-        Q_EMIT reply(RPCConsole::CMD_REPLY, QString::fromStdString(strPrint));
+        emit reply(RPCConsole::CMD_REPLY, QString::fromStdString(strPrint));
     }
     catch (UniValue& objError)
     {
@@ -188,16 +188,16 @@ void RPCExecutor::request(const QString &command)
         {
             int code = find_value(objError, "code").get_int();
             std::string message = find_value(objError, "message").get_str();
-            Q_EMIT reply(RPCConsole::CMD_ERROR, QString::fromStdString(message) + " (code " + QString::number(code) + ")");
+            emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(message) + " (code " + QString::number(code) + ")");
         }
         catch (const std::runtime_error&) // raised when converting to invalid type, i.e. missing code or message
         {   // Show raw JSON object
-            Q_EMIT reply(RPCConsole::CMD_ERROR, QString::fromStdString(objError.write()));
+            emit reply(RPCConsole::CMD_ERROR, QString::fromStdString(objError.write()));
         }
     }
     catch (const std::exception& e)
     {
-        Q_EMIT reply(RPCConsole::CMD_ERROR, QString("Error: ") + QString::fromStdString(e.what()));
+        emit reply(RPCConsole::CMD_ERROR, QString("Error: ") + QString::fromStdString(e.what()));
     }
 }
 
@@ -245,7 +245,7 @@ RPCConsole::RPCConsole(QWidget *parent) :
 RPCConsole::~RPCConsole()
 {
     GUIUtil::saveWindowGeometry("nRPCConsoleWindow", this);
-    Q_EMIT stopExecutor();
+    emit stopExecutor();
     delete ui;
 }
 
@@ -431,7 +431,7 @@ void RPCConsole::on_lineEdit_returnPressed()
     if(!cmd.isEmpty())
     {
         message(CMD_REQUEST, cmd);
-        Q_EMIT cmdRequest(cmd);
+        emit cmdRequest(cmd);
         // Remove command, if already in history
         history.removeOne(cmd);
         // Append command to history
@@ -687,7 +687,7 @@ void RPCConsole::disconnectSelectedNode()
     QString strNode = GUIUtil::getEntryData(ui->peerWidget, 0, PeerTableModel::Address);
     // Find the node, disconnect it and clear the selected node
     if (CNode *bannedNode = FindNode(strNode.toStdString())) {
-        bannedNode->fDisconnect = true;
+        bannedNode->CloseSocketDisconnect();
         clearSelectedNode();
     }
 }

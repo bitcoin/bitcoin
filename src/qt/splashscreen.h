@@ -27,7 +27,7 @@ protected:
     void paintEvent(QPaintEvent *event);
     void closeEvent(QCloseEvent *event);
 
-public Q_SLOTS:
+public slots:
     /** Slot to call finish() method as it's not defined as slot */
     void slotFinish(QWidget *mainWin);
 

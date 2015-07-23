@@ -142,7 +142,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {
     if(filter)
-        Q_EMIT transactionClicked(filter->mapToSource(index));
+        emit transactionClicked(filter->mapToSource(index));
 }
 
 OverviewPage::~OverviewPage()

@@ -450,5 +450,5 @@ int AddressTableModel::lookupAddress(const QString &address) const
 
 void AddressTableModel::emitDataChanged(int idx)
 {
-    Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
+    emit dataChanged(index(idx, 0, QModelIndex()), index(idx, columns.length()-1, QModelIndex()));
 }

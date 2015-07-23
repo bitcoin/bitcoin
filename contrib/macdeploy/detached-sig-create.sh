@@ -7,7 +7,6 @@ CODESIGN=codesign
 TEMPDIR=sign.temp
 TEMPLIST=${TEMPDIR}/signatures.txt
 OUT=signature.tar.gz
-OUTROOT=osx
 
 if [ ! -n "$1" ]; then
   echo "usage: $0 <codesign args>"
@@ -24,7 +23,7 @@ grep -v CodeResources < "${TEMPLIST}" | while read i; do
   TARGETFILE="${BUNDLE}/`echo "${i}" | sed "s|.*${BUNDLE}/||"`"
   SIZE=`pagestuff "$i" -p | tail -2 | grep size | sed 's/[^0-9]*//g'`
   OFFSET=`pagestuff "$i" -p | tail -2 | grep offset | sed 's/[^0-9]*//g'`
-  SIGNFILE="${TEMPDIR}/${OUTROOT}/${TARGETFILE}.sign"
+  SIGNFILE="${TEMPDIR}/${TARGETFILE}.sign"
   DIRNAME="`dirname "${SIGNFILE}"`"
   mkdir -p "${DIRNAME}"
   echo "Adding detached signature for: ${TARGETFILE}. Size: ${SIZE}. Offset: ${OFFSET}"
@@ -33,7 +32,7 @@ done
 
 grep CodeResources < "${TEMPLIST}" | while read i; do
   TARGETFILE="${BUNDLE}/`echo "${i}" | sed "s|.*${BUNDLE}/||"`"
-  RESOURCE="${TEMPDIR}/${OUTROOT}/${TARGETFILE}"
+  RESOURCE="${TEMPDIR}/${TARGETFILE}"
   DIRNAME="`dirname "${RESOURCE}"`"
   mkdir -p "${DIRNAME}"
   echo "Adding resource for: "${TARGETFILE}""

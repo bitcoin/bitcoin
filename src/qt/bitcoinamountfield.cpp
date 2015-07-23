@@ -61,7 +61,7 @@ public:
     void setValue(const CAmount& value)
     {
         lineEdit()->setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
-        Q_EMIT valueChanged();
+        emit valueChanged();
     }
 
     void stepBy(int steps)
@@ -184,7 +184,7 @@ protected:
         return rv;
     }
 
-Q_SIGNALS:
+signals:
     void valueChanged();
 };
 
