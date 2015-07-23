@@ -184,7 +184,14 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
             if (!GetMasterSeed(hdPubKey.chainHash, masterSeed))
                 return false;
 
-            bip32MasterKey.SetMaster(&masterSeed[0], masterSeed.size());
+            if (masterSeed.size() == BIP32_EXTKEY_SIZE)
+            {
+                //if the seed size matches the BIP32_EXTKEY_SIZE, we assume its a encoded ext priv key
+                bip32MasterKey.Decode(&masterSeed[0]);
+            }
+            else
+                bip32MasterKey.SetMaster(&masterSeed[0], masterSeed.size());
+
             parentKey = bip32MasterKey;
         }
         else if (fragment == "c")

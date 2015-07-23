@@ -291,7 +291,7 @@ void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
     memcpy(vchFingerprint, code+1, 4);
     nChild = (code[5] << 24) | (code[6] << 16) | (code[7] << 8) | code[8];
     memcpy(chaincode.begin(), code+9, 32);
-    key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
+    key.Set(code+42, code+74, true);
 }
 
 bool ECC_InitSanityCheck() {

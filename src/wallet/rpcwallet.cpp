@@ -2502,12 +2502,13 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
 
     if (fHelp)
         throw runtime_error(
-                            "hdaddchain (<chainpath>|default) (<masterseed_hex>)\n"
+                            "hdaddchain (<chainpath>|default) (<masterseed_hex | master_priv_key>)\n"
                             "\nAdds a HD/Bip32 chain \n"
                             "\nArguments:\n"
                             "1. chainpath        (string, optional, default="+hd_default_chainpath+") chainpath for hd wallet structure\n"
                             "   m stands for master, c for internal/external key-switch, k stands for upcounting child key index"
                             "2. masterseed_hex   (string/hex, optional) use this seed for master key generation\n"
+                            "2. master_priv_key  (string/base58check, optional) will import the given extended master private key for this chain of keys\n"
                             "\nResult\n"
                             "{\n"
                             "  \"seed_hex\" : \"<hexstr>\",  (string) seed used during master key generation (only if no masterseed hex was provided\n"
@@ -2532,22 +2533,32 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
     if (params.size() > 0 && params[0].isStr() && params[0].get_str() != "default")
         chainPath = params[1].get_str(); //todo bip32 chainpath sanity
 
-    if (params.size() > 1 && params[1].isStr())
-    {
-        if (!IsHex(params[1].get_str()))
-            throw runtime_error("HD master seed must encoded in hex");
-
-        std::vector<unsigned char> seed = ParseHex(params[1].get_str());
-        if (seed.size() != bip32MasterSeedLength)
-            throw runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
-
-        memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
-        memory_cleanse(&seed[0], bip32MasterSeedLength);
-        fGenerateMasterSeed = false;
-    }
-
     std::string xpubOut;
     std::string xprivOut;
+
+    if (params.size() > 1 && params[1].isStr())
+    {
+        if (params[1].get_str().size() > 32)
+        {
+            //assume it's a base58check encoded key
+            xprivOut = params[1].get_str();
+        }
+        else
+        {
+            if (!IsHex(params[1].get_str()))
+                throw runtime_error("HD master seed must be encoded in hex");
+
+            std::vector<unsigned char> seed = ParseHex(params[1].get_str());
+            if (seed.size() != bip32MasterSeedLength)
+                throw runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
+
+            memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
+            memory_cleanse(&seed[0], bip32MasterSeedLength);
+            fGenerateMasterSeed = false;
+        }
+    }
+
+
 
     pwalletMain->HDAddHDChain(chainPath, fGenerateMasterSeed, vSeed, chainId, xprivOut, xpubOut);
     if (fGenerateMasterSeed)

@@ -88,7 +88,6 @@ void RunTest(const TestVector &test) {
         unsigned char data[74];
         key.Encode(data);
         pubkey.Encode(data);
-
         // Test private key
         CBitcoinExtKey b58key; b58key.SetKey(key);
         BOOST_CHECK(b58key.ToString() == derive.prv);
