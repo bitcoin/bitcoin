@@ -553,7 +553,7 @@ void MetaDExDialog::sendTrade(bool sell)
     if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
 
     // check if main net trading is allowed
-    if (!testeco && GetHeight() < MSC_METADEX_BLOCK) {
+    if (!isNonMainNet() && !testeco && GetHeight() < MSC_METADEX_BLOCK) {
         QMessageBox::critical( this, "Unable to send MetaDEx transaction",
         "Trading on main ecosystem properties is not yet active.\n\nPlease switch to a test ecosystem market to send trade transactions." );
         return;
