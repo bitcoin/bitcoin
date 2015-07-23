@@ -18,7 +18,7 @@ class CHDPubKey
 public:
     static const int CURRENT_VERSION=1;
     int nVersion;
-    CPubKey pubkey; //the acctual pubkey
+    CPubKey pubkey; //the actual pubkey
     unsigned int nChild; //child index
     HDChainID chainHash; //hash of the chains master pubkey
     std::string chainPath; //individual key chainpath like m/44'/0'/0'/0/1
@@ -147,7 +147,7 @@ public:
     //!writes a chain defined by given chainId to chainOut, returns false if not found
     bool GetChain(const HDChainID chainId, CHDChain& chainOut) const;
 
-    //!Derives a hdpubkey object in a given chain defined by chainId from the existing external oder internal chain root pub key
+    //!Derives a hdpubkey object in a given chain defined by chainId from the existing external or internal chain root pub key
     bool DeriveHDPubKeyAtIndex(const HDChainID chainId, CHDPubKey& hdPubKeyOut, unsigned int nIndex, bool internal) const;
 
     /**

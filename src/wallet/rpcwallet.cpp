@@ -2514,9 +2514,9 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
                             "}\n"
 
                             "\nExamples\n"
-                            + HelpExampleCli("hdaddchain", "set")
-                            + HelpExampleCli("hdaddchain", "set m/44'/0'/0'/c/k")
-                            + HelpExampleRpc("hdaddchain", "set m/44'/0'/0'/c/k")
+                            + HelpExampleCli("hdaddchain", "")
+                            + HelpExampleCli("hdaddchain", "m/44'/0'/0'/c/k")
+                            + HelpExampleRpc("hdaddchain", "m/44'/0'/0'/c/k")
                             );
 
     UniValue result(UniValue::VOBJ);
