@@ -226,7 +226,8 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL) return activeMasternode.GetStatus();
+        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL || !masternodeSync.IsSynced())
+            return activeMasternode.GetStatus();
 
         CTxIn vin = CTxIn();
         CPubKey pubkey = CScript();
@@ -235,7 +236,7 @@ Value masternode(const Array& params, bool fHelp)
         if(!found){
             return "Missing masternode input, please look at the documentation for instructions on masternode creation";
         } else {
-            return "No problems were found";
+            return activeMasternode.GetStatus();
         }
     }
 
@@ -541,9 +542,9 @@ Value masternodelist(const Array& params, bool fHelp)
                                mn.protocolVersion << " " <<
                                address2.ToString() << " " << setw(21) <<
                                mn.addr.ToString() << " " <<
-                               mn.lastPing.sigTime << " " << setw(8) <<
-                               (mn.lastPing.sigTime - mn.sigTime) << " " <<
-                               mn.GetLastPaid();
+                               (int64_t)mn.lastPing.sigTime << " " << setw(8) <<
+                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
+                               (int64_t)mn.GetLastPaid();
                 std::string output = stringStream.str();
                 stringStream << " " << strVin;
                 if(strFilter !="" && stringStream.str().find(strFilter) == string::npos &&
