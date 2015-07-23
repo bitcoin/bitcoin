@@ -578,19 +578,19 @@ void CheckWalletUpdate(bool forceUpdate)
 int TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_t amountInvested, int nBlock, unsigned int nTime)
 {
     const int secondsPerWeek = 60 * 60 * 24 * 7;
+    const CConsensusParams& params = ConsensusParams();
 
-    if (nBlock >= GENESIS_BLOCK && nBlock <= LAST_EXODUS_BLOCK || isNonMainNet()) {
-        int deadlineTimeleft = 1377993600 - nTime;
-        double bonusPercentage = 0.10 * deadlineTimeleft / secondsPerWeek;
+    if (nBlock >= params.GENESIS_BLOCK && nBlock <= params.LAST_EXODUS_BLOCK) {
+        int deadlineTimeleft = params.exodusDeadline - nTime;
+        double bonusPercentage = params.exodusBonusPerWeek * deadlineTimeleft / secondsPerWeek;
         double bonus = 1.0 + std::max(bonusPercentage, 0.0);
 
         if (isNonMainNet()) {
-            bonus = 1;
             // TODO: seems useless, if limited to non-mainnet; should be removed
             if (sender == exodus_address) return 1; // sending from Exodus should not be fundraising anything
         }
 
-        int64_t amountGenerated = round(100 * amountInvested * bonus);
+        int64_t amountGenerated = round(params.exodusReward * amountInvested * bonus);
         if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
 
         // TODO: return result, grant somewhere else
