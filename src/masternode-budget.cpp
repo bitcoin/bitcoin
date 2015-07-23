@@ -119,7 +119,7 @@ void CBudgetManager::SubmitFinalBudget()
 
     int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     if(nSubmittedFinalBudget >= nBlockStart) return;
-    if(nBlockStart - pindexPrev->nHeight > 100) return;
+    if(nBlockStart - pindexPrev->nHeight > 576*2) return; //submit final budget 2 days before payment
 
     std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
     std::string strBudgetName = "main";
