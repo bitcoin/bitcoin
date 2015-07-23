@@ -5,6 +5,9 @@ class uint256;
 
 #include <stdint.h>
 
+#include <limits>
+#include <string>
+
 namespace mastercore
 {
 //! Starting block for parsing in regtest mode
@@ -36,6 +39,80 @@ const int P2SH_BLOCK = 322000;
 //! Block to enable OP_RETURN based encoding
 const int OP_RETURN_BLOCK = 999999;
 
+// TODO: rename allcaps variable names
+// TODO: push down value initialization
+// TODO: remove global heights
+
+/** Base class for consensus parameters.
+ */
+class CConsensusParams
+{
+public:
+    //! Earily bird bonus per week of Exodus crowdsale
+    double exodusBonusPerWeek;
+    //! Deadline of Exodus crowdsale as Unix timestamp
+    unsigned int exodusDeadline;
+    //! Number of MSC/TMSC generated per unit invested
+    int64_t exodusReward;
+    //! First block of the Exodus crowdsale
+    int GENESIS_BLOCK;
+    //! Last block of the Exodus crowdsale
+    int LAST_EXODUS_BLOCK;
+
+protected:
+    /** Constructor, only to be called from derived classes. */
+    CConsensusParams() {}
+};
+
+/** Consensus parameters for mainnet.
+ */
+class CMainConsensusParams: public CConsensusParams
+{
+public:
+    CMainConsensusParams()
+    {
+        exodusBonusPerWeek = 0.10;
+        exodusDeadline = 1377993600;
+        exodusReward = 100;
+        GENESIS_BLOCK = 249498;
+        LAST_EXODUS_BLOCK = 255365;
+    }
+};
+
+/** Consensus parameters for testnet.
+ */
+class CTestNetConsensusParams: public CConsensusParams
+{
+public:
+    CTestNetConsensusParams()
+    {
+        exodusBonusPerWeek = 0.00;
+        exodusDeadline = 1377993600;
+        exodusReward = 100;
+        GENESIS_BLOCK = 263000;
+        LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+    }
+};
+
+/** Consensus parameters for regtest mode.
+ */
+class CRegTestConsensusParams: public CConsensusParams
+{
+public:
+    CRegTestConsensusParams()
+    {
+        exodusBonusPerWeek = 0.00;
+        exodusDeadline = 1377993600;
+        exodusReward = 100;
+        GENESIS_BLOCK = 101;
+        LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+    }
+};
+
+/** Returns consensus parameters for the given network. */
+CConsensusParams& ConsensusParams(const std::string& network);
+/** Returns currently active consensus parameter. */
+const CConsensusParams& ConsensusParams();
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */

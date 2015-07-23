@@ -10,10 +10,13 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/utilsbitcoin.h"
 
+#include "chainparams.h"
 #include "script/standard.h"
+#include "sync.h"
 
 #include <openssl/sha.h>
 #include <stdint.h>
+#include <string>
 
 namespace mastercore
 {
@@ -77,6 +80,48 @@ static const int txRestrictionsRules[][3] = {
     // end of array marker, in addition to sizeof/sizeof
     {-1,-1},
 };
+
+//! Guards global consensus paramter
+static CCriticalSection cs_consensus_params;
+//! Currently active consensus parameter
+static CConsensusParams* pCurrentConsensusParams;
+// Parameters for each network:
+static CMainConsensusParams mainConsensusParams;
+static CTestNetConsensusParams testNetConsensusParams;
+static CRegTestConsensusParams regTestConsensusParams;
+
+/**
+ * Returns consensus parameters for the given network.
+ */
+CConsensusParams& ConsensusParams(const std::string& network)
+{
+    if (network == "main") {
+        return mainConsensusParams;
+    }
+    if (network == "test") {
+        return testNetConsensusParams;
+    }
+    if (network == "regtest") {
+        return regTestConsensusParams;
+    }
+    // Fallback:
+    return mainConsensusParams;
+}
+
+/**
+ * Returns currently active consensus parameter.
+ */
+const CConsensusParams& ConsensusParams()
+{
+    LOCK(cs_consensus_params);
+
+    if (!pCurrentConsensusParams) {
+        const std::string& network = Params().NetworkIDString();
+        pCurrentConsensusParams = &ConsensusParams(network);
+    }
+
+    return *pCurrentConsensusParams;
+}
 
 /**
  * Checks, if the script type is allowed as input.
