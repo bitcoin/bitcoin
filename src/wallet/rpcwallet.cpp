@@ -2531,14 +2531,14 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
     HDChainID chainId;
     std::string chainPath = hd_default_chainpath;
     if (params.size() > 0 && params[0].isStr() && params[0].get_str() != "default")
-        chainPath = params[1].get_str(); //todo bip32 chainpath sanity
+        chainPath = params[0].get_str(); //todo bip32 chainpath sanity
 
     std::string xpubOut;
     std::string xprivOut;
 
     if (params.size() > 1 && params[1].isStr())
     {
-        if (params[1].get_str().size() > 32)
+        if (params[1].get_str().size() > 32*2) //hex
         {
             //assume it's a base58check encoded key
             xprivOut = params[1].get_str();
