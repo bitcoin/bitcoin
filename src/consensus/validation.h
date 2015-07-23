@@ -75,6 +75,7 @@ public:
     }
     unsigned char GetRejectCode() const { return chRejectCode; }
     std::string GetRejectReason() const { return strRejectReason; }
+    int GetDoS() const { return nDoS; }
 };
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H

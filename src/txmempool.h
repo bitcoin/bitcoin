@@ -14,21 +14,12 @@
 #include "sync.h"
 
 class CAutoFile;
-
-inline double AllowFreeThreshold()
-{
-    return COIN * 144 / 250;
-}
-
-inline bool AllowFree(double dPriority)
-{
-    // Large (in bytes) low-priority (new, small-coin) transactions
-    // need a fee.
-    return dPriority > AllowFreeThreshold();
-}
+class CValidationState;
 
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
 
 /**
  * CTxMemPool stores these:
@@ -97,6 +88,8 @@ private:
 
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
     uint64_t cachedInnerUsage; //! sum of dynamic memory usage of all the map elements (NOT the maps themselves)
+    CAmount nStageFeesRemoved;
+    std::set<uint256> stage;
 
 public:
     mutable CCriticalSection cs;
@@ -117,6 +110,7 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
+    void removeUnchecked(const uint256& hash);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
@@ -137,6 +131,20 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
+
+    /**
+     * Resets stage and nStageFeesRemoved.
+     */
+    void ClearStaged();
+    /**
+     * Build a stage list (attribute) of transaction (hashes) to replace such that:
+     *  - The list is consistent (if a parent is included, all its dependencies are included as well).
+     *  - No dependencies of toadd are removed.
+     *  - The transactions have to be removed from the mempool to accept toadd (due to spend conflicts and/or insufficient space in the mempool). 
+     * @returns false if the new entry is rejected.
+     */
+    bool StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, bool& fReplacementAccepted, bool fLimitFree, const CCoinsViewCache& view);
+    void RemoveStaged(const uint256& txHash);
 
     unsigned long size()
     {
@@ -169,6 +177,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 
