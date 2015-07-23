@@ -106,7 +106,6 @@ void CMasternodeSync::Process()
                 uint256 n = 0;
                 pnode->PushMessage("mnvs", n); //sync masternode votes
             } else {
-                printf("finished\n");
                 RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
             RequestedMasternodeAttempt++;
