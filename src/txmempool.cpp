@@ -239,6 +239,7 @@ void CTxMemPool::clear()
     mapNextTx.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
+    bypassedSize = 0;
     ++nTransactionsUpdated;
 }
 
@@ -412,6 +413,7 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
+    LOCK(cs);
     for (unsigned int i = 0; i < tx.vin.size(); i++)
         if (exists(tx.vin[i].prevout.hash))
             return false;
@@ -459,32 +461,43 @@ bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd,
         return true;
     }
     size_t sizeToTrim = std::min(expsize - sizelimit, incUsage);
-    return TrimMempool(sizeToTrim, protect, nFeesReserved, toadd.GetTxSize(), toadd.GetFee(), true, stage, nFeesRemoved);
+    return TrimMempool(sizeToTrim, protect, nFeesReserved, toadd.GetTxSize(), toadd.GetFee(), true, 10, stage, nFeesRemoved);
 }
 
-bool CTxMemPool::SurplusTrim(int multiplier, CFeeRate minRelayRate, size_t usageToTrim, std::set<uint256>& stage) {
+void CTxMemPool::SurplusTrim(int multiplier, CFeeRate minRelayRate, size_t usageToTrim) {
     CFeeRate excessRate(multiplier * minRelayRate.GetFeePerK());
     std::set<uint256> noprotect;
     CAmount nFeesRemoved = 0;
+    std::set<uint256> stageTrimDelete;
     size_t sizeToTrim = usageToTrim / 4;  //Conservatively assume we have transactions at least 1/4 the size of the mempool space they've taken
-    return TrimMempool(usageToTrim, noprotect, 0, sizeToTrim, excessRate.GetFee(sizeToTrim), false, stage, nFeesRemoved);
+    if (TrimMempool(usageToTrim, noprotect, 0, sizeToTrim, excessRate.GetFee(sizeToTrim), false, 100, stageTrimDelete, nFeesRemoved)) {
+        size_t oldUsage = DynamicMemoryUsage();
+        size_t txsToDelete = stageTrimDelete.size();
+        RemoveStaged(stageTrimDelete);
+        size_t curUsage = DynamicMemoryUsage();
+        LogPrint("mempool", "Removing %u transactions (%ld total usage) using periodic trim from reserve size\n", txsToDelete, oldUsage - curUsage);
+    }
 }
 
 bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
-                             bool mustTrimAllSize, std::set<uint256>& stage, CAmount &nFeesRemoved) {
+                             bool mustTrimAllSize, int iterextra, std::set<uint256>& stage, CAmount &nFeesRemoved) {
     size_t usageRemoved = 0;
     indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
     int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
+    int iterperfail = 10;
+    int itertotal = 0;
+    int failmax = 10; //Try no more than 10 starting transactions
+    seed_insecure_rand();
     // Iterate from lowest feerate to highest feerate in the mempool:
     while (usageRemoved < sizeToTrim && it != mapTx.get<1>().rend()) {
-        const uint256& hash = it->GetTx().GetHash();
-        if (stage.count(hash)) {
-            // If the transaction is already staged for deletion, we know its descendants are already processed, so skip it.
+        if (insecure_rand()%10) {
+            // Only try 1/10 of the transactions so we don't get stuck on the same long chains
             it++;
             continue;
         }
-        if (GetRand(10)) {
-            // Only try 1/10 of the transactions, in order to have some chance to avoid very big chains.
+        const uint256& hash = it->GetTx().GetHash();
+        if (stage.count(hash)) {
+            // If the transaction is already staged for deletion, we know its descendants are already processed, so skip it.
             it++;
             continue;
         }
@@ -498,7 +511,6 @@ bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmo
         CAmount nowfee = 0; // Sum of the fees in 'now'.
         size_t nowsize = 0; // Sum of the tx sizes in 'now'.
         size_t nowusage = 0; // Sum of the memory usages of transactions in 'now'.
-        int iternow = 0; // Transactions we've inspected so far while determining whether 'hash' is acceptable.
         todo.push_back(it->GetTx().GetHash()); // Add 'hash' to the todo list, to initiate processing its children.
         bool good = true; // Whether including 'hash' (and all its descendants) is a good idea.
         // Iterate breadth-first over all descendants of transaction with hash 'hash'.
@@ -509,8 +521,8 @@ bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmo
                 good = false;
                 break;
             }
-            iternow++; // We only count transactions we actually had to go find in the mempool.
-            if (iternow + fails > 20) {
+            itertotal++; // We only count transactions we actually had to go find in the mempool.
+            if (itertotal > iterextra + iterperfail*(fails+1)) {
                 good = false;
                 break;
             }
@@ -545,9 +557,9 @@ bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmo
             nFeesRemoved += nowfee;
             usageRemoved += nowusage;
         } else {
-            fails += iternow;
-            if (fails > 10) {
-                // Bail out after traversing 32 transactions that are not acceptable.
+            fails++;
+            if (fails > failmax) {
+                // Bail out after traversing failmax transactions that are not acceptable.
                 break;
             }
         }
@@ -568,6 +580,7 @@ void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
 }
 
 int CTxMemPool::Expire(int64_t time) {
+    LOCK(cs);
     indexed_transaction_set::nth_index<2>::type::iterator it = mapTx.get<2>().begin();
     std::set<uint256> toremove;
     int ret = 0;

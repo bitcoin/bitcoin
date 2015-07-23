@@ -781,7 +781,7 @@ static std::string FormatStateMessage(const CValidationState &state)
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectAbsurdFee)
+                        bool* pfMissingInputs, bool fRejectAbsurdFee, bool safeToEvict)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
@@ -906,34 +906,56 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
+        size_t softcap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 700000;
+        size_t hardcap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+        size_t capstep = (hardcap - softcap) / 10;
+
+        {
+        LOCK(pool.cs); // Keep holding this lock from when we populate stagedelete, until they are deleted.
+        size_t curUsage = pool.DynamicMemoryUsage();
+
+        // During a reorg, it doesn't make sense to be evicting anything from the mempool to make
+        // room for txs readded from disconnected blocks.  If however after the reorg, there is significant
+        // growth in mempool size it could temporarily impede new txs, so it makes sense to try to trim away
+        // any growth.  We're not worried about free relay in this case, so there is no exact restriction on
+        // what fee rate we can use for eviction, so just use the highest logical choice which is the fee rate
+        // of the current ratezone.
+        if (safeToEvict && pool.bypassedSize) {
+            if (curUsage > softcap) {
+                size_t trimGoal = std::min(pool.bypassedSize, curUsage - softcap);
+                int rateZone = (curUsage - softcap)/capstep + 1;
+                int rateMultForTrim = 1 << rateZone;
+                pool.SurplusTrim(rateMultForTrim, ::minRelayTxFee, trimGoal);
+            }
+            pool.bypassedSize = 0;
+        }
         // If the predicted mempool usage is under the softcap, StageTrimToSize will return success.
         // Otherwise StageTrimToSize will attempt to find appropriate transactions of lesser
         // feerate to evict from the mempool.  If this fails and the mempool usage would be under
         // the hardcap there is an opportunity for this transaction to enter the mempool anyway if
         // it has a fee high enough to pass an increased minimum relay feerate.  The are 10 bands
         // of doubling the effective minimum feerate between the softcap and hardcap.
-        size_t softcap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 700000;
-        size_t hardcap = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-        size_t capstep = (hardcap - softcap) / 10;
         std::set<uint256> stagedelete;
         CAmount nFeesDeleted = 0;
-        if (!pool.StageTrimToSize(softcap, entry, nFeesRequired, stagedelete, nFeesDeleted)) {
-            size_t expsize = pool.DynamicMemoryUsage() + pool.GuessDynamicMemoryUsage(entry);
+        if (safeToEvict && !pool.StageTrimToSize(softcap, entry, nFeesRequired, stagedelete, nFeesDeleted)) {
+            size_t expsize = curUsage + pool.GuessDynamicMemoryUsage(entry);
             if (expsize > hardcap) {
-                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap");
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap", false,
+                                 strprintf("%u > %u", expsize, hardcap));
             } else {
                 assert(expsize > softcap);
                 int rateZone = (expsize - softcap)/capstep + 1;
                 int relayMult = 1 << rateZone;
                 if (nFees < relayMult * ::minRelayTxFee.GetFee(nSize)) {
-                    return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap");
+                    return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap", false,
+                                     strprintf("Mult: %d - %d < %d", relayMult, nFees, relayMult * ::minRelayTxFee.GetFee(nSize)));
                 } else {
                     // The fee rate of this transaction is high enough to enter into the reserve space
                     // If stagedelete is non-empty at this point, it has only been populated with sets of transactions
                     // that each have lower fee-rate than this transaction.  As such, it is safe to also still delete
                     // the partial eviction set, as the effective fee rate for any remaining part of the transaction
                     // would only have been higher than the original fee rate, and still passed the test for reserve space.
-                    LogPrint("mempool", "Tx %s entering reserve space size/fee %ld %ld at usage of %5.2f and mult of %d\n",tx.GetHash().ToString().substr(0,10).c_str(),nSize,nFees, expsize, relayMult);
+                    LogPrint("mempool", "Tx %s eligible for reserve space size/fee %ld %ld at usage of %5.2f and mult of %d\n",tx.GetHash().ToString().substr(0,10).c_str(),nSize,nFees, expsize, relayMult);
                 }
             }
         }
@@ -991,26 +1013,26 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             LogPrint("mempool", "Removing %u transactions (%d fees) from the mempool to make space for %s\n", stagedelete.size(), nFeesDeleted, tx.GetHash().ToString());
             pool.RemoveStaged(stagedelete);
         }
-
+        }
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
 
         // Try to use excess relay fees paid by txs above the soft cap to trim in aggregate
         int64_t timeNow = GetTime();
-        size_t curUsage = pool.DynamicMemoryUsage();
-        size_t trimGoal = 1000000; //Try to trim up to 1MB worth of transactions at a time
-        if (curUsage > softcap + trimGoal && timeNow > lastSurplusTrimTime) {
-            // Require at least 1M at highest fee rate we'll try to trim at, and try to trim 1MB
-            lastSurplusTrimTime = timeNow;
-            int rateZone = (curUsage - softcap - trimGoal)/capstep + 1;
-            int rateMultForTrim = 1 << rateZone;
-            std::set<uint256> stageTrimDelete;
-            if (pool.SurplusTrim(rateMultForTrim-1, minRelayTxFee, trimGoal, stageTrimDelete)) {
-                size_t oldUsage = curUsage;
-                size_t txsToDelete = stageTrimDelete.size();
-                pool.RemoveStaged(stageTrimDelete);
-                curUsage = pool.DynamicMemoryUsage();
-                LogPrint("mempool", "Removing %u transactions (%ld total usage) using periodic trim from reserve size\n", txsToDelete, oldUsage - curUsage);
+        {
+            LOCK(pool.cs);
+            size_t curUsage = pool.DynamicMemoryUsage();
+            size_t trimGoal = 1000000; //Try to trim up to 1MB worth of transactions at a time
+            if (timeNow % 10 == 0) {
+                // Try to trim larger chunk of transactions on occasion.  It doesn't really matter
+                // if it turns out 1MB is greater than capstep (maxmempool < 33MB).
+                trimGoal = capstep;
+            }
+            if (safeToEvict && curUsage > softcap + trimGoal && timeNow > lastSurplusTrimTime) {
+                lastSurplusTrimTime = timeNow;
+                int rateZone = (curUsage - softcap - trimGoal)/capstep + 1;
+                int rateMultForTrim = 1 << rateZone;
+                pool.SurplusTrim(rateMultForTrim - 1, ::minRelayTxFee, trimGoal);
             }
         }
     }
@@ -2107,7 +2129,7 @@ bool static DisconnectTip(CValidationState &state) {
         // ignore validation errors in resurrected transactions
         list<CTransaction> removed;
         CValidationState stateDummy;
-        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
+        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, false, false))
             mempool.remove(tx, removed, true);
     }
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
@@ -2349,8 +2371,14 @@ bool ActivateBestChain(CValidationState &state, const CBlock *pblock) {
             if (pindexMostWork == NULL || pindexMostWork == chainActive.Tip())
                 return true;
 
+            size_t oldUsage = mempool.DynamicMemoryUsage();
             if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL))
                 return false;
+            size_t newUsage = mempool.DynamicMemoryUsage();
+            if (newUsage > oldUsage) {
+                LOCK(mempool.cs);
+                mempool.bypassedSize += (newUsage - oldUsage);
+            }
 
             pindexNewTip = chainActive.Tip();
             fInitialDownload = IsInitialBlockDownload();

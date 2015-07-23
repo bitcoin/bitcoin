@@ -159,6 +159,7 @@ public:
     indexed_transaction_set mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
+    size_t bypassedSize;
 
     CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
@@ -195,17 +196,23 @@ public:
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
 
-    /** Build a list of transaction (hashes) to remove such that:
-     *  - The list is consistent (if a parent is included, all its dependencies are included as well).
-     *  - No dependencies of toadd are removed.
-     *  - The total fees removed are not more than the fees added by toadd.
-     *  - The feerate of what is removed is not better than the feerate of toadd.
-     *  - Removing said list will reduce the DynamicMemoryUsage after adding toadd, below sizelimit.
-     */
+    // StageTrimToSize will call TrimMempool for any mempool usage over the size limit up to the size of toadd.
     bool StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, CAmount nFeesReserved, std::set<uint256>& stage, CAmount& nFeesRemoved);
-    bool SurplusTrim(int mutliplier, CFeeRate minRelayRate, size_t usageToTrim, std::set<uint256> &stage);
+    // SurplusTrim will call TrimMempool for usageToTrim with synthetic fees and size based on multiplier*minRelayRate.
+    void SurplusTrim(int mutliplier, CFeeRate minRelayRate, size_t usageToTrim);
+private:
+    /** TrimMempool will build a list of transactions (hashes) to remove until it reaches sizeToTrim:
+     *  - No txs in protect are removed.
+     *  - The total fees removed are not more than the feeToUse (minus any nFeesReserved).
+     *  - The feerate of what is removed is not better than the feerate of feeToUse/sizeToUse.
+     *  - if mustTrimAllSize return false unless sizeToTrim is met
+     *  - iterextra helps provide a bound on how many txs will be iterated over.
+     *  - The list returned in stage is consistent (if a parent is included, all its descendants are included as well).
+     *  - Total fees removed are returned in nfeesRemoved
+     */
     bool TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
-		     bool mustTrimAllSize, std::set<uint256>& stage, CAmount &nfeesRemoved);
+		     bool mustTrimAllSize, int iterextra, std::set<uint256>& stage, CAmount &nfeesRemoved);
+public:
     void RemoveStaged(std::set<uint256>& stage);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
