@@ -59,6 +59,23 @@ $(package)_config_opts += -qt-libpng
 $(package)_config_opts += -qt-libjpeg
 $(package)_config_opts += -qt-zlib
 $(package)_config_opts += -qt-pcre
+$(package)_config_opts += -no-pulseaudio
+$(package)_config_opts += -no-openvg
+$(package)_config_opts += -no-xrender
+$(package)_config_opts += -no-alsa
+$(package)_config_opts += -no-mtdev
+$(package)_config_opts += -no-gstreamer
+$(package)_config_opts += -no-mitshm
+$(package)_config_opts += -no-kms
+$(package)_config_opts += -no-reduce-relocations
+$(package)_config_opts += -no-egl
+$(package)_config_opts += -no-eglfs
+$(package)_config_opts += -no-linuxfb
+$(package)_config_opts += -no-xinput2
+$(package)_config_opts += -no-libudev
+$(package)_config_opts += -no-use-gold-linker
+$(package)_config_opts += -reduce-exports
+$(package)_config_opts += -optimized-qmake
 
 ifneq ($(build_os),darwin)
 $(package)_config_opts_darwin = -xplatform macx-clang-linux
@@ -72,14 +89,9 @@ endif
 
 $(package)_config_opts_linux  = -qt-xkbcommon
 $(package)_config_opts_linux += -qt-xcb
-$(package)_config_opts_linux += -no-eglfs
-$(package)_config_opts_linux += -no-linuxfb
 $(package)_config_opts_linux += -system-freetype
 $(package)_config_opts_linux += -no-sm
 $(package)_config_opts_linux += -fontconfig
-$(package)_config_opts_linux += -no-xinput2
-$(package)_config_opts_linux += -no-libudev
-$(package)_config_opts_linux += -no-egl
 $(package)_config_opts_linux += -no-opengl
 $(package)_config_opts_arm_linux  = -platform linux-g++ -xplatform $(host)
 $(package)_config_opts_i686_linux  = -xplatform linux-g++-32
