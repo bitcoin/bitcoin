@@ -147,12 +147,13 @@ AC_ARG_ENABLE([debug],
     [enable_debug=no])
 
 if test "x$enable_debug" = xyes; then
+    CPPFLAGS="$CPPFLAGS -DDEBUG -DDEBUG_LOCKORDER"
     if test "x$GCC" = xyes; then
-        CFLAGS="-g3 -O0 -DDEBUG"
+        CFLAGS="$CFLAGS -g3 -O0"
     fi
     
     if test "x$GXX" = xyes; then
-        CXXFLAGS="-g3 -O0 -DDEBUG"
+        CXXFLAGS="$CXXFLAGS -g3 -O0"
     fi
 fi 
 
@@ -162,7 +163,7 @@ fi
 if test "x$CXXFLAGS_overridden" = "xno"; then
   CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
 fi
-CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
+CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],

@@ -71,6 +71,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listunspent", 1 },
     { "listunspent", 2 },
     { "getblock", 1 },
+    { "getblockheader", 1 },
     { "gettransaction", 1 },
     { "getrawtransaction", 1 },
     { "createrawtransaction", 0 },
@@ -78,6 +79,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "signrawtransaction", 1 },
     { "signrawtransaction", 2 },
     { "sendrawtransaction", 1 },
+    { "fundrawtransaction", 1 },
     { "gettxout", 1 },
     { "gettxout", 2 },
     { "gettxoutproof", 0 },
@@ -93,6 +95,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "estimatepriority", 0 },
     { "prioritisetransaction", 1 },
     { "prioritisetransaction", 2 },
+    { "setban", 2 },
+    { "setban", 3 },
 };
 
 class CRPCConvertTable

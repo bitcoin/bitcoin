@@ -43,6 +43,14 @@ public:
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const;
 };
 
+/** A signature creator that just produces 72-byte empty signatyres. */
+class DummySignatureCreator : public BaseSignatureCreator {
+public:
+    DummySignatureCreator(const CKeyStore* keystoreIn) : BaseSignatureCreator(keystoreIn) {}
+    const BaseSignatureChecker& Checker() const;
+    bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const;
+};
+
 /** Produce a script signature using a generic signature creator. */
 bool ProduceSignature(const BaseSignatureCreator& creator, const CScript& scriptPubKey, CScript& scriptSig);
 

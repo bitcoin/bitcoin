@@ -56,7 +56,7 @@ public:
     */
     QWidget *setupTabChain(QWidget *prev);
 
-signals:
+Q_SIGNALS:
     void valueChanged();
 
 protected:
@@ -67,7 +67,7 @@ private:
     AmountSpinBox *amount;
     QValueComboBox *unit;
 
-private slots:
+private Q_SLOTS:
     void unitChanged(int idx);
 
 };

@@ -53,9 +53,9 @@ int ClientModel::getNumConnections(unsigned int flags) const
         return vNodes.size();
 
     int nNum = 0;
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT))
-        nNum++;
+    BOOST_FOREACH(const CNode* pnode, vNodes)
+        if (flags & (pnode->fInbound ? CONNECTIONS_IN : CONNECTIONS_OUT))
+            nNum++;
 
     return nNum;
 }
@@ -117,15 +117,15 @@ void ClientModel::updateTimer()
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
 
-        emit numBlocksChanged(newNumBlocks, newBlockDate);
+        Q_EMIT numBlocksChanged(newNumBlocks, newBlockDate);
     }
 
-    emit bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
+    Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
 }
 
 void ClientModel::updateNumConnections(int numConnections)
 {
-    emit numConnectionsChanged(numConnections);
+    Q_EMIT numConnectionsChanged(numConnections);
 }
 
 void ClientModel::updateAlert(const QString &hash, int status)
@@ -138,11 +138,11 @@ void ClientModel::updateAlert(const QString &hash, int status)
         CAlert alert = CAlert::getAlertByHash(hash_256);
         if(!alert.IsNull())
         {
-            emit message(tr("Network Alert"), QString::fromStdString(alert.strStatusBar), CClientUIInterface::ICON_ERROR);
+            Q_EMIT message(tr("Network Alert"), QString::fromStdString(alert.strStatusBar), CClientUIInterface::ICON_ERROR);
         }
     }
 
-    emit alertsChanged(getStatusBarWarnings());
+    Q_EMIT alertsChanged(getStatusBarWarnings());
 }
 
 bool ClientModel::inInitialBlockDownload() const

@@ -43,7 +43,8 @@ related to the DNS seed operation.
 
 If these expectations cannot be satisfied the operator should
 discontinue providing services and contact the active Bitcoin
-Core development team as well as posting on bitcoin-development.
+Core development team as well as posting on
+[bitcoin-dev](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev).
 
 Behavior outside of these expectations may be reasonable in some
 situations but should be discussed in public in advance.

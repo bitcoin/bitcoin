@@ -11,10 +11,12 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "policy/policy.h"
 #include "pow.h"
 #include "txdb.h"
 #include "txmempool.h"
@@ -57,10 +59,12 @@ bool fTxIndex = false;
 bool fHavePruned = false;
 bool fPruneMode = false;
 bool fIsBareMultisigStd = true;
+bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = true;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
+bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
@@ -71,9 +75,9 @@ struct COrphanTx {
     CTransaction tx;
     NodeId fromPeer;
 };
-map<uint256, COrphanTx> mapOrphanTransactions;
-map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
-void EraseOrphansFor(NodeId peer);
+map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
+map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
+void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -433,13 +437,14 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 
         // Iterate over those blocks in vToFetch (in forward direction), adding the ones that
         // are not yet downloaded and not in flight to vBlocks. In the mean time, update
-        // pindexLastCommonBlock as long as all ancestors are already downloaded.
+        // pindexLastCommonBlock as long as all ancestors are already downloaded, or if it's
+        // already part of our chain (and therefore don't need it even if pruned).
         BOOST_FOREACH(CBlockIndex* pindex, vToFetch) {
             if (!pindex->IsValid(BLOCK_VALID_TREE)) {
                 // We consider the chain that this peer is on invalid.
                 return;
             }
-            if (pindex->nStatus & BLOCK_HAVE_DATA) {
+            if (pindex->nStatus & BLOCK_HAVE_DATA || chainActive.Contains(pindex)) {
                 if (pindex->nChainTx)
                     state->pindexLastCommonBlock = pindex;
             } else if (mapBlocksInFlight.count(pindex->GetBlockHash()) == 0) {
@@ -522,7 +527,7 @@ CBlockTreeDB *pblocktree = NULL;
 // mapOrphanTransactions
 //
 
-bool AddOrphanTx(const CTransaction& tx, NodeId peer)
+bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     uint256 hash = tx.GetHash();
     if (mapOrphanTransactions.count(hash))
@@ -552,7 +557,7 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer)
     return true;
 }
 
-void static EraseOrphanTx(uint256 hash)
+void static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
     if (it == mapOrphanTransactions.end())
@@ -586,7 +591,7 @@ void EraseOrphansFor(NodeId peer)
 }
 
 
-unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
+unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     unsigned int nEvicted = 0;
     while (mapOrphanTransactions.size() > nMaxOrphans)
@@ -600,76 +605,6 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
         ++nEvicted;
     }
     return nEvicted;
-}
-
-
-
-
-
-
-
-bool IsStandardTx(const CTransaction& tx, string& reason)
-{
-    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
-        reason = "version";
-        return false;
-    }
-
-    // Extremely large transactions with lots of inputs can cost the network
-    // almost as much to process as they cost the sender in fees, because
-    // computing signature hashes is O(ninputs*txsize). Limiting transactions
-    // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
-    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
-    if (sz >= MAX_STANDARD_TX_SIZE) {
-        reason = "tx-size";
-        return false;
-    }
-
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
-        // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
-        // keys. (remember the 520 byte limit on redeemScript size) That works
-        // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
-        // bytes of scriptSig, which we round off to 1650 bytes for some minor
-        // future-proofing. That's also enough to spend a 20-of-20
-        // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
-        // considered standard)
-        if (txin.scriptSig.size() > 1650) {
-            reason = "scriptsig-size";
-            return false;
-        }
-        if (!txin.scriptSig.IsPushOnly()) {
-            reason = "scriptsig-not-pushonly";
-            return false;
-        }
-    }
-
-    unsigned int nDataOut = 0;
-    txnouttype whichType;
-    BOOST_FOREACH(const CTxOut& txout, tx.vout) {
-        if (!::IsStandard(txout.scriptPubKey, whichType)) {
-            reason = "scriptpubkey";
-            return false;
-        }
-
-        if (whichType == TX_NULL_DATA)
-            nDataOut++;
-        else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
-            reason = "bare-multisig";
-            return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
-            reason = "dust";
-            return false;
-        }
-    }
-
-    // only one OP_RETURN txout is permitted
-    if (nDataOut > 1) {
-        reason = "multi-op-return";
-        return false;
-    }
-
-    return true;
 }
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
@@ -688,74 +623,6 @@ bool CheckFinalTx(const CTransaction &tx)
 {
     AssertLockHeld(cs_main);
     return IsFinalTx(tx, chainActive.Height() + 1, GetAdjustedTime());
-}
-
-/**
- * Check transaction inputs to mitigate two
- * potential denial-of-service attacks:
- *
- * 1. scriptSigs with extra data stuffed into them,
- *    not consumed by scriptPubKey (or P2SH script)
- * 2. P2SH scripts with a crazy number of expensive
- *    CHECKSIG/CHECKMULTISIG operations
- */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
-{
-    if (tx.IsCoinBase())
-        return true; // Coinbases don't use vin normally
-
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        const CTxOut& prev = mapInputs.GetOutputFor(tx.vin[i]);
-
-        vector<vector<unsigned char> > vSolutions;
-        txnouttype whichType;
-        // get the scriptPubKey corresponding to this input:
-        const CScript& prevScript = prev.scriptPubKey;
-        if (!Solver(prevScript, whichType, vSolutions))
-            return false;
-        int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
-        if (nArgsExpected < 0)
-            return false;
-
-        // Transactions with extra stuff in their scriptSigs are
-        // non-standard. Note that this EvalScript() call will
-        // be quick, because if there are any operations
-        // beside "push data" in the scriptSig
-        // IsStandardTx() will have already returned false
-        // and this method isn't called.
-        vector<vector<unsigned char> > stack;
-        if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
-            return false;
-
-        if (whichType == TX_SCRIPTHASH)
-        {
-            if (stack.empty())
-                return false;
-            CScript subscript(stack.back().begin(), stack.back().end());
-            vector<vector<unsigned char> > vSolutions2;
-            txnouttype whichType2;
-            if (Solver(subscript, whichType2, vSolutions2))
-            {
-                int tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
-                if (tmpExpected < 0)
-                    return false;
-                nArgsExpected += tmpExpected;
-            }
-            else
-            {
-                // Any other Script with less than 15 sigops OK:
-                unsigned int sigops = subscript.GetSigOpCount(true);
-                // ... extra data left on the stack after execution is OK, too:
-                return (sigops <= MAX_P2SH_SIGOPS);
-            }
-        }
-
-        if (stack.size() != (unsigned int)nArgsExpected)
-            return false;
-    }
-
-    return true;
 }
 
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
@@ -898,7 +765,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
-    if (Params().RequireStandard() && !IsStandardTx(tx, reason))
+    if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.DoS(0,
                          error("AcceptToMemoryPool: nonstandard transaction: %s", reason),
                          REJECT_NONSTANDARD, reason);
@@ -969,7 +836,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         // Check for non-standard pay-to-script-hash in inputs
-        if (Params().RequireStandard() && !AreInputsStandard(tx, view))
+        if (fRequireStandard && !AreInputsStandard(tx, view))
             return error("AcceptToMemoryPool: nonstandard transaction input");
 
         // Check that the transaction doesn't have an excessive number of
@@ -2192,7 +2059,6 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
     LogPrint("bench", "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
     {
         CCoinsViewCache view(pcoinsTip);
-        CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
         bool rv = ConnectBlock(*pblock, state, pindexNew, view);
         GetMainSignals().BlockChecked(*pblock, state);
         if (!rv) {
@@ -2200,7 +2066,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
                 InvalidBlockFound(pindexNew, state);
             return error("ConnectTip(): ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
-        mapBlockSource.erase(inv.hash);
+        mapBlockSource.erase(pindexNew->GetBlockHash());
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
         LogPrint("bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
         assert(view.Flush());
@@ -2808,36 +2674,37 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     uint256 hash = block.GetHash();
     BlockMap::iterator miSelf = mapBlockIndex.find(hash);
     CBlockIndex *pindex = NULL;
-    if (miSelf != mapBlockIndex.end()) {
-        // Block header is already known.
-        pindex = miSelf->second;
-        if (ppindex)
-            *ppindex = pindex;
-        if (pindex->nStatus & BLOCK_FAILED_MASK)
-            return state.Invalid(error("%s: block is marked invalid", __func__), 0, "duplicate");
-        return true;
-    }
-
-    if (!CheckBlockHeader(block, state))
-        return false;
-
-    // Get prev block index
-    CBlockIndex* pindexPrev = NULL;
     if (hash != chainparams.GetConsensus().hashGenesisBlock) {
+
+        if (miSelf != mapBlockIndex.end()) {
+            // Block header is already known.
+            pindex = miSelf->second;
+            if (ppindex)
+                *ppindex = pindex;
+            if (pindex->nStatus & BLOCK_FAILED_MASK)
+                return state.Invalid(error("%s: block is marked invalid", __func__), 0, "duplicate");
+            return true;
+        }
+
+        if (!CheckBlockHeader(block, state))
+            return false;
+
+        // Get prev block index
+        CBlockIndex* pindexPrev = NULL;
         BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
         if (mi == mapBlockIndex.end())
             return state.DoS(10, error("%s: prev block not found", __func__), 0, "bad-prevblk");
         pindexPrev = (*mi).second;
         if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
             return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
+
+        assert(pindexPrev);
+        if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
+            return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
+
+        if (!ContextualCheckBlockHeader(block, state, pindexPrev))
+            return false;
     }
-    assert(pindexPrev);
-    if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, hash))
-        return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
-
-    if (!ContextualCheckBlockHeader(block, state, pindexPrev))
-        return false;
-
     if (pindex == NULL)
         pindex = AddToBlockIndex(block);
 
@@ -3782,7 +3649,7 @@ std::string GetWarnings(const std::string& strFor)
 //
 
 
-bool static AlreadyHave(const CInv& inv)
+bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     switch (inv.type)
     {
@@ -4626,7 +4493,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
-    else if (strCommand == "alert")
+    else if (fAlerts && strCommand == "alert")
     {
         CAlert alert;
         vRecv >> alert;
@@ -4956,7 +4823,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     LogPrintf("Warning: not banning local peer %s!\n", pto->addr.ToString());
                 else
                 {
-                    CNode::Ban(pto->addr);
+                    CNode::Ban(pto->addr, BanReasonNodeMisbehaving);
                 }
             }
             state.fShouldBan = false;

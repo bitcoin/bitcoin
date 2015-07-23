@@ -5,9 +5,10 @@
 
 #include "script/sign.h"
 
-#include "primitives/transaction.h"
 #include "key.h"
 #include "keystore.h"
+#include "policy/policy.h"
+#include "primitives/transaction.h"
 #include "script/standard.h"
 #include "uint256.h"
 
@@ -274,4 +275,40 @@ CScript CombineSignatures(const CScript& scriptPubKey, const BaseSignatureChecke
     EvalScript(stack2, scriptSig2, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker());
 
     return CombineSignatures(scriptPubKey, checker, txType, vSolutions, stack1, stack2);
+}
+
+namespace {
+/** Dummy signature checker which accepts all signatures. */
+class DummySignatureChecker : public BaseSignatureChecker
+{
+public:
+    DummySignatureChecker() {}
+
+    bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
+    {
+        return true;
+    }
+};
+const DummySignatureChecker dummyChecker;
+}
+
+const BaseSignatureChecker& DummySignatureCreator::Checker() const
+{
+    return dummyChecker;
+}
+
+bool DummySignatureCreator::CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode) const
+{
+    // Create a dummy signature that is a valid DER-encoding
+    vchSig.assign(72, '\000');
+    vchSig[0] = 0x30;
+    vchSig[1] = 69;
+    vchSig[2] = 0x02;
+    vchSig[3] = 33;
+    vchSig[4] = 0x01;
+    vchSig[4 + 33] = 0x02;
+    vchSig[5 + 33] = 32;
+    vchSig[6 + 33] = 0x01;
+    vchSig[6 + 33 + 32] = SIGHASH_ALL;
+    return true;
 }
