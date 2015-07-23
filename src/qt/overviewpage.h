@@ -35,11 +35,11 @@ public:
     void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
 
-public Q_SLOTS:
+public slots:
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
-Q_SIGNALS:
+signals:
     void transactionClicked(const QModelIndex &index);
 
 private:
@@ -56,7 +56,7 @@ private:
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
 
-private Q_SLOTS:
+private slots:
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);

@@ -24,13 +24,13 @@ public:
     /** Specify model role to use as ordinal value (defaults to Qt::UserRole) */
     void setRole(int role);
 
-Q_SIGNALS:
+signals:
     void valueChanged();
 
 private:
     int role;
 
-private Q_SLOTS:
+private slots:
     void handleSelectionChanged(int idx);
 };
 

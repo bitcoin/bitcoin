@@ -83,7 +83,7 @@ private:
 
     bool eventFilter(QObject *obj, QEvent *event);
 
-private Q_SLOTS:
+private slots:
     void contextualMenu(const QPoint &);
     void dateRangeChanged();
     void showDetails();
@@ -95,13 +95,13 @@ private Q_SLOTS:
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
 
-Q_SIGNALS:
+signals:
     void doubleClicked(const QModelIndex&);
 
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 
-public Q_SLOTS:
+public slots:
     void chooseDate(int idx);
     void chooseType(int idx);
     void chooseWatchonly(int idx);

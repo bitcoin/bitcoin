@@ -147,10 +147,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
             return error("%s: Deserialize or I/O error - %s", __func__, e.what());
         }
     }
-    {
-        LOCK(cs_main);
-        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
-    }
+    stats.nHeight = mapBlockIndex.find(GetBestBlock())->second->nHeight;
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;

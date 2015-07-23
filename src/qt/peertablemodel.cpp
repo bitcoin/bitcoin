@@ -63,7 +63,7 @@ public:
 #if QT_VERSION >= 0x040700
             cachedNodeStats.reserve(vNodes.size());
 #endif
-            Q_FOREACH (CNode* pnode, vNodes)
+            foreach (CNode* pnode, vNodes)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
@@ -92,7 +92,7 @@ public:
         // build index map
         mapNodeRows.clear();
         int row = 0;
-        Q_FOREACH (const CNodeCombinedStats& stats, cachedNodeStats)
+        foreach (const CNodeCombinedStats& stats, cachedNodeStats)
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
@@ -220,9 +220,9 @@ const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)
 
 void PeerTableModel::refresh()
 {
-    Q_EMIT layoutAboutToBeChanged();
+    emit layoutAboutToBeChanged();
     priv->refreshPeers();
-    Q_EMIT layoutChanged();
+    emit layoutChanged();
 }
 
 int PeerTableModel::getRowByNodeId(NodeId nodeid)

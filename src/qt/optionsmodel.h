@@ -81,7 +81,7 @@ private:
     /// Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);
 
-Q_SIGNALS:
+signals:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
 };

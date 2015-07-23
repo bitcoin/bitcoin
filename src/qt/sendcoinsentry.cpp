@@ -114,7 +114,7 @@ void SendCoinsEntry::clear()
 
 void SendCoinsEntry::deleteClicked()
 {
-    Q_EMIT removeEntry(this);
+    emit removeEntry(this);
 }
 
 bool SendCoinsEntry::validate()
