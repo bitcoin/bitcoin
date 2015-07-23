@@ -428,7 +428,7 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 }
 
 // Is this masternode scheduled to get paid soon? 
-// -- Only look ahead up to 7 blocks to allow for propagation
+// -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 winners
 bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
@@ -438,7 +438,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
     mnpayee = GetScriptForDestination(mn.pubkey.GetID());
 
     CScript payee;
-    for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+7; h++){
+    for(int64_t h = pindexPrev->nHeight; h <= pindexPrev->nHeight+8; h++){
         if(h == nNotBlockHeight) continue;
         if(mapMasternodeBlocks.count(h)){
             if(mapMasternodeBlocks[h].GetPayee(payee)){

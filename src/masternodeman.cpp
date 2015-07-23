@@ -407,7 +407,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         // //check protocol version
         if(mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
 
-        //it's in the list (up to 7 entries ahead of current block to allow propagation) -- so let's skip it
+        //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //make sure it has as many confirmations as there are masternodes
@@ -420,8 +420,8 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     sort(vecMasternodeLastPaid.rbegin(), vecMasternodeLastPaid.rend(), CompareValueOnly());
 
     // Look at 1/10 of the oldest nodes (by last payment), calculate their scores and pay the best one
-    //  -- This doesn't look at who is being paid in the +7-10 blocks, allowing for double payments very rarely
-    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*3 --(chance per block * chances before IsScheduled will fire)
+    //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
+    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2 --(chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = mnodeman.CountEnabled()/10;
     int nCount = 0; 
     uint256 nHigh = 0;
