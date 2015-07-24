@@ -128,5 +128,47 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
     return bAllowed && !bBlackHole;
 }
 
+/** Obtains a hash of all balances to use for consensus verification & checkpointing. */
+uint256 GetConsensusHash()
+{
+    // allocate and init a SHA256_CTX
+    SHA256_CTX shaCtx;
+    SHA256_Init(&shaCtx);
+
+    // obtain a lock while we interrogate the tally map
+    LOCK(cs_tally);
+
+    // loop through the tally map, updating the sha context with the data from each balance & type
+    for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
+        const std::string& address = my_it->first;
+        CMPTally& tally = my_it->second;
+        tally.init();
+        uint32_t propertyId;
+        while (0 != (propertyId = (tally.next()))) {
+            /*
+            for maximum flexibility so other implementations (eg OmniWallet & Chest) can also apply this methodology without
+            necessarily using the same exact data types (which would be needed to hash the data bytes directly), create a
+            string in the following format for each address/property id combo to use for hashing:
+
+                address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve
+
+            note: pending tally is ignored
+            */
+            const std::string& dataStr = address + "|" + FormatIndivisibleMP(propertyId) + "|" +
+                                         FormatIndivisibleMP(tally.getMoney(propertyId, BALANCE)) + "|" +
+                                         FormatIndivisibleMP(tally.getMoney(propertyId, SELLOFFER_RESERVE)) + "|" +
+                                         FormatIndivisibleMP(tally.getMoney(propertyId, ACCEPT_RESERVE)) + "|" +
+                                         FormatIndivisibleMP(tally.getMoney(propertyId, METADEX_RESERVE));
+
+            // update the sha context with the data string
+            SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+        }
+    }
+
+    // extract the final result and return the hash
+    uint256 consensusHash;
+    SHA256_Final((unsigned char*)&consensusHash, &shaCtx);
+    return consensusHash;
+}
 
 } // namespace mastercore
