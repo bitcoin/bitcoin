@@ -21,7 +21,7 @@ typedef struct {
     secp256k1_fe_t fe_x, fe_y;
     secp256k1_ge_t ge_x, ge_y;
     secp256k1_gej_t gej_x, gej_y;
-    unsigned char data[32];
+    unsigned char data[64];
     int wnaf[256];
 } bench_inv_t;
 
@@ -51,6 +51,7 @@ void bench_setup(void* arg) {
     secp256k1_gej_set_ge(&data->gej_x, &data->ge_x);
     secp256k1_gej_set_ge(&data->gej_y, &data->ge_y);
     memcpy(data->data, init_x, 32);
+    memcpy(data->data + 32, init_y, 32);
 }
 
 void bench_scalar_add(void* arg) {
@@ -265,7 +266,7 @@ void bench_rfc6979_hmac_sha256(void* arg) {
     secp256k1_rfc6979_hmac_sha256_t rng;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_rfc6979_hmac_sha256_initialize(&rng, data->data, 32, data->data, 32, NULL, 0);
+        secp256k1_rfc6979_hmac_sha256_initialize(&rng, data->data, 64);
         secp256k1_rfc6979_hmac_sha256_generate(&rng, data->data, 32);
     }
 }
