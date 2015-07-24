@@ -128,7 +128,7 @@ Value masternode(const Array& params, bool fHelp)
         (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" &&
          strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
         strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
-        strCommand != "outputs" && strCommand != "status"))
+        strCommand != "outputs" && strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
                 "masternode \"command\"... ( \"passphrase\" )\n"
                 "Set of commands to execute masternode related actions\n"
@@ -462,6 +462,36 @@ Value masternode(const Array& params, bool fHelp)
         for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
             obj.push_back(Pair(strprintf("%d", nHeight),       GetRequiredPaymentsString(nHeight)));
+        }
+
+        return obj;
+    }
+
+    /*
+        Shows which masternode wins by score each block
+    */
+    if (strCommand == "calcscore")
+    {
+        int nLast = 10;
+
+        if (params.size() >= 2){
+            nLast = atoi(params[1].get_str());
+        }
+        Object obj;
+
+        std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
+        for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++){
+            uint256 nHigh = 0;
+            CMasternode *pBestMasternode = NULL;
+            BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+                uint256 n = mn.CalculateScore(1, nHeight-100);
+                if(n > nHigh){
+                    nHigh = n;
+                    pBestMasternode = &mn;
+                }
+            }
+            if(pBestMasternode)
+                obj.push_back(Pair(strprintf("%d", nHeight),       pBestMasternode->vin.prevout.ToStringShort().c_str()));
         }
 
         return obj;
