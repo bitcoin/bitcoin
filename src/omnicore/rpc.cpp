@@ -1549,14 +1549,25 @@ Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
             "omni_getcurrentconsensushash\n"
             "\nReturns the consensus hash for all balances for the current block.\n"
             "\nResult:\n"
-            "\"hash\",                 (string) the consensus hash for the current block\n"
+            "{\n"
+            "  \"block\" : nnnnnn,                              (number) the index of the block this consensus hash applies to\n"
+            "  \"consensushash\" : \"hash\",                    (string) the consensus hash for the block\n"
+            "}\n"
+
             "\nExamples:\n"
             + HelpExampleCli("omni_getcurrentconsensushash", "")
             + HelpExampleRpc("omni_getcurrentconsensushash", "")
         );
 
+    LOCK(cs_main); // TODO - will this ensure we don't take in a new block in the couple of ms it takes to calculate the consensus hash?
+
+    int block = GetHeight();
     uint256 consensusHash;
     consensusHash = GetConsensusHash();
 
-    return consensusHash.GetHex();
+    Object response;
+    response.push_back(Pair("block", block));
+    response.push_back(Pair("consensushash", consensusHash.GetHex()));
+
+    return response;
 }
