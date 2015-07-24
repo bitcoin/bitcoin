@@ -252,6 +252,8 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  * Returns: 1 if a nonce was successfully generated. 0 will cause signing to fail.
  * In:      msg32:     the 32-byte message hash being verified (will not be NULL)
  *          key32:     pointer to a 32-byte secret key (will not be NULL)
+ *          algo16:    pointer to a 16-byte array describing the signature
+ *                     algorithm (will be NULL for ECDSA for compatibility).
  *          attempt:   how many iterations we have tried to find a nonce.
  *                     This will almost always be 0, but different attempt values
  *                     are required to result in a different nonce.
@@ -264,6 +266,7 @@ typedef int (*secp256k1_nonce_function_t)(
   unsigned char *nonce32,
   const unsigned char *msg32,
   const unsigned char *key32,
+  const unsigned char *algo16,
   unsigned int attempt,
   const void *data
 );
@@ -425,6 +428,23 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
   const unsigned char *seed32
 ) SECP256K1_ARG_NONNULL(1);
 
+/** Add a number of public keys together.
+ *  Returns: 1: the sum of the public keys is valid.
+ *           0: the sum of the public keys is not valid.
+ *  In:     ctx:        pointer to a context object
+ *          out:        pointer to pubkey for placing the resulting public key
+ *                      (cannot be NULL)
+ *          n:          the number of public keys to add together (must be at least 1)
+ *          ins:        pointer to array of pointers to public keys (cannot be NULL)
+ *  Use secp256k1_ec_pubkey_compress and secp256k1_ec_pubkey_decompress if the
+ *  uncompressed format is needed.
+ */
+SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
+  const secp256k1_context_t* ctx,
+  secp256k1_pubkey_t *out,
+  int n,
+  const secp256k1_pubkey_t * const * ins
+) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
 # ifdef __cplusplus
 }

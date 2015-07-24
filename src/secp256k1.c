@@ -267,20 +267,29 @@ int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const unsigned char *
             secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &r, &s, &q, &m));
 }
 
-static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
-   unsigned char keydata[96];
+static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
+   unsigned char keydata[112];
+   int keylen = 64;
    secp256k1_rfc6979_hmac_sha256_t rng;
    unsigned int i;
    /* We feed a byte array to the PRNG as input, consisting of:
     * - the private key (32 bytes) and message (32 bytes), see RFC 6979 3.2d.
     * - optionally 32 extra bytes of data, see RFC 6979 3.6 Additional Data.
+    * - optionally 16 extra bytes with the algorithm name (the extra data bytes
+    *   are set to zeroes when not present, while the algorithm name is).
     */
    memcpy(keydata, key32, 32);
    memcpy(keydata + 32, msg32, 32);
    if (data != NULL) {
        memcpy(keydata + 64, data, 32);
+       keylen = 96;
    }
-   secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, data != NULL ? 96 : 64);
+   if (algo16 != NULL) {
+       memset(keydata + keylen, 0, 96 - keylen);
+       memcpy(keydata + 96, algo16, 16);
+       keylen = 112;
+   }
+   secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, keylen);
    memset(keydata, 0, sizeof(keydata));
    for (i = 0; i <= counter; i++) {
        secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
@@ -314,7 +323,7 @@ int secp256k1_ecdsa_sign(const secp256k1_context_t* ctx, const unsigned char *ms
         secp256k1_scalar_set_b32(&msg, msg32, NULL);
         while (1) {
             unsigned char nonce32[32];
-            ret = noncefp(nonce32, msg32, seckey, count, noncedata);
+            ret = noncefp(nonce32, msg32, seckey, NULL, count, noncedata);
             if (!ret) {
                 break;
             }
@@ -527,6 +536,34 @@ int secp256k1_context_randomize(secp256k1_context_t* ctx, const unsigned char *s
     return 1;
 }
 
+int secp256k1_ec_pubkey_combine(const secp256k1_context_t* ctx, secp256k1_pubkey_t *pubnonce, int n, const secp256k1_pubkey_t * const *pubnonces) {
+    int i;
+    secp256k1_gej_t Qj;
+    secp256k1_ge_t Q;
+
+    ARG_CHECK(pubnonce != NULL);
+    ARG_CHECK(n >= 1);
+    ARG_CHECK(pubnonces != NULL);
+
+    secp256k1_gej_set_infinity(&Qj);
+
+    for (i = 0; i < n; i++) {
+        secp256k1_pubkey_load(ctx, &Q, pubnonces[i]);
+        secp256k1_gej_add_ge(&Qj, &Qj, &Q);
+    }
+    if (secp256k1_gej_is_infinity(&Qj)) {
+        memset(pubnonce, 0, sizeof(*pubnonce));
+        return 0;
+    }
+    secp256k1_ge_set_gej(&Q, &Qj);
+    secp256k1_pubkey_save(pubnonce, &Q);
+    return 1;
+}
+
 #ifdef ENABLE_MODULE_ECDH
 # include "modules/ecdh/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORR
+# include "modules/schnorr/main_impl.h"
 #endif
