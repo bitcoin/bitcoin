@@ -16,6 +16,13 @@
 
 namespace mastercore
 {
+/** Checkpoints - block and consensus hash.
+ */
+static const std::pair<int, std::string> checkpoints[] = {
+    std::make_pair(250000, "dummy")
+};
+
+
 /** A mapping of transaction types, versions and the blocks at which they are enabled.
  */
 static const int txRestrictionsRules[][3] = {
@@ -169,6 +176,24 @@ uint256 GetConsensusHash()
     uint256 consensusHash;
     SHA256_Final((unsigned char*)&consensusHash, &shaCtx);
     return consensusHash;
+}
+
+/** Compares a supplied block and consensus hash against a hardcoded list of checkpoints */
+bool VerifyCheckpoint(int block)
+{
+    // checkpoints are only verified for mainnet
+    if (isNonMainNet()) return true;
+
+    for (unsigned int i = 0; i < sizeof(checkpoints)/sizeof(checkpoints[0]); i++) {
+        if (block != checkpoints[i].first) continue;
+        // only verify if there is a checkpoint to verify against
+        uint256 consensusHash;
+        consensusHash = GetConsensusHash();
+        if (consensusHash.GetHex() != checkpoints[i].second) return false;
+    }
+
+    // either checkpoint matched or we don't have a checkpoint for this block
+    return true;
 }
 
 } // namespace mastercore
