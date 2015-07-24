@@ -225,6 +225,7 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 {
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything -- find the longest chain
+        if(fDebug) LogPrintf("Client not synced, skipping block payee checks\n");
         return true;
     }
 

@@ -157,7 +157,10 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
     uint256 hash = 0;
     uint256 aux = vin.prevout.hash + vin.prevout.n;
 
-    if(!GetBlockHash(hash, nBlockHeight)) return 0;
+    if(!GetBlockHash(hash, nBlockHeight)) {
+        LogPrintf("CalculateScore ERROR - nHeight %d - Returned 0\n", nBlockHeight);
+        return 0;
+    }
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << hash;
