@@ -122,8 +122,8 @@ class TestNode(NodeConnCB):
 #    or false, then only the last tx is tested against outcome.)
 
 class TestInstance(object):
-    def __init__(self, objects=[], sync_every_block=True, sync_every_tx=False):
-        self.blocks_and_transactions = objects
+    def __init__(self, objects=None, sync_every_block=True, sync_every_tx=False):
+        self.blocks_and_transactions = objects if objects else []
         self.sync_every_block = sync_every_block
         self.sync_every_tx = sync_every_tx
 
