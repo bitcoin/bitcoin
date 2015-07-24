@@ -31,3 +31,15 @@
 
  QMAKE_CXXFLAGS += $$QMAKE_CFLAGS_XCB
  QMAKE_CFLAGS += $$QMAKE_CFLAGS_XCB
+--- old/qtbase/src/plugins/platforms/xcb/xcb-plugin.pro	2015-07-24 16:02:59.530038830 -0400
++++ new/qtbase/src/plugins/platforms/xcb/xcb-plugin.pro	2015-07-24 16:01:22.106037459 -0400
+@@ -11,3 +11,9 @@
+     qxcbmain.cpp
+ OTHER_FILES += xcb.json README
+
++contains(QT_CONFIG, xcb-qt) {
++    DEFINES += XCB_USE_RENDER
++    XCB_DIR = ../../../3rdparty/xcb
++    QMAKE_CFLAGS += -I$$XCB_DIR/include -I$$XCB_DIR/sysinclude $$QMAKE_CFLAGS_XCB
++    QMAKE_CXXFLAGS += -I$$XCB_DIR/include -I$$XCB_DIR/sysinclude $$QMAKE_CFLAGS_XCB
++}
