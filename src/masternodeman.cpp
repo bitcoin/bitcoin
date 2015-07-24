@@ -461,7 +461,7 @@ void CMasternodeMan::DecrementVotedTimes()
 
 CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
 {
-    unsigned int score = 0;
+    int64_t score = 0;
     CMasternode* winner = NULL;
 
     // scan for winner
@@ -471,8 +471,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
 
         // calculate the score for each Masternode
         uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = n.GetCompact(false);
 
         // determine the winner
         if(n2 > score){
@@ -486,7 +485,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
 
 int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
-    std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
+    std::vector<pair<int64_t, CTxIn> > vecMasternodeScores;
 
     //make sure we know about this block
     uint256 hash = 0;
@@ -500,8 +499,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
             if(!mn.IsEnabled()) continue;
         }
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = n.GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
     }
@@ -509,7 +507,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
 
     int rank = 0;
-    BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeScores){
         rank++;
         if(s.second.prevout == vin.prevout) {
             return rank;
@@ -521,7 +519,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
 
 std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t nBlockHeight, int minProtocol)
 {
-    std::vector<pair<unsigned int, CMasternode> > vecMasternodeScores;
+    std::vector<pair<int64_t, CMasternode> > vecMasternodeScores;
     std::vector<pair<int, CMasternode> > vecMasternodeRanks;
 
     //make sure we know about this block
@@ -539,8 +537,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = n.GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn));
     }
@@ -548,7 +545,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnlyMN());
 
     int rank = 0;
-    BOOST_FOREACH (PAIRTYPE(unsigned int, CMasternode)& s, vecMasternodeScores){
+    BOOST_FOREACH (PAIRTYPE(int64_t, CMasternode)& s, vecMasternodeScores){
         rank++;
         vecMasternodeRanks.push_back(make_pair(rank, s.second));
     }
@@ -558,7 +555,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
 
 CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight, int minProtocol, bool fOnlyActive)
 {
-    std::vector<pair<unsigned int, CTxIn> > vecMasternodeScores;
+    std::vector<pair<int64_t, CTxIn> > vecMasternodeScores;
 
     // scan for winner
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
@@ -570,8 +567,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        unsigned int n2 = 0;
-        memcpy(&n2, &n, sizeof(n2));
+        int64_t n2 = n.GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
     }
@@ -579,7 +575,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
     sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
 
     int rank = 0;
-    BOOST_FOREACH (PAIRTYPE(unsigned int, CTxIn)& s, vecMasternodeScores){
+    BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeScores){
         rank++;
         if(rank == nRank) {
             return Find(s.second);
