@@ -181,6 +181,7 @@ public:
         payee = payeeIn;
     }
 
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -216,6 +217,7 @@ private:
 public:
     std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
+    std::map<uint256, int> mapMasternodesLastVote; //prevout.hash + prevout.n, nBlockHeight
 
     CMasternodePayments() {
         nSyncedFromPeer = 0;
@@ -237,6 +239,18 @@ public:
     bool GetBlockPayee(int nBlockHeight, CScript& payee);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
+
+    bool CanVote(COutPoint outMasternode, int nBlockHeight) {
+        if(mapMasternodesLastVote.count(outMasternode.hash + outMasternode.n)) {
+            if(mapMasternodesLastVote[outMasternode.hash + outMasternode.n] == nBlockHeight) {
+                return false;
+            }
+        }
+
+        //record this masternode voted
+        mapMasternodesLastVote[outMasternode.hash + outMasternode.n] = nBlockHeight;
+        return true;
+    }
 
     int GetMinMasternodePaymentsProto();
     void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
