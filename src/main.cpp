@@ -3964,17 +3964,41 @@ bool static AlreadyHave(const CInv& inv)
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
-        return masternodePayments.mapMasternodePayeeVotes.count(inv.hash);
+        if(masternodePayments.mapMasternodePayeeVotes.count(inv.hash)) {
+            masternodeSync.AddedMasternodeWinner();
+            return true;
+        }
+        return false;
     case MSG_BUDGET_VOTE:
-        return mapSeenMasternodeBudgetVotes.count(inv.hash);
+        if(mapSeenMasternodeBudgetVotes.count(inv.hash)) {
+            masternodeSync.AddedBudgetItem();
+            return true;
+        }
+        return false;
     case MSG_BUDGET_PROPOSAL:
-        return mapSeenMasternodeBudgetProposals.count(inv.hash);
+        if(mapSeenMasternodeBudgetProposals.count(inv.hash)) {
+            masternodeSync.AddedBudgetItem();
+            return true;
+        }
+        return false;
     case MSG_BUDGET_FINALIZED_VOTE:
-        return mapSeenFinalizedBudgetVotes.count(inv.hash);
+        if(mapSeenFinalizedBudgetVotes.count(inv.hash)) {
+            masternodeSync.AddedBudgetItem();
+            return true;
+        }
+        return false;
     case MSG_BUDGET_FINALIZED:
-        return mapSeenFinalizedBudgets.count(inv.hash);
+        if(mapSeenFinalizedBudgets.count(inv.hash)) {
+            masternodeSync.AddedBudgetItem();
+            return true;
+        }
+        return false;
     case MSG_MASTERNODE_ANNOUNCE:
-        return mapSeenMasternodeBroadcast.count(inv.hash);
+        if(mapSeenMasternodeBroadcast.count(inv.hash)) {
+            masternodeSync.AddedMasternodeList();
+            return true;
+        }
+        return false;
     case MSG_MASTERNODE_PING:
         return mapSeenMasternodePing.count(inv.hash);
     }

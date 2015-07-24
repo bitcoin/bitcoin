@@ -617,7 +617,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
-        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) return; //seen
+        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+            masternodeSync.AddedMasternodeList();
+            return;
+        }
         mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
 
         int nDoS = 0;
