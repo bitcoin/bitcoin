@@ -136,7 +136,7 @@ void CMasternodeSync::Process()
         if(IsInitialBlockDownload()) return;
 
         //don't begin syncing until we're almost at a recent block
-        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight && pindexPrev->nTime + 600 < GetTime()) return;
+        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight || pindexPrev->nTime + 600 < GetTime()) return;
 
         if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 
