@@ -56,28 +56,53 @@ static const ConsensusCheckpoint vCheckpoints[] = {
               uint256("943732e46304fc30099c6a728616c998efe689384f81b7108a65b051381656a6") },
 };
 
+/** A structure to represent transaction restrictions.
+ */
+struct TransactionRestriction
+{
+    //! Transaction type
+    uint16_t txType;
+    //! Transaction version
+    uint16_t txVersion;
+    //! Whether the property identifier can be 0 (= BTC)
+    bool allowWildcard;
+    //! Block after which the feature or transaction is enabled
+    int featureActivation;
+};
+
+// TODO: the feature identifier should not represent the activation height, but
+//       instead it should be used to lookup the activation height, based on the
+//       currently active consensus parameters!
+
 /** A mapping of transaction types, versions and the blocks at which they are enabled.
  */
-static const int txRestrictionsRules[][3] = {
-    {MSC_TYPE_SIMPLE_SEND,                MSC_SEND_BLOCK,         MP_TX_PKT_V0},
-    {MSC_TYPE_TRADE_OFFER,                MSC_DEX_BLOCK,          MP_TX_PKT_V1},
-    {MSC_TYPE_ACCEPT_OFFER_BTC,           MSC_DEX_BLOCK,          MP_TX_PKT_V0},
-    {MSC_TYPE_CREATE_PROPERTY_FIXED,      MSC_SP_BLOCK,           MP_TX_PKT_V0},
-    {MSC_TYPE_CREATE_PROPERTY_VARIABLE,   MSC_SP_BLOCK,           MP_TX_PKT_V1},
-    {MSC_TYPE_CLOSE_CROWDSALE,            MSC_SP_BLOCK,           MP_TX_PKT_V0},
-    {MSC_TYPE_CREATE_PROPERTY_MANUAL,     MSC_MANUALSP_BLOCK,     MP_TX_PKT_V0},
-    {MSC_TYPE_GRANT_PROPERTY_TOKENS,      MSC_MANUALSP_BLOCK,     MP_TX_PKT_V0},
-    {MSC_TYPE_REVOKE_PROPERTY_TOKENS,     MSC_MANUALSP_BLOCK,     MP_TX_PKT_V0},
-    {MSC_TYPE_CHANGE_ISSUER_ADDRESS,      MSC_MANUALSP_BLOCK,     MP_TX_PKT_V0},
-    {MSC_TYPE_SEND_TO_OWNERS,             MSC_STO_BLOCK,          MP_TX_PKT_V0},
-    {MSC_TYPE_METADEX_TRADE,              MSC_METADEX_BLOCK,      MP_TX_PKT_V0},
-    {MSC_TYPE_METADEX_CANCEL_PRICE,       MSC_METADEX_BLOCK,      MP_TX_PKT_V0},
-    {MSC_TYPE_METADEX_CANCEL_PAIR,        MSC_METADEX_BLOCK,      MP_TX_PKT_V0},
-    {MSC_TYPE_METADEX_CANCEL_ECOSYSTEM,   MSC_METADEX_BLOCK,      MP_TX_PKT_V0},
-    {MSC_TYPE_OFFER_ACCEPT_A_BET,         MSC_BET_BLOCK,          MP_TX_PKT_V0},
+static const TransactionRestriction vTxRestrictions[] =
+{ //  transaction type                    version        allow 0  activation block
+  //  ----------------------------------  -------------  -------  ------------------
+    { MSC_TYPE_SIMPLE_SEND,               MP_TX_PKT_V0,  false,   MSC_SEND_BLOCK     },
 
-    // end of array marker, in addition to sizeof/sizeof
-    {-1,-1},
+    { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
+    { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V1,  false,   MSC_DEX_BLOCK      },
+    { MSC_TYPE_ACCEPT_OFFER_BTC,          MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
+
+    { MSC_TYPE_CREATE_PROPERTY_FIXED,     MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
+    { MSC_TYPE_CREATE_PROPERTY_VARIABLE,  MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
+    { MSC_TYPE_CREATE_PROPERTY_VARIABLE,  MP_TX_PKT_V1,  false,   MSC_SP_BLOCK       },
+    { MSC_TYPE_CLOSE_CROWDSALE,           MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
+
+    { MSC_TYPE_CREATE_PROPERTY_MANUAL,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+    { MSC_TYPE_GRANT_PROPERTY_TOKENS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+    { MSC_TYPE_REVOKE_PROPERTY_TOKENS,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+    { MSC_TYPE_CHANGE_ISSUER_ADDRESS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+
+    { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V0,  false,   MSC_STO_BLOCK      },
+
+    { MSC_TYPE_METADEX_TRADE,             MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
+    { MSC_TYPE_METADEX_CANCEL_PRICE,      MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
+    { MSC_TYPE_METADEX_CANCEL_PAIR,       MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
+    { MSC_TYPE_METADEX_CANCEL_ECOSYSTEM,  MP_TX_PKT_V0,  true,    MSC_METADEX_BLOCK  },
+
+    { MSC_TYPE_OFFER_ACCEPT_A_BET,        MP_TX_PKT_V0,  false,   MSC_BET_BLOCK      },
 };
 
 //! Consensus parameters for mainnet
@@ -162,49 +187,38 @@ bool IsAllowedOutputType(int whichType, int nBlock)
 /**
  * Checks, if the transaction type and version is supported and enabled.
  *
- * Certain transaction types are not live/enabled until some specific block height.
- * Certain transactions will be unknown to the client, i.e. "black holes" based on their version.
+ * On testnet, in regtest mode, or in the test ecosystem, transactions, which are
+ * known to the client are allowed without height restriction.
  *
- * The restrictions array is as such:
- *   type, block-allowed-in, top-version-allowed
+ * Certain transactions use a property identifier of 0 (= BTC) as wildcard, which
+ * must explicitly be allowed.
  */
-bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType, uint16_t version, bool bAllowNullProperty) {
-    bool bAllowed = false;
-    bool bBlackHole = false;
-    unsigned int type;
-    int block_FirstAllowed;
-    unsigned short version_TopAllowed;
-
-    // bitcoin as property is never allowed, unless explicitly stated otherwise
-    if ((OMNI_PROPERTY_BTC == txProperty) && !bAllowNullProperty) return false;
-
-    // everything is always allowed on Bitcoin's TestNet or with TMSC/TestEcosystem on MainNet
-    if (isNonMainNet() || isTestEcosystemProperty(txProperty)) {
-        bAllowed = true;
-    }
-
-    for (unsigned int i = 0; i < sizeof(txRestrictionsRules)/sizeof(txRestrictionsRules[0]); i++) {
-        type = txRestrictionsRules[i][0];
-        block_FirstAllowed = txRestrictionsRules[i][1];
-        version_TopAllowed = txRestrictionsRules[i][2];
-
-        if (txType != type) continue;
-
-        if (version_TopAllowed < version) {
-            PrintToLog("Black Hole identified !!! %d, %u, %u, %u\n", txBlock, txProperty, txType, version);
-
-            bBlackHole = true;
-
-            // TODO: what else?
-            // ...
+bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType, uint16_t version)
+{
+    for (size_t i = 0; i < (sizeof(vTxRestrictions) / sizeof(vTxRestrictions[0])); ++i)
+    {
+        const TransactionRestriction& entry = vTxRestrictions[i];
+        if (entry.txType != txType || entry.txVersion != version) {
+            continue;
+        }
+        // a property identifier of 0 (= BTC) may be used as wildcard
+        if (OMNI_PROPERTY_BTC == txProperty && !entry.allowWildcard) {
+            continue;
+        }
+        // transactions are not restricted on testnet. or in the test ecosystem
+        if (isNonMainNet() || isTestEcosystemProperty(txProperty)) {
+            return true;
         }
 
-        if (0 > block_FirstAllowed) break; // array contains a negative -- nothing's allowed or done parsing
-
-        if (block_FirstAllowed <= txBlock) bAllowed = true;
+        // TODO: the feature identifier should not represent the activation height,
+        // but instead it should be used to lookup the activation height, based on
+        // the currently active consensus parameters!
+        if (txBlock >= entry.featureActivation) {
+            return true;
+        }
     }
 
-    return bAllowed && !bBlackHole;
+    return false;
 }
 
 /** Obtains a hash of all balances to use for consensus verification & checkpointing. */
