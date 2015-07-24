@@ -388,7 +388,7 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
 // 
 // Deterministically select the oldest/best masternode to pay on the network
 //
-CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight)
+CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime)
 {
     LOCK(cs);
 
@@ -412,7 +412,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
-        if(mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
+        if(fFilterSigTime && mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
 
         //make sure it has as many confirmations as there are masternodes
         if(mn.GetMasternodeInputAge() < nMnCount) continue;

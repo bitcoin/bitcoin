@@ -672,7 +672,9 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
         LogPrintf("CMasternodePayments::ProcessBlock() Start nHeight %d - vin %s. \n", nBlockHeight, activeMasternode.vin.ToString().c_str());
 
         // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
-        CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight);
+        CMasternode *pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true);
+        if(pmn == NULL) pmn = mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, false); // if no results, look for any node with a newer sigTime
+        
         if(pmn != NULL)
         {
             LogPrintf("CMasternodePayments::ProcessBlock() Found by FindOldestNotInVec \n");
