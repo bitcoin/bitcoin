@@ -790,6 +790,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> budgetProposalBroadcast;
 
         if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())){
+            masternodeSync.AddedBudgetItem();
             return;
         }
 
@@ -819,6 +820,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vote.fValid = true;
 
         if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
+            masternodeSync.AddedBudgetItem();
             return;
         }
 
@@ -852,6 +854,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> finalizedBudgetBroadcast;
 
         if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())){
+            masternodeSync.AddedBudgetItem();
             return;
         }
 
@@ -883,6 +886,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vote.fValid = true;
 
         if(mapSeenFinalizedBudgetVotes.count(vote.GetHash())){
+            masternodeSync.AddedBudgetItem();
             return;
         }
 
