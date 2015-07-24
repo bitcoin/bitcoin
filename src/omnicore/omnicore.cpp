@@ -4093,6 +4093,10 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         PrintToLog("Consensus hash for block %d: %s\n", nBlockNow, consensusHash.GetHex());
     }
 
+    // request checkpoint verification
+    bool checkpointValid = VerifyCheckpoint(nBlockNow);
+    assert(checkpointValid);
+
     return 0;
 }
 
