@@ -28,10 +28,11 @@ const int MSC_STO_BLOCK = 342650;
 const int MSC_METADEX_BLOCK = 999999;
 //! Block to enable betting transactions
 const int MSC_BET_BLOCK = 999999;
+
 //! Block to enable pay-to-script-hash support
-const int P2SH_BLOCK = 322000;
+//const int P2SH_BLOCK = 322000;
 //! Block to enable OP_RETURN based encoding
-const int OP_RETURN_BLOCK = 999999;
+//const int OP_RETURN_BLOCK = 999999;
 
 // TODO: rename allcaps variable names
 // TODO: push down value initialization
@@ -53,6 +54,15 @@ public:
     //! Last block of the Exodus crowdsale
     int LAST_EXODUS_BLOCK;
 
+    //! Block to enable pay-to-pubkey-hash support
+    int PUBKEYHASH_BLOCK;
+    //! Block to enable pay-to-script-hash support
+    int SCRIPTHASH_BLOCK;
+    //! Block to enable bare-multisig based encoding
+    int MULTISIG_BLOCK;
+    //! Block to enable OP_RETURN based encoding
+    int NULLDATA_BLOCK;
+
 protected:
     /** Constructor, only to be called from derived classes. */
     CConsensusParams() {}
@@ -65,11 +75,17 @@ class CMainConsensusParams: public CConsensusParams
 public:
     CMainConsensusParams()
     {
+        // Exodus related:
         exodusBonusPerWeek = 0.10;
         exodusDeadline = 1377993600;
         exodusReward = 100;
         GENESIS_BLOCK = 249498;
         LAST_EXODUS_BLOCK = 255365;
+        // Script related:
+        PUBKEYHASH_BLOCK = 0;
+        SCRIPTHASH_BLOCK = 322000;
+        MULTISIG_BLOCK = 0;
+        NULLDATA_BLOCK = 999999;
     }
 };
 
@@ -80,11 +96,17 @@ class CTestNetConsensusParams: public CConsensusParams
 public:
     CTestNetConsensusParams()
     {
+        // Exodus related:
         exodusBonusPerWeek = 0.00;
         exodusDeadline = 1377993600;
         exodusReward = 100;
         GENESIS_BLOCK = 263000;
         LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+        // Script related:
+        PUBKEYHASH_BLOCK = 0;
+        SCRIPTHASH_BLOCK = 0;
+        MULTISIG_BLOCK = 0;
+        NULLDATA_BLOCK = 0;
     }
 };
 
@@ -95,11 +117,17 @@ class CRegTestConsensusParams: public CConsensusParams
 public:
     CRegTestConsensusParams()
     {
+        // Exodus related:
         exodusBonusPerWeek = 0.00;
         exodusDeadline = 1377993600;
         exodusReward = 100;
         GENESIS_BLOCK = 101;
         LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+        // Script related:
+        PUBKEYHASH_BLOCK = 0;
+        SCRIPTHASH_BLOCK = 0;
+        MULTISIG_BLOCK = 0;
+        NULLDATA_BLOCK = 0;
     }
 };
 

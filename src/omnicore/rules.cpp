@@ -12,7 +12,6 @@
 
 #include "chainparams.h"
 #include "script/standard.h"
-#include "sync.h"
 
 #include <openssl/sha.h>
 #include <stdint.h>
@@ -81,13 +80,11 @@ static const int txRestrictionsRules[][3] = {
     {-1,-1},
 };
 
-//! Guards global consensus paramter
-static CCriticalSection cs_consensus_params;
-//! Currently active consensus parameter
-static CConsensusParams* pCurrentConsensusParams;
-// Parameters for each network:
+//! Consensus parameters for mainnet
 static CMainConsensusParams mainConsensusParams;
+//! Consensus parameters for testnet
 static CTestNetConsensusParams testNetConsensusParams;
+//! Consensus parameters for regtest mode
 static CRegTestConsensusParams regTestConsensusParams;
 
 /**
@@ -113,14 +110,9 @@ CConsensusParams& ConsensusParams(const std::string& network)
  */
 const CConsensusParams& ConsensusParams()
 {
-    LOCK(cs_consensus_params);
+    const std::string& network = Params().NetworkIDString();
 
-    if (!pCurrentConsensusParams) {
-        const std::string& network = Params().NetworkIDString();
-        pCurrentConsensusParams = &ConsensusParams(network);
-    }
-
-    return *pCurrentConsensusParams;
+    return ConsensusParams(network);
 }
 
 /**
@@ -128,13 +120,15 @@ const CConsensusParams& ConsensusParams()
  */
 bool IsAllowedInputType(int whichType, int nBlock)
 {
+    const CConsensusParams& params = ConsensusParams();
+
     switch (whichType)
     {
         case TX_PUBKEYHASH:
-            return true;
+            return (params.PUBKEYHASH_BLOCK <= nBlock);
 
         case TX_SCRIPTHASH:
-            return (P2SH_BLOCK <= nBlock || isNonMainNet());
+            return (params.SCRIPTHASH_BLOCK <= nBlock);
     }
 
     return false;
@@ -145,19 +139,21 @@ bool IsAllowedInputType(int whichType, int nBlock)
  */
 bool IsAllowedOutputType(int whichType, int nBlock)
 {
+    const CConsensusParams& params = ConsensusParams();
+
     switch (whichType)
     {
         case TX_PUBKEYHASH:
-            return true;
-
-        case TX_MULTISIG:
-            return true;
+            return (params.PUBKEYHASH_BLOCK <= nBlock);
 
         case TX_SCRIPTHASH:
-            return (P2SH_BLOCK <= nBlock || isNonMainNet());
+            return (params.SCRIPTHASH_BLOCK <= nBlock);
+
+        case TX_MULTISIG:
+            return (params.MULTISIG_BLOCK <= nBlock);
 
         case TX_NULL_DATA:
-            return (OP_RETURN_BLOCK <= nBlock || isNonMainNet());
+            return (params.NULLDATA_BLOCK <= nBlock);
     }
 
     return false;

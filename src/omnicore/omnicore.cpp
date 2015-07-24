@@ -743,6 +743,7 @@ namespace legacy {
 
 static const int MAX_LEGACY_PACKETS = 64;
 static const int MAX_BTC_OUTPUTS    = 16;
+static const int P2SH_BLOCK         = 322000;
 
 static bool isAllowedOutputType(int whichType, int nBlock)
 {

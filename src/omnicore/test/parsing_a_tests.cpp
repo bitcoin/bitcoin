@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000100000002540be400000000");
     }
     {
-        int nBlock = P2SH_BLOCK;
+        int nBlock = ConsensusParams().SCRIPTHASH_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "34xhWktMFEGRTRmWf1hdNn1SyDDWiXa18H"));
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "00000000000000010000000777777700000000");
     }
     {
-        int nBlock = P2SH_BLOCK;
+        int nBlock = ConsensusParams().SCRIPTHASH_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1815000, "3Kpeeo8MVoYnx7PeNb5FUus8bkJsZFPbw7"));
