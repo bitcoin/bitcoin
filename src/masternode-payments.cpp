@@ -378,6 +378,11 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
             return;
         }
 
+        if(!masternodePayments.CanVote(winner.vinMasternode.prevout, winner.nBlockHeight)){
+            LogPrintf("mnw - masternode already voted - %s\n", winner.vinMasternode.prevout.ToStringShort());
+            return;
+        }
+
         if(!winner.SignatureValid()){
             LogPrintf("mnw - invalid signature\n");
             Misbehaving(pfrom->GetId(), 100);
@@ -388,7 +393,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         ExtractDestination(winner.payee, address1);
         CBitcoinAddress address2(address1);
 
-        if(fDebug) LogPrintf("mnw - winning vote - Addr %s Height %d bestHeight %d\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight);
+        if(fDebug) LogPrintf("mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight, winner.vinMasternode.prevout.ToStringShort());
 
         if(masternodePayments.AddWinningMasternode(winner)){
             winner.Relay();
