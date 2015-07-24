@@ -19,9 +19,19 @@ namespace mastercore
 /** Checkpoints - block and consensus hash.
  */
 static const std::pair<int, std::string> checkpoints[] = {
-    std::make_pair(250000, "dummy")
+    std::make_pair(250000, "f8ca97346756bbe3b530d052c884b2f54c14edc1498ba2176214857dee13f3ca"),
+    std::make_pair(260000, "e8b5445bbfc915e59164a6c22e4d84b23539569ee3c95b49eefaeaca86ea98a0"),
+    std::make_pair(270000, "4eb6f75c961308c18dad1e2677170465f30d367489e61cb2510e400dc3d21117"),
+    std::make_pair(280000, "5896745cfde2423d1c896865b49953cac76d87f8d29c619793698d06c14f11d6"),
+    std::make_pair(290000, "28f4c64fa05adee082c7fb10f3b768747fef28bff1e29f22482ed17e9dfe130c"),
+    std::make_pair(300000, "51b429776f26ee4b9ebf2de669c7c01f420004ce29d4df92a2e3d7b0248cbe8e"),
+    std::make_pair(310000, "f8ab77846e859ccc5094f4944e0b6fbf7f1e1435578fd3debffc0e0db4afda58"),
+    std::make_pair(320000, "ac76516b2be5fd6391ac1511c409e19eab0c5b55754883a72d2473457af9299e"),
+    std::make_pair(330000, "158c9640fd4376569e439f7c6f4b7ac17e14dffc9f9b99a7e6b38b57c7ff5ece"),
+    std::make_pair(340000, "85655b4e01fa328f5d1c955d00f27989e644a38931280d1448b83c98f78d3a25"),
+    std::make_pair(350000, "c562ebcc36c5dd094f7dff3d0083362701b8ad489b825a93dab3e51d7a0b59f2"),
+    std::make_pair(360000, "da08157c018429bf717989ec653151652fb95d3107b287e016c8b9483e9f86f7")
 };
-
 
 /** A mapping of transaction types, versions and the blocks at which they are enabled.
  */
