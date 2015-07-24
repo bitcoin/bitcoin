@@ -14,6 +14,7 @@
 #include "omnicore/rpctx.h"
 #include "omnicore/rpctxobject.h"
 #include "omnicore/rpcvalues.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
@@ -1541,3 +1542,21 @@ Value omni_gettrade(const Array& params, bool fHelp)
     return txobj;
 }
 
+Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "omni_getcurrentconsensushash\n"
+            "\nReturns the consensus hash for all balances for the current block.\n"
+            "\nResult:\n"
+            "\"hash\",                 (string) the consensus hash for the current block\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getcurrentconsensushash", "")
+            + HelpExampleRpc("omni_getcurrentconsensushash", "")
+        );
+
+    uint256 consensusHash;
+    consensusHash = GetConsensusHash();
+
+    return consensusHash.GetHex();
+}
