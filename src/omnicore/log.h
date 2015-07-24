@@ -44,6 +44,7 @@ extern bool msc_debug_metadex2;
 extern bool msc_debug_metadex3;
 extern bool msc_debug_packets;
 extern bool msc_debug_walletcache;
+extern bool msc_debug_consensus_hash;
 
 /* When we switch to C++11, this can be switched to variadic templates instead
  * of this macro-based construction (see tinyformat.h).
