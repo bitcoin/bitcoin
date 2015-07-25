@@ -15,6 +15,8 @@ const int MAX_VERSION = std::numeric_limits<uint16_t>().max();
 
 BOOST_AUTO_TEST_CASE(simple_send_restrictions)
 {
+    int MSC_SEND_BLOCK = ConsensusParams().MSC_SEND_BLOCK;
+
     BOOST_CHECK(!IsTransactionTypeAllowed(0,                OMNI_PROPERTY_BTC,  MSC_TYPE_SIMPLE_SEND, MP_TX_PKT_V0));
     BOOST_CHECK(!IsTransactionTypeAllowed(MSC_SEND_BLOCK,   OMNI_PROPERTY_BTC,  MSC_TYPE_SIMPLE_SEND, MP_TX_PKT_V0));
     BOOST_CHECK(!IsTransactionTypeAllowed(MAX_BLOCK,        OMNI_PROPERTY_BTC,  MSC_TYPE_SIMPLE_SEND, MAX_VERSION));

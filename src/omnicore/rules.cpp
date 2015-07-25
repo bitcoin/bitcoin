@@ -14,8 +14,11 @@
 #include "script/standard.h"
 
 #include <openssl/sha.h>
+
 #include <stdint.h>
+#include <limits>
 #include <string>
+#include <vector>
 
 namespace mastercore
 {
@@ -56,54 +59,122 @@ static const ConsensusCheckpoint vCheckpoints[] = {
               uint256("943732e46304fc30099c6a728616c998efe689384f81b7108a65b051381656a6") },
 };
 
-/** A structure to represent transaction restrictions.
+/**
+ * Returns a mapping of transaction types, and the blocks at which they are enabled.
  */
-struct TransactionRestriction
+std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
 {
-    //! Transaction type
-    uint16_t txType;
-    //! Transaction version
-    uint16_t txVersion;
-    //! Whether the property identifier can be 0 (= BTC)
-    bool allowWildcard;
-    //! Block after which the feature or transaction is enabled
-    int featureActivation;
-};
+    const TransactionRestriction vTxRestrictions[] =
+    { //  transaction type                    version        allow 0  activation block
+      //  ----------------------------------  -------------  -------  ------------------
+        { MSC_TYPE_SIMPLE_SEND,               MP_TX_PKT_V0,  false,   MSC_SEND_BLOCK     },
 
-// TODO: the feature identifier should not represent the activation height, but
-//       instead it should be used to lookup the activation height, based on the
-//       currently active consensus parameters!
+        { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
+        { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V1,  false,   MSC_DEX_BLOCK      },
+        { MSC_TYPE_ACCEPT_OFFER_BTC,          MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
 
-/** A mapping of transaction types, versions and the blocks at which they are enabled.
+        { MSC_TYPE_CREATE_PROPERTY_FIXED,     MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
+        { MSC_TYPE_CREATE_PROPERTY_VARIABLE,  MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
+        { MSC_TYPE_CREATE_PROPERTY_VARIABLE,  MP_TX_PKT_V1,  false,   MSC_SP_BLOCK       },
+        { MSC_TYPE_CLOSE_CROWDSALE,           MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
+
+        { MSC_TYPE_CREATE_PROPERTY_MANUAL,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+        { MSC_TYPE_GRANT_PROPERTY_TOKENS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+        { MSC_TYPE_REVOKE_PROPERTY_TOKENS,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+        { MSC_TYPE_CHANGE_ISSUER_ADDRESS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
+
+        { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V0,  false,   MSC_STO_BLOCK      },
+
+        { MSC_TYPE_METADEX_TRADE,             MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
+        { MSC_TYPE_METADEX_CANCEL_PRICE,      MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
+        { MSC_TYPE_METADEX_CANCEL_PAIR,       MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
+        { MSC_TYPE_METADEX_CANCEL_ECOSYSTEM,  MP_TX_PKT_V0,  true,    MSC_METADEX_BLOCK  },
+
+        { MSC_TYPE_OFFER_ACCEPT_A_BET,        MP_TX_PKT_V0,  false,   MSC_BET_BLOCK      },
+    };
+
+    const size_t nSize = sizeof(vTxRestrictions) / sizeof(vTxRestrictions[0]);
+
+    return std::vector<TransactionRestriction>(vTxRestrictions, vTxRestrictions + nSize);
+}
+
+/**
+ * Constructor for mainnet consensus parameters.
  */
-static const TransactionRestriction vTxRestrictions[] =
-{ //  transaction type                    version        allow 0  activation block
-  //  ----------------------------------  -------------  -------  ------------------
-    { MSC_TYPE_SIMPLE_SEND,               MP_TX_PKT_V0,  false,   MSC_SEND_BLOCK     },
+CMainConsensusParams::CMainConsensusParams()
+{
+    // Exodus related:
+    exodusBonusPerWeek = 0.10;
+    exodusDeadline = 1377993600;
+    exodusReward = 100;
+    GENESIS_BLOCK = 249498;
+    LAST_EXODUS_BLOCK = 255365;
+    // Script related:
+    PUBKEYHASH_BLOCK = 0;
+    SCRIPTHASH_BLOCK = 322000;
+    MULTISIG_BLOCK = 0;
+    NULLDATA_BLOCK = 999999;
+    // Transaction restrictions:
+    MSC_SEND_BLOCK = 249498;
+    MSC_DEX_BLOCK = 290630;
+    MSC_SP_BLOCK = 297110;
+    MSC_MANUALSP_BLOCK = 323230;
+    MSC_STO_BLOCK = 342650;
+    MSC_METADEX_BLOCK = 999999;
+    MSC_BET_BLOCK = 999999;
+}
 
-    { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
-    { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V1,  false,   MSC_DEX_BLOCK      },
-    { MSC_TYPE_ACCEPT_OFFER_BTC,          MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
+/**
+ * Constructor for testnet consensus parameters.
+ */
+CTestNetConsensusParams::CTestNetConsensusParams()
+{
+    // Exodus related:
+    exodusBonusPerWeek = 0.00;
+    exodusDeadline = 1377993600;
+    exodusReward = 100;
+    GENESIS_BLOCK = 263000;
+    LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+    // Script related:
+    PUBKEYHASH_BLOCK = 0;
+    SCRIPTHASH_BLOCK = 0;
+    MULTISIG_BLOCK = 0;
+    NULLDATA_BLOCK = 0;
+    // Transaction restrictions:
+    MSC_SEND_BLOCK = 0;
+    MSC_DEX_BLOCK = 0;
+    MSC_SP_BLOCK = 0;
+    MSC_MANUALSP_BLOCK = 0;
+    MSC_STO_BLOCK = 0;
+    MSC_METADEX_BLOCK = 0;
+    MSC_BET_BLOCK = 999999;
+}
 
-    { MSC_TYPE_CREATE_PROPERTY_FIXED,     MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
-    { MSC_TYPE_CREATE_PROPERTY_VARIABLE,  MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
-    { MSC_TYPE_CREATE_PROPERTY_VARIABLE,  MP_TX_PKT_V1,  false,   MSC_SP_BLOCK       },
-    { MSC_TYPE_CLOSE_CROWDSALE,           MP_TX_PKT_V0,  false,   MSC_SP_BLOCK       },
-
-    { MSC_TYPE_CREATE_PROPERTY_MANUAL,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
-    { MSC_TYPE_GRANT_PROPERTY_TOKENS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
-    { MSC_TYPE_REVOKE_PROPERTY_TOKENS,    MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
-    { MSC_TYPE_CHANGE_ISSUER_ADDRESS,     MP_TX_PKT_V0,  false,   MSC_MANUALSP_BLOCK },
-
-    { MSC_TYPE_SEND_TO_OWNERS,            MP_TX_PKT_V0,  false,   MSC_STO_BLOCK      },
-
-    { MSC_TYPE_METADEX_TRADE,             MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
-    { MSC_TYPE_METADEX_CANCEL_PRICE,      MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
-    { MSC_TYPE_METADEX_CANCEL_PAIR,       MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
-    { MSC_TYPE_METADEX_CANCEL_ECOSYSTEM,  MP_TX_PKT_V0,  true,    MSC_METADEX_BLOCK  },
-
-    { MSC_TYPE_OFFER_ACCEPT_A_BET,        MP_TX_PKT_V0,  false,   MSC_BET_BLOCK      },
-};
+/**
+ * Constructor for regtest consensus parameters.
+ */
+CRegTestConsensusParams::CRegTestConsensusParams()
+{
+    // Exodus related:
+    exodusBonusPerWeek = 0.00;
+    exodusDeadline = 1377993600;
+    exodusReward = 100;
+    GENESIS_BLOCK = 101;
+    LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+    // Script related:
+    PUBKEYHASH_BLOCK = 0;
+    SCRIPTHASH_BLOCK = 0;
+    MULTISIG_BLOCK = 0;
+    NULLDATA_BLOCK = 0;
+    // Transaction restrictions:
+    MSC_SEND_BLOCK = 0;
+    MSC_DEX_BLOCK = 0;
+    MSC_SP_BLOCK = 0;
+    MSC_MANUALSP_BLOCK = 0;
+    MSC_STO_BLOCK = 0;
+    MSC_METADEX_BLOCK = 0;
+    MSC_BET_BLOCK = 999999;
+}
 
 //! Consensus parameters for mainnet
 static CMainConsensusParams mainConsensusParams;
@@ -195,9 +266,11 @@ bool IsAllowedOutputType(int whichType, int nBlock)
  */
 bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType, uint16_t version)
 {
-    for (size_t i = 0; i < (sizeof(vTxRestrictions) / sizeof(vTxRestrictions[0])); ++i)
+    const std::vector<TransactionRestriction>& vTxRestrictions = ConsensusParams().GetRestrictions();
+
+    for (std::vector<TransactionRestriction>::const_iterator it = vTxRestrictions.begin(); it != vTxRestrictions.end(); ++it)
     {
-        const TransactionRestriction& entry = vTxRestrictions[i];
+        const TransactionRestriction& entry = *it;
         if (entry.txType != txType || entry.txVersion != version) {
             continue;
         }
@@ -210,10 +283,7 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
             return true;
         }
 
-        // TODO: the feature identifier should not represent the activation height,
-        // but instead it should be used to lookup the activation height, based on
-        // the currently active consensus parameters!
-        if (txBlock >= entry.featureActivation) {
+        if (txBlock >= entry.activationBlock) {
             return true;
         }
     }

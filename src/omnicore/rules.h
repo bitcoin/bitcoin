@@ -4,9 +4,8 @@
 class uint256;
 
 #include <stdint.h>
-
-#include <limits>
 #include <string>
+#include <vector>
 
 namespace mastercore
 {
@@ -14,29 +13,24 @@ namespace mastercore
 const int MONEYMAN_REGTEST_BLOCK = 101;
 //! Block to enable the Exodus fundraiser address on testnet
 const int MONEYMAN_TESTNET_BLOCK = 270775;
-//! Block to enable simple send transactions
-const int MSC_SEND_BLOCK = 249498;
-//! Block to enable DEx transactions
-const int MSC_DEX_BLOCK = 290630;
-//! Block to enable smart property transactions
-const int MSC_SP_BLOCK = 297110;
-//! Block to enable managed properties
-const int MSC_MANUALSP_BLOCK = 323230;
-//! Block to enable send-to-owners transactions
-const int MSC_STO_BLOCK = 342650;
-//! Block to enable MetaDEx transactions
-const int MSC_METADEX_BLOCK = 999999;
-//! Block to enable betting transactions
-const int MSC_BET_BLOCK = 999999;
 
-//! Block to enable pay-to-script-hash support
-//const int P2SH_BLOCK = 322000;
-//! Block to enable OP_RETURN based encoding
-//const int OP_RETURN_BLOCK = 999999;
+/** A structure to represent transaction restrictions.
+ */
+struct TransactionRestriction
+{
+    //! Transaction type
+    uint16_t txType;
+    //! Transaction version
+    uint16_t txVersion;
+    //! Whether the property identifier can be 0 (= BTC)
+    bool allowWildcard;
+    //! Block after which the feature or transaction is enabled
+    int activationBlock;
+};
 
 // TODO: rename allcaps variable names
-// TODO: push down value initialization
-// TODO: remove global heights
+// TODO: remove remaining global heights
+// TODO: add Exodus addresses to params
 
 /** Base class for consensus parameters.
  */
@@ -63,6 +57,24 @@ public:
     //! Block to enable OP_RETURN based encoding
     int NULLDATA_BLOCK;
 
+    //! Block to enable simple send transactions
+    int MSC_SEND_BLOCK;
+    //! Block to enable DEx transactions
+    int MSC_DEX_BLOCK;
+    //! Block to enable smart property transactions
+    int MSC_SP_BLOCK;
+    //! Block to enable managed properties
+    int MSC_MANUALSP_BLOCK;
+    //! Block to enable send-to-owners transactions
+    int MSC_STO_BLOCK;
+    //! Block to enable MetaDEx transactions
+    int MSC_METADEX_BLOCK;
+    //! Block to enable betting transactions
+    int MSC_BET_BLOCK;
+
+    /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
+    std::vector<TransactionRestriction> GetRestrictions() const;
+
 protected:
     /** Constructor, only to be called from derived classes. */
     CConsensusParams() {}
@@ -73,20 +85,8 @@ protected:
 class CMainConsensusParams: public CConsensusParams
 {
 public:
-    CMainConsensusParams()
-    {
-        // Exodus related:
-        exodusBonusPerWeek = 0.10;
-        exodusDeadline = 1377993600;
-        exodusReward = 100;
-        GENESIS_BLOCK = 249498;
-        LAST_EXODUS_BLOCK = 255365;
-        // Script related:
-        PUBKEYHASH_BLOCK = 0;
-        SCRIPTHASH_BLOCK = 322000;
-        MULTISIG_BLOCK = 0;
-        NULLDATA_BLOCK = 999999;
-    }
+    /** Constructor for mainnet consensus parameters. */
+    CMainConsensusParams();
 };
 
 /** Consensus parameters for testnet.
@@ -94,20 +94,8 @@ public:
 class CTestNetConsensusParams: public CConsensusParams
 {
 public:
-    CTestNetConsensusParams()
-    {
-        // Exodus related:
-        exodusBonusPerWeek = 0.00;
-        exodusDeadline = 1377993600;
-        exodusReward = 100;
-        GENESIS_BLOCK = 263000;
-        LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
-        // Script related:
-        PUBKEYHASH_BLOCK = 0;
-        SCRIPTHASH_BLOCK = 0;
-        MULTISIG_BLOCK = 0;
-        NULLDATA_BLOCK = 0;
-    }
+    /** Constructor for testnet consensus parameters. */
+    CTestNetConsensusParams();
 };
 
 /** Consensus parameters for regtest mode.
@@ -115,20 +103,8 @@ public:
 class CRegTestConsensusParams: public CConsensusParams
 {
 public:
-    CRegTestConsensusParams()
-    {
-        // Exodus related:
-        exodusBonusPerWeek = 0.00;
-        exodusDeadline = 1377993600;
-        exodusReward = 100;
-        GENESIS_BLOCK = 101;
-        LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
-        // Script related:
-        PUBKEYHASH_BLOCK = 0;
-        SCRIPTHASH_BLOCK = 0;
-        MULTISIG_BLOCK = 0;
-        NULLDATA_BLOCK = 0;
-    }
+    /** Constructor for regtest consensus parameters. */
+    CRegTestConsensusParams();
 };
 
 /** Returns consensus parameters for the given network. */
