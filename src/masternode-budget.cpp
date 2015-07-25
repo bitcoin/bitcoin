@@ -1139,6 +1139,14 @@ void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
+
+    if(mapVotes.count(hash)){
+        if(mapVotes[hash].nTime > vote.nTime){
+            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - new vote older than existing vote - %s\n", vote.GetHash().ToString());
+            return;
+        }
+    }
+
     mapVotes[hash] = vote;
 }
 
@@ -1387,6 +1395,13 @@ void CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote)
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
+    if(mapVotes.count(hash)){
+        if(mapVotes[hash].nTime > vote.nTime){
+            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - new vote older than existing vote - %s\n", vote.GetHash().ToString());
+            return;
+        }
+    }
+
     mapVotes[hash] = vote;
 }
 
