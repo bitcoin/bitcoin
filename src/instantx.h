@@ -15,7 +15,11 @@
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by
     one party without comprimising the security of InstantX
-    (1000/2150.0)**15 = 1.031e-05
+    (1000/2150.0)**10 = 0.00047382219560689856
+    (1000/2900.0)**10 = 2.3769498616783657e-05
+
+    ### getting 5 of 10 signatures w/ 1000 nodes of 2900
+    (1000/2900.0)**5 = 0.004875397277841433
 */
 #define INSTANTX_SIGNATURES_REQUIRED           5
 #define INSTANTX_SIGNATURES_TOTAL              10
@@ -27,7 +31,7 @@ class CConsensusVote;
 class CTransaction;
 class CTransactionLock;
 
-static const int MIN_INSTANTX_PROTO_VERSION = 70096;
+static const int MIN_INSTANTX_PROTO_VERSION = 70097;
 
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransaction> mapTxLockReqRejected;

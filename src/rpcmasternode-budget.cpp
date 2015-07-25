@@ -180,7 +180,7 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
         }
 
-        mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+        budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
         budget.AddProposal(budgetProposalBroadcast);
 
@@ -248,7 +248,7 @@ Value mnbudget(const Array& params, bool fHelp)
                 continue;
             }
 
-            mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             budget.UpdateProposal(vote, NULL);
 
@@ -292,7 +292,7 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         budget.UpdateProposal(vote, NULL);
 
@@ -538,7 +538,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 continue;
             }
 
-            mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             budget.UpdateFinalizedBudget(vote, NULL);
 
@@ -577,7 +577,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         budget.UpdateFinalizedBudget(vote, NULL);
 

@@ -10,9 +10,10 @@
 #define MASTERNODE_SYNC_LIST              2
 #define MASTERNODE_SYNC_MNW               3
 #define MASTERNODE_SYNC_BUDGET            4
+#define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
-#define MASTERNODE_SYNC_TIMEOUT           5
+#define MASTERNODE_SYNC_TIMEOUT           15
 
 class CMasternodeSync;
 extern CMasternodeSync masternodeSync;
@@ -27,6 +28,7 @@ public:
     int64_t lastMasternodeList;
     int64_t lastMasternodeWinner;
     int64_t lastBudgetItem;
+    int64_t lastFailure;
 
     // Count peers we've requested the list from
     int RequestedMasternodeAssets;

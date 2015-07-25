@@ -5,6 +5,7 @@
 #include "main.h"
 #include "masternode-sync.h"
 #include "masternode-payments.h"
+#include "masternode-budget.h"
 #include "masternode.h"
 #include "masternodeman.h"
 #include "util.h"
@@ -47,6 +48,7 @@ void CMasternodeSync::GetNextAsset()
     switch(RequestedMasternodeAssets)
     {
         case(MASTERNODE_SYNC_INITIAL):
+        case(MASTERNODE_SYNC_FAILED):
             lastMasternodeList = 0;
             lastMasternodeWinner = 0;
             lastBudgetItem = 0;
@@ -95,6 +97,13 @@ void CMasternodeSync::Process()
             RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
         } else
             return;
+    }
+
+    //try syncing again in an hour
+    if(RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED && lastFailure + (60*60) < GetTime()) {
+        GetNextAsset();
+    } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
+        return;
     }
 
     if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
@@ -185,7 +194,14 @@ void CMasternodeSync::Process()
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    GetNextAsset();
+                    if(budget.HasNextFinalizedBudget()) {
+                        GetNextAsset();
+                    } else { //we've failed to sync, this state will reject the next budget block
+                        LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
+                        RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
+                        RequestedMasternodeAttempt = 0;
+                        lastFailure = GetTime();
+                    }
                     return;
                 }
 
