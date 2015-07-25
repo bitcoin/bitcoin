@@ -3,7 +3,6 @@
 
 class uint256;
 
-#include <openssl/sha.h>
 #include <stdint.h>
 
 namespace mastercore

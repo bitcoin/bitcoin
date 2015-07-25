@@ -12,6 +12,7 @@
 
 #include "script/standard.h"
 
+#include <openssl/sha.h>
 #include <stdint.h>
 
 namespace mastercore
