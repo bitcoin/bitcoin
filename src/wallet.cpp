@@ -2345,7 +2345,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         return _("Error: Wallet locked, unable to create transaction!");
 
     if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS)
-        if(darkSendPool.GetMyTransactionCount() > 0)
+        if(darkSendPool.GetEntriesCount() > 0)
             return _("Error: You already have pending entries in the Darksend pool");
 
     // ** find the coins we'll use
