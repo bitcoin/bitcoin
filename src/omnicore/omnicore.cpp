@@ -4094,7 +4094,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     }
 
     // request checkpoint verification
-    bool checkpointValid = VerifyCheckpoint(nBlockNow);
+    bool checkpointValid = VerifyCheckpoint(nBlockNow, pBlockIndex->GetBlockHash());
     assert(checkpointValid);
 
     return 0;

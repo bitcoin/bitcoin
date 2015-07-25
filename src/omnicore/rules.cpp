@@ -16,21 +16,41 @@
 
 namespace mastercore
 {
-/** Checkpoints - block and consensus hash.
+
+struct ConsensusCheckpoint
+{
+    int blockHeight;
+    uint256 blockHash;
+    uint256 consensusHash;
+};
+
+/** Checkpoints - block, block hash and consensus hash.
  */
-static const std::pair<int, std::string> checkpoints[] = {
-    std::make_pair(250000, "f8ca97346756bbe3b530d052c884b2f54c14edc1498ba2176214857dee13f3ca"),
-    std::make_pair(260000, "e8b5445bbfc915e59164a6c22e4d84b23539569ee3c95b49eefaeaca86ea98a0"),
-    std::make_pair(270000, "4eb6f75c961308c18dad1e2677170465f30d367489e61cb2510e400dc3d21117"),
-    std::make_pair(280000, "5896745cfde2423d1c896865b49953cac76d87f8d29c619793698d06c14f11d6"),
-    std::make_pair(290000, "28f4c64fa05adee082c7fb10f3b768747fef28bff1e29f22482ed17e9dfe130c"),
-    std::make_pair(300000, "51b429776f26ee4b9ebf2de669c7c01f420004ce29d4df92a2e3d7b0248cbe8e"),
-    std::make_pair(310000, "f8ab77846e859ccc5094f4944e0b6fbf7f1e1435578fd3debffc0e0db4afda58"),
-    std::make_pair(320000, "ac76516b2be5fd6391ac1511c409e19eab0c5b55754883a72d2473457af9299e"),
-    std::make_pair(330000, "158c9640fd4376569e439f7c6f4b7ac17e14dffc9f9b99a7e6b38b57c7ff5ece"),
-    std::make_pair(340000, "85655b4e01fa328f5d1c955d00f27989e644a38931280d1448b83c98f78d3a25"),
-    std::make_pair(350000, "c562ebcc36c5dd094f7dff3d0083362701b8ad489b825a93dab3e51d7a0b59f2"),
-    std::make_pair(360000, "da08157c018429bf717989ec653151652fb95d3107b287e016c8b9483e9f86f7")
+static const ConsensusCheckpoint vCheckpoints[] = {
+    { 250000, uint256("000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"),
+              uint256("f8ca97346756bbe3b530d052c884b2f54c14edc1498ba2176214857dee13f3ca") },
+    { 260000, uint256("000000000000001fb91fbcebaaba0e2d926f04908d798a8b598c3bd962951080"),
+              uint256("e8b5445bbfc915e59164a6c22e4d84b23539569ee3c95b49eefaeaca86ea98a0") },
+    { 270000, uint256("0000000000000002a775aec59dc6a9e4bb1c025cf1b8c2195dd9dc3998c827c5"),
+              uint256("4eb6f75c961308c18dad1e2677170465f30d367489e61cb2510e400dc3d21117") },
+    { 280000, uint256("0000000000000001c091ada69f444dc0282ecaabe4808ddbb2532e5555db0c03"),
+              uint256("5896745cfde2423d1c896865b49953cac76d87f8d29c619793698d06c14f11d6") },
+    { 290000, uint256("0000000000000000fa0b2badd05db0178623ebf8dd081fe7eb874c26e27d0b3b"),
+              uint256("28f4c64fa05adee082c7fb10f3b768747fef28bff1e29f22482ed17e9dfe130c") },
+    { 300000, uint256("000000000000000082ccf8f1557c5d40b21edabb18d2d691cfbf87118bac7254"),
+              uint256("51b429776f26ee4b9ebf2de669c7c01f420004ce29d4df92a2e3d7b0248cbe8e") },
+    { 310000, uint256("0000000000000000125a28cc9e9209ddb75718f599a8039f6c9e7d9f1fb021e0"),
+              uint256("f8ab77846e859ccc5094f4944e0b6fbf7f1e1435578fd3debffc0e0db4afda58") },
+    { 320000, uint256("000000000000000015aab005b28a326ade60f07515c33517ea5cb598f28fb7ea"),
+              uint256("ac76516b2be5fd6391ac1511c409e19eab0c5b55754883a72d2473457af9299e") },
+    { 330000, uint256("00000000000000000faabab19f17c0178c754dbed023e6c871dcaf74159c5f02"),
+              uint256("158c9640fd4376569e439f7c6f4b7ac17e14dffc9f9b99a7e6b38b57c7ff5ece") },
+    { 340000, uint256("00000000000000000d9b2508615d569e18f00c034d71474fc44a43af8d4a5003"),
+              uint256("85655b4e01fa328f5d1c955d00f27989e644a38931280d1448b83c98f78d3a25") },
+    { 350000, uint256("0000000000000000053cf64f0400bb38e0c4b3872c38795ddde27acb40a112bb"),
+              uint256("c562ebcc36c5dd094f7dff3d0083362701b8ad489b825a93dab3e51d7a0b59f2") },
+    { 360000, uint256("00000000000000000ca6e07cf681390ff888b7f96790286a440da0f2b87c8ea6"),
+              uint256("da08157c018429bf717989ec653151652fb95d3107b287e016c8b9483e9f86f7") },
 };
 
 /** A mapping of transaction types, versions and the blocks at which they are enabled.
@@ -202,17 +222,20 @@ uint256 GetConsensusHash()
     return consensusHash;
 }
 
-/** Compares a supplied block and consensus hash against a hardcoded list of checkpoints */
-bool VerifyCheckpoint(int block)
+/** Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints */
+bool VerifyCheckpoint(int block, uint256 blockHash)
 {
     // checkpoints are only verified for mainnet
     if (isNonMainNet()) return true;
 
-    for (unsigned int i = 0; i < sizeof(checkpoints)/sizeof(checkpoints[0]); i++) {
-        if (block != checkpoints[i].first) continue;
+    for (unsigned int i = 0; i < sizeof(vCheckpoints)/sizeof(vCheckpoints[0]); i++) {
+        if (block != vCheckpoints[i].blockHeight) continue;
+
+        if (blockHash != vCheckpoints[i].blockHash) return false;
+
         // only verify if there is a checkpoint to verify against
         uint256 consensusHash = GetConsensusHash();
-        if (consensusHash.GetHex() != checkpoints[i].second) return false;
+        if (consensusHash != vCheckpoints[i].consensusHash) return false;
     }
 
     // either checkpoint matched or we don't have a checkpoint for this block
