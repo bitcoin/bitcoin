@@ -406,7 +406,7 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
         else {
             coinControl->Select(outpt);
             CTxIn vin(outpt);
-            int rounds = GetInputDarksendRounds(vin);
+            int rounds = pwalletMain->GetInputDarksendRounds(vin);
             if(coinControl->useDarkSend && rounds < nDarksendRounds) {
                 QMessageBox::warning(this, windowTitle(),
                     tr("Non-anonymized input selected. <b>Darksend will be disabled.</b><br><br>If you still want to use Darksend, please deselect all non-nonymized inputs first and then check Darksend checkbox again."),
@@ -789,7 +789,7 @@ void CoinControlDialog::updateView()
 
             // ds+ rounds
             CTxIn vin = CTxIn(out.tx->GetHash(), out.i);
-            int rounds = GetInputDarksendRounds(vin);
+            int rounds = pwalletMain->GetInputDarksendRounds(vin);
 
             if(rounds >= 0) itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString::number(rounds), 11, " "));
             else itemOutput->setText(COLUMN_DARKSEND_ROUNDS, strPad(QString(tr("n/a")), 11, " "));

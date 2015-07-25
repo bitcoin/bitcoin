@@ -56,11 +56,6 @@ extern std::string strMasterNodePrivKey;
 extern map<uint256, CDarksendBroadcastTx> mapDarksendBroadcastTxes;
 extern CActiveMasternode activeMasternode;
 
-// get the Darksend chain depth for a given input
-int GetRealInputDarksendRounds(CTxIn in, int rounds);
-// respect current settings
-int GetInputDarksendRounds(CTxIn in);
-
 /** Holds an Darksend input
  */
 class CTxDSIn : public CTxIn
