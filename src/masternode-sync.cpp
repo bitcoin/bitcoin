@@ -160,7 +160,7 @@ void CMasternodeSync::Process()
                 pnode->FulfilledRequest("mnsync");
 
                 if((lastMasternodeList == 0 || lastMasternodeList > GetTime() - MASTERNODE_SYNC_TIMEOUT)
-                        && RequestedMasternodeAttempt <= 2){
+                        && RequestedMasternodeAttempt <= 4){
                     mnodeman.DsegUpdate(pnode);
                     RequestedMasternodeAttempt++;
                 }

@@ -763,7 +763,7 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
         CMasternodePaymentWinner winner = (*it).second;
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20) {
             CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
-            RelayInv(inv);
+            node->PushInventory(inv);
         }
         ++it;
     }

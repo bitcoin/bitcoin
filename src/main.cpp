@@ -4016,13 +4016,13 @@ bool static AlreadyHave(const CInv& inv)
         }
         return false;
     case MSG_MASTERNODE_ANNOUNCE:
-        if(mapSeenMasternodeBroadcast.count(inv.hash)) {
+        if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
             masternodeSync.AddedMasternodeList();
             return true;
         }
         return false;
     case MSG_MASTERNODE_PING:
-        return mapSeenMasternodePing.count(inv.hash);
+        return mnodeman.mapSeenMasternodePing.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -4223,20 +4223,20 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if(mapSeenMasternodeBroadcast.count(inv.hash)){
+                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeBroadcast[inv.hash];
+                        ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash];
                         pfrom->PushMessage("mnb", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_PING) {
-                    if(mapSeenMasternodePing.count(inv.hash)){
+                    if(mnodeman.mapSeenMasternodePing.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenMasternodePing[inv.hash];
+                        ss << mnodeman.mapSeenMasternodePing[inv.hash];
                         pfrom->PushMessage("mnp", ss);
                         pushed = true;
                     }

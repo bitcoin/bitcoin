@@ -141,7 +141,7 @@ void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     int nDoS = 0;
     if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
         lastPing = mnb.lastPing;
-        mapSeenMasternodePing[lastPing.GetHash()] = lastPing;
+        mnodeman.mapSeenMasternodePing[lastPing.GetHash()] = lastPing;
     }
 }
 

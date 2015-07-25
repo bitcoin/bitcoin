@@ -1799,7 +1799,6 @@ void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
 
         pnode->PushMessage("ix", tx);
     }
-
 }
 
 void RelayInv(CInv &inv, const int minProtoVersion) {
