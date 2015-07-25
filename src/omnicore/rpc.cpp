@@ -1562,8 +1562,7 @@ Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
     LOCK(cs_main); // TODO - will this ensure we don't take in a new block in the couple of ms it takes to calculate the consensus hash?
 
     int block = GetHeight();
-    uint256 consensusHash;
-    consensusHash = GetConsensusHash();
+    uint256 consensusHash = GetConsensusHash();
 
     Object response;
     response.push_back(Pair("block", block));

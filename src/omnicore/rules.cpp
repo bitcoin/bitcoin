@@ -205,8 +205,7 @@ bool VerifyCheckpoint(int block)
     for (unsigned int i = 0; i < sizeof(checkpoints)/sizeof(checkpoints[0]); i++) {
         if (block != checkpoints[i].first) continue;
         // only verify if there is a checkpoint to verify against
-        uint256 consensusHash;
-        consensusHash = GetConsensusHash();
+        uint256 consensusHash = GetConsensusHash();
         if (consensusHash.GetHex() != checkpoints[i].second) return false;
     }
 
