@@ -20,12 +20,6 @@ using namespace std;
 
 class CMasternodeMan;
 
-// Keep track of all broadcasts I've seen
-extern map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
-
-// Keep track of all pings I've seen
-extern map<uint256, CMasternodePing> mapSeenMasternodePing;
-
 extern CMasternodeMan mnodeman;
 void DumpMasternodes();
 
@@ -71,6 +65,11 @@ private:
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
+    // Keep track of all broadcasts I've seen
+    map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+    // Keep track of all pings I've seen
+    map<uint256, CMasternodePing> mapSeenMasternodePing;
+    
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
@@ -78,12 +77,15 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-            LOCK(cs);
-            READWRITE(vMasternodes);
-            READWRITE(mAskedUsForMasternodeList);
-            READWRITE(mWeAskedForMasternodeList);
-            READWRITE(mWeAskedForMasternodeListEntry);
-            READWRITE(nDsqCount);
+        LOCK(cs);
+        READWRITE(vMasternodes);
+        READWRITE(mAskedUsForMasternodeList);
+        READWRITE(mWeAskedForMasternodeList);
+        READWRITE(mWeAskedForMasternodeListEntry);
+        READWRITE(nDsqCount);
+
+        READWRITE(mapSeenMasternodeBroadcast);
+        READWRITE(mapSeenMasternodePing);
     }
 
     CMasternodeMan();

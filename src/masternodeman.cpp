@@ -15,12 +15,6 @@
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
-// Keep track of all broadcasts I've seen
-map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
-
-// Keep track of all pings I've seen
-map<uint256, CMasternodePing> mapSeenMasternodePing;
-
 struct CompareValueOnly
 {
     bool operator()(const pair<int64_t, CTxIn>& t1,
@@ -617,11 +611,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
-        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+        if(mnodeman.mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
             masternodeSync.AddedMasternodeList();
             return;
         }
-        mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
+        mnodeman.mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
 
         int nDoS = 0;
         if(!mnb.CheckAndUpdate(nDoS)){
@@ -661,8 +655,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(fDebug) LogPrintf("mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
 
-        if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
-        mapSeenMasternodePing[mnp.GetHash()] = mnp;
+        if(mnodeman.mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
+        mnodeman.mapSeenMasternodePing[mnp.GetHash()] = mnp;
 
         int nDoS = 0;
         if(mnp.CheckAndUpdate(nDoS)) return;
@@ -724,15 +718,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(mn.IsEnabled()) {
                 if(fDebug) LogPrintf("dseg - Sending Masternode entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
-                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                    ss.reserve(1000);
-                    ss << CMasternodeBroadcast(mn);
-                    pfrom->PushMessage("mnb", ss);
+                    CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
+                    pfrom->PushInventory(inv);
                 } else if (vin == mn.vin) {
-                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                    ss.reserve(1000);
-                    ss << CMasternodeBroadcast(mn);
-                    pfrom->PushMessage("mnb", ss);
+                    CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
+                    pfrom->PushInventory(inv);
 
                     LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString().c_str());
                     return;

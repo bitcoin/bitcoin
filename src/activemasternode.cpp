@@ -171,7 +171,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
         }
 
         pmn->lastPing = mnp;
-        mapSeenMasternodePing[mnp.GetHash()] = mnp;
+        mnodeman.mapSeenMasternodePing[mnp.GetHash()] = mnp;
         mnp.Relay();
 
         return true;
@@ -244,7 +244,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
         LogPrintf("CActiveMasternode::Register() -  %s\n", errorMessage);
         return false;
     }
-    mapSeenMasternodePing[mnp.GetHash()] = mnp;
+    mnodeman.mapSeenMasternodePing[mnp.GetHash()] = mnp;
 
     LogPrintf("CActiveMasternode::Register() - Adding to Masternode list\n    service: %s\n    vin: %s\n", service.ToString(), vin.ToString());
     mnb = CMasternodeBroadcast(service, vin, pubKeyCollateralAddress, pubKeyMasternode, PROTOCOL_VERSION);
@@ -254,7 +254,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
         LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
         return false;
     }
-    mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
+    mnodeman.mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
 
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
