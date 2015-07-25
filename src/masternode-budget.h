@@ -33,11 +33,6 @@ class CTxBudgetPayment;
 static const CAmount BUDGET_FEE_TX = (0.5*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 
-extern std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
-extern std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
-extern std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
-extern std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
-
 extern CBudgetManager budget;
 void DumpBudgets();
 
@@ -88,6 +83,13 @@ public:
     map<uint256, CBudgetProposal> mapProposals;
     map<uint256, CFinalizedBudget> mapFinalizedBudgets;
 
+    std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
+    std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
+    std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
+    std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
+    std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
+    std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
+
     CBudgetManager() {
         mapProposals.clear();
         mapFinalizedBudgets.clear();
@@ -114,6 +116,7 @@ public:
     void AddProposal(CBudgetProposal& budgetProposal);
     void AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
     void SubmitFinalBudget();
+    bool HasNextFinalizedBudget();
 
     bool UpdateProposal(CBudgetVote& vote, CNode* pfrom);
     bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom);
@@ -131,6 +134,8 @@ public:
         mapSeenMasternodeBudgetVotes.clear();
         mapSeenFinalizedBudgets.clear();
         mapSeenFinalizedBudgetVotes.clear();
+        mapOrphanMasternodeBudgetVotes.clear();
+        mapOrphanFinalizedBudgetVotes.clear();
     }
     void CheckAndRemove();
     std::string ToString() const;
@@ -144,6 +149,8 @@ public:
         READWRITE(mapSeenMasternodeBudgetVotes);
         READWRITE(mapSeenFinalizedBudgets);
         READWRITE(mapSeenFinalizedBudgetVotes);
+        READWRITE(mapOrphanMasternodeBudgetVotes);
+        READWRITE(mapOrphanFinalizedBudgetVotes);
 
         READWRITE(mapProposals);
         READWRITE(mapFinalizedBudgets);

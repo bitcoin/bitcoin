@@ -3266,6 +3266,17 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();
+
+            //allow clients to ask for syncing again if they need it
+            if(GetHeight() % 100 == 0) {
+                LOCK(cs_vNodes);
+                BOOST_FOREACH(CNode* pnode, vNodes) {
+                    pnode->ClearFulfilledRequest("getspork");
+                    pnode->ClearFulfilledRequest("mnsync");
+                    pnode->ClearFulfilledRequest("mnwsync");
+                    pnode->ClearFulfilledRequest("busync");
+                }                
+            }
         }
     }
 
@@ -3970,25 +3981,25 @@ bool static AlreadyHave(const CInv& inv)
         }
         return false;
     case MSG_BUDGET_VOTE:
-        if(mapSeenMasternodeBudgetVotes.count(inv.hash)) {
+        if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)) {
             masternodeSync.AddedBudgetItem();
             return true;
         }
         return false;
     case MSG_BUDGET_PROPOSAL:
-        if(mapSeenMasternodeBudgetProposals.count(inv.hash)) {
+        if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)) {
             masternodeSync.AddedBudgetItem();
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
-        if(mapSeenFinalizedBudgetVotes.count(inv.hash)) {
+        if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)) {
             masternodeSync.AddedBudgetItem();
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
-        if(mapSeenFinalizedBudgets.count(inv.hash)) {
+        if(budget.mapSeenFinalizedBudgets.count(inv.hash)) {
             masternodeSync.AddedBudgetItem();
             return true;
         }
@@ -4161,40 +4172,40 @@ void static ProcessGetData(CNode* pfrom)
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeBudgetVotes[inv.hash];
+                        ss << budget.mapSeenMasternodeBudgetVotes[inv.hash];
                         pfrom->PushMessage("mvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenMasternodeBudgetProposals[inv.hash];
+                        ss << budget.mapSeenMasternodeBudgetProposals[inv.hash];
                         pfrom->PushMessage("mprop", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
-                    if(mapSeenFinalizedBudgetVotes.count(inv.hash)){
+                    if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenFinalizedBudgetVotes[inv.hash];
+                        ss << budget.mapSeenFinalizedBudgetVotes[inv.hash];
                         pfrom->PushMessage("fbvote", ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if(mapSeenFinalizedBudgets.count(inv.hash)){
+                    if(budget.mapSeenFinalizedBudgets.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mapSeenFinalizedBudgets[inv.hash];
+                        ss << budget.mapSeenFinalizedBudgets[inv.hash];
                         pfrom->PushMessage("fbs", ss);
                         pushed = true;
                     }
@@ -4818,7 +4829,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 if (state.IsInvalid(nDoS)) {
                     if (nDoS > 0)
                         Misbehaving(pfrom->GetId(), nDoS);
-                    return error("invalid header received");
+                    std::string strError = "invalid header received " + header.GetHash().ToString();
+                    return error(strError.c_str());
                 }
             }
         }

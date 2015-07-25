@@ -18,13 +18,6 @@
 CBudgetManager budget;
 CCriticalSection cs_budget;
 
-std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
-std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
-std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
-std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
-std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
-std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
-
 std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 
 int nSubmittedFinalBudget;
@@ -514,6 +507,19 @@ bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight){
     return false;
 }
 
+bool CBudgetManager::HasNextFinalizedBudget()
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return false;
+
+    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    if(nBlockStart - pindexPrev->nHeight > 576*2) return false; //we wouldn't have the budget yet
+
+    if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
+
+    return false;
+}
+
 bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
     int nHighestCount = 0;
@@ -771,7 +777,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         uint256 nProp;
         vRecv >> nProp;
 
-
         if(Params().NetworkID() == CBaseChainParams::MAIN){
             if(pfrom->HasFulfilledRequest("mnvs")) {
                 LogPrintf("mnvs - peer already asked me for the list\n");
@@ -810,6 +815,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         budgetProposalBroadcast.Relay();
         masternodeSync.AddedBudgetItem();
 
+        LogPrintf("mprop - new budget - %s\n", budgetProposalBroadcast.GetHash().ToString());
+
         //We might have active votes for this proposal that are valid now
         CheckOrphanVotes();
     }
@@ -843,6 +850,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             vote.Relay();
             if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
             masternodeSync.AddedBudgetItem();
+
+            LogPrintf("mvote - new budget vote - %s\n", vote.GetHash().ToString());
         } else {
             LogPrintf("mvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
@@ -870,6 +879,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             LogPrintf("fbs - invalid finalized budget - %s\n", strError);
             return;
         }
+
+        LogPrintf("fbs - new finalized budget - %s\n", finalizedBudgetBroadcast.GetHash().ToString());
 
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
         AddFinalizedBudget(finalizedBudget);
@@ -908,6 +919,9 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             vote.Relay();
             if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
             masternodeSync.AddedBudgetItem();
+
+            if(fDebug) LogPrintf("fbs - new finalized budget vote - %s\n", vote.GetHash().ToString());
+
         } else {
             LogPrintf("fbvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
             return;
@@ -952,7 +966,6 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
         }
         ++it1;
     }
-
 
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
@@ -1576,7 +1589,7 @@ void CFinalizedBudget::SubmitVote()
         return;
     }
 
-    mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+    budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
     vote.Relay();
     budget.UpdateFinalizedBudget(vote, NULL);
 }
@@ -1690,7 +1703,11 @@ std::string CBudgetManager::ToString() const
     std::ostringstream info;
 
     info << "Proposals: " << (int)mapProposals.size() <<
-            ", Budgets: " << (int)mapFinalizedBudgets.size();
+            ", Budgets: " << (int)mapFinalizedBudgets.size() <<
+            ", Seen Budgets: " << (int)mapSeenMasternodeBudgetProposals.size() <<
+            ", Seen Budget Votes: " << (int)mapSeenMasternodeBudgetVotes.size() <<
+            ", Seen Final Budgets: " << (int)mapSeenFinalizedBudgets.size() <<
+            ", Seen Final Budget Votes: " << (int)mapSeenFinalizedBudgetVotes.size();
 
     return info.str();
 }
