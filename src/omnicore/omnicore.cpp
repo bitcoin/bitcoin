@@ -4088,7 +4088,7 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     }
 
     // calculate and print a consensus hash if required
-    if (msc_debug_consensus_hash) {
+    if (msc_debug_consensus_hash_every_block) {
         uint256 consensusHash = GetConsensusHash();
         PrintToLog("Consensus hash for block %d: %s\n", nBlockNow, consensusHash.GetHex());
     }

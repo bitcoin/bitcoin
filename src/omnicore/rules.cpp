@@ -154,6 +154,8 @@ uint256 GetConsensusHash()
 
     LOCK(cs_tally);
 
+    if (msc_debug_consensus_hash) PrintToLog("Beginning generation of current consensus hash...\n");
+
     // loop through the tally map, updating the sha context with the data from each balance & type
     for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
@@ -185,6 +187,8 @@ uint256 GetConsensusHash()
                                          FormatIndivisibleMP(acceptReserve) + "|" +
                                          FormatIndivisibleMP(metaDExReserve);
 
+            if (msc_debug_consensus_hash) PrintToLog("Adding data to consensus hash: %s\n", dataStr);
+
             // update the sha context with the data string
             SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
         }
@@ -193,6 +197,8 @@ uint256 GetConsensusHash()
     // extract the final result and return the hash
     uint256 consensusHash;
     SHA256_Final((unsigned char*)&consensusHash, &shaCtx);
+    if (msc_debug_consensus_hash) PrintToLog("Finished generation of consensus hash.  Result: %s\n", consensusHash.GetHex());
+
     return consensusHash;
 }
 
