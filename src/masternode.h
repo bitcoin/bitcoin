@@ -309,6 +309,7 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << sigTime;
         ss << pubkey;
+        ss << lastPing;
         return ss.GetHash();
     }
 
