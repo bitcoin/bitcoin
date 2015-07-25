@@ -192,9 +192,10 @@ Value masternode(const Array& params, bool fHelp)
         {
             if(params[1] == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
             if(params[1] == "enabled") return mnodeman.CountEnabled();
-            if(params[1] == "all") return strprintf("%d / %d / %d",
+            if(params[1] == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d)",
+                                                    mnodeman.size(),
                                                     mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION),
-                                                    mnodeman.CountEnabled(), mnodeman.size());
+                                                    mnodeman.CountEnabled());
         }
         return mnodeman.size();
     }
