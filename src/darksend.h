@@ -267,6 +267,37 @@ class CDarksendPool
 private:
     mutable CCriticalSection cs_darksend;
 
+    std::vector<CDarkSendEntry> entries; // Masternode/clients entries
+    CMutableTransaction finalTransaction; // the finalized transaction ready for signing
+
+    int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
+
+    unsigned int state; // should be one of the POOL_STATUS_XXX values
+    unsigned int entriesCount;
+    unsigned int lastEntryAccepted;
+    unsigned int countEntriesAccepted;
+
+    std::vector<CTxIn> lockedCoins;
+
+    std::string lastMessage;
+    bool unitTest;
+
+    int sessionID;
+
+    int sessionUsers; //N Users have said they'll join
+    bool sessionFoundMasternode; //If we've found a compatible Masternode
+    std::vector<CTransaction> vecSessionCollateral;
+
+    int cachedLastSuccess;
+
+    int minBlockSpacing; //required blocks between mixes
+    CMutableTransaction txCollateral;
+
+    int64_t lastNewBlock;
+
+    //debugging data
+    std::string strAutoDenomResult;
+
 public:
     enum messages {
         ERR_ALREADY_HAVE,
@@ -293,45 +324,12 @@ public:
         MSG_ENTRIES_ADDED
     };
 
-    std::vector<CDarkSendEntry> myEntries; // clients entries
-    std::vector<CDarkSendEntry> entries; // Masternode entries
-    CMutableTransaction finalTransaction; // the finalized transaction ready for signing
-
-    int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
-    int64_t lastAutoDenomination; // TODO; not used - Delete?
-
-    unsigned int state; // should be one of the POOL_STATUS_XXX values
-    unsigned int entriesCount;
-    unsigned int lastEntryAccepted;
-    unsigned int countEntriesAccepted;
-
     // where collateral should be made out to
     CScript collateralPubKey;
 
-    std::vector<CTxIn> lockedCoins;
-
-    uint256 masterNodeBlockHash;
-
-    std::string lastMessage;
-    bool completedTransaction;
-    bool unitTest;
     CMasternode* pSubmittedToMasternode;
-
-    int sessionID;
     int sessionDenom; //Users must submit an denom matching this
-    int sessionUsers; //N Users have said they'll join
-    bool sessionFoundMasternode; //If we've found a compatible Masternode
-    std::vector<CTransaction> vecSessionCollateral;
-
-    int cachedLastSuccess;
     int cachedNumBlocks; //used for the overview screen
-    int minBlockSpacing; //required blocks between mixes
-    CMutableTransaction txCollateral;
-
-    int64_t lastNewBlock;
-
-    //debugging data
-    std::string strAutoDenomResult;
 
     CDarksendPool()
     {
@@ -375,13 +373,13 @@ public:
 
     bool SetCollateralAddress(std::string strAddress);
     void Reset();
-    void SetNull(bool clearEverything=false);
+    void SetNull();
 
     void UnlockCoins();
 
     bool IsNull() const
     {
-        return (state == POOL_STATUS_ACCEPTING_ENTRIES && entries.empty() && myEntries.empty());
+        return state == POOL_STATUS_ACCEPTING_ENTRIES && entries.empty();
     }
 
     int GetState() const
@@ -393,11 +391,7 @@ public:
 
     int GetEntriesCount() const
     {
-        if(fMasterNode){
-            return entries.size();
-        } else {
-            return entriesCount;
-        }
+        return entries.size();
     }
 
     /// Get the time the last entry was accepted (time in UTC milliseconds)
@@ -412,17 +406,11 @@ public:
         return countEntriesAccepted;
     }
 
-    /// Get the client's transaction count
-    int GetMyTransactionCount() const
-    {
-        return myEntries.size();
-    }
-
     // Set the 'state' value, with some logging and capturing when the state changed
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
+            if(fDebug) LogPrintf("CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
             return;
         }
 

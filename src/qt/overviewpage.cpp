@@ -502,6 +502,7 @@ void OverviewPage::toggleDarksend(){
 
     if(!fEnableDarksend){
         ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+        darkSendPool.UnlockCoins();
     } else {
         ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
 
