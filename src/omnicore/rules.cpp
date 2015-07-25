@@ -152,7 +152,6 @@ uint256 GetConsensusHash()
     SHA256_CTX shaCtx;
     SHA256_Init(&shaCtx);
 
-    // obtain a lock while we interrogate the tally map
     LOCK(cs_tally);
 
     // loop through the tally map, updating the sha context with the data from each balance & type
@@ -171,11 +170,20 @@ uint256 GetConsensusHash()
 
             note: pending tally is ignored
             */
+
+            int64_t balance = tally.getMoney(propertyId, BALANCE);
+            int64_t sellOfferReserve = tally.getMoney(propertyId, SELLOFFER_RESERVE);
+            int64_t acceptReserve = tally.getMoney(propertyId, ACCEPT_RESERVE);
+            int64_t metaDExReserve = tally.getMoney(propertyId, METADEX_RESERVE);
+
+            // skip this entry if all balances are empty
+            if (!balance && !sellOfferReserve && !acceptReserve && !metaDExReserve) continue;
+
             const std::string& dataStr = address + "|" + FormatIndivisibleMP(propertyId) + "|" +
-                                         FormatIndivisibleMP(tally.getMoney(propertyId, BALANCE)) + "|" +
-                                         FormatIndivisibleMP(tally.getMoney(propertyId, SELLOFFER_RESERVE)) + "|" +
-                                         FormatIndivisibleMP(tally.getMoney(propertyId, ACCEPT_RESERVE)) + "|" +
-                                         FormatIndivisibleMP(tally.getMoney(propertyId, METADEX_RESERVE));
+                                         FormatIndivisibleMP(balance) + "|" +
+                                         FormatIndivisibleMP(sellOfferReserve) + "|" +
+                                         FormatIndivisibleMP(acceptReserve) + "|" +
+                                         FormatIndivisibleMP(metaDExReserve);
 
             // update the sha context with the data string
             SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
