@@ -1193,9 +1193,9 @@ CAmount CWallet::GetAnonymizableBalance(bool includeAlreadyAnonymized) const
                 {
                     CTxIn vin = CTxIn(hash, i);
 
-                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i])) continue;
+                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || IsLockedCoin(hash, i)) continue;
                     if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0) continue; // do not count immature
-                    if(pcoin->vout[i].nValue == 1000*COIN) continue; // do not count MN-like outputs
+                    if(fMasterNode && pcoin->vout[i].nValue == 1000*COIN) continue; // do not count MN-like outputs
 
                     int rounds = GetInputDarksendRounds(vin);
                     if(rounds >=-2 && (rounds < nDarksendRounds || (includeAlreadyAnonymized && rounds >= nDarksendRounds))) {
@@ -1450,10 +1450,9 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
                 } else if(coin_type == ONLY_NONDENOMINATED || coin_type == ONLY_NONDENOMINATED_NOTMN) {
-                    found = true;
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !IsDenominatedAmount(pcoin->vout[i].nValue);
-                    if(found && coin_type == ONLY_NONDENOMINATED_NOTMN) found = (pcoin->vout[i].nValue != 1000*COIN); // do not use MN funds
+                    if(found && fMasterNode && coin_type == ONLY_NONDENOMINATED_NOTMN) found = (pcoin->vout[i].nValue != 1000*COIN); // do not use MN funds
                 } else {
                     found = true;
                 }
