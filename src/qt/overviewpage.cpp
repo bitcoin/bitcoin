@@ -157,7 +157,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
             }
             timer = new QTimer(this);
             connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
-            timer->start(333);
+            timer->start(1000);
         }
     }
 
@@ -307,7 +307,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateDarksendProgress()
 {
-    if(IsInitialBlockDownload() || ShutdownRequested()) return;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     if(!pwalletMain) return;
 
@@ -329,8 +329,9 @@ void OverviewPage::updateDarksendProgress()
         return;
     }
 
-    int64_t nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true, true);
-    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance(true) + nDenominatedUnconfirmedBalance;
+    int64_t nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
+    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance() +
+            pwalletMain->GetAnonymizedBalance() + nDenominatedUnconfirmedBalance;
 
     // If it's more than the anon threshold, limit to that.
     if(nMaxToAnonymize > nAnonymizeDarkcoinAmount*COIN) nMaxToAnonymize = nAnonymizeDarkcoinAmount*COIN;
@@ -390,22 +391,19 @@ void OverviewPage::updateDarksendProgress()
 
 void OverviewPage::darkSendStatus()
 {
-    static int64_t lastNewBlock = 0;
+    static int64_t nLastDSProgressBlockTime = 0;
 
     int nBestHeight = chainActive.Tip()->nHeight;
 
-    if(nBestHeight != darkSendPool.cachedNumBlocks)
-    {
-        //we we're processing lots of blocks, we'll just leave
-        if(GetTime() - lastNewBlock < 10) return;
-        lastNewBlock = GetTime();
-        updateDarksendProgress();
-    }
+    // we we're processing more then 1 block per second, we'll just leave
+    if(((nBestHeight - darkSendPool.cachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
+    nLastDSProgressBlockTime = GetTimeMillis();
 
     if(!fEnableDarksend) {
         if(nBestHeight != darkSendPool.cachedNumBlocks)
         {
             darkSendPool.cachedNumBlocks = nBestHeight;
+            updateDarksendProgress();
 
             ui->darksendEnabled->setText(tr("Disabled"));
             ui->darksendStatus->setText("");
@@ -420,8 +418,7 @@ void OverviewPage::darkSendStatus()
     {
         // Balance and number of transactions might have changed
         darkSendPool.cachedNumBlocks = nBestHeight;
-
-        /* *******************************************************/
+        updateDarksendProgress();
 
         ui->darksendEnabled->setText(tr("Enabled"));
     }

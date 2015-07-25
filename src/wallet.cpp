@@ -11,7 +11,6 @@
 #include "coincontrol.h"
 #include "net.h"
 #include "masternode-budget.h"
-#include "darksend.h"
 #include "keepass.h"
 #include "instantx.h"
 #include "script/script.h"
@@ -829,6 +828,101 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
     return 0;
 }
 
+// Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
+int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
+{
+    static std::map<uint256, CMutableTransaction> mDenomWtxes;
+
+    if(rounds >= 16) return 15; // 16 rounds max
+
+    uint256 hash = in.prevout.hash;
+    unsigned int nout = in.prevout.n;
+
+    const CWalletTx* wtx = GetWalletTx(hash);
+    if(wtx != NULL)
+    {
+        std::map<uint256, CMutableTransaction>::const_iterator mdwi = mDenomWtxes.find(hash);
+        // not known yet, let's add it
+        if(mdwi == mDenomWtxes.end())
+        {
+            if(fDebug) LogPrintf("GetInputDarksendRounds INSERTING %s\n", hash.ToString());
+            mDenomWtxes[hash] = CMutableTransaction(*wtx);
+        }
+        // found and it's not an initial value, just return it
+        else if(mDenomWtxes[hash].vout[nout].nRounds != -10)
+        {
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
+
+
+        // bounds check
+        if(nout >= wtx->vout.size())
+        {
+            // should never actually hit this
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
+            return -4;
+        }
+
+        if(pwalletMain->IsCollateralAmount(wtx->vout[nout].nValue))
+        {
+            mDenomWtxes[hash].vout[nout].nRounds = -3;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
+
+        //make sure the final output is non-denominate
+        if(/*rounds == 0 && */!IsDenominatedAmount(wtx->vout[nout].nValue)) //NOT DENOM
+        {
+            mDenomWtxes[hash].vout[nout].nRounds = -2;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
+
+        bool fAllDenoms = true;
+        BOOST_FOREACH(CTxOut out, wtx->vout)
+        {
+            fAllDenoms = fAllDenoms && IsDenominatedAmount(out.nValue);
+        }
+        // this one is denominated but there is another non-denominated output found in the same tx
+        if(!fAllDenoms)
+        {
+            mDenomWtxes[hash].vout[nout].nRounds = 0;
+            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            return mDenomWtxes[hash].vout[nout].nRounds;
+        }
+
+        int nShortest = -10; // an initial value, should be no way to get this by calculations
+        bool fDenomFound = false;
+        // only denoms here so let's look up
+        BOOST_FOREACH(CTxIn in2, wtx->vin)
+        {
+            if(IsMine(in2))
+            {
+                int n = GetRealInputDarksendRounds(in2, rounds+1);
+                // denom found, find the shortest chain or initially assign nShortest with the first found value
+                if(n >= 0 && (n < nShortest || nShortest == -10))
+                {
+                    nShortest = n;
+                    fDenomFound = true;
+                }
+            }
+        }
+        mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
+                ? (nShortest >= 15 ? 16 : nShortest + 1) // good, we a +1 to the shortest one but only 16 rounds max allowed
+                : 0;            // too bad, we are the fist one in that chain
+        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+        return mDenomWtxes[hash].vout[nout].nRounds;
+    }
+
+    return rounds-1;
+}
+
+// respect current settings
+int CWallet::GetInputDarksendRounds(CTxIn in) const {
+    int realDarksendRounds = GetRealInputDarksendRounds(in, 0);
+    return realDarksendRounds > nDarksendRounds ? nDarksendRounds : realDarksendRounds;
+}
+
 bool CWallet::IsDenominated(const CTxIn &txin) const
 {
     {
@@ -842,6 +936,22 @@ bool CWallet::IsDenominated(const CTxIn &txin) const
     }
     return false;
 }
+
+bool CWallet::IsDenominated(const CTransaction& tx) const
+{
+    /*
+        Return false if ANY inputs are non-denom
+    */
+    bool ret = true;
+    BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    {
+        if(!IsDenominated(txin)) {
+            ret = false;
+        }
+    }
+    return ret;
+}
+
 
 bool CWallet::IsDenominatedAmount(int64_t nInputAmount) const
 {
@@ -1175,7 +1285,7 @@ CAmount CWallet::GetBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetAnonymizableBalance(bool includeAlreadyAnonymized) const
+CAmount CWallet::GetAnonymizableBalance() const
 {
     if(fLiteMode) return 0;
 
@@ -1187,22 +1297,7 @@ CAmount CWallet::GetAnonymizableBalance(bool includeAlreadyAnonymized) const
             const CWalletTx* pcoin = &(*it).second;
 
             if (pcoin->IsTrusted())
-            {
-                uint256 hash = (*it).first;
-                for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-                {
-                    CTxIn vin = CTxIn(hash, i);
-
-                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || IsLockedCoin(hash, i)) continue;
-                    if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0) continue; // do not count immature
-                    if(fMasterNode && pcoin->vout[i].nValue == 1000*COIN) continue; // do not count MN-like outputs
-
-                    int rounds = GetInputDarksendRounds(vin);
-                    if(rounds >=-2 && (rounds < nDarksendRounds || (includeAlreadyAnonymized && rounds >= nDarksendRounds))) {
-                        nTotal += pcoin->vout[i].nValue;
-                    }
-                }
-            }
+               nTotal += pcoin->GetAnonymizableCredit();
         }
     }
 
@@ -1221,20 +1316,7 @@ CAmount CWallet::GetAnonymizedBalance() const
             const CWalletTx* pcoin = &(*it).second;
 
             if (pcoin->IsTrusted())
-            {
-                uint256 hash = (*it).first;
-                for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-                {
-                    CTxIn vin = CTxIn(hash, i);
-
-                    if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
-
-                    int rounds = GetInputDarksendRounds(vin);
-                    if(rounds >= nDarksendRounds){
-                        nTotal += pcoin->vout[i].nValue;
-                    }
-                }
-            }
+                nTotal += pcoin->GetAnonymizedCredit();
         }
     }
 
@@ -1245,6 +1327,8 @@ CAmount CWallet::GetAnonymizedBalance() const
 // that's ok as long as we use it for informational purposes only
 double CWallet::GetAverageAnonymizedRounds() const
 {
+    if(fLiteMode) return 0;
+
     double fTotal = 0;
     double fCount = 0;
 
@@ -1260,7 +1344,7 @@ double CWallet::GetAverageAnonymizedRounds() const
 
                 CTxIn vin = CTxIn(hash, i);
 
-                if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+                if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(vin)) continue;
 
                 int rounds = GetInputDarksendRounds(vin);
                 fTotal += (float)rounds;
@@ -1278,6 +1362,8 @@ double CWallet::GetAverageAnonymizedRounds() const
 // that's ok as long as we use it for informational purposes only
 CAmount CWallet::GetNormalizedAnonymizedBalance() const
 {
+    if(fLiteMode) return 0;
+
     CAmount nTotal = 0;
 
     {
@@ -1292,7 +1378,8 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
                 CTxIn vin = CTxIn(hash, i);
 
-                if(IsSpent(hash, i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+                if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(vin)) continue;
+                if (pcoin->GetDepthInMainChain() < 0) continue;
 
                 int rounds = GetInputDarksendRounds(vin);
                 nTotal += pcoin->vout[i].nValue * rounds / nDarksendRounds;
@@ -1303,8 +1390,10 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetDenominatedBalance(bool denom, bool unconfirmed, bool includeAlreadyAnonymized) const
+CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
 {
+    if(fLiteMode) return 0;
+
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
@@ -1312,31 +1401,9 @@ CAmount CWallet::GetDenominatedBalance(bool denom, bool unconfirmed, bool includ
         {
             const CWalletTx* pcoin = &(*it).second;
 
-            int nDepth = pcoin->GetDepthInMainChain(false);
-
-            // skip conflicted
-            if(nDepth < 0) continue;
-
-            bool isUnconfirmed = (!IsFinalTx(*pcoin) || (!pcoin->IsTrusted() && nDepth == 0));
-            if(unconfirmed != isUnconfirmed) continue;
-            uint256 hash = (*it).first;
-
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++)
-            {
-                if(IsSpent(hash, i)) continue;
-                if(!IsMine(pcoin->vout[i])) continue;
-                if(denom != IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
-
-                CTxIn vin = CTxIn(hash, i);
-                int rounds = GetInputDarksendRounds(vin);
-                if(!includeAlreadyAnonymized && rounds >= nDarksendRounds) continue;
-
-                nTotal += pcoin->vout[i].nValue;
-            }
+            nTotal += pcoin->GetDenominatedCredit(unconfirmed);
         }
     }
-
-
 
     return nTotal;
 }
@@ -1884,7 +1951,7 @@ int CWallet::CountInputsWithAmount(int64_t nInputAmount)
 
                     if(out.tx->vout[out.i].nValue != nInputAmount) continue;
                     if(!IsDenominatedAmount(pcoin->vout[i].nValue)) continue;
-                    if(IsSpent(out.tx->GetHash(), i) || !IsMine(pcoin->vout[i]) || !IsDenominated(vin)) continue;
+                    if(IsSpent(out.tx->GetHash(), i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(vin)) continue;
 
                     nTotal++;
                 }
@@ -2549,20 +2616,6 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         return false;
     CWalletDB(strWalletFile).ErasePurpose(CBitcoinAddress(address).ToString());
     return CWalletDB(strWalletFile).EraseName(CBitcoinAddress(address).ToString());
-}
-
-bool CWallet::GetTransaction(const uint256 &hashTx, CWalletTx& wtx)
-{
-    {
-        LOCK(cs_wallet);
-        map<uint256, CWalletTx>::iterator mi = mapWallet.find(hashTx);
-        if (mi != mapWallet.end())
-        {
-            wtx = (*mi).second;
-            return true;
-        }
-    }
-    return false;
 }
 
 bool CWallet::SetDefaultKey(const CPubKey &vchPubKey)

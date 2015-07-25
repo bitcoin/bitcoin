@@ -378,101 +378,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
 int randomizeList (int i) { return std::rand()%i;}
 
-// Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
-int GetRealInputDarksendRounds(CTxIn in, int rounds)
-{
-    static std::map<uint256, CMutableTransaction> mDenomWtxes;
-
-    if(rounds >= 16) return 15; // 16 rounds max
-
-    uint256 hash = in.prevout.hash;
-    unsigned int nout = in.prevout.n;
-
-    CWalletTx wtx;
-    if(pwalletMain->GetTransaction(hash, wtx))
-    {
-        std::map<uint256, CMutableTransaction>::const_iterator mdwi = mDenomWtxes.find(hash);
-        // not known yet, let's add it
-        if(mdwi == mDenomWtxes.end())
-        {
-            if(fDebug) LogPrintf("GetInputDarksendRounds INSERTING %s\n", hash.ToString());
-            mDenomWtxes[hash] = CMutableTransaction(wtx);
-        }
-        // found and it's not an initial value, just return it
-        else if(mDenomWtxes[hash].vout[nout].nRounds != -10)
-        {
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-
-        // bounds check
-        if(nout >= wtx.vout.size())
-        {
-            // should never actually hit this
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
-            return -4;
-        }
-
-        if(pwalletMain->IsCollateralAmount(wtx.vout[nout].nValue))
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = -3;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        //make sure the final output is non-denominate
-        if(/*rounds == 0 && */!pwalletMain->IsDenominatedAmount(wtx.vout[nout].nValue)) //NOT DENOM
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = -2;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        bool fAllDenoms = true;
-        BOOST_FOREACH(CTxOut out, wtx.vout)
-        {
-            fAllDenoms = fAllDenoms && pwalletMain->IsDenominatedAmount(out.nValue);
-        }
-        // this one is denominated but there is another non-denominated output found in the same tx
-        if(!fAllDenoms)
-        {
-            mDenomWtxes[hash].vout[nout].nRounds = 0;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-            return mDenomWtxes[hash].vout[nout].nRounds;
-        }
-
-        int nShortest = -10; // an initial value, should be no way to get this by calculations
-        bool fDenomFound = false;
-        // only denoms here so let's look up
-        BOOST_FOREACH(CTxIn in2, wtx.vin)
-        {
-            if(pwalletMain->IsMine(in2))
-            {
-                int n = GetRealInputDarksendRounds(in2, rounds+1);
-                // denom found, find the shortest chain or initially assign nShortest with the first found value
-                if(n >= 0 && (n < nShortest || nShortest == -10))
-                {
-                    nShortest = n;
-                    fDenomFound = true;
-                }
-            }
-        }
-        mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
-                ? (nShortest >= 15 ? 16 : nShortest + 1) // good, we a +1 to the shortest one but only 16 rounds max allowed
-                : 0;            // too bad, we are the fist one in that chain
-        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
-        return mDenomWtxes[hash].vout[nout].nRounds;
-    }
-
-    return rounds-1;
-}
-
-// respect current settings
-int GetInputDarksendRounds(CTxIn in) {
-    int realDarksendRounds = GetRealInputDarksendRounds(in, 0);
-    return realDarksendRounds > nDarksendRounds ? nDarksendRounds : realDarksendRounds;
-}
-
 void CDarksendPool::Reset(){
     cachedLastSuccess = 0;
     lastNewBlock = 0;
@@ -533,7 +438,7 @@ void CDarksendPool::UnlockCoins(){
 std::string CDarksendPool::GetStatus()
 {
     static int showingDarkSendMessage = 0;
-    showingDarkSendMessage+=3;
+    showingDarkSendMessage += 10;
     std::string suffix = "";
 
     if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
@@ -1438,7 +1343,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 {
     LOCK(cs_darksend);
 
-    if(!masternodeSync.IsListSyncStarted()) {
+    if(!masternodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -1509,7 +1414,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
         if (pwalletMain->SelectCoinsDark(nValueMin, 9999999*COIN, vCoins, nValueIn, -2, 0))
         {
-            nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true, false, false);
+            nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true) + pwalletMain->GetDenominatedBalance() - pwalletMain->GetAnonymizedBalance();
             nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
 
             if(nBalanceNeedsDenominated > nValueIn) nBalanceNeedsDenominated = nValueIn;
@@ -1527,7 +1432,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
     if(fDryRun) return true;
 
-    nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true, false, false);
+    nOnlyDenominatedBalance = pwalletMain->GetDenominatedBalance(true) + pwalletMain->GetDenominatedBalance() - pwalletMain->GetAnonymizedBalance();
     nBalanceNeedsDenominated = nBalanceNeedsAnonymized - nOnlyDenominatedBalance;
 
     //check if we have should create more denominated inputs
@@ -1547,7 +1452,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         int nUseQueue = rand()%100;
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
-        if(pwalletMain->GetDenominatedBalance(true, true) > 0){ //get denominated unconfirmed inputs
+        if(pwalletMain->GetDenominatedBalance(true) > 0){ //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
             strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
             return false;
@@ -2306,7 +2211,7 @@ void ThreadCheckDarkSendPool()
         // try to sync from all available nodes, one step at a time
         masternodeSync.Process();
 
-        if(masternodeSync.IsListSyncStarted()) {
+        if(masternodeSync.IsBlockchainSynced()) {
 
             c++;
 
