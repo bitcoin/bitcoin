@@ -1557,11 +1557,13 @@ int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
         for(int i = 210240; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
     }
 
-    if(nHeight > 158000+((576*30)* 7)) nSubsidy -= nSubsidy/40; // 278960 - 47.5% - 2015-06-01
-    if(nHeight > 158000+((576*30)* 9)) nSubsidy -= nSubsidy/40; // 313520 - 50.0% - 2015-08-03
-    if(nHeight > 158000+((576*30)*11)) nSubsidy -= nSubsidy/40; // 348080 - 52.5% - 2015-10-05
-    if(nHeight > 158000+((576*30)*13)) nSubsidy -= nSubsidy/40; // 382640 - 55.0% - 2015-12-07
-
+    /*
+        
+        Hard fork will activate on block 320436, reducing the block reward by 10 extra percent (allowing budget super-blocks)
+    
+    */
+    if(nHeight > 308340+(576*21)) nSubsidy -= nSubsidy/10; // 320436 - 10.0% - August 24, 2015
+    
     return nSubsidy + nFees;
 }
 
@@ -1587,8 +1589,17 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
     if(nHeight > 158000+((576*30)* 4)) ret += blockValue / 40; // 227120 - 40.0% - 2015-02-27
     if(nHeight > 158000+((576*30)* 5)) ret += blockValue / 40; // 244400 - 42.5% - 2015-03-30
     if(nHeight > 158000+((576*30)* 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
-    if(nHeight > 158000+((576*30)*15)) ret += blockValue / 40; // 417200 - 47.5% - 2016-02-08
-    if(nHeight > 158000+((576*30)*17)) ret += blockValue / 40; // 451760 - 50.0% - 2016-04-11
+    if(nHeight > 158000+((576*30)* 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
+    if(nHeight > 158000+((576*30)* 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
+
+    /* 
+        Hard for will activate on block 348080 separating the two networks (v11 and earier and v12)
+
+        if(nHeight > 158000+((576*30)*11)) ret += blockValue / 40; // 348080 - 52.5% - 2015-10-05
+        if(nHeight > 158000+((576*30)*13)) ret += blockValue / 40; // 382640 - 55.0% - 2015-12-07
+        if(nHeight > 158000+((576*30)*15)) ret += blockValue / 40; // 417200 - 57.5% - 2016-02-08
+        if(nHeight > 158000+((576*30)*17)) ret += blockValue / 40; // 451760 - 60.0% - 2016-04-11
+    */
 
     return ret;
 }
