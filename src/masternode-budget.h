@@ -32,6 +32,7 @@ class CTxBudgetPayment;
 
 static const CAmount BUDGET_FEE_TX = (0.5*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
+static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
 
 extern CBudgetManager budget;
 void DumpBudgets();
@@ -118,8 +119,8 @@ public:
     void SubmitFinalBudget();
     bool HasNextFinalizedBudget();
 
-    bool UpdateProposal(CBudgetVote& vote, CNode* pfrom);
-    bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom);
+    bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
+    bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool PropExists(uint256 nHash);
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int nBlockHeight);
@@ -206,7 +207,7 @@ public:
     CFinalizedBudget(const CFinalizedBudget& other);
 
     void CleanAndRemove(bool fSignatureCheck);
-    bool AddOrUpdateVote(CFinalizedBudgetVote& vote);
+    bool AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError);
     double GetScore();
     bool HasMinimumRequiredSupport();
 
@@ -371,7 +372,7 @@ public:
     CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
 
     void Calculate();
-    bool AddOrUpdateVote(CBudgetVote& vote);
+    bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool HasMinimumRequiredSupport();
     std::pair<std::string, std::string> GetVotes();
 

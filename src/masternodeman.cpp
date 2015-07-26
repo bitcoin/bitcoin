@@ -447,12 +447,6 @@ CMasternode *CMasternodeMan::FindRandom()
     return &vMasternodes[GetRandInt(vMasternodes.size())];
 }
 
-void CMasternodeMan::DecrementVotedTimes()
-{
-    BOOST_FOREACH(CMasternode& mn, vMasternodes)
-        if(--mn.nVotedTimes < 0) mn.nVotedTimes = 0; 
-}
-
 CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
 {
     int64_t score = 0;

@@ -248,12 +248,18 @@ Value mnbudget(const Array& params, bool fHelp)
                 continue;
             }
 
-            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-            vote.Relay();
-            budget.UpdateProposal(vote, NULL);
 
-            success++;
-            statusObj.push_back(Pair("result", "success"));
+            std::string strError = "";
+            if(budget.UpdateProposal(vote, NULL, strError)) {
+                budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+                vote.Relay();
+                success++;
+                statusObj.push_back(Pair("result", "success"));
+            } else {
+                failed++;
+                statusObj.push_back(Pair("result", strError.c_str()));
+            }
+
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
@@ -292,11 +298,14 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-        vote.Relay();
-        budget.UpdateProposal(vote, NULL);
-
-        return "Voted successfully";
+        std::string strError = "";
+        if(budget.UpdateProposal(vote, NULL, strError)){
+            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            vote.Relay();
+            return "Voted successfully";
+        } else {
+            return "Error voting : " + strError;
+        }
     }
 
     if(strCommand == "projection")
@@ -538,12 +547,17 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 continue;
             }
 
-            budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-            vote.Relay();
-            budget.UpdateFinalizedBudget(vote, NULL);
+            std::string strError = "";
+            if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
+                budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+                vote.Relay();
+                success++;
+                statusObj.push_back(Pair("result", "success"));
+            } else {
+                failed++;
+                statusObj.push_back(Pair("result", strError.c_str()));
+            }
 
-            success++;
-            statusObj.push_back(Pair("result", "success"));
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
@@ -577,11 +591,15 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             return "Failure to sign.";
         }
 
-        budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-        vote.Relay();
-        budget.UpdateFinalizedBudget(vote, NULL);
+        std::string strError = "";
+        if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
+            budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            vote.Relay();
+            return "success";
+        } else {
+            return "Error voting : " + strError;
+        }
 
-        return "success";
     }
 
     if(strCommand == "show")
