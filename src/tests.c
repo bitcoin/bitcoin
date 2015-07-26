@@ -111,7 +111,7 @@ void run_context_tests(void) {
     secp256k1_gej_t pubj;
     secp256k1_ge_t pub;
     secp256k1_scalar_t msg, key, nonce;
-    secp256k1_ecdsa_sig_t sig;
+    secp256k1_scalar_t sigr, sigs;
 
     /*** clone and destroy all of them to make sure cloning was complete ***/
     {
@@ -132,15 +132,15 @@ void run_context_tests(void) {
     /* obtain a working nonce */
     do {
         random_scalar_order_test(&nonce);
-    } while(!secp256k1_ecdsa_sig_sign(&both->ecmult_gen_ctx, &sig, &key, &msg, &nonce, NULL));
+    } while(!secp256k1_ecdsa_sig_sign(&both->ecmult_gen_ctx, &sigr, &sigs, &key, &msg, &nonce, NULL));
 
     /* try signing */
-    CHECK(secp256k1_ecdsa_sig_sign(&sign->ecmult_gen_ctx, &sig, &key, &msg, &nonce, NULL));
-    CHECK(secp256k1_ecdsa_sig_sign(&both->ecmult_gen_ctx, &sig, &key, &msg, &nonce, NULL));
+    CHECK(secp256k1_ecdsa_sig_sign(&sign->ecmult_gen_ctx, &sigr, &sigs, &key, &msg, &nonce, NULL));
+    CHECK(secp256k1_ecdsa_sig_sign(&both->ecmult_gen_ctx, &sigr, &sigs, &key, &msg, &nonce, NULL));
 
     /* try verifying */
-    CHECK(secp256k1_ecdsa_sig_verify(&vrfy->ecmult_ctx, &sig, &pub, &msg));
-    CHECK(secp256k1_ecdsa_sig_verify(&both->ecmult_ctx, &sig, &pub, &msg));
+    CHECK(secp256k1_ecdsa_sig_verify(&vrfy->ecmult_ctx, &sigr, &sigs, &pub, &msg));
+    CHECK(secp256k1_ecdsa_sig_verify(&both->ecmult_ctx, &sigr, &sigs, &pub, &msg));
 
     /* cleanup */
     secp256k1_context_destroy(none);
@@ -1488,11 +1488,11 @@ void run_ecmult_gen_blind(void) {
 }
 
 
-void random_sign(secp256k1_ecdsa_sig_t *sig, const secp256k1_scalar_t *key, const secp256k1_scalar_t *msg, int *recid) {
+void random_sign(secp256k1_scalar_t *sigr, secp256k1_scalar_t *sigs, const secp256k1_scalar_t *key, const secp256k1_scalar_t *msg, int *recid) {
     secp256k1_scalar_t nonce;
     do {
         random_scalar_order_test(&nonce);
-    } while(!secp256k1_ecdsa_sig_sign(&ctx->ecmult_gen_ctx, sig, key, msg, &nonce, recid));
+    } while(!secp256k1_ecdsa_sig_sign(&ctx->ecmult_gen_ctx, sigr, sigs, key, msg, &nonce, recid));
 }
 
 void test_ecdsa_sign_verify(void) {
@@ -1500,7 +1500,7 @@ void test_ecdsa_sign_verify(void) {
     secp256k1_ge_t pub;
     secp256k1_scalar_t one;
     secp256k1_scalar_t msg, key;
-    secp256k1_ecdsa_sig_t sig;
+    secp256k1_scalar_t sigr, sigs;
     int recid;
     int getrec;
     random_scalar_order_test(&msg);
@@ -1508,14 +1508,14 @@ void test_ecdsa_sign_verify(void) {
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pubj, &key);
     secp256k1_ge_set_gej(&pub, &pubj);
     getrec = secp256k1_rand32()&1;
-    random_sign(&sig, &key, &msg, getrec?&recid:NULL);
+    random_sign(&sigr, &sigs, &key, &msg, getrec?&recid:NULL);
     if (getrec) {
         CHECK(recid >= 0 && recid < 4);
     }
-    CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sig, &pub, &msg));
+    CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &pub, &msg));
     secp256k1_scalar_set_int(&one, 1);
     secp256k1_scalar_add(&msg, &msg, &one);
-    CHECK(!secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sig, &pub, &msg));
+    CHECK(!secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &pub, &msg));
 }
 
 void run_ecdsa_sign_verify(void) {
@@ -1926,15 +1926,15 @@ void test_ecdsa_edge_cases(void) {
         secp256k1_gej_t keyj;
         secp256k1_ge_t key;
         secp256k1_scalar_t msg;
-        secp256k1_ecdsa_sig_t s;
-        secp256k1_scalar_set_int(&s.s, 1);
-        secp256k1_scalar_negate(&s.s, &s.s);
-        secp256k1_scalar_inverse(&s.s, &s.s);
-        secp256k1_scalar_set_int(&s.r, 1);
-        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &keyj, &s.r);
+        secp256k1_scalar_t sr, ss;
+        secp256k1_scalar_set_int(&ss, 1);
+        secp256k1_scalar_negate(&ss, &ss);
+        secp256k1_scalar_inverse(&ss, &ss);
+        secp256k1_scalar_set_int(&sr, 1);
+        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &keyj, &sr);
         secp256k1_ge_set_gej(&key, &keyj);
-        msg = s.s;
-        CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &s, &key, &msg) == 0);
+        msg = ss;
+        CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sr, &ss, &key, &msg) == 0);
     }
 
     /* Test r/s equal to zero */
@@ -2018,7 +2018,7 @@ void test_ecdsa_edge_cases(void) {
         unsigned char key[32];
         unsigned char msg[32];
         secp256k1_ecdsa_signature_t sig2;
-        secp256k1_ecdsa_sig_t s[512];
+        secp256k1_scalar_t sr[512], ss;
         const unsigned char *extra;
         extra = t == 0 ? NULL : zero;
         memset(msg, 0, 32);
@@ -2051,9 +2051,9 @@ void test_ecdsa_edge_cases(void) {
             msg[0] = i;
             CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
-            secp256k1_ecdsa_signature_load(&s[i], NULL, &sig2);
+            secp256k1_ecdsa_signature_load(&sr[i], &ss, NULL, &sig2);
             for (j = 0; j < i; j++) {
-                CHECK(!secp256k1_scalar_eq(&s[i].r, &s[j].r));
+                CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
             }
         }
         msg[0] = 0;
@@ -2064,9 +2064,9 @@ void test_ecdsa_edge_cases(void) {
             key[0] = i - 256;
             CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
-            secp256k1_ecdsa_signature_load(&s[i], NULL, &sig2);
+            secp256k1_ecdsa_signature_load(&sr[i], &ss, NULL, &sig2);
             for (j = 0; j < i; j++) {
-                CHECK(!secp256k1_scalar_eq(&s[i].r, &s[j].r));
+                CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
             }
         }
         key[0] = 0;
@@ -2107,7 +2107,7 @@ EC_KEY *get_openssl_key(const secp256k1_scalar_t *key) {
 void test_ecdsa_openssl(void) {
     secp256k1_gej_t qj;
     secp256k1_ge_t q;
-    secp256k1_ecdsa_sig_t sig;
+    secp256k1_scalar_t sigr, sigs;
     secp256k1_scalar_t one;
     secp256k1_scalar_t msg2;
     secp256k1_scalar_t key, msg;
@@ -2124,14 +2124,14 @@ void test_ecdsa_openssl(void) {
     ec_key = get_openssl_key(&key);
     CHECK(ec_key);
     CHECK(ECDSA_sign(0, message, sizeof(message), signature, &sigsize, ec_key));
-    CHECK(secp256k1_ecdsa_sig_parse(&sig, signature, sigsize));
-    CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sig, &q, &msg));
+    CHECK(secp256k1_ecdsa_sig_parse(&sigr, &sigs, signature, sigsize));
+    CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &q, &msg));
     secp256k1_scalar_set_int(&one, 1);
     secp256k1_scalar_add(&msg2, &msg, &one);
-    CHECK(!secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sig, &q, &msg2));
+    CHECK(!secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &q, &msg2));
 
-    random_sign(&sig, &key, &msg, NULL);
-    CHECK(secp256k1_ecdsa_sig_serialize(signature, &secp_sigsize, &sig));
+    random_sign(&sigr, &sigs, &key, &msg, NULL);
+    CHECK(secp256k1_ecdsa_sig_serialize(signature, &secp_sigsize, &sigr, &sigs));
     CHECK(ECDSA_verify(0, message, sizeof(message), signature, secp_sigsize, ec_key) == 1);
 
     EC_KEY_free(ec_key);
