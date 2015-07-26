@@ -113,8 +113,8 @@ public:
     std::vector<CBudgetProposal*> GetAllProposals();
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    void AddProposal(CBudgetProposal& budgetProposal);
-    void AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
+    bool AddProposal(CBudgetProposal& budgetProposal);
+    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
     void SubmitFinalBudget();
     bool HasNextFinalizedBudget();
 
@@ -206,7 +206,7 @@ public:
     CFinalizedBudget(const CFinalizedBudget& other);
 
     void CleanAndRemove(bool fSignatureCheck);
-    void AddOrUpdateVote(CFinalizedBudgetVote& vote);
+    bool AddOrUpdateVote(CFinalizedBudgetVote& vote);
     double GetScore();
     bool HasMinimumRequiredSupport();
 
@@ -371,7 +371,7 @@ public:
     CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
 
     void Calculate();
-    void AddOrUpdateVote(CBudgetVote& vote);
+    bool AddOrUpdateVote(CBudgetVote& vote);
     bool HasMinimumRequiredSupport();
     std::pair<std::string, std::string> GetVotes();
 

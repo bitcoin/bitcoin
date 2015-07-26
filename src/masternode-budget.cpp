@@ -346,33 +346,35 @@ void DumpBudgets()
     LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-void CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
+bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
 {
     LOCK(cs);
     std::string strError = "";
-    if(!finalizedBudget.IsValid(strError)) return;
+    if(!finalizedBudget.IsValid(strError)) return false;
 
     if(mapFinalizedBudgets.count(finalizedBudget.GetHash())) {
-        return;
+        return false;
     }
 
     mapFinalizedBudgets.insert(make_pair(finalizedBudget.GetHash(), finalizedBudget));
+    return true;
 }
 
-void CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
+bool CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
 {
     LOCK(cs);
     std::string strError = "";
     if(!budgetProposal.IsValid(strError)) {
         LogPrintf("CBudgetManager::AddProposal - invalid budget proposal - %s\n", strError);
-        return;
+        return false;
     }
 
     if(mapProposals.count(budgetProposal.GetHash())) {
-        return;
+        return false;
     }
 
     mapProposals.insert(make_pair(budgetProposal.GetHash(), budgetProposal));
+    return true;
 }
 
 void CBudgetManager::CheckAndRemove()
@@ -811,8 +813,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         CBudgetProposal budgetProposal(budgetProposalBroadcast);
-        AddProposal(budgetProposal);
-        budgetProposalBroadcast.Relay();
+        if(AddProposal(budgetProposal)) {budgetProposalBroadcast.Relay();}
         masternodeSync.AddedBudgetItem();
 
         LogPrintf("mprop - new budget - %s\n", budgetProposalBroadcast.GetHash().ToString());
@@ -846,8 +847,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         if(pmn->nVotedTimes < 100){
-            UpdateProposal(vote, pfrom);
-            vote.Relay();
+            if(UpdateProposal(vote, pfrom)) vote.Relay();
             if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
             masternodeSync.AddedBudgetItem();
 
@@ -883,8 +883,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         LogPrintf("fbs - new finalized budget - %s\n", finalizedBudgetBroadcast.GetHash().ToString());
 
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
-        AddFinalizedBudget(finalizedBudget);
-        finalizedBudgetBroadcast.Relay();
+        if(AddFinalizedBudget(finalizedBudget)) {finalizedBudgetBroadcast.Relay();}
         masternodeSync.AddedBudgetItem();
 
         //we might have active votes for this budget that are now valid
@@ -915,8 +914,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(pmn->nVotedTimes < 100){
-            UpdateFinalizedBudget(vote, pfrom);
-            vote.Relay();
+            if(UpdateFinalizedBudget(vote, pfrom)) {vote.Relay();}
             if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
             masternodeSync.AddedBudgetItem();
 
@@ -1015,8 +1013,7 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom)
     }
 
 
-    mapProposals[vote.nProposalHash].AddOrUpdateVote(vote);
-    return true;
+    return mapProposals[vote.nProposalHash].AddOrUpdateVote(vote);
 }
 
 bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom)
@@ -1041,8 +1038,7 @@ bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pf
         return false;
     }
 
-    mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(vote);
-    return true;
+    return mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(vote);
 }
 
 CBudgetProposal::CBudgetProposal()
@@ -1138,7 +1134,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     return true;
 }
 
-void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
+bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
 {
     LOCK(cs);
 
@@ -1147,11 +1143,12 @@ void CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
     if(mapVotes.count(hash)){
         if(mapVotes[hash].nTime > vote.nTime){
             if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - new vote older than existing vote - %s\n", vote.GetHash().ToString());
-            return;
+            return false;
         }
     }
 
     mapVotes[hash] = vote;
+    return true;
 }
 
 // If masternode voted for a proposal, but is now invalid -- remove the vote
@@ -1394,7 +1391,7 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     fValid = true;
 }
 
-void CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote)
+bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote)
 {
     LOCK(cs);
 
@@ -1402,11 +1399,12 @@ void CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote)
     if(mapVotes.count(hash)){
         if(mapVotes[hash].nTime > vote.nTime){
             if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - new vote older than existing vote - %s\n", vote.GetHash().ToString());
-            return;
+            return false;
         }
     }
 
     mapVotes[hash] = vote;
+    return true;
 }
 
 //evaluate if we should vote for this. Masternode only
