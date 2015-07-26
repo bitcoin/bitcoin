@@ -1,7 +1,7 @@
 #ifndef OMNICORE_RULES_H
 #define OMNICORE_RULES_H
 
-class uint256;
+#include "uint256.h"
 
 #include <stdint.h>
 #include <string>
@@ -26,6 +26,15 @@ struct TransactionRestriction
     bool allowWildcard;
     //! Block after which the feature or transaction is enabled
     int activationBlock;
+};
+
+/** A structure to represent a verification checkpoint.
+ */
+struct ConsensusCheckpoint
+{
+    int blockHeight;
+    uint256 blockHash;
+    uint256 consensusHash;
 };
 
 // TODO: rename allcaps variable names
@@ -73,11 +82,16 @@ public:
     int MSC_BET_BLOCK;
 
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
-    std::vector<TransactionRestriction> GetRestrictions() const;
+    virtual std::vector<TransactionRestriction> GetRestrictions() const;
+
+    /** Returns an empty vector of consensus checkpoints. */
+    virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
 
 protected:
     /** Constructor, only to be called from derived classes. */
     CConsensusParams() {}
+    /** Destructor. */
+    virtual ~CConsensusParams() {}
 };
 
 /** Consensus parameters for mainnet.
@@ -87,6 +101,11 @@ class CMainConsensusParams: public CConsensusParams
 public:
     /** Constructor for mainnet consensus parameters. */
     CMainConsensusParams();
+    /** Destructor. */
+    virtual ~CMainConsensusParams() {}
+
+    /** Returns consensus checkpoints for mainnet, used to verify transaction processing. */
+    virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
 };
 
 /** Consensus parameters for testnet.
@@ -96,6 +115,8 @@ class CTestNetConsensusParams: public CConsensusParams
 public:
     /** Constructor for testnet consensus parameters. */
     CTestNetConsensusParams();
+    /** Destructor. */
+    virtual ~CTestNetConsensusParams() {}
 };
 
 /** Consensus parameters for regtest mode.
@@ -105,6 +126,8 @@ class CRegTestConsensusParams: public CConsensusParams
 public:
     /** Constructor for regtest consensus parameters. */
     CRegTestConsensusParams();
+    /** Destructor. */
+    virtual ~CRegTestConsensusParams() {}
 };
 
 /** Returns consensus parameters for the given network. */

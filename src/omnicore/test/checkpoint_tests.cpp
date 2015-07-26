@@ -3,11 +3,10 @@
 #include "omnicore/tally.h"
 
 #include "sync.h"
+#include "uint256.h"
 
 #include <stdint.h>
 #include <string>
-
-#include <openssl/sha.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -20,6 +19,7 @@ BOOST_AUTO_TEST_CASE(hash_generation)
     LOCK(cs_tally);
     mp_tally_map.clear();
 
+    BOOST_CHECK_EQUAL(GetConsensusHash().GetHex(), "55b852781b9995a44c939b64e441ae2724b96f99c8f4fb9a141cfc9842c4b0e3");
     BOOST_CHECK(update_tally_map("3CwZ7FiQ4MqBenRdCkjjc41M5bnoKQGC2b", 1, 12345, BALANCE));
     BOOST_CHECK_EQUAL(GetConsensusHash().GetHex(), "33c9eb05f8720c170d93cfcd835bd53bca879ab10990ff178ebe682fc6d6d05c");
     BOOST_CHECK(update_tally_map("1LCShN3ntEbeRrj8XBFWdScGqw5NgDXL5R", 3,  3400, BALANCE));
@@ -53,6 +53,36 @@ BOOST_AUTO_TEST_CASE(hash_generation)
 
     // Cleanup
     mp_tally_map.clear();
+}
+
+BOOST_AUTO_TEST_CASE(get_checkpoints)
+{
+    // There are consensus checkpoints for mainnet:
+    BOOST_CHECK(!ConsensusParams("main").GetCheckpoints().empty());
+    // ... but no checkpoints for regtest mode are defined:
+    BOOST_CHECK(ConsensusParams("regtest").GetCheckpoints().empty());
+}
+
+BOOST_AUTO_TEST_CASE(verify_checkpoints)
+{
+    LOCK(cs_tally);
+    mp_tally_map.clear();
+
+    // Not a checkpoint (so we assume it's valid)
+    BOOST_CHECK(VerifyCheckpoint(1, uint256("00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048")));
+    // Valid checkpoint
+    BOOST_CHECK(VerifyCheckpoint(0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
+    // Valid checkpoint, but block hash mismatch
+    BOOST_CHECK(!VerifyCheckpoint(0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce260")));
+
+    // Pollute the state (and therefore hash)
+    BOOST_CHECK(update_tally_map("3CwZ7FiQ4MqBenRdCkjjc41M5bnoKQGC2b", 1, 12345, BALANCE));
+    // Checkpoint mismatch, due to the state pollution
+    BOOST_CHECK(!VerifyCheckpoint(0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
+
+    // Cleanup
+    mp_tally_map.clear();
+    BOOST_CHECK(VerifyCheckpoint(0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f")));
 }
 
 
