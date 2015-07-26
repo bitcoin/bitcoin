@@ -14,6 +14,7 @@
 #include "omnicore/rpctx.h"
 #include "omnicore/rpctxobject.h"
 #include "omnicore/rpcvalues.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
@@ -1541,3 +1542,36 @@ Value omni_gettrade(const Array& params, bool fHelp)
     return txobj;
 }
 
+Value omni_getcurrentconsensushash(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "omni_getcurrentconsensushash\n"
+            "\nReturns the consensus hash for all balances for the current block.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"block\" : nnnnnn,                              (number) the index of the block this consensus hash applies to\n"
+            "  \"consensushash\" : \"hash\",                    (string) the consensus hash for the block\n"
+            "}\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getcurrentconsensushash", "")
+            + HelpExampleRpc("omni_getcurrentconsensushash", "")
+        );
+
+    LOCK(cs_main); // TODO - will this ensure we don't take in a new block in the couple of ms it takes to calculate the consensus hash?
+
+    int block = GetHeight();
+
+    CBlockIndex* pblockindex = chainActive[block];
+    uint256 blockHash = pblockindex->GetBlockHash();
+
+    uint256 consensusHash = GetConsensusHash();
+
+    Object response;
+    response.push_back(Pair("block", block));
+    response.push_back(Pair("blockhash", blockHash.GetHex()));
+    response.push_back(Pair("consensushash", consensusHash.GetHex()));
+
+    return response;
+}

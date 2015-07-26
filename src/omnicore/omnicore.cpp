@@ -4126,6 +4126,21 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         mastercore_save_state(pBlockIndex);
     }
 
+    // calculate and print a consensus hash if required
+    if (msc_debug_consensus_hash_every_block) {
+        uint256 consensusHash = GetConsensusHash();
+        PrintToLog("Consensus hash for block %d: %s\n", nBlockNow, consensusHash.GetHex());
+    }
+
+    // request checkpoint verification
+    bool checkpointValid = VerifyCheckpoint(nBlockNow, pBlockIndex->GetBlockHash());
+    if (!checkpointValid) {
+        // failed checkpoint, can't be trusted to provide valid data - shutdown client
+        const std::string& msg = strprintf("Shutting down due to failed checkpoint for block %d (hash %s)\n", nBlockNow, pBlockIndex->GetBlockHash().GetHex());
+        PrintToLog(msg);
+        if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode(msg, msg);
+    }
+
     return 0;
 }
 

@@ -371,6 +371,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_getallbalancesforaddress",   &omni_getallbalancesforaddress,   false,      true,       true },
     { "omni layer (data retrieval)",         "omni_gettradehistoryforaddress",  &omni_gettradehistoryforaddress,  false,      true,       true },
     { "omni layer (data retrieval)",         "omni_gettradehistoryforpair",     &omni_gettradehistoryforpair,     false,      true,       true },
+    { "omni layer (data retrieval)",         "omni_getcurrentconsensushash",    &omni_getcurrentconsensushash,    false,      true,       false },
 
     /* Omni Core configuration calls */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
