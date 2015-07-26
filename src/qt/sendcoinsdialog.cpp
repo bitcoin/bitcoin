@@ -380,6 +380,22 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients, QString strFee,
         .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
         .arg("<br />" + alternativeUnits.join(" " + tr("or") + "<br />")));
 
+    // Limit number of displayed entries
+    int messageEntries = formatted.size();
+    int displayedEntries = 0;
+    for(int i = 0; i < formatted.size(); i++){
+        if(i >= MAX_SEND_POPUP_ENTRIES){
+            formatted.removeLast();
+            i--;
+        }
+        else{
+            displayedEntries = i+1;
+        }
+    }
+    questionString.append("<hr />");
+    questionString.append(tr("<b>(%1 of %2 entries displayed)</b>").arg(displayedEntries).arg(messageEntries));
+
+    // Display message box    
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")),
         QMessageBox::Yes | QMessageBox::Cancel,
