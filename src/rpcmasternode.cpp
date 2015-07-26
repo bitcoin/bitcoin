@@ -473,6 +473,7 @@ Value masternode(const Array& params, bool fHelp)
     */
     if (strCommand == "calcscore")
     {
+
         int nLast = 10;
 
         if (params.size() >= 2){
