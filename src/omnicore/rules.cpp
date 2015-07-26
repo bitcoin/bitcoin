@@ -33,25 +33,25 @@ static const ConsensusCheckpoint vCheckpoints[] = {
     { 260000, uint256("000000000000001fb91fbcebaaba0e2d926f04908d798a8b598c3bd962951080"),
               uint256("e8b5445bbfc915e59164a6c22e4d84b23539569ee3c95b49eefaeaca86ea98a0") },
     { 270000, uint256("0000000000000002a775aec59dc6a9e4bb1c025cf1b8c2195dd9dc3998c827c5"),
-              uint256("4eb6f75c961308c18dad1e2677170465f30d367489e61cb2510e400dc3d21117") },
+              uint256("486a81cb5b0c89d26543e85f2635f225468e87bda89e752ab2dcebf1d2f74248") },
     { 280000, uint256("0000000000000001c091ada69f444dc0282ecaabe4808ddbb2532e5555db0c03"),
-              uint256("5896745cfde2423d1c896865b49953cac76d87f8d29c619793698d06c14f11d6") },
+              uint256("801a9d4099802a49bdea1e7567680e11a50e120e5446a3be0a1c3757eff3b2b3") },
     { 290000, uint256("0000000000000000fa0b2badd05db0178623ebf8dd081fe7eb874c26e27d0b3b"),
-              uint256("28f4c64fa05adee082c7fb10f3b768747fef28bff1e29f22482ed17e9dfe130c") },
+              uint256("a6ad14928b6a96ca2c2b1426e264d5c461e723145c7169248dadb87b7693a7dd") },
     { 300000, uint256("000000000000000082ccf8f1557c5d40b21edabb18d2d691cfbf87118bac7254"),
-              uint256("51b429776f26ee4b9ebf2de669c7c01f420004ce29d4df92a2e3d7b0248cbe8e") },
+              uint256("a26c7c6cea0ebbb52b7b75262e3c7ac036f6812b0f5b5b09c64efa5afacc6a83") },
     { 310000, uint256("0000000000000000125a28cc9e9209ddb75718f599a8039f6c9e7d9f1fb021e0"),
-              uint256("f8ab77846e859ccc5094f4944e0b6fbf7f1e1435578fd3debffc0e0db4afda58") },
+              uint256("73f207b07090f29aa9e7cc793e16b49ddd14ff201bbd1103c812ceabcf594b38") },
     { 320000, uint256("000000000000000015aab005b28a326ade60f07515c33517ea5cb598f28fb7ea"),
-              uint256("ac76516b2be5fd6391ac1511c409e19eab0c5b55754883a72d2473457af9299e") },
+              uint256("0b510ba8e4ba26e563337053922b31a4f2ec78eac62f73b4b70bad7d026a0b65") },
     { 330000, uint256("00000000000000000faabab19f17c0178c754dbed023e6c871dcaf74159c5f02"),
-              uint256("158c9640fd4376569e439f7c6f4b7ac17e14dffc9f9b99a7e6b38b57c7ff5ece") },
+              uint256("fb027d26256267583eed58d40c7330435f91b85014d7bbab452d1b47264a6e88") },
     { 340000, uint256("00000000000000000d9b2508615d569e18f00c034d71474fc44a43af8d4a5003"),
-              uint256("85655b4e01fa328f5d1c955d00f27989e644a38931280d1448b83c98f78d3a25") },
+              uint256("510f73407a607d6b8c684a8a0bb70187802e418769adb8d30080bd46df71dab1") },
     { 350000, uint256("0000000000000000053cf64f0400bb38e0c4b3872c38795ddde27acb40a112bb"),
-              uint256("c562ebcc36c5dd094f7dff3d0083362701b8ad489b825a93dab3e51d7a0b59f2") },
+              uint256("7fdbd8b028dba2cb7253e29378c88e0411d883ccd49422230b446df4a17e3785") },
     { 360000, uint256("00000000000000000ca6e07cf681390ff888b7f96790286a440da0f2b87c8ea6"),
-              uint256("da08157c018429bf717989ec653151652fb95d3107b287e016c8b9483e9f86f7") },
+              uint256("943732e46304fc30099c6a728616c998efe689384f81b7108a65b051381656a6") },
 };
 
 /** A mapping of transaction types, versions and the blocks at which they are enabled.
@@ -232,11 +232,17 @@ bool VerifyCheckpoint(int block, uint256 blockHash)
     for (unsigned int i = 0; i < sizeof(vCheckpoints)/sizeof(vCheckpoints[0]); i++) {
         if (block != vCheckpoints[i].blockHeight) continue;
 
-        if (blockHash != vCheckpoints[i].blockHash) return false;
+        if (blockHash != vCheckpoints[i].blockHash) {
+            PrintToLog("%s(): block hash mismatch - expected %s, received %s\n", __func__, vCheckpoints[i].blockHash.GetHex(), blockHash.GetHex());
+            return false;
+        }
 
         // only verify if there is a checkpoint to verify against
         uint256 consensusHash = GetConsensusHash();
-        if (consensusHash != vCheckpoints[i].consensusHash) return false;
+        if (consensusHash != vCheckpoints[i].consensusHash) {
+            PrintToLog("%s(): consensus hash mismatch - expected %s, received %s\n", __func__, vCheckpoints[i].consensusHash.GetHex(), consensusHash.GetHex());
+            return false;
+        }
     }
 
     // either checkpoint matched or we don't have a checkpoint for this block
