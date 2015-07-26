@@ -15,6 +15,22 @@
 class CAutoFile;
 class CFeeRate;
 class CTxMemPoolEntry;
+class CValidationState;
+
+/** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 50000;
+
+inline double AllowFreeThreshold()
+{
+    return COIN * 144 / 250;
+}
+
+inline bool AllowFree(double dPriority)
+{
+    // Large (in bytes) low-priority (new, small-coin) transactions
+    // need a fee.
+    return dPriority > AllowFreeThreshold();
+}
 
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the fee or priority needed
@@ -250,6 +266,9 @@ public:
 
     /** Read estimation data from a file */
     void Read(CAutoFile& filein);
+
+    /** Allow transactions bellow the min relay fee or not */
+    bool AllowFreeTx(const CTxMemPoolEntry& toadd, CValidationState& state, const double& dViewPriority) const;
 
 private:
     CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main

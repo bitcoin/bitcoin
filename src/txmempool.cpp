@@ -108,6 +108,19 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     return true;
 }
 
+void CTxMemPool::removeUnchecked(const uint256& hash)
+{
+    const CTxMemPoolEntry &entry = mapTx.find(hash)->second;
+
+    BOOST_FOREACH(const CTxIn& txin, entry.GetTx().vin)
+        mapNextTx.erase(txin.prevout);
+
+    totalTxSize -= entry.GetTxSize();
+    cachedInnerUsage -= entry.DynamicMemoryUsage();
+    mapTx.erase(hash);
+    nTransactionsUpdated++;
+    minerPolicyEstimator->removeTx(hash);
+}
 
 void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)
 {
@@ -143,15 +156,8 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
                     txToRemove.push_back(it->second.ptx->GetHash());
                 }
             }
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                mapNextTx.erase(txin.prevout);
-
             removed.push_back(tx);
-            totalTxSize -= mapTx[hash].GetTxSize();
-            cachedInnerUsage -= mapTx[hash].DynamicMemoryUsage();
-            mapTx.erase(hash);
-            nTransactionsUpdated++;
-            minerPolicyEstimator->removeTx(hash);
+            removeUnchecked(hash);
         }
     }
 }
@@ -275,7 +281,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             waitingOnDependants.push_back(&it->second);
         else {
             CValidationState state;
-            assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, NULL));
+            CAmount nTxFees;
+            assert(Consensus::CheckTxInputs(tx, state, mempoolDuplicate, GetSpendHeight(mempoolDuplicate), nTxFees));
             UpdateCoins(tx, state, mempoolDuplicate, 1000000);
         }
     }
@@ -289,7 +296,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             stepsSinceLastRemove++;
             assert(stepsSinceLastRemove < waitingOnDependants.size());
         } else {
-            assert(CheckInputs(entry->GetTx(), state, mempoolDuplicate, false, 0, false, NULL));
+            CAmount nTxFees;
+            assert(Consensus::CheckTxInputs(entry->GetTx(), state, mempoolDuplicate, GetSpendHeight(mempoolDuplicate), nTxFees));
             UpdateCoins(entry->GetTx(), state, mempoolDuplicate, 1000000);
             stepsSinceLastRemove = 0;
         }
@@ -430,4 +438,64 @@ bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
     return memusage::DynamicUsage(mapTx) + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
+}
+
+void CTxMemPool::ClearStaged()
+{
+    stage.clear();
+    nStageFeesRemoved = 0;
+}
+
+bool CTxMemPool::StageReplace(const CTxMemPoolEntry& toadd, CValidationState& state, bool fLimitFree, const CCoinsViewCache& view)
+{
+    ClearStaged();
+    bool fSpendConflicts = false;
+    // Check for conflicts with in-memory transactions
+    {
+        LOCK(cs); // protect pool.mapNextTx
+        BOOST_FOREACH(const CTxIn& in, toadd.GetTx().vin) {
+            if (mapNextTx.count(in.prevout))
+                fSpendConflicts = true;
+        }
+    }
+    const CTransaction& tx = toadd.GetTx();
+    uint256 hash = tx.GetHash();
+    const CAmount nFees = toadd.GetFee();
+    const size_t nSize = toadd.GetTxSize();
+
+    if (fSpendConflicts) {
+        // Disable replacement feature for now
+        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "replacement-rejected-conflicts");
+    }
+
+    if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize) + nStageFeesRemoved) {
+
+        bool fAllowFree = true;
+        double dPriorityDelta = 0;
+        CAmount nFeeDelta = 0;
+        ApplyDeltas(hash, dPriorityDelta, nFeeDelta);
+        if (dPriorityDelta <= 0 || nFeeDelta <= 0) {
+            state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee");
+            fAllowFree = false;
+        } else if (!minerPolicyEstimator->AllowFreeTx(toadd, state, view.GetPriority(tx, chainActive.Height() + 1)))
+            fAllowFree = false;
+
+        if (!fAllowFree) {
+            LogPrintf("%s: %s: %d < %d (txHash %s)", __func__, state.GetRejectReason(), nFees, ::minRelayTxFee.GetFee(nSize) + nStageFeesRemoved, hash.ToString());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void CTxMemPool::RemoveStaged(const uint256& txHash)
+{
+    if (!stage.empty()) {
+        LogPrint("mempool", "Removing %u transactions (%d fees) from the mempool to make space for %s\n", stage.size(), nStageFeesRemoved, txHash.ToString());
+        BOOST_FOREACH(const uint256& hash, stage) {
+            removeUnchecked(hash);
+        }
+        ClearStaged();
+    }
 }
