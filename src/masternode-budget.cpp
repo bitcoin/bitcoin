@@ -947,19 +947,21 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
 
     */
 
+    vector<CInv> vInv;
+
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid && (nProp == 0 || (*it1).first == nProp)){
             CInv inv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash());
-            pfrom->PushInventory(inv);
+            vInv.push_back(inv);
         
             //send votes
             std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
             while(it2 != pbudgetProposal->mapVotes.end()){
                 if((*it2).second.fValid){
                     CInv inv(MSG_BUDGET_VOTE, (*it2).second.GetHash());
-                    pfrom->PushInventory(inv);
+                    vInv.push_back(inv);
                 }
                 ++it2;
             }
@@ -972,14 +974,14 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
         if(pfinalizedBudget && pfinalizedBudget->fValid && (nProp == 0 || (*it3).first == nProp)){
             CInv inv(MSG_BUDGET_FINALIZED, (*it3).second.GetHash());
-            pfrom->PushInventory(inv);
+            vInv.push_back(inv);
 
             //send votes
             std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
             while(it4 != pfinalizedBudget->mapVotes.end()){
                 if((*it4).second.fValid) {
                     CInv inv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash());
-                    pfrom->PushInventory(inv);
+                    vInv.push_back(inv);
                 }
                 ++it4;
             }
@@ -987,6 +989,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
         ++it3;
     }
 
+    if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 }
 
 bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom)

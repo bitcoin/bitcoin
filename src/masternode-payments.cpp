@@ -758,15 +758,17 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
     int nCount = (mnodeman.CountEnabled()*2);
     if(nCountNeeded > nCount) nCountNeeded = nCount;
 
+    vector<CInv> vInv;
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
         CMasternodePaymentWinner winner = (*it).second;
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20) {
             CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
-            node->PushInventory(inv);
+            vInv.push_back(inv);
         }
         ++it;
     }
+    if(vInv.size() > 0) node->PushMessage("inv", vInv);
 }
 
 std::string CMasternodePayments::ToString() const
