@@ -28,6 +28,11 @@ bool CMasternodeSync::IsSynced()
     return RequestedMasternodeAssets == MASTERNODE_SYNC_FINISHED;
 }
 
+bool CMasternodeSync::IsListSyncStarted()
+{
+    return RequestedMasternodeAssets >= MASTERNODE_SYNC_LIST;
+}
+
 void CMasternodeSync::AddedMasternodeList()
 {
     lastMasternodeList = GetTime();

@@ -44,6 +44,7 @@ public:
 
     void Process();
     bool IsSynced();
+    bool IsListSyncStarted();
 };
 
 #endif
