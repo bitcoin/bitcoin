@@ -28,9 +28,13 @@ bool CMasternodeSync::IsSynced()
     return RequestedMasternodeAssets == MASTERNODE_SYNC_FINISHED;
 }
 
-bool CMasternodeSync::IsListSyncStarted()
+bool CMasternodeSync::IsBlockchainSynced()
 {
-    return RequestedMasternodeAssets >= MASTERNODE_SYNC_LIST;
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) return false;
+
+    if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight || pindexPrev->nTime + 600 < GetTime()) return false;
+    return true;
 }
 
 void CMasternodeSync::AddedMasternodeList()
