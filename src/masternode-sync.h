@@ -44,7 +44,7 @@ public:
 
     void Process();
     bool IsSynced();
-    bool IsListSyncStarted();
+    bool IsBlockchainSynced();
 };
 
 #endif
