@@ -718,15 +718,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
             if(mn.IsEnabled()) {
                 if(fDebug) LogPrintf("dseg - Sending Masternode entry - %s \n", mn.addr.ToString().c_str());
-                if(vin == CTxIn()){
-                    CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
-                    vInv.push_back(inv);
-                } else if (vin == mn.vin) {
+                if(vin == CTxIn() || vin == mn.vin){
                     CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
                     vInv.push_back(inv);
 
-                    LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString().c_str());
-                    return;
+                    if(vin == mn.vin) {
+                        LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString().c_str());
+                        break;
+                    }
                 }
                 i++;
             }
