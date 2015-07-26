@@ -232,11 +232,17 @@ bool VerifyCheckpoint(int block, uint256 blockHash)
     for (unsigned int i = 0; i < sizeof(vCheckpoints)/sizeof(vCheckpoints[0]); i++) {
         if (block != vCheckpoints[i].blockHeight) continue;
 
-        if (blockHash != vCheckpoints[i].blockHash) return false;
+        if (blockHash != vCheckpoints[i].blockHash) {
+            PrintToLog("%s(): block hash mismatch - expected %s, received %s\n", __func__, vCheckpoints[i].blockHash.GetHex(), blockHash.GetHex());
+            return false;
+        }
 
         // only verify if there is a checkpoint to verify against
         uint256 consensusHash = GetConsensusHash();
-        if (consensusHash != vCheckpoints[i].consensusHash) return false;
+        if (consensusHash != vCheckpoints[i].consensusHash) {
+            PrintToLog("%s(): consensus hash mismatch - expected %s, received %s\n", __func__, vCheckpoints[i].consensusHash.GetHex(), consensusHash.GetHex());
+//            return false;
+        }
     }
 
     // either checkpoint matched or we don't have a checkpoint for this block
