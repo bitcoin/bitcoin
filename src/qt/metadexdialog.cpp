@@ -547,13 +547,13 @@ void MetaDExDialog::recalcTotal(bool useBuyFields)
 
 void MetaDExDialog::sendTrade(bool sell)
 {
-    unsigned int propertyId = global_metadex_market;
+    int blockHeight = GetHeight();
+    uint32_t propertyId = global_metadex_market;
     bool divisible = isPropertyDivisible(propertyId);
-    bool testeco = false;
-    if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
+    bool testeco = isTestEcosystemProperty(propertyId);
 
     // check if main net trading is allowed
-    if (!testeco && GetHeight() < MSC_METADEX_BLOCK) {
+    if (!IsTransactionTypeAllowed(blockHeight, propertyId, MSC_TYPE_METADEX_TRADE, MP_TX_PKT_V0)) {
         QMessageBox::critical( this, "Unable to send MetaDEx transaction",
         "Trading on main ecosystem properties is not yet active.\n\nPlease switch to a test ecosystem market to send trade transactions." );
         return;
