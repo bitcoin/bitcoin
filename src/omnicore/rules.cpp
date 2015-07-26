@@ -12,6 +12,7 @@
 
 #include "chainparams.h"
 #include "script/standard.h"
+#include "uint256.h"
 
 #include <openssl/sha.h>
 
@@ -291,7 +292,37 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
     return false;
 }
 
-/** Obtains a hash of all balances to use for consensus verification & checkpointing. */
+/**
+ * Obtains a hash of all balances to use for consensus verification and checkpointing.
+ *
+ * For increased flexibility, so other implementations like OmniWallet and OmniChest can
+ * also apply this methodology without necessarily using the same exact data types (which
+ * would be needed to hash the data bytes directly), create a string in the following
+ * format for each address/property identifier combo to use for hashing:
+ *
+ * Format specifiers:
+ *   "%s|%d|%d|%d|%d|%d"
+ *
+ * With placeholders:
+ *   "address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve"
+ *
+ * Example:
+ *   SHA256 round 1: "1LCShN3ntEbeRrj8XBFWdScGqw5NgDXL5R|31|8000|0|0|0"
+ *   SHA256 round 2: "1LCShN3ntEbeRrj8XBFWdScGqw5NgDXL5R|2147483657|0|0|0|234235245"
+ *   SHA256 round 3: "1LP7G6uiHPaG8jm64aconFF8CLBAnRGYcb|1|0|100|0|0"
+ *   SHA256 round 4: "1LP7G6uiHPaG8jm64aconFF8CLBAnRGYcb|2|0|0|0|50000"
+ *   SHA256 round 5: "1LP7G6uiHPaG8jm64aconFF8CLBAnRGYcb|10|0|0|1|0"
+ *   SHA256 round 6: "3CwZ7FiQ4MqBenRdCkjjc41M5bnoKQGC2b|1|12345|5|777|9000"
+ *
+ * Result:
+ *   "3580e94167f75620dfa8c267862aa47af46164ed8edaec3a800d732050ec0607"
+ *
+ * The byte order is important, and in the example we assume:
+ *   SHA256("abc") = "ad1500f261ff10b49c7a1796a36103b02322ae5dde404141eacf018fbf1678ba"
+ *
+ * Note: empty balance records and the pending tally are ignored. Addresses are sorted based
+ * on lexicographical order, and balance records are sorted by the property identifiers.
+ */
 uint256 GetConsensusHash()
 {
     // allocate and init a SHA256_CTX
@@ -302,23 +333,13 @@ uint256 GetConsensusHash()
 
     if (msc_debug_consensus_hash) PrintToLog("Beginning generation of current consensus hash...\n");
 
-    // loop through the tally map, updating the sha context with the data from each balance & type
+    // loop through the tally map, updating the sha context with the data from each balance and tally type
     for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
         CMPTally& tally = my_it->second;
         tally.init();
-        uint32_t propertyId;
+        uint32_t propertyId = 0;
         while (0 != (propertyId = (tally.next()))) {
-            /*
-            for maximum flexibility so other implementations (eg OmniWallet & Chest) can also apply this methodology without
-            necessarily using the same exact data types (which would be needed to hash the data bytes directly), create a
-            string in the following format for each address/property id combo to use for hashing:
-
-                address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve
-
-            note: pending tally is ignored
-            */
-
             int64_t balance = tally.getMoney(propertyId, BALANCE);
             int64_t sellOfferReserve = tally.getMoney(propertyId, SELLOFFER_RESERVE);
             int64_t acceptReserve = tally.getMoney(propertyId, ACCEPT_RESERVE);
@@ -327,11 +348,8 @@ uint256 GetConsensusHash()
             // skip this entry if all balances are empty
             if (!balance && !sellOfferReserve && !acceptReserve && !metaDExReserve) continue;
 
-            const std::string& dataStr = address + "|" + FormatIndivisibleMP(propertyId) + "|" +
-                                         FormatIndivisibleMP(balance) + "|" +
-                                         FormatIndivisibleMP(sellOfferReserve) + "|" +
-                                         FormatIndivisibleMP(acceptReserve) + "|" +
-                                         FormatIndivisibleMP(metaDExReserve);
+            std::string dataStr = strprintf("%s|%d|%d|%d|%d|%d",
+                    address, propertyId, balance, sellOfferReserve, acceptReserve, metaDExReserve);
 
             if (msc_debug_consensus_hash) PrintToLog("Adding data to consensus hash: %s\n", dataStr);
 
@@ -348,8 +366,10 @@ uint256 GetConsensusHash()
     return consensusHash;
 }
 
-/** Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints */
-bool VerifyCheckpoint(int block, uint256 blockHash)
+/**
+ * Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints.
+ */
+bool VerifyCheckpoint(int block, const uint256& blockHash)
 {
     // checkpoints are only verified for mainnet
     if (isNonMainNet()) return true;
