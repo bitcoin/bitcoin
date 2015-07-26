@@ -603,6 +603,13 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
 
             pmn->lastPing = *this;
 
+            //mnodeman.mapSeenMasternodeBroadcast.lastPing is probably outdated, so we'll update it
+            CMasternodeBroadcast mnb(*pmn);
+            uint256 hash = mnb.GetHash();
+            if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
+                mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = *this;
+            }
+
             pmn->Check();
             if(!pmn->IsEnabled()) return false;
 
