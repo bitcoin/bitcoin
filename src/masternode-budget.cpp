@@ -587,9 +587,14 @@ std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
     return vBudgetProposalRet;
 }
 
+//
+// Sort by votes, if there's a tie sort by their feeHash TX
+//
 struct sortProposalsByVotes {
     bool operator()(const std::pair<CBudgetProposal*, int> &left, const std::pair<CBudgetProposal*, int> &right) {
-        return left.second > right.second;
+      if( left.second != right.second)
+        return (left.second > right.second);
+      return (left.first->nFeeTXHash > right.first->nFeeTXHash);
     }
 };
 

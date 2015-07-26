@@ -566,6 +566,8 @@ bool InitSanityCheck(void)
     return true;
 }
 
+
+
 /** Initialize dash.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -612,6 +614,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     } else {
         umask(077);
     }
+
 
     // Clean shutdown on SIGTERM
     struct sigaction sa;
