@@ -23,7 +23,9 @@ void bench_recover(void* arg) {
     for (i = 0; i < 20000; i++) {
         int j;
         int pubkeylen = 33;
-        CHECK(secp256k1_ecdsa_recover_compact(data->ctx, data->msg, data->sig, &pubkey, i % 2));
+        secp256k1_ecdsa_signature_t sig;
+        CHECK(secp256k1_ecdsa_signature_parse_compact(data->ctx, &sig, data->sig, i % 2));
+        CHECK(secp256k1_ecdsa_recover(data->ctx, data->msg, &sig, &pubkey));
         CHECK(secp256k1_ec_pubkey_serialize(data->ctx, pubkeyc, &pubkeylen, &pubkey, 1));
         for (j = 0; j < 32; j++) {
             data->sig[j + 32] = data->msg[j];    /* Move former message to S. */

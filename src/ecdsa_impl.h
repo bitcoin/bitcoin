@@ -118,6 +118,7 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, int *size, const se
     while (lenR > 1 && rp[0] == 0 && rp[1] < 0x80) { lenR--; rp++; }
     while (lenS > 1 && sp[0] == 0 && sp[1] < 0x80) { lenS--; sp++; }
     if (*size < 6+lenS+lenR) {
+        *size = 6 + lenS + lenR;
         return 0;
     }
     *size = 6 + lenS + lenR;
