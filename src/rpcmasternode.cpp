@@ -512,7 +512,7 @@ Value masternodelist(const Array& params, bool fHelp)
 
     if (fHelp ||
             (strMode != "status" && strMode != "vin" && strMode != "pubkey" && strMode != "lastseen" && strMode != "activeseconds" && strMode != "rank" && strMode != "addr"
-                && strMode != "protocol" && strMode != "full" && strMode != "votes" && strMode != "lastpaid"))
+                && strMode != "protocol" && strMode != "full" && strMode != "lastpaid"))
     {
         throw runtime_error(
                 "masternodelist ( \"mode\" \"filter\" )\n"
@@ -535,7 +535,6 @@ Value masternodelist(const Array& params, bool fHelp)
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  status         - Print masternode status: ENABLED / EXPIRED / VIN_SPENT / REMOVE / POS_ERROR\n"
                 "                   (can be additionally filtered, partial match)\n"
-                "  votes          - The amount of times this node has voted recently\n"
                 );
     }
 
@@ -607,10 +606,6 @@ Value masternodelist(const Array& params, bool fHelp)
                 std::string strStatus = mn.Status();
                 if(strFilter !="" && strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       strStatus));
-            } else if(strMode == "votes"){
-                if(strFilter !="" && mn.vin.prevout.hash.ToString().find(strFilter) == string::npos &&
-                    strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,      (int64_t)mn.nVotedTimes));
             }
         }
     }

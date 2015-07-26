@@ -81,7 +81,6 @@ CMasternode::CMasternode()
     nLastDsq = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nVotedTimes = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -103,7 +102,6 @@ CMasternode::CMasternode(const CMasternode& other)
     nLastDsq = other.nLastDsq;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
-    nVotedTimes = other.nVotedTimes;
 }
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
@@ -125,7 +123,6 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     nLastDsq = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
-    nVotedTimes = 0;
 }
 
 //

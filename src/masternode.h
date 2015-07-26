@@ -132,7 +132,6 @@ public:
     int64_t nLastDsq; //the dsq count from the last dsq broadcast of this node
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
-    int nVotedTimes;
     CMasternodePing lastPing;
 
 
@@ -164,7 +163,6 @@ public:
         swap(first.nLastDsq, second.nLastDsq);
         swap(first.nScanningErrorCount, second.nScanningErrorCount);
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
-        swap(first.nVotedTimes, second.nVotedTimes);
     }
 
     CMasternode& operator=(CMasternode from)
@@ -205,7 +203,6 @@ public:
             READWRITE(nLastDsq);
             READWRITE(nScanningErrorCount);
             READWRITE(nLastScanningErrorBlockHeight);
-            READWRITE(nVotedTimes);
     }
 
     int64_t SecondsSincePayment();

@@ -85,9 +85,10 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
 
 void CBudgetManager::CheckOrphanVotes()
 {
+    std::string strError = "";
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
     while(it1 != mapOrphanMasternodeBudgetVotes.end()){
-        if(budget.UpdateProposal(((*it1).second), NULL)){
+        if(budget.UpdateProposal(((*it1).second), NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
             mapOrphanMasternodeBudgetVotes.erase(it1++);
         } else {
@@ -96,7 +97,7 @@ void CBudgetManager::CheckOrphanVotes()
     }
     std::map<uint256, CFinalizedBudgetVote>::iterator it2 = mapOrphanFinalizedBudgetVotes.begin();
     while(it2 != mapOrphanFinalizedBudgetVotes.end()){
-        if(budget.UpdateFinalizedBudget(((*it2).second),NULL)){
+        if(budget.UpdateFinalizedBudget(((*it2).second),NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
             mapOrphanFinalizedBudgetVotes.erase(it2++);
         } else {
@@ -747,7 +748,6 @@ void CBudgetManager::NewBlock()
     if(chainActive.Height() % 6 != 0) return;
 
     CheckAndRemove();
-    mnodeman.DecrementVotedTimes();
 
     //remove invalid votes once in a while (we have to check the signatures and validity of every vote, somewhat CPU intensive)
 
@@ -843,24 +843,21 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
 
+        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(!vote.SignatureValid(true)){
             LogPrintf("mvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
         }
-
-        if(pmn->nVotedTimes < 100){
-            if(UpdateProposal(vote, pfrom)) vote.Relay();
-            if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
+        
+        std::string strError = "";
+        if(UpdateProposal(vote, pfrom, strError)) {
+            vote.Relay();
             masternodeSync.AddedBudgetItem();
-
-            LogPrintf("mvote - new budget vote - %s\n", vote.GetHash().ToString());
-        } else {
-            LogPrintf("mvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
-            return;
         }
+
+        LogPrintf("mvote - new budget vote - %s\n", vote.GetHash().ToString());
     }
 
     if (strCommand == "fbs") { //Finalized Budget Suggestion
@@ -911,24 +908,20 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         if(!vote.SignatureValid(true)){
             LogPrintf("fbvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
             return;
         }
 
-        mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-        if(pmn->nVotedTimes < 100){
-            if(UpdateFinalizedBudget(vote, pfrom)) {vote.Relay();}
-            if(!masternodeSync.IsSynced()) pmn->nVotedTimes++;
+        std::string strError = "";
+        if(UpdateFinalizedBudget(vote, pfrom, strError)) {
+            vote.Relay();
             masternodeSync.AddedBudgetItem();
-
-            if(fDebug) LogPrintf("fbs - new finalized budget vote - %s\n", vote.GetHash().ToString());
-
-        } else {
-            LogPrintf("fbvote - masternode can't vote again - vin: %s\n", pmn->vin.ToString());
-            return;
         }
+
+        if(fDebug) LogPrintf("fbs - new finalized budget vote - %s\n", vote.GetHash().ToString());
     }
 }
 
@@ -995,7 +988,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
     if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 }
 
-bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom)
+bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
 
@@ -1018,10 +1011,10 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom)
     }
 
 
-    return mapProposals[vote.nProposalHash].AddOrUpdateVote(vote);
+    return mapProposals[vote.nProposalHash].AddOrUpdateVote(vote, strError);
 }
 
-bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom)
+bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
 
@@ -1043,7 +1036,7 @@ bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pf
         return false;
     }
 
-    return mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(vote);
+    return mapFinalizedBudgets[vote.nBudgetHash].AddOrUpdateVote(vote, strError);
 }
 
 CBudgetProposal::CBudgetProposal()
@@ -1139,7 +1132,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     return true;
 }
 
-bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
+bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 
@@ -1147,10 +1140,32 @@ bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote)
 
     if(mapVotes.count(hash)){
         if(mapVotes[hash].nTime > vote.nTime){
-            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - new vote older than existing vote - %s\n", vote.GetHash().ToString());
+            strError = strprintf("new vote older than existing vote - %s\n", vote.GetHash().ToString());
+            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }
+        if(vote.nTime - mapVotes[hash].nTime < BUDGET_VOTE_UPDATE_MIN){
+            strError = strprintf("time between votes is too soon - %s - %lli\n", vote.GetHash().ToString(), vote.nTime - mapVotes[hash].nTime);
+            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - %s\n", strError);
             return false;
         }
     }
+
+    //if we're synced, the vote should have been recent
+    if(masternodeSync.IsSynced()) {
+        //up to an hour ago
+        if(vote.nTime < GetTime() - (60*60)){
+            strError = strprintf("new vote is too old - %s - nTime %lli - Min Time %lli\n", vote.GetHash().ToString(), vote.nTime, GetTime() - (60*60));
+            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }        
+    }
+
+    if(vote.nTime > GetTime() + (60*60)){
+        strError = strprintf("new vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", vote.GetHash().ToString(), vote.nTime, GetTime() + (60*60));
+        if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - %s\n", strError);
+        return false;
+    }        
 
     mapVotes[hash] = vote;
     return true;
@@ -1396,16 +1411,38 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     fValid = true;
 }
 
-bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote)
+bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
     if(mapVotes.count(hash)){
         if(mapVotes[hash].nTime > vote.nTime){
-            if(fDebug) LogPrintf("CBudgetProposal::AddOrUpdateVote - new vote older than existing vote - %s\n", vote.GetHash().ToString());
+            strError = strprintf("new vote older than existing vote - %s\n", vote.GetHash().ToString());
+            if(fDebug) LogPrintf("CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
             return false;
         }
+        if(vote.nTime - mapVotes[hash].nTime < BUDGET_VOTE_UPDATE_MIN){
+            strError = strprintf("time between votes is too soon - %s - %lli\n", vote.GetHash().ToString(), vote.nTime - mapVotes[hash].nTime);
+            if(fDebug) LogPrintf("CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }
+    }
+
+    //if we're synced, the vote should have been recent
+    if(masternodeSync.IsSynced()) {
+        //up to an hour ago
+        if(vote.nTime < GetTime() - (60*60)){
+            strError = strprintf("new vote is too old - %s - nTime %lli - Min Time %lli\n", vote.GetHash().ToString(), vote.nTime, GetTime() - (60*60));
+            if(fDebug) LogPrintf("CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }        
+    }
+
+    if(vote.nTime > GetTime() + (60*60)){
+        strError = strprintf("new vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", vote.GetHash().ToString(), vote.nTime, GetTime() + (60*60));
+        if(fDebug) LogPrintf("CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
+        return false;
     }
 
     mapVotes[hash] = vote;
@@ -1611,9 +1648,13 @@ void CFinalizedBudget::SubmitVote()
         return;
     }
 
-    budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-    vote.Relay();
-    budget.UpdateFinalizedBudget(vote, NULL);
+    std::string strError = "";
+    if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
+        budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        vote.Relay();
+    } else {
+        LogPrintf("CFinalizedBudget::SubmitVote : Error submitting vote - %s\n", strError);
+    }
 }
 
 CFinalizedBudgetBroadcast::CFinalizedBudgetBroadcast()
