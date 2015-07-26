@@ -30,7 +30,9 @@ static void bench_sign(void* arg) {
     for (i = 0; i < 20000; i++) {
         int j;
         int recid = 0;
-        CHECK(secp256k1_ecdsa_sign_compact(data->ctx, data->msg, sig, data->key, NULL, NULL, &recid));
+        secp256k1_ecdsa_signature_t signature;
+        CHECK(secp256k1_ecdsa_sign(data->ctx, data->msg, &signature, data->key, NULL, NULL));
+        CHECK(secp256k1_ecdsa_signature_serialize_compact(data->ctx, sig, &recid, &signature));
         for (j = 0; j < 32; j++) {
             data->msg[j] = sig[j];             /* Move former R to message. */
             data->key[j] = sig[j + 32];        /* Move former S to key.     */
