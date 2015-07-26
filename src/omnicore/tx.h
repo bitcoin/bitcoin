@@ -83,6 +83,9 @@ private:
     // Alert
     char alertString[SP_STRING_FIELD_LEN];
 
+    // Indicates whether the transaction can be used to execute logic
+    bool rpcOnly;
+
     /** Checks whether a pointer to the payload is past it's last position. */
     bool isOverrun(const char* p);
 
@@ -161,6 +164,7 @@ public:
     uint64_t getNewAmount() const { return nNewValue; }
     std::string getSPName() const { return name; }
     std::string getAlertString() const { return alertString; }
+    bool isRpcOnly() const { return rpcOnly; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -205,6 +209,7 @@ public:
         min_fee = 0;
         subaction = 0;
         memset(&alertString, 0, sizeof(alertString));
+        rpcOnly = true;
     }
 
     /** Sets the given values. */
@@ -238,6 +243,9 @@ public:
 
     /** Interprets the payload and executes the logic. */
     int interpretPacket();
+
+    /** Enables access of interpretPacket. */
+    void unlockLogic() { rpcOnly = false; };
 
     /** Compares transaction objects based on block height and position within the block. */
     bool operator<(const CMPTransaction& other) const

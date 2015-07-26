@@ -114,8 +114,8 @@ std::set<uint32_t> global_wallet_property_list;
  */
 bool autoCommit = true;
 
+//! Number of "Dev MSC" of the last processed block
 static int64_t exodus_prev = 0;
-static int64_t exodus_balance;
 
 static boost::filesystem::path MPPersistencePath;
 
@@ -472,37 +472,57 @@ static void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
 // 10) need a locking mechanism between Core & Qt -- to retrieve the tally, for instance, this and similar to this: LOCK(wallet->cs_wallet);
 //
 
-int64_t calculate_and_update_devmsc(unsigned int nTime)
+/**
+ * Calculates and updates the "development mastercoins".
+ *
+ * For every 10 MSC sold during the Exodus period, 1 additional "Dev MSC" was generated,
+ * which are being awarded to the Exodus address slowly over the years.
+ *
+ * @see The "Dev MSC" specification:
+ * https://github.com/OmniLayer/spec#development-mastercoins-dev-msc-previously-reward-mastercoins
+ *
+ * Note:
+ * If timestamps are out of order, then previously vested "Dev MSC" are not voided.
+ *
+ * @param nTime  The timestamp of the block to update the "Dev MSC" for
+ * @return The number of "Dev MSC" generated
+ */
+static int64_t calculate_and_update_devmsc(unsigned int nTime)
 {
-//do nothing if before end of fundraiser
-if (nTime < 1377993874) return -9919;
+    // do nothing if before end of fundraiser
+    if (nTime < 1377993874) return 0;
 
-// taken mainly from msc_validate.py: def get_available_reward(height, c)
-int64_t devmsc = 0;
-int64_t exodus_delta;
-// spec constants:
-const int64_t all_reward = 5631623576222;
-const double seconds_in_one_year = 31556926;
-const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
-const double years = seconds_passed/seconds_in_one_year;
-const double part_available = 1 - pow(0.5, years);
-const double available_reward=all_reward * part_available;
+    // taken mainly from msc_validate.py: def get_available_reward(height, c)
+    int64_t devmsc = 0;
+    int64_t exodus_delta = 0;
+    // spec constants:
+    const int64_t all_reward = 5631623576222;
+    const double seconds_in_one_year = 31556926;
+    const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
+    const double years = seconds_passed / seconds_in_one_year;
+    const double part_available = 1 - pow(0.5, years);
+    const double available_reward = all_reward * part_available;
 
-  devmsc = rounduint64(available_reward);
-  exodus_delta = devmsc - exodus_prev;
+    devmsc = rounduint64(available_reward);
+    exodus_delta = devmsc - exodus_prev;
 
-  if (msc_debug_exo) PrintToLog("devmsc=%lu, exodus_prev=%lu, exodus_delta=%ld\n", devmsc, exodus_prev, exodus_delta);
+    if (msc_debug_exo) PrintToLog("devmsc=%d, exodus_prev=%d, exodus_delta=%d\n", devmsc, exodus_prev, exodus_delta);
 
-  // skip if a block's timestamp is older than that of a previous one!
-  if (0>exodus_delta) return 0;
+    // skip if a block's timestamp is older than that of a previous one!
+    if (0 > exodus_delta) return 0;
 
-  // sanity check that devmsc isn't an impossible value
-  if (devmsc > all_reward || 0 > devmsc) return -9918;
+    // sanity check that devmsc isn't an impossible value
+    if (devmsc > all_reward || 0 > devmsc) {
+        PrintToLog("%s(): ERROR: insane number of Dev MSC (nTime=%d, exodus_prev=%d, devmsc=%d)\n", __func__, nTime, exodus_prev, devmsc);
+        return 0;
+    }
 
-  update_tally_map(exodus_address, OMNI_PROPERTY_MSC, exodus_delta, BALANCE);
-  exodus_prev = devmsc;
+    if (exodus_delta > 0) {
+        update_tally_map(exodus_address, OMNI_PROPERTY_MSC, exodus_delta, BALANCE);
+        exodus_prev = devmsc;
+    }
 
-  return devmsc;
+    return exodus_delta;
 }
 
 uint32_t mastercore::GetNextPropertyId(bool maineco)
@@ -783,8 +803,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         return -1;
     }
 
-    PrintToLog("____________________________________________________________________________________________________________________________________\n");
-    PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    if (!bRPConly || msc_debug_parser_readonly) {
+        PrintToLog("____________________________________________________________________________________________________________________________________\n");
+        PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    }
 
     // now save output addresses & scripts for later use
     // also determine if there is a multisig in there, if so = Class B
@@ -1055,8 +1077,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         if (strDataAddress.empty()) // an empty Data Address here means it is not Class A valid and should be defaulted to a BTC payment
         {
             // this must be the BTC payment - validate (?)
-            PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
-            PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            if (!bRPConly || msc_debug_parser_readonly) {
+                PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+                PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            }
 
             // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
 
@@ -1070,7 +1094,9 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                         const std::string strAddress = CBitcoinAddress(dest).ToString();
 
                         if (exodus_address == strAddress) continue;
-                        PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
+                        if (!bRPConly || msc_debug_parser_readonly) {
+                            PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
+                        }
 
                         // check everything & pay BTC for the property we are buying here...
                         if (bRPConly) count = 55555; // no real way to validate a payment during simple RPC call
@@ -1221,6 +1247,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 // RETURNS: >0 if 1 or more payments have been made
 static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, unsigned int idx, CMPTransaction& mp_tx, unsigned int nTime)
 {
+    assert(bRPConly == mp_tx.isRpcOnly());
+
     // Fallback to legacy parsing, if OP_RETURN isn't enabled:
     if (!IsAllowedOutputType(TX_NULL_DATA, nBlock)) {
         return legacy::parseTransaction(bRPConly, wtx, nBlock, idx, mp_tx, nTime);
@@ -1234,8 +1262,11 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     if (omniClass == NO_MARKER) {
         return -1; // No Exodus/Omni marker, thus not a valid Omni transaction
     }
-    PrintToLog("____________________________________________________________________________________________________________________________________\n");
-    PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+
+    if (!bRPConly || msc_debug_parser_readonly) {
+        PrintToLog("____________________________________________________________________________________________________________________________________\n");
+        PrintToLog("%s(block=%d, %s idx= %d); txid: %s\n", __FUNCTION__, nBlock, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime), idx, wtx.GetHash().GetHex());
+    }
 
     // Add previous transaction inputs to the cache
     if (!FillTxInputCache(wtx)) {
@@ -1453,8 +1484,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
         } else {
             // ### BTC PAYMENT FOR DEX HANDLING ###
-            PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
-            PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            if (!bRPConly || msc_debug_parser_readonly) {
+                PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
+                PrintToLog("!! this may be the BTC payment for an offer !!\n");
+            }
             // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
             int count = 0;
             for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
@@ -1465,7 +1498,9 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                         continue;
                     }
                     std::string strAddress = address.ToString();
-                    PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(wtx.vout[n].nValue));
+                    if (!bRPConly || msc_debug_parser_readonly) {
+                        PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(wtx.vout[n].nValue));
+                    }
                     // check everything & pay BTC for the property we are buying here...
                     if (bRPConly) count = 55555;  // no real way to validate a payment during simple RPC call
                     else if (0 == DEx_payment(wtx.GetHash(), n, strAddress, strSender, wtx.vout[n].nValue, nBlock)) ++count;
@@ -1869,10 +1904,10 @@ int input_msc_balances_string(const std::string& s)
         int64_t acceptReserved = boost::lexical_cast<int64_t>(curBalance[2]);
         int64_t metadexReserved = boost::lexical_cast<int64_t>(curBalance[3]);
 
-        update_tally_map(strAddress, propertyId, balance, BALANCE);
-        update_tally_map(strAddress, propertyId, sellReserved, SELLOFFER_RESERVE);
-        update_tally_map(strAddress, propertyId, acceptReserved, ACCEPT_RESERVE);
-        update_tally_map(strAddress, propertyId, metadexReserved, METADEX_RESERVE);
+        if (balance) update_tally_map(strAddress, propertyId, balance, BALANCE);
+        if (sellReserved) update_tally_map(strAddress, propertyId, sellReserved, SELLOFFER_RESERVE);
+        if (acceptReserved) update_tally_map(strAddress, propertyId, acceptReserved, ACCEPT_RESERVE);
+        if (metadexReserved) update_tally_map(strAddress, propertyId, metadexReserved, METADEX_RESERVE);
     }
 
     return 0;
@@ -2646,8 +2681,10 @@ int mastercore_init()
 
     // collect the real Exodus balances available at the snapshot time
     // redundant? do we need to show it both pre-parse and post-parse?  if so let's label the printfs accordingly
-    exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-    PrintToLog("[Snapshot] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+    if (msc_debug_exo) {
+        int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+        PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
+    }
 
     // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
     p_txlistdb->setLastAlert(nWaterlineBlock);
@@ -2655,8 +2692,8 @@ int mastercore_init()
     msc_initial_scan(nWaterlineBlock);
 
     // display Exodus balance
-    exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
-    PrintToLog("[Initialized] Exodus balance: %s\n", FormatDivisibleMP(exodus_balance));
+    int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+    PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
 
     PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
     PrintToConsole("Omni Core initialization completed\n");
@@ -2716,11 +2753,13 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
     // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
     PendingDelete(tx.GetHash());
 
-    CMPTransaction mp_obj;
     // save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)
     int interp_ret = -555555, pop_ret;
 
     if (nBlock < nWaterlineBlock) return -1; // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
+
+    CMPTransaction mp_obj;
+    mp_obj.unlockLogic();
 
     pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime());
     if (0 == pop_ret) {
@@ -3974,7 +4013,7 @@ int validity = 0;
   std::vector<std::string> vstr;
   boost::split(vstr, result, boost::is_any_of(":"), token_compress_on);
 
-  PrintToLog("%s() size=%lu : %s\n", __FUNCTION__, vstr.size(), result);
+  if (msc_debug_txdb) PrintToLog("%s() size=%lu : %s\n", __FUNCTION__, vstr.size(), result);
 
   if (1 <= vstr.size()) validity = atoi(vstr[0]);
 
@@ -3996,7 +4035,7 @@ int validity = 0;
     else nAmended = 0;
   }
 
-  p_txlistdb->printStats();
+  if (msc_debug_txdb) p_txlistdb->printStats();
 
   if ((int)0 == validity) return false;
 
@@ -4072,8 +4111,8 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     devmsc = calculate_and_update_devmsc(pBlockIndex->GetBlockTime());
 
     if (msc_debug_exo) {
-        PrintToLog("devmsc for block %d: %lu, Exodus balance: %lu\n", nBlockNow,
-            devmsc, getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE));
+        int64_t balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
+        PrintToLog("devmsc for block %d: %d, Exodus balance: %d\n", nBlockNow, devmsc, FormatDivisibleMP(balance));
     }
 
     // check the alert status, do we need to do anything else here?
@@ -4183,8 +4222,13 @@ const std::vector<unsigned char> GetOmMarker()
  //
 int CMPTransaction::interpretPacket()
 {
+    if (rpcOnly) {
+        PrintToLog("%s(): ERROR: attempt to execute logic in RPC mode\n", __func__);
+        return (PKT_ERROR -1);
+    }
+
     if (!interpret_Transaction()) {
-        return -98765;
+        return (PKT_ERROR -2);
     }
 
     LOCK(cs_tally);
