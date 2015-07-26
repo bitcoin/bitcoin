@@ -9,7 +9,7 @@
 // Bootup the Masternode, look for a 1000DRK input and register on the network
 //
 void CActiveMasternode::ManageStatus()
-{
+{    
     std::string errorMessage;
 
     if(!fMasterNode) return;

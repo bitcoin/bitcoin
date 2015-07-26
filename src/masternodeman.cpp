@@ -711,6 +711,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
         } //else, asking for a specific node which is ok
 
+        std::vector<CInv> vInv;
         int i = 0;
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
             if(mn.addr.IsRFC1918()) continue; //local network
@@ -719,10 +720,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 if(fDebug) LogPrintf("dseg - Sending Masternode entry - %s \n", mn.addr.ToString().c_str());
                 if(vin == CTxIn()){
                     CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
-                    pfrom->PushInventory(inv);
+                    vInv.push_back(inv);
                 } else if (vin == mn.vin) {
                     CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
-                    pfrom->PushInventory(inv);
+                    vInv.push_back(inv);
 
                     LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString().c_str());
                     return;
@@ -730,6 +731,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 i++;
             }
         }
+        if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 
         LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString().c_str());
     }
