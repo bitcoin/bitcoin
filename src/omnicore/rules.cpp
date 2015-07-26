@@ -241,7 +241,7 @@ bool VerifyCheckpoint(int block, uint256 blockHash)
         uint256 consensusHash = GetConsensusHash();
         if (consensusHash != vCheckpoints[i].consensusHash) {
             PrintToLog("%s(): consensus hash mismatch - expected %s, received %s\n", __func__, vCheckpoints[i].consensusHash.GetHex(), consensusHash.GetHex());
-//            return false;
+            return false;
         }
     }
 
