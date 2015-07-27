@@ -116,15 +116,17 @@ public:
 class CRollingBloomFilter
 {
 public:
-    CRollingBloomFilter(unsigned int nElements, double nFPRate,
-                        unsigned int nTweak = 0);
+    // A random bloom filter calls GetRand() at creation time.
+    // Don't create global CRollingBloomFilter objects, as they may be
+    // constructed before the randomizer is properly initialized.
+    CRollingBloomFilter(unsigned int nElements, double nFPRate);
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const uint256& hash);
     bool contains(const std::vector<unsigned char>& vKey) const;
     bool contains(const uint256& hash) const;
 
-    void reset(unsigned int nNewTweak = 0);
+    void reset();
 
 private:
     unsigned int nBloomSize;

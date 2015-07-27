@@ -216,16 +216,17 @@ void CBloomFilter::UpdateEmptyFull()
     isEmpty = empty;
 }
 
-CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate, unsigned int nTweak) :
-    b1(nElements * 2, fpRate, nTweak), b2(nElements * 2, fpRate, nTweak)
+CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate) :
+    b1(nElements * 2, fpRate, 0), b2(nElements * 2, fpRate, 0)
 {
     // Implemented using two bloom filters of 2 * nElements each.
     // We fill them up, and clear them, staggered, every nElements
     // inserted, so at least one always contains the last nElements
     // inserted.
+    nInsertions = 0;
     nBloomSize = nElements * 2;
 
-    reset(nTweak);
+    reset();
 }
 
 void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
@@ -262,11 +263,9 @@ bool CRollingBloomFilter::contains(const uint256& hash) const
     return contains(data);
 }
 
-void CRollingBloomFilter::reset(unsigned int nNewTweak)
+void CRollingBloomFilter::reset()
 {
-    if (!nNewTweak)
-        nNewTweak = GetRand(std::numeric_limits<unsigned int>::max());
-
+    unsigned int nNewTweak = GetRand(std::numeric_limits<unsigned int>::max());
     b1.reset(nNewTweak);
     b2.reset(nNewTweak);
     nInsertions = 0;
