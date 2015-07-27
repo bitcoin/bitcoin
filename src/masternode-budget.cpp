@@ -1007,6 +1007,7 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
             }
         }
 
+        strError = "Proposal not found!";
         return false;
     }
 
@@ -1033,6 +1034,8 @@ bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pf
             }
 
         }
+
+        strError = "Finalized Budget not found!";
         return false;
     }
 
