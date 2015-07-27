@@ -3976,6 +3976,8 @@ bool static AlreadyHave(const CInv& inv)
             return txInMap || mapOrphanTransactions.count(inv.hash) ||
                 pcoinsTip->HaveCoins(inv.hash);
         }
+    case MSG_DSTX:
+        return mapDarksendBroadcastTxes.count(inv.hash);
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash);
     case MSG_TXLOCK_REQUEST:
@@ -4124,26 +4126,13 @@ void static ProcessGetData(CNode* pfrom)
 
                 if (!pushed && inv.type == MSG_TX) {
 
-                    if(mapDarksendBroadcastTxes.count(inv.hash)){
+                    CTransaction tx;
+                    if (mempool.lookup(inv.hash, tx)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss <<
-                            mapDarksendBroadcastTxes[inv.hash].tx <<
-                            mapDarksendBroadcastTxes[inv.hash].vin <<
-                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
-                            mapDarksendBroadcastTxes[inv.hash].sigTime;
-
-                        pfrom->PushMessage("dstx", ss);
+                        ss << tx;
+                        pfrom->PushMessage("tx", ss);
                         pushed = true;
-                    } else {
-                        CTransaction tx;
-                        if (mempool.lookup(inv.hash, tx)) {
-                            CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                            ss.reserve(1000);
-                            ss << tx;
-                            pfrom->PushMessage("tx", ss);
-                            pushed = true;
-                        }
                     }
                 }
                 if (!pushed && inv.type == MSG_TXLOCK_VOTE) {
@@ -4241,6 +4230,22 @@ void static ProcessGetData(CNode* pfrom)
                         pushed = true;
                     }
                 }
+
+                if (!pushed && inv.type == MSG_DSTX) {       
+                    if(mapDarksendBroadcastTxes.count(inv.hash)){
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss <<
+                            mapDarksendBroadcastTxes[inv.hash].tx <<
+                            mapDarksendBroadcastTxes[inv.hash].vin <<
+                            mapDarksendBroadcastTxes[inv.hash].vchSig <<
+                            mapDarksendBroadcastTxes[inv.hash].sigTime;
+
+                        pfrom->PushMessage("dstx", ss);
+                        pushed = true;
+                    }
+                }
+
 
                 if (!pushed) {
                     vNotFound.push_back(inv);
@@ -4789,8 +4794,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // Always relay transactions received from whitelisted peers, even
             // if they are already in the mempool (allowing the node to function
             // as a gateway for nodes hidden behind it).
+
             RelayTransaction(tx);
         }
+
+        if(strCommand == "dstx"){
+            CInv inv(MSG_DSTX, tx.GetHash());
+            RelayInv(inv, MIN_POOL_PEER_PROTO_VERSION);
+        }
+
         int nDoS = 0;
         if (state.IsInvalid(nDoS))
         {
