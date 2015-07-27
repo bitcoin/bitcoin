@@ -709,9 +709,8 @@ void CDarksendPool::CheckFinalTransaction()
                 mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
             }
 
-            // Broadcast the transaction to the network
-            txNew.fTimeReceivedIsTxTime = true;
-            txNew.RelayWalletTransaction();
+            CInv inv(MSG_DSTX, txNew.GetHash());
+            RelayInv(inv, MIN_POOL_PEER_PROTO_VERSION);
 
             // Tell the clients it was successful
             RelayCompletedTransaction(sessionID, false, MSG_SUCCESS);
