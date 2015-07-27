@@ -19,10 +19,13 @@ https://www.torproject.org/docs/tor-manual.html.en
 
 This allows running bitcoind without having to do any manual configuration.
 
-Example header
-----------------------
+Low-level RPC API changes
+--------------------------
 
-Example content.
+- Monetary amounts can be provided as strings. This means that for example the
+  argument to sendtoaddress can be "0.0001" instead of 0.0001. This can be an
+  advantage if a JSON library insists on using a lossy floating point type for
+  numbers, which would be dangerous for monetary amounts.
 
 0.12.0 Change log
 =================
