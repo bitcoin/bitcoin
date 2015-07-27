@@ -21,6 +21,10 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
 dashd/dash-qt (on Linux).
 
+** This new version uses transaction indexing by default, you will need to reindex 
+the blockchain. To do so, start the client with --reindex. **
+
+
 Downgrade warning
 ------------------
 
@@ -50,12 +54,48 @@ This does not affect wallet forward or backward compatibility.
 
 Switched to Bitcoin Core version 0.10
 https://bitcoin.org/en/release/v0.10.0
+Implemented decentralized budget system
+Removed reference node
+Implemented new decentralized masternode payment consensus system
+Improved speed of DS
+New masternode payment/winners/budgets syncing strategy
+Platform indepentant masternode ranking system
+Masternode broadcasts, pings and winners now use the inventory system
+
 
 Credits
 --------
 
 Thanks to who contributed to this release, at least:
 
-- *to do ..*
+eduffield
+UdjinM6
+Crowning
+moli
+flare
+thelazier
+adios
+poiuty 
+scratchy 
+moocowmoo
+the-baker
+BrainShutdown
+Lukas_Jackson
+Sub-Ether
+italx
+yidakee
+TanteStefana
+coingun
+tungfa
+MangledBlue
+AjM
+Lariondos
+elbereth
+minersday
+qwizzie
+TaoOfSatoshi
+dark-sailor
+AlexMomo
+snogcel
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/dash/).
