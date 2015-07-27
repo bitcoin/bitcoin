@@ -354,7 +354,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
         // disabled due to locking issues
-        //LOCK(cs_masternodepayments);
+        LOCK(cs_masternodepayments);
 
         //this is required in litemodef
         CMasternodePaymentWinner winner;
