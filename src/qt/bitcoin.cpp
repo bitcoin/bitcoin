@@ -8,6 +8,7 @@
 
 #include "bitcoingui.h"
 
+#include "chainparams.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
@@ -24,7 +25,6 @@
 #endif
 
 #include "init.h"
-#include "main.h"
 #include "rpcserver.h"
 #include "scheduler.h"
 #include "ui_interface.h"

@@ -12,18 +12,10 @@
 
 #include "amount.h"
 #include "chain.h"
-#include "chainparams.h"
 #include "coins.h"
 #include "net.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "script/sigcache.h"
-#include "script/standard.h"
+#include "script/script_error.h"
 #include "sync.h"
-#include "tinyformat.h"
-#include "txmempool.h"
-#include "uint256.h"
 
 #include <algorithm>
 #include <exception>
@@ -41,6 +33,7 @@ class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
 class CScriptCheck;
+class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
 

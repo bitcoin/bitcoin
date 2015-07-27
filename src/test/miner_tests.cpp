@@ -2,12 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
+#include "coins.h"
 #include "consensus/validation.h"
 #include "main.h"
 #include "miner.h"
 #include "pubkey.h"
+#include "script/standard.h"
+#include "txmempool.h"
 #include "uint256.h"
 #include "util.h"
+#include "utilstrencodings.h"
 
 #include "test/test_bitcoin.h"
 
