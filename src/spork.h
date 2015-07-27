@@ -32,7 +32,7 @@ using namespace boost;
 #define SPORK_7_MASTERNODE_SCANNING                           10006
 #define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT                10007
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT                 10008
-#define SPORK_10_MASTERNODE_PAY_NEWEST_NODES                  10009
+#define SPORK_10_MASTERNODE_PAY_UPDATED_NODES                 10009
 #define SPORK_11_RESET_BUDGET                                 10010
 #define SPORK_12_RECONSIDER_BLOCKS                            10011
 #define SPORK_13_ENABLE_SUPERBLOCKS                           10012
@@ -43,10 +43,10 @@ using namespace boost;
 #define SPORK_7_MASTERNODE_SCANNING_DEFAULT                   978307200   //2001-1-1
 #define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT        1444217600   //OFF
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT         1444217600   //OFF
-#define SPORK_10_MASTERNODE_PAY_NEWEST_NODES_DEFAULT          1444217600   //OFF
+#define SPORK_10_MASTERNODE_PAY_UPDATED_NODES_DEFAULT         1444217600   //OFF
 #define SPORK_11_RESET_BUDGET_DEFAULT                         0
 #define SPORK_12_RECONSIDER_BLOCKS_DEFAULT                    0
-#define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   978307200   //2001-1-1
+#define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   0 //1439510400   //8/13/2015, 5:00:00 PM
     
 class CSporkMessage;
 class CSporkManager;
