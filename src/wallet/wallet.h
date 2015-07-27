@@ -7,10 +7,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
-#include "key.h"
-#include "keystore.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
+#include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"

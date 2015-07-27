@@ -6,8 +6,9 @@
 #ifndef BITCOIN_WALLET_WALLET_ISMINE_H
 #define BITCOIN_WALLET_WALLET_ISMINE_H
 
-#include "key.h"
 #include "script/standard.h"
+
+#include <stdint.h>
 
 class CKeyStore;
 class CScript;
