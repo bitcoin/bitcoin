@@ -134,6 +134,8 @@ public:
 CConsensusParams& ConsensusParams(const std::string& network);
 /** Returns currently active consensus parameter. */
 const CConsensusParams& ConsensusParams();
+/** Returns currently active mutable consensus parameter. */
+CConsensusParams& MutableConsensusParams();
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */

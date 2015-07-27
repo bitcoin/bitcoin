@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(network_restrictions_test)
     BOOST_CHECK_EQUAL(params.MSC_METADEX_BLOCK, 0);
 }
 
-BOOST_AUTO_TEST_CASE(update_feature)
+BOOST_AUTO_TEST_CASE(update_feature_network)
 {
     const std::string& network = Params().NetworkIDString();
 
@@ -53,5 +53,25 @@ BOOST_AUTO_TEST_CASE(update_feature)
     ConsensusParams(network).MSC_BET_BLOCK = oldActivationBlock;
     BOOST_CHECK_EQUAL(oldActivationBlock, ConsensusParams().MSC_BET_BLOCK);
 }
+
+BOOST_AUTO_TEST_CASE(update_feature)
+{
+    int oldActivationBlock = ConsensusParams().MSC_BET_BLOCK;
+    int newActivationBlock = 123;
+
+    // Before updated
+    BOOST_CHECK(oldActivationBlock != newActivationBlock);
+    BOOST_CHECK(!IsTransactionTypeAllowed(newActivationBlock, OMNI_PROPERTY_MSC, MSC_TYPE_OFFER_ACCEPT_A_BET, MP_TX_PKT_V0));
+
+    // Update
+    MutableConsensusParams().MSC_BET_BLOCK = newActivationBlock;
+    BOOST_CHECK_EQUAL(newActivationBlock, ConsensusParams().MSC_BET_BLOCK);
+    BOOST_CHECK(IsTransactionTypeAllowed(newActivationBlock, OMNI_PROPERTY_MSC, MSC_TYPE_OFFER_ACCEPT_A_BET, MP_TX_PKT_V0));
+
+    // Restore original
+    MutableConsensusParams().MSC_BET_BLOCK = oldActivationBlock;
+    BOOST_CHECK_EQUAL(oldActivationBlock, ConsensusParams().MSC_BET_BLOCK);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

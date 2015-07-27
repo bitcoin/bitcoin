@@ -226,6 +226,16 @@ const CConsensusParams& ConsensusParams()
 }
 
 /**
+ * Returns currently active mutable consensus parameter.
+ */
+CConsensusParams& MutableConsensusParams()
+{
+    const std::string& network = Params().NetworkIDString();
+
+    return ConsensusParams(network);
+}
+
+/**
  * Checks, if the script type is allowed as input.
  */
 bool IsAllowedInputType(int whichType, int nBlock)
