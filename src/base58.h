@@ -146,12 +146,19 @@ public:
 
     K GetKey() {
         K ret;
-        ret.Decode(&vchData[0], &vchData[Size]);
+        if (vchData.size() == Size) {
+            //if base58 encouded data not holds a ext key, return a !IsValid() key
+            ret.Decode(&vchData[0]);
+        }
         return ret;
     }
 
     CBitcoinExtKeyBase(const K &key) {
         SetKey(key);
+    }
+
+    CBitcoinExtKeyBase(const std::string& strBase58c) {
+        SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
     }
 
     CBitcoinExtKeyBase() {}
