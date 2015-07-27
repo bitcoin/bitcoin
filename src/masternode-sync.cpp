@@ -160,7 +160,7 @@ void CMasternodeSync::Process()
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
-                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
@@ -168,16 +168,13 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("mnsync")) continue;
                 pnode->FulfilledRequest("mnsync");
 
-                if((lastMasternodeList == 0 || lastMasternodeList > GetTime() - MASTERNODE_SYNC_TIMEOUT)
-                        && RequestedMasternodeAttempt <= 4){
-                    mnodeman.DsegUpdate(pnode);
-                    RequestedMasternodeAttempt++;
-                }
+                mnodeman.DsegUpdate(pnode);
+                RequestedMasternodeAttempt++;
                 return;
             }
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
-                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
@@ -185,16 +182,14 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("mnwsync")) continue;
                 pnode->FulfilledRequest("mnwsync");
 
-                if((lastMasternodeWinner == 0 || lastMasternodeWinner > GetTime() - MASTERNODE_SYNC_TIMEOUT)
-                        && RequestedMasternodeAttempt <= 4){
 
-                    CBlockIndex* pindexPrev = chainActive.Tip();
-                    if(pindexPrev == NULL) return;
+                CBlockIndex* pindexPrev = chainActive.Tip();
+                if(pindexPrev == NULL) return;
 
-                    int nMnCount = mnodeman.CountEnabled()*2;
-                    pnode->PushMessage("mnget", nMnCount); //sync payees
-                    RequestedMasternodeAttempt++;
-                }
+                int nMnCount = mnodeman.CountEnabled()*2;
+                pnode->PushMessage("mnget", nMnCount); //sync payees
+                RequestedMasternodeAttempt++;
+
                 return;
             }
         }
@@ -203,7 +198,7 @@ void CMasternodeSync::Process()
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*3){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*3 && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
                     if(budget.HasNextFinalizedBudget()) {
                         GetNextAsset();
                     } else { //we've failed to sync, this state will reject the next budget block
@@ -218,12 +213,10 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
-                if((lastBudgetItem == 0 || lastBudgetItem > GetTime() - MASTERNODE_SYNC_TIMEOUT)
-                        && RequestedMasternodeAttempt <= 4){
-                    uint256 n = 0;
-                    pnode->PushMessage("mnvs", n); //sync masternode votes
-                    RequestedMasternodeAttempt++;
-                }
+                uint256 n = 0;
+                pnode->PushMessage("mnvs", n); //sync masternode votes
+                RequestedMasternodeAttempt++;
+                
                 return;
             }
 
