@@ -27,6 +27,14 @@ Low-level RPC API changes
   advantage if a JSON library insists on using a lossy floating point type for
   numbers, which would be dangerous for monetary amounts.
 
+Option parsing behavior
+-----------------------
+
+Command line options are now parsed strictly in the order in which they are
+specified. It used to be the case that `-X -noX` ends up, unintuitively, with X
+set, as `-X` had precedence over `-noX`. This is no longer the case. Like for
+other software, the last specified value for an option will hold.
+
 0.12.0 Change log
 =================
 
