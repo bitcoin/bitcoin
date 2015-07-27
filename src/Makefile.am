@@ -173,7 +173,6 @@ libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 # server: shared between dashd and dash-qt
 libbitcoin_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
 libbitcoin_server_a_SOURCES = \
-  activemasternode.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -208,8 +207,17 @@ libbitcoin_server_a_SOURCES = \
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   activemasternode.cpp \
+  darksend.cpp \
+  darksend-relay.cpp \
   db.cpp \
   crypter.cpp \
+  instantx.cpp \
+  masternode.cpp \
+  masternode-budget.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \
@@ -273,20 +281,10 @@ univalue_libbitcoin_univalue_a_SOURCES = \
 # common: shared between dashd, and dash-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_common_a_SOURCES = \
-  activemasternode.cpp \
   allocators.cpp \
   amount.cpp \
   base58.cpp \
   chainparams.cpp \
-  darksend.cpp \
-  darksend-relay.cpp \
-  masternode.cpp \
-  masternode-budget.cpp \
-  masternode-sync.cpp \
-  masternode-payments.cpp \
-  masternodeman.cpp \
-  masternodeconfig.cpp \
-  instantx.cpp \
   coins.cpp \
   compressor.cpp \
   primitives/block.cpp \
