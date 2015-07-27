@@ -236,16 +236,8 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
 
 void CRollingBloomFilter::insert(const uint256& hash)
 {
-    if (nInsertions == 0) {
-        b1.clear();
-    } else if (nInsertions == nBloomSize / 2) {
-        b2.clear();
-    }
-    b1.insert(hash);
-    b2.insert(hash);
-    if (++nInsertions == nBloomSize) {
-        nInsertions = 0;
-    }
+    vector<unsigned char> data(hash.begin(), hash.end());
+    insert(data);
 }
 
 bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
@@ -258,10 +250,8 @@ bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 
 bool CRollingBloomFilter::contains(const uint256& hash) const
 {
-    if (nInsertions < nBloomSize / 2) {
-        return b2.contains(hash);
-    }
-    return b1.contains(hash);
+    vector<unsigned char> data(hash.begin(), hash.end());
+    return contains(data);
 }
 
 void CRollingBloomFilter::clear()
