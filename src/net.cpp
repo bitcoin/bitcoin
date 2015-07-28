@@ -1532,11 +1532,6 @@ void ThreadMessageHandler()
             }
         }
 
-        // Poll the connected nodes for messages
-        CNode* pnodeTrickle = NULL;
-        if (!vNodesCopy.empty())
-            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
-
         bool fSleep = true;
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
@@ -1567,7 +1562,7 @@ void ThreadMessageHandler()
             {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend)
-                    g_signals.SendMessages(pnode, pnode == pnodeTrickle || pnode->fWhitelisted);
+                    g_signals.SendMessages(pnode);
             }
             boost::this_thread::interruption_point();
         }
@@ -2089,6 +2084,10 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     hashContinue = uint256();
     nStartingHeight = -1;
     fGetAddr = false;
+    nNextAddrSend = GetTimeMicros() + GetRand(30 * 1000000);
+    nNextLocalAddrSend = GetTimeMicros() + 1000 * (int64_t)GetRand(24 * 60 * 60 * 1000);
+    nNextClearSetKnown = GetTimeMicros() + 1000 * (int64_t)GetRand(12 * 60 * 60 * 1000);
+    nNextInvSend = GetTimeMicros() + GetRand(10 * 1000000);
     fRelayTxes = false;
     pfilter = new CBloomFilter();
     nPingNonceSent = 0;

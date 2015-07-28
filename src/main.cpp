@@ -3891,19 +3891,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (!pfrom->fInbound)
         {
-            // Advertise our address
-            if (fListen && !IsInitialBlockDownload())
-            {
-                CAddress addr = GetLocalAddress(&pfrom->addr);
-                if (addr.IsRoutable())
-                {
-                    pfrom->PushAddress(addr);
-                } else if (IsPeerAddrLocalGood(pfrom)) {
-                    addr.SetIP(pfrom->addrLocal);
-                    pfrom->PushAddress(addr);
-                }
-            }
-
             // Get recent addresses
             if (pfrom->fOneShot || pfrom->nVersion >= CADDR_TIME_VERSION || addrman.size() < 1000)
             {
@@ -4736,7 +4723,7 @@ bool ProcessMessages(CNode* pfrom)
 }
 
 
-bool SendMessages(CNode* pto, bool fSendTrickle)
+bool SendMessages(CNode* pto)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {
@@ -4777,31 +4764,25 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (!lockMain)
             return true;
 
-        // Address refresh broadcast
-        static int64_t nLastRebroadcast;
-        if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
-        {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-            {
-                // Periodically clear addrKnown to allow refresh broadcasts
-                if (nLastRebroadcast)
-                    pnode->addrKnown.clear();
-
-                // Rebroadcast our address
-                AdvertizeLocal(pnode);
-            }
-            if (!vNodes.empty())
-                nLastRebroadcast = GetTime();
-        }
-
         //
         // Message: addr
         //
-        if (fSendTrickle)
-        {
+
+        int64_t nNowMicros = GetTimeMicros();
+        if (pto->nNextLocalAddrSend < nNowMicros) {
+            AdvertizeLocal(pto);
+            pto->nNextLocalAddrSend = nNowMicros + 1000 * (int64_t)GetRand(24 * 60 * 60 * 1000);
+        }
+
+        if (pto->nNextClearSetKnown < nNowMicros) {
+            pto->addrKnown.clear();
+            pto->nNextClearSetKnown = nNowMicros + 1000 * (int64_t)GetRand(12 * 60 * 60 * 1000);
+        }
+
+        if (pto->nNextAddrSend < nNowMicros) {
+            pto->nNextAddrSend = nNowMicros + GetRand(30 * 1000000);
             vector<CAddress> vAddr;
-            vAddr.reserve(pto->vAddrToSend.size());
+            vAddr.reserve(std::min(1000, static_cast<int>(pto->vAddrToSend.size())));
             BOOST_FOREACH(const CAddress& addr, pto->vAddrToSend)
             {
                 if (!pto->addrKnown.contains(addr.GetKey()))
@@ -4867,54 +4848,91 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: inventory
         //
-        vector<CInv> vInv;
-        vector<CInv> vInvWait;
+        vector<CInv> vInv, vInvWait;
+        nNowMicros = GetTimeMicros();
+
+        vInv.reserve(1000);
+
         {
             LOCK(pto->cs_inventory);
-            vInv.reserve(pto->vInventoryToSend.size());
-            vInvWait.reserve(pto->vInventoryToSend.size());
-            BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend)
-            {
-                if (pto->setInventoryKnown.count(inv))
-                    continue;
 
-                // trickle out tx inv to protect privacy
-                if (inv.type == MSG_TX && !fSendTrickle)
-                {
-                    // 1/4 of tx invs blast to all immediately
-                    static uint256 hashSalt;
-                    if (hashSalt.IsNull())
-                        hashSalt = GetRandHash();
-                    uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
-                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
-
-                    if (fTrickleWait)
-                    {
-                        vInvWait.push_back(inv);
-                        continue;
-                    }
-                }
-
-                // returns true if wasn't already contained in the set
-                if (pto->setInventoryKnown.insert(inv).second)
-                {
+            // Aggressively push MSG_BLOCK/MSG_FILTERED_BLOCK
+            BOOST_FOREACH(const CInv& inv, pto->vBlockInventoryToSend) {
+                if (pto->setInventoryKnown.insert(inv).second) {
                     vInv.push_back(inv);
-                    if (vInv.size() >= 1000)
-                    {
+                    if (vInv.size() >= 1000) {
                         pto->PushMessage("inv", vInv);
                         vInv.clear();
                     }
                 }
             }
+            
+            if (!vInv.empty()) {
+                pto->PushMessage("inv", vInv);
+                vInv.clear();
+            }
+        }
+
+        if (pto->nNextInvSend < nNowMicros)
+            vInvWait.reserve(pto->vInventoryToSend.size());
+
+        {
+            LOCK(pto->cs_inventory);
+
+            std::vector<int> vRandInv;
+            vRandInv.resize(pto->vInventoryToSend.size());
+
+            for (size_t i = 0; i < pto->vInventoryToSend.size(); i++)
+                vRandInv[i] = i;
+
+            for (size_t i = 0; i < vRandInv.size(); i++)
+                std::swap(vRandInv[i], vRandInv[i + GetRand(vRandInv.size() - i)]);
+
+            for (size_t i = 0; i < vRandInv.size(); i++) {
+                const CInv& inv = pto->vInventoryToSend[vRandInv[i]];
+
+                switch(inv.type) {
+                    case MSG_TX:
+                    {
+                        if (pto->nNextInvSend < nNowMicros || pto->fWhitelisted) {
+                            if (pto->setInventoryKnown.insert(inv).second) {
+                                vInv.push_back(inv);
+                                if (vInv.size() >= 1000) {
+                                    pto->PushMessage("inv", vInv);
+                                    vInv.clear();
+                                }
+                            }
+                        }
+                        else
+                            vInvWait.push_back(inv);
+
+                        break;
+                    }
+                    default:
+                    {
+                        vInv.push_back(inv);
+                        if (vInv.size() >= 1000) {
+                            pto->PushMessage("inv", vInv);
+                            vInv.clear();
+                        }
+                    }
+                }
+            }
+
             pto->vInventoryToSend = vInvWait;
         }
-        if (!vInv.empty())
+
+        if (!vInv.empty()) {
             pto->PushMessage("inv", vInv);
+            vInv.clear();
+        }
+
+        if (pto->nNextInvSend < nNowMicros)
+            pto->nNextInvSend = nNowMicros + GetRand(10 * 1000000);
 
         // Detect whether we're stalling
-        int64_t nNow = GetTimeMicros();
-        if (!pto->fDisconnect && state.nStallingSince && state.nStallingSince < nNow - 1000000 * BLOCK_STALLING_TIMEOUT) {
+        nNowMicros = GetTimeMicros();
+        if (!pto->fDisconnect && state.nStallingSince && state.nStallingSince < nNowMicros - 1000000 * BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
@@ -4933,12 +4951,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // more quickly than once every 5 minutes, then we'll shorten the download window for this block).
         if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0) {
             QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
-            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNow, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
+            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNowMicros, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
             if (queuedBlock.nTimeDisconnect > nTimeoutIfRequestedNow) {
                 LogPrint("net", "Reducing block download timeout for peer=%d block=%s, orig=%d new=%d\n", pto->id, queuedBlock.hash.ToString(), queuedBlock.nTimeDisconnect, nTimeoutIfRequestedNow);
                 queuedBlock.nTimeDisconnect = nTimeoutIfRequestedNow;
             }
-            if (queuedBlock.nTimeDisconnect < nNow) {
+            if (queuedBlock.nTimeDisconnect < nNowMicros) {
                 LogPrintf("Timeout downloading block %s from peer=%d, disconnecting\n", queuedBlock.hash.ToString(), pto->id);
                 pto->fDisconnect = true;
             }
@@ -4960,7 +4978,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             }
             if (state.nBlocksInFlight == 0 && staller != -1) {
                 if (State(staller)->nStallingSince == 0) {
-                    State(staller)->nStallingSince = nNow;
+                    State(staller)->nStallingSince = nNowMicros;
                     LogPrint("net", "Stall started peer=%d\n", staller);
                 }
             }
@@ -4969,7 +4987,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: getdata (non-blocks)
         //
-        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
+        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNowMicros)
         {
             const CInv& inv = (*pto->mapAskFor.begin()).second;
             if (!AlreadyHave(inv))

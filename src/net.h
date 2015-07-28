@@ -97,7 +97,7 @@ struct CNodeSignals
 {
     boost::signals2::signal<int ()> GetHeight;
     boost::signals2::signal<bool (CNode*), CombinerAll> ProcessMessages;
-    boost::signals2::signal<bool (CNode*, bool), CombinerAll> SendMessages;
+    boost::signals2::signal<bool (CNode*), CombinerAll> SendMessages;
     boost::signals2::signal<void (NodeId, const CNode*)> InitializeNode;
     boost::signals2::signal<void (NodeId)> FinalizeNode;
 };
@@ -374,12 +374,17 @@ public:
     CRollingBloomFilter addrKnown;
     bool fGetAddr;
     std::set<uint256> setKnown;
+    int64_t nNextAddrSend;
+    int64_t nNextLocalAddrSend;
+    int64_t nNextClearSetKnown;
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
+    std::vector<CInv> vBlockInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
+    int64_t nNextInvSend;
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
@@ -479,10 +484,23 @@ public:
 
     void PushInventory(const CInv& inv)
     {
+        switch(inv.type)
         {
-            LOCK(cs_inventory);
-            if (!setInventoryKnown.count(inv))
-                vInventoryToSend.push_back(inv);
+            case MSG_BLOCK:
+            case MSG_FILTERED_BLOCK:
+            {
+                LOCK(cs_inventory);
+                if (!setInventoryKnown.count(inv))
+                    vBlockInventoryToSend.push_back(inv);
+                break;
+            }
+            default:
+            {
+                LOCK(cs_inventory);
+                if (!setInventoryKnown.count(inv))
+                    vInventoryToSend.push_back(inv);
+                break;
+            }
         }
     }
 
