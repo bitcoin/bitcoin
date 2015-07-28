@@ -609,7 +609,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
         (*it).second.CleanAndRemove(false);
-        vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYeas()));
+        vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYeas()-(*it).second.GetNays()));
         ++it;
     }
 
@@ -636,7 +636,8 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
         //prop start/end should be inside this period
         if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart &&
                 pbudgetProposal->nBlockEnd >= nBlockEnd &&
-                pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)
+                pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
+                pbudgetProposal->IsEstablished())
         {
             if(nTotalBudget == nBudgetAllocated){
                 pbudgetProposal->SetAllotted(0);
@@ -733,7 +734,11 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
         for(int i = 210240; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
     }
 
-    return ((nSubsidy/100)*10)*576*30;
+    // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
+    if(Params().NetworkID() == CBaseChainParams::MAIN) return ((nSubsidy/100)*10)*576*30;
+
+    //for testing purposes
+    return ((nSubsidy/100)*10)*50;
 }
 
 void CBudgetManager::NewBlock()
@@ -1060,7 +1065,7 @@ CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strU
     nBlockEnd = nBlockEndIn;
     address = addressIn;
     nAmount = nAmountIn;
-    nTime = 0;
+    nTime = GetAdjustedTime();
     nFeeTXHash = nFeeTXHashIn;
     fValid = true;
 }
@@ -1098,6 +1103,13 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
 
     if(fCheckCollateral){
         if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
+            return false;
+        }
+    }
+
+    if(masternodeSync.IsSynced()) {
+        if(nTime < GetTime() - (60*60) || nTime < GetTime() - (60*60)) {
+            strError = "Time is out of acceptable range.";
             return false;
         }
     }
