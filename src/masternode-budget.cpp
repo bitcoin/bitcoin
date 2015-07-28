@@ -57,7 +57,7 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
 
     }
     if(!foundOpReturn){
-        strError = strprintf("Couldn't find opReturn %s", txCollateral.ToString());
+        strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral.ToString());
         LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
         return false;
     }
@@ -811,9 +811,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        //set time we first saw this prop
-        budgetProposalBroadcast.nTime = GetAdjustedTime();
-
         mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
 
         std::string strError = "";
@@ -1057,7 +1054,7 @@ CBudgetProposal::CBudgetProposal()
     fValid = true;
 }
 
-CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn)
+CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn, int64_t nTimeIn)
 {
     strProposalName = strProposalNameIn;
     strURL = strURLIn;
@@ -1065,7 +1062,7 @@ CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strU
     nBlockEnd = nBlockEndIn;
     address = addressIn;
     nAmount = nAmountIn;
-    nTime = GetAdjustedTime();
+    nTime = nTimeIn;
     nFeeTXHash = nFeeTXHashIn;
     fValid = true;
 }
@@ -1108,7 +1105,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     }
 
     if(masternodeSync.IsSynced()) {
-        if(nTime < GetTime() - (60*60) || nTime < GetTime() - (60*60)) {
+        if(nTime < GetTime() - (60*60*2) || nTime < GetTime() - (60*60)) {
             strError = "Time is out of acceptable range.";
             return false;
         }
@@ -1312,9 +1309,10 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
     address = other.address;
     nAmount = other.nAmount;
     nFeeTXHash = other.nFeeTXHash;
+    nTime = other.nTime;
 }
 
-CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)
+CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn, int64_t nTimeIn)
 {
     strProposalName = strProposalNameIn;
     strURL = strURLIn;
@@ -1329,6 +1327,8 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn
     nAmount = nAmountIn;
 
     nFeeTXHash = nFeeTXHashIn;
+
+    nTime = nTimeIn;
 }
 
 void CBudgetProposalBroadcast::Relay()
