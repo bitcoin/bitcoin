@@ -33,7 +33,7 @@ bool CMasternodeSync::IsBlockchainSynced()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
 
-    if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight || pindexPrev->nTime + 600 < GetTime()) return false;
+    if(pindexPrev->nTime + 600 < GetTime()) return false;
     return true;
 }
 
@@ -154,7 +154,7 @@ void CMasternodeSync::Process()
         if(IsInitialBlockDownload()) return;
 
         //don't begin syncing until we're almost at a recent block
-        if(pindexPrev->nHeight + 4 < pindexBestHeader->nHeight || pindexPrev->nTime + 600 < GetTime()) return;
+        if(pindexPrev->nTime + 600 < GetTime()) return;
 
         if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 
