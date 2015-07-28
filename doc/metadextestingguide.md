@@ -24,12 +24,9 @@ Run Omni Core QT on testnet.  To do so, execute with the --testnet startup param
 
 Create a shortcut to omnicore-qt.exe and edit the properties to append ```--testnet``` to the target field
 
-[Imgur](http://i.imgur.com/NJ5TuzN.png)
 ![alt tag](http://i.imgur.com/NJ5TuzN.png)
 
-or
-
-Open the command prompt, change to the directory containing the Omni Core binaries and execute:
+Alternatively, open the command prompt, change to the directory containing the Omni Core binaries and execute:
 
 ```omnicore-qt.exe --testnet```
 
@@ -49,9 +46,13 @@ Open the terminal, change to the directory containing the Omni Core binaries and
 
 Wait for the Omni Core client to sync the testnet blockchain.
 
+![alt tag](http://i.imgur.com/RLtEfCU.png)
+
 ### Step 4
 
 Obtain a testnet bitcoin address for your wallet by selecting File > Receiving Addresses
+
+![alt tag](http://i.imgur.com/vZxf0pL.png)
 
 ### Step 5
 
@@ -74,7 +75,11 @@ Once you have received your testnet bitcoins, you can convert some of them into 
 3. Enter the amount of testnet BTC you would like to convert to testnet MSC
 4. Use the 'Send' button to broadcast the transaction to the testnet network.
 
+![alt tag](http://i.imgur.com/PnLyAYe.png)
+
 Wait for the transaction to confirm (you can use the 'Transactions' page, 'Bitcoin' tab to check the confirmation status of the transaction.
+
+![alt tag](http://i.imgur.com/j62Cnig.png)
 
 ### Step 7
 
@@ -90,3 +95,4 @@ It is recommended that you test trading via properties #12 (divisible) and #13 (
 
 To trade, simply select the address you wish to use and either click an existing open trade to automatically populate the amount & price fields or enter your chosen values manually.  Finally click the buy or sell buttons accordingly.
 
+![alt tag](http://i.imgur.com/G5dQS4E.png)
