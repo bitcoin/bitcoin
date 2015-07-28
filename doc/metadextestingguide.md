@@ -24,6 +24,9 @@ Run Omni Core QT on testnet.  To do so, execute with the --testnet startup param
 
 Create a shortcut to omnicore-qt.exe and edit the properties to append ```--testnet``` to the target field
 
+[Imgur](http://i.imgur.com/NJ5TuzN.png)
+![alt tag](http://i.imgur.com/NJ5TuzN.png)
+
 or
 
 Open the command prompt, change to the directory containing the Omni Core binaries and execute:
