@@ -383,7 +383,7 @@ public:
         if(Params().NetworkID() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
 
         //for testing purposes - 4 hours
-        return (nTime < GetTime() - (60*60*4));
+        return (nTime < GetTime() - (60*20));
     }
 
     std::string GetName() {return strProposalName; }
