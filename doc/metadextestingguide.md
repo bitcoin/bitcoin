@@ -96,3 +96,7 @@ It is recommended that you test trading via properties #12 (divisible) and #13 (
 To trade, simply select the address you wish to use and either click an existing open trade to automatically populate the amount & price fields or enter your chosen values manually.  Finally click the buy or sell buttons accordingly.
 
 ![alt tag](http://i.imgur.com/G5dQS4E.png)
+
+### Problems / Feedback
+
+Please lodge any feedback or issues at https://github.com/OmniLayer/omnicore/issues - any and all feedback is most welcomed.
