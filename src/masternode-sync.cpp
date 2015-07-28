@@ -199,13 +199,14 @@ void CMasternodeSync::Process()
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
                 if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*3 && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    if(budget.HasNextFinalizedBudget()) {
+                    if(budget.HasNextFinalizedBudget() || nCountFailures >= 2) {
                         GetNextAsset();
                     } else { //we've failed to sync, this state will reject the next budget block
                         LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
                         RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
                         RequestedMasternodeAttempt = 0;
                         lastFailure = GetTime();
+                        nCountFailures++;
                     }
                     return;
                 }

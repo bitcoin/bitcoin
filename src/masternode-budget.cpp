@@ -516,9 +516,11 @@ bool CBudgetManager::HasNextFinalizedBudget()
     if(!pindexPrev) return false;
 
     int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    if(nBlockStart - pindexPrev->nHeight > 576*2) return false; //we wouldn't have the budget yet
+    if(nBlockStart - pindexPrev->nHeight > 576*2) return true; //we wouldn't have the budget yet
 
     if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
+
+    LogPrintf("CBudgetManager::HasNextFinalizedBudget() - Client is missing budget\n");
 
     return false;
 }

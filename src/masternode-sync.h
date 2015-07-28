@@ -29,6 +29,7 @@ public:
     int64_t lastMasternodeWinner;
     int64_t lastBudgetItem;
     int64_t lastFailure;
+    int64_t nCountFailures;
 
     // Count peers we've requested the list from
     int RequestedMasternodeAssets;
