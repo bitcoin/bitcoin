@@ -77,7 +77,7 @@ Once you have received your testnet bitcoins, you can convert some of them into 
 
 ![alt tag](http://i.imgur.com/PnLyAYe.png)
 
-Wait for the transaction to confirm (you can use the 'Transactions' page, 'Bitcoin' tab to check the confirmation status of the transaction.
+Wait for the transaction to confirm (you can use the 'Transactions' page, 'Bitcoin' tab to check the confirmation status of the transaction.)
 
 ![alt tag](http://i.imgur.com/j62Cnig.png)
 
