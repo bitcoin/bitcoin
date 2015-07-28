@@ -143,12 +143,13 @@ static void RegisterLoad(const string& strInput)
         valStr.insert(valStr.size(), buf, bread);
     }
 
-    if (ferror(f)) {
+    int error = ferror(f);
+    fclose(f);
+
+    if (error) {
         string strErr = "Error reading file " + filename;
         throw runtime_error(strErr);
     }
-
-    fclose(f);
 
     // evaluate as JSON buffer register
     RegisterSetJson(key, valStr);
