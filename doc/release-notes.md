@@ -190,6 +190,21 @@ calculating the target.
 A more detailed documentation about keeping traffic low can be found in
 [/doc/reducetraffic.md](/doc/reducetraffic.md).
 
+Signature validation using libsecp256k1
+---------------------------------------
+
+ECDSA signatures inside Bitcoin transactions now use validation using
+[https://github.com/bitcoin/secp256k1](libsecp256k1) instead of OpenSSL.
+
+Depending on the platform, this means a significant speedup for raw signature
+validation speed. The advantage is largest on x86_64, where validation is over
+five times faster. In practice, this translates to a raw reindexing and new
+block validation times that are less than half of what it was before.
+
+Libsecp256k1 has undergone very extensive testing and validation.
+
+A side effect of this change is that libconsensus no longer depends on OpenSSL.
+
 0.12.0 Change log
 =================
 
