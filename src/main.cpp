@@ -1559,10 +1559,10 @@ int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
 
     /*
         
-        Hard fork will activate on block 320436, reducing the block reward by 10 extra percent (allowing budget super-blocks)
+        Hard fork will activate on block 328008, reducing the block reward by 10 extra percent (allowing budget super-blocks)
     
     */
-    if(nHeight > 308340+(576*21)) nSubsidy -= nSubsidy/10; // 320436 - 10.0% - August 24, 2015
+    if(nHeight > 309759+(553*33)) nSubsidy -= nSubsidy/10; // 328008 - 10.0% - August 30, 2015
     
     return nSubsidy + nFees;
 }
