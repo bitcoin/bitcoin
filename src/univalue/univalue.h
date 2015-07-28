@@ -16,7 +16,7 @@
 
 class UniValue {
 public:
-    enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VREAL, VBOOL, };
+    enum VType { VNULL, VOBJ, VARR, VSTR, VNUM, VBOOL, };
 
     UniValue() { typ = VNULL; }
     UniValue(UniValue::VType initialType, const std::string& initialStr = "") {
@@ -61,7 +61,7 @@ public:
     bool setObject();
 
     enum VType getType() const { return typ; }
-    std::string getValStr() const { return val; }
+    const std::string& getValStr() const { return val; }
     bool empty() const { return (values.size() == 0); }
 
     size_t size() const { return values.size(); }
@@ -78,7 +78,6 @@ public:
     bool isBool() const { return (typ == VBOOL); }
     bool isStr() const { return (typ == VSTR); }
     bool isNum() const { return (typ == VNUM); }
-    bool isReal() const { return (typ == VREAL); }
     bool isArray() const { return (typ == VARR); }
     bool isObject() const { return (typ == VOBJ); }
 
@@ -247,4 +246,3 @@ extern const UniValue NullUniValue;
 const UniValue& find_value( const UniValue& obj, const std::string& name);
 
 #endif // BITCOIN_UNIVALUE_UNIVALUE_H
-

@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
+#include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
@@ -14,15 +15,15 @@
 #include "net.h"
 #include "pow.h"
 #include "rpcserver.h"
+#include "txmempool.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "validationinterface.h"
-#ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#endif
 
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "univalue/univalue.h"
 
@@ -92,7 +93,6 @@ UniValue getnetworkhashps(const UniValue& params, bool fHelp)
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
-#ifdef ENABLE_WALLET
 UniValue getgenerate(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -127,8 +127,6 @@ UniValue generate(const UniValue& params, bool fHelp)
             + HelpExampleCli("generate", "11")
         );
 
-    if (pwalletMain == NULL)
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
     if (!Params().MineBlocksOnDemand())
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This method can only be used on regtest");
 
@@ -136,7 +134,13 @@ UniValue generate(const UniValue& params, bool fHelp)
     int nHeightEnd = 0;
     int nHeight = 0;
     int nGenerate = params[0].get_int();
-    CReserveKey reservekey(pwalletMain);
+
+    boost::shared_ptr<CReserveScript> coinbaseScript;
+    GetMainSignals().ScriptForMining(coinbaseScript);
+
+    //throw an error if no script was provided
+    if (!coinbaseScript->reserveScript.size())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available (mining requires a wallet)");
 
     {   // Don't keep cs_main locked
         LOCK(cs_main);
@@ -148,9 +152,9 @@ UniValue generate(const UniValue& params, bool fHelp)
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd)
     {
-        auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+        auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(coinbaseScript->reserveScript));
         if (!pblocktemplate.get())
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet keypool empty");
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
         {
             LOCK(cs_main);
@@ -166,10 +170,12 @@ UniValue generate(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
+
+        //mark script as important because it was used at least for one coinbase output
+        coinbaseScript->KeepScript();
     }
     return blockHashes;
 }
-
 
 UniValue setgenerate(const UniValue& params, bool fHelp)
 {
@@ -193,8 +199,6 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
             + HelpExampleRpc("setgenerate", "true, 1")
         );
 
-    if (pwalletMain == NULL)
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
     if (Params().MineBlocksOnDemand())
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Use the generate method instead of setgenerate on this network");
 
@@ -212,12 +216,10 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
 
     mapArgs["-gen"] = (fGenerate ? "1" : "0");
     mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
-    GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
+    GenerateBitcoins(fGenerate, nGenProcLimit, Params());
 
     return NullUniValue;
 }
-#endif
-
 
 UniValue getmininginfo(const UniValue& params, bool fHelp)
 {
@@ -257,9 +259,7 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("testnet",          Params().TestnetToBeDeprecatedFieldRPC()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
-#ifdef ENABLE_WALLET
     obj.push_back(Pair("generate",         getgenerate(params, false)));
-#endif
     return obj;
 }
 
@@ -398,7 +398,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         if (strMode == "proposal")
         {
             const UniValue& dataval = find_value(oparam, "data");
-            if (dataval.isStr())
+            if (!dataval.isStr())
                 throw JSONRPCError(RPC_TYPE_ERROR, "Missing data String key for proposal");
 
             CBlock block;
@@ -523,8 +523,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     UniValue transactions(UniValue::VARR);
     map<uint256, int64_t> setTxIndex;
     int i = 0;
-    BOOST_FOREACH (CTransaction& tx, pblock->vtx)
-    {
+    BOOST_FOREACH (const CTransaction& tx, pblock->vtx) {
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
 
@@ -670,16 +669,15 @@ UniValue estimatefee(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "estimatefee nblocks\n"
-            "\nEstimates the approximate fee per kilobyte\n"
-            "needed for a transaction to begin confirmation\n"
-            "within nblocks blocks.\n"
+            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+            "confirmation within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"
             "\nResult:\n"
-            "n :    (numeric) estimated fee-per-kilobyte\n"
+            "n              (numeric) estimated fee-per-kilobyte\n"
             "\n"
-            "-1.0 is returned if not enough transactions and\n"
-            "blocks have been observed to make an estimate.\n"
+            "A negative value is returned if not enough transactions and blocks\n"
+            "have been observed to make an estimate.\n"
             "\nExample:\n"
             + HelpExampleCli("estimatefee", "6")
             );
@@ -702,16 +700,15 @@ UniValue estimatepriority(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "estimatepriority nblocks\n"
-            "\nEstimates the approximate priority\n"
-            "a zero-fee transaction needs to begin confirmation\n"
-            "within nblocks blocks.\n"
+            "\nEstimates the approximate priority a zero-fee transaction needs to begin\n"
+            "confirmation within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"
             "\nResult:\n"
-            "n :    (numeric) estimated priority\n"
+            "n              (numeric) estimated priority\n"
             "\n"
-            "-1.0 is returned if not enough transactions and\n"
-            "blocks have been observed to make an estimate.\n"
+            "A negative value is returned if not enough transactions and blocks\n"
+            "have been observed to make an estimate.\n"
             "\nExample:\n"
             + HelpExampleCli("estimatepriority", "6")
             );

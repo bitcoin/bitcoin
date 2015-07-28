@@ -55,7 +55,7 @@ void StopRPCThreads();
 /** Query whether RPC is running */
 bool IsRPCRunning();
 
-/** 
+/**
  * Set the RPC warmup status.  When this is done, all RPC calls will error out
  * immediately with RPC_IN_WARMUP.
  */
@@ -110,8 +110,8 @@ private:
     std::map<std::string, const CRPCCommand*> mapCommands;
 public:
     CRPCTable();
-    const CRPCCommand* operator[](std::string name) const;
-    std::string help(std::string name) const;
+    const CRPCCommand* operator[](const std::string& name) const;
+    std::string help(const std::string& name) const;
 
     /**
      * Execute a method.
@@ -142,8 +142,8 @@ extern CAmount AmountFromValue(const UniValue& value);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
 extern std::string HelpRequiringPassphrase();
-extern std::string HelpExampleCli(std::string methodname, std::string args);
-extern std::string HelpExampleRpc(std::string methodname, std::string args);
+extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
+extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
 extern void EnsureWalletIsUnlocked();
 
@@ -151,8 +151,12 @@ extern UniValue getconnectioncount(const UniValue& params, bool fHelp); // in rp
 extern UniValue getpeerinfo(const UniValue& params, bool fHelp);
 extern UniValue ping(const UniValue& params, bool fHelp);
 extern UniValue addnode(const UniValue& params, bool fHelp);
+extern UniValue disconnectnode(const UniValue& params, bool fHelp);
 extern UniValue getaddednodeinfo(const UniValue& params, bool fHelp);
 extern UniValue getnettotals(const UniValue& params, bool fHelp);
+extern UniValue setban(const UniValue& params, bool fHelp);
+extern UniValue listbanned(const UniValue& params, bool fHelp);
+extern UniValue clearbanned(const UniValue& params, bool fHelp);
 
 extern UniValue dumpprivkey(const UniValue& params, bool fHelp); // in rpcdump.cpp
 extern UniValue importprivkey(const UniValue& params, bool fHelp);
@@ -217,6 +221,7 @@ extern UniValue listlockunspent(const UniValue& params, bool fHelp);
 extern UniValue createrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue decoderawtransaction(const UniValue& params, bool fHelp);
 extern UniValue decodescript(const UniValue& params, bool fHelp);
+extern UniValue fundrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue signrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue sendrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue gettxoutproof(const UniValue& params, bool fHelp);
@@ -229,6 +234,7 @@ extern UniValue settxfee(const UniValue& params, bool fHelp);
 extern UniValue getmempoolinfo(const UniValue& params, bool fHelp);
 extern UniValue getrawmempool(const UniValue& params, bool fHelp);
 extern UniValue getblockhash(const UniValue& params, bool fHelp);
+extern UniValue getblockheader(const UniValue& params, bool fHelp);
 extern UniValue getblock(const UniValue& params, bool fHelp);
 extern UniValue gettxoutsetinfo(const UniValue& params, bool fHelp);
 extern UniValue gettxout(const UniValue& params, bool fHelp);

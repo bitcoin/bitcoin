@@ -13,7 +13,7 @@
 #include "guiutil.h"
 #include "optionsmodel.h"
 
-#include "main.h" // for MAX_SCRIPTCHECK_THREADS
+#include "main.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
@@ -42,7 +42,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
-    ui->threadsScriptVerif->setMinimum(-(int)boost::thread::hardware_concurrency());
+    ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
 
     /* Network elements init */
@@ -73,7 +73,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* Display elements init */
     QDir translations(":translations");
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
-    foreach(const QString &langStr, translations.entryList())
+    Q_FOREACH(const QString &langStr, translations.entryList())
     {
         QLocale locale(langStr);
 
@@ -281,7 +281,7 @@ bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
     {
         if(object == ui->proxyIp)
         {
-            emit proxyIpChecks(ui->proxyIp, ui->proxyPort->text().toInt());
+            Q_EMIT proxyIpChecks(ui->proxyIp, ui->proxyPort->text().toInt());
         }
     }
     return QDialog::eventFilter(object, event);

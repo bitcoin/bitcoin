@@ -141,10 +141,13 @@ public:
         // which has units satoshis-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
-        // A typical txout is 34 bytes big, and will
+        // A typical spendable txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
-        // so dust is a txout less than 546 satoshis 
+        // so dust is a spendable txout less than 546 satoshis
         // with default minRelayTxFee.
+        if (scriptPubKey.IsUnspendable())
+            return 0;
+
         size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
         return 3*minRelayTxFee.GetFee(nSize);
     }

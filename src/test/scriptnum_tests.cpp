@@ -145,7 +145,7 @@ static void RunCreate(const int64_t& num)
 {
     CheckCreateInt(num);
     CScriptNum scriptnum(num);
-    if (scriptnum.getvch().size() <= CScriptNum::nMaxNumSize)
+    if (scriptnum.getvch().size() <= CScriptNum::nDefaultMaxNumSize)
         CheckCreateVch(num);
     else
     {

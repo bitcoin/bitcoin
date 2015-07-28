@@ -11,7 +11,7 @@
 
 #include "primitives/transaction.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // For minRelayTxFee
 #include "protocol.h"
 #include "script/script.h"
 #include "script/standard.h"
@@ -263,6 +263,19 @@ void copyEntryData(QAbstractItemView *view, int column, int role)
         // Copy first item
         setClipboard(selection.at(0).data(role).toString());
     }
+}
+
+QString getEntryData(QAbstractItemView *view, int column, int role)
+{
+    if(!view || !view->selectionModel())
+        return QString();
+    QModelIndexList selection = view->selectionModel()->selectedRows(column);
+
+    if(!selection.isEmpty()) {
+        // Return first item
+        return (selection.at(0).data(role).toString());
+    }
+    return QString();
 }
 
 QString getSaveFileName(QWidget *parent, const QString &caption, const QString &dir,

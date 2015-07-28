@@ -7,10 +7,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
-#include "key.h"
-#include "keystore.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
+#include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
@@ -27,6 +24,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <boost/shared_ptr.hpp>
 
 /**
  * Settings
@@ -376,6 +375,9 @@ public:
         return (GetDebit(filter) > 0);
     }
 
+    // True if only scriptSigs are different
+    bool IsEquivalentTo(const CWalletTx& tx) const;
+
     bool IsTrusted() const;
 
     bool WriteToDisk(CWalletDB *pwalletdb);
@@ -496,7 +498,7 @@ public:
         SetNull();
     }
 
-    CWallet(std::string strWalletFileIn)
+    CWallet(const std::string& strWalletFileIn)
     {
         SetNull();
 
@@ -615,7 +617,6 @@ public:
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
-    void EraseFromWallet(const uint256 &hash);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime);
@@ -626,8 +627,9 @@ public:
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
-    bool CreateTransaction(const std::vector<CRecipient>& vecSend,
-                           CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, const CCoinControl *coinControl = NULL);
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
+                           std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     static CFeeRate minTxFee;
@@ -645,7 +647,7 @@ public:
     std::set< std::set<CTxDestination> > GetAddressGroupings();
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
-    std::set<CTxDestination> GetAccountAddresses(std::string strAccount) const;
+    std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
 
     isminetype IsMine(const CTxIn& txin) const;
     CAmount GetDebit(const CTxIn& txin, const isminefilter& filter) const;
@@ -680,6 +682,13 @@ public:
         }
     }
 
+    void GetScriptForMining(boost::shared_ptr<CReserveScript> &script);
+    void ResetRequestCount(const uint256 &hash)
+    {
+        LOCK(cs_wallet);
+        mapRequestCount[hash] = 0;
+    };
+    
     unsigned int GetKeyPoolSize()
     {
         AssertLockHeld(cs_wallet); // setKeyPool
@@ -735,7 +744,7 @@ public:
 };
 
 /** A key allocated from the key pool. */
-class CReserveKey
+class CReserveKey : public CReserveScript
 {
 protected:
     CWallet* pwallet;
@@ -756,6 +765,7 @@ public:
     void ReturnKey();
     bool GetReservedKey(CPubKey &pubkey);
     void KeepKey();
+    void KeepScript() { KeepKey(); }
 };
 
 

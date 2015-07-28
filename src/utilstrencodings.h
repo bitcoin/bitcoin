@@ -88,11 +88,11 @@ inline std::string HexStr(const T& vch, bool fSpaces=false)
     return HexStr(vch.begin(), vch.end(), fSpaces);
 }
 
-/** 
+/**
  * Format a paragraph of text to a fixed width, adding spaces for
  * indentation to any added line.
  */
-std::string FormatParagraph(const std::string in, size_t width=79, size_t indent=0);
+std::string FormatParagraph(const std::string& in, size_t width = 79, size_t indent = 0);
 
 /**
  * Timing-attack-resistant comparison.
@@ -108,5 +108,12 @@ bool TimingResistantEqual(const T& a, const T& b)
         accumulator |= a[i] ^ b[i%b.size()];
     return accumulator == 0;
 }
+
+/** Parse number as fixed point according to JSON number syntax.
+ * See http://json.org/number.gif
+ * @returns true on success, false on error.
+ * @note The result must be in the range (-10^18,10^18), otherwise an overflow error will trigger.
+ */
+bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out);
 
 #endif // BITCOIN_UTILSTRENCODINGS_H

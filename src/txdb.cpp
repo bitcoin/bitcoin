@@ -5,6 +5,7 @@
 
 #include "txdb.h"
 
+#include "chain.h"
 #include "chainparams.h"
 #include "hash.h"
 #include "main.h"
@@ -147,7 +148,10 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
             return error("%s: Deserialize or I/O error - %s", __func__, e.what());
         }
     }
-    stats.nHeight = mapBlockIndex.find(GetBestBlock())->second->nHeight;
+    {
+        LOCK(cs_main);
+        stats.nHeight = mapBlockIndex.find(stats.hashBlock)->second->nHeight;
+    }
     stats.hashSerialized = ss.GetHash();
     stats.nTotalAmount = nTotalAmount;
     return true;

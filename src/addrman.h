@@ -459,7 +459,7 @@ public:
     }
 
     //! Return the number of (unique) addresses in all tables.
-    int size()
+    size_t size() const
     {
         return vRandom.size();
     }

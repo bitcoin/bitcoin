@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_PEERTABLEMODEL_H
 #define BITCOIN_QT_PEERTABLEMODEL_H
 
-#include "main.h"
+#include "main.h" // For CNodeStateStats
 #include "net.h"
 
 #include <QAbstractTableModel>
@@ -68,7 +68,7 @@ public:
     void sort(int column, Qt::SortOrder order);
     /*@}*/
 
-public slots:
+public Q_SLOTS:
     void refresh();
 
 private:

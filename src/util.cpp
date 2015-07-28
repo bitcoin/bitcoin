@@ -83,6 +83,7 @@
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
+#include <openssl/conf.h>
 
 // Work around clang compilation problem in Boost 1.46:
 // /usr/include/boost/program_options/detail/config_file.hpp:163:17: error: call to function 'to_internal' that is neither visible in the template definition nor found by argument-dependent lookup
@@ -113,7 +114,7 @@ CTranslationInterface translationInterface;
 
 /** Init OpenSSL library multithreading support */
 static CCriticalSection** ppmutexOpenSSL;
-void locking_callback(int mode, int i, const char* file, int line)
+void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
     if (mode & CRYPTO_LOCK) {
         ENTER_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
@@ -133,6 +134,13 @@ public:
         for (int i = 0; i < CRYPTO_num_locks(); i++)
             ppmutexOpenSSL[i] = new CCriticalSection();
         CRYPTO_set_locking_callback(locking_callback);
+
+        // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
+        // We don't use them so we don't require the config. However some of our libs may call functions
+        // which attempt to load the config file, possibly resulting in an exit() or crash if it is missing
+        // or corrupt. Explicitly tell OpenSSL not to try to load the file. The result for our libs will be
+        // that the config appears to have been loaded and there are no modules/engines available.
+        OPENSSL_no_config();
 
 #ifdef WIN32
         // Seed OpenSSL PRNG with current contents of the screen
@@ -167,23 +175,51 @@ instance_of_cinit;
  */
 
 static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
+
 /**
- * We use boost::call_once() to make sure these are initialized
- * in a thread-safe manner the first time called:
+ * We use boost::call_once() to make sure mutexDebugLog and
+ * vMsgsBeforeOpenLog are initialized in a thread-safe manner.
+ *
+ * NOTE: fileout, mutexDebugLog and sometimes vMsgsBeforeOpenLog
+ * are leaked on exit. This is ugly, but will be cleaned up by
+ * the OS/libc. When the shutdown sequence is fully audited and
+ * tested, explicit destruction of these objects can be implemented.
  */
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
+static list<string> *vMsgsBeforeOpenLog;
+
+static int FileWriteStr(const std::string &str, FILE *fp)
+{
+    return fwrite(str.data(), 1, str.size(), fp);
+}
 
 static void DebugPrintInit()
 {
-    assert(fileout == NULL);
     assert(mutexDebugLog == NULL);
+    mutexDebugLog = new boost::mutex();
+    vMsgsBeforeOpenLog = new list<string>;
+}
 
+void OpenDebugLog()
+{
+    boost::call_once(&DebugPrintInit, debugPrintInitFlag);
+    boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
+
+    assert(fileout == NULL);
+    assert(vMsgsBeforeOpenLog);
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
     fileout = fopen(pathDebug.string().c_str(), "a");
     if (fileout) setbuf(fileout, NULL); // unbuffered
 
-    mutexDebugLog = new boost::mutex();
+    // dump buffered messages from before we opened the log
+    while (!vMsgsBeforeOpenLog->empty()) {
+        FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
+        vMsgsBeforeOpenLog->pop_front();
+    }
+
+    delete vMsgsBeforeOpenLog;
+    vMsgsBeforeOpenLog = NULL;
 }
 
 bool LogAcceptCategory(const char* category)
@@ -215,44 +251,67 @@ bool LogAcceptCategory(const char* category)
     return true;
 }
 
+/**
+ * fStartedNewLine is a state variable held by the calling context that will
+ * suppress printing of the timestamp when multiple calls are made that don't
+ * end in a newline. Initialize it to true, and hold it, in the calling context.
+ */
+static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine)
+{
+    string strStamped;
+
+    if (!fLogTimestamps)
+        return str;
+
+    if (*fStartedNewLine)
+        strStamped =  DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()) + ' ' + str;
+    else
+        strStamped = str;
+
+    if (!str.empty() && str[str.size()-1] == '\n')
+        *fStartedNewLine = true;
+    else
+        *fStartedNewLine = false;
+
+    return strStamped;
+}
+
 int LogPrintStr(const std::string &str)
 {
     int ret = 0; // Returns total number of characters written
+    static bool fStartedNewLine = true;
     if (fPrintToConsole)
     {
         // print to console
         ret = fwrite(str.data(), 1, str.size(), stdout);
         fflush(stdout);
     }
-    else if (fPrintToDebugLog && AreBaseParamsConfigured())
+    else if (fPrintToDebugLog)
     {
-        static bool fStartedNewLine = true;
         boost::call_once(&DebugPrintInit, debugPrintInitFlag);
-
-        if (fileout == NULL)
-            return ret;
-
         boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
 
-        // reopen the log file, if requested
-        if (fReopenDebugLog) {
-            fReopenDebugLog = false;
-            boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-            if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
-                setbuf(fileout, NULL); // unbuffered
+        string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
+
+        // buffer if we haven't opened the log yet
+        if (fileout == NULL) {
+            assert(vMsgsBeforeOpenLog);
+            ret = strTimestamped.length();
+            vMsgsBeforeOpenLog->push_back(strTimestamped);
         }
-
-        // Debug print useful for profiling
-        if (fLogTimestamps && fStartedNewLine)
-            ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-        if (!str.empty() && str[str.size()-1] == '\n')
-            fStartedNewLine = true;
         else
-            fStartedNewLine = false;
+        {
+            // reopen the log file, if requested
+            if (fReopenDebugLog) {
+                fReopenDebugLog = false;
+                boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+                if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
+                    setbuf(fileout, NULL); // unbuffered
+            }
 
-        ret = fwrite(str.data(), 1, str.size(), fileout);
+            ret = FileWriteStr(strTimestamped, fileout);
+        }
     }
-
     return ret;
 }
 
@@ -702,7 +761,7 @@ boost::filesystem::path GetTempPath() {
 #endif
 }
 
-void runCommand(std::string strCommand)
+void runCommand(const std::string& strCommand)
 {
     int nErr = ::system(strCommand.c_str());
     if (nErr)
@@ -756,3 +815,13 @@ void SetThreadPriority(int nPriority)
 #endif // PRIO_THREAD
 #endif // WIN32
 }
+
+int GetNumCores()
+{
+#if BOOST_VERSION >= 105600
+    return boost::thread::physical_concurrency();
+#else // Must fall back to hardware_concurrency, which unfortunately counts virtual cores
+    return boost::thread::hardware_concurrency();
+#endif
+}
+

@@ -34,7 +34,7 @@ development team members simply pulls it.
 
 If it is a *more complicated or potentially controversial* change, then the patch
 submitter will be asked to start a discussion (if they haven't already) on the
-[mailing list](http://sourceforge.net/mailarchive/forum.php?forum_name=bitcoin-development).
+[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
 
 The patch will be accepted if there is broad consensus that it is a good thing.
 Developers should expect to rework and resubmit patches if the code doesn't
@@ -57,6 +57,10 @@ lots of money.
 
 Developers are strongly encouraged to write unit tests for new code, and to
 submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
+
+There are also regression and integration tests of the RPC interface, written
+in Python, that are run automatically on the build server.
+These tests can be run with: `qa/pull-tester/rpc-tests.sh`
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
