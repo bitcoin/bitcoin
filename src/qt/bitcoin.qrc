@@ -46,6 +46,8 @@
         <file alias="about_qt">res/icons/about_qt.png</file>
         <file alias="verify">res/icons/verify.png</file>
         <file alias="warning">res/icons/warning.png</file>
+        <file alias="block">res/icons/block.png</file>
+        <file alias="transaction">res/icons/transaction.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="spinner-000">res/movies/spinner-000.png</file>
@@ -84,5 +86,9 @@
         <file alias="spinner-033">res/movies/spinner-033.png</file>
         <file alias="spinner-034">res/movies/spinner-034.png</file>
         <file alias="spinner-035">res/movies/spinner-035.png</file>
+    </qresource>
+    <qresource prefix="/fonts">
+        <file alias="BebasNeue-Regular">res/fonts/BebasNeue-Regular.ttf</file>
+        <file alias="BebasNeue-Thin">res/fonts/BebasNeue-Thin.ttf</file>
     </qresource>
 </RCC>

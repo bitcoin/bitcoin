@@ -13,6 +13,7 @@
 #include "openuridialog.h"
 #include "optionsdialog.h"
 #include "optionsmodel.h"
+#include "pulsedialog.h"
 #include "rpcconsole.h"
 #include "scicon.h"
 #include "utilitydialog.h"
@@ -93,6 +94,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     openRPCConsoleAction(0),
     openAction(0),
     showHelpMessageAction(0),
+    showPulseAction(0),
     trayIcon(0),
     trayIconMenu(0),
     notificator(0),
@@ -343,12 +345,17 @@ void BitcoinGUI::createActions()
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options"));
 
+    showPulseAction = new QAction(TextColorIcon(":/icons/info"), tr("&Pulse"), this);
+    showPulseAction->setStatusTip(tr("Show live bitcoin informations"));
+    
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
+    connect(showPulseAction, SIGNAL(triggered()), this, SLOT(showPulseClicked()));
+    
 #ifdef ENABLE_WALLET
     if(walletFrame)
     {
@@ -404,6 +411,7 @@ void BitcoinGUI::createMenuBar()
         help->addAction(openRPCConsoleAction);
     }
     help->addAction(showHelpMessageAction);
+    help->addAction(showPulseAction);
     help->addSeparator();
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
@@ -592,6 +600,12 @@ void BitcoinGUI::showHelpMessageClicked()
     HelpMessageDialog *help = new HelpMessageDialog(this, false);
     help->setAttribute(Qt::WA_DeleteOnClose);
     help->show();
+}
+
+void BitcoinGUI::showPulseClicked()
+{
+    PulseDialog *dlg = new PulseDialog(this);
+    dlg->show();
 }
 
 #ifdef ENABLE_WALLET
