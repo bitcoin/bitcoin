@@ -11,6 +11,11 @@
 #include <QPalette>
 #include <QPixmap>
 
+#if !defined(WIN32) && !defined(MAC_OSX)
+#   define ENABLE_SCICON
+#endif
+
+#ifdef ENABLE_SCICON
 namespace {
 
 void MakeSingleColorImage(QImage& img, const QColor& colorbase)
@@ -27,11 +32,12 @@ void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 }
 
 }
+#endif
 
 QImage SingleColorImage(const QString& filename, const QColor& colorbase)
 {
     QImage img(filename);
-#if !defined(WIN32) && !defined(MAC_OSX)
+#ifdef ENABLE_SCICON
     MakeSingleColorImage(img, colorbase);
 #endif
     return img;
@@ -39,7 +45,7 @@ QImage SingleColorImage(const QString& filename, const QColor& colorbase)
 
 QIcon SingleColorIcon(const QIcon& ico, const QColor& colorbase)
 {
-#if defined(WIN32) || defined(MAC_OSX)
+#ifndef ENABLE_SCICON
     return ico;
 #else
     QIcon new_ico;
@@ -61,7 +67,7 @@ QIcon SingleColorIcon(const QString& filename, const QColor& colorbase)
 
 QColor SingleColor()
 {
-#if defined(WIN32) || defined(MAC_OSX)
+#ifndef ENABLE_SCICON
     return QColor(0,0,0);
 #else
     const QColor colorHighlightBg(QApplication::palette().color(QPalette::Highlight));
