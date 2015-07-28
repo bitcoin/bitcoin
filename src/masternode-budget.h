@@ -378,6 +378,14 @@ public:
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
 
+    bool IsEstablished() {
+        //Proposals must be at least a day old to make it into a budget
+        if(Params().NetworkID() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
+
+        //for testing purposes - 4 hours
+        return (nTime < GetTime() - (60*60*4));
+    }
+
     std::string GetName() {return strProposalName; }
     std::string GetURL() {return strURL; }
     int GetBlockStart() {return nBlockStart;}
@@ -403,6 +411,7 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strProposalName;
         ss << strURL;
+        ss << nTime;
         ss << nBlockStart;
         ss << nBlockEnd;
         ss << nAmount;
@@ -419,6 +428,7 @@ public:
         //for syncing with other clients
         READWRITE(LIMITED_STRING(strProposalName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
+        READWRITE(nTime);
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
@@ -452,6 +462,7 @@ public:
 
         READWRITE(LIMITED_STRING(strProposalName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
+        READWRITE(nTime);
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
