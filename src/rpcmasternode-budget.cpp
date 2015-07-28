@@ -91,7 +91,8 @@ Value mnbudget(const Array& params, bool fHelp)
 
         //*************************************************************************
 
-        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, 0);
+        // create transaction 15 minutes into the future, to allow for confirmation time
+        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, 0, GetAdjustedTime()+(60*15));
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(strError, false))
@@ -112,8 +113,12 @@ Value mnbudget(const Array& params, bool fHelp)
         //send the tx to the network
         pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
 
-        return wtx.GetHash().ToString();
 
+        Object returnObj;
+        returnObj.push_back(Pair("fee_tx", wtx.GetHash().ToString()));
+        returnObj.push_back(Pair("time", (int64_t)budgetProposalBroadcast.nTime));
+
+        return returnObj;
     }
 
     if(strCommand == "submit")
@@ -124,8 +129,8 @@ Value mnbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        if (params.size() != 8)
-            throw runtime_error("Correct usage is 'mnbudget submit proposal-name url payment_count block_start dash_address monthly_payment_dash fee_tx'");
+        if (params.size() != 9)
+            throw runtime_error("Correct usage is 'mnbudget submit proposal-name url payment_count block_start dash_address monthly_payment_dash fee_tx nTime'");
 
         // Check these inputs the same way we check the vote commands:
         // **********************************************************
@@ -167,9 +172,13 @@ Value mnbudget(const Array& params, bool fHelp)
         CScript scriptPubKey = GetScriptForDestination(address.Get());
         CAmount nAmount = AmountFromValue(params[6]);
         uint256 hash = ParseHashV(params[7], "parameter 1");
+        int64_t nTime = params[8].get_int();
+
+        if(nTime < GetTime() - (60*60*2) || nTime > GetTime() + (60*60))
+            return "nTime is out of range, you must submit the proposal within 2 hours of creating the original colateral transaction";
 
         //create the proposal incase we're the first to make it
-        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
+        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash, nTime);
 
         std::string strError = "";
         if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError)){
@@ -341,6 +350,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("IsValidReason",  strError.c_str()));
             bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
             resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
@@ -385,8 +395,11 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
             bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
 
+            bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
+
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("IsValidReason",  strError.c_str()));
             bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
             resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
@@ -427,6 +440,8 @@ Value mnbudget(const Array& params, bool fHelp)
         obj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
         obj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
         
+        obj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
+
         std::string strError = "";
         obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
         obj.push_back(Pair("fValid",  pbudgetProposal->fValid));

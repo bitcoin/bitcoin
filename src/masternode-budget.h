@@ -369,7 +369,7 @@ public:
 
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
+    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn, int64_t nTimeIn);
 
     void Calculate();
     bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
@@ -450,7 +450,7 @@ private:
 public:
     CBudgetProposalBroadcast();
     CBudgetProposalBroadcast(const CBudgetProposal& other);
-    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
+    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn, int64_t nTimeIn);
 
     void Relay();
 
