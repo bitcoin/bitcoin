@@ -60,7 +60,7 @@ If everything looks correct, you can ask for votes from other masternodes. To vo
 
 4.  Make it inte the budget
 
-After you get enough votes, execute "mnbudget projection" to see if you made it into the budget. Projection will show you, if you the budget was finalized at this moment which proposals would be in it. 
+After you get enough votes, execute "mnbudget projection" to see if you made it into the budget. If you the budget was finalized at this moment which proposals would be in it. Note: Proposals must be active at least 1 day on the network and receive 10% of the masternode network in yes votes in order to qualify (E.g. if there is 2500 masternodes, you will need 250 yes votes.)
 
 mnbudget projection:￼
 {
