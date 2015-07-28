@@ -10,6 +10,7 @@
 #include <QWidget>
 #include <QKeyEvent>
 
+class PlatformStyle;
 class TransactionFilterProxy;
 class WalletModel;
 
@@ -32,7 +33,7 @@ class TransactionView : public QWidget
     Q_OBJECT
 
 public:
-    explicit TransactionView(QWidget *parent = 0);
+    explicit TransactionView(const PlatformStyle *platformStyle, QWidget *parent = 0);
 
     void setModel(WalletModel *model);
 
