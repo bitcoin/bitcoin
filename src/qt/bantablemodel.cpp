@@ -54,11 +54,11 @@ public:
 #if QT_VERSION >= 0x040700
         cachedBanlist.reserve(banMap.size());
 #endif
-        foreach (const PAIRTYPE(CSubNet, CBanEntry)& banentry, banMap)
+        for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
         {
             CCombinedBan banEntry;
-            banEntry.subnet = banentry.first;
-            banEntry.banEntry = banentry.second;
+            banEntry.subnet = (*it).first;
+            banEntry.banEntry = (*it).second;
             cachedBanlist.append(banEntry);
         }
 
@@ -161,9 +161,9 @@ QModelIndex BanTableModel::index(int row, int column, const QModelIndex &parent)
 
 void BanTableModel::refresh()
 {
-    emit layoutAboutToBeChanged();
+    Q_EMIT layoutAboutToBeChanged();
     priv->refreshBanlist();
-    emit layoutChanged();
+    Q_EMIT layoutChanged();
 }
 
 void BanTableModel::sort(int column, Qt::SortOrder order)

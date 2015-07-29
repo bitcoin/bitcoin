@@ -60,7 +60,7 @@ public:
     bool shouldShow();
     /*@}*/
 
-public slots:
+public Q_SLOTS:
     void refresh();
 
 private:
