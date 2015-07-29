@@ -705,6 +705,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             }
         } //else, asking for a specific node which is ok
 
+
         std::vector<CInv> vInv;
         int i = 0;
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
@@ -724,6 +725,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 i++;
             }
         }
+
+        if(vin == CTxIn()) pfrom->PushMessage("ssc", MASTERNODE_SYNC_LIST, (int)vInv.size());
         if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 
         LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString().c_str());

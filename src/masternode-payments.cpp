@@ -768,6 +768,7 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
         }
         ++it;
     }
+    node->PushMessage("ssc", MASTERNODE_SYNC_MNW, (int)vInv.size());
     if(vInv.size() > 0) node->PushMessage("inv", vInv);
 }
 
