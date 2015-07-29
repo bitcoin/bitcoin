@@ -13,6 +13,10 @@
 
 using namespace std;
 
+extern CCriticalSection cs_vecPayments;
+extern CCriticalSection cs_mapMasternodeBlocks;
+extern CCriticalSection cs_mapMasternodePayeeVotes;
+
 class CMasternodePayments;
 class CMasternodePaymentWinner;
 class CMasternodeBlockPayees;
@@ -96,6 +100,8 @@ public:
     }
 
     void AddPayee(CScript payeeIn, int nIncrement){
+        LOCK(cs_vecPayments);
+
         BOOST_FOREACH(CMasternodePayee& payee, vecPayments){
             if(payee.scriptPubKey == payeeIn) {
                 payee.nVotes += nIncrement;
@@ -109,6 +115,8 @@ public:
 
     bool GetPayee(CScript& payee)
     {
+        LOCK(cs_vecPayments);
+
         int nVotes = -1;
         BOOST_FOREACH(CMasternodePayee& p, vecPayments){
             if(p.nVotes > nVotes){
@@ -122,6 +130,8 @@ public:
 
     bool HasPayeeWithVotes(CScript payee, int nVotesReq)
     {
+        LOCK(cs_vecPayments);
+
         BOOST_FOREACH(CMasternodePayee& p, vecPayments){
             if(p.nVotes >= nVotesReq && p.scriptPubKey == payee) return true;
         }
@@ -225,6 +235,7 @@ public:
     }
 
     void Clear() {
+        LOCK2(cs_mapMasternodeBlocks, cs_mapMasternodePayeeVotes);
         mapMasternodeBlocks.clear();
         mapMasternodePayeeVotes.clear();
     }
@@ -241,6 +252,8 @@ public:
     bool IsScheduled(CMasternode& mn, int nNotBlockHeight);
 
     bool CanVote(COutPoint outMasternode, int nBlockHeight) {
+        LOCK(cs_mapMasternodePayeeVotes);
+
         if(mapMasternodesLastVote.count(outMasternode.hash + outMasternode.n)) {
             if(mapMasternodesLastVote[outMasternode.hash + outMasternode.n] == nBlockHeight) {
                 return false;

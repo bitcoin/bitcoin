@@ -17,6 +17,8 @@
 
 using namespace std;
 
+extern CCriticalSection cs_budget;
+
 class CBudgetManager;
 class CFinalizedBudgetBroadcast;
 class CFinalizedBudget;
@@ -73,13 +75,14 @@ public:
 class CBudgetManager
 {
 private:
-    // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
 
     //hold txes until they mature enough to use
     map<uint256, CTransaction> mapCollateral;
 
 public:
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+    
     // keep track of the scanning errors I've seen
     map<uint256, CBudgetProposal> mapProposals;
     map<uint256, CFinalizedBudget> mapFinalizedBudgets;
@@ -128,6 +131,8 @@ public:
 
     void CheckOrphanVotes();
     void Clear(){
+        LOCK(cs);
+
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();
         mapFinalizedBudgets.clear();
@@ -221,6 +226,8 @@ public:
     bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     bool GetBudgetPaymentByBlock(int64_t nBlockHeight, CTxBudgetPayment& payment)
     {
+        LOCK(cs);
+
         int i = nBlockHeight - GetBlockStart();
         if(i < 0) return false;
         if(i > (int)vecBudgetPayments.size() - 1) return false;
@@ -229,6 +236,8 @@ public:
     }
     bool GetPayeeAndAmount(int64_t nBlockHeight, CScript& payee, CAmount& nAmount)
     {
+        LOCK(cs);
+
         int i = nBlockHeight - GetBlockStart();
         if(i < 0) return false;
         if(i > (int)vecBudgetPayments.size() - 1) return false;
