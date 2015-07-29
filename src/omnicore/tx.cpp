@@ -39,6 +39,7 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_SIMPLE_SEND: return "Simple Send";
         case MSC_TYPE_RESTRICTED_SEND: return "Restricted Send";
         case MSC_TYPE_SEND_TO_OWNERS: return "Send To Owners";
+        case MSC_TYPE_SEND_ALL: return "Send All";
         case MSC_TYPE_SAVINGS_MARK: return "Savings";
         case MSC_TYPE_SAVINGS_COMPROMISED: return "Savings COMPROMISED";
         case MSC_TYPE_RATELIMITED_MARK: return "Rate-Limiting";
@@ -103,6 +104,9 @@ bool CMPTransaction::interpret_Transaction()
 
         case MSC_TYPE_SEND_TO_OWNERS:
             return interpret_SendToOwners();
+
+        case MSC_TYPE_SEND_ALL:
+            return interpret_SendAll();
 
         case MSC_TYPE_TRADE_OFFER:
             return interpret_TradeOffer();
@@ -212,6 +216,16 @@ bool CMPTransaction::interpret_SendToOwners()
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+    }
+
+    return true;
+}
+
+/** Tx 4 */
+bool CMPTransaction::interpret_SendAll()
+{
+    if (pkt_size < 4) {
+        return false;
     }
 
     return true;
@@ -661,6 +675,9 @@ int CMPTransaction::interpretPacket()
         case MSC_TYPE_SEND_TO_OWNERS:
             return logicMath_SendToOwners();
 
+        case MSC_TYPE_SEND_ALL:
+            return logicMath_SendAll();
+
         case MSC_TYPE_TRADE_OFFER:
             return logicMath_TradeOffer();
 
@@ -946,6 +963,52 @@ int CMPTransaction::logicMath_SendToOwners()
 
     // sent_so_far must equal nValue here
     assert(sent_so_far == (int64_t)nValue);
+
+    return 0;
+}
+
+/** Tx 4 */
+int CMPTransaction::logicMath_SendAll()
+{
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_SEND_ALL -22);
+    }
+
+    // ------------------------------------------
+
+    // Special case: if can't find the receiver -- assume send to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
+
+    CMPTally* ptally = getTally(sender);
+    if (ptally == NULL) {
+        PrintToLog("%s(): rejected: sender %s has no tokens to send\n", __func__, sender);
+        return (PKT_ERROR_SEND_ALL -54);
+    }
+
+    bool fSent = false;
+    uint32_t propertyId = ptally->init();
+
+    while (0 != (propertyId = ptally->next())) {
+        int64_t money = ptally->getMoney(propertyId, BALANCE);
+        if (money > 0) {
+            fSent = true;
+            assert(update_tally_map(sender, propertyId, -money, BALANCE));
+            assert(update_tally_map(receiver, propertyId, money, BALANCE));
+        }
+    }
+
+    if (!fSent) {
+        PrintToLog("%s(): rejected: sender %s has no tokens to send\n", __func__, sender);
+        return (PKT_ERROR_SEND_ALL -55);
+    }
 
     return 0;
 }

@@ -139,6 +139,9 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, Object& txobj, uint32_t txType,
         case MSC_TYPE_SEND_TO_OWNERS:
             populateRPCTypeSendToOwners(mp_obj, txobj, extendedDetails, extendedDetailsFilter);
             break;
+        case MSC_TYPE_SEND_ALL:
+            populateRPCTypeSendAll(mp_obj, txobj);
+            break;
         case MSC_TYPE_TRADE_OFFER:
             populateRPCTypeTradeOffer(mp_obj, txobj);
             break;
@@ -241,6 +244,11 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
     txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
     if (extendedDetails) populateRPCExtendedTypeSendToOwners(omniObj.getHash(), extendedDetailsFilter, txobj);
+}
+
+void populateRPCTypeSendAll(CMPTransaction& omniObj, Object& txobj)
+{
+    // TODO: list all recipients?
 }
 
 void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)

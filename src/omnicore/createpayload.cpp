@@ -43,6 +43,20 @@ std::vector<unsigned char> CreatePayload_SimpleSend(uint32_t propertyId, uint64_
     return payload;
 }
 
+std::vector<unsigned char> CreatePayload_SendAll()
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 4;
+    uint16_t messageVer = 0;
+    mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(messageVer);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+
+    return payload;
+}
+
 std::vector<unsigned char> CreatePayload_DExSell(uint32_t propertyId, uint64_t amountForSale, uint64_t amountDesired, uint8_t timeLimit, uint64_t minFee, uint8_t subAction)
 {
     std::vector<unsigned char> payload;

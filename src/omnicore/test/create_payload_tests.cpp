@@ -30,6 +30,14 @@ BOOST_AUTO_TEST_CASE(payload_send_to_owners)
     BOOST_CHECK_EQUAL(HexStr(vch), "00000003000000010000000005f5e100");
 }
 
+BOOST_AUTO_TEST_CASE(payload_send_all)
+{
+    // Send to owners [type 4, version 0]
+    std::vector<unsigned char> vch = CreatePayload_SendAll();
+
+    BOOST_CHECK_EQUAL(HexStr(vch), "00000004");
+}
+
 BOOST_AUTO_TEST_CASE(payload_dex_offer)
 {
     // Sell tokens for bitcoins [type 20, version 1]

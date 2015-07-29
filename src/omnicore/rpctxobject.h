@@ -14,6 +14,7 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, json_spirit::Object& txobj, uin
 
 void populateRPCTypeSimpleSend(CMPTransaction& omniObj, json_spirit::Object& txobj);
 void populateRPCTypeSendToOwners(CMPTransaction& omniObj, json_spirit::Object& txobj, bool extendedDetails, std::string extendedDetailsFilter);
+void populateRPCTypeSendAll(CMPTransaction& omniObj, json_spirit::Object& txobj);
 void populateRPCTypeTradeOffer(CMPTransaction& omniObj, json_spirit::Object& txobj);
 void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, json_spirit::Object& txobj, bool extendedDetails);
 void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, json_spirit::Object& txobj, bool extendedDetails);

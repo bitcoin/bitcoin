@@ -93,6 +93,59 @@ Value omni_send(const Array& params, bool fHelp)
     }
 }
 
+// omni_sendall - send all
+Value omni_sendall(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "omni_sendall \"fromaddress\" \"toaddress\" ( \"redeemaddress\" \"referenceamount\" )\n"
+
+            "\nTransfers *all* tokens owned to the recipient.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, required) the address of the receiver\n"
+            "3. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "4. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
+
+            "\nResult:\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\"")
+            + HelpExampleRpc("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\"")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    std::string toAddress = ParseAddress(params[1]);
+    std::string redeemAddress = (params.size() > 2 && !ParseText(params[2]).empty()) ? ParseAddress(params[2]): "";
+    int64_t referenceAmount = (params.size() > 3) ? ParseAmount(params[3], true): 0;
+
+    // perform checks
+    RequireSaneReferenceAmount(referenceAmount);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_SendAll();
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            // TODO: pending
+            return txid.GetHex();
+        }
+    }
+}
+
 // omni_senddexsell - DEx sell offer
 Value omni_senddexsell(const Array& params, bool fHelp)
 {

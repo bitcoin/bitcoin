@@ -66,6 +66,7 @@ enum TransactionType {
   MSC_TYPE_SIMPLE_SEND              =  0,
   MSC_TYPE_RESTRICTED_SEND          =  2,
   MSC_TYPE_SEND_TO_OWNERS           =  3,
+  MSC_TYPE_SEND_ALL                 =  4,
   MSC_TYPE_SAVINGS_MARK             = 10,
   MSC_TYPE_SAVINGS_COMPROMISED      = 11,
   MSC_TYPE_RATELIMITED_MARK         = 12,
@@ -123,6 +124,7 @@ enum FILETYPES {
 #define PKT_ERROR_METADEX     (-80000)
 #define METADEX_ERROR         (-81000)
 #define PKT_ERROR_TOKENS      (-82000)
+#define PKT_ERROR_SEND_ALL    (-83000)
 
 #define OMNI_PROPERTY_BTC   0
 #define OMNI_PROPERTY_MSC   1
