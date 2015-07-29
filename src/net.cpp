@@ -445,7 +445,7 @@ void CNode::PushVersion()
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
+                nLocalHostNonce, FormatUserAgent(vUserAgentCodebases), nBestHeight, true);
 }
 
 

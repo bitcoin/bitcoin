@@ -62,8 +62,21 @@ extern const std::string CLIENT_BUILD;
 extern const std::string CLIENT_DATE;
 
 
+class BitcoinUserAgentCodebase {
+public:
+    std::string name;
+    std::string version;
+    std::vector<std::string> comments;
+
+    BitcoinUserAgentCodebase(const std::string strName, const std::string strVersion, const std::vector<std::string> vstrComments = std::vector<std::string>());
+    BitcoinUserAgentCodebase(const std::string strName, const std::string strVersion, const std::string strComment);
+};
+
+extern std::vector<BitcoinUserAgentCodebase> vUserAgentCodebases;
+
+std::string FormatVersion(int nVersion);
 std::string FormatFullVersion();
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments);
+std::string FormatUserAgent(const std::vector<BitcoinUserAgentCodebase>);
 
 #endif // WINDRES_PREPROC
 
