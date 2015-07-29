@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "main.h"
+#include "activemasternode.h"
 #include "masternode-sync.h"
 #include "masternode-payments.h"
 #include "masternode-budget.h"
@@ -201,6 +202,9 @@ void CMasternodeSync::Process()
                 if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*3 && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
                     if(budget.HasNextFinalizedBudget() || nCountFailures >= 2) {
                         GetNextAsset();
+
+                        //try to activate our masternode if possible
+                        activeMasternode.ManageStatus();
                     } else { //we've failed to sync, this state will reject the next budget block
                         LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
                         RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
