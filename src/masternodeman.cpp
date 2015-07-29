@@ -325,16 +325,19 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
     LOCK(cs);
 
-    if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())){
-        std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
-        if (it != mWeAskedForMasternodeList.end())
-        {
-            if (GetTime() < (*it).second) {
-                LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
-                return;
+    if(Params().NetworkID() == CBaseChainParams::MAIN) {
+        if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())){
+            std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
+            if (it != mWeAskedForMasternodeList.end())
+            {
+                if (GetTime() < (*it).second) {
+                    LogPrintf("dseg - we already asked %s for the list; skipping...\n", pnode->addr.ToString());
+                    return;
+                }
             }
         }
     }
+    
     pnode->PushMessage("dseg", CTxIn());
     int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;

@@ -515,6 +515,8 @@ bool CBudgetManager::HasNextFinalizedBudget()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return false;
 
+    if(masternodeSync.IsBudgetFinEmpty()) return true;
+
     int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
     if(nBlockStart - pindexPrev->nHeight > 576*2) return true; //we wouldn't have the budget yet
 

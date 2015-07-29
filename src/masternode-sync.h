@@ -48,7 +48,6 @@ public:
     int RequestedMasternodeAssets;
     int RequestedMasternodeAttempt;
 
-
     CMasternodeSync();
 
     void AddedMasternodeList();
@@ -56,7 +55,8 @@ public:
     void AddedBudgetItem();
     void GetNextAsset();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-
+    bool IsBudgetFinEmpty();
+    
     void Process();
     bool IsSynced();
     bool IsBlockchainSynced();
