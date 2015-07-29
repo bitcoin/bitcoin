@@ -63,6 +63,11 @@ void CMasternodeSync::AddedBudgetItem()
     lastBudgetItem = GetTime();
 }
 
+bool CMasternodeSync::IsBudgetPropEmpty()
+{
+    return sumBudgetItemProp==0 && countBudgetItemProp>0;
+}
+
 bool CMasternodeSync::IsBudgetFinEmpty()
 {
     return sumBudgetItemFin==0 && countBudgetItemFin>0;
@@ -268,7 +273,7 @@ void CMasternodeSync::Process()
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
                 if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || (sumBudgetItemProp==0 && countBudgetItemProp>0)) {
+                    if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
                         GetNextAsset();
 
                         //try to activate our masternode if possible

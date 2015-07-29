@@ -56,7 +56,8 @@ public:
     void GetNextAsset();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     bool IsBudgetFinEmpty();
-    
+    bool IsBudgetPropEmpty();
+
     void Process();
     bool IsSynced();
     bool IsBlockchainSynced();
