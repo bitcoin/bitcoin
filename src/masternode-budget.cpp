@@ -497,8 +497,6 @@ CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
 
 bool CBudgetManager::IsBudgetPaymentBlock(int nBlockHeight)
 {
-    LOCK(cs);
-
     int nHighestCount = -1;
 
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
