@@ -874,7 +874,7 @@ font-weight:bold;
 font-size:14px;
 min-height:35px;
 }
-
+/******************************************************************/
 QWidget .QFrame#frameDarksend .QLabel#labelDarksendSyncStatus { /* Darksend Sync Status */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 margin-left:20px;
@@ -889,6 +889,7 @@ min-width:175px;
 font-weight:normal;
 min-height:25px;
 }
+
 
 QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_6 { /* Darksend Status Label */
 qproperty-alignment: 'AlignVCenter | AlignRight';
@@ -1041,15 +1042,16 @@ QWidget .QFrame#frame_2 { /* Transactions Widget */
 min-width:410px;
 margin-right:20px;
 margin-left:0;
+margin-top:0;
 background-image: url(':/images/dash_logo_horizontal');
 background-repeat:none;
 }
 
 QWidget .QFrame#frame_2 .QLabel#label_4 { /* Recent Transactions Label */
-min-width:200px;
+min-width:180px;
 color:#3398CC;
 margin-left:67px;
-margin-top:123px;
+margin-top:83px;
 margin-right:5px;
 padding-right:5px;
 font-weight:bold;
@@ -1058,9 +1060,11 @@ min-height:24px;
 }
 
 QWidget .QFrame#frame_2 .QLabel#labelTransactionsStatus { /* Recent Transactions Sync Status */
-qproperty-alignment: 'AlignBottom | AlignLeft';
-margin-top:123px;
+qproperty-alignment: 'AlignBottom | AlignRight';
+min-width:93px;
+margin-top:83px;
 margin-left:16px;
+margin-right:5px;
 min-height:16px;
 }
 
@@ -1068,6 +1072,7 @@ QWidget .QFrame#frame_2 QListView { /* Transaction List */
 font-weight:normal;
 font-size:12px;
 max-width:369px;
+margin-top:12px;
 margin-left:0px; /* CSS Voodoo - set to -66px to hide default transaction icons */
 }
 
