@@ -919,6 +919,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
 
 // respect current settings
 int CWallet::GetInputDarksendRounds(CTxIn in) const {
+    LOCK(cs_wallet);
     int realDarksendRounds = GetRealInputDarksendRounds(in, 0);
     return realDarksendRounds > nDarksendRounds ? nDarksendRounds : realDarksendRounds;
 }
