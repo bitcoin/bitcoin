@@ -441,13 +441,36 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     return pBestMasternode;
 }
 
-CMasternode *CMasternodeMan::FindRandom()
+CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion)
 {
     LOCK(cs);
 
-    if(size() == 0) return NULL;
+    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
-    return &vMasternodes[GetRandInt(vMasternodes.size())];
+    int nCountEnabled = CountEnabled(protocolVersion);
+    LogPrintf("CMasternodeMan::FindRandomNotInVec - nCountEnabled - vecToExclude.size() %d\n", nCountEnabled - vecToExclude.size());
+    if(nCountEnabled - vecToExclude.size() < 1) return NULL;
+
+    int rand = GetRandInt(nCountEnabled - vecToExclude.size());
+    LogPrintf("CMasternodeMan::FindRandomNotInVec - rand %d\n", rand);
+    bool found;
+
+    BOOST_FOREACH(CMasternode &mn, vMasternodes) {
+        if(mn.protocolVersion < protocolVersion || !mn.IsEnabled()) continue;
+        found = false;
+        BOOST_FOREACH(CTxIn &usedVin, vecToExclude) {
+            if(mn.vin.prevout == usedVin.prevout) {
+                found = true;
+                break;
+            }
+        }
+        if(found) continue;
+        if(--rand < 1) {
+            return &mn;
+        }
+    }
+
+    return NULL;
 }
 
 CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight, int minProtocol)
