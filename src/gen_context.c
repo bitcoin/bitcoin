@@ -13,6 +13,17 @@
 #include "group_impl.h"
 #include "ecmult_gen_impl.h"
 
+static void default_error_callback_fn(const char* str, void* data) {
+    (void)data;
+    fprintf(stderr, "[libsecp256k1] internal consistency check failed: %s\n", str);
+    abort();
+}
+
+static const callback_t default_error_callback = {
+    default_error_callback_fn,
+    NULL
+};
+
 int main(int argc, char **argv) {
     secp256k1_ecmult_gen_context_t ctx;
     int inner;
@@ -35,7 +46,7 @@ int main(int argc, char **argv) {
     fprintf(fp, "static const secp256k1_ge_storage_t secp256k1_ecmult_static_context[64][16] = {\n");
 
     secp256k1_ecmult_gen_context_init(&ctx);
-    secp256k1_ecmult_gen_context_build(&ctx);
+    secp256k1_ecmult_gen_context_build(&ctx, &default_error_callback);
     for(outer = 0; outer != 64; outer++) {
         fprintf(fp,"{\n");
         for(inner = 0; inner != 16; inner++) {

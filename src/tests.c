@@ -1160,7 +1160,7 @@ void test_ge(void) {
             }
         }
         secp256k1_ge_set_table_gej_var(4 * runs + 1, ge_set_table, gej, zr);
-        secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej);
+        secp256k1_ge_set_all_gej_var(4 * runs + 1, ge_set_all, gej, &ctx->error_callback);
         for (i = 0; i < 4 * runs + 1; i++) {
             secp256k1_fe_t s;
             random_fe_non_zero(&s);
@@ -2051,7 +2051,7 @@ void test_ecdsa_edge_cases(void) {
             msg[0] = i;
             CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
-            secp256k1_ecdsa_signature_load(&sr[i], &ss, NULL, &sig2);
+            secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, NULL, &sig2);
             for (j = 0; j < i; j++) {
                 CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
             }
@@ -2064,7 +2064,7 @@ void test_ecdsa_edge_cases(void) {
             key[0] = i - 256;
             CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
-            secp256k1_ecdsa_signature_load(&sr[i], &ss, NULL, &sig2);
+            secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, NULL, &sig2);
             for (j = 0; j < i; j++) {
                 CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
             }
