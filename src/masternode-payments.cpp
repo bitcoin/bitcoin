@@ -14,10 +14,12 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
-CCriticalSection cs_masternodepayments;
-
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
+
+CCriticalSection cs_vecPayments;
+CCriticalSection cs_mapMasternodeBlocks;
+CCriticalSection cs_mapMasternodePayeeVotes;
 
 //
 // CMasternodePaymentDB
@@ -353,9 +355,6 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
-        // disabled due to locking issues
-        LOCK(cs_masternodepayments);
-
         //this is required in litemodef
         CMasternodePaymentWinner winner;
         vRecv >> winner;
@@ -439,6 +438,8 @@ bool CMasternodePayments::GetBlockPayee(int nBlockHeight, CScript& payee)
 // -- Only look ahead up to 8 blocks to allow for propagation of the latest 2 winners
 bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 {
+    LOCK(cs_mapMasternodeBlocks);
+
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return false;
 
@@ -467,15 +468,19 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
         return false;
     }
 
-    if(mapMasternodePayeeVotes.count(winnerIn.GetHash())){
-       return false;
-    }
+    {
+        LOCK2(cs_mapMasternodePayeeVotes, cs_mapMasternodeBlocks);
+    
+        if(mapMasternodePayeeVotes.count(winnerIn.GetHash())){
+           return false;
+        }
 
-    mapMasternodePayeeVotes[winnerIn.GetHash()] = winnerIn;
+        mapMasternodePayeeVotes[winnerIn.GetHash()] = winnerIn;
 
-    if(!mapMasternodeBlocks.count(winnerIn.nBlockHeight)){
-       CMasternodeBlockPayees blockPayees(winnerIn.nBlockHeight);
-       mapMasternodeBlocks[winnerIn.nBlockHeight] = blockPayees;
+        if(!mapMasternodeBlocks.count(winnerIn.nBlockHeight)){
+           CMasternodeBlockPayees blockPayees(winnerIn.nBlockHeight);
+           mapMasternodeBlocks[winnerIn.nBlockHeight] = blockPayees;
+        }
     }
 
     int n = 1;
@@ -487,6 +492,8 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
 
 bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 {
+    LOCK(cs_vecPayments);
+
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
@@ -532,6 +539,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 
 std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
 {
+    LOCK(cs_vecPayments);
+
     std::string ret = "Unknown";
 
     BOOST_FOREACH(CMasternodePayee& payee, vecPayments)
@@ -552,6 +561,8 @@ std::string CMasternodeBlockPayees::GetRequiredPaymentsString()
 
 std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight)
 {
+    LOCK(cs_mapMasternodeBlocks);
+
     if(mapMasternodeBlocks.count(nBlockHeight)){
         return mapMasternodeBlocks[nBlockHeight].GetRequiredPaymentsString();
     }
@@ -561,6 +572,8 @@ std::string CMasternodePayments::GetRequiredPaymentsString(int nBlockHeight)
 
 bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
+    LOCK(cs_mapMasternodeBlocks);
+
     if(mapMasternodeBlocks.count(nBlockHeight)){
         return mapMasternodeBlocks[nBlockHeight].IsTransactionValid(txNew);
     }
@@ -570,7 +583,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
 
 void CMasternodePayments::CleanPaymentList()
 {
-    LOCK(cs_masternodepayments);
+    LOCK(cs_mapMasternodePayeeVotes);
 
     if(chainActive.Tip() == NULL) return;
 
@@ -634,8 +647,6 @@ bool CMasternodePaymentWinner::IsValid(std::string& strError)
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
-    LOCK(cs_masternodepayments);
-
     if(!fMasterNode) return false;
 
     //reference node - hybrid mode
@@ -663,12 +674,6 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     if(budget.IsBudgetPaymentBlock(nBlockHeight)){
         //is budget payment block -- handled by the budgeting software
     } else {
-        uint256 hash;
-
-        if(!GetBlockHash(hash, nBlockHeight-100)) return false;
-        unsigned int nHash;
-        memcpy(&nHash, &hash, 2);
-
         LogPrintf("CMasternodePayments::ProcessBlock() Start nHeight %d - vin %s. \n", nBlockHeight, activeMasternode.vin.ToString().c_str());
 
         // pay to the oldest MN that still had no payment but its input is old enough and it was active long enough
@@ -751,7 +756,7 @@ bool CMasternodePaymentWinner::SignatureValid()
 
 void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
 {
-    LOCK(cs_masternodepayments);
+    LOCK(cs_mapMasternodePayeeVotes);
 
     if(chainActive.Tip() == NULL) return;
 
@@ -786,7 +791,7 @@ std::string CMasternodePayments::ToString() const
 
 int CMasternodePayments::GetOldestBlock()
 {
-    LOCK(cs_masternodepayments);
+    LOCK(cs_mapMasternodeBlocks);
 
     int nOldestBlock = std::numeric_limits<int>::max();
 
@@ -805,7 +810,7 @@ int CMasternodePayments::GetOldestBlock()
 
 int CMasternodePayments::GetNewestBlock()
 {
-    LOCK(cs_masternodepayments);
+    LOCK(cs_mapMasternodeBlocks);
 
     int nNewestBlock = 0;
 
