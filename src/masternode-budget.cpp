@@ -25,8 +25,8 @@ int nSubmittedFinalBudget;
 int GetBudgetPaymentCycleBlocks(){
     // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
     if(Params().NetworkID() == CBaseChainParams::MAIN) return 16616;
-
     //for testing purposes
+
     return 50;
 }
 
@@ -123,7 +123,7 @@ void CBudgetManager::SubmitFinalBudget()
         CTxBudgetPayment txBudgetPayment;
         txBudgetPayment.nProposalHash = vBudgetProposals[i]->GetHash();
         txBudgetPayment.payee = vBudgetProposals[i]->GetPayee();
-        txBudgetPayment.nAmount = vBudgetProposals[i]->GetAmount();
+        txBudgetPayment.nAmount = vBudgetProposals[i]->GetAllotted();
         vecTxBudgetPayments.push_back(txBudgetPayment);
     }
 
@@ -643,17 +643,13 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
                 pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
                 pbudgetProposal->IsEstablished())
         {
-            if(nTotalBudget == nBudgetAllocated){
-                pbudgetProposal->SetAllotted(0);
-            } else if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
+            if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
                 pbudgetProposal->SetAllotted(pbudgetProposal->GetAmount());
                 nBudgetAllocated += pbudgetProposal->GetAmount();
             } else {
-                //couldn't pay for the entire budget, so it'll be partially paid.
-                pbudgetProposal->SetAllotted(nTotalBudget - nBudgetAllocated);
-                nBudgetAllocated = nTotalBudget;
+                pbudgetProposal->SetAllotted(0);
             }
-
+            
             vBudgetProposalsRet.push_back(pbudgetProposal);
         }
 
