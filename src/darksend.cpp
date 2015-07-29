@@ -1544,22 +1544,12 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
         // otherwise, try one randomly
         while(i < 10)
         {
-            CMasternode* pmn = mnodeman.FindRandom();
+            CMasternode* pmn = mnodeman.FindRandomNotInVec(vecMasternodesUsed, MIN_POOL_PEER_PROTO_VERSION);
             if(pmn == NULL)
             {
-                LogPrintf("DoAutomaticDenominating --- Masternode list is empty!\n");
+                LogPrintf("DoAutomaticDenominating --- Can't find random masternode!\n");
+                strAutoDenomResult = _("Can't find random Masternode.");
                 return false;
-            }
-            //don't reuse Masternodes
-            BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed) {
-                if(pmn->vin == usedVin){
-                    i++;
-                    continue;
-                }
-            }
-            if(pmn->protocolVersion < MIN_POOL_PEER_PROTO_VERSION) {
-                i++;
-                continue;
             }
 
             if(pmn->nLastDsq != 0 &&
