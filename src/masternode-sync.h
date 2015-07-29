@@ -10,6 +10,8 @@
 #define MASTERNODE_SYNC_LIST              2
 #define MASTERNODE_SYNC_MNW               3
 #define MASTERNODE_SYNC_BUDGET            4
+#define MASTERNODE_SYNC_BUDGET_PROP       10
+#define MASTERNODE_SYNC_BUDGET_FIN        11
 #define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
@@ -29,7 +31,18 @@ public:
     int64_t lastMasternodeWinner;
     int64_t lastBudgetItem;
     int64_t lastFailure;
-    int64_t nCountFailures;
+    int nCountFailures;
+
+    // sum of all counts
+    int sumMasternodeList;
+    int sumMasternodeWinner;
+    int sumBudgetItemProp;
+    int sumBudgetItemFin;
+    // peers that reported counts
+    int countMasternodeList;
+    int countMasternodeWinner;
+    int countBudgetItemProp;
+    int countBudgetItemFin;
 
     // Count peers we've requested the list from
     int RequestedMasternodeAssets;
@@ -42,6 +55,7 @@ public:
     void AddedMasternodeWinner();
     void AddedBudgetItem();
     void GetNextAsset();
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void Process();
     bool IsSynced();

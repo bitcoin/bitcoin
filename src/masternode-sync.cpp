@@ -20,6 +20,16 @@ CMasternodeSync::CMasternodeSync()
     lastMasternodeList = 0;
     lastMasternodeWinner = 0;
     lastBudgetItem = 0;
+    lastFailure = 0;
+    nCountFailures = 0;
+    sumMasternodeList = 0;
+    sumMasternodeWinner = 0;
+    sumBudgetItemProp = 0;
+    sumBudgetItemFin = 0;
+    countMasternodeList = 0;
+    countMasternodeWinner = 0;
+    countBudgetItemProp = 0;
+    countBudgetItemFin = 0;
     RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
     RequestedMasternodeAttempt = 0;
 }
@@ -79,6 +89,47 @@ void CMasternodeSync::GetNextAsset()
             break;
     }
     RequestedMasternodeAttempt = 0;
+}
+
+
+void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
+{
+    if (strCommand == "ssc") { //Sync status count
+        int nItemID;
+        int nCount;
+        vRecv >> nItemID >> nCount;
+
+        if(RequestedMasternodeAssets >= MASTERNODE_SYNC_FINISHED) return;
+
+        if(RequestedMasternodeAssets == nItemID){
+            //this means we will receive no further communication
+            switch(RequestedMasternodeAssets)
+            {
+                case(MASTERNODE_SYNC_LIST):
+                    if(nCount == 0) lastMasternodeList = GetTime();
+                    sumMasternodeList += nCount;
+                    countMasternodeList++;
+                    break;
+                case(MASTERNODE_SYNC_MNW):
+                    if(nCount == 0) lastMasternodeWinner = GetTime();
+                    sumMasternodeWinner += nCount;
+                    countMasternodeWinner++;
+                    break;
+                case(MASTERNODE_SYNC_BUDGET_PROP):
+                    if(nCount == 0) lastBudgetItem = GetTime();
+                    sumBudgetItemProp += nCount;
+                    countBudgetItemProp++;
+                    break;
+                case(MASTERNODE_SYNC_BUDGET_FIN):
+                    if(nCount == 0) lastBudgetItem = GetTime();
+                    sumBudgetItemFin += nCount;
+                    countBudgetItemFin++;
+                    break;
+            }
+        }
+        
+        LogPrintf("ssc - got inventory count %d %d\n", nItemID, nCount);
+    }
 }
 
 void CMasternodeSync::Process()
@@ -199,8 +250,9 @@ void CMasternodeSync::Process()
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*3 && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    if(budget.HasNextFinalizedBudget() || nCountFailures >= 2) {
+                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    if((budget.HasNextFinalizedBudget() || (sumBudgetItemFin==0 && countBudgetItemFin>0))  || 
+                        nCountFailures >= 2 || (sumBudgetItemProp==0 && countBudgetItemProp>0)) {
                         GetNextAsset();
 
                         //try to activate our masternode if possible

@@ -969,6 +969,10 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
         ++it1;
     }
 
+    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_PROP, (int)vInv.size());
+    if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
+    vInv.clear();
+
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
@@ -989,6 +993,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
         ++it3;
     }
 
+    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_FIN, (int)vInv.size());
     if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 }
 
