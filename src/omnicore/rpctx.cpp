@@ -48,7 +48,7 @@ Value omni_send(const Array& params, bool fHelp)
             "2. toaddress            (string, required) the address of the receiver\n"
             "3. propertyid           (number, required) the identifier of the tokens to send\n"
             "4. amount               (string, required) the amount to send\n"
-            "5. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "5. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
             "6. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
 
             "\nResult:\n"
@@ -105,7 +105,7 @@ Value omni_sendall(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
             "2. toaddress            (string, required) the address of the receiver\n"
-            "3. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "3. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
             "4. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
 
             "\nResult:\n"
@@ -533,7 +533,7 @@ Value omni_sendsto(const Array& params, bool fHelp)
             "1. fromaddress          (string, required) the address to send from\n"
             "2. propertyid           (number, required) the identifier of the tokens to distribute\n"
             "3. amount               (string, required) the amount to distribute\n"
-            "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "4. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
