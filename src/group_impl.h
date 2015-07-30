@@ -251,7 +251,13 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge *a) {
 }
 
 static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr) {
-    /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate */
+    /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate.
+     *
+     * Note that there is an implementation described at
+     *     https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
+     * which trades a multiply for a square, but in practice this is actually slower,
+     * mainly because it requires more normalizations.
+     */
     secp256k1_fe t1,t2,t3,t4;
     /** For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
      *  Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
