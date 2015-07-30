@@ -2222,7 +2222,6 @@ void ThreadCheckDarkSendPool()
                 }
 
                 mnodeman.ProcessMasternodeConnections();
-                masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
 
                 //if we've used 90% of the Masternode list then drop all the oldest.
