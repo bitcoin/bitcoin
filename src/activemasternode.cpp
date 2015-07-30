@@ -227,12 +227,6 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
         return false;
     }
 
-    if(!ConnectNode((CAddress)service, service.ToString().c_str())){
-        errorMessage = strprintf("Error: Could not connect to %s", service.ToString());
-        LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
-        return false;
-    }
-
     return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage);
 }
 

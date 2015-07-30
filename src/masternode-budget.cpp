@@ -30,7 +30,7 @@ int GetBudgetPaymentCycleBlocks(){
     return 50;
 }
 
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError)
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime)
 {
     CTransaction txCollateral;
     uint256 nBlockHash;
@@ -69,6 +69,7 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
             CBlockIndex* pindex = (*mi).second;
             if (chainActive.Contains(pindex)) {
                 conf += chainActive.Height() - pindex->nHeight + 1;
+                nTime = pindex->nTime;
             }
         }
     }
@@ -87,6 +88,7 @@ void CBudgetManager::CheckOrphanVotes()
 {
     LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
+
 
     std::string strError = "";
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
@@ -906,7 +908,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError)){
+        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime)){
             LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.nFeeTXHash.ToString(), strError);
             return;
         }
@@ -1098,7 +1100,7 @@ CBudgetProposal::CBudgetProposal()
     fValid = true;
 }
 
-CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn, int64_t nTimeIn)
+CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn)
 {
     strProposalName = strProposalNameIn;
     strURL = strURLIn;
@@ -1106,7 +1108,6 @@ CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strU
     nBlockEnd = nBlockEndIn;
     address = addressIn;
     nAmount = nAmountIn;
-    nTime = nTimeIn;
     nFeeTXHash = nFeeTXHashIn;
     fValid = true;
 }
@@ -1143,14 +1144,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     }
 
     if(fCheckCollateral){
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError)){
-            return false;
-        }
-    }
-
-    if(masternodeSync.IsSynced()) {
-        if(nTime < GetTime() - (60*60*2) || nTime < GetTime() - (60*60)) {
-            strError = "Time is out of acceptable range.";
+        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError, nTime)){
             return false;
         }
     }
@@ -1341,8 +1335,8 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast()
     nBlockStart = 0;
     nBlockEnd = 0;
     nAmount = 0;
-    nTime = 0;
     nFeeTXHash = 0;
+    nTime = 0;
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
@@ -1357,7 +1351,7 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
     nTime = other.nTime;
 }
 
-CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn, int64_t nTimeIn)
+CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)
 {
     strProposalName = strProposalNameIn;
     strURL = strURLIn;
@@ -1372,8 +1366,6 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn
     nAmount = nAmountIn;
 
     nFeeTXHash = nFeeTXHashIn;
-
-    nTime = nTimeIn;
 }
 
 void CBudgetProposalBroadcast::Relay()
@@ -1458,6 +1450,7 @@ CFinalizedBudget::CFinalizedBudget()
     vecBudgetPayments.clear();
     mapVotes.clear();
     nFeeTXHash = 0;
+    nTime = 0;
     fValid = true;
 }
 
@@ -1468,6 +1461,7 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     vecBudgetPayments = other.vecBudgetPayments;
     mapVotes = other.mapVotes;
     nFeeTXHash = other.nFeeTXHash;
+    nTime = other.nTime;
     fValid = true;
 }
 
@@ -1652,7 +1646,7 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral)
 
     std::string strError2 = "";
     if(fCheckCollateral){
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2)){
+        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime)){
             {strError = "Invalid Collateral : " + strError2; return false;}
         }
     }
