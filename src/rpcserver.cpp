@@ -400,6 +400,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (transaction creation)",   "omni_sendrevoke",                 &omni_sendrevoke,                 false,      true,       true },
     { "omni layer (transaction creation)",   "omni_sendclosecrowdsale",         &omni_sendclosecrowdsale,         false,      true,       true },
     { "omni layer (transaction creation)",   "omni_sendchangeissuer",           &omni_sendchangeissuer,           false,      true,       true },
+    { "omni layer (transaction creation)",   "omni_sendall",                    &omni_sendall,                    false,      true,       true },
 
     /* Omni Core hidden calls - development usage (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
