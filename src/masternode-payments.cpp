@@ -144,8 +144,8 @@ CMasternodePaymentDB::ReadResult CMasternodePaymentDB::Read(CMasternodePayments&
     LogPrintf("Loaded info from mnpayments.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", objToLoad.ToString());
     if(!fDryRun) {
-        LogPrintf("Masternode payments manager - cleaning....\n");
-        objToLoad.CleanPaymentList();
+        //LogPrintf("Masternode payments manager - cleaning....\n");
+        //objToLoad.CleanPaymentList();
         LogPrintf("Masternode payments manager - result:\n");
         LogPrintf("  %s\n", objToLoad.ToString());
     }
