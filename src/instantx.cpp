@@ -70,7 +70,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         bool fMissingInputs = false;
         CValidationState state;
 
-
+        LOCK(cs_main);
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             vector<CInv> vInv;
