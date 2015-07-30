@@ -86,7 +86,6 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
 
 void CBudgetManager::CheckOrphanVotes()
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
 
@@ -186,7 +185,6 @@ void CBudgetManager::SubmitFinalBudget()
         return;
     }
 
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
     mapSeenFinalizedBudgets.insert(make_pair(finalizedBudgetBroadcast.GetHash(), finalizedBudgetBroadcast));
     finalizedBudgetBroadcast.Relay();
@@ -372,7 +370,6 @@ bool CBudgetManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
 
 bool CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
     std::string strError = "";
     if(!budgetProposal.IsValid(strError)) {
@@ -415,7 +412,6 @@ void CBudgetManager::CheckAndRemove()
 
 void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     CBlockIndex* pindexPrev = chainActive.Tip();
@@ -493,7 +489,6 @@ CBudgetProposal *CBudgetManager::FindProposal(const std::string &strProposalName
 
 CBudgetProposal *CBudgetManager::FindProposal(uint256 nHash)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     if(mapProposals.count(nHash))
@@ -546,7 +541,6 @@ bool CBudgetManager::HasNextFinalizedBudget()
 
 bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHeight)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     int nHighestCount = 0;
@@ -596,7 +590,6 @@ bool CBudgetManager::IsTransactionValid(const CTransaction& txNew, int nBlockHei
 
 std::vector<CBudgetProposal*> CBudgetManager::GetAllProposals()
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     std::vector<CBudgetProposal*> vBudgetProposalRet;
@@ -629,7 +622,6 @@ struct sortProposalsByVotes {
 //Need to review this function
 std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     // ------- Sort budgets by Yes Count
@@ -693,7 +685,6 @@ struct sortFinalizedBudgetsByVotes {
 
 std::vector<CFinalizedBudget*> CBudgetManager::GetFinalizedBudgets()
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     std::vector<CFinalizedBudget*> vFinalizedBudgetsRet;
@@ -723,7 +714,6 @@ std::vector<CFinalizedBudget*> CBudgetManager::GetFinalizedBudgets()
 
 std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     std::string ret = "unknown-budget";
@@ -775,7 +765,6 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 
 void CBudgetManager::NewBlock()
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     if (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_BUDGET) return;
@@ -818,7 +807,6 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     // lite mode is not supported
     if(IsInitialBlockDownload()) return;
 
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs_budget);
 
     if (strCommand == "mnvs") { //Masternode vote sync
@@ -971,7 +959,6 @@ bool CBudgetManager::PropExists(uint256 nHash)
 
 void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     /*
@@ -1036,7 +1023,6 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
 
 bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     if(!mapProposals.count(vote.nProposalHash)){
@@ -1064,7 +1050,6 @@ bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string
 
 bool CBudgetManager::UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     if(!mapFinalizedBudgets.count(vote.nBudgetHash)){
@@ -1184,7 +1169,6 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
 
 bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
@@ -1467,7 +1451,6 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
 
 bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError)
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
@@ -1507,7 +1490,6 @@ bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& 
 //evaluate if we should vote for this. Masternode only
 void CFinalizedBudget::AutoCheck()
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
 
     if(!fMasterNode || fAutoChecked) return;
@@ -1578,7 +1560,6 @@ CAmount CFinalizedBudget::GetTotalPayout()
 
 std::string CFinalizedBudget::GetProposals() 
 {
-    LogPrintf("LOCK - %\n", __func__);
     LOCK(cs);
     std::string ret = "";
 
