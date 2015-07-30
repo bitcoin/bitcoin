@@ -61,6 +61,7 @@ public:
     void Process();
     bool IsSynced();
     bool IsBlockchainSynced();
+    void ClearFulfilledRequest();
 };
 
 #endif

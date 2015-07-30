@@ -93,6 +93,7 @@ void CMasternodeSync::GetNextAsset()
             countBudgetItemProp = 0;
             countBudgetItemFin = 0;  
             RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
+            ClearFulfilledRequest();
             break;
         case(MASTERNODE_SYNC_SPORKS):
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
@@ -150,7 +151,19 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
                 break;
         }
         
-        LogPrintf("ssc - got inventory count %d %d\n", nItemID, nCount);
+        LogPrintf("CMasternodeSync:ProcessMessage - ssc - got inventory count %d %d\n", nItemID, nCount);
+    }
+}
+
+void CMasternodeSync::ClearFulfilledRequest()
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes)
+    {
+        pnode->ClearFulfilledRequest("getspork");
+        pnode->ClearFulfilledRequest("mnsync");
+        pnode->ClearFulfilledRequest("mnwsync");
+        pnode->ClearFulfilledRequest("busync");
     }
 }
 
@@ -168,15 +181,7 @@ void CMasternodeSync::Process()
             Resync if we lose all masternodes from sleep/wake or failure to sync originally
         */
         if(mnodeman.CountEnabled() == 0) {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-            {
-                pnode->ClearFulfilledRequest("getspork");
-                pnode->ClearFulfilledRequest("mnsync");
-                pnode->ClearFulfilledRequest("mnwsync");
-                pnode->ClearFulfilledRequest("busync");
-            }
-
+            ClearFulfilledRequest();
             RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
         } else
             return;
@@ -273,6 +278,7 @@ void CMasternodeSync::Process()
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
                 if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= 4){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    LogPrintf("CMasternodeSync::Process - HasNextFinalizedBudget %d nCountFailures %d IsBudgetPropEmpty %d\n", budget.HasNextFinalizedBudget(), nCountFailures, IsBudgetPropEmpty());
                     if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
                         GetNextAsset();
 
