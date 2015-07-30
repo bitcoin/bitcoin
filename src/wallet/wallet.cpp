@@ -9,7 +9,6 @@
 #include "checkpoints.h"
 #include "chain.h"
 #include "coincontrol.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "keystore.h"

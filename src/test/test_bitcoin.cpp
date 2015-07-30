@@ -7,7 +7,6 @@
 #include "test_bitcoin.h"
 
 #include "chainparams.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "main.h"

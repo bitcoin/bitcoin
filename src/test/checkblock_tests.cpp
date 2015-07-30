@@ -4,7 +4,6 @@
 
 #include "chainparams.h"
 #include "clientversion.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "main.h" // For CheckBlock
 #include "primitives/block.h"
