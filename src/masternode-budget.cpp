@@ -75,7 +75,7 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     }
 
     //if we're syncing we won't have instantX information, so accept 1 confirmation 
-    if(conf >= BUDGET_FEE_CONFIRMATIONS || (!masternodeSync.IsSynced() && conf >= 1)){
+    if(conf >= BUDGET_FEE_CONFIRMATIONS){
         return true;
     } else {
         strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", BUDGET_FEE_CONFIRMATIONS, conf);
