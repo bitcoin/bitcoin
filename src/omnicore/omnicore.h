@@ -231,6 +231,7 @@ public:
     int getNumberOfSubRecords(const uint256 txid);
     int getNumberOfMetaDExCancels(const uint256 txid);
     bool getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue);
+    bool getSendAllDetails(const uint256& txid, int subSend, uint32_t *propertyId, int64_t *amount);
     int getMPTransactionCountTotal();
     int getMPTransactionCountBlock(int block);
 

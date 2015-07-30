@@ -3172,6 +3172,23 @@ string CMPTxList::getKeyValue(string key)
     if (status.ok()) { return strValue; } else { return ""; }
 }
 
+bool CMPTxList::getSendAllDetails(const uint256& txid, int subSend, uint32_t *propertyId, int64_t *amount)
+{
+    if (!pdb) return 0;
+    std::vector<std::string> vstr;
+    string strValue;
+    Status status = pdb->Get(readoptions, txid.ToString()+"-"+to_string(subSend), &strValue);
+    if (status.ok()) {
+        boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
+        if (2 == vstr.size()) {
+            *propertyId = atoi(vstr[0]);
+            *amount = boost::lexical_cast<boost::int64_t>(vstr[1]);;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CMPTxList::getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue)
 {
     if (!pdb) return 0;
