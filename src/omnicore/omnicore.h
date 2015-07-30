@@ -224,6 +224,7 @@ public:
     void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
     void recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller);
     void recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &txidSub, bool fValid, int nBlock, unsigned int propertyId, uint64_t nValue);
+    void recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nvalue);
 
     string getKeyValue(string key);
     uint256 findMetaDExCancel(const uint256 txid);

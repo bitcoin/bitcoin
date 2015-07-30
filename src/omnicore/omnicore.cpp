@@ -3248,6 +3248,17 @@ void CMPTxList::recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &
        }
 }
 
+void CMPTxList::recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nValue)
+{
+    if (!pdb) return;
+
+    const std::string& key = strprintf("%s-%d", txid.ToString(), subRecordNumber);
+    const std::string& value = strprintf("%d:%d", propertyId, nValue);
+
+    Status status = pdb->Put(writeoptions, key, value);
+    if (msc_debug_txdb) PrintToLog("%s(): Key:%s, Value:%s, Status:%s\n", __FUNCTION__, key, value, status.ToString());
+}
+
 void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller)
 {
   if (!pdb) return;
