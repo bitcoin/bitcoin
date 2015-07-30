@@ -285,6 +285,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
 
 UniValue verifytxoutproof(const UniValue& params, bool fHelp)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "verifytxoutproof \"proof\"\n"
@@ -302,7 +303,7 @@ UniValue verifytxoutproof(const UniValue& params, bool fHelp)
 
     UniValue res(UniValue::VARR);
 
-    static const uint64_t nMaxTransactions = MAX_BLOCK_SIZE / 60;
+    static const uint64_t nMaxTransactions = consensusParams.nMaxTxSize / consensusParams.nMinTxSize;
     vector<uint256> vMatch;
     if (merkleBlock.txn.ExtractMatches(nMaxTransactions, vMatch) != merkleBlock.header.hashMerkleRoot)
         return res;

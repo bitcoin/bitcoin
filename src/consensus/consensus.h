@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
 
@@ -26,15 +27,27 @@ namespace Consensus {
  * Context-independent CTransaction validity checks
  */
 bool CheckTx(const CTransaction& tx, CValidationState& state, const Params& consensusParams);
+/**
+ * Check whether all inputs of this transaction are valid (no double spends and amounts)
+ * This does not modify the UTXO set. This does not check scripts and sigs.
+ * Preconditions: tx.IsCoinBase() is false.
+ */
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const Params& consensusParams, const CCoinsViewCache& inputs, int nSpendHeight);
 
 } // namespace Consensus
 
+/** Block validation utility functions */
+
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
-static const unsigned int MAX_BLOCK_SIZE = 1000000;
+inline uint64_t MaxBlockSize(const Consensus::Params& consensusParams)
+{
+    return consensusParams.nMaxBlockSize;
+}
 /** The maximum allowed number of signature check operations in a block (network rule) */
-static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
-/** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
-static const int COINBASE_MATURITY = 100;
+inline uint64_t MaxBlockSigops(const Consensus::Params& consensusParams)
+{
+    return consensusParams.nMaxBlockSigops;
+}
 
 /** Flags for LockTime() */
 enum {
