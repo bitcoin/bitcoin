@@ -43,7 +43,7 @@ void DumpBudgets();
 int GetBudgetPaymentCycleBlocks();
 
 //Check the collateral transaction for the budget proposal/finalized budget
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError);
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime);
 
 /** Save Budget Manager (budget.dat)
  */
@@ -208,6 +208,7 @@ public:
     std::vector<CTxBudgetPayment> vecBudgetPayments;
     map<uint256, CFinalizedBudgetVote> mapVotes;
     uint256 nFeeTXHash;
+    int64_t nTime;
 
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
@@ -276,6 +277,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(LIMITED_STRING(strBudgetName, 20));
         READWRITE(nFeeTXHash);
+        READWRITE(nTime);
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
 
@@ -381,7 +383,7 @@ public:
 
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn, int64_t nTimeIn);
+    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
 
     void Calculate();
     bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
@@ -413,7 +415,6 @@ public:
     int GetNays();
     int GetAbstains();
     CAmount GetAmount() {return nAmount;}
-
     void SetAllotted(CAmount nAllotedIn) {nAlloted = nAllotedIn;}
     CAmount GetAllotted() {return nAlloted;}
 
@@ -423,7 +424,6 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strProposalName;
         ss << strURL;
-        ss << nTime;
         ss << nBlockStart;
         ss << nBlockEnd;
         ss << nAmount;
@@ -462,7 +462,7 @@ private:
 public:
     CBudgetProposalBroadcast();
     CBudgetProposalBroadcast(const CBudgetProposal& other);
-    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn, int64_t nTimeIn);
+    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
     void Relay();
 
