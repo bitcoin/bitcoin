@@ -204,6 +204,7 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_GRANT_PROPERTY_TOKENS: return true;
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return false;
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return true;
+        case MSC_TYPE_SEND_ALL: return true;
     }
     return true; // default to true, shouldn't be needed but just in case
 }
@@ -248,7 +249,8 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
 
 void populateRPCTypeSendAll(CMPTransaction& omniObj, Object& txobj)
 {
-    // TODO: list all recipients?
+    Array subSends;
+    if (populateRPCSendAllSubSends(omniObj.getHash(), subSends) > 0) txobj.push_back(Pair("subsends", subSends));
 }
 
 void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
@@ -525,6 +527,36 @@ void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
         }
     }
     txobj.push_back(Pair("cancelledtransactions", cancelArray));
+}
+
+/* Function to enumerate sub sends for a given txid and add to supplied JSON array
+ * Note: this function exists as send all has the potential to carry multiple sends in a single transaction.
+ */
+int populateRPCSendAllSubSends(const uint256& txid, Array& subSends)
+{
+    int numberOfSubSends = 0;
+    {
+        LOCK(cs_tally);
+        numberOfSubSends = p_txlistdb->getNumberOfSubRecords(txid);
+    }
+    if (numberOfSubSends <= 0) {
+        PrintToLog("TXLISTDB Error: Transaction %s parsed as a send all but could not locate sub sends in txlistdb.\n", txid.GetHex());
+        return -1;
+    }
+    for (int subSend = 1; subSend <= numberOfSubSends; subSend++) {
+        Object subSendObj;
+        uint32_t propertyId;
+        int64_t amount;
+        {
+            LOCK(cs_tally);
+            p_txlistdb->getSendAllDetails(txid, subSend, &propertyId, &amount);
+        }
+        subSendObj.push_back(Pair("propertyid", (uint64_t)propertyId));
+        subSendObj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+        subSendObj.push_back(Pair("amount", FormatMP(propertyId, amount)));
+        subSends.push_back(subSendObj);
+    }
+    return subSends.size();
 }
 
 /* Function to enumerate DEx purchases for a given txid and add to supplied JSON array

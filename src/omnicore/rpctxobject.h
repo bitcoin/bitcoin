@@ -34,6 +34,8 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
 void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, json_spirit::Object& txobj);
 
 int populateRPCDExPurchases(const CTransaction& wtx, json_spirit::Array& purchases, std::string filterAddress);
+int populateRPCSendAllSubSends(const uint256& txid, json_spirit::Array& subSends);
+
 bool showRefForTx(uint32_t txType);
 
 #endif // OMNICORE_RPCTXOBJECT_H
