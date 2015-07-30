@@ -2434,7 +2434,8 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 
     LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Got: %d \n", nValueIn);
 
-    BOOST_FOREACH(CTxIn v, vCoins) 
+    LOCK(cs_wallet);
+    BOOST_FOREACH(CTxIn v, vCoins)
         LockCoin(v.prevout);
 
     int64_t nValueLeft = nValueIn;

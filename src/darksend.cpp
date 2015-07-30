@@ -259,11 +259,14 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
                 return;
             }
 
-            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)) {
-                LogPrintf("dsi -- transaction not valid! \n");
-                errorID = ERR_INVALID_TX;
-                pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
-                return;
+            {
+                LOCK(cs_main);
+                if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)) {
+                    LogPrintf("dsi -- transaction not valid! \n");
+                    errorID = ERR_INVALID_TX;
+                    pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
+                    return;
+                }
             }
         }
 
@@ -429,6 +432,7 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
 // Unlock coins after Darksend fails or succeeds
 //
 void CDarksendPool::UnlockCoins(){
+    LOCK(pwalletMain->cs_wallet);
     BOOST_FOREACH(CTxIn v, lockedCoins)
         pwalletMain->UnlockCoin(v.prevout);
 
@@ -967,10 +971,13 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
 
     if(fDebug) LogPrintf("CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString().c_str());
 
-    CValidationState state;
-    if(!AcceptableInputs(mempool, state, txCollateral, true, NULL)){
-        if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
-        return false;
+    {
+        LOCK(cs_main);
+        CValidationState state;
+        if(!AcceptableInputs(mempool, state, txCollateral, true, NULL)){
+            if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
+            return false;
+        }
     }
 
     return true;
@@ -1147,11 +1154,14 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString().c_str());
 
-        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)){
-            LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
-            UnlockCoins();
-            SetNull();
-            return;
+        {
+            LOCK(cs_main);
+            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)){
+                LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString().c_str());
+                UnlockCoins();
+                SetNull();
+                return;
+            }
         }
     }
 
