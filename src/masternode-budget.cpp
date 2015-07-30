@@ -319,8 +319,8 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& objToLoad, bool fDryRun)
     LogPrintf("Loaded info from budget.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", objToLoad.ToString());
     if(!fDryRun) {
-        //LogPrintf("Budget manager - cleaning....\n");
-        //objToLoad.CheckAndRemove();
+        LogPrintf("Budget manager - cleaning....\n");
+        objToLoad.CheckAndRemove();
         LogPrintf("Budget manager - result:\n");
         LogPrintf("  %s\n", objToLoad.ToString());
     }
