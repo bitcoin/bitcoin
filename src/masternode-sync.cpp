@@ -175,9 +175,6 @@ void CMasternodeSync::Process()
 
     if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
 
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return;
-
     if(IsSynced()) {
         /* 
             Resync if we lose all masternodes from sleep/wake or failure to sync originally
@@ -242,7 +239,7 @@ void CMasternodeSync::Process()
         }
 
         //don't begin syncing until we're almost at a recent block
-        if(pindexPrev->nTime + 600 < GetTime()) return;
+        if(!IsBlockchainSynced()) return;
 
         if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 

@@ -172,7 +172,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
         }
 
         pmn->lastPing = mnp;
-        mnodeman.mapSeenMasternodePing[mnp.GetHash()] = mnp;
+        mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
         mnp.Relay();
 
         return true;
@@ -239,7 +239,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
         LogPrintf("CActiveMasternode::Register() -  %s\n", errorMessage);
         return false;
     }
-    mnodeman.mapSeenMasternodePing[mnp.GetHash()] = mnp;
+    mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
     LogPrintf("CActiveMasternode::Register() - Adding to Masternode list\n    service: %s\n    vin: %s\n", service.ToString(), vin.ToString());
     mnb = CMasternodeBroadcast(service, vin, pubKeyCollateralAddress, pubKeyMasternode, PROTOCOL_VERSION);
@@ -249,7 +249,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
         LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
         return false;
     }
-    mnodeman.mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
+    mnodeman.mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
@@ -382,8 +382,8 @@ bool CActiveMasternode::EnableHotColdMasterNode(CTxIn& newVin, CService& newServ
     status = ACTIVE_MASTERNODE_STARTED;
 
     //The values below are needed for signing mnping messages going forward
-    this->vin = newVin;
-    this->service = newService;
+    vin = newVin;
+    service = newService;
 
     LogPrintf("CActiveMasternode::EnableHotColdMasterNode() - Enabled! You may shut down the cold daemon.\n");
 
