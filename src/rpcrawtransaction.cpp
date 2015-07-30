@@ -300,8 +300,9 @@ UniValue verifytxoutproof(const UniValue& params, bool fHelp)
 
     UniValue res(UniValue::VARR);
 
+    uint64_t nMaxTransactions = MAX_BLOCK_SIZE / 60;
     vector<uint256> vMatch;
-    if (merkleBlock.txn.ExtractMatches(vMatch) != merkleBlock.header.hashMerkleRoot)
+    if (merkleBlock.txn.ExtractMatches(nMaxTransactions, vMatch) != merkleBlock.header.hashMerkleRoot)
         return res;
 
     LOCK(cs_main);
