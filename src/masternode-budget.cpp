@@ -539,7 +539,7 @@ bool CBudgetManager::HasNextFinalizedBudget()
 
     if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
 
-    LogPrintf("CBudgetManager::HasNextFinalizedBudget() - Client is missing budget\n");
+    LogPrintf("CBudgetManager::HasNextFinalizedBudget() - Client is missing budget - %lli\n", nBlockStart);
 
     return false;
 }
