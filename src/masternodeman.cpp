@@ -224,9 +224,9 @@ void CMasternodeMan::Check()
 
 void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
 {
-    LOCK(cs);
-
     Check();
+
+    LOCK(cs);
 
     //remove inactive and outdated
     vector<CMasternode>::iterator it = vMasternodes.begin();
@@ -604,9 +604,9 @@ void CMasternodeMan::ProcessMasternodeConnections()
     //we don't care about this for regtest
     if(Params().NetworkID() == CBaseChainParams::REGTEST) return;
 
-    LOCK(cs_vNodes);
-
     if(!darkSendPool.pSubmittedToMasternode) return;
+
+    LOCK(cs_vNodes);
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
@@ -614,7 +614,7 @@ void CMasternodeMan::ProcessMasternodeConnections()
 
         if(pnode->fDarkSendMaster){
             LogPrintf("Closing Masternode connection %s \n", pnode->addr.ToString().c_str());
-            pnode->CloseSocketDisconnect();
+            pnode->fDisconnect = true;
         }
     }
 }

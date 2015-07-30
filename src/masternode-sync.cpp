@@ -157,7 +157,9 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
 
 void CMasternodeSync::ClearFulfilledRequest()
 {
-    LOCK(cs_vNodes);
+    TRY_LOCK(cs_vNodes, lockRecv);
+    if(!lockRecv) return;
+
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         pnode->ClearFulfilledRequest("getspork");
@@ -198,7 +200,9 @@ void CMasternodeSync::Process()
 
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
-    LOCK(cs_vNodes);
+    TRY_LOCK(cs_vNodes, lockRecv);
+    if(!lockRecv) return;
+
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
         if(Params().NetworkID() == CBaseChainParams::REGTEST){
@@ -230,7 +234,12 @@ void CMasternodeSync::Process()
             return;
         }
 
-        if(IsInitialBlockDownload()) return;
+        {
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) return;
+
+            if(IsInitialBlockDownload()) return;
+        }
 
         //don't begin syncing until we're almost at a recent block
         if(pindexPrev->nTime + 600 < GetTime()) return;

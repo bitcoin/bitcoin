@@ -177,10 +177,6 @@ void CMasternode::Check()
 {
     if(ShutdownRequested()) return;
 
-    //TODO: Random segfault with this line removed
-    TRY_LOCK(cs_main, lockRecv);
-    if(!lockRecv) return;
-
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
 
@@ -202,9 +198,15 @@ void CMasternode::Check()
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
-        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
-            activeState = MASTERNODE_VIN_SPENT;
-            return;
+        {
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) return;
+
+            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
+                activeState = MASTERNODE_VIN_SPENT;
+                return;
+
+            }
         }
     }
 
@@ -425,53 +427,58 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
-    if(AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
-        if(fDebug) LogPrintf("mnb - Accepted Masternode entry\n");
 
-        if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-            LogPrintf("mnb - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+    {
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) return false;
+
+        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
+            //set nDos
+            state.IsInvalid(nDoS);
             return false;
         }
-
-        // verify that sig time is legit in past
-        // should be at least not earlier than block when 1000 DASH tx got MASTERNODE_MIN_CONFIRMATIONS
-        uint256 hashBlock = 0;
-        CTransaction tx2;
-        GetTransaction(vin.prevout.hash, tx2, hashBlock, true);
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second)
-        {
-            CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
-            CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
-            if(pConfIndex->GetBlockTime() > sigTime)
-            {
-                LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
-                          sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
-                return false;
-            }
-        }
-
-        LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
-        CMasternode mn(*this);
-        mnodeman.Add(mn);
-
-        // if it matches our Masternode privkey, then we've been remotely activated
-        if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
-            activeMasternode.EnableHotColdMasterNode(vin, addr);
-        }
-
-        bool isLocal = addr.IsRFC1918() || addr.IsLocal();
-        if(Params().NetworkID() == CBaseChainParams::REGTEST) isLocal = false;
-
-        if(!isLocal) Relay();
-
-        return true;
-    } else {
-        //set nDos
-        state.IsInvalid(nDoS);
     }
 
-    return false;
+    if(fDebug) LogPrintf("mnb - Accepted Masternode entry\n");
+
+    if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
+        LogPrintf("mnb - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+        return false;
+    }
+
+    // verify that sig time is legit in past
+    // should be at least not earlier than block when 1000 DASH tx got MASTERNODE_MIN_CONFIRMATIONS
+    uint256 hashBlock = 0;
+    CTransaction tx2;
+    GetTransaction(vin.prevout.hash, tx2, hashBlock, true);
+    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+    if (mi != mapBlockIndex.end() && (*mi).second)
+    {
+        CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
+        CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
+        if(pConfIndex->GetBlockTime() > sigTime)
+        {
+            LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
+                      sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
+            return false;
+        }
+    }
+
+    LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
+    CMasternode mn(*this);
+    mnodeman.Add(mn);
+
+    // if it matches our Masternode privkey, then we've been remotely activated
+    if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
+        activeMasternode.EnableHotColdMasterNode(vin, addr);
+    }
+
+    bool isLocal = addr.IsRFC1918() || addr.IsLocal();
+    if(Params().NetworkID() == CBaseChainParams::REGTEST) isLocal = false;
+
+    if(!isLocal) Relay();
+
+    return true;
 }
 
 void CMasternodeBroadcast::Relay()
