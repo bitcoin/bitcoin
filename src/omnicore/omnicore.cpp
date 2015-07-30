@@ -3111,24 +3111,19 @@ int CMPTxList::getNumberOfMetaDExCancels(const uint256 txid)
     return numberOfCancels;
 }
 
-int CMPTxList::getNumberOfPurchases(const uint256 txid)
+int CMPTxList::getNumberOfSubRecords(const uint256 txid)
 {
     if (!pdb) return 0;
-    int numberOfPurchases = 0;
+    int numberOfSubRecords = 0;
     std::vector<std::string> vstr;
     string strValue;
     Status status = pdb->Get(readoptions, txid.ToString(), &strValue);
-    if (status.ok())
-    {
-        // parse the string returned
+    if (status.ok()) {
+        // parse the string returned & obtain the number of sub records
         boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-        // obtain the number of purchases
-        if (4 <= vstr.size())
-        {
-            numberOfPurchases = atoi(vstr[3]);
-        }
+        if (4 <= vstr.size()) numberOfSubRecords = atoi(vstr[3]);
     }
-    return numberOfPurchases;
+    return numberOfSubRecords;
 }
 
 int CMPTxList::getMPTransactionCountTotal()

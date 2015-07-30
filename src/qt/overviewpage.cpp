@@ -166,7 +166,7 @@ public:
                                 }
                                 bool bIsBuy = IsMyAddress(tmpBuyer);
                                 LOCK(cs_tally);
-                                int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
+                                int numberOfPurchases=p_txlistdb->getNumberOfSubRecords(hash);
                                 if (0<numberOfPurchases) { // calculate total bought/sold
                                     for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
                                         p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);

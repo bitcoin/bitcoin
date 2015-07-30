@@ -272,7 +272,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                 p_txlistdb->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
             }
             bIsBuy = IsMyAddress(tmpBuyer);
-            numberOfPurchases = p_txlistdb->getNumberOfPurchases(txHash);
+            numberOfPurchases = p_txlistdb->getNumberOfSubRecords(txHash);
             if (0 >= numberOfPurchases) continue;
             for (int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
                 LOCK(cs_tally);

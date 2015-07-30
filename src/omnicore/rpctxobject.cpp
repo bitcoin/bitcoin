@@ -536,7 +536,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, Array& purchases, std::stri
     int numberOfPurchases = 0;
     {
         LOCK(cs_tally);
-        numberOfPurchases = p_txlistdb->getNumberOfPurchases(wtx.GetHash());
+        numberOfPurchases = p_txlistdb->getNumberOfSubRecords(wtx.GetHash());
     }
     if (numberOfPurchases <= 0) {
         PrintToLog("TXLISTDB Error: Transaction %s parsed as a DEx payment but could not locate purchases in txlistdb.\n", wtx.GetHash().GetHex());

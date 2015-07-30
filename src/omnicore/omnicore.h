@@ -227,7 +227,7 @@ public:
 
     string getKeyValue(string key);
     uint256 findMetaDExCancel(const uint256 txid);
-    int getNumberOfPurchases(const uint256 txid);
+    int getNumberOfSubRecords(const uint256 txid);
     int getNumberOfMetaDExCancels(const uint256 txid);
     bool getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue);
     int getMPTransactionCountTotal();
