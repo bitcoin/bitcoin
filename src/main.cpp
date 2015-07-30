@@ -692,7 +692,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 
 
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool Consensus::CheckTx(const CTransaction& tx, CValidationState &state, const Consensus::Params& consensusParams)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -700,7 +700,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > consensusParams.nMaxTxSize)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -781,11 +781,12 @@ static std::string FormatStateMessage(const CValidationState &state)
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state))
+    if (!Consensus::CheckTx(tx, state, consensusParams))
         return false;
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -2581,6 +2582,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
 
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     // These are checks that are independent of context.
 
     if (block.fChecked)
@@ -2627,7 +2629,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
+        if (!Consensus::CheckTx(tx, state, consensusParams))
             return error("CheckBlock(): CheckTransaction of %s failed with %s",
                 tx.GetHash().ToString(),
                 FormatStateMessage(state));

@@ -6,6 +6,29 @@
 #ifndef BITCOIN_CONSENSUS_CONSENSUS_H
 #define BITCOIN_CONSENSUS_CONSENSUS_H
 
+#include "consensus/params.h"
+
+#include <stdint.h>
+
+class CTransaction;
+class CValidationState;
+
+/**
+ * Consensus validations:
+ * Check_ means checking everything possible with the data provided.
+ * Verify_ means all data provided was enough for this level and its "consensus-verified".
+ */
+namespace Consensus {
+
+/** Transaction validation functions */
+
+/**
+ * Context-independent CTransaction validity checks
+ */
+bool CheckTx(const CTransaction& tx, CValidationState& state, const Params& consensusParams);
+
+} // namespace Consensus
+
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** The maximum allowed number of signature check operations in a block (network rule) */
