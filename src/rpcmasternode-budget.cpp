@@ -176,6 +176,10 @@ Value mnbudget(const Array& params, bool fHelp)
             return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
         }
 
+        if(!masternodeSync.IsSynced()){
+            return "Must wait for client to sync with masternode network. Try again in a minute or so.";            
+        }
+
         if(!budgetProposalBroadcast.IsValid(strError)){
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
         }
