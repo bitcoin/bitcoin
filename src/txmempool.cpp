@@ -5,6 +5,7 @@
 
 #include "txmempool.h"
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
@@ -161,6 +162,7 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned in
     // Remove transactions spending a coinbase which are now immature
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->second.GetTx();
         BOOST_FOREACH(const CTxIn& txin, tx.vin) {
@@ -169,7 +171,7 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned in
                 continue;
             const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
             if (fSanityCheck) assert(coins);
-            if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
+            if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < consensusParams.nCoinbaseMaturity)) {
                 transactionsToRemove.push_back(tx);
                 break;
             }

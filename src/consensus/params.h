@@ -14,7 +14,12 @@ namespace Consensus {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    uint32_t nMinTxSize;
+    uint64_t nMaxBlockSize;
     uint32_t nMaxTxSize;
+    uint64_t nMaxBlockSigops;
+    /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
+    int32_t nCoinbaseMaturity;
     int nSubsidyHalvingInterval;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
