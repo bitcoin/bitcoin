@@ -3311,6 +3311,10 @@ bool LoadBlockIndex()
 bool InitBlockIndex() {
     const CChainParams& chainparams = Params();
     LOCK(cs_main);
+
+    // Initialize global variables that cannot be constructed at startup.
+    recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
+
     // Check whether we're already initialized
     if (chainActive.Genesis() != NULL)
         return true;
@@ -3343,9 +3347,6 @@ bool InitBlockIndex() {
             return error("LoadBlockIndex(): failed to initialize block database: %s", e.what());
         }
     }
-
-    // Initialize global variables that cannot be constructed at startup.
-    recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
 
     return true;
 }
@@ -3716,6 +3717,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
     case MSG_TX:
         {
+            assert(recentRejects);
             if (chainActive.Tip()->GetBlockHash() != hashRecentRejectsChainTip)
             {
                 // If the chain tip has changed previously rejected transactions
@@ -4329,6 +4331,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // Probably non-standard or insufficient fee/priority
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanHash.ToString());
                         vEraseQueue.push_back(orphanHash);
+                        assert(recentRejects);
                         recentRejects->insert(orphanHash);
                     }
                     mempool.check(pcoinsTip);
@@ -4352,6 +4355,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // already in the mempool; if the tx isn't in the mempool that
             // means it was rejected and we shouldn't ask for it again.
             if (!mempool.exists(tx.GetHash())) {
+                assert(recentRejects);
                 recentRejects->insert(tx.GetHash());
             }
             if (pfrom->fWhitelisted) {
