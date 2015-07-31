@@ -752,14 +752,14 @@ void StopRPCThreads()
     {
         acceptor->cancel(ec);
         if (ec)
-            LogPrintf("%s: Warning: %s when cancelling acceptor", __func__, ec.message());
+            LogPrintf("%s: Warning: %s when cancelling acceptor\n", __func__, ec.message());
     }
     rpc_acceptors.clear();
     BOOST_FOREACH(const PAIRTYPE(std::string, boost::shared_ptr<deadline_timer>) &timer, deadlineTimers)
     {
         timer.second->cancel(ec);
         if (ec)
-            LogPrintf("%s: Warning: %s when cancelling timer", __func__, ec.message());
+            LogPrintf("%s: Warning: %s when cancelling timer\n", __func__, ec.message());
     }
     deadlineTimers.clear();
 
