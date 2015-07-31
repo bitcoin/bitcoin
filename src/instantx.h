@@ -11,6 +11,7 @@
 #include "util.h"
 #include "base58.h"
 #include "main.h"
+#include "spork.h"
 
 /*
     At 15 signatures, 1/2 of the masternode network can be owned by

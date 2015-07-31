@@ -399,9 +399,6 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
  *  of problems. Note that in any case, coins may be modified. */
 bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool* pfClean = NULL);
 
-/** Find a conflicting transcation in a block and disconnect all up to that point **/
-bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock);
-
 /** Reprocess a number of blocks to try and get on the correct chain again **/
 bool DisconnectBlocksAndReprocess(int blocks);
 
