@@ -748,13 +748,13 @@ padding-right:5px;
 
 QWidget .QFrame#frame .QLabel#labelWalletStatus { /* Wallet Sync Status */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-margin-left:20px;
+margin-left:3px;
 }
 
 QWidget .QFrame#frame .QLabel#labelSpendable { /* Spendable Header */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 font-size:12px;
-margin-left:32px;
+margin-left:18px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWatchonly { /* Watch-only Header */
@@ -780,7 +780,7 @@ qproperty-alignment: 'AlignVCenter | AlignLeft';
 font-size:12px;
 font-weight:bold;
 color:#56ABD8;
-margin-left:32px;
+margin-left:0px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWatchAvailable { /* Watch-only Balance */
@@ -801,7 +801,7 @@ padding-right:5px;
 QWidget .QFrame#frame .QLabel#labelUnconfirmed { /* Pending Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 font-size:12px;
-margin-left:32px;
+margin-left:0px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWatchPending { /* Watch-only Pending Balance */
@@ -822,7 +822,7 @@ padding-right:5px;
 QWidget .QFrame#frame .QLabel#labelImmature { /* Immature Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 font-size:12px;
-margin-left:32px;
+margin-left:0px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWatchImmature { /* Watch-only Immature Balance */
@@ -843,7 +843,7 @@ padding-right:5px;
 QWidget .QFrame#frame .QLabel#labelTotal { /* Total Balance */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
 font-size:12px;
-margin-left:32px;
+margin-left:0px;
 }
 
 QWidget .QFrame#frame .QLabel#labelWatchTotal { /* Watch-only Total Balance */
@@ -877,7 +877,7 @@ min-height:35px;
 /******************************************************************/
 QWidget .QFrame#frameDarksend .QLabel#labelDarksendSyncStatus { /* Darksend Sync Status */
 qproperty-alignment: 'AlignVCenter | AlignLeft';
-margin-left:20px;
+margin-left:2px;
 }
 
 QWidget .QFrame#frameDarksend #formLayoutWidget {
@@ -889,7 +889,6 @@ min-width:175px;
 font-weight:normal;
 min-height:25px;
 }
-
 
 QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_6 { /* Darksend Status Label */
 qproperty-alignment: 'AlignVCenter | AlignRight';
