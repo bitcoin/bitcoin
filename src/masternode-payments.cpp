@@ -362,9 +362,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         if(chainActive.Tip() == NULL) return;
 
         if(masternodePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
-           if(fDebug) LogPrintf("mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), chainActive.Tip()->nHeight);
-           masternodeSync.AddedMasternodeWinner();
-           return;
+            if(fDebug) LogPrintf("mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), chainActive.Tip()->nHeight);
+            masternodeSync.AddedMasternodeWinner(winner.GetHash());
+            return;
         }
 
         int nFirstBlock = chainActive.Tip()->nHeight - (mnodeman.CountEnabled()*2);
@@ -638,7 +638,7 @@ bool CMasternodePaymentWinner::IsValid(std::string& strError)
     if(n > MNPAYMENTS_SIGNATURES_TOTAL)
     {
         strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, n);
-        LogPrintf ("CMasternodePaymentWinner::IsValid - %s\n", strError);
+        LogPrintf("CMasternodePaymentWinner::IsValid - %s\n", strError);
         return false;
     }
 

@@ -15,7 +15,7 @@
 /** Masternode manager */
 CMasternodeMan mnodeman;
 
-struct CompareValueOnly
+struct CompareLastPaid
 {
     bool operator()(const pair<int64_t, CTxIn>& t1,
                     const pair<int64_t, CTxIn>& t2) const
@@ -24,7 +24,16 @@ struct CompareValueOnly
     }
 };
 
-struct CompareValueOnlyMN
+struct CompareScoreTxIn
+{
+    bool operator()(const pair<int64_t, CTxIn>& t1,
+                    const pair<int64_t, CTxIn>& t2) const
+    {
+        return t1.first < t2.first;
+    }
+};
+
+struct CompareScoreMN
 {
     bool operator()(const pair<int64_t, CMasternode>& t1,
                     const pair<int64_t, CMasternode>& t2) const
@@ -154,10 +163,12 @@ CMasternodeDB::ReadResult CMasternodeDB::Read(CMasternodeMan& mnodemanToLoad, bo
 
     LogPrintf("Loaded info from mncache.dat  %dms\n", GetTimeMillis() - nStart);
     LogPrintf("  %s\n", mnodemanToLoad.ToString());
-    LogPrintf("Masternode manager - cleaning....\n");
-    if(!fDryRun) mnodemanToLoad.CheckAndRemove(true);
-    LogPrintf("Masternode manager - result:\n");
-    LogPrintf("  %s\n", mnodemanToLoad.ToString());
+    if(!fDryRun) {
+        LogPrintf("Masternode manager - cleaning....\n");
+        mnodemanToLoad.CheckAndRemove(true);
+        LogPrintf("Masternode manager - result:\n");
+        LogPrintf("  %s\n", mnodemanToLoad.ToString());
+    }
 
     return Ok;
 }
@@ -171,7 +182,7 @@ void DumpMasternodes()
 
     LogPrintf("Verifying mncache.dat format...\n");
     CMasternodeDB::ReadResult readResult = mndb.Read(tempMnodeman, true);
-    // there was an error and it was not an error on file openning => do not proceed
+    // there was an error and it was not an error on file opening => do not proceed
     if (readResult == CMasternodeDB::FileError)
         LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
     else if (readResult != CMasternodeDB::Ok)
@@ -418,11 +429,12 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     }
 
     // Sort them low to high
-    sort(vecMasternodeLastPaid.rbegin(), vecMasternodeLastPaid.rend(), CompareValueOnly());
+    sort(vecMasternodeLastPaid.rbegin(), vecMasternodeLastPaid.rend(), CompareLastPaid());
 
     // Look at 1/10 of the oldest nodes (by last payment), calculate their scores and pay the best one
     //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
-    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2 --(chance per block * chances before IsScheduled will fire)
+    //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
+    //  -- (chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = mnodeman.CountEnabled()/10;
     int nCount = 0; 
     uint256 nHigh = 0;
@@ -518,7 +530,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
     }
 
-    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareScoreTxIn());
 
     int rank = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeScores){
@@ -556,7 +568,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
         vecMasternodeScores.push_back(make_pair(n2, mn));
     }
 
-    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnlyMN());
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareScoreMN());
 
     int rank = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CMasternode)& s, vecMasternodeScores){
@@ -586,7 +598,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
     }
 
-    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareValueOnly());
+    sort(vecMasternodeScores.rbegin(), vecMasternodeScores.rend(), CompareScoreTxIn());
 
     int rank = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeScores){
@@ -635,7 +647,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             masternodeSync.AddedMasternodeList();
             return;
         }
-        mnodeman.mapSeenMasternodeBroadcast[mnb.GetHash()] = mnb;
+        mnodeman.mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
         int nDoS = 0;
         if(!mnb.CheckAndUpdate(nDoS)){
@@ -676,7 +688,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(fDebug) LogPrintf("mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
 
         if(mnodeman.mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
-        mnodeman.mapSeenMasternodePing[mnp.GetHash()] = mnp;
+        mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
         int nDoS = 0;
         if(mnp.CheckAndUpdate(nDoS)) return;
