@@ -3111,18 +3111,23 @@ int CMPTxList::getNumberOfMetaDExCancels(const uint256 txid)
     return numberOfCancels;
 }
 
-int CMPTxList::getNumberOfSubRecords(const uint256 txid)
+/**
+ * Returns the number of sub records.
+ */
+int CMPTxList::getNumberOfSubRecords(const uint256& txid)
 {
-    if (!pdb) return 0;
     int numberOfSubRecords = 0;
-    std::vector<std::string> vstr;
-    string strValue;
+
+    std::string strValue;
     Status status = pdb->Get(readoptions, txid.ToString(), &strValue);
     if (status.ok()) {
-        // parse the string returned & obtain the number of sub records
-        boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-        if (4 <= vstr.size()) numberOfSubRecords = atoi(vstr[3]);
+        std::vector<std::string> vstr;
+        boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
+        if (4 <= vstr.size()) {
+            numberOfSubRecords = boost::lexical_cast<int>(vstr[3]);
+        }
     }
+
     return numberOfSubRecords;
 }
 
@@ -3172,17 +3177,20 @@ string CMPTxList::getKeyValue(string key)
     if (status.ok()) { return strValue; } else { return ""; }
 }
 
-bool CMPTxList::getSendAllDetails(const uint256& txid, int subSend, uint32_t *propertyId, int64_t *amount)
+/**
+ * Retrieves details about a "send all" record.
+ */
+bool CMPTxList::getSendAllDetails(const uint256& txid, int subSend, uint32_t& propertyId, int64_t& amount)
 {
-    if (!pdb) return 0;
-    std::vector<std::string> vstr;
-    string strValue;
-    Status status = pdb->Get(readoptions, txid.ToString()+"-"+to_string(subSend), &strValue);
+    std::string strKey = strprintf("%s-%d", txid.ToString(), subSend);
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, strKey, &strValue);
     if (status.ok()) {
-        boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
+        std::vector<std::string> vstr;
+        boost::split(vstr, strValue, boost::is_any_of(":"), boost::token_compress_on);
         if (2 == vstr.size()) {
-            *propertyId = atoi(vstr[0]);
-            *amount = boost::lexical_cast<boost::int64_t>(vstr[1]);;
+            propertyId = boost::lexical_cast<uint32_t>(vstr[0]);
+            amount = boost::lexical_cast<int64_t>(vstr[1]);
             return true;
         }
     }
@@ -3265,15 +3273,17 @@ void CMPTxList::recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &
        }
 }
 
+/**
+ * Records a "send all" sub record.
+ */
 void CMPTxList::recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nValue)
 {
-    if (!pdb) return;
+    std::string strKey = strprintf("%s-%d", txid.ToString(), subRecordNumber);
+    std::string strValue = strprintf("%d:%d", propertyId, nValue);
 
-    const std::string& key = strprintf("%s-%d", txid.ToString(), subRecordNumber);
-    const std::string& value = strprintf("%d:%d", propertyId, nValue);
-
-    Status status = pdb->Put(writeoptions, key, value);
-    if (msc_debug_txdb) PrintToLog("%s(): Key:%s, Value:%s, Status:%s\n", __FUNCTION__, key, value, status.ToString());
+    leveldb::Status status = pdb->Put(writeoptions, strKey, strValue);
+    ++nWritten;
+    if (msc_debug_txdb) PrintToLog("%s(): store: %s=%s, status: %s\n", __func__, strKey, strValue, status.ToString());
 }
 
 void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller)

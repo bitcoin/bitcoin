@@ -993,22 +993,20 @@ int CMPTransaction::logicMath_SendAll()
         return (PKT_ERROR_SEND_ALL -54);
     }
 
-    bool fSent = false;
     uint32_t propertyId = ptally->init();
     int numberOfPropertiesSent = 0;
 
     while (0 != (propertyId = ptally->next())) {
-        int64_t money = ptally->getMoney(propertyId, BALANCE);
-        if (money > 0) {
-            fSent = true;
-            numberOfPropertiesSent++;
-            assert(update_tally_map(sender, propertyId, -money, BALANCE));
-            assert(update_tally_map(receiver, propertyId, money, BALANCE));
-            p_txlistdb->recordSendAllSubRecord(txid, numberOfPropertiesSent, propertyId, money);
+        int64_t moneyAvailable = ptally->getMoney(propertyId, BALANCE);
+        if (moneyAvailable > 0) {
+            ++numberOfPropertiesSent;
+            assert(update_tally_map(sender, propertyId, -moneyAvailable, BALANCE));
+            assert(update_tally_map(receiver, propertyId, moneyAvailable, BALANCE));
+            p_txlistdb->recordSendAllSubRecord(txid, numberOfPropertiesSent, propertyId, moneyAvailable);
         }
     }
 
-    if (!fSent) {
+    if (!numberOfPropertiesSent) {
         PrintToLog("%s(): rejected: sender %s has no tokens to send\n", __func__, sender);
         return (PKT_ERROR_SEND_ALL -55);
     }

@@ -549,7 +549,7 @@ int populateRPCSendAllSubSends(const uint256& txid, Array& subSends)
         int64_t amount;
         {
             LOCK(cs_tally);
-            p_txlistdb->getSendAllDetails(txid, subSend, &propertyId, &amount);
+            p_txlistdb->getSendAllDetails(txid, subSend, propertyId, amount);
         }
         subSendObj.push_back(Pair("propertyid", (uint64_t)propertyId));
         subSendObj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
