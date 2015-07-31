@@ -894,7 +894,7 @@ QWidget .QFrame#frameDarksend #formLayoutWidget .QLabel#label_6 { /* Darksend St
 qproperty-alignment: 'AlignVCenter | AlignRight';
 min-width:160px;
 background-color:#F8F6F6;
-margin-right:0px;
+margin-right:5px;
 padding-right:5px;
 }
 
