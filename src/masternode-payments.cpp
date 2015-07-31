@@ -363,7 +363,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(masternodePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
             if(fDebug) LogPrintf("mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), chainActive.Tip()->nHeight);
-            masternodeSync.AddedMasternodeWinner(winner.GetHash());
+            masternodeSync.AddedMasternodeWinner();
             return;
         }
 
