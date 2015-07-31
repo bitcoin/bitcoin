@@ -228,8 +228,8 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
     std::string strPost = constructHTTPPost(sRequest, mapRequestHeaders);
 
     // Logging of actual post data disabled as to not write passphrase in debug.log. Only enable temporarily when needed
-    //if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - send POST data: %s\n", strPost.c_str());
-    if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - send POST data\n");
+    //LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - send POST data: %s\n", strPost);
+    LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - send POST data\n");
 
     boost::asio::streambuf request;
     std::ostream request_stream(&request);
@@ -238,7 +238,7 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
     // Send the request.
     boost::asio::write(socket, request);
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - request written\n");
+    LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - request written\n");
 
     // Read the response status line. The response streambuf will automatically
     // grow to accommodate the entire line. The growth may be limited by passing
@@ -246,14 +246,14 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
     boost::asio::streambuf response;
     boost::asio::read_until(socket, response, "\r\n");
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - request status line read\n");
+    LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - request status line read\n");
 
     // Receive HTTP reply status
     int nProto = 0;
     std::istream response_stream(&response);
     nStatus = ReadHTTPStatus(response_stream, nProto);
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - reading response body start\n");
+    LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - reading response body start\n");
     // Read until EOF, writing data to output as we go.
     while (boost::asio::read(socket, response, boost::asio::transfer_at_least(1), error))
     {
@@ -265,12 +265,12 @@ void CKeePassIntegrator::doHTTPPost(const std::string& sRequest, int& nStatus, s
             }
         }
     }
-    if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - reading response body end\n");
+    LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - reading response body end\n");
 
     // Receive HTTP reply message headers and body
     std::map<std::string, std::string> mapHeaders;
     ReadHTTPMessage(response_stream, mapHeaders, sResponse, nProto, std::numeric_limits<size_t>::max());
-    if(fDebug) LogPrintf("CKeePassIntegrator::doHTTPPost - Processed body\n");
+    LogPrint("keepass", "CKeePassIntegrator::doHTTPPost - Processed body\n");
 }
 
 void CKeePassIntegrator::rpcTestAssociation(bool bTriggerUnlock)
@@ -283,7 +283,7 @@ void CKeePassIntegrator::rpcTestAssociation(bool bTriggerUnlock)
 
     doHTTPPost(request.getJson(), nStatus, sResponse);
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::rpcTestAssociation - send result: status: %d response: %s\n", nStatus, sResponse.c_str());
+    LogPrint("keepass", "CKeePassIntegrator::rpcTestAssociation - send result: status: %d response: %s\n", nStatus, sResponse);
 }
 
 std::vector<CKeePassIntegrator::CKeePassEntry> CKeePassIntegrator::rpcGetLogins()
@@ -304,8 +304,8 @@ std::vector<CKeePassIntegrator::CKeePassEntry> CKeePassIntegrator::rpcGetLogins(
     doHTTPPost(request.getJson(), nStatus, sResponse);
 
     // Logging of actual response data disabled as to not write passphrase in debug.log. Only enable temporarily when needed
-    //if(fDebug) LogPrintf("CKeePassIntegrator::rpcGetLogins - send result: status: %d response: %s\n", nStatus, sResponse.c_str());
-    if(fDebug) LogPrintf("CKeePassIntegrator::rpcGetLogins - send result: status: %d\n", nStatus);
+    //LogPrint("keepass", "CKeePassIntegrator::rpcGetLogins - send result: status: %d response: %s\n", nStatus, sResponse);
+    LogPrint("keepass", "CKeePassIntegrator::rpcGetLogins - send result: status: %d\n", nStatus);
 
     if(nStatus != 200)
     {
@@ -340,7 +340,7 @@ void CKeePassIntegrator::rpcSetLogin(const SecureString& strWalletPass, const Se
     request.addStrParameter("Id", sKeePassId);
     request.addStrParameter("Url", sUrl);
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::rpcSetLogin - send Url: %s\n", sUrl.c_str());
+    LogPrint("keepass", "CKeePassIntegrator::rpcSetLogin - send Url: %s\n", sUrl);
 
     //request.addStrParameter("SubmitUrl", sSubmitUrl); // Is used to construct the entry title
     request.addStrParameter("Login", SecureString("dash"));
@@ -356,7 +356,7 @@ void CKeePassIntegrator::rpcSetLogin(const SecureString& strWalletPass, const Se
     doHTTPPost(request.getJson(), nStatus, sResponse);
 
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::rpcSetLogin - send result: status: %d response: %s\n", nStatus, sResponse.c_str());
+    LogPrint("keepass", "CKeePassIntegrator::rpcSetLogin - send result: status: %d response: %s\n", nStatus, sResponse);
 
     if(nStatus != 200)
     {
@@ -399,7 +399,7 @@ void CKeePassIntegrator::rpcAssociate(std::string& sId, SecureString& sKeyBase64
 
     doHTTPPost(request.getJson(), nStatus, sResponse);
 
-    if(fDebug) LogPrintf("CKeePassIntegrator::rpcAssociate - send result: status: %d response: %s\n", nStatus, sResponse.c_str());
+    LogPrint("keepass", "CKeePassIntegrator::rpcAssociate - send result: status: %d response: %s\n", nStatus, sResponse);
 
     if(nStatus != 200)
     {

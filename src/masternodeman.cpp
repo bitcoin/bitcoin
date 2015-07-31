@@ -216,7 +216,7 @@ bool CMasternodeMan::Add(CMasternode &mn)
     CMasternode *pmn = Find(mn.vin);
     if (pmn == NULL)
     {
-        if(fDebug) LogPrintf("CMasternodeMan: Adding new Masternode %s - %i now\n", mn.addr.ToString().c_str(), size() + 1);
+        LogPrint("masnernode", "CMasternodeMan: Adding new Masternode %s - %i now\n", mn.addr.ToString(), size() + 1);
         vMasternodes.push_back(mn);
         return true;
     }
@@ -246,7 +246,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
                 (*it).protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
-            if(fDebug) LogPrintf("CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+            LogPrint("masnernode", "CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
 
             //erase all of the broadcasts we've seen from this vin
             // -- if we missed a few pings and the node was removed, this will allow is to get it back without them 
@@ -625,7 +625,7 @@ void CMasternodeMan::ProcessMasternodeConnections()
         if(darkSendPool.pSubmittedToMasternode->addr == pnode->addr) continue;
 
         if(pnode->fDarkSendMaster){
-            LogPrintf("Closing Masternode connection %s \n", pnode->addr.ToString().c_str());
+            LogPrintf("Closing Masternode connection %s \n", pnode->addr.ToString());
             pnode->fDisconnect = true;
         }
     }
@@ -685,7 +685,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodePing mnp;
         vRecv >> mnp;
 
-        if(fDebug) LogPrintf("mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
+        LogPrint("masnernode", "mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
 
         if(mnodeman.mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
@@ -750,13 +750,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(mn.addr.IsRFC1918()) continue; //local network
 
             if(mn.IsEnabled()) {
-                if(fDebug) LogPrintf("dseg - Sending Masternode entry - %s \n", mn.addr.ToString().c_str());
+                LogPrint("masnernode", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
                 if(vin == CTxIn() || vin == mn.vin){
                     CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
                     vInv.push_back(inv);
 
                     if(vin == mn.vin) {
-                        LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString().c_str());
+                        LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString());
                         break;
                     }
                 }
@@ -767,7 +767,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(vin == CTxIn()) pfrom->PushMessage("ssc", MASTERNODE_SYNC_LIST, (int)vInv.size());
         if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 
-        LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString().c_str());
+        LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString());
     }
 
 }
@@ -779,7 +779,7 @@ void CMasternodeMan::Remove(CTxIn vin)
     vector<CMasternode>::iterator it = vMasternodes.begin();
     while(it != vMasternodes.end()){
         if((*it).vin == vin){
-            if(fDebug) LogPrintf("CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString().c_str(), size() - 1);
+            LogPrint("masnernode", "CMasternodeMan: Removing Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
             vMasternodes.erase(it);
             break;
         }
