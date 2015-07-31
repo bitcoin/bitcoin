@@ -469,7 +469,7 @@ static std::vector<unsigned char> RandomData()
 BOOST_AUTO_TEST_CASE(rolling_bloom)
 {
     // last-100-entry, 1% false positive:
-    CRollingBloomFilter rb1(100, 0.01, 0);
+    CRollingBloomFilter rb1(100, 0.01);
 
     // Overfill:
     static const int DATASIZE=399;
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     BOOST_CHECK(nHits < 175);
 
     BOOST_CHECK(rb1.contains(data[DATASIZE-1]));
-    rb1.clear();
+    rb1.reset();
     BOOST_CHECK(!rb1.contains(data[DATASIZE-1]));
 
     // Now roll through data, make sure last 100 entries
@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
     BOOST_CHECK(nHits < 100);
 
     // last-1000-entry, 0.01% false positive:
-    CRollingBloomFilter rb2(1000, 0.001, 0);
+    CRollingBloomFilter rb2(1000, 0.001);
     for (int i = 0; i < DATASIZE; i++) {
         rb2.insert(data[i]);
     }

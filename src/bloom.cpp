@@ -8,6 +8,7 @@
 #include "hash.h"
 #include "script/script.h"
 #include "script/standard.h"
+#include "random.h"
 #include "streams.h"
 
 #include <math.h>
@@ -121,6 +122,12 @@ void CBloomFilter::clear()
     isEmpty = true;
 }
 
+void CBloomFilter::reset(unsigned int nNewTweak)
+{
+    clear();
+    nTweak = nNewTweak;
+}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
@@ -209,15 +216,17 @@ void CBloomFilter::UpdateEmptyFull()
     isEmpty = empty;
 }
 
-CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate, unsigned int nTweak) :
-    b1(nElements * 2, fpRate, nTweak), b2(nElements * 2, fpRate, nTweak)
+CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate) :
+    b1(nElements * 2, fpRate, 0), b2(nElements * 2, fpRate, 0)
 {
     // Implemented using two bloom filters of 2 * nElements each.
     // We fill them up, and clear them, staggered, every nElements
     // inserted, so at least one always contains the last nElements
     // inserted.
-    nBloomSize = nElements * 2;
     nInsertions = 0;
+    nBloomSize = nElements * 2;
+
+    reset();
 }
 
 void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
@@ -234,6 +243,12 @@ void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
     }
 }
 
+void CRollingBloomFilter::insert(const uint256& hash)
+{
+    vector<unsigned char> data(hash.begin(), hash.end());
+    insert(data);
+}
+
 bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 {
     if (nInsertions < nBloomSize / 2) {
@@ -242,9 +257,16 @@ bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
     return b1.contains(vKey);
 }
 
-void CRollingBloomFilter::clear()
+bool CRollingBloomFilter::contains(const uint256& hash) const
 {
-    b1.clear();
-    b2.clear();
+    vector<unsigned char> data(hash.begin(), hash.end());
+    return contains(data);
+}
+
+void CRollingBloomFilter::reset()
+{
+    unsigned int nNewTweak = GetRand(std::numeric_limits<unsigned int>::max());
+    b1.reset(nNewTweak);
+    b2.reset(nNewTweak);
     nInsertions = 0;
 }
