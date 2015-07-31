@@ -86,7 +86,8 @@ gen_%.o: src/gen_%.c
 gen_context$(BUILD_EXEEXT): $(gen_context_OBJECTS)
 	$(CC_FOR_BUILD) $^ -o $@
 
-BUILT_SOURCES = src/ecmult_static_context.h
+$(libsecp256k1_la_OBJECTS): src/ecmult_static_context.h
+$(tests_OBJECTS): src/ecmult_static_context.h
 
 src/ecmult_static_context.h: gen_context
 	./gen_context
