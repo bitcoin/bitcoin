@@ -426,7 +426,7 @@
             <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
            </property>
            <property name="horizontalSpacing">
-            <number>30</number>
+            <number>11</number>
            </property>
            <property name="verticalSpacing">
             <number>12</number>
@@ -435,13 +435,6 @@
             <widget class="QLabel" name="label_6">
              <property name="text">
               <string>Status:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="darksendEnabled">
-             <property name="text">
-              <string>Enabled/Disabled</string>
              </property>
             </widget>
            </item>
@@ -513,6 +506,13 @@
              </property>
              <property name="text">
               <string>n/a</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="darksendEnabled">
+             <property name="text">
+              <string>Enabled/Disabled</string>
              </property>
             </widget>
            </item>
@@ -1059,7 +1059,7 @@
            <string>Reset</string>
           </property>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
             <x>10</x>
