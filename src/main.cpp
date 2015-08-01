@@ -4881,11 +4881,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
     {
-        TRY_LOCK(cs_main, lockMainBlock);
-        if(!lockMainBlock) return;
-
         CBlock block;
         vRecv >> block;
+
+        TRY_LOCK(cs_main, lockMainBlock);
+        if(!lockMainBlock) {
+            LogPrintf("block -- failed to lock cs_main - %s\n", block.GetHash().ToString());
+            return false;
+        }
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
