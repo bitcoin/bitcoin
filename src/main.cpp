@@ -2466,9 +2466,9 @@ bool DisconnectBlockAndInputs(CValidationState &state, CTransaction txLock)
     }
 
     if (vDisconnect.size() > 0) {
-        LogPrintf("REORGANIZE: Disconnect Conflicting Blocks %lli blocks; %s..\n", vDisconnect.size(), pindexNew->GetBlockHash().ToString().c_str());
+        LogPrintf("REORGANIZE: Disconnect Conflicting Blocks %lli blocks; %s..\n", vDisconnect.size(), pindexNew->GetBlockHash().ToString());
         BOOST_FOREACH(CBlockIndex* pindex, vDisconnect) {
-            LogPrintf(" -- disconnect %s\n", pindex->GetBlockHash().ToString().c_str());
+            LogPrintf(" -- disconnect %s\n", pindex->GetBlockHash().ToString());
             DisconnectTip(state);
         }
     }
@@ -2948,7 +2948,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 BOOST_FOREACH(const CTxIn& in, tx.vin){
                     if(mapLockedInputs.count(in.prevout)){
                         if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString().c_str(), tx.GetHash().ToString().c_str());
+                            LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString(), tx.GetHash().ToString());
                             return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
                                              REJECT_INVALID, "conflicting-tx-ix");
                         }
@@ -4685,7 +4685,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             {
                 if(!pmn->allowFreeTx){
                     //multiple peers can send us a valid masternode transaction
-                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString().c_str());
+                    if(fDebug) LogPrintf("dstx: Masternode sending too many transactions %s\n", tx.GetHash().ToString());
                     return true;
                 }
 
@@ -4693,12 +4693,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 std::string errorMessage = "";
                 if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString().c_str());
+                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString());
                     //pfrom->Misbehaving(20);
                     return false;
                 }
 
-                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString().c_str());
+                LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString());
 
                 ignoreFees = true;
                 pmn->allowFreeTx = false;
