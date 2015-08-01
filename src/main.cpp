@@ -4881,6 +4881,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
     {
+        TRY_LOCK(cs_main, lockMainBlock);
+        if(!lockMainBlock) return;
+
         CBlock block;
         vRecv >> block;
 
@@ -4896,7 +4899,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
                                state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
             if (nDoS > 0) {
-                LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), nDoS);
             }
         }
