@@ -134,27 +134,16 @@ void ExecuteSpork(int nSporkID, int nValue)
     //correct fork via spork technology
     if(nSporkID == SPORK_12_RECONSIDER_BLOCKS && nValue > 0) {
         LogPrintf("Spork::ExecuteSpork -- Reconcider Last %d Blocks\n", nValue);
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        int count = 0;
 
-        for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
-            count++;
-            if(count >= nValue) return;
+        CValidationState state;
+        {
+            LOCK(cs_main);
 
-            CValidationState state;
-            {
-                LOCK(cs_main);
+            DisconnectBlocksAndReprocess(nValue);
+        }
 
-                LogPrintf("Spork::ExecuteSpork -- Reconcider %s\n", pindexPrev->phashBlock->ToString());
-                ReconsiderBlock(state, pindexPrev);
-            }
-
-            if (state.IsValid()) {
-                ActivateBestChain(state);
-            }
-
-            if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
-            pindexPrev = pindexPrev->pprev;
+        if (state.IsValid()) {
+            ActivateBestChain(state);
         }
     }
 }
