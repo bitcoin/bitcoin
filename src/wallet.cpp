@@ -845,7 +845,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         // not known yet, let's add it
         if(mdwi == mDenomWtxes.end())
         {
-            if(fDebug) LogPrintf("GetInputDarksendRounds INSERTING %s\n", hash.ToString());
+            LogPrint("darksend", "GetInputDarksendRounds INSERTING %s\n", hash.ToString());
             mDenomWtxes[hash] = CMutableTransaction(*wtx);
         }
         // found and it's not an initial value, just return it
@@ -859,14 +859,14 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         if(nout >= wtx->vout.size())
         {
             // should never actually hit this
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
+            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
             return -4;
         }
 
         if(pwalletMain->IsCollateralAmount(wtx->vout[nout].nValue))
         {
             mDenomWtxes[hash].vout[nout].nRounds = -3;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -874,7 +874,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         if(/*rounds == 0 && */!IsDenominatedAmount(wtx->vout[nout].nValue)) //NOT DENOM
         {
             mDenomWtxes[hash].vout[nout].nRounds = -2;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -887,7 +887,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         if(!fAllDenoms)
         {
             mDenomWtxes[hash].vout[nout].nRounds = 0;
-            if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -910,7 +910,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
                 ? (nShortest >= 15 ? 16 : nShortest + 1) // good, we a +1 to the shortest one but only 16 rounds max allowed
                 : 0;            // too bad, we are the fist one in that chain
-        if(fDebug) LogPrintf("GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+        LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
         return mDenomWtxes[hash].vout[nout].nRounds;
     }
 
@@ -2073,7 +2073,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CWalletTx& tx, uint256 hash, bool useI
     CCoinControl *coinControl=NULL;
     bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, strFail, coinControl, ALL_COINS, useIX, (CAmount)0);
     if(!success){
-        LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail.c_str());
+        LogPrintf("GetBudgetSystemCollateralTX: Error - %s\n", strFail);
         return false;
     }
 
