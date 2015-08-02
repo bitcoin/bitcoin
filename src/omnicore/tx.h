@@ -132,6 +132,11 @@ private:
     int logicMath_SavingsMark();
     int logicMath_SavingsCompromised();
 
+    /**
+     * Logic helpers
+     */
+    int logicHelper_CrowdsaleParticipation();
+
 public:
     //! DEx and MetaDEx action values
     enum ActionTypes
