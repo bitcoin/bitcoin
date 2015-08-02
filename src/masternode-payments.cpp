@@ -200,9 +200,9 @@ bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
         LogPrintf("IsBlockValueValid() : WARNING: Couldn't find previous block");
     }
 
-    //are these blocks even enabled?
+    //are these blocks even enabled
     if(!IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
-        return block.vtx[0].GetValueOut() > nExpectedValue;
+        return block.vtx[0].GetValueOut() <= nExpectedValue;
     }
 
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
