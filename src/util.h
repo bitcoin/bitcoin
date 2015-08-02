@@ -55,8 +55,10 @@ typedef struct {
 /* Like assert(), but when VERIFY is defined, and side-effect safe. */
 #ifdef VERIFY
 #define VERIFY_CHECK CHECK
+#define VERIFY_SETUP(stmt) do { stmt; } while(0)
 #else
 #define VERIFY_CHECK(cond) do { (void)(cond); } while(0)
+#define VERIFY_SETUP(stmt)
 #endif
 
 static SECP256K1_INLINE void *checked_malloc(const callback_t* cb, size_t size) {

@@ -136,9 +136,10 @@ static int secp256k1_scalar_add(secp256k1_scalar_t *r, const secp256k1_scalar_t 
     return overflow;
 }
 
-static void secp256k1_scalar_add_bit(secp256k1_scalar_t *r, unsigned int bit) {
+static void secp256k1_scalar_cadd_bit(secp256k1_scalar_t *r, unsigned int bit, int flag) {
     uint64_t t;
     VERIFY_CHECK(bit < 256);
+    bit += ((uint32_t) flag - 1) & 0x100;  /* forcing (bit >> 5) > 7 makes this a noop */
     t = (uint64_t)r->d[0] + (((uint32_t)((bit >> 5) == 0)) << (bit & 0x1F));
     r->d[0] = t & 0xFFFFFFFFULL; t >>= 32;
     t += (uint64_t)r->d[1] + (((uint32_t)((bit >> 5) == 1)) << (bit & 0x1F));
@@ -233,6 +234,31 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar_t *a) {
     yes |= (a->d[0] > SECP256K1_N_H_0) & ~no;
     return yes;
 }
+
+static int secp256k1_scalar_cond_negate(secp256k1_scalar_t *r, int flag) {
+    /* If we are flag = 0, mask = 00...00 and this is a no-op;
+     * if we are flag = 1, mask = 11...11 and this is identical to secp256k1_scalar_negate */
+    uint32_t mask = !flag - 1;
+    uint32_t nonzero = 0xFFFFFFFFUL * (secp256k1_scalar_is_zero(r) == 0);
+    uint64_t t = (uint64_t)(r->d[0] ^ mask) + ((SECP256K1_N_0 + 1) & mask);
+    r->d[0] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[1] ^ mask) + (SECP256K1_N_1 & mask);
+    r->d[1] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[2] ^ mask) + (SECP256K1_N_2 & mask);
+    r->d[2] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[3] ^ mask) + (SECP256K1_N_3 & mask);
+    r->d[3] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[4] ^ mask) + (SECP256K1_N_4 & mask);
+    r->d[4] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[5] ^ mask) + (SECP256K1_N_5 & mask);
+    r->d[5] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[6] ^ mask) + (SECP256K1_N_6 & mask);
+    r->d[6] = t & nonzero; t >>= 32;
+    t += (uint64_t)(r->d[7] ^ mask) + (SECP256K1_N_7 & mask);
+    r->d[7] = t & nonzero;
+    return 2 * (mask == 0) - 1;
+}
+
 
 /* Inspired by the macros in OpenSSL's crypto/bn/asm/x86_64-gcc.c. */
 
@@ -624,6 +650,22 @@ static void secp256k1_scalar_mul(secp256k1_scalar_t *r, const secp256k1_scalar_t
     secp256k1_scalar_reduce_512(r, l);
 }
 
+static int secp256k1_scalar_shr_int(secp256k1_scalar_t *r, int n) {
+    int ret;
+    VERIFY_CHECK(n > 0);
+    VERIFY_CHECK(n < 16);
+    ret = r->d[0] & ((1 << n) - 1);
+    r->d[0] = (r->d[0] >> n) + (r->d[1] << (32 - n));
+    r->d[1] = (r->d[1] >> n) + (r->d[2] << (32 - n));
+    r->d[2] = (r->d[2] >> n) + (r->d[3] << (32 - n));
+    r->d[3] = (r->d[3] >> n) + (r->d[4] << (32 - n));
+    r->d[4] = (r->d[4] >> n) + (r->d[5] << (32 - n));
+    r->d[5] = (r->d[5] >> n) + (r->d[6] << (32 - n));
+    r->d[6] = (r->d[6] >> n) + (r->d[7] << (32 - n));
+    r->d[7] = (r->d[7] >> n);
+    return ret;
+}
+
 static void secp256k1_scalar_sqr(secp256k1_scalar_t *r, const secp256k1_scalar_t *a) {
     uint32_t l[16];
     secp256k1_scalar_sqr_512(l, a);
@@ -673,9 +715,7 @@ SECP256K1_INLINE static void secp256k1_scalar_mul_shift_var(secp256k1_scalar_t *
     r->d[5] = shift < 352 ? (l[5 + shiftlimbs] >> shiftlow | (shift < 320 && shiftlow ? (l[6 + shiftlimbs] << shifthigh) : 0)) : 0;
     r->d[6] = shift < 320 ? (l[6 + shiftlimbs] >> shiftlow | (shift < 288 && shiftlow ? (l[7 + shiftlimbs] << shifthigh) : 0)) : 0;
     r->d[7] = shift < 288 ? (l[7 + shiftlimbs] >> shiftlow)  : 0;
-    if ((l[(shift - 1) >> 5] >> ((shift - 1) & 0x1f)) & 1) {
-        secp256k1_scalar_add_bit(r, 0);
-    }
+    secp256k1_scalar_cadd_bit(r, 0, (l[(shift - 1) >> 5] >> ((shift - 1) & 0x1f)) & 1);
 }
 
 #endif

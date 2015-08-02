@@ -19,6 +19,8 @@ noinst_HEADERS += src/eckey.h
 noinst_HEADERS += src/eckey_impl.h
 noinst_HEADERS += src/ecmult.h
 noinst_HEADERS += src/ecmult_impl.h
+noinst_HEADERS += src/ecmult_const.h
+noinst_HEADERS += src/ecmult_const_impl.h
 noinst_HEADERS += src/ecmult_gen.h
 noinst_HEADERS += src/ecmult_gen_impl.h
 noinst_HEADERS += src/num.h
@@ -95,3 +97,7 @@ CLEANFILES = gen_context src/ecmult_static_context.h
 endif
 
 EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
+
+if ENABLE_MODULE_ECDH
+include src/modules/ecdh/Makefile.am.include
+endif

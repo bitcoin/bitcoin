@@ -14,6 +14,7 @@
 #include "scalar_impl.h"
 #include "group_impl.h"
 #include "ecmult_impl.h"
+#include "ecmult_const_impl.h"
 #include "ecmult_gen_impl.h"
 #include "ecdsa_impl.h"
 #include "eckey_impl.h"
@@ -525,3 +526,7 @@ int secp256k1_context_randomize(secp256k1_context_t* ctx, const unsigned char *s
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
     return 1;
 }
+
+#ifdef ENABLE_MODULE_ECDH
+# include "modules/ecdh/main_impl.h"
+#endif

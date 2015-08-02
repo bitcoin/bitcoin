@@ -1,4 +1,5 @@
 bench_inv
+bench_ecdh
 bench_sign
 bench_verify
 bench_recover
