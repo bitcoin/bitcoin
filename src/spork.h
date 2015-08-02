@@ -59,6 +59,7 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 int GetSporkValue(int nSporkID);
 bool IsSporkActive(int nSporkID);
 void ExecuteSpork(int nSporkID, int nValue);
+void ReprocessBlocks(int nBlocks);
 
 //
 // Spork Class

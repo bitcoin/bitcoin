@@ -115,7 +115,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                         LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
 
                         //reprocess the last 15 blocks
-                        ExecuteSpork(SPORK_12_RECONSIDER_BLOCKS, 15);
+                        ReprocessBlocks(15);
                         mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
                     }
                 }
@@ -383,7 +383,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
                 //if this tx lock was rejected, we need to remove the conflicting blocks
                 if(mapTxLockReqRejected.count((*i).second.txHash)){
                     //reprocess the last 15 blocks
-                    ExecuteSpork(SPORK_12_RECONSIDER_BLOCKS, 15);
+                    ReprocessBlocks(15);
                 }
             }
         }

@@ -133,36 +133,38 @@ void ExecuteSpork(int nSporkID, int nValue)
 
     //correct fork via spork technology
     if(nSporkID == SPORK_12_RECONSIDER_BLOCKS && nValue > 0) {
-        LogPrintf("Spork::ExecuteSpork -- Reconcider Last %d Blocks\n", nValue);
+        LogPrintf("Spork::ExecuteSpork -- Reconsider Last %d Blocks\n", nValue);
 
-        CBlockIndex* pindexPrev = chainActive.Tip();
+        ReprocessBlocks(nValue);
+    }
+}
 
-        for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
-            i++;
-            if(i >= nValue) break;
+void ReprocessBlocks(int nBlocks) 
+{
+    CBlockIndex* pindexPrev = chainActive.Tip();
 
-            CValidationState state;
-            {
-                LOCK(cs_main);
-
-                LogPrintf("Spork::ExecuteSpork -- Reconsider %s\n", pindexPrev->phashBlock->ToString());
-                ReconsiderBlock(state, pindexPrev);
-            }
-
-            if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
-            pindexPrev = pindexPrev->pprev;
-        }
+    for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
+        if(i > nBlocks) break;
 
         CValidationState state;
         {
             LOCK(cs_main);
-
-            DisconnectBlocksAndReprocess(nValue);
+            ReconsiderBlock(state, pindexPrev);
         }
 
-        if (state.IsValid()) {
-            ActivateBestChain(state);
-        }
+        if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
+        pindexPrev = pindexPrev->pprev;
+    }
+
+    CValidationState state;
+    {
+        LOCK(cs_main);
+
+        DisconnectBlocksAndReprocess(nBlocks);
+    }
+
+    if (state.IsValid()) {
+        ActivateBestChain(state);
     }
 }
 
