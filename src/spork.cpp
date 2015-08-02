@@ -136,17 +136,16 @@ void ExecuteSpork(int nSporkID, int nValue)
         LogPrintf("Spork::ExecuteSpork -- Reconcider Last %d Blocks\n", nValue);
 
         CBlockIndex* pindexPrev = chainActive.Tip();
-        int count = 0;
 
         for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
-            count++;
-            if(count >= nValue) return;
+            i++;
+            if(i >= nValue) break;
 
             CValidationState state;
             {
                 LOCK(cs_main);
 
-                LogPrintf("Spork::ExecuteSpork -- Reconcider %s\n", pindexPrev->phashBlock->ToString());
+                LogPrintf("Spork::ExecuteSpork -- Reconsider %s\n", pindexPrev->phashBlock->ToString());
                 ReconsiderBlock(state, pindexPrev);
             }
 
