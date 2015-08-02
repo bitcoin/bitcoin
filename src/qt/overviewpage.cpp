@@ -382,16 +382,21 @@ void OverviewPage::updateDarksendProgress()
     anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
 
     // apply some weights to them (sum should be <=100) and calculate the whole progress
-    denomPart = ceilf((denomPart * 20) * 100) / 100;
-    anonNormPart = ceilf((anonNormPart * 50) * 100) / 100;
-    anonFullPart = ceilf((anonFullPart * 30) * 100) / 100;
-    float progress = denomPart + anonNormPart + anonFullPart;
+    float denomPartCalc = ceilf((denomPart * 20) * 100) / 100;
+    float anonNormPartCalc = ceilf((anonNormPart * 50) * 100) / 100;
+    float anonFullPartCalc = ceilf((anonFullPart * 30) * 100) / 100;
+    float progress = denomPartCalc + anonNormPartCalc + anonFullPartCalc;
     if(progress >= 100) progress = 100;
 
     ui->darksendProgress->setValue(progress);
 
-    QString strToolPip = tr("Progress: %1% (%2% + %3% + %4%; denominated inputs have %5 of %n rounds on average)", "", nDarksendRounds)
-            .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart).arg(pwalletMain->GetAverageAnonymizedRounds());
+    QString strToolPip = ("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
+                          tr("Denominated") + ": %2%<br/>" +
+                          tr("Mixed") + ": %3%<br/>" +
+                          tr("Anonymized") + ": %4%<br/>" +
+                          tr("Denominated inputs have %5 of %n rounds on average", "", nDarksendRounds))
+            .arg(progress).arg(denomPart * 100).arg(anonNormPart * 100).arg(anonFullPart * 100)
+            .arg(pwalletMain->GetAverageAnonymizedRounds());
     ui->darksendProgress->setToolTip(strToolPip);
 }
 
