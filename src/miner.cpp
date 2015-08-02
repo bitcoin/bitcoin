@@ -129,14 +129,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     CAmount nFees = 0;
 
     {
-        TRY_LOCK(cs_main, fLockMain);
-        if (!fLockMain) {   
-            LogPrintf("CreateNewBlock : ERROR - failed to lock cs_main - disabled mining\n");
-        }
-        TRY_LOCK(mempool.cs, fLockMempool);
-        if (!fLockMempool) {   
-            LogPrintf("CreateNewBlock : ERROR - failed to lock mempool.cs - disabled mining\n");
-        }
+        LOCK2(cs_main, mempool.cs);
 
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
