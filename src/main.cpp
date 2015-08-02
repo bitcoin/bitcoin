@@ -3108,15 +3108,15 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     CBlockIndex *pindex = NULL;
 
     // TODO : ENABLE BLOCK CACHE IN SPECIFIC CASES
-    // if (miSelf != mapBlockIndex.end()) {
-    //     // Block header is already known.
-    //     pindex = miSelf->second;
-    //     if (ppindex)
-    //         *ppindex = pindex;
-    //     if (pindex->nStatus & BLOCK_FAILED_MASK)
-    //         return state.Invalid(error("%s : block is marked invalid", __func__), 0, "duplicate");
-    //     return true;
-    // }
+    if (miSelf != mapBlockIndex.end()) {
+        // Block header is already known.
+        pindex = miSelf->second;
+        if (ppindex)
+            *ppindex = pindex;
+        if (pindex->nStatus & BLOCK_FAILED_MASK)
+            return state.Invalid(error("%s : block is marked invalid", __func__), 0, "duplicate");
+        return true;
+    }
 
     if (!CheckBlockHeader(block, state))
         return false;
