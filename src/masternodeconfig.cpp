@@ -49,7 +49,7 @@ bool CMasternodeConfig::read(std::string& strErr) {
         } else if(CService(ip).GetPort() == 9999) {
             strErr = _("Invalid port detected in masternode.conf") + "\n" +
                     strprintf(_("Line: %d"), linenumber) + "\n\"" + line + "\"" + "\n" +
-                    _(" (9999 could be used only on mainnet)");
+                    _("(9999 could be used only on mainnet)");
             streamConfig.close();
             return false;
         }
