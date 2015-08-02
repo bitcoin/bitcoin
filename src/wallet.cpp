@@ -2162,11 +2162,11 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                         strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.");
                     } else {
                         strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction.");
-                        strFailReason += _("Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
+                        strFailReason += " " + _("Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
                     }
 
                     if(useIX){
-                        strFailReason += _("InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.");
+                        strFailReason += " " + _("InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.");
                     }
 
                     return false;
@@ -2429,7 +2429,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
     */
     if(minRounds >= 0){
         if (!SelectCoinsByDenominations(darkSendPool.sessionDenom, 0.1*COIN, DARKSEND_POOL_MAX, vCoins, vCoins2, nValueIn, minRounds, maxRounds))
-            return _("Error: can't select current denominated inputs");
+            return _("Error: Can't select current denominated inputs");
     }
 
     LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Got: %d \n", nValueIn);

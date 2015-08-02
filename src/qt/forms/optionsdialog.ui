@@ -135,7 +135,7 @@
          <item>
           <widget class="QLabel" name="label">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
            <property name="text">
             <string>Darksend rounds to use</string>
@@ -225,7 +225,7 @@
           <item>
            <widget class="QCheckBox" name="spendZeroConfChange">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If you disable the spending of unconfirmed change, the change from a transaction&lt;/p&gt;&lt;p&gt;cannot be used until that transaction has at least one confirmation.&lt;/p&gt;&lt;p&gt;This also affects how your balance is computed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
             </property>
             <property name="text">
              <string>&amp;Spend unconfirmed change</string>
