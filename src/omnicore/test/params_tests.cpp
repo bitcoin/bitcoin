@@ -32,6 +32,22 @@ BOOST_AUTO_TEST_CASE(network_restrictions_test)
     BOOST_CHECK_EQUAL(params.MSC_METADEX_BLOCK, 0);
 }
 
+BOOST_AUTO_TEST_CASE(ecosystem_restrictions_main)
+{
+    // Unit tests and mainnet use the same params
+    BOOST_CHECK(!IsTransactionTypeAllowed(0, OMNI_PROPERTY_MSC, MSC_TYPE_OFFER_ACCEPT_A_BET, MP_TX_PKT_V0));
+    BOOST_CHECK(IsTransactionTypeAllowed(0, OMNI_PROPERTY_TMSC, MSC_TYPE_OFFER_ACCEPT_A_BET, MP_TX_PKT_V0));
+}
+
+BOOST_AUTO_TEST_CASE(ecosystem_restrictions_test)
+{
+    SelectParams(CBaseChainParams::TESTNET);
+    BOOST_CHECK(!IsTransactionTypeAllowed(0, OMNI_PROPERTY_MSC, MSC_TYPE_OFFER_ACCEPT_A_BET, MP_TX_PKT_V0));
+    BOOST_CHECK(IsTransactionTypeAllowed(0, OMNI_PROPERTY_TMSC, MSC_TYPE_OFFER_ACCEPT_A_BET, MP_TX_PKT_V0));
+    // Restore original
+    SelectParams(CBaseChainParams::UNITTEST);
+}
+
 BOOST_AUTO_TEST_CASE(update_feature_network)
 {
     const std::string& network = Params().NetworkIDString();
