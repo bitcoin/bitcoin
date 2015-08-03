@@ -52,15 +52,18 @@ This does not affect wallet forward or backward compatibility.
 0.12.0 changelog
 ----------------
 
-Switched to Bitcoin Core version 0.10
-https://bitcoin.org/en/release/v0.10.0
-Implemented decentralized budget system
+Switched to Bitcoin Core version 0.10 - https://bitcoin.org/en/release/v0.10.0
+Implemented decentralized budget system 
 Removed reference node
-Implemented new decentralized masternode payment consensus system
-Improved speed of DS
-New masternode payment/winners/budgets syncing strategy
-Platform indepentant masternode ranking system
+Implemented new decentralized masternode payment consensus system 
+Improved speed of DS 
+New masternode payment/winners/budgets syncing strategy 
+Platform independent masternode ranking system 
 Masternode broadcasts, pings and winners now use the inventory system
+Transaction indexing is enabled by default for all clients
+Better implementation of IX block reprocessing to find and remove an invalid block
+IX nearly 100% successful with new implementation
+
 
 
 Credits
