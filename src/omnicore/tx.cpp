@@ -599,7 +599,7 @@ bool CMPTransaction::interpret_Activation()
     memcpy(&activation_block, &pkt[6], 4);
     swapByteOrder32(activation_block);
 
-    if (msc_debug_packets) {
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t      feature id: %d\n", feature_id);
         PrintToLog("\tactivation block: %d\n", activation_block);
     }
