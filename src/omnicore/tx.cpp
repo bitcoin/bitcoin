@@ -66,16 +66,20 @@ std::string mastercore::c_strMasterProtocolTXType(uint16_t txType)
 }
 
 /** Helper to convert class number to string. */
-static std::string intToClass(int multi)
+static std::string intToClass(int encodingClass)
 {
-    switch (multi) {
-        case 1:
+    switch (encodingClass) {
+        case OMNI_CLASS_A:
+            return "A";
+        case OMNI_CLASS_B:
             return "B";
-        case 2:
+        case OMNI_CLASS_C:
             return "C";
     }
-    return "A";
+
+    return "-";
 }
+
 /** Checks whether a pointer to the payload is past it's last position. */
 bool CMPTransaction::isOverrun(const char* p)
 {
@@ -166,7 +170,7 @@ bool CMPTransaction::interpret_TransactionType()
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t------------------------------\n");
-        PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(multi));
+        PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(encodingClass));
         PrintToLog("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
     }
 

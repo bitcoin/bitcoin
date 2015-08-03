@@ -2060,7 +2060,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, CBlock *
 
         //! Omni Core: new confirmed transaction notification
         LogPrint("handler", "Omni Core handler: new confirmed transaction [height: %d, idx: %u]\n", GetHeight(), nTxIdx);
-        if (0 == mastercore_handler_tx(tx, GetHeight(), nTxIdx++, pindexNew)) ++nNumMetaTxs;
+        if (mastercore_handler_tx(tx, GetHeight(), nTxIdx++, pindexNew)) ++nNumMetaTxs;
     }
 
     //! Omni Core: end of block connect notification
