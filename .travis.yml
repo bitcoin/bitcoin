@@ -8,7 +8,7 @@ compiler:
   - gcc
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=no ASM=no  BUILD=check  EXTRAFLAGS= HOST= ECDH=no schnorr=NO
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  schnorr=NO
   matrix:
     - SCALAR=32bit
     - SCALAR=32bit    FIELD=32bit       ECDH=yes
