@@ -193,6 +193,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
             if (txConflict != tx)
             {
                 remove(txConflict, removed, true);
+                ClearPrioritisation(txConflict.GetHash());
             }
         }
     }
