@@ -4885,7 +4885,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> block;
 
         TRY_LOCK(cs_main, lockMainBlock);
-        if(!lockMainBlock) {
+        if(!lockMainBlock && masternodeSync.IsBlockchainSynced()) {
             LogPrintf("block -- failed to lock cs_main - %s\n", block.GetHash().ToString());
             return false;
         }
