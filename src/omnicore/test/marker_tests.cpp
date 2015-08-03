@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(class_class_a)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_A);
     }
     {
-        int nBlock = P2SH_BLOCK;
+        int nBlock = ConsensusParams().SCRIPTHASH_BLOCK;
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(class_class_b)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_B);
     }
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(class_class_b)
 BOOST_AUTO_TEST_CASE(class_class_c)
 {
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(OpReturn_PlainMarker());
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
     }
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToScriptHash_Unrelated());
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
     }
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKey_Unrelated());

@@ -1,51 +1,152 @@
 #ifndef OMNICORE_RULES_H
 #define OMNICORE_RULES_H
 
-class uint256;
+#include "uint256.h"
 
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 namespace mastercore
 {
-//! Starting block for parsing in regtest mode
-const int START_REGTEST_BLOCK = 5;
 //! Block to enable the Exodus fundraiser address in regtest mode
 const int MONEYMAN_REGTEST_BLOCK = 101;
-//! Starting block for parsing on testnet
-const int START_TESTNET_BLOCK = 263000;
 //! Block to enable the Exodus fundraiser address on testnet
 const int MONEYMAN_TESTNET_BLOCK = 270775;
-//! First block of the Exodus fundraiser
-const int GENESIS_BLOCK = 249498;
-//! Last block of the Exodus fundraiser
-const int LAST_EXODUS_BLOCK = 255365;
-//! Block to enable DEx transactions
-const int MSC_DEX_BLOCK = 290630;
-//! Block to enable smart property transactions
-const int MSC_SP_BLOCK = 297110;
-//! Block to enable managed properties
-const int MSC_MANUALSP_BLOCK = 323230;
-//! Block to enable send-to-owners transactions
-const int MSC_STO_BLOCK = 342650;
-//! Block to enable MetaDEx transactions
-const int MSC_METADEX_BLOCK = 999999;
-//! Block to enable betting transactions
-const int MSC_BET_BLOCK = 999999;
-//! Block to enable pay-to-script-hash support
-const int P2SH_BLOCK = 322000;
-//! Block to enable OP_RETURN based encoding
-const int OP_RETURN_BLOCK = 999999;
 
+/** A structure to represent transaction restrictions.
+ */
+struct TransactionRestriction
+{
+    //! Transaction type
+    uint16_t txType;
+    //! Transaction version
+    uint16_t txVersion;
+    //! Whether the property identifier can be 0 (= BTC)
+    bool allowWildcard;
+    //! Block after which the feature or transaction is enabled
+    int activationBlock;
+};
+
+/** A structure to represent a verification checkpoint.
+ */
+struct ConsensusCheckpoint
+{
+    int blockHeight;
+    uint256 blockHash;
+    uint256 consensusHash;
+};
+
+// TODO: rename allcaps variable names
+// TODO: remove remaining global heights
+// TODO: add Exodus addresses to params
+
+/** Base class for consensus parameters.
+ */
+class CConsensusParams
+{
+public:
+    //! Earily bird bonus per week of Exodus crowdsale
+    double exodusBonusPerWeek;
+    //! Deadline of Exodus crowdsale as Unix timestamp
+    unsigned int exodusDeadline;
+    //! Number of MSC/TMSC generated per unit invested
+    int64_t exodusReward;
+    //! First block of the Exodus crowdsale
+    int GENESIS_BLOCK;
+    //! Last block of the Exodus crowdsale
+    int LAST_EXODUS_BLOCK;
+
+    //! Block to enable pay-to-pubkey-hash support
+    int PUBKEYHASH_BLOCK;
+    //! Block to enable pay-to-script-hash support
+    int SCRIPTHASH_BLOCK;
+    //! Block to enable bare-multisig based encoding
+    int MULTISIG_BLOCK;
+    //! Block to enable OP_RETURN based encoding
+    int NULLDATA_BLOCK;
+
+    //! Block to enable simple send transactions
+    int MSC_SEND_BLOCK;
+    //! Block to enable DEx transactions
+    int MSC_DEX_BLOCK;
+    //! Block to enable smart property transactions
+    int MSC_SP_BLOCK;
+    //! Block to enable managed properties
+    int MSC_MANUALSP_BLOCK;
+    //! Block to enable send-to-owners transactions
+    int MSC_STO_BLOCK;
+    //! Block to enable MetaDEx transactions
+    int MSC_METADEX_BLOCK;
+    //! Block to enable betting transactions
+    int MSC_BET_BLOCK;
+
+    /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
+    virtual std::vector<TransactionRestriction> GetRestrictions() const;
+
+    /** Returns an empty vector of consensus checkpoints. */
+    virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
+
+    /** Destructor. */
+    virtual ~CConsensusParams() {}
+
+protected:
+    /** Constructor, only to be called from derived classes. */
+    CConsensusParams() {}
+};
+
+/** Consensus parameters for mainnet.
+ */
+class CMainConsensusParams: public CConsensusParams
+{
+public:
+    /** Constructor for mainnet consensus parameters. */
+    CMainConsensusParams();
+    /** Destructor. */
+    virtual ~CMainConsensusParams() {}
+
+    /** Returns consensus checkpoints for mainnet, used to verify transaction processing. */
+    virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
+};
+
+/** Consensus parameters for testnet.
+ */
+class CTestNetConsensusParams: public CConsensusParams
+{
+public:
+    /** Constructor for testnet consensus parameters. */
+    CTestNetConsensusParams();
+    /** Destructor. */
+    virtual ~CTestNetConsensusParams() {}
+};
+
+/** Consensus parameters for regtest mode.
+ */
+class CRegTestConsensusParams: public CConsensusParams
+{
+public:
+    /** Constructor for regtest consensus parameters. */
+    CRegTestConsensusParams();
+    /** Destructor. */
+    virtual ~CRegTestConsensusParams() {}
+};
+
+/** Returns consensus parameters for the given network. */
+CConsensusParams& ConsensusParams(const std::string& network);
+/** Returns currently active consensus parameter. */
+const CConsensusParams& ConsensusParams();
+/** Returns currently active mutable consensus parameter. */
+CConsensusParams& MutableConsensusParams();
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */
 bool IsAllowedOutputType(int whichType, int nBlock);
 /** Checks, if the transaction type and version is supported and enabled. */
-bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType, uint16_t version, bool bAllowNullProperty = false);
-/** Obtains a hash of all balances to use for consensus verification & checkpointing. */
+bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType, uint16_t version);
+/** Obtains a hash of all balances to use for consensus verification and checkpointing. */
 uint256 GetConsensusHash();
-/** Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints */
-bool VerifyCheckpoint(int block, uint256 blockHash);
+/** Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints. */
+bool VerifyCheckpoint(int block, const uint256& blockHash);
 }
 
 #endif // OMNICORE_RULES_H

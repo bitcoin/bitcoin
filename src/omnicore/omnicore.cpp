@@ -491,29 +491,31 @@ void CheckWalletUpdate(bool forceUpdate)
     uiInterface.OmniBalanceChanged();
 }
 
-int TXExodusFundraiser(const CTransaction &wtx, const string &sender, int64_t ExodusHighestValue, int nBlock, unsigned int nTime)
+int TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_t amountInvested, int nBlock, unsigned int nTime)
 {
-  if ((nBlock >= GENESIS_BLOCK && nBlock <= LAST_EXODUS_BLOCK) || (isNonMainNet()))
-  { //Exodus Fundraiser start/end blocks
-    int deadline_timeleft=1377993600-nTime;
-    double bonus= 1 + std::max( 0.10 * deadline_timeleft / (60 * 60 * 24 * 7), 0.0 );
+    const int secondsPerWeek = 60 * 60 * 24 * 7;
+    const CConsensusParams& params = ConsensusParams();
 
-    if (isNonMainNet())
-    {
-      bonus = 1;
+    if (nBlock >= params.GENESIS_BLOCK && nBlock <= params.LAST_EXODUS_BLOCK) {
+        int deadlineTimeleft = params.exodusDeadline - nTime;
+        double bonusPercentage = params.exodusBonusPerWeek * deadlineTimeleft / secondsPerWeek;
+        double bonus = 1.0 + std::max(bonusPercentage, 0.0);
 
-      if (sender == exodus_address) return 1; // sending from Exodus should not be fundraising anything
+        if (isNonMainNet()) {
+            // TODO: seems useless, if limited to non-mainnet; should be removed
+            if (sender == exodus_address) return 1; // sending from Exodus should not be fundraising anything
+        }
+
+        int64_t amountGenerated = round(params.exodusReward * amountInvested * bonus);
+        if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
+
+        // TODO: return result, grant somewhere else
+        update_tally_map(sender, OMNI_PROPERTY_MSC, amountGenerated, BALANCE);
+        update_tally_map(sender, OMNI_PROPERTY_TMSC, amountGenerated, BALANCE);
+
+        return 0;
     }
-
-    uint64_t msc_tot= round( 100 * ExodusHighestValue * bonus ); 
-    if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %lu.%08lu\n",wtx.GetHash().ToString(), msc_tot / COIN, msc_tot % COIN);
- 
-    update_tally_map(sender, OMNI_PROPERTY_MSC, msc_tot, BALANCE);
-    update_tally_map(sender, OMNI_PROPERTY_TMSC, msc_tot, BALANCE);
-
-    return 0;
-  }
-  return -1;
+    return -1;
 }
 
 /**
@@ -657,6 +659,7 @@ namespace legacy {
 
 static const int MAX_LEGACY_PACKETS = 64;
 static const int MAX_BTC_OUTPUTS    = 16;
+static const int P2SH_BLOCK         = 322000;
 
 static bool isAllowedOutputType(int whichType, int nBlock)
 {
@@ -2573,11 +2576,6 @@ int mastercore_init()
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
 
-    // legacy code, setting to pre-genesis-block
-    static int snapshotHeight = GENESIS_BLOCK - 1;
-    if (isNonMainNet()) snapshotHeight = START_TESTNET_BLOCK - 1;
-    if (RegTest()) snapshotHeight = START_REGTEST_BLOCK - 1;
-
     ++mastercoreInitialized;
 
     nWaterlineBlock = load_most_relevant_state();
@@ -2591,6 +2589,9 @@ int mastercore_init()
         // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
         clear_all_state();
     }
+
+    // legacy code, setting to pre-genesis-block
+    int snapshotHeight = ConsensusParams().GENESIS_BLOCK - 1;
 
     if (nWaterlineBlock < snapshotHeight) {
         nWaterlineBlock = snapshotHeight;
@@ -3975,9 +3976,7 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
         s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight - 1);
         reorgRecoveryMaxHeight = 0;
 
-        nWaterlineBlock = GENESIS_BLOCK - 1;
-        if (isNonMainNet()) nWaterlineBlock = START_TESTNET_BLOCK - 1;
-        if (RegTest()) nWaterlineBlock = START_REGTEST_BLOCK - 1;
+        nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
 
         int best_state_block = load_most_relevant_state();
         if (best_state_block < 0) {

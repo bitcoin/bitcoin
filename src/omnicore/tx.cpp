@@ -1220,7 +1220,7 @@ int CMPTransaction::logicMath_MetaDExCancelPair()
 /** Tx 28 */
 int CMPTransaction::logicMath_MetaDExCancelEcosystem()
 {
-    if (!IsTransactionTypeAllowed(block, ecosystem, type, version, true)) {
+    if (!IsTransactionTypeAllowed(block, ecosystem, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
                 __func__,
                 type,

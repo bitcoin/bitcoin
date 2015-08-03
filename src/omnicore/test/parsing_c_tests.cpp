@@ -72,7 +72,7 @@ static CTxOut createTxOut(int64_t amount, const std::string& dest)
 BOOST_AUTO_TEST_CASE(reference_identification)
 {
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(5000000, "1NNQKWM8mC35pBNPxV1noWFZEw7A5X6zXz"));
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(reference_identification)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "00000000000000070000000006dac2c0");
     }
     {
-        int nBlock = OP_RETURN_BLOCK + 1000;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK + 1000;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(6000, "3NfRfUekDSzgSyohRro9jXD1AqDALN321P"));
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(trimmed_op_return)
 BOOST_AUTO_TEST_CASE(multiple_op_return_short)
 {
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "13ZXjcDDUY3cRTPFXVfwmFR9Mz2WpnF5PP"));
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_short)
 BOOST_AUTO_TEST_CASE(multiple_op_return)
 {
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
                 "05da59767e81f4b019fe9f5984dbaa4f61bf197967");
     }
     {
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
          * The following transaction is invalid, because the first pushed data
          * doesn't contain the class C marker.
          */
-        int nBlock = OP_RETURN_BLOCK;
+        int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));
