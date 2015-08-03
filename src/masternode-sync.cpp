@@ -41,10 +41,22 @@ bool CMasternodeSync::IsSynced()
 
 bool CMasternodeSync::IsBlockchainSynced()
 {
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return false;
+    if (fImporting || fReindex) return false;
 
-    if(pindexPrev->nTime + 600 < GetTime()) return false;
+    TRY_LOCK(cs_main, lockMain);
+    if(!lockMain) return false;
+
+    CBlockIndex* pindex = chainActive.Tip();
+    if(pindex == NULL) return false;
+
+    static bool fBlockchainSynced = false;
+    if(fBlockchainSynced) return true;
+
+    if(pindex->nTime + 600 < GetTime())
+        return false;
+
+    fBlockchainSynced = true;
+
     return true;
 }
 
@@ -197,6 +209,10 @@ void CMasternodeSync::Process()
 
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
+    // sporks synced but blockchain is not, wait until we're almost at a recent block to continue
+    if(Params().NetworkID() != CBaseChainParams::REGTEST &&
+            !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
+
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
 
@@ -230,16 +246,6 @@ void CMasternodeSync::Process()
             
             return;
         }
-
-        {
-            TRY_LOCK(cs_main, lockMain);
-            if(!lockMain) return;
-
-            if(IsInitialBlockDownload()) return;
-        }
-
-        //don't begin syncing until we're almost at a recent block
-        if(!IsBlockchainSynced()) return;
 
         if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
 
