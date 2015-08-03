@@ -445,7 +445,7 @@ std::string CDarksendPool::GetStatus()
     showingDarkSendMessage += 10;
     std::string suffix = "";
 
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing || !masternodeSync.IsBlockchainSynced()) {
         return strAutoDenomResult;
     }
     switch(state) {
@@ -1352,6 +1352,12 @@ void CDarksendPool::ClearLastMessage()
 //
 bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 {
+    TRY_LOCK(cs_darksend, lockDS);
+    if(!lockDS) {
+        strAutoDenomResult = _("Lock is already in place.");
+        return false;
+    }
+
     LOCK(cs_darksend);
 
     if(!masternodeSync.IsBlockchainSynced()) {
