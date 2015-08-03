@@ -9,11 +9,6 @@
 
 namespace mastercore
 {
-/** The amount of blocks to use for notice rules on activation
-  */
-const int MIN_ACTIVATION_BLOCKS = 2048; // ~2 weeks
-const int MAX_ACTIVATION_BLOCKS = 12288; // ~12 weeks
-
 //! Block to enable the Exodus fundraiser address in regtest mode
 const int MONEYMAN_REGTEST_BLOCK = 101;
 //! Block to enable the Exodus fundraiser address on testnet
@@ -62,6 +57,11 @@ public:
     //! Last block of the Exodus crowdsale
     int LAST_EXODUS_BLOCK;
 
+    //! Minimum number of blocks to use for notice rules on activation
+    int MIN_ACTIVATION_BLOCKS;
+    //! Maximum number of blocks to use for notice rules on activation
+    int MAX_ACTIVATION_BLOCKS;
+
     //! Block to enable pay-to-pubkey-hash support
     int PUBKEYHASH_BLOCK;
     //! Block to enable pay-to-script-hash support
@@ -71,6 +71,8 @@ public:
     //! Block to enable OP_RETURN based encoding
     int NULLDATA_BLOCK;
 
+    //! Block to enable alerts and notifications
+    int MSC_ALERT_BLOCK;
     //! Block to enable simple send transactions
     int MSC_SEND_BLOCK;
     //! Block to enable DEx transactions
@@ -142,14 +144,17 @@ CConsensusParams& ConsensusParams(const std::string& network);
 const CConsensusParams& ConsensusParams();
 /** Returns currently active mutable consensus parameter. */
 CConsensusParams& MutableConsensusParams();
-/** Activate a feature (set the live block) */
-bool ActivateFeature(int featureId, int activationBlock, int transactionBlock);
+
+/** Activates a feature at a specific block height. */
+bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock);
+
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */
 bool IsAllowedOutputType(int whichType, int nBlock);
 /** Checks, if the transaction type and version is supported and enabled. */
 bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType, uint16_t version);
+
 /** Obtains a hash of all balances to use for consensus verification and checkpointing. */
 uint256 GetConsensusHash();
 /** Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints. */

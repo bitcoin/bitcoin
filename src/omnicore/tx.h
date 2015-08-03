@@ -112,8 +112,8 @@ private:
     bool interpret_GrantTokens();
     bool interpret_RevokeTokens();
     bool interpret_ChangeIssuer();
-    bool interpret_Alert();
     bool interpret_Activation();
+    bool interpret_Alert();
 
     /**
      * Logic and "effects"
@@ -133,10 +133,8 @@ private:
     int logicMath_GrantTokens();
     int logicMath_RevokeTokens();
     int logicMath_ChangeIssuer();
-    int logicMath_Alert();
-    int logicMath_SavingsMark();
-    int logicMath_SavingsCompromised();
     int logicMath_Activation();
+    int logicMath_Alert();
 
     /**
      * Logic helpers

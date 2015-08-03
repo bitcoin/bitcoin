@@ -139,11 +139,11 @@ bool CMPTransaction::interpret_Transaction()
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return interpret_ChangeIssuer();
 
-        case OMNICORE_MESSAGE_TYPE_ALERT:
-            return interpret_Alert();
-
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             return interpret_Activation();
+
+        case OMNICORE_MESSAGE_TYPE_ALERT:
+            return interpret_Alert();
     }
 
     return false;
@@ -696,11 +696,11 @@ int CMPTransaction::interpretPacket()
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return logicMath_ChangeIssuer();
 
-        case OMNICORE_MESSAGE_TYPE_ALERT:
-            return logicMath_Alert();
-
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             return logicMath_Activation();
+
+        case OMNICORE_MESSAGE_TYPE_ALERT:
+            return logicMath_Alert();
     }
 
     return (PKT_ERROR -100);
@@ -1775,17 +1775,21 @@ int CMPTransaction::logicMath_ChangeIssuer()
 /** Tx 65534 */
 int CMPTransaction::logicMath_Activation()
 {
-    // check the packet version is also FF
-    if (version != 65535) {
-        PrintToLog("%s(): rejected: invalid transaction version: %d\n", __func__, version);
-        return (PKT_ERROR -50);
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR -22);
     }
 
     // is sender authorized - temporarily use alert auths but ## TO BE MOVED TO FOUNDATION P2SH KEY ##
     bool authorized = CheckAlertAuthorization(sender);
 
-    PrintToLog("\t activation auth: %s\n", authorized);
     PrintToLog("\t          sender: %s\n", sender);
+    PrintToLog("\t      authorized: %s\n", authorized);
 
     if (!authorized) {
         PrintToLog("%s(): rejected: sender %s is not authorized for feature activations\n", __func__, sender);
@@ -1806,17 +1810,21 @@ int CMPTransaction::logicMath_Activation()
 /** Tx 65535 */
 int CMPTransaction::logicMath_Alert()
 {
-    // check the packet version is also FF
-    if (version != 65535) {
-        PrintToLog("%s(): rejected: invalid transaction version: %d\n", __func__, version);
-        return (PKT_ERROR -50);
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR -22);
     }
 
     // is sender authorized?
     bool authorized = CheckAlertAuthorization(sender);
 
-    PrintToLog("\t      alert auth: %s\n", authorized);
-    PrintToLog("\t    alert sender: %s\n", sender);
+    PrintToLog("\t          sender: %s\n", sender);
+    PrintToLog("\t      authorized: %s\n", authorized);
 
     if (!authorized) {
         PrintToLog("%s(): rejected: sender %s is not authorized for alerts\n", __func__, sender);
@@ -1863,19 +1871,5 @@ int CMPTransaction::logicMath_Alert()
     CAlert::Notify(alertMessage, true);
 
     return 0;
-}
-
-int CMPTransaction::logicMath_SavingsMark()
-{
-    int rc = -12345;
-
-    return rc;
-}
-
-int CMPTransaction::logicMath_SavingsCompromised()
-{
-    int rc = -23456;
-
-    return rc;
 }
 

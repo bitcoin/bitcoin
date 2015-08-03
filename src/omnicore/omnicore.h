@@ -87,13 +87,6 @@ enum TransactionType {
   OMNICORE_MESSAGE_TYPE_ALERT       = 65535
 };
 
-// Features, activated by message
-enum FeatureId {
-  OMNICORE_FEATURE_CLASS_C          = 1,
-  OMNICORE_FEATURE_METADEX          = 2,
-  OMNICORE_FEATURE_BETTING          = 3
-};
-
 #define MSC_PROPERTY_TYPE_INDIVISIBLE             1
 #define MSC_PROPERTY_TYPE_DIVISIBLE               2
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_REPLACING   65
