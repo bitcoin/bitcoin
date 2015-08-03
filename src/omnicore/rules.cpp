@@ -321,9 +321,6 @@ bool ActivateFeature(int featureId, int activationBlock, int transactionBlock)
 /**
  * Checks, if the transaction type and version is supported and enabled.
  *
- * On testnet, in regtest mode, or in the test ecosystem, transactions, which are
- * known to the client are allowed without height restriction.
- *
  * Certain transactions use a property identifier of 0 (= BTC) as wildcard, which
  * must explicitly be allowed.
  */
@@ -341,11 +338,6 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
         if (OMNI_PROPERTY_BTC == txProperty && !entry.allowWildcard) {
             continue;
         }
-        // transactions are not restricted on testnet. or in the test ecosystem
-        if (isNonMainNet() || isTestEcosystemProperty(txProperty)) {
-            return true;
-        }
-
         if (txBlock >= entry.activationBlock) {
             return true;
         }
