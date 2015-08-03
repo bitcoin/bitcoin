@@ -498,7 +498,7 @@ std::string CDarksendPool::GetStatus()
 //
 void CDarksendPool::Check()
 {
-    if(fMasterNode) LogPrintf("darksend", "CDarksendPool::Check() - entries count %lu\n", entries.size());
+    if(fMasterNode) LogPrint("darksend", "CDarksendPool::Check() - entries count %lu\n", entries.size());
     //printf("CDarksendPool::Check() %d - %d - %d\n", state, anonTx.CountEntries(), GetTimeMillis()-lastTimeChanged);
 
     if(fMasterNode) {
@@ -1688,7 +1688,7 @@ bool CDarksendPool::MakeCollateralAmounts()
     if(!success){
         // if we failed (most likeky not enough funds), try to use denominated instead -
         // MN-like funds should not be touched in any case and we can't mix denominated without collaterals anyway
-        LogPrintf("darksend", "MakeCollateralAmounts: ONLY_NONDENOMINATED_NOTMN Error - %s\n", strFail);
+        LogPrintf("MakeCollateralAmounts: ONLY_NONDENOMINATED_NOTMN Error - %s\n", strFail);
         success = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
                 nFeeRet, strFail, coinControl, ONLY_DENOMINATED);
         if(!success){
