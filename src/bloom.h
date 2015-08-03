@@ -89,6 +89,7 @@ public:
     bool contains(const uint256& hash) const;
 
     void clear();
+    void reset(unsigned int nNewTweak);
 
     //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
     //! (catch a filter which was just deserialized which was too big)
@@ -103,7 +104,11 @@ public:
 
 /**
  * RollingBloomFilter is a probabilistic "keep track of most recently inserted" set.
- * Construct it with the number of items to keep track of, and a false-positive rate.
+ * Construct it with the number of items to keep track of, and a false-positive
+ * rate. Unlike CBloomFilter, by default nTweak is set to a cryptographically
+ * secure random value for you. Similarly rather than clear() the method
+ * reset() is provided, which also changes nTweak to decrease the impact of
+ * false-positives.
  *
  * contains(item) will always return true if item was one of the last N things
  * insert()'ed ... but may also return true for items that were not inserted.
@@ -111,12 +116,17 @@ public:
 class CRollingBloomFilter
 {
 public:
-    CRollingBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak);
+    // A random bloom filter calls GetRand() at creation time.
+    // Don't create global CRollingBloomFilter objects, as they may be
+    // constructed before the randomizer is properly initialized.
+    CRollingBloomFilter(unsigned int nElements, double nFPRate);
 
     void insert(const std::vector<unsigned char>& vKey);
+    void insert(const uint256& hash);
     bool contains(const std::vector<unsigned char>& vKey) const;
+    bool contains(const uint256& hash) const;
 
-    void clear();
+    void reset();
 
 private:
     unsigned int nBloomSize;
