@@ -232,16 +232,18 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     }
 
     //check if it's a budget block
-    if(budget.IsBudgetPaymentBlock(nBlockHeight)){
-        if(budget.IsTransactionValid(txNew, nBlockHeight)){
-            return true;
-        } else {
-            LogPrintf("Invalid budget payment detected %s\n", txNew.ToString().c_str());
-            if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
-                return false;
-            } else {
-                LogPrintf("Budget enforcement is disabled, accepting block\n");
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS)){
+        if(budget.IsBudgetPaymentBlock(nBlockHeight)){
+            if(budget.IsTransactionValid(txNew, nBlockHeight)){
                 return true;
+            } else {
+                LogPrintf("Invalid budget payment detected %s\n", txNew.ToString().c_str());
+                if(IsSporkActive(SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT)){
+                    return false;
+                } else {
+                    LogPrintf("Budget enforcement is disabled, accepting block\n");
+                    return true;
+                }
             }
         }
     }
@@ -269,7 +271,7 @@ void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
-    if(budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
         budget.FillBlockPayee(txNew, nFees);
     } else {
         masternodePayments.FillBlockPayee(txNew, nFees);
@@ -278,7 +280,7 @@ void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
 
 std::string GetRequiredPaymentsString(int nBlockHeight)
 {
-    if(budget.IsBudgetPaymentBlock(nBlockHeight)){
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(nBlockHeight)){
         return budget.GetRequiredPaymentsString(nBlockHeight);
     } else {
         return masternodePayments.GetRequiredPaymentsString(nBlockHeight);

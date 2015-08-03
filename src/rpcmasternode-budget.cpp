@@ -49,8 +49,8 @@ Value mnbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        if (params.size() != 7 && params.size() != 8)
-            throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address monthly_payment_dash [use_ix(true|false)]'");
+        if (params.size() != 7)
+            throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address monthly_payment_dash'");
 
         std::string strProposalName = params[1].get_str();
         if(strProposalName.size() > 20)
