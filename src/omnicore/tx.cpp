@@ -698,6 +698,9 @@ int CMPTransaction::interpretPacket()
 
         case OMNICORE_MESSAGE_TYPE_ALERT:
             return logicMath_Alert();
+
+        case OMNICORE_MESSAGE_TYPE_ACTIVATION:
+            return logicMath_Activation();
     }
 
     return (PKT_ERROR -100);
