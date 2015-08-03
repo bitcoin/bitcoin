@@ -81,19 +81,20 @@ CPPFLAGS_FOR_BUILD +=-I$(top_srcdir)/
 CFLAGS_FOR_BUILD += -Wall -Wextra -Wno-unused-function
 
 gen_context_OBJECTS = gen_context.o
-
+gen_context_BIN = gen_context$(BUILD_EXEEXT)
 gen_%.o: src/gen_%.c
 	$(CC_FOR_BUILD) $(CPPFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) -c $< -o $@
 
-gen_context$(BUILD_EXEEXT): $(gen_context_OBJECTS)
+$(gen_context_BIN): $(gen_context_OBJECTS)
 	$(CC_FOR_BUILD) $^ -o $@
 
-BUILT_SOURCES = src/ecmult_static_context.h
+$(libsecp256k1_la_OBJECTS): src/ecmult_static_context.h
+$(tests_OBJECTS): src/ecmult_static_context.h
 
-src/ecmult_static_context.h: gen_context
-	./gen_context
+src/ecmult_static_context.h: $(gen_context_BIN)
+	./$(gen_context_BIN)
 
-CLEANFILES = gen_context src/ecmult_static_context.h
+CLEANFILES = $(gen_context_BIN) src/ecmult_static_context.h
 endif
 
 EXTRA_DIST = autogen.sh src/gen_context.c src/basic-config.h
