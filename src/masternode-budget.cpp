@@ -1500,7 +1500,9 @@ void CFinalizedBudget::AutoCheck()
     if(!fMasterNode || fAutoChecked) return;
 
     //do this 1 in 20 blocks -- spread out the voting activity on mainnet
-    if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 20 != 0) return;
+    if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 20 != 0) {
+        return;
+    }
 
     fAutoChecked = true; //we only need to check this once
 
@@ -1512,6 +1514,12 @@ void CFinalizedBudget::AutoCheck()
             LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
             return;
         }
+
+        if(vBudgetProposals.size() != vecBudgetPayments.size()) {
+            LogPrintf("CFinalizedBudget::AutoCheck - Budget length doesn't match\n");
+            return;
+        }
+
 
         for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
             if(i > vBudgetProposals.size() - 1) {
@@ -1533,10 +1541,10 @@ void CFinalizedBudget::AutoCheck()
                 LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
                 return;
             }
-
-            LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
-            SubmitVote();
         }
+
+        LogPrintf("CFinalizedBudget::AutoCheck - Finalized Budget Matches! Submitting Vote.\n");
+        SubmitVote();
 
     }
 }
