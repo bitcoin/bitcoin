@@ -87,11 +87,12 @@ public:
     /** Returns an empty vector of consensus checkpoints. */
     virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
 
+    /** Destructor. */
+    virtual ~CConsensusParams() {}
+
 protected:
     /** Constructor, only to be called from derived classes. */
     CConsensusParams() {}
-    /** Destructor. */
-    virtual ~CConsensusParams() {}
 };
 
 /** Consensus parameters for mainnet.
