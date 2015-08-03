@@ -57,7 +57,7 @@ Value darksend(const Array& params, bool fHelp)
         throw runtime_error(
             "darksend <dashaddress> <amount>\n"
             "dashaddress, reset, or auto (AutoDenominate)"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
+            "<amount> is a real and will be rounded to the next 0.1"
             + HelpRequiringPassphrase());
 
     if (pwalletMain->IsLocked())
@@ -67,8 +67,7 @@ Value darksend(const Array& params, bool fHelp)
         if(fMasterNode)
             return "DarkSend is not supported from masternodes";
 
-        darkSendPool.DoAutomaticDenominating();
-        return "DoAutomaticDenominating";
+        return "DoAutomaticDenominating " + (darkSendPool.DoAutomaticDenominating() ? "successful" : ("failed: " + darkSendPool.GetStatus()));
     }
 
     if(params[0].get_str() == "reset"){
@@ -80,7 +79,7 @@ Value darksend(const Array& params, bool fHelp)
         throw runtime_error(
             "darksend <dashaddress> <amount>\n"
             "dashaddress, denominate, or auto (AutoDenominate)"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
+            "<amount> is a real and will be rounded to the next 0.1"
             + HelpRequiringPassphrase());
 
     CBitcoinAddress address(params[0].get_str());
