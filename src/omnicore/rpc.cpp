@@ -295,8 +295,8 @@ Value omni_getbalance(const Array& params, bool fHelp)
             "omni_getbalance \"address\" propertyid\n"
             "\nReturns the token balance for a given address and property.\n"
             "\nArguments:\n"
-            "1. address           (string, required) the address\n"
-            "2. propertyid        (number, required) the property identifier\n"
+            "1. address              (string, required) the address\n"
+            "2. propertyid           (number, required) the property identifier\n"
             "\nResult:\n"
             "{\n"
             "  \"balance\" : \"n.nnnnnnnn\",   (string) the available balance of the address\n"
@@ -433,8 +433,8 @@ Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("omni_getallbalancesforaddress", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")
-            + HelpExampleRpc("omni_getallbalancesforaddress", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")
+            + HelpExampleCli("omni_getallbalancesforaddress", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\"")
+            + HelpExampleRpc("omni_getallbalancesforaddress", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\"")
         );
 
     std::string address = ParseAddress(params[0]);
@@ -873,8 +873,8 @@ Value omni_getorderbook(const Array& params, bool fHelp)
             "omni_getorderbook propertyid ( propertyid )\n"
             "\nList active offers on the distributed token exchange.\n"
             "\nArguments:\n"
-            "1. propertyid           (number, required) filter orders by propertyid for sale\n"
-            "2. propertyid           (number, optional) filter orders by propertyid desired\n"
+            "1. propertyid           (number, required) filter orders by property identifier for sale\n"
+            "2. propertyid           (number, optional) filter orders by property identifier desired\n"
             "\nResult:\n"
             "[                                              (array of JSON objects)\n"
             "  {\n"
@@ -944,7 +944,7 @@ Value omni_gettradehistoryforaddress(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. address              (string, required) address to retrieve history for\n"
             "2. count                (number, optional) number of orders to retrieve (default: 10)\n"
-            "3. propertyid           (number, optional) filter by propertyid transacted (default: no filter)\n"
+            "3. propertyid           (number, optional) filter by property identifier transacted (default: no filter)\n"
             "\nResult:\n"
             "[                                              (array of JSON objects)\n"
             "  {\n"
@@ -1471,8 +1471,8 @@ Value omni_getsto(const Array& params, bool fHelp)
             "  ]\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-            + HelpExampleRpc("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleCli("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" \"*\"")
+            + HelpExampleRpc("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"*\"")
         );
 
     uint256 hash(params[0].get_str());

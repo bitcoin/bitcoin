@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 using boost::algorithm::token_compress_on;
@@ -629,6 +630,207 @@ bool CMPTransaction::interpret_Alert()
 }
 
 // ---------------------- CORE LOGIC -------------------------
+
+/**
+ * Interprets the payload and executes the logic.
+ *
+ * @return  0  if the transaction is fully valid
+ *         <0  if the transaction is invalid
+ */
+int CMPTransaction::interpretPacket()
+{
+    if (rpcOnly) {
+        PrintToLog("%s(): ERROR: attempt to execute logic in RPC mode\n", __func__);
+        return (PKT_ERROR -1);
+    }
+
+    if (!interpret_Transaction()) {
+        return (PKT_ERROR -2);
+    }
+
+    LOCK(cs_tally);
+
+    switch (type) {
+        case MSC_TYPE_SIMPLE_SEND:
+            return logicMath_SimpleSend();
+
+        case MSC_TYPE_SEND_TO_OWNERS:
+            return logicMath_SendToOwners();
+
+        case MSC_TYPE_TRADE_OFFER:
+            return logicMath_TradeOffer();
+
+        case MSC_TYPE_ACCEPT_OFFER_BTC:
+            return logicMath_AcceptOffer_BTC();
+
+        case MSC_TYPE_METADEX_TRADE:
+            return logicMath_MetaDExTrade();
+
+        case MSC_TYPE_METADEX_CANCEL_PRICE:
+            return logicMath_MetaDExCancelPrice();
+
+        case MSC_TYPE_METADEX_CANCEL_PAIR:
+            return logicMath_MetaDExCancelPair();
+
+        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
+            return logicMath_MetaDExCancelEcosystem();
+
+        case MSC_TYPE_CREATE_PROPERTY_FIXED:
+            return logicMath_CreatePropertyFixed();
+
+        case MSC_TYPE_CREATE_PROPERTY_VARIABLE:
+            return logicMath_CreatePropertyVariable();
+
+        case MSC_TYPE_CLOSE_CROWDSALE:
+            return logicMath_CloseCrowdsale();
+
+        case MSC_TYPE_CREATE_PROPERTY_MANUAL:
+            return logicMath_CreatePropertyManaged();
+
+        case MSC_TYPE_GRANT_PROPERTY_TOKENS:
+            return logicMath_GrantTokens();
+
+        case MSC_TYPE_REVOKE_PROPERTY_TOKENS:
+            return logicMath_RevokeTokens();
+
+        case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
+            return logicMath_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_ALERT:
+            return logicMath_Alert();
+    }
+
+    return (PKT_ERROR -100);
+}
+
+/** Passive effect of crowdsale participation. */
+int CMPTransaction::logicHelper_CrowdsaleParticipation()
+{
+    CMPCrowd* pcrowdsale = getCrowd(receiver);
+
+    // No active crowdsale
+    if (pcrowdsale == NULL) {
+        return (PKT_ERROR_CROWD -1);
+    }
+    // Active crowdsale, but not for this property
+    if (pcrowdsale->getCurrDes() != property) {
+        return (PKT_ERROR_CROWD -2);
+    }
+
+    CMPSPInfo::Entry sp;
+    assert(_my_sps->getSP(pcrowdsale->getPropertyId(), sp));
+    PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
+
+    // Holds the tokens to be credited to the sender and receiver
+    std::pair<int64_t, int64_t> tokens;
+
+    // Passed by reference to determine, if max_tokens has been reached
+    bool close_crowdsale = false;
+
+    // Units going into the calculateFundraiser function must match the unit of
+    // the fundraiser's property_type. By default this means satoshis in and
+    // satoshis out. In the condition that the fundraiser is divisible, but 
+    // indivisible tokens are accepted, it must account for .0 Div != 1 Indiv,
+    // but actually 1.0 Div == 100000000 Indiv. The unit must be shifted or the
+    // values will be incorrect, which is what is checked below.
+    if (!isPropertyDivisible(property)) {
+        nValue = nValue * 1e8;
+    }
+ 
+    // Calculate the amounts to credit for this fundraiser
+    calculateFundraiser(nValue, sp.early_bird, sp.deadline, blockTime,
+            sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
+            tokens, close_crowdsale);
+
+    if (msc_debug_sp) {
+        PrintToLog("%s(): granting via crowdsale to user: %s %d (%s)\n",
+                __func__, FormatMP(property, tokens.first), property, strMPProperty(property));
+        PrintToLog("%s(): granting via crowdsale to issuer: %s %d (%s)\n",
+                __func__, FormatMP(property, tokens.second), property, strMPProperty(property));
+    }
+
+    // Update the crowdsale object
+    pcrowdsale->incTokensUserCreated(tokens.first);
+    pcrowdsale->incTokensIssuerCreated(tokens.second);
+
+    // Data to pass to txFundraiserData
+    int64_t txdata[] = {(int64_t) nValue, blockTime, tokens.first, tokens.second};
+    std::vector<int64_t> txDataVec(txdata, txdata + sizeof(txdata) / sizeof(txdata[0]));
+
+    // Insert data about crowdsale participation
+    pcrowdsale->insertDatabase(txid, txDataVec);
+
+    // Credit tokens for this fundraiser
+    if (tokens.first > 0) {
+        assert(update_tally_map(sender, pcrowdsale->getPropertyId(), tokens.first, BALANCE));
+    }
+    if (tokens.second > 0) {
+        assert(update_tally_map(receiver, pcrowdsale->getPropertyId(), tokens.second, BALANCE));
+    }
+
+    // Close crowdsale, if we hit MAX_TOKENS
+    if (close_crowdsale) {
+        eraseMaxedCrowdsale(receiver, blockTime, block);
+    }
+
+    // Indicate, if no tokens were transferred
+    if (!tokens.first && !tokens.second) {
+        return (PKT_ERROR_CROWD -3);
+    }
+
+    return 0;
+}
+
+/** Tx 0 */
+int CMPTransaction::logicMath_SimpleSend()
+{
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_SEND -22);
+    }
+
+    if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
+        PrintToLog("%s(): rejected: value out of range or zero: %d", __func__, nValue);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (!_my_sps->hasSP(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_SEND -24);
+    }
+
+    int64_t nBalance = getMPbalance(sender, property, BALANCE);
+    if (nBalance < (int64_t) nValue) {
+        PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
+                __func__,
+                sender,
+                property,
+                FormatMP(property, nBalance),
+                FormatMP(property, nValue));
+        return (PKT_ERROR_SEND -25);
+    }
+
+    // ------------------------------------------
+
+    // Special case: if can't find the receiver -- assume send to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
+
+    // Move the tokens
+    assert(update_tally_map(sender, property, -nValue, BALANCE));
+    assert(update_tally_map(receiver, property, nValue, BALANCE));
+
+    // Is there an active crowdsale running from this recepient?
+    logicHelper_CrowdsaleParticipation();
+
+    return 0;
+}
 
 /** Tx 3 */
 int CMPTransaction::logicMath_SendToOwners()
@@ -1419,12 +1621,21 @@ int CMPTransaction::logicMath_GrantTokens()
     sp.historicalData.insert(std::make_pair(txid, dataPt));
     sp.update_block = blockHash;
 
+    // Persist the number of granted tokens
     assert(_my_sps->updateSP(property, sp));
-    assert(update_tally_map(sender, property, nValue, BALANCE));
 
-    int rc = logicMath_SimpleSend();
+    // Special case: if can't find the receiver -- assume grant to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
 
-    return rc;
+    // Move the tokens
+    assert(update_tally_map(receiver, property, nValue, BALANCE));
+
+    // Is there an active crowdsale running from this recepient?
+    logicHelper_CrowdsaleParticipation();
+
+    return 0;
 }
 
 /** Tx 56 */

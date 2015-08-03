@@ -119,6 +119,7 @@ enum FILETYPES {
 #define DEX_ERROR_PAYMENT     (-30000)
 // Smart Properties
 #define PKT_ERROR_SP          (-40000)
+#define PKT_ERROR_CROWD       (-45000)
 // Send To Owners
 #define PKT_ERROR_STO         (-50000)
 #define PKT_ERROR_SEND        (-60000)
