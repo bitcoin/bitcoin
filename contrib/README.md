@@ -1,9 +1,6 @@
 Wallet Tools
 ---------------------
 
-### [BitRPC](/contrib/bitrpc) ###
-Allows for sending of all standard Bitcoin commands via RPC rather than as command line args.
-
 ### [SpendFrom](/contrib/spendfrom) ###
 
 Use the raw transactions API to send coins received on a particular
