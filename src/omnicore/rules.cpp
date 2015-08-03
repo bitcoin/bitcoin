@@ -291,8 +291,8 @@ bool ActivateFeature(int featureId, int activationBlock, int transactionBlock)
 {
     PrintToLog("Feature activation requested (ID %d to go active as of block: %d)\n", featureId, activationBlock);
 
-    // check activation block is allowed
-    if (transactionBlock + MIN_ACTIVATION_BLOCKS < activationBlock || activationBlock > transactionBlock + MAX_ACTIVATION_BLOCKS) {
+    // check activation block is allowed (note: time restrictions for notice do not apply on testnet/regtest)
+    if (!isNonMainNet() && (transactionBlock + MIN_ACTIVATION_BLOCKS < activationBlock || activationBlock > transactionBlock + MAX_ACTIVATION_BLOCKS)) {
         PrintToLog("Feature activation of ID %d refused due to notice checks\n", featureId);
         return false;
     }
