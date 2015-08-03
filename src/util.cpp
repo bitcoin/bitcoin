@@ -223,6 +223,15 @@ bool LogAcceptCategory(const char* category)
             const vector<string>& categories = mapMultiArgs["-debug"];
             ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
             // thread_specific_ptr automatically deletes the set when the thread ends.
+            // "dash" is a composite category enabling all Dash-related debug output
+            if(ptrCategory->count(string("dash"))) {
+                ptrCategory->insert(string("darksend"));
+                ptrCategory->insert(string("instantx"));
+                ptrCategory->insert(string("masternode"));
+                ptrCategory->insert(string("keepass"));
+                ptrCategory->insert(string("mnpayments"));
+                ptrCategory->insert(string("mnbudget"));
+            }
         }
         const set<string>& setCategories = *ptrCategory.get();
 
