@@ -2974,6 +2974,7 @@ void CMPTxList::LoadActivations()
             PrintToLog("ERROR: While loading activation transaction %s: levelDB type mismatch, not an activation.\n", hash.GetHex());
             continue;
         }
+        mp_obj.unlockLogic();
         if (0 != mp_obj.interpretPacket()) {
             PrintToLog("ERROR: While loading activation transaction %s: non-zero return from interpretPacket\n", hash.GetHex());
             continue;
