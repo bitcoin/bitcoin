@@ -160,7 +160,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_SP_BLOCK = 0;
     MSC_MANUALSP_BLOCK = 0;
     MSC_STO_BLOCK = 0;
-    MSC_METADEX_BLOCK = 0;
+    MSC_METADEX_BLOCK = 999999;
     MSC_BET_BLOCK = 999999;
 }
 
@@ -276,6 +276,45 @@ bool IsAllowedOutputType(int whichType, int nBlock)
             return (params.NULLDATA_BLOCK <= nBlock);
     }
 
+    return false;
+}
+
+/**
+ * Activates a feature at a specific blockheight, authorization has already been validated
+ *
+ * Note: Feature activations are consensus breaking.  It is not permitted to activate a feature within
+ *       the next 2048 blocks (roughly 2 weeks), nor is it permitted to activate a feature further out
+ *       than 12288 blocks (roughly 12 weeks) to ensure sufficient notice.
+ *       This does not apply for activation during initialization (where loadingActivations is set true).
+ */
+bool ActivateFeature(int featureId, int activationBlock, int transactionBlock)
+{
+    PrintToLog("Feature activation requested (ID %d to go active as of block: %d)\n", featureId, activationBlock);
+
+    // check activation block is allowed
+    if (transactionBlock + MIN_ACTIVATION_BLOCKS < activationBlock || activationBlock > transactionBlock + MAX_ACTIVATION_BLOCKS) {
+        PrintToLog("Feature activation of ID %d refused due to notice checks\n", featureId);
+        return false;
+    }
+
+    // check feature is recognized and activation is successful
+    switch(featureId) {
+        case OMNICORE_FEATURE_CLASS_C:
+            MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded, OP_RETURN block is now %d\n", featureId, ConsensusParams().NULLDATA_BLOCK);
+            return true;
+        case OMNICORE_FEATURE_METADEX:
+            MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded, MSC_METADEX_BLOCK is now %d\n", featureId, ConsensusParams().MSC_METADEX_BLOCK);
+            return true;
+        case OMNICORE_FEATURE_BETTING:
+            MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded, MSC_BET_BLOCK is now %d\n", featureId, ConsensusParams().MSC_BET_BLOCK);
+            return true;
+    }
+
+    // unrecognized featureId
+    PrintToLog("Feature activation of id %d refused due to unknown feature ID\n", featureId);
     return false;
 }
 

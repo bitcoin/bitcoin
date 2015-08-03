@@ -9,6 +9,11 @@
 
 namespace mastercore
 {
+/** The amount of blocks to use for notice rules on activation
+  */
+const int MIN_ACTIVATION_BLOCKS = 2048; // ~2 weeks
+const int MAX_ACTIVATION_BLOCKS = 12288; // ~12 weeks
+
 //! Block to enable the Exodus fundraiser address in regtest mode
 const int MONEYMAN_REGTEST_BLOCK = 101;
 //! Block to enable the Exodus fundraiser address on testnet
@@ -136,6 +141,8 @@ CConsensusParams& ConsensusParams(const std::string& network);
 const CConsensusParams& ConsensusParams();
 /** Returns currently active mutable consensus parameter. */
 CConsensusParams& MutableConsensusParams();
+/** Activate a feature (set the live block) */
+bool ActivateFeature(int featureId, int activationBlock, int transactionBlock);
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */

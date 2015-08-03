@@ -83,6 +83,10 @@ private:
     // Alert
     char alertString[SP_STRING_FIELD_LEN];
 
+    // Activation
+    uint16_t feature_id;
+    uint32_t activation_block;
+
     // Indicates whether the transaction can be used to execute logic
     bool rpcOnly;
 
@@ -109,6 +113,7 @@ private:
     bool interpret_RevokeTokens();
     bool interpret_ChangeIssuer();
     bool interpret_Alert();
+    bool interpret_Activation();
 
     /**
      * Logic and "effects"
@@ -131,6 +136,7 @@ private:
     int logicMath_Alert();
     int logicMath_SavingsMark();
     int logicMath_SavingsCompromised();
+    int logicMath_Activation();
 
 public:
     //! DEx and MetaDEx action values

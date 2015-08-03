@@ -83,7 +83,15 @@ enum TransactionType {
   MSC_TYPE_GRANT_PROPERTY_TOKENS    = 55,
   MSC_TYPE_REVOKE_PROPERTY_TOKENS   = 56,
   MSC_TYPE_CHANGE_ISSUER_ADDRESS    = 70,
-  OMNICORE_MESSAGE_TYPE_ALERT     = 65535
+  OMNICORE_MESSAGE_TYPE_ACTIVATION  = 65534,
+  OMNICORE_MESSAGE_TYPE_ALERT       = 65535
+};
+
+// Features, activated by message
+enum FeatureId {
+  OMNICORE_FEATURE_CLASS_C          = 1,
+  OMNICORE_FEATURE_METADEX          = 2,
+  OMNICORE_FEATURE_BETTING          = 3
 };
 
 #define MSC_PROPERTY_TYPE_INDIVISIBLE             1
@@ -230,6 +238,7 @@ public:
     bool getTX(const uint256 &txid, string &value);
 
     int setLastAlert(int blockHeight);
+    void LoadActivations();
 
     void printStats();
     void printAll();
