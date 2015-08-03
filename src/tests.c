@@ -1271,6 +1271,38 @@ void run_ge(void) {
     test_add_neg_y_diff_x();
 }
 
+void test_ec_combine(void) {
+    secp256k1_scalar_t sum = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    secp256k1_pubkey_t data[6];
+    const secp256k1_pubkey_t* d[6];
+    secp256k1_pubkey_t sd;
+    secp256k1_pubkey_t sd2;
+    secp256k1_gej_t Qj;
+    secp256k1_ge_t Q;
+    int i;
+    for (i = 1; i <= 6; i++) {
+        secp256k1_scalar_t s;
+        random_scalar_order_test(&s);
+        secp256k1_scalar_add(&sum, &sum, &s);
+        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &s);
+        secp256k1_ge_set_gej(&Q, &Qj);
+        secp256k1_pubkey_save(&data[i - 1], &Q);
+        d[i - 1] = &data[i - 1];
+        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &sum);
+        secp256k1_ge_set_gej(&Q, &Qj);
+        secp256k1_pubkey_save(&sd, &Q);
+        CHECK(secp256k1_ec_pubkey_combine(ctx, &sd2, i, d) == 1);
+        CHECK(memcmp(&sd, &sd2, sizeof(sd)) == 0);
+    }
+}
+
+void run_ec_combine(void) {
+    int i;
+    for (i = 0; i < count * 8; i++) {
+         test_ec_combine();
+    }
+}
+
 /***** ECMULT TESTS *****/
 
 void run_ecmult_chain(void) {
@@ -1755,22 +1787,23 @@ void run_ecdsa_sign_verify(void) {
 }
 
 /** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
-static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
     (void)msg32;
     (void)key32;
+    (void)algo16;
     memcpy(nonce32, data, 32);
     return (counter == 0);
 }
 
-static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
    /* Dummy nonce generator that has a fatal error on the first counter value. */
    if (counter == 0) {
        return 0;
    }
-   return nonce_function_rfc6979(nonce32, msg32, key32, counter - 1, data);
+   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, counter - 1, data);
 }
 
-static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, unsigned int counter, const void *data) {
+static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
    /* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
    if (counter < 3) {
        memset(nonce32, counter==0 ? 0 : 255, 32);
@@ -1797,7 +1830,7 @@ static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char
    if (counter > 5) {
        return 0;
    }
-   return nonce_function_rfc6979(nonce32, msg32, key32, counter - 5, data);
+   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, counter - 5, data);
 }
 
 int is_empty_signature(const secp256k1_ecdsa_signature_t *sig) {
@@ -2378,6 +2411,10 @@ void run_ecdsa_openssl(void) {
 # include "modules/ecdh/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_SCHNORR
+# include "modules/schnorr/tests_impl.h"
+#endif
+
 int main(int argc, char **argv) {
     unsigned char seed16[16] = {0};
     unsigned char run32[32] = {0};
@@ -2460,6 +2497,7 @@ int main(int argc, char **argv) {
     run_ecmult_constants();
     run_ecmult_gen_blind();
     run_ecmult_const_tests();
+    run_ec_combine();
 
     /* endomorphism tests */
 #ifdef USE_ENDOMORPHISM
@@ -2478,6 +2516,11 @@ int main(int argc, char **argv) {
     run_ecdsa_edge_cases();
 #ifdef ENABLE_OPENSSL_TESTS
     run_ecdsa_openssl();
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORR
+    /* Schnorr tests */
+    run_schnorr_tests();
 #endif
 
     secp256k1_rand256(run32);
