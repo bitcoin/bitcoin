@@ -618,12 +618,8 @@ void CMasternodeMan::ProcessMasternodeConnections()
 
     if(!darkSendPool.pSubmittedToMasternode) return;
 
-    LOCK(cs_vNodes);
-
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        if(darkSendPool.pSubmittedToMasternode->addr == pnode->addr) continue;
-
+    CNode* pnode = FindNode(darkSendPool.pSubmittedToMasternode->addr);
+    if(pnode != NULL) {
         if(pnode->fDarkSendMaster){
             LogPrintf("Closing Masternode connection %s \n", pnode->addr.ToString());
             pnode->fDisconnect = true;
