@@ -44,7 +44,7 @@
     <message>
         <location line="+3"/>
         <source>&amp;Export</source>
-        <translation>&amp;Vie...</translation>
+        <translation>Vi&amp;e...</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -64,7 +64,7 @@
     <message>
         <location line="+5"/>
         <source>C&amp;hoose</source>
-        <translation>&amp;Valitse</translation>
+        <translation>V&amp;alitse</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -89,7 +89,7 @@
     <message>
         <location line="+6"/>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Kopioi Osoite</translation>
+        <translation>Kopioi &amp;Osoite</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -295,12 +295,12 @@
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+107"/>
-        <location line="+726"/>
+        <location line="+728"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-717"/>
+        <location line="-719"/>
         <source>Wallet</source>
         <translation>Lompakko</translation>
     </message>
@@ -310,7 +310,7 @@
         <translation>Solmu</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+144"/>
         <source>&amp;Overview</source>
         <translation>&amp;Yleisnäkymä</translation>
     </message>
@@ -322,7 +322,7 @@
     <message>
         <location line="+10"/>
         <source>&amp;Send</source>
-        <translation>&amp;Lähetä</translation>
+        <translation>L&amp;ähetä</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -362,7 +362,7 @@
     <message>
         <location line="+3"/>
         <source>&amp;About Dash Core</source>
-        <translation>&amp;Tietoja Dash Core:sta</translation>
+        <translation>Tietoja &amp;Dash Core:sta</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -458,7 +458,7 @@
     <message>
         <location line="+1"/>
         <source>&amp;Verify message...</source>
-        <translation>Tarkista &amp;Viesti...</translation>
+        <translation>&amp;Tarkista Viesti...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -528,7 +528,7 @@
     <message>
         <location line="+1"/>
         <source>Show Automatic &amp;Backups</source>
-        <translation>Näytä Automaattiset &amp;Varmistukset</translation>
+        <translation>&amp;Näytä Automaattiset Varmistukset</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -548,7 +548,7 @@
     <message>
         <location line="+1"/>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Vastaanottavat Osoitteet...</translation>
+        <translation>Va&amp;staanottavat Osoitteet...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -743,7 +743,7 @@ Osoite: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+171"/>
+        <location filename="../clientmodel.cpp" line="+173"/>
         <source>Network Alert</source>
         <translation>Verkkohälytys</translation>
     </message>
@@ -832,8 +832,8 @@ Osoite: %4
     </message>
     <message>
         <location line="+5"/>
-        <source>Darksend Rounds</source>
-        <translation>Darksend Kierrokset</translation>
+        <source>DS Rounds</source>
+        <translation>DS Kierrokset</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -949,16 +949,16 @@ Osoite: %4
     <message>
         <location line="+216"/>
         <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation>Voi vaihdella +/- %1 duff(s) per syöte.</translation>
+        <translation>Voi vaihdella +/- %1 duffs per syöte.</translation>
     </message>
     <message>
-        <location line="+131"/>
+        <location line="+132"/>
         <source>n/a</source>
         <translation>e/s</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="-318"/>
-        <location filename="../coincontroldialog.cpp" line="-346"/>
+        <location filename="../coincontroldialog.cpp" line="-347"/>
         <source>medium</source>
         <translation>keskisuuri</translation>
     </message>
@@ -1248,7 +1248,7 @@ Osoite: %4
         <location line="+5"/>
         <location line="+2"/>
         <source>(%1-bit)</source>
-        <translation>(%1-bitti)</translation>
+        <translation>(%1-bittinen)</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1268,7 +1268,7 @@ Osoite: %4
     <message>
         <location line="+1"/>
         <source>command-line options</source>
-        <translation>komentorivi parametrit</translation>
+        <translation>komentorivi valintaparametrit</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1431,12 +1431,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
         <translation>(0 = auto, &lt;0 = jätä näin monta prosessorin ydintä vapaaksi)</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tämä asetus määrittää kuinka monen erillisen masternoden kautta syötteen anonymisointi tehdään. Mitä enemmän anonymisoinnin kierroksia, sen parempi yksityisyys, mutta se myös maksaa enemmän siirtomaksuina.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+40"/>
         <source>Darksend rounds to use</source>
         <translation>Kuinka montaa Darksend kierrosta käytetään</translation>
     </message>
@@ -1456,7 +1451,12 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
         <translation>&amp;Lompakko</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+22"/>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>Jos poistat vahvistamattomien vaihtorahojen käytön, siirtotapahtuman&lt;br/&gt;vaihtorahaa ei voida käyttää ennen vähintään yhtä vahvistusta.&lt;br/&gt;Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Accept connections from outside</source>
         <translation>Hyväksy yhteydet ulkopuolelta</translation>
     </message>
@@ -1481,7 +1481,12 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
         <translation>Expertti</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-74"/>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>Tämä asetus määrittää kuinka monen erillisen masternoden kautta syötteen anonymisointi tehdään.&lt;br/&gt;Mitä enemmän anonymisoinnin kierroksia, sen parempi yksityisyys, mutta se myös maksaa enemmän siirtomaksuina.</translation>
+    </message>
+    <message>
+        <location line="+80"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Näytetäänkö kolikkokontrollin ominaisuuksia vai ei</translation>
     </message>
@@ -1491,12 +1496,7 @@ Varoitus: Jos käytät käyttöjärjestelmää (Live os) suoraan usb, dvd tai cd
         <translation>Ota käytöön &amp;kolikkokontrolli ominaisuudet</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Jos poistat vahvistamattomien vaihtorahojen käytön, siirtotapahtuman vaihtorahaa ei voida käyttää ennen vähintään yhtä vahvistusta. Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+10"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Käytä vahvistamattomia vaihtorahoja</translation>
     </message>
@@ -1585,7 +1585,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+19"/>
         <source>User Interface Theme:</source>
-        <translation>&amp;Käyttöliittymän Teema:</translation>
+        <translation>Käyttöliittymän Teema:</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -1599,6 +1599,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+11"/>
+        <source>Decimal digits</source>
+        <translation>Desimaalit</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <location line="+13"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Ulkopuoliset URL-osoitteet (esim. lohkoselain,) jotka esiintyvät tapahtumat-välilehdellä valikossa. %s URL-osoitteessa korvataan siirtotunnuksella. Useampi URL-osoite on eroteltu pystyviivalla |.</translation>
@@ -1621,7 +1626,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+3"/>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Palauta Asetukset</translation>
+        <translation>Palauta &amp;Asetukset</translation>
     </message>
     <message>
         <location line="+61"/>
@@ -1634,7 +1639,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Peruuta</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+84"/>
+        <location filename="../optionsdialog.cpp" line="+91"/>
         <source>default</source>
         <translation>oletus</translation>
     </message>
@@ -1644,7 +1649,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ei mitään</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+87"/>
         <source>Confirm options reset</source>
         <translation>Vahvista asetusten palautus</translation>
     </message>
@@ -1682,7 +1687,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="+1015"/>
         <location line="+77"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>Näytetyt tiedot eivät välttämättä ole ajan tasalla. Lompakkosi synkronoituu automaattisesti Dash verkkoon kun yhteys on muodostettu, mutta tämä prosessi ei vielä ole valmis.</translation>
+        <translation>Näytetyt tiedot eivät välttämättä ole ajan tasalla.&lt;br&gt;Lompakkosi synkronoituu automaattisesti Dash verkkoon kun&lt;br&gt;yhteys on muodostettu, mutta tämä prosessi ei vielä ole valmis.</translation>
     </message>
     <message>
         <location line="-843"/>
@@ -1702,7 +1707,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="-236"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Vahvistamattomien siirtotapahtumien summa, jota ei vielä lasketa käytettävissä olevaan saldoon</translation>
+        <translation>Vahvistamattomien siirtotapahtumien summa,&lt;br&gt;jota ei vielä lasketa käytettävissä olevaan saldoon</translation>
     </message>
     <message>
         <location line="+112"/>
@@ -1765,12 +1770,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tila:</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+78"/>
         <source>Enabled/Disabled</source>
         <translation>Käytössä/Ei käytössä</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-71"/>
         <source>Completion:</source>
         <translation>Valmiina:</translation>
     </message>
@@ -1780,12 +1785,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Darksend Saldo:</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>0 DASH</source>
-        <translation>0 DASH</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+20"/>
         <source>Amount and Rounds:</source>
         <translation>Määrä ja Kierrokset:</translation>
     </message>
@@ -1805,9 +1805,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>e/s</translation>
     </message>
     <message>
-        <location line="+566"/>
-        <location filename="../overviewpage.cpp" line="+464"/>
-        <location line="+14"/>
+        <location line="+573"/>
+        <location filename="../overviewpage.cpp" line="+465"/>
+        <location line="+10"/>
+        <location line="+10"/>
         <location line="+14"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
@@ -1823,12 +1824,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Käynnistä/Lopeta Sekoitus</translation>
     </message>
     <message>
-        <location line="-462"/>
+        <location line="-469"/>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Masternodelle lähetetyt denominoinnit.&lt;br&gt;Jotta sekoitus onnistuisi, täytyy muiden käyttäjien käyttää saman arvoisia denominointeja.</translation>
     </message>
     <message>
-        <location line="+494"/>
+        <location line="+501"/>
         <source>(Last Message)</source>
         <translation>(Viimeisin Viesti)</translation>
     </message>
@@ -1853,67 +1854,83 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nollaus</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="-353"/>
+        <location filename="../overviewpage.cpp" line="-359"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>Ei ajan tasalla</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+6"/>
         <location line="+1"/>
         <location line="+1"/>
-        <location line="+262"/>
+        <location line="+270"/>
         <source>Disabled</source>
         <translation>Ei käytössä</translation>
     </message>
     <message>
-        <location line="-259"/>
-        <location line="+261"/>
-        <location line="+86"/>
+        <location line="-266"/>
+        <location line="+268"/>
+        <location line="+91"/>
         <source>Start Darksend Mixing</source>
         <translation>Käynnistä Darksend Sekoitus</translation>
     </message>
     <message>
-        <location line="-345"/>
-        <location line="+347"/>
+        <location line="-357"/>
+        <location line="+360"/>
         <source>Stop Darksend Mixing</source>
         <translation>Lopeta Darksend Sekoitus</translation>
     </message>
     <message>
-        <location line="-196"/>
+        <location line="-188"/>
+        <location line="+6"/>
         <source>No inputs detected</source>
         <translation>Syötteitä ei havaittu</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
-        <location line="+59"/>
-        <location line="+15"/>
+        <location line="-2"/>
+        <location line="+20"/>
+        <location line="+10"/>
         <source>%n Rounds</source>
         <translation><numerusform>%n Kierros</numerusform><numerusform>%n Kierrosta</numerusform></translation>
     </message>
     <message>
-        <location line="-65"/>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation>Löytyi vahvistamattomia syötteitä, odotetaan että ne vahvistetaan uudelleen laskentaa varten.</translation>
-    </message>
-    <message numerus="yes">
-        <location line="+37"/>
-        <source>Progress: %1% (inputs have an average of %2 of %n rounds)</source>
-        <translation><numerusform>Valmiina: %1% (syötteillä on keskimäärin %2 kierrosta %n:sta kierroksesta)</numerusform><numerusform>Valmiina: %1% (syötteillä on keskimäärin %2 kierrosta %n:sta kierroksesta)</numerusform></translation>
+        <location line="-7"/>
+        <source>Not enough compatible inputs to anonymize &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; instead</source>
+        <translation>Ei tarpeeksi yhteensopivia syötteitä anonymisointiin &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br&gt;anonymisoidaan &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; sen sijaan</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+38"/>
+        <source>Overall progress</source>
+        <translation>Edistyminen</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Denominated</source>
+        <translation>Denominoitu</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Anonymized</source>
+        <translation>Anonymisoitu</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>Denominated inputs have %5 of %n rounds on average</source>
+        <translation><numerusform>Denominoiduilla syötteillä on keskimäärin %5 / %n kierrosta</numerusform><numerusform>Denominoiduilla syötteillä on keskimäärin %5 / %n kierrosta</numerusform></translation>
+    </message>
+    <message>
+        <location line="-48"/>
         <source>Found enough compatible inputs to anonymize %1</source>
         <translation>Löytyi tarpeeksi yhteensopivia syötteitä anonymisointiin %1</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Not enough compatible inputs to anonymize &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br/&gt;will anonymize &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; instead</source>
-        <translation>Ei tarpeeksi yhteensopivia syötteitä anonymisointiin &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br/&gt;anonymisoidaan &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; sen sijaan</translation>
+        <location line="+46"/>
+        <source>Mixed</source>
+        <translation>Sekoitettu</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+40"/>
         <source>Enabled</source>
         <translation>Käytössä</translation>
     </message>
@@ -1935,7 +1952,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Darksend nollattu onnistuneesti.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+10"/>
+        <source>If you don&apos;t want to see internal Darksend fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</source>
+        <translation>Jos et halua nähdä sisäisiä Darksend sekoituksen kuluja/tapahtumia, valitse &quot;Yleiset&quot; tyypiksi siirtotapahtumissa.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>Darksendin käyttö vaatii vähintään %1.</translation>
     </message>
@@ -2072,7 +2094,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../peertablemodel.cpp" line="+118"/>
         <source>Address/Hostname</source>
-        <translation>Osoite/Insäntänimi</translation>
+        <translation>Osoite/Isäntänimi</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2082,13 +2104,13 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+0"/>
         <source>Ping Time</source>
-        <translation>Vastausaika</translation>
+        <translation>Ping aika</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoinunits.cpp" line="+234"/>
+        <location filename="../bitcoinunits.cpp" line="+252"/>
         <source>Amount</source>
         <translation>Määrä</translation>
     </message>
@@ -2098,7 +2120,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Syötä Dash osoite (esim. %1)</translation>
     </message>
     <message>
-        <location line="+757"/>
+        <location line="+760"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2179,12 +2201,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>T&amp;ietoa</translation>
     </message>
     <message>
-        <location line="+304"/>
-        <source>Masternode Count</source>
-        <translation>Masternodet määrä</translation>
-    </message>
-    <message>
-        <location line="-253"/>
+        <location line="+51"/>
         <source>General</source>
         <translation>Yleinen</translation>
     </message>
@@ -2292,7 +2309,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lohkoketju</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+289"/>
+        <source>Number of Masternodes</source>
+        <translation>Masternodet määrä</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>&amp;Console</source>
         <translation>&amp;Konsoli</translation>
     </message>
@@ -2401,7 +2423,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+23"/>
         <source>Ping Time</source>
-        <translation>Vastausaika</translation>
+        <translation>Ping aika</translation>
     </message>
     <message>
         <location line="+40"/>
@@ -2436,7 +2458,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+19"/>
         <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
-        <translation>Painikkeet käynnistävät lompakon korjauksen komentorivin valintoja käyttäen, korjaa korruptoituneen lohkoketjun tai puuttuvat / vanhentuneet tapahtumat.</translation>
+        <translation>Painikkeet käynnistävät lompakon korjauksen komentorivin valintoja käyttäen.
+Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/vanhentuneet tapahtumat.</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -2560,8 +2583,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>ReceiveCoinsDialog</name>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="+34"/>
-        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Uudelleenkäytä yksi vanhoista vastaanottavista osoitteista. Uudelleenkäyttössä on turvallisuus- ja yksityisyysongelmia. Älä käytä tätä ellet ole uudelleenluomassa aikaisempaa maksupyyntöä.</translation>
+        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
+        <translation>Uudelleenkäytä yksi vanhoista vastaanottavista osoitteista.&lt;br&gt;Uudelleenkäyttössä on turvallisuus- ja yksityisyysongelmia.&lt;br&gt;Älä käytä tätä ellet ole uudelleenluomassa aikaisempaa maksupyyntöä.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2570,14 +2593,13 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+14"/>
-        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>Valinnainen viesti liitettäväksi maksupyyntöön, joka näytetään kun pyyntö on avattu. Huomio: Viestiä ei lähetetä maksun mukana Dash verkkoon.</translation>
+        <translation>Valinnainen viesti liitettäväksi maksupyyntöön, joka näytetään kun pyyntö on avattu.&lt;br&gt;Huomio: Viestiä ei lähetetä maksun mukana Dash verkkoon.</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="+3"/>
         <source>&amp;Message:</source>
-        <translation>&amp;Viesti:</translation>
+        <translation>Vi&amp;esti:</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2586,7 +2608,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Valinnainen nimi liitetään uuteen vastaanottavaan osoitteeseen.</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-14"/>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>Valinnainen viesti liitettäväksi maksupyyntöön, joka näytetään kun pyyntö on avattu.&lt;br&gt;Huomio: Viestiä ei lähetetä maksun mukana Dash verkkoon.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Käytä tätä lomaketta maksupyyntöihin. Kaikki kentät ovat &lt;b&gt;valinnaisia&lt;/b&gt;.</translation>
     </message>
@@ -2639,7 +2666,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+17"/>
         <source>Remove the selected entries from the list</source>
-        <translation>Poista valitut alkiot listasta</translation>
+        <translation>Poista valitut merkinnät listasta</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2772,10 +2799,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+599"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <location line="+12"/>
         <source>Send Coins</source>
-        <translation>Lähetä Dasheja</translation>
+        <translation>Lähetä</translation>
     </message>
     <message>
         <location line="+76"/>
@@ -2879,32 +2906,32 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+78"/>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Jos mukautettu siirtomaksu on asetettu 1000 duffs ja siirtotapahtuma on vain 250 tavua, tällöin &quot;per kilotavu&quot; maksaa vain 250 duffs siirtomaksun, kun taas &quot;vähintään&quot; maksaa 1000 duffs. Siirtotapahtumat jotka ovat isompia kuin kilotavu, molemmat maksaa &quot;per kilotavu&quot;.</translation>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Jos mukautettu siirtomaksu on asetettu 1000 duff ja siirtotapahtuma on vain 250 tavua,&lt;br /&gt;tällöin &quot;per kilotavu&quot; maksaa vain 250 duffs siirtomaksun, kun taas &quot;vähintään&quot; maksaa 1000 duffs.&lt;br /&gt;Siirtotapahtumat jotka ovat isompia kuin kilotavu, molemmat maksaa &quot;per kilotavu&quot;.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+16"/>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Jos mukautettu siirtomaksu on asetettu 1000 duff ja siirtotapahtuma on vain 250 tavua,&lt;br /&gt;tällöin &quot;per kilotavu&quot; maksaa vain 250 duffs siirtomaksun, kun taas &quot;yhteensä vähintään&quot; maksaa 1000 duffs.&lt;br /&gt;Siirtotapahtumat jotka ovat isompia kuin kilotavu, molemmat maksaa &quot;per kilotavu&quot;.</translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <location line="+13"/>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation>Minimi siirtomaksun maksaminen on ok niin kauan kun siirtotapahtumien määrä on pienempi kuin tila lohkoissa.&lt;br /&gt;Mutta ota huomioon että tämä voi johtaa siirtotapahtumaan jota ei vahvisteta koskaan, jos siirtotapahtumia on enemmän kuin verkko voi käsitellä.</translation>
+    </message>
+    <message>
+        <location line="-59"/>
         <source>per kilobyte</source>
         <translation>per kilotavu</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Jos mukautettu siirtomaksu on asetettu 1000 duffs ja siirtotapahtuma on vain 250 tavua, tällöin &quot;per kilotavu&quot; maksaa vain 250 duffs siirtomaksun, kun taas &quot;yhteensä vähintään&quot; maksaa 1000 duffs. Siirtotapahtumat jotka ovat isompia kuin kilotavu, molemmat maksaa &quot;per kilotavu&quot;.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+16"/>
         <source>total at least</source>
         <translation>yhteensä vähintään</translation>
     </message>
     <message>
-        <location line="+30"/>
-        <location line="+13"/>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation>Minimi siirtomaksun maksaminen on ok niin kauan kun siirtotapahtumien määrä on pienempi kuin tila lohkoissa. Mutta ota huomioon että tämä voi johtaa siirtotapahtumaan jota ei vahvisteta koskaan, jos siirtotapahtumia on enemmän kuin verkko voi käsitellä.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+46"/>
         <source>(read the tooltip)</source>
         <translation>(lue vinkki)</translation>
     </message>
@@ -2919,7 +2946,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Mukautettu:</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+55"/>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation>(Älykästä siirtomaksua ei ole alustettu vielä. Tämä kestää yleensä muutaman lohkon...)</translation>
     </message>
@@ -2966,7 +2993,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+3"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Tyhjennä Kaikki</translation>
+        <translation>T&amp;yhjennä Kaikki</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2994,7 +3021,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-543"/>
+        <location filename="../sendcoinsdialog.cpp" line="-562"/>
         <source>Copy quantity</source>
         <translation>Kopioi määrä</translation>
     </message>
@@ -3081,21 +3108,16 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+17"/>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Yhteensä %1 (= %2)</translation>
+        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
+        <translation>Määrä yhteensä = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>or</source>
-        <translation>tai</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+20"/>
         <source>Confirm send coins</source>
         <translation>Hyväksy lähettäminen</translation>
     </message>
     <message>
-        <location line="+235"/>
+        <location line="+238"/>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
         <translation>Siirtomaksu %1 kertaa korkeampi kuin %2 per kB on erittäin korkea siirtomaksu.</translation>
     </message>
@@ -3110,7 +3132,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vastaanottajan osoite on virheellinen, tarkista osoite.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-214"/>
+        <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
+        <translation>&lt;b&gt;(Näytetään %1 / %2 merkintää)&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location line="+217"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Maksettavan summan tulee olla suurempi kuin 0.</translation>
     </message>
@@ -3224,7 +3251,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="+521"/>
         <location line="+536"/>
         <source>A&amp;mount:</source>
-        <translation>M&amp;äärä:</translation>
+        <translation>&amp;Määrä:</translation>
     </message>
     <message>
         <location line="-1041"/>
@@ -3344,7 +3371,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+3"/>
         <source>Sign &amp;Message</source>
-        <translation>Allekirjoita &amp;viesti</translation>
+        <translation>Allekirjoita &amp;Viesti</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -3355,7 +3382,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="+3"/>
         <location line="+143"/>
         <source>Clear &amp;All</source>
-        <translation>&amp;Tyhjennä Kaikki</translation>
+        <translation>T&amp;yhjennä Kaikki</translation>
     </message>
     <message>
         <location line="-84"/>
@@ -3869,7 +3896,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+2"/>
         <source>Darksend Create Denominations</source>
-        <translation>Darksend denominoinnin luonti</translation>
+        <translation>Darksend denominointien luonti</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3920,7 +3947,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+67"/>
+        <location filename="../transactionview.cpp" line="+69"/>
         <location line="+17"/>
         <source>All</source>
         <translation>Kaikki</translation>
@@ -3956,12 +3983,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Alue...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+12"/>
         <source>Most Common</source>
-        <translation>Yleisin</translation>
+        <translation>Yleiset</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Received with</source>
         <translation>Vastaanotettu</translation>
     </message>
@@ -3983,7 +4010,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+1"/>
         <source>Darksend Create Denominations</source>
-        <translation>Darksend denom. luonti</translation>
+        <translation>Darksend denominointien luonti</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4011,7 +4038,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Muu</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Enter address or label to search</source>
         <translation>Anna etsittävä osoite tai tunniste</translation>
     </message>
@@ -4051,7 +4078,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Näytä siirtotapahtuman yksityiskohdat</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+201"/>
         <source>Export Transaction History</source>
         <translation>Vie siirtotapahtumien historia</translation>
     </message>
@@ -4116,7 +4143,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Siirtotapahtumien historia tallennettiin onnistuneesti paikkaan %1.</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+126"/>
         <source>Range:</source>
         <translation>Alue:</translation>
     </message>
@@ -4171,7 +4198,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vie tällä hetkellä valitun välilehden tiedot tiedostoon</translation>
     </message>
     <message>
-        <location line="+201"/>
+        <location line="+8"/>
+        <source>Selected amount:</source>
+        <translation>Valittu määrä:</translation>
+    </message>
+    <message>
+        <location line="+193"/>
         <source>Backup Wallet</source>
         <translation>Varmuuskopioi lompakko</translation>
     </message>
@@ -4244,12 +4276,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on korvattu lohko tarkisteella)</translation>
     </message>
     <message>
-        <location line="+12"/>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Löytyi vahvistamattomia syötteitä, odotetaan että ne vahvistetaan.</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+20"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>Tässä moodissa -genproclimit ohjaa kuinka monta lohkoa luodaan välittömästi.</translation>
     </message>
@@ -4269,7 +4296,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tiedustele vertaisverkon osoitteita DNS hakua käyttäen jos osoitteita ei ole riittävästi (oletus: 1 paitsi jos -connect)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
         <translation>Aseta ulkoinen osoite:portti tälle masternodelle (esim: osoite:portti)</translation>
     </message>
@@ -4326,7 +4353,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+3"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Varoitus: Virhe luettaessa wallet.dat lompakkotiedostoa. Kaikki avaimet luettiin onnistuneesti, mutta siirtohistoria tai osoitekirja saattavat olla kadonneet tai virheellisiä.</translation>
+        <translation>Varoitus: Virhe luettaessa wallet.dat lompakkotiedostoa. Kaikki avaimet luettiin onnistuneesti, mutta siirtohistorian tai osoitekirjan merkinnät saattavat olla kadonneet tai virheellisiä.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4339,12 +4366,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Sinun täytyy määritellä masternodeprivkey asetustiedostoon. Katso lisätietoja dokumentaatiosta.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>(default: 1)</source>
         <translation>(oletus: 1)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Hyväksy merkkipohjaiset ja JSON-RPC käskyt</translation>
     </message>
@@ -4384,7 +4411,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ei voida denominoida: yhteensopivia syötteitä ei ole jäljellä.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Cannot downgrade wallet</source>
         <translation>Et voi päivittää lompakkoasi vanhempaan versioon</translation>
     </message>
@@ -4429,12 +4456,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vioittunut lohkotietokanta havaittu</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Darksend is disabled.</source>
-        <translation>Darksend on pois käytöstä.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Darksend options:</source>
         <translation>Darksend valinnat:</translation>
     </message>
@@ -4514,7 +4536,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Virhe</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Error: Disk space is low!</source>
         <translation>Virhe: Levytila on alhainen!</translation>
     </message>
@@ -4526,7 +4548,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+1"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation>Virhe: Sinulla on jo odottavia syötteitä Darksend varannossa</translation>
+        <translation>Virhe: Sinulla on jo odottavia merkintöjä Darksend varannossa</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4544,7 +4566,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Jos &lt;kategoria&gt; ei ole toimitettu, tulosta kaikki debuggaustieto.</translation>
     </message>
     <message>
-        <location line="-261"/>
+        <location line="-268"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = pidä tx meta data esim. tilin omistaja ja maksupyyntö tiedot, 2 = poista tx meta data)</translation>
     </message>
@@ -4629,7 +4651,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Aja tietokannan tapahtumat muistivarannosta kovalevylogiin joka &lt;n&gt; megatavu (oletus: %u)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+3"/>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation>Löytyi vahvistamattomia syötteitä, odotetaan että ne vahvistetaan.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Kuinka vaativa lohkon vahvistus -checkblocks on (0-4, oletus: %u)</translation>
     </message>
@@ -4651,7 +4678,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+2"/>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Ylläpidä täyttä siirtotapahtumien indeksiä, jota käyttää getrawtransaction rpc call (oletus: %u)</translation>
+        <translation>Ylläpidä täyttä siirtotapahtumien indeksiä, jota käyttää getrawtransaction rpc kutsu (oletus: %u)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -4684,6 +4711,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vaadi korkea prioriteetti välitettäville ilmaisille tai matalan siirtomaksun siirtotapahtumille (oletus: %u)</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Send trace/debug info to console instead of debug.log file (default: %u)</source>
+        <translation>Lähetä jäljitys/debug tiedot konsoliin debug.log tiedoston sijaan (default: %u)</translation>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Aseta prosessorin ytimien määrä louhintaan, jos päällä (-1 = kaikki ytimet, oletus: %d)</translation>
@@ -4698,7 +4730,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin &lt;https://www.openssl.org/&gt; sekä Eric Youngin kehittämän salausohjelmiston ja Thomas Bernardin kehittämän UPnP ohjelmiston.
 
-Käännös päivitetty: 28.6.2015 by AjM.</translation>
+Käännös päivitetty: 3.8.2015 by AjM.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -4752,11 +4784,16 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     </message>
     <message>
         <location line="+6"/>
+        <source>(9999 could be used only on mainnet)</source>
+        <translation>(9999 voidaan käyttää vain pääverkossa)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>(default: %s)</source>
         <translation>(oletus: %s)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>&lt;category&gt; can be:
 </source>
         <translation>&lt;category&gt; voi olla:
@@ -4778,7 +4815,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Tiedustele aina peers osoitteita DNS hakua käyttäen (oletus: %u)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
         <translation>Ei voida selvittää -whitebind osoitetta: &apos;%s&apos;</translation>
     </message>
@@ -4848,6 +4885,11 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Virhe: Vakava sisäinen virhe, katso debug.log saadaksesi lisätietoja</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Error: Can&apos;t select current denominated inputs</source>
+        <translation>Virhe: Ei voida valita nykyisiä denominoituja syötteitä</translation>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Virhe: Ei tuettu argumentti -tor löytyi, käytä -onion.</translation>
@@ -4889,11 +4931,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     </message>
     <message>
         <location line="+2"/>
-        <source>Ignore masternodes less than version (example: 70050; default: %u)</source>
-        <translation>Hylkää masternodet joiden versio on pienempi kuin (esim: 70050; oletus: %u)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Importing...</source>
         <translation>Tuodaan...</translation>
     </message>
@@ -4910,7 +4947,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Incompatible mode.</source>
-        <translation>Yhteensopimaton tila:</translation>
+        <translation>Yhteensopimaton tila.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4941,11 +4978,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <location line="+1"/>
         <source>InstantX options:</source>
         <translation>InstantX valinnat:</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Insufficient funds</source>
-        <translation>Saldo ei riitä</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4988,7 +5020,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Virheellinen määrä -paytxfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Last successful Darksend action was too recent.</source>
         <translation>Viimeinen onnistunut Darksend tapahtuma oli liian äskettäin.</translation>
     </message>
@@ -4998,7 +5030,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Rajoita allekirjoitusien välimuisti &lt;n&gt; merkintään (oletus: %u)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Kuuntele JSON-RPC yhteyksiä portissa &lt;port&gt; (oletus: %u tai testiverkossa: %u)</translation>
     </message>
@@ -5008,7 +5040,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Kuuntele yhteyksiä portissa &lt;port&gt; (oletus: %u tai testiverkossa: %u)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Lukitse masternodet niiden asetustiedoston kautta (oletus: %u)</translation>
     </message>
@@ -5073,12 +5105,17 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Lisää debug lokitiedoston merkinnän alkuun pvm/aika (oletus: %u)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Run a thread to flush wallet periodically (default: %u)</source>
         <translation>Aja säie joka säännöllisesti tallettaa lompakon (oletus: %u)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Send trace/debug info to debug.log file (default: %u)</source>
+        <translation>Lähetä jäljitys/debug tiedot debug.log tiedostoon (default: %u)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
         <translation>Lähetä siirtotapahtumat nolla siirtomaksulla jos mahdollista (oletus: %u)</translation>
     </message>
@@ -5093,12 +5130,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Serverin yksityisavain (oletus: %s)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Session timed out, please resubmit.</source>
-        <translation>Istunto vanheni, esitä uudestaan.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Aseta avainvarannon koko &lt;n&gt; (oletus: %u)</translation>
     </message>
@@ -5115,92 +5147,97 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Asettaa DB_PRIVATE lipun lompakon tietokantaympäristössä (oletus: %u)</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <source>Signing timed out.</source>
+        <translation>Allekirjoitus aikaraja.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Specify configuration file (default: %s)</source>
-        <translation type="unfinished"/>
+        <translation>Määritä asetustiedosto (oletus: %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>Määritä yhteyden aikakatkaisu millisekunneissa (minimi: 1, oletus: %d)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Specify masternode configuration file (default: %s)</source>
-        <translation type="unfinished"/>
+        <translation>Määritä masternoden asetustiedosto (oletus: %s)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Specify pid file (default: %s)</source>
-        <translation type="unfinished"/>
+        <translation>Määritä pid tiedosto (oletus: %s)</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Käytä vahvistamattomia vaihtorahoja lähetettäessä siirtotapahtumia (oletus: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Keskeytä kun kaikki lohkot tuotu levyltä (oletus: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Submitted following entries to masternode: %u / %d</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty seuraavat merkinnät masternodelle: %u / %d</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty masternodelle, odotetaan lisää merkintöjä ( %u / %d ) %s</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Submitted to masternode, waiting in queue %s</source>
-        <translation type="unfinished"/>
+        <translation>Esitetty masternodelle, odotetaan jonossa %s</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>This is not a Masternode.</source>
-        <translation type="unfinished"/>
+        <translation>Tämä ei ole Masternode.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Yhteyden kynnysaika huonosti käyttäyville peers:lle (oletus: %u)</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Käytä KeePass 2 integraatiota käyttäen KeePassHttp liitännäistä (oletus: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Käytä N erillistä masternodea varojen anonymisointiin (2-8, oletus: %u)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Käytä UPnP:tä kuunneltavan portin kartoitukseen (oletus: %u)</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>Wallet needed to be rewritten: restart Dash Core to complete</source>
-        <translation type="unfinished"/>
+        <translation>Lompakko on kirjoitettava uudelleen: käynnistä Dash Core uudestaan viimeistelyä varten</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation type="unfinished"/>
+        <translation>Varoitus: Ei tuettu argumentti -benchmark jätetty huomiotta, käytä -debug=bench.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation type="unfinished"/>
+        <translation>Varoitus: Ei tuettu argumentti -debugnet jätetty huomiotta, käytä -debug=net.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5208,14 +5245,39 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Yritetään uudelleen...</translation>
     </message>
     <message>
-        <location line="-122"/>
+        <location line="-127"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Virheellinen masternoden yksityisavain (masternodeprivkey). Katso lisätietoja dokumentaatiosta.</translation>
     </message>
     <message>
+        <location line="-88"/>
+        <source>(must be 9999 for mainnet)</source>
+        <translation>(oltava 9999 pääverkossa)</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Can&apos;t find random Masternode.</source>
+        <translation>Satunnaista Masternodea ei löydy.</translation>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Can&apos;t mix while sync in progress.</source>
+        <translation>Ei voida sekoittaa synkronoinnin aikana.</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Could not parse masternode.conf</source>
+        <translation> Ei voitu jäsentää masternode.conf</translation>
+    </message>
+    <message>
+        <location line="+59"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Virheellinen verkkomaski määritelty -whitelist: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid port detected in masternode.conf</source>
+        <translation>Virheellinen portti löytyi masternode.conf :sta</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5240,7 +5302,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Keep N DASH anonymized (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Pidä N DASH anonymisoituna (oletus: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5253,7 +5315,12 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Viimeisin Darksend oli liian äskettäin.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
+        <source>Line: %d</source>
+        <translation>Rivi: %d</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Loading addresses...</source>
         <translation>Ladataan osoitteita...</translation>
     </message>
@@ -5265,12 +5332,17 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Loading budget cache...</source>
-        <translation type="unfinished"/>
+        <translation>Ladataan budjettivälimuistia...</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Loading masternode cache...</source>
-        <translation type="unfinished"/>
+        <translation>Ladataan masternodevälimuistia...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Loading masternode payment cache...</source>
+        <translation>Ladataan masternode maksuvälimuistia...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5315,7 +5387,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Node relay options:</source>
-        <translation type="unfinished"/>
+        <translation>Solmun välitysasetukset:</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5355,7 +5427,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation>RPC tuki jatkuville HTTP yhteyksille (oletus: %d)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5374,13 +5446,18 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Vastaanota ja näytä P2P verkon hälytykset (oletus: %u)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Välitä ja louhi datan kuljetustapahtumia (oletus: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Välitä non-P2SH multisig (oletus: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5398,17 +5475,17 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Aja taustalla palveluprosessina ja hyväksy komennot</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Lähetä jäljitys/debug-tieto konsoliin, debug.log tiedoston sijaan</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Session not complete!</source>
         <translation>Istunto ei ole valmis!</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Session timed out.</source>
+        <translation>Istunnon aikaraja.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Aseta tietokannan välimuistin koko megatavuissa (%d - %d, oletus: %d</translation>
     </message>
@@ -5438,12 +5515,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Allekirjoitus epäonnistui.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Signing timed out, please resubmit.</source>
-        <translation>Allekirjoitus aikaraja, esitä uudestaan.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Signing transaction failed</source>
         <translation>Siirtotapahtuman allekirjoitus epäonnistui</translation>
     </message>
@@ -5515,7 +5587,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Transmitting final transaction.</source>
-        <translation type="unfinished"/>
+        <translation>Lähetetään lopullinen siirtotapahtuma.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5535,7 +5607,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Unknown state: id = %u</source>
-        <translation type="unfinished"/>
+        <translation>Tuntematon tila: id = %u</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5594,13 +5666,18 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
+        <source>Wallet window title</source>
+        <translation>Lompakon ikkunaotsikko</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Warning</source>
         <translation>Varoitus</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Varoitus: Tämä versio on vanhentunut, päivitys on tarpeen!</translation>
+        <translation>Varoitus: Tämä versio on vanhentunut, päivitys vaaditaan!</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -5610,12 +5687,12 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     <message>
         <location line="+1"/>
         <source>Your entries added successfully.</source>
-        <translation type="unfinished"/>
+        <translation>Merkinnnät lisätty onnistuneesti.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>Your transaction was accepted into the pool!</source>
-        <translation type="unfinished"/>
+        <translation>Siirtotapahtuma hyväksytty varantoon!</translation>
     </message>
     <message>
         <location line="+1"/>
