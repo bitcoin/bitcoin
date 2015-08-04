@@ -70,14 +70,14 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         bool fMissingInputs = false;
         CValidationState state;
 
-        LOCK(cs_main);
-        if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
+        bool fAccepted = false;
         {
-            vector<CInv> vInv;
-            vInv.push_back(inv);
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-                pnode->PushMessage("inv", vInv);
+            LOCK(cs_main);
+            fAccepted = AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs);
+        }
+        if (fAccepted)
+        {
+            RelayInv(inv);
 
             DoConsensusVote(tx, nBlockHeight);
 
@@ -161,12 +161,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                     mapUnknownVotes[ctx.vinMasternode.prevout.hash] = GetTime()+(60*10);
                 }
             }
-            vector<CInv> vInv;
-            vInv.push_back(inv);
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-                pnode->PushMessage("inv", vInv);
-
+            RelayInv(inv);
         }
 
         return;
