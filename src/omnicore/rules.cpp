@@ -210,7 +210,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_SP_BLOCK = 0;
     MSC_MANUALSP_BLOCK = 0;
     MSC_STO_BLOCK = 0;
-    MSC_METADEX_BLOCK = 999999;
+    MSC_METADEX_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
 }
 
