@@ -81,7 +81,6 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         // future-proofing. That's also enough to spend a 20-of-20
         // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
         // considered standard)
-        bool 
         if (txin.scriptSig.size() > 1650) {
             reason = "scriptsig-size";
             isStandardTx = false;
