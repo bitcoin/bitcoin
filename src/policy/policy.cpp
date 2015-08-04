@@ -56,9 +56,10 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
+    bool isStandardTx = true;
     if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
         reason = "version";
-        return false;
+        isStandardTx = false;
     }
 
     // Extremely large transactions with lots of inputs can cost the network
@@ -68,7 +69,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
     if (sz >= MAX_STANDARD_TX_SIZE) {
         reason = "tx-size";
-        return false;
+        isStandardTx = false;
     }
 
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
@@ -82,11 +83,11 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         // considered standard)
         if (txin.scriptSig.size() > 1650) {
             reason = "scriptsig-size";
-            return false;
+            isStandardTx = false;
         }
         if (!txin.scriptSig.IsPushOnly()) {
             reason = "scriptsig-not-pushonly";
-            return false;
+            isStandardTx = false;
         }
     }
 
@@ -95,27 +96,27 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     BOOST_FOREACH(const CTxOut& txout, tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
-            return false;
+            isStandardTx = false;
         }
 
         if (whichType == TX_NULL_DATA)
             nDataOut++;
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
-            return false;
+            isStandardTx = false;
         } else if (txout.IsDust(::minRelayTxFee)) {
             reason = "dust";
-            return false;
+            isStandardTx = false;
         }
     }
 
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
         reason = "multi-op-return";
-        return false;
+        isStandardTx = false;
     }
 
-    return true;
+    return isStandardTx;
 }
 
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
