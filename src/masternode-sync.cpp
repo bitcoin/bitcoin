@@ -28,6 +28,15 @@ bool CMasternodeSync::IsSynced()
 bool CMasternodeSync::IsBlockchainSynced()
 {
     static bool fBlockchainSynced = false;
+    static int64_t lastProcess = GetTime();
+
+    // if the last call to this function was more than 10 minutes ago (client was in sleep mode) reset the sync process
+    if(GetTime() - lastProcess > 60*10) {
+        Reset();
+        fBlockchainSynced = false;
+    }
+    lastProcess = GetTime();
+
     if(fBlockchainSynced) return true;
 
     if (fImporting || fReindex) return false;
@@ -47,36 +56,12 @@ bool CMasternodeSync::IsBlockchainSynced()
     return true;
 }
 
-// if the last call to this function was more than 10 minutes ago, reset the sync process
-// - Get new masternode information
-// - Get new votes we missed (budgets and winners)
-// - Get new masternode budget
-void CMasternodeSync::WakeUp()
-{
-    // was asleep for more than 10 minutes?
-    if(GetTime() - lastProcess > 60*10) {
-        static bool fBlockchainSynced = false;
-        fBlockchainSynced = false;
-    
-        Reset();
-
-        // this could get us banned by our peers, but we'll need to try and get new information we missed
-        ClearFulfilledRequest();
-
-        // maybe we should reset all masternode based information and resync from scratch? 
-        // maybe we should get 8 new peers?
-    }
-
-    lastProcess = GetTime();
-}
-
 void CMasternodeSync::Reset()
 {   
     lastMasternodeList = 0;
     lastMasternodeWinner = 0;
     lastBudgetItem = 0;
     lastFailure = 0;
-    lastProcess = GetTime();
     nCountFailures = 0;
     sumMasternodeList = 0;
     sumMasternodeWinner = 0;
@@ -215,8 +200,6 @@ void CMasternodeSync::Process()
 {
     static int tick = 0;
 
-    WakeUp();
-    
     if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
 
     if(IsSynced()) {
