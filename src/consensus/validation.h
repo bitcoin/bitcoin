@@ -64,9 +64,10 @@ public:
         return mode == MODE_ERROR;
     }
     bool IsInvalid(int &nDoSOut) const {
+        bool isInvalid = false;
         if (IsInvalid()) {
             nDoSOut = nDoS;
-            return true;
+            isInvalid = true;
         }
         return false;
     }
