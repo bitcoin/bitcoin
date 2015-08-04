@@ -224,8 +224,15 @@ bool CMPTransaction::interpret_SendToOwners()
 /** Tx 4 */
 bool CMPTransaction::interpret_SendAll()
 {
-    if (pkt_size < 4) {
+    if (pkt_size < 5) {
         return false;
+    }
+    memcpy(&ecosystem, &pkt[4], 1);
+
+    property = ecosystem; // provide a hint for the UI, TODO: better handling!
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t       ecosystem: %d\n", (int)ecosystem);
     }
 
     return true;
@@ -970,12 +977,12 @@ int CMPTransaction::logicMath_SendToOwners()
 /** Tx 4 */
 int CMPTransaction::logicMath_SendAll()
 {
-    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+    if (!IsTransactionTypeAllowed(block, ecosystem, type, version)) {
         PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
                 __func__,
                 type,
                 version,
-                property,
+                ecosystem,
                 block);
         return (PKT_ERROR_SEND_ALL -22);
     }
@@ -997,6 +1004,14 @@ int CMPTransaction::logicMath_SendAll()
     int numberOfPropertiesSent = 0;
 
     while (0 != (propertyId = ptally->next())) {
+        // only transfer tokens in the specified ecosystem
+        if (ecosystem == OMNI_PROPERTY_MSC && isTestEcosystemProperty(propertyId)) {
+            continue;
+        }
+        if (ecosystem == OMNI_PROPERTY_TMSC && isMainEcosystemProperty(propertyId)) {
+            continue;
+        }
+
         int64_t moneyAvailable = ptally->getMoney(propertyId, BALANCE);
         if (moneyAvailable > 0) {
             ++numberOfPropertiesSent;

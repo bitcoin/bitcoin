@@ -250,6 +250,8 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
 void populateRPCTypeSendAll(CMPTransaction& omniObj, Object& txobj)
 {
     Array subSends;
+    if (omniObj.getEcosystem() == 1) txobj.push_back(Pair("ecosystem", "main"));
+    if (omniObj.getEcosystem() == 2) txobj.push_back(Pair("ecosystem", "test"));
     if (populateRPCSendAllSubSends(omniObj.getHash(), subSends) > 0) txobj.push_back(Pair("subsends", subSends));
 }
 

@@ -43,16 +43,17 @@ std::vector<unsigned char> CreatePayload_SimpleSend(uint32_t propertyId, uint64_
     return payload;
 }
 
-std::vector<unsigned char> CreatePayload_SendAll()
+std::vector<unsigned char> CreatePayload_SendAll(uint8_t ecosystem)
 {
     std::vector<unsigned char> payload;
-    uint16_t messageType = 4;
     uint16_t messageVer = 0;
-    mastercore::swapByteOrder16(messageType);
+    uint16_t messageType = 4;
     mastercore::swapByteOrder16(messageVer);
+    mastercore::swapByteOrder16(messageType);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, ecosystem);
 
     return payload;
 }

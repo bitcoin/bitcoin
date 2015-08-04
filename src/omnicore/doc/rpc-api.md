@@ -295,19 +295,20 @@ $ omnicore-cli "omni_sendchangeissuer" "1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu" "3HT
 
 ### omni_sendall
 
-Transfers *all* tokens owned to the recipient.
+Transfers all available tokens in the given ecosystem to the recipient.
 
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to send from
 2. ***toaddress            (string, required):*** the address of the receiver
-3. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
-4. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
+3. ***ecosystem            (number, required):*** the ecosystem of the tokens to send: (1) main, (2) test
+4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
+5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
 
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendall" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa"
+$ omnicore-cli "omni_sendall" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 2
 ```
 
 ### omni_sendrawtx

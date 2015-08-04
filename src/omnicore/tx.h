@@ -54,7 +54,7 @@ private:
     // CreatePropertyMananged, GrantTokens, RevokeTokens, ChangeIssuer
     unsigned int property;
 
-    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged, MetaDEx
+    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged, MetaDEx, SendAll
     unsigned char ecosystem;
 
     // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged
