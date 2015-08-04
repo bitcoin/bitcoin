@@ -31,7 +31,6 @@ public:
     int64_t lastMasternodeWinner;
     int64_t lastBudgetItem;
     int64_t lastFailure;
-    int64_t lastProcess;
     int nCountFailures;
 
     // sum of all counts
@@ -61,7 +60,6 @@ public:
 
     void Reset();
     void Process();
-    void WakeUp();
     bool IsSynced();
     bool IsBlockchainSynced();
     void ClearFulfilledRequest();
