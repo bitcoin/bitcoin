@@ -28,6 +28,15 @@ bool CMasternodeSync::IsSynced()
 bool CMasternodeSync::IsBlockchainSynced()
 {
     static bool fBlockchainSynced = false;
+    static int64_t lastProcess = GetTime();
+
+    // if the last call to this function was more than 10 minutes ago (client was in sleep mode) reset the sync process
+    if(GetTime() - lastProcess > 60*10) {
+        Reset();
+        fBlockchainSynced = false;
+    }
+    lastProcess = GetTime();
+
     if(fBlockchainSynced) return true;
 
     if (fImporting || fReindex) return false;
@@ -47,36 +56,12 @@ bool CMasternodeSync::IsBlockchainSynced()
     return true;
 }
 
-// if the last call to this function was more than 10 minutes ago, reset the sync process
-// - Get new masternode information
-// - Get new votes we missed (budgets and winners)
-// - Get new masternode budget
-void CMasternodeSync::WakeUp()
-{
-    // was asleep for more than 10 minutes?
-    if(GetTime() - lastProcess > 60*10) {
-        static bool fBlockchainSynced = false;
-        fBlockchainSynced = false;
-    
-        Reset();
-
-        // this could get us banned by our peers, but we'll need to try and get new information we missed
-        ClearFulfilledRequest();
-
-        // maybe we should reset all masternode based information and resync from scratch? 
-        // maybe we should get 8 new peers?
-    }
-
-    lastProcess = GetTime();
-}
-
 void CMasternodeSync::Reset()
 {   
     lastMasternodeList = 0;
     lastMasternodeWinner = 0;
     lastBudgetItem = 0;
     lastFailure = 0;
-    lastProcess = GetTime();
     nCountFailures = 0;
     sumMasternodeList = 0;
     sumMasternodeWinner = 0;
@@ -120,22 +105,9 @@ void CMasternodeSync::GetNextAsset()
     switch(RequestedMasternodeAssets)
     {
         case(MASTERNODE_SYNC_INITIAL):
-        case(MASTERNODE_SYNC_FAILED):
-            lastMasternodeList = 0;
-            lastMasternodeWinner = 0;
-            lastBudgetItem = 0;
-            lastFailure = 0;
-            nCountFailures = 0;
-            sumMasternodeList = 0;
-            sumMasternodeWinner = 0;
-            sumBudgetItemProp = 0;
-            sumBudgetItemFin = 0;
-            countMasternodeList = 0;
-            countMasternodeWinner = 0;
-            countBudgetItemProp = 0;
-            countBudgetItemFin = 0;  
-            RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
+        case(MASTERNODE_SYNC_FAILED): // should never be used here actually, use Reset() instead
             ClearFulfilledRequest();
+            RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
@@ -215,8 +187,6 @@ void CMasternodeSync::Process()
 {
     static int tick = 0;
 
-    WakeUp();
-    
     if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
 
     if(IsSynced()) {
@@ -224,15 +194,14 @@ void CMasternodeSync::Process()
             Resync if we lose all masternodes from sleep/wake or failure to sync originally
         */
         if(mnodeman.CountEnabled() == 0) {
-            ClearFulfilledRequest();
-            RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
+            Reset();
         } else
             return;
     }
 
     //try syncing again in an hour
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED && lastFailure + (60*60) < GetTime()) {
-        GetNextAsset();
+        Reset();
     } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
         return;
     }
