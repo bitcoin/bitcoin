@@ -295,12 +295,12 @@
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+107"/>
-        <location line="+726"/>
+        <location line="+728"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-717"/>
+        <location line="-719"/>
         <source>Wallet</source>
         <translation>Ví</translation>
     </message>
@@ -310,7 +310,7 @@
         <translation>Nút</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+144"/>
         <source>&amp;Overview</source>
         <translation>&amp;Tổng thể</translation>
     </message>
@@ -743,7 +743,7 @@ Kiểu: %3
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+171"/>
+        <location filename="../clientmodel.cpp" line="+173"/>
         <source>Network Alert</source>
         <translation>Cảnh báo mạng</translation>
     </message>
@@ -832,8 +832,8 @@ Kiểu: %3
     </message>
     <message>
         <location line="+5"/>
-        <source>Darksend Rounds</source>
-        <translation>Số vòng Darksend</translation>
+        <source>DS Rounds</source>
+        <translation>Số vòng DS</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -949,16 +949,16 @@ Kiểu: %3
     <message>
         <location line="+216"/>
         <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation type="unfinished"/>
+        <translation>Có thể thay đổi +/- %1 duff(s) cho mỗi đầu vào.</translation>
     </message>
     <message>
-        <location line="+131"/>
+        <location line="+132"/>
         <source>n/a</source>
         <translation>không áp dụng</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="-318"/>
-        <location filename="../coincontroldialog.cpp" line="-346"/>
+        <location filename="../coincontroldialog.cpp" line="-347"/>
         <source>medium</source>
         <translation>vừa</translation>
     </message>
@@ -1430,12 +1430,7 @@ Kiểu: %3
         <translation>(0 = tự động, &lt;0 = để đó rất nhiều lõi miễn phí)</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This setting determines the amount of individual masternodes that an input will be anonymized through. More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Thiết lập này xác định số tiền cho mỗi master nodes mà đầu vào thông qua đó được ẩn danh. Càng có nhiều vòng ẩn danh thì sẽ cho mức độ riêng tư càng cao, nhưng nó cũng tốn nhiều phí hơn.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+40"/>
         <source>Darksend rounds to use</source>
         <translation>Số vòng Darksend sử dụng</translation>
     </message>
@@ -1455,7 +1450,12 @@ Kiểu: %3
         <translation>&amp;Ví</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+22"/>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Accept connections from outside</source>
         <translation>Chấp nhận kết nối từ bên ngoài</translation>
     </message>
@@ -1480,7 +1480,12 @@ Kiểu: %3
         <translation>Chuyên gia</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-74"/>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+80"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Hiển thị hoặc không hiển thị tính năng coin control.</translation>
     </message>
@@ -1490,12 +1495,7 @@ Kiểu: %3
         <translation>Bật tính năng Coin &amp;control</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Nếu bạn tắt chức năng chi tiêu các khoản tiền trả lại chưa được xác nhận, thì những khoản trả lại đó sẽ không thể sử dụng đến tận khi các giao dịch đó được ít nhất một lần xác nhận. Điều này cũng ảnh hưởng đến cách tính số dư của bạn.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+10"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Tiêu phần trả lại chưa được xác nhận</translation>
     </message>
@@ -1598,6 +1598,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+11"/>
+        <source>Decimal digits</source>
+        <translation>Số các chữ số thập phân</translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <location line="+13"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Địa chỉ web của bên thứ ba (VD: chức năng kiểm tra số cái) mà nó xuất hiện trong tab giao dịch giống như các mục trong menu ngữ cảnh. %s trong địa chỉ web được thay thế bởi mã băm giao dịch. Nhiều địa chỉ web được phân cách bởi dấu gạch đứng |.</translation>
@@ -1633,7 +1638,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Huỷ</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+84"/>
+        <location filename="../optionsdialog.cpp" line="+91"/>
         <source>default</source>
         <translation>ngầm định</translation>
     </message>
@@ -1643,7 +1648,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>không có</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+87"/>
         <source>Confirm options reset</source>
         <translation>Xác nhận tái lập tuỳ chọn</translation>
     </message>
@@ -1764,12 +1769,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tình trạng:</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+78"/>
         <source>Enabled/Disabled</source>
         <translation>Bật/Tắt</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-71"/>
         <source>Completion:</source>
         <translation>Hoàn thành:</translation>
     </message>
@@ -1779,12 +1784,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số dư cho Darksend:</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>0 DASH</source>
-        <translation>0 DASH</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+20"/>
         <source>Amount and Rounds:</source>
         <translation>Số tiền và số vòng:</translation>
     </message>
@@ -1804,9 +1804,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>không áp dụng</translation>
     </message>
     <message>
-        <location line="+566"/>
-        <location filename="../overviewpage.cpp" line="+464"/>
-        <location line="+14"/>
+        <location line="+573"/>
+        <location filename="../overviewpage.cpp" line="+465"/>
+        <location line="+10"/>
+        <location line="+10"/>
         <location line="+14"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
@@ -1822,12 +1823,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bắt đầu/Tắt việc trộn</translation>
     </message>
     <message>
-        <location line="-462"/>
+        <location line="-469"/>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Mệnh giá mà bạn gửi cho Masternode. &lt;br&gt;Để trộn, những người dùng khác cũng cần gửi chính xác dùng loại mệnh giá đó.</translation>
     </message>
     <message>
-        <location line="+494"/>
+        <location line="+501"/>
         <source>(Last Message)</source>
         <translation>(Thông điệp cuối)</translation>
     </message>
@@ -1852,67 +1853,83 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Khởi động lại</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="-353"/>
+        <location filename="../overviewpage.cpp" line="-359"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>không đồng bộ</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+6"/>
         <location line="+1"/>
         <location line="+1"/>
-        <location line="+262"/>
+        <location line="+270"/>
         <source>Disabled</source>
         <translation>Đã tắt</translation>
     </message>
     <message>
-        <location line="-259"/>
-        <location line="+261"/>
-        <location line="+86"/>
+        <location line="-266"/>
+        <location line="+268"/>
+        <location line="+91"/>
         <source>Start Darksend Mixing</source>
         <translation>Bắt đầu trộn Darksend</translation>
     </message>
     <message>
-        <location line="-345"/>
-        <location line="+347"/>
+        <location line="-357"/>
+        <location line="+360"/>
         <source>Stop Darksend Mixing</source>
         <translation>Tắt trộn Darksend</translation>
     </message>
     <message>
-        <location line="-196"/>
+        <location line="-188"/>
+        <location line="+6"/>
         <source>No inputs detected</source>
         <translation>Phát hiện không có đầu vào</translation>
     </message>
     <message numerus="yes">
-        <location line="+7"/>
-        <location line="+59"/>
-        <location line="+15"/>
+        <location line="-2"/>
+        <location line="+20"/>
+        <location line="+10"/>
         <source>%n Rounds</source>
         <translation><numerusform>%n Vòng</numerusform></translation>
     </message>
     <message>
-        <location line="-65"/>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
-        <translation>Tìm thấy các mệnh giá đầu ra chưa được xác nhận, sẽ đợi đến khi chúng xác nhận để tính toán lại.</translation>
-    </message>
-    <message numerus="yes">
-        <location line="+37"/>
-        <source>Progress: %1% (inputs have an average of %2 of %n rounds)</source>
-        <translation><numerusform>Tiến trình: %1% (đầu vào có trung bình %2 của %n vòng)</numerusform></translation>
+        <location line="-7"/>
+        <source>Not enough compatible inputs to anonymize &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; instead</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+38"/>
+        <source>Overall progress</source>
+        <translation>Tiến trình chung</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Denominated</source>
+        <translation>Đã chia mệnh giá</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Anonymized</source>
+        <translation>Đã được ẩn danh</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+1"/>
+        <source>Denominated inputs have %5 of %n rounds on average</source>
+        <translation><numerusform>Mệnh giá đầu vào có %5 của %n vòng trên trung bình</numerusform></translation>
+    </message>
+    <message>
+        <location line="-48"/>
         <source>Found enough compatible inputs to anonymize %1</source>
         <translation>Đã tìm được đủ đầu vào tương thích để ẩn danh hoá %1</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>Not enough compatible inputs to anonymize &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br/&gt;will anonymize &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; instead</source>
-        <translation type="unfinished"/>
+        <location line="+46"/>
+        <source>Mixed</source>
+        <translation>Đã trộn</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+40"/>
         <source>Enabled</source>
         <translation>Đã bật</translation>
     </message>
@@ -1934,7 +1951,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Darksend vừa được tái lập thành công.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+10"/>
+        <source>If you don&apos;t want to see internal Darksend fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</source>
+        <translation>Nếu bạn không muốn thấy các thông tin bên trong về Darksend phí/giao dịch thì hãy chọn &quot;Thông dụng nhất&quot; làm Kiểu trong trang &quot;Giao dịch&quot;.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>Darksend cần ít nhất %1 để sử dụng.</translation>
     </message>
@@ -1986,7 +2008,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+8"/>
         <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
+        <translation>URI không thể phân tích. Nó có thể bởi địa chỉ Dash không hợp lệ hoặc thông số URI dị hình.</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2076,7 +2098,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+0"/>
         <source>User Agent</source>
-        <translation type="unfinished"/>
+        <translation>User Agent</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2087,7 +2109,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoinunits.cpp" line="+234"/>
+        <location filename="../bitcoinunits.cpp" line="+252"/>
         <source>Amount</source>
         <translation>Số lượng</translation>
     </message>
@@ -2097,7 +2119,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Hãy nhập một địa chỉ Dash (VD: %1)</translation>
     </message>
     <message>
-        <location line="+757"/>
+        <location line="+760"/>
         <source>%1 d</source>
         <translation>%1 giờ</translation>
     </message>
@@ -2178,12 +2200,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Thông tin</translation>
     </message>
     <message>
-        <location line="+304"/>
-        <source>Masternode Count</source>
-        <translation>Số Masternode</translation>
-    </message>
-    <message>
-        <location line="-253"/>
+        <location line="+51"/>
         <source>General</source>
         <translation>Chung chung</translation>
     </message>
@@ -2291,7 +2308,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Block chain</translation>
     </message>
     <message>
-        <location line="+323"/>
+        <location line="+289"/>
+        <source>Number of Masternodes</source>
+        <translation>Số lượng Masternodes</translation>
+    </message>
+    <message>
+        <location line="+34"/>
         <source>&amp;Console</source>
         <translation>&amp;Console</translation>
     </message>
@@ -2340,7 +2362,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+25"/>
         <source>Direction</source>
-        <translation type="unfinished"/>
+        <translation>Hướng</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2350,7 +2372,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+23"/>
         <source>User Agent</source>
-        <translation type="unfinished"/>
+        <translation>User Agent</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2360,12 +2382,12 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+23"/>
         <source>Starting Height</source>
-        <translation type="unfinished"/>
+        <translation>Độ cao khởi đầu</translation>
     </message>
     <message>
         <location line="+23"/>
         <source>Sync Height</source>
-        <translation type="unfinished"/>
+        <translation>Sync Height</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2475,7 +2497,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+13"/>
         <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation type="unfinished"/>
+        <translation>-reindex: Tái lập lại chỉ mục cho chuỗi khối từ tệp hiện tại blk000??.dat</translation>
     </message>
     <message>
         <location filename="../rpcconsole.cpp" line="-203"/>
@@ -2559,8 +2581,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>ReceiveCoinsDialog</name>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="+34"/>
-        <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation>Sử dụng lại địa chỉ đã được sử dụng để nhận trước đây. Sử dụng lại địa chỉ nảy sinh vấn đề an ninh và riêng tư. Đừng sử dụng nó trừ khi bạn tạo lại yêu cầu thanh toán mà bạn đã làm trước đây.</translation>
+        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+3"/>
@@ -2569,12 +2591,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+14"/>
-        <location line="+23"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
         <translation>Một thông điệp tuỳ chọn để đính vào yêu cầu thanh toán, nó sẽ hiển thị khi yêu cầu được mở. Chú ý: Thông điệp sẽ không được gửi thông qua mạng lưới Dash.</translation>
     </message>
     <message>
-        <location line="-20"/>
+        <location line="+3"/>
         <source>&amp;Message:</source>
         <translation>&amp;Thông điệp:</translation>
     </message>
@@ -2585,7 +2606,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Một nhãn tuỳ chọn để liên kết với địa chỉ nhận mới.</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-14"/>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
         <translation>Sử dụng biểu mẫu này để yêu cầu thanh toán. Tất cả các trường đều là &lt;b&gt;không bắt buộc&lt;/b&gt;.</translation>
     </message>
@@ -2771,7 +2797,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+599"/>
+        <location filename="../sendcoinsdialog.cpp" line="+633"/>
         <location line="+12"/>
         <source>Send Coins</source>
         <translation>Gửi tiền</translation>
@@ -2869,7 +2895,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+7"/>
         <source>collapse fee-settings</source>
-        <translation type="unfinished"/>
+        <translation>Thu gọn các thiết lập về phí</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2878,34 +2904,34 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+78"/>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+16"/>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+33"/>
+        <location line="+13"/>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="-59"/>
         <source>per kilobyte</source>
         <translation>mỗi kilobyte</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+16"/>
         <source>total at least</source>
         <translation>tổng ít nhất</translation>
     </message>
     <message>
-        <location line="+30"/>
-        <location line="+13"/>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+46"/>
         <source>(read the tooltip)</source>
-        <translation type="unfinished"/>
+        <translation>(xem gợi ý)</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -2918,7 +2944,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tuỳ chỉnh:</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+55"/>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
         <translation type="unfinished"/>
     </message>
@@ -2993,7 +3019,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Số dư:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-543"/>
+        <location filename="../sendcoinsdialog.cpp" line="-562"/>
         <source>Copy quantity</source>
         <translation>Sao chép số lượng</translation>
     </message>
@@ -3080,23 +3106,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+17"/>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Tổng số tiền %1 (= %2)</translation>
+        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
+        <translation>Tổng số tiền = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>or</source>
-        <translation>hoặc</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+20"/>
         <source>Confirm send coins</source>
         <translation>Xác nhận việc gửi tiền</translation>
     </message>
     <message>
-        <location line="+235"/>
+        <location line="+238"/>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
-        <translation type="unfinished"/>
+        <translation>Mức phí cao hơn %1 lần so với %2 cho mỗi kB được xem là mức phí rất cao.</translation>
     </message>
     <message numerus="yes">
         <location line="+109"/>
@@ -3109,7 +3130,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Địa chỉ nhận không hợp lệ, hãy kiểm tra lại.</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-214"/>
+        <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+217"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Số tiền thanh toán phải lớn hơn 0.</translation>
     </message>
@@ -3647,7 +3673,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <location line="-142"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform></translation>
+        <translation><numerusform>mãn hạn trong %n khối nữa</numerusform></translation>
     </message>
     <message>
         <location line="+2"/>
@@ -3919,7 +3945,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+67"/>
+        <location filename="../transactionview.cpp" line="+69"/>
         <location line="+17"/>
         <source>All</source>
         <translation>Tất cả</translation>
@@ -3955,12 +3981,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Khoảng...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+12"/>
         <source>Most Common</source>
         <translation>Phổ biến nhất</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Received with</source>
         <translation>Nhận với</translation>
     </message>
@@ -4010,7 +4036,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Khác</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Enter address or label to search</source>
         <translation>Nhập địa chỉ hoặc nhãn để tìm</translation>
     </message>
@@ -4050,7 +4076,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Xem chi tiết giao dịch</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+201"/>
         <source>Export Transaction History</source>
         <translation>Kết xuất Lịch sử Giao dịch</translation>
     </message>
@@ -4115,7 +4141,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
     </message>
     <message>
-        <location line="+128"/>
+        <location line="+126"/>
         <source>Range:</source>
         <translation>Khoảng:</translation>
     </message>
@@ -4130,7 +4156,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../bitcoingui.cpp" line="+115"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
-        <translation type="unfinished"/>
+        <translation>Đơn vị mà hiển thị số lượng trong đó. Hãy click để chọn một đơn vị khác.</translation>
     </message>
 </context>
 <context>
@@ -4154,7 +4180,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="-20"/>
         <location line="+9"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
-        <translation type="unfinished"/>
+        <translation>InstantX không hỗ trợ để gửi giá trị lớn đến như vậy. Giới hạn giao dịch hiện tại đến %1 DASH.</translation>
     </message>
 </context>
 <context>
@@ -4170,7 +4196,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kết xuất dữ liệu trong tab này sang một file</translation>
     </message>
     <message>
-        <location line="+201"/>
+        <location line="+8"/>
+        <source>Selected amount:</source>
+        <translation>Chọn số lượng:</translation>
+    </message>
+    <message>
+        <location line="+193"/>
         <source>Backup Wallet</source>
         <translation>Sao lưu Ví</translation>
     </message>
@@ -4243,12 +4274,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Thực hiện lệnh khi khối tốt nhất thay đổi (%s trong cmd được thay thế bởi giá trị băm của khối)</translation>
     </message>
     <message>
-        <location line="+12"/>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Đã thấy các mệnh giá đầu ra chưa được xác nhận, sẽ đợi đến khi chúng xác nhận để tiếp tục.</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+20"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
         <translation>Chế độ này -genproclimit kiểm soát bao nhiêu khối được sinh tức thời.</translation>
     </message>
@@ -4268,7 +4294,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Truy vấn địa chỉ đối tác ngang hàng thông qua tìm kiếm DNS, nếu có ít địa chỉ (ngầm định: 1 trừ trường hợp -connect)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
         <translation>Đặt external address:port cho masternode này (ví dụ: address:port)</translation>
     </message>
@@ -4338,12 +4364,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bạn cần chỉ rõ masternodeprivkey trong tệp cấu hình. Hãy xem tài liệu để có hướng dẫn.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>(default: 1)</source>
         <translation>(ngầm định: 1)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Chấp nhận dòng lệnh và các lệnh JSON-RPC</translation>
     </message>
@@ -4383,7 +4409,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không thể định giá: không còn đầu vào tương tích.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Cannot downgrade wallet</source>
         <translation>Không thể hạ cấp ví</translation>
     </message>
@@ -4428,12 +4454,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Phát hiện ra dữ liệu khối bị hỏng</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Darksend is disabled.</source>
-        <translation>Darksend đã được tắt.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Darksend options:</source>
         <translation>Tuỳ chọn Darksend:</translation>
     </message>
@@ -4513,7 +4534,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Lỗi</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Error: Disk space is low!</source>
         <translation>Lỗi: Dung lượng đĩa thấp!</translation>
     </message>
@@ -4543,7 +4564,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nếu &lt;category&gt; không được cung cấp, đưa ra tất cả các thông tin gỡ rối.</translation>
     </message>
     <message>
-        <location line="-261"/>
+        <location line="-268"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation type="unfinished"/>
     </message>
@@ -4628,7 +4649,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+3"/>
+        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
+        <translation>Đã thấy các mệnh giá đầu ra chưa được xác nhận, sẽ đợi đến khi chúng xác nhận để tiếp tục.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation type="unfinished"/>
     </message>
@@ -4683,6 +4709,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Send trace/debug info to console instead of debug.log file (default: %u)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+9"/>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation type="unfinished"/>
@@ -4690,7 +4721,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+3"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Hiển thị N xác nhận cho mỗi giao dịch được khoá thành công (0-9999, ngầm định: %u)</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -4739,24 +4770,29 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+6"/>
-        <source>(default: %s)</source>
-        <translation>(ngầm định: %s)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>&lt;category&gt; can be:
-</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Accept public REST requests (default: %u)</source>
+        <source>(9999 could be used only on mainnet)</source>
         <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
+        <source>(default: %s)</source>
+        <translation>(ngầm định: %s)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&lt;category&gt; can be:
+</source>
+        <translation>&lt;category&gt; có thể là:</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Chấp nhận các yêu cầu REST công khai (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Acceptable ciphers (default: %s)</source>
-        <translation type="unfinished"/>
+        <translation>Các loại mã hoá có thể chấp nhận (ngầm định: %s)</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -4764,9 +4800,9 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Cannot resolve -whitebind address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation>Không thể phân giải địa chỉ -whitebind: &apos;%s&apos;</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -4834,9 +4870,14 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation type="unfinished"/>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Error: Can&apos;t select current denominated inputs</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+2"/>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation type="unfinished"/>
+        <translation>Lỗi: Tìm thấy tham số không được hỗ trợ -tor, thay vào đó hãy sử dụng -onion</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -4875,11 +4916,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+2"/>
-        <source>Ignore masternodes less than version (example: 70050; default: %u)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Importing...</source>
         <translation>Đang nạp...</translation>
     </message>
@@ -4930,11 +4966,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+1"/>
-        <source>Insufficient funds</source>
-        <translation>Không đủ tiền</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Insufficient funds.</source>
         <translation>Không đủ tiền.</translation>
     </message>
@@ -4974,7 +5005,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Số tiền không hợp lệ cho -paytxfee =&lt;số tiền&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>Last successful Darksend action was too recent.</source>
         <translation>Phiên giao dịch Darksend thành công cuối cùng quá gần đây.</translation>
     </message>
@@ -4984,7 +5015,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Giới hạn kích thước bộ đệm chữ ký tới &lt;n&gt; thành phần (ngầm định: %u)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Lắng nghe kết nối JSON-RPC trên &lt;cổng&gt; (ngầm định: %u hoặc mạng thử: %u)</translation>
     </message>
@@ -4994,7 +5025,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Lắng nghe kết nối từ &lt;cổng&gt; (ngầm định: %u hoặc mạng thử: %u)</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Khoá các masternode từ tệp cấu hình masternode (ngầm định: %u)</translation>
     </message>
@@ -5059,12 +5090,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Thêm tiền tố đầu ra debug với dấu thời gian (ngầm định: %u)</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Run a thread to flush wallet periodically (default: %u)</source>
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
+        <source>Send trace/debug info to debug.log file (default: %u)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
         <translation>Gửi giao dịch như là giao dịch không phí nếu có thể (ngầm định: %u)</translation>
     </message>
@@ -5079,12 +5115,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Khoá riêng của máy chủ (ngầm định: %s)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Session timed out, please resubmit.</source>
-        <translation>Phiên làm việc đã quá giờ, vui lòng gửi yêu cầu lại.</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Thiết lập kích thước pool đến &lt;n&gt; (ngầm định: %u)</translation>
     </message>
@@ -5104,7 +5135,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <source>Signing timed out.</source>
+        <translation>Ký không kịp.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
         <source>Specify configuration file (default: %s)</source>
         <translation>Hãy chỉ rõ tệp cấu hình (ngầm định: %s)</translation>
     </message>
@@ -5179,7 +5215,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Ví cần được ghi lại: khởi động lại Dash Core để hoàn tất</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
         <translation type="unfinished"/>
     </message>
@@ -5194,13 +5230,38 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Sẽ thử lại...</translation>
     </message>
     <message>
-        <location line="-122"/>
+        <location line="-127"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Masternodeprivkey không hợp lệ. Hãy xem lại tài liệu.</translation>
     </message>
     <message>
+        <location line="-88"/>
+        <source>(must be 9999 for mainnet)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>Can&apos;t find random Masternode.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
         <location line="+1"/>
+        <source>Can&apos;t mix while sync in progress.</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Could not parse masternode.conf</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+59"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid port detected in masternode.conf</source>
         <translation type="unfinished"/>
     </message>
     <message>
@@ -5239,7 +5300,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Darksend cuối cùng quá gần.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
+        <source>Line: %d</source>
+        <translation>Dòng: %d</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Loading addresses...</source>
         <translation>Nạp các địa chỉ...</translation>
     </message>
@@ -5257,6 +5323,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <location line="+1"/>
         <source>Loading masternode cache...</source>
         <translation>Đang tải cache cho masternode...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Loading masternode payment cache...</source>
+        <translation>Đang tải bộ đệm thanh toán cho masternode...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5360,6 +5431,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+1"/>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Relay and mine data carrier transactions (default: %u)</source>
         <translation type="unfinished"/>
     </message>
@@ -5384,17 +5460,17 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Chạy trên chế độ nền như là một tiến trình ngầm và chấp nhận các lệnh</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Gửi thông tin theo dõi/gỡ rối đến console thay vì tệp debug.log</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Session not complete!</source>
         <translation>Phiên làm việc chưa hoàn thành.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
+        <source>Session timed out.</source>
+        <translation>Hết thời gian cho phiên làm việc.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Thiết lập kích thước bộ đệm cơ sở dữ liệu theo megabytes (%d đến %d, ngầm định: %d)</translation>
     </message>
@@ -5424,12 +5500,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Ký không thành công.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Signing timed out, please resubmit.</source>
-        <translation>Ký không kịp, hãy gửi lại.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Signing transaction failed</source>
         <translation>Thất bại khi ký giao dịch</translation>
     </message>
@@ -5577,6 +5648,11 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <location line="+2"/>
         <source>Wallet options:</source>
         <translation>Tuỳ chọn ví:</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Wallet window title</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location line="+1"/>
