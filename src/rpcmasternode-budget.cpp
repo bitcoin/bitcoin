@@ -106,7 +106,9 @@ Value mnbudget(const Array& params, bool fHelp)
         // }
 
         CWalletTx wtx;
-        pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), useIX);
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), useIX)){
+            return "Error making collateral transaction for proposal. Please check your wallet balance and make sure your wallet is unlocked.";
+        }
 
         // make our change address
         CReserveKey reservekey(pwalletMain);
@@ -296,6 +298,12 @@ Value mnbudget(const Array& params, bool fHelp)
 
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return "Error upon calling SetKey";
+
+        CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
+        if(pmn == NULL)
+        {
+            return "Failure to find masternode in list : " + activeMasternode.vin.ToString();
+        }
 
         CBudgetVote vote(activeMasternode.vin, hash, nVote);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
@@ -595,6 +603,12 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             return "Error upon calling SetKey";
+
+        CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
+        if(pmn == NULL)
+        {
+            return "Failure to find masternode in list : " + activeMasternode.vin.ToString();
+        }
 
         CFinalizedBudgetVote vote(activeMasternode.vin, hash);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
