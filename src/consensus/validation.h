@@ -69,7 +69,7 @@ public:
             nDoSOut = nDoS;
             isInvalid = true;
         }
-        return false;
+        return isInvalid;
     }
     bool CorruptionPossible() const {
         return corruptionPossible;
