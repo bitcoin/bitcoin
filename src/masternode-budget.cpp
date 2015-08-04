@@ -664,11 +664,10 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
             if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
                 pbudgetProposal->SetAllotted(pbudgetProposal->GetAmount());
                 nBudgetAllocated += pbudgetProposal->GetAmount();
+                vBudgetProposalsRet.push_back(pbudgetProposal);
             } else {
                 pbudgetProposal->SetAllotted(0);
             }
-            
-            vBudgetProposalsRet.push_back(pbudgetProposal);
         }
 
         ++it2;
