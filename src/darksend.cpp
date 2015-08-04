@@ -2219,16 +2219,7 @@ void ThreadCheckDarkSendPool()
 
             if(c % 60 == 0)
             {
-                {
-                    LOCK(cs_main);
-                    /*
-                        cs_main is required for doing CMasternode.Check because something
-                        is modifying the coins view without a mempool lock. It causes
-                        segfaults from this code without the cs_main lock.
-                    */
-                    mnodeman.CheckAndRemove();
-                }
-
+                mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
                 masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
