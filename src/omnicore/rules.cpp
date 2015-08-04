@@ -23,6 +23,15 @@
 
 namespace mastercore
 {
+/** Features, activated by message
+ */
+enum FeatureId
+{
+    OMNICORE_FEATURE_CLASS_C = 1,
+    OMNICORE_FEATURE_METADEX = 2,
+    OMNICORE_FEATURE_BETTING = 3
+};
+
 /**
  * Returns a mapping of transaction types, and the blocks at which they are enabled.
  */
@@ -31,6 +40,9 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
     const TransactionRestriction vTxRestrictions[] =
     { //  transaction type                    version        allow 0  activation block
       //  ----------------------------------  -------------  -------  ------------------
+        { OMNICORE_MESSAGE_TYPE_ALERT,        0xFFFF,        true,    MSC_ALERT_BLOCK    },
+        { OMNICORE_MESSAGE_TYPE_ACTIVATION,   0xFFFF,        true,    MSC_ALERT_BLOCK    },
+
         { MSC_TYPE_SIMPLE_SEND,               MP_TX_PKT_V0,  false,   MSC_SEND_BLOCK     },
 
         { MSC_TYPE_TRADE_OFFER,               MP_TX_PKT_V0,  false,   MSC_DEX_BLOCK      },
@@ -123,12 +135,16 @@ CMainConsensusParams::CMainConsensusParams()
     exodusReward = 100;
     GENESIS_BLOCK = 249498;
     LAST_EXODUS_BLOCK = 255365;
+    // Notice range for feature activations:
+    MIN_ACTIVATION_BLOCKS = 2048;  // ~2 weeks
+    MAX_ACTIVATION_BLOCKS = 12288; // ~12 weeks
     // Script related:
     PUBKEYHASH_BLOCK = 0;
     SCRIPTHASH_BLOCK = 322000;
     MULTISIG_BLOCK = 0;
     NULLDATA_BLOCK = 999999;
     // Transaction restrictions:
+    MSC_ALERT_BLOCK = 0;
     MSC_SEND_BLOCK = 249498;
     MSC_DEX_BLOCK = 290630;
     MSC_SP_BLOCK = 297110;
@@ -149,12 +165,16 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     exodusReward = 100;
     GENESIS_BLOCK = 263000;
     LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+    // Notice range for feature activations:
+    MIN_ACTIVATION_BLOCKS = 0;
+    MAX_ACTIVATION_BLOCKS = std::numeric_limits<int>::max();
     // Script related:
     PUBKEYHASH_BLOCK = 0;
     SCRIPTHASH_BLOCK = 0;
     MULTISIG_BLOCK = 0;
     NULLDATA_BLOCK = 0;
     // Transaction restrictions:
+    MSC_ALERT_BLOCK = 0;
     MSC_SEND_BLOCK = 0;
     MSC_DEX_BLOCK = 0;
     MSC_SP_BLOCK = 0;
@@ -175,18 +195,22 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     exodusReward = 100;
     GENESIS_BLOCK = 101;
     LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
+    // Notice range for feature activations:
+    MIN_ACTIVATION_BLOCKS = 5;
+    MAX_ACTIVATION_BLOCKS = 10;
     // Script related:
     PUBKEYHASH_BLOCK = 0;
     SCRIPTHASH_BLOCK = 0;
     MULTISIG_BLOCK = 0;
     NULLDATA_BLOCK = 0;
     // Transaction restrictions:
+    MSC_ALERT_BLOCK = 0;
     MSC_SEND_BLOCK = 0;
     MSC_DEX_BLOCK = 0;
     MSC_SP_BLOCK = 0;
     MSC_MANUALSP_BLOCK = 0;
     MSC_STO_BLOCK = 0;
-    MSC_METADEX_BLOCK = 0;
+    MSC_METADEX_BLOCK = 999999;
     MSC_BET_BLOCK = 999999;
 }
 
@@ -280,6 +304,47 @@ bool IsAllowedOutputType(int whichType, int nBlock)
 }
 
 /**
+ * Activates a feature at a specific block height, authorization has already been validated.
+ *
+ * Note: Feature activations are consensus breaking.  It is not permitted to activate a feature within
+ *       the next 2048 blocks (roughly 2 weeks), nor is it permitted to activate a feature further out
+ *       than 12288 blocks (roughly 12 weeks) to ensure sufficient notice.
+ *       This does not apply for activation during initialization (where loadingActivations is set true).
+ */
+bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock)
+{
+    PrintToLog("Feature activation requested (ID %d to go active as of block: %d)\n", featureId, activationBlock);
+
+    const CConsensusParams& params = ConsensusParams();
+
+    // check activation block is allowed
+    if ((activationBlock < (transactionBlock + params.MIN_ACTIVATION_BLOCKS)) ||
+        (activationBlock > (transactionBlock + params.MAX_ACTIVATION_BLOCKS))) {
+        PrintToLog("Feature activation of ID %d refused due to notice checks\n", featureId);
+        return false;
+    }
+
+    // check feature is recognized and activation is successful
+    switch (featureId) {
+        case OMNICORE_FEATURE_CLASS_C:
+            MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded, OP_RETURN block is now %d\n", featureId, params.NULLDATA_BLOCK);
+            return true;
+        case OMNICORE_FEATURE_METADEX:
+            MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded, MSC_METADEX_BLOCK is now %d\n", featureId, params.MSC_METADEX_BLOCK);
+            return true;
+        case OMNICORE_FEATURE_BETTING:
+            MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded, MSC_BET_BLOCK is now %d\n", featureId, params.MSC_BET_BLOCK);
+            return true;
+    }
+
+    PrintToLog("Feature activation of id %d refused due to unknown feature ID\n", featureId);
+    return false;
+}
+
+/**
  * Checks, if the transaction type and version is supported and enabled.
  *
  * In the test ecosystem, transactions, which are known to the client are allowed
@@ -306,7 +371,6 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
         if (isTestEcosystemProperty(txProperty)) {
             return true;
         }
-
         if (txBlock >= entry.activationBlock) {
             return true;
         }

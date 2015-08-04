@@ -83,6 +83,11 @@ void LookupTXDialog::searchTX()
                 strText += "a Bitcoin transaction only.\n\nTip: You can use the debug console "
                            "'gettransaction' command to lookup specific Bitcoin transactions.";
             break;
+
+            default:
+                strText += "of an unknown type.  If you are seeing this message please raise a bug report "
+                           "with the transaction hash at github.com/OmniLayer/omnicore/issues.";
+            break;
         }
         QString strQText = QString::fromStdString(strText);
         QMessageBox errorDialog;

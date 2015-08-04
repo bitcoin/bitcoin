@@ -2610,6 +2610,10 @@ int mastercore_init()
 
     // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
     p_txlistdb->setLastAlert(nWaterlineBlock);
+
+    // load feature activation messages from txlistdb and process them accordingly
+    p_txlistdb->LoadActivations();
+
     // initial scan
     msc_initial_scan(nWaterlineBlock);
 
@@ -2918,6 +2922,65 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
         txid = wtxNew.GetHash();
         return 0;
     }
+}
+
+void CMPTxList::LoadActivations()
+{
+    if (!pdb) return;
+
+    Slice skey, svalue;
+    Iterator* it = NewIterator();
+
+    PrintToLog("Loading feature activations from levelDB\n");
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        skey = it->key();
+        svalue = it->value();
+        std::string itData = svalue.ToString();
+
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        if (4 != vstr.size()) continue;
+        if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ACTIVATION || atoi(vstr[0]) != 1) continue; // we only care about valid activations
+
+        uint256 hash(skey.ToString());
+        uint256 blockHash = 0;
+        CTransaction wtx;
+        CMPTransaction mp_obj;
+
+        if (!GetTransaction(hash, wtx, blockHash, true)) {
+            PrintToLog("ERROR: While loading activation transaction %s: tx in levelDB but does not exist.\n", hash.GetHex());
+            continue;
+        }
+        if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) {
+            PrintToLog("ERROR: While loading activation transaction %s: failed to retrieve block hash.\n", hash.GetHex());
+            continue;
+        }
+        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+        if (NULL == pBlockIndex) {
+            PrintToLog("ERROR: While loading activation transaction %s: failed to retrieve block index.\n", hash.GetHex());
+            continue;
+        }
+        int blockHeight = pBlockIndex->nHeight;
+        if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) {
+            PrintToLog("ERROR: While loading activation transaction %s: failed ParseTransaction.\n", hash.GetHex());
+            continue;
+        }
+        if (!mp_obj.interpret_Transaction()) {
+            PrintToLog("ERROR: While loading activation transaction %s: failed interpret_Transaction.\n", hash.GetHex());
+            continue;
+        }
+        if (OMNICORE_MESSAGE_TYPE_ACTIVATION != mp_obj.getType()) {
+            PrintToLog("ERROR: While loading activation transaction %s: levelDB type mismatch, not an activation.\n", hash.GetHex());
+            continue;
+        }
+        mp_obj.unlockLogic();
+        if (0 != mp_obj.interpretPacket()) {
+            PrintToLog("ERROR: While loading activation transaction %s: non-zero return from interpretPacket\n", hash.GetHex());
+            continue;
+        }
+    }
+    delete it;
 }
 
 int CMPTxList::setLastAlert(int blockHeight)
@@ -4137,4 +4200,3 @@ const std::vector<unsigned char> GetOmMarker()
 
     return std::vector<unsigned char>(pch, pch + sizeof(pch) / sizeof(pch[0]));
 }
-

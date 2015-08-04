@@ -59,6 +59,7 @@ std::string mastercore::c_strMasterProtocolTXType(uint16_t txType)
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return "Change Issuer Address";
         case MSC_TYPE_NOTIFICATION: return "Notification";
         case OMNICORE_MESSAGE_TYPE_ALERT: return "ALERT";
+        case OMNICORE_MESSAGE_TYPE_ACTIVATION: return "Feature Activation";
 
         default: return "* unknown type *";
     }
@@ -137,6 +138,9 @@ bool CMPTransaction::interpret_Transaction()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return interpret_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_ACTIVATION:
+            return interpret_Activation();
 
         case OMNICORE_MESSAGE_TYPE_ALERT:
             return interpret_Alert();
@@ -584,6 +588,25 @@ bool CMPTransaction::interpret_ChangeIssuer()
     return true;
 }
 
+/** Tx 65534 */
+bool CMPTransaction::interpret_Activation()
+{
+    if (pkt_size < 10) {
+        return false;
+    }
+    memcpy(&feature_id, &pkt[4], 2);
+    swapByteOrder16(feature_id);
+    memcpy(&activation_block, &pkt[6], 4);
+    swapByteOrder32(activation_block);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t      feature id: %d\n", feature_id);
+        PrintToLog("\tactivation block: %d\n", activation_block);
+    }
+
+    return true;
+}
+
 /** Tx 65535 */
 bool CMPTransaction::interpret_Alert()
 {
@@ -672,6 +695,9 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             return logicMath_ChangeIssuer();
+
+        case OMNICORE_MESSAGE_TYPE_ACTIVATION:
+            return logicMath_Activation();
 
         case OMNICORE_MESSAGE_TYPE_ALERT:
             return logicMath_Alert();
@@ -1746,20 +1772,59 @@ int CMPTransaction::logicMath_ChangeIssuer()
     return 0;
 }
 
+/** Tx 65534 */
+int CMPTransaction::logicMath_Activation()
+{
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR -22);
+    }
+
+    // is sender authorized - temporarily use alert auths but ## TO BE MOVED TO FOUNDATION P2SH KEY ##
+    bool authorized = CheckAlertAuthorization(sender);
+
+    PrintToLog("\t          sender: %s\n", sender);
+    PrintToLog("\t      authorized: %s\n", authorized);
+
+    if (!authorized) {
+        PrintToLog("%s(): rejected: sender %s is not authorized for feature activations\n", __func__, sender);
+        return (PKT_ERROR -51);
+    }
+
+    // authorized, request feature activation
+    bool activationSuccess = ActivateFeature(feature_id, activation_block, block);
+
+    if (!activationSuccess) {
+        PrintToLog("%s(): ActivateFeature failed to activate this feature\n", __func__);
+        return (PKT_ERROR -54);
+    }
+
+    return 0;
+}
+
 /** Tx 65535 */
 int CMPTransaction::logicMath_Alert()
 {
-    // check the packet version is also FF
-    if (version != 65535) {
-        PrintToLog("%s(): rejected: invalid transaction version: %d\n", __func__, version);
-        return (PKT_ERROR -50);
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR -22);
     }
 
     // is sender authorized?
     bool authorized = CheckAlertAuthorization(sender);
 
-    PrintToLog("\t      alert auth: %s\n", authorized);
-    PrintToLog("\t    alert sender: %s\n", sender);
+    PrintToLog("\t          sender: %s\n", sender);
+    PrintToLog("\t      authorized: %s\n", authorized);
 
     if (!authorized) {
         PrintToLog("%s(): rejected: sender %s is not authorized for alerts\n", __func__, sender);
@@ -1806,19 +1871,5 @@ int CMPTransaction::logicMath_Alert()
     CAlert::Notify(alertMessage, true);
 
     return 0;
-}
-
-int CMPTransaction::logicMath_SavingsMark()
-{
-    int rc = -12345;
-
-    return rc;
-}
-
-int CMPTransaction::logicMath_SavingsCompromised()
-{
-    int rc = -23456;
-
-    return rc;
 }
 

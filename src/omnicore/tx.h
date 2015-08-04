@@ -83,6 +83,10 @@ private:
     // Alert
     char alertString[SP_STRING_FIELD_LEN];
 
+    // Activation
+    uint16_t feature_id;
+    uint32_t activation_block;
+
     // Indicates whether the transaction can be used to execute logic
     bool rpcOnly;
 
@@ -108,6 +112,7 @@ private:
     bool interpret_GrantTokens();
     bool interpret_RevokeTokens();
     bool interpret_ChangeIssuer();
+    bool interpret_Activation();
     bool interpret_Alert();
 
     /**
@@ -128,9 +133,8 @@ private:
     int logicMath_GrantTokens();
     int logicMath_RevokeTokens();
     int logicMath_ChangeIssuer();
+    int logicMath_Activation();
     int logicMath_Alert();
-    int logicMath_SavingsMark();
-    int logicMath_SavingsCompromised();
 
     /**
      * Logic helpers

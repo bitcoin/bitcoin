@@ -3,6 +3,7 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
+#include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 
 #include "main.h"
@@ -153,8 +154,10 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                     bool txLive = (curBlock > (int64_t) expiryValue);
 
                     //testnet allows all types of transactions, so override this here for testing
-                    //txSupported = false; //testing
-                    //txLive = true; //testing
+                    if (isNonMainNet()) {
+                        txSupported = true; //testing
+                        //txLive = true; //testing
+                    }
 
                     if ((!txSupported) && (txLive)) {
                         // we know we have transactions live we don't understand
