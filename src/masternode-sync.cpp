@@ -105,22 +105,9 @@ void CMasternodeSync::GetNextAsset()
     switch(RequestedMasternodeAssets)
     {
         case(MASTERNODE_SYNC_INITIAL):
-        case(MASTERNODE_SYNC_FAILED):
-            lastMasternodeList = 0;
-            lastMasternodeWinner = 0;
-            lastBudgetItem = 0;
-            lastFailure = 0;
-            nCountFailures = 0;
-            sumMasternodeList = 0;
-            sumMasternodeWinner = 0;
-            sumBudgetItemProp = 0;
-            sumBudgetItemFin = 0;
-            countMasternodeList = 0;
-            countMasternodeWinner = 0;
-            countBudgetItemProp = 0;
-            countBudgetItemFin = 0;  
-            RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
+        case(MASTERNODE_SYNC_FAILED): // should never be used here actually, use Reset() instead
             ClearFulfilledRequest();
+            RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
@@ -207,15 +194,14 @@ void CMasternodeSync::Process()
             Resync if we lose all masternodes from sleep/wake or failure to sync originally
         */
         if(mnodeman.CountEnabled() == 0) {
-            ClearFulfilledRequest();
-            RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
+            Reset();
         } else
             return;
     }
 
     //try syncing again in an hour
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED && lastFailure + (60*60) < GetTime()) {
-        GetNextAsset();
+        Reset();
     } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
         return;
     }
