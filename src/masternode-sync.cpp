@@ -17,21 +17,7 @@ CMasternodeSync masternodeSync;
 
 CMasternodeSync::CMasternodeSync()
 {
-    lastMasternodeList = 0;
-    lastMasternodeWinner = 0;
-    lastBudgetItem = 0;
-    lastFailure = 0;
-    nCountFailures = 0;
-    sumMasternodeList = 0;
-    sumMasternodeWinner = 0;
-    sumBudgetItemProp = 0;
-    sumBudgetItemFin = 0;
-    countMasternodeList = 0;
-    countMasternodeWinner = 0;
-    countBudgetItemProp = 0;
-    countBudgetItemFin = 0;
-    RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
-    RequestedMasternodeAttempt = 0;
+    Reset();
 }
 
 bool CMasternodeSync::IsSynced()
@@ -59,6 +45,49 @@ bool CMasternodeSync::IsBlockchainSynced()
     fBlockchainSynced = true;
 
     return true;
+}
+
+// if the last call to this function was more than 10 minutes ago, reset the sync process
+// - Get new masternode information
+// - Get new votes we missed (budgets and winners)
+// - Get new masternode budget
+void CMasternodeSync::WakeUp()
+{
+    // was asleep for more than 10 minutes?
+    if(GetTime() - lastProcess > 60*10) {
+        static bool fBlockchainSynced = false;
+        fBlockchainSynced = false;
+    
+        Reset();
+
+        // this could get us banned by our peers, but we'll need to try and get new information we missed
+        ClearFulfilledRequest();
+
+        // maybe we should reset all masternode based information and resync from scratch? 
+        // maybe we should get 8 new peers?
+    }
+
+    lastProcess = GetTime();
+}
+
+void CMasternodeSync::Reset()
+{   
+    lastMasternodeList = 0;
+    lastMasternodeWinner = 0;
+    lastBudgetItem = 0;
+    lastFailure = 0;
+    lastProcess = GetTime();
+    nCountFailures = 0;
+    sumMasternodeList = 0;
+    sumMasternodeWinner = 0;
+    sumBudgetItemProp = 0;
+    sumBudgetItemFin = 0;
+    countMasternodeList = 0;
+    countMasternodeWinner = 0;
+    countBudgetItemProp = 0;
+    countBudgetItemFin = 0;
+    RequestedMasternodeAssets = MASTERNODE_SYNC_INITIAL;
+    RequestedMasternodeAttempt = 0;
 }
 
 void CMasternodeSync::AddedMasternodeList()
@@ -186,6 +215,8 @@ void CMasternodeSync::Process()
 {
     static int tick = 0;
 
+    WakeUp();
+    
     if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
 
     if(IsSynced()) {
