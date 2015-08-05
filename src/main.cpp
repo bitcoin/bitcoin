@@ -4812,7 +4812,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if(strCommand == "dstx"){
             CInv inv(MSG_DSTX, tx.GetHash());
-            RelayInv(inv, MIN_POOL_PEER_PROTO_VERSION);
+            RelayInv(inv);
         }
 
         int nDoS = 0;
