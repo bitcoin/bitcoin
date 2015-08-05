@@ -63,3 +63,5 @@ git merge commit are mentioned.
 
 ### Miscellaneous
 
+- Removed bitrpc.py from contrib
+
