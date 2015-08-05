@@ -830,7 +830,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> budgetProposalBroadcast;
 
         if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())){
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
             return;
         }
 
@@ -849,7 +849,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         CBudgetProposal budgetProposal(budgetProposalBroadcast);
         if(AddProposal(budgetProposal)) {budgetProposalBroadcast.Relay();}
-        masternodeSync.AddedBudgetItem();
+        masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
 
         LogPrintf("mprop - new budget - %s\n", budgetProposalBroadcast.GetHash().ToString());
 
@@ -863,7 +863,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vote.fValid = true;
 
         if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(vote.GetHash());
             return;
         }
 
@@ -884,7 +884,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         std::string strError = "";
         if(UpdateProposal(vote, pfrom, strError)) {
             vote.Relay();
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(vote.GetHash());
         }
 
         LogPrintf("mvote - new budget vote - %s\n", vote.GetHash().ToString());
@@ -895,7 +895,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> finalizedBudgetBroadcast;
 
         if(mapSeenFinalizedBudgets.count(finalizedBudgetBroadcast.GetHash())){
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(finalizedBudgetBroadcast.GetHash());
             return;
         }
 
@@ -916,7 +916,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         CFinalizedBudget finalizedBudget(finalizedBudgetBroadcast);
         if(AddFinalizedBudget(finalizedBudget)) {finalizedBudgetBroadcast.Relay();}
-        masternodeSync.AddedBudgetItem();
+        masternodeSync.AddedBudgetItem(finalizedBudgetBroadcast.GetHash());
 
         //we might have active votes for this budget that are now valid
         CheckOrphanVotes();
@@ -928,7 +928,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vote.fValid = true;
 
         if(mapSeenFinalizedBudgetVotes.count(vote.GetHash())){
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(vote.GetHash());
             return;
         }
 
@@ -948,7 +948,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         std::string strError = "";
         if(UpdateFinalizedBudget(vote, pfrom, strError)) {
             vote.Relay();
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(vote.GetHash());
         }
 
         LogPrint("mnbudget", "fbs - new finalized budget vote - %s\n", vote.GetHash().ToString());
