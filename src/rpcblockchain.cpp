@@ -279,8 +279,10 @@ UniValue getblockhash(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 
     int nHeight = params[0].get_int();
-    if (nHeight < 0 || nHeight > chainActive.Height())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+    if (nHeight < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative block height");
+    if (nHeight > chainActive.Height())
+        throw JSONRPCError(RPC_NOT_FOUND, "Block height out of range");
 
     CBlockIndex* pblockindex = chainActive[nHeight];
     return pblockindex->GetBlockHash().GetHex();
@@ -388,7 +390,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
         fVerbose = params[1].get_bool();
 
     if (mapBlockIndex.count(hash) == 0)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        throw JSONRPCError(RPC_NOT_FOUND, "Block not found");
 
     CBlock block;
     CBlockIndex* pblockindex = mapBlockIndex[hash];
@@ -803,7 +805,7 @@ UniValue invalidateblock(const UniValue& params, bool fHelp)
     {
         LOCK(cs_main);
         if (mapBlockIndex.count(hash) == 0)
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+            throw JSONRPCError(RPC_NOT_FOUND, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
         InvalidateBlock(state, pblockindex);
@@ -842,7 +844,7 @@ UniValue reconsiderblock(const UniValue& params, bool fHelp)
     {
         LOCK(cs_main);
         if (mapBlockIndex.count(hash) == 0)
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+            throw JSONRPCError(RPC_NOT_FOUND, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
         ReconsiderBlock(state, pblockindex);

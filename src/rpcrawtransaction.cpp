@@ -187,7 +187,7 @@ UniValue getrawtransaction(const UniValue& params, bool fHelp)
     CTransaction tx;
     uint256 hashBlock;
     if (!GetTransaction(hash, tx, hashBlock, true))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
+        throw JSONRPCError(RPC_NOT_FOUND, "No information available about transaction");
 
     string strHex = EncodeHexTx(tx);
 
@@ -245,7 +245,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
     {
         hashBlock = uint256S(params[1].get_str());
         if (!mapBlockIndex.count(hashBlock))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+            throw JSONRPCError(RPC_NOT_FOUND, "Block not found");
         pblockindex = mapBlockIndex[hashBlock];
     } else {
         CCoins coins;
@@ -257,7 +257,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
     {
         CTransaction tx;
         if (!GetTransaction(oneTxid, tx, hashBlock, false) || hashBlock.IsNull())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
+            throw JSONRPCError(RPC_NOT_FOUND, "Transaction not yet in block");
         if (!mapBlockIndex.count(hashBlock))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
         pblockindex = mapBlockIndex[hashBlock];
@@ -272,7 +272,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
         if (setTxids.count(tx.GetHash()))
             ntxFound++;
     if (ntxFound != setTxids.size())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "(Not all) transactions not found in specified block");
+        throw JSONRPCError(RPC_NOT_FOUND, "(Not all) transactions not found in specified block");
 
     CDataStream ssMB(SER_NETWORK, PROTOCOL_VERSION);
     CMerkleBlock mb(block, setTxids);
@@ -307,7 +307,7 @@ UniValue verifytxoutproof(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 
     if (!mapBlockIndex.count(merkleBlock.header.GetHash()) || !chainActive.Contains(mapBlockIndex[merkleBlock.header.GetHash()]))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+        throw JSONRPCError(RPC_NOT_FOUND, "Block not found in chain");
 
     BOOST_FOREACH(const uint256& hash, vMatch)
         res.push_back(hash.GetHex());
@@ -377,7 +377,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
     BOOST_FOREACH(const string& name_, addrList) {
         CBitcoinAddress address(name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+name_);
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid Bitcoin address: ")+name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
@@ -628,10 +628,10 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
             CBitcoinSecret vchSecret;
             bool fGood = vchSecret.SetString(k.get_str());
             if (!fGood)
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid private key");
             CKey key = vchSecret.GetKey();
             if (!key.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Private key outside allowed range");
             tempKeystore.AddKey(key);
         }
     }
