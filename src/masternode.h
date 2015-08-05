@@ -111,11 +111,12 @@ private:
     int64_t lastTimeChecked;
 public:
     enum state {
-        MASTERNODE_ENABLED = 1,
-        MASTERNODE_EXPIRED = 2,
-        MASTERNODE_VIN_SPENT = 3,
-        MASTERNODE_REMOVE = 4,
-        MASTERNODE_POS_ERROR = 5
+        MASTERNODE_PRE_ENABLED,
+        MASTERNODE_ENABLED,
+        MASTERNODE_EXPIRED,
+        MASTERNODE_VIN_SPENT,
+        MASTERNODE_REMOVE,
+        MASTERNODE_POS_ERROR
     };
 
     CTxIn vin;
@@ -246,6 +247,11 @@ public:
         return activeState == MASTERNODE_ENABLED;
     }
 
+    bool IsPreEnabled()
+    {
+        return activeState == MASTERNODE_PRE_ENABLED;
+    }
+
     int GetMasternodeInputAge()
     {
         if(chainActive.Tip() == NULL) return 0;
@@ -259,13 +265,14 @@ public:
     }
 
     std::string Status() {
-        std::string strStatus = "ACTIVE";
+        std::string strStatus = "unknown";
 
-        if(activeState == CMasternode::MASTERNODE_ENABLED) strStatus   = "ENABLED";
-        if(activeState == CMasternode::MASTERNODE_EXPIRED) strStatus   = "EXPIRED";
-        if(activeState == CMasternode::MASTERNODE_VIN_SPENT) strStatus = "VIN_SPENT";
-        if(activeState == CMasternode::MASTERNODE_REMOVE) strStatus    = "REMOVE";
-        if(activeState == CMasternode::MASTERNODE_POS_ERROR) strStatus = "POS_ERROR";
+        if(activeState == CMasternode::MASTERNODE_PRE_ENABLED) strStatus = "PRE_ENABLED";
+        if(activeState == CMasternode::MASTERNODE_ENABLED) strStatus     = "ENABLED";
+        if(activeState == CMasternode::MASTERNODE_EXPIRED) strStatus     = "EXPIRED";
+        if(activeState == CMasternode::MASTERNODE_VIN_SPENT) strStatus   = "VIN_SPENT";
+        if(activeState == CMasternode::MASTERNODE_REMOVE) strStatus      = "REMOVE";
+        if(activeState == CMasternode::MASTERNODE_POS_ERROR) strStatus   = "POS_ERROR";
 
         return strStatus;
     }

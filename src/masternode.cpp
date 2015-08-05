@@ -189,6 +189,10 @@ void CMasternode::Check(bool forceCheck)
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
 
+    if(lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS){
+        activeState = MASTERNODE_PRE_ENABLED;
+        return;
+    }
 
     if(!IsPingedWithin(MASTERNODE_REMOVAL_SECONDS)){
         activeState = MASTERNODE_REMOVE;
@@ -398,7 +402,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     //search existing Masternode list, this is where we update existing Masternodes with new mnb broadcasts
     CMasternode* pmn = mnodeman.Find(vin);
 
-    // no such masternode or it's not enabled already, nothing to update
+    // no such masternode or it's not enabled yet/already, nothing to update
     if(pmn == NULL || (pmn != NULL && !pmn->IsEnabled())) return true;
 
     // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
@@ -427,8 +431,8 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     CMasternode* pmn = mnodeman.Find(vin);
 
     if(pmn != NULL) {
-        // nothing to do here if we already know about this masternode and it's enabled
-        if(pmn->IsEnabled()) return true;
+        // nothing to do here if we already know about this masternode and it's (pre)enabled
+        if(pmn->IsEnabled() || pmn->IsPreEnabled()) return true;
         // if it's not enabled, remove old MN first and continue
         else mnodeman.Remove(pmn->vin);
     }
@@ -586,7 +590,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
     {
-        if (fRequireEnabled && !pmn->IsEnabled()) return false;
+        if (fRequireEnabled && !pmn->IsEnabled() && !pmn->IsPreEnabled()) return false;
 
         // LogPrintf("mnping - Found corresponding mn for vin: %s\n", vin.ToString());
         // update only if there is no known ping for this masternode or
