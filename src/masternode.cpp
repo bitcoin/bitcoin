@@ -390,7 +390,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         pmn->UpdateFromNewBroadcast((*this));
         pmn->Check();
         if(pmn->IsEnabled()) Relay();
-        masternodeSync.AddedMasternodeList();
+        masternodeSync.AddedMasternodeList(GetHash());
     }
 
     return true;

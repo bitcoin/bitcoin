@@ -27,6 +27,10 @@ extern CMasternodeSync masternodeSync;
 class CMasternodeSync
 {
 public:
+    std::map<uint256, int> mapSeenSyncMNB;
+    std::map<uint256, int> mapSeenSyncMNW;
+    std::map<uint256, int> mapSeenSyncBudget;
+
     int64_t lastMasternodeList;
     int64_t lastMasternodeWinner;
     int64_t lastBudgetItem;
@@ -50,9 +54,9 @@ public:
 
     CMasternodeSync();
 
-    void AddedMasternodeList();
-    void AddedMasternodeWinner();
-    void AddedBudgetItem();
+    void AddedMasternodeList(uint256 hash);
+    void AddedMasternodeWinner(uint256 hash);
+    void AddedBudgetItem(uint256 hash);
     void GetNextAsset();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     bool IsBudgetFinEmpty();
