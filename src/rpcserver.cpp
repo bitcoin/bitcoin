@@ -309,6 +309,7 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* Dash features */
+    { "dash",               "mnsync",                 &mnsync,                 true,      false,      false },
     { "dash",               "spork",                  &spork,                  true,      false,      false },
     { "dash",               "masternode",             &masternode,             true,      false,      true  },
     { "dash",               "mnbudget",               &mnbudget,               true,      false,      false },
