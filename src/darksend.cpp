@@ -1527,26 +1527,24 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
                 }
 
                 // connect to Masternode and submit the queue request
-                if(ConnectNode((CAddress)addr, NULL, true)){
-                    CNode* pnode = FindNode(addr);
-                    if(pnode)
+                CNode* pnode = ConnectNode((CAddress)addr, NULL, true);
+                if(pnode != NULL)
+                {
+                    CMasternode* pmn = mnodeman.Find(dsq.vin);
+                    if(pmn == NULL)
                     {
-                        CMasternode* pmn = mnodeman.Find(dsq.vin);
-                        if(pmn == NULL)
-                        {
-                            LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
-                            continue;
-                        }
-                        pSubmittedToMasternode = pmn;
-                        vecMasternodesUsed.push_back(dsq.vin);
-                        sessionDenom = dsq.nDenom;
-
-                        pnode->PushMessage("dsa", sessionDenom, txCollateral);
-                        LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d - %s\n", sessionDenom, pnode->addr.ToString());
-                        strAutoDenomResult = _("Mixing in progress...");
-                        dsq.time = 0; //remove node
-                        return true;
+                        LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
+                        continue;
                     }
+                    pSubmittedToMasternode = pmn;
+                    vecMasternodesUsed.push_back(dsq.vin);
+                    sessionDenom = dsq.nDenom;
+
+                    pnode->PushMessage("dsa", sessionDenom, txCollateral);
+                    LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d - %s\n", sessionDenom, pnode->addr.ToString());
+                    strAutoDenomResult = _("Mixing in progress...");
+                    dsq.time = 0; //remove node
+                    return true;
                 } else {
                     LogPrintf("DoAutomaticDenominating --- error connecting \n");
                     strAutoDenomResult = _("Error connecting to Masternode.");
@@ -1577,27 +1575,21 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
             lastTimeChanged = GetTimeMillis();
             LogPrintf("DoAutomaticDenominating -- attempt %d connection to Masternode %s\n", i, pmn->addr.ToString());
-            if(ConnectNode((CAddress)pmn->addr, NULL, true)){
+            CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
+            if(pnode != NULL){
+                pSubmittedToMasternode = pmn;
+                vecMasternodesUsed.push_back(pmn->vin);
 
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes)
-                {
-                    if((CNetAddr)pnode->addr != (CNetAddr)pmn->addr) continue;
+                std::vector<CAmount> vecAmounts;
+                pwalletMain->ConvertList(vCoins, vecAmounts);
+                // try to get random denoms out of vecAmounts
+                while(sessionDenom == 0)
+                    sessionDenom = GetDenominationsByAmounts(vecAmounts, true);
 
-                    pSubmittedToMasternode = pmn;
-                    vecMasternodesUsed.push_back(pmn->vin);
-
-                    std::vector<CAmount> vecAmounts;
-                    pwalletMain->ConvertList(vCoins, vecAmounts);
-                    // try to get random denoms out of vecAmounts
-                    while(sessionDenom == 0)
-                        sessionDenom = GetDenominationsByAmounts(vecAmounts, true);
-
-                    pnode->PushMessage("dsa", sessionDenom, txCollateral);
-                    LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d\n", sessionDenom);
-                    strAutoDenomResult = _("Mixing in progress...");
-                    return true;
-                }
+                pnode->PushMessage("dsa", sessionDenom, txCollateral);
+                LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d\n", sessionDenom);
+                strAutoDenomResult = _("Mixing in progress...");
+                return true;
             } else {
                 i++;
                 continue;
@@ -2167,6 +2159,7 @@ void CDarksendPool::RelayFinalTransaction(const int sessionID, const CTransactio
 
 void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout)
 {
+    if(!pSubmittedToMasternode) return;
 
     std::vector<CTxIn> vin2;
     std::vector<CTxOut> vout2;
@@ -2177,11 +2170,8 @@ void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmo
     BOOST_FOREACH(CTxDSOut out, vout)
         vout2.push_back(out);
 
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        if(!pSubmittedToMasternode) return;
-        if((CNetAddr)pSubmittedToMasternode->addr != (CNetAddr)pnode->addr) continue;
+    CNode* pnode = FindNode(pSubmittedToMasternode->addr);
+    if(pnode != NULL) {
         LogPrintf("RelayIn - found master, relaying message - %s \n", pnode->addr.ToString());
         pnode->PushMessage("dsi", vin2, nAmount, txCollateral, vout2);
     }
@@ -2229,16 +2219,7 @@ void ThreadCheckDarkSendPool()
 
             if(c % 60 == 0)
             {
-                {
-                    LOCK(cs_main);
-                    /*
-                        cs_main is required for doing CMasternode.Check because something
-                        is modifying the coins view without a mempool lock. It causes
-                        segfaults from this code without the cs_main lock.
-                    */
-                    mnodeman.CheckAndRemove();
-                }
-
+                mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
                 masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
