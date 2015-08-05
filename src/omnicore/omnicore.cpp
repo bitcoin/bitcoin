@@ -2803,8 +2803,13 @@ CWallet *wallet = pwalletMain;
   return string();
 }
 
-// This function determines whether it is valid to use a Class C transaction for a given payload size
-static bool UseEncodingClassC(size_t nDataSize)
+/**
+ * Determines, whether it is valid to use a Class C transaction for a given payload size.
+ *
+ * @param nDataSize The length of the payload
+ * @return True, if Class C is enabled and the payload is small enough
+ */
+bool mastercore::UseEncodingClassC(size_t nDataSize)
 {
     size_t nTotalSize = nDataSize + GetOmMarker().size(); // Marker "omni"
     bool fDataEnabled = GetBoolArg("-datacarrier", true);
@@ -2813,30 +2818,6 @@ static bool UseEncodingClassC(size_t nDataSize)
         fDataEnabled = false;
     }
     return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
-}
-
-bool feeCheck(const string &address, size_t nDataSize)
-{
-    // check the supplied address against selectCoins to determine if sufficient fees for send
-    CCoinControl coinControl;
-    int64_t inputTotal = SelectCoins(address, coinControl, 0);
-    bool ClassC = UseEncodingClassC(nDataSize);
-    int64_t minFee = 0;
-
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
-    if (ClassC) {
-        // estimated minimum fee calculation for Class C with payload of nDataSize
-        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
-        minFee = 10000; // simply warn when below 10,000 satoshi for now
-    } else {
-        // estimated minimum fee calculation for Class B with payload of nDataSize
-        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
-        minFee = 10000; // simply warn when below 10,000 satoshi for now
-    }
-
-    return inputTotal >= minFee;
 }
 
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload

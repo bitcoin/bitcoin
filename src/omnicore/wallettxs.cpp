@@ -59,6 +59,33 @@ bool AddressToPubKey(const std::string& key, CPubKey& pubKey)
 }
 
 /**
+ * Checks, whether enough spendable outputs are available to pay for transaction fees.
+ */
+bool CheckFee(const std::string& fromAddress, size_t nDataSize)
+{
+    int64_t minFee = 0;
+    int64_t inputTotal = 0;
+#ifdef ENABLE_WALLET
+    bool fUseClassC = UseEncodingClassC(nDataSize);
+
+    CCoinControl coinControl;
+    inputTotal = SelectCoins(fromAddress, coinControl, 0);
+
+    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
+    if (fUseClassC) {
+        // estimated minimum fee calculation for Class C with payload of nDataSize
+        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        minFee = 10000; // simply warn when below 10,000 satoshi for now
+    } else {
+        // estimated minimum fee calculation for Class B with payload of nDataSize
+        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
+        minFee = 10000; // simply warn when below 10,000 satoshi for now
+    }
+#endif
+    return inputTotal >= minFee;
+}
+
+/**
  * Checks, whether the output qualifies as input for a transaction.
  */
 bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest)

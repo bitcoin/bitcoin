@@ -14,6 +14,9 @@ namespace mastercore
 /** Retrieves a public key from the wallet, or converts a hex-string to a public key. */
 bool AddressToPubKey(const std::string& key, CPubKey& pubKey);
 
+/** Checks, whether enough spendable outputs are available to pay for transaction fees. */
+bool CheckFee(const std::string& fromAddress, size_t nDataSize);
+
 /** Checks, whether the output qualifies as input for a transaction. */
 bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest);
 

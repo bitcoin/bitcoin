@@ -20,6 +20,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "sync.h"
@@ -407,7 +408,7 @@ void MetaDExDialog::UpdateSellAddressBalance()
         if (isPropertyDivisible(propertyId)) { sellBalStr = FormatDivisibleMP(balanceAvailable); } else { sellBalStr = FormatIndivisibleMP(balanceAvailable); }
         ui->yourSellBalanceLabel->setText(QString::fromStdString("Your balance: " + sellBalStr + " SPT"));
         // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
-        if (feeCheck(currentSetSellAddress.toStdString(), 28)) {
+        if (CheckFee(currentSetSellAddress.toStdString(), 28)) {
             ui->sellAddressFeeWarningLabel->setVisible(false);
         } else {
             ui->sellAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");
@@ -429,7 +430,7 @@ void MetaDExDialog::UpdateBuyAddressBalance()
         int64_t balanceAvailable = getUserAvailableMPbalance(currentSetBuyAddress.toStdString(), propertyId);
         ui->yourBuyBalanceLabel->setText(QString::fromStdString("Your balance: " + FormatDivisibleMP(balanceAvailable) + getTokenLabel(propertyId)));
         // warning label will be lit if insufficient fees for MetaDEx payload (28 bytes)
-        if (feeCheck(currentSetBuyAddress.toStdString(), 28)) {
+        if (CheckFee(currentSetBuyAddress.toStdString(), 28)) {
             ui->buyAddressFeeWarningLabel->setVisible(false);
         } else {
             ui->buyAddressFeeWarningLabel->setText("WARNING: The address is low on BTC for transaction fees.");

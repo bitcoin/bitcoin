@@ -18,6 +18,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "base58.h"
@@ -157,7 +158,7 @@ void SendMPDialog::updateFrom()
             ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
         }
         // warning label will be lit if insufficient fees for simple send (16 byte payload)
-        if (feeCheck(currentSetFromAddress, 16)) {
+        if (CheckFee(currentSetFromAddress, 16)) {
             ui->feeWarningLabel->setVisible(false);
         } else {
             ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");
