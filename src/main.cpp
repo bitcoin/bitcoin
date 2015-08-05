@@ -3996,37 +3996,37 @@ bool static AlreadyHave(const CInv& inv)
         return mapSporks.count(inv.hash);
     case MSG_MASTERNODE_WINNER:
         if(masternodePayments.mapMasternodePayeeVotes.count(inv.hash)) {
-            masternodeSync.AddedMasternodeWinner();
+            masternodeSync.AddedMasternodeWinner(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_VOTE:
         if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_PROPOSAL:
         if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED_VOTE:
         if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_BUDGET_FINALIZED:
         if(budget.mapSeenFinalizedBudgets.count(inv.hash)) {
-            masternodeSync.AddedBudgetItem();
+            masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
         return false;
     case MSG_MASTERNODE_ANNOUNCE:
         if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
-            masternodeSync.AddedMasternodeList();
+            masternodeSync.AddedMasternodeList(inv.hash);
             return true;
         }
         return false;
