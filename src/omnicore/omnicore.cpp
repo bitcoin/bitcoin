@@ -31,7 +31,9 @@
 #include "chainparams.h"
 #include "coincontrol.h"
 #include "coins.h"
+#include "core_io.h"
 #include "init.h"
+#include "main.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -39,11 +41,14 @@
 #include "sync.h"
 #include "tinyformat.h"
 #include "uint256.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
-#include "ui_interface.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#include "wallet_ismine.h"
+#endif
 
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/to_string.hpp>
@@ -469,7 +474,7 @@ void CheckWalletUpdate(bool forceUpdate)
             return;
         }
     }
-
+#ifdef ENABLE_WALLET
     LOCK(cs_tally);
 
     // balance changes were found in the wallet, update the global totals and signal a Omni balance change
@@ -499,6 +504,7 @@ void CheckWalletUpdate(bool forceUpdate)
     }
     // signal an Omni balance change
     uiInterface.OmniBalanceChanged();
+#endif
 }
 
 /**
@@ -2796,19 +2802,21 @@ bool mastercore::UseEncodingClassC(size_t nDataSize)
 int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
                           int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
 {
+#ifdef ENABLE_WALLET
+    if (pwalletMain == NULL) return MP_ERR_WALLET_ACCESS;
+
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
     if (!UseEncodingClassC(data.size())) omniTxClass = OMNI_CLASS_B;
 
     // Prepare the transaction - first setup some vars
-    CWallet *wallet = pwalletMain;
     CCoinControl coinControl;
     txid = 0;
     CWalletTx wtxNew;
     int64_t nFeeRet = 0;
     std::string strFailReason;
-    vector< pair<CScript, int64_t> > vecSend;
-    CReserveKey reserveKey(wallet);
+    std::vector<std::pair<CScript, int64_t> > vecSend;
+    CReserveKey reserveKey(pwalletMain);
 
     // Next, we set the change address to the sender
     CBitcoinAddress addr = CBitcoinAddress(senderAddress);
@@ -2835,30 +2843,30 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
     if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
-        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustThreshold(scriptPubKey)));
+        vecSend.push_back(std::make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustThreshold(scriptPubKey)));
     }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
-    if (!wallet) return MP_ERR_WALLET_ACCESS;
+
     if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL;
 
     // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
-    if (!wallet->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
 
     // If this request is only to create, but not commit the transaction then display it and exit
     if (!commit) {
-        CTransaction tx = (CTransaction) wtxNew;
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << tx;
-        rawHex = HexStr(ssTx.begin(), ssTx.end());
+        rawHex = EncodeHexTx(wtxNew);
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
         PrintToLog("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString(), nFeeRet, __LINE__, __FILE__);
-        if (!wallet->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
+        if (!pwalletMain->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
         txid = wtxNew.GetHash();
         return 0;
     }
+#else
+    return MP_ERR_WALLET_ACCESS;
+#endif
 }
 
 void CMPTxList::LoadActivations()

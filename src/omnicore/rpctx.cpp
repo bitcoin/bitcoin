@@ -1,4 +1,8 @@
-// RPC calls for creating and sending Omni transactions
+/**
+ * @file rpctx.cpp
+ *
+ * This file contains RPC calls for creating and sending Omni transactions.
+ */
 
 #include "omnicore/rpctx.h"
 
@@ -16,7 +20,9 @@
 #include "main.h"
 #include "rpcserver.h"
 #include "sync.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#endif
 
 #include "json/json_spirit_value.h"
 
@@ -216,8 +222,7 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
         RequireSaneDExPaymentWindow(toAddress, propertyId);
     }
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
+#ifdef ENABLE_WALLET
     // use new 0.10 custom fee to set the accept minimum fee appropriately
     int64_t nMinimumAcceptFee = 0;
     {
@@ -227,10 +232,14 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
         nMinimumAcceptFee = sellOffer->getMinFee();
     }
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    // temporarily update the global transaction fee to pay enough for the accept fee
     CFeeRate payTxFeeOriginal = payTxFee;
     bool fPayAtLeastCustomFeeOriginal = fPayAtLeastCustomFee;
     payTxFee = CFeeRate(nMinimumAcceptFee, 1000);
     fPayAtLeastCustomFee = true;
+#endif
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_DExAccept(propertyId, amount);
@@ -240,9 +249,11 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
     std::string rawHex;
     int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, "", 0, payload, txid, rawHex, autoCommit);
 
+#ifdef ENABLE_WALLET
     // set the custom fee back to original
     payTxFee = payTxFeeOriginal;
     fPayAtLeastCustomFee = fPayAtLeastCustomFeeOriginal;
+#endif
 
     // check error and return the txid (or raw hex depending on autocommit)
     if (result != 0) {

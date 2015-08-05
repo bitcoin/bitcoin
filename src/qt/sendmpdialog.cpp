@@ -25,7 +25,7 @@
 #include "main.h"
 #include "sync.h"
 #include "uint256.h"
-#include "wallet.h"
+#include "wallet_ismine.h"
 
 #include <stdint.h>
 #include <map>

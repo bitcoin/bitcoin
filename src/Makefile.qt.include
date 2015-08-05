@@ -329,7 +329,9 @@ BITCOIN_QT_CPP = \
   qt/splashscreen.cpp \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp \
-  qt/winshutdownmonitor.cpp
+  qt/winshutdownmonitor.cpp \
+  qt/omnicore_init.cpp \
+  qt/omnicore_qtutils.cpp
 
 if ENABLE_WALLET
 BITCOIN_QT_CPP += \
@@ -365,11 +367,9 @@ BITCOIN_QT_CPP += \
   qt/lookuptxdialog.cpp \
   qt/txhistorydialog.cpp \
   qt/balancesdialog.cpp \
-  qt/omnicore_init.cpp \
   qt/metadexdialog.cpp \
   qt/metadexcanceldialog.cpp \
-  qt/tradehistorydialog.cpp \
-  qt/omnicore_qtutils.cpp
+  qt/tradehistorydialog.cpp
 endif
 
 RES_IMAGES = \
