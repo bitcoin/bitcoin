@@ -77,6 +77,9 @@ struct COrphanTx {
 };
 map<uint256, COrphanTx> mapOrphanTransactions;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
+map<uint256, int64_t> mapRejectedBlocks;
+
+
 void EraseOrphansFor(NodeId peer);
 
 static void CheckBlockIndex();
@@ -2948,6 +2951,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 BOOST_FOREACH(const CTxIn& in, tx.vin){
                     if(mapLockedInputs.count(in.prevout)){
                         if(mapLockedInputs[in.prevout] != tx.GetHash()){
+                            mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
                             LogPrintf("CheckBlock() : found conflicting transaction with transaction lock %s %s\n", mapLockedInputs[in.prevout].ToString(), tx.GetHash().ToString());
                             return state.DoS(0, error("CheckBlock() : found conflicting transaction with transaction lock"),
                                              REJECT_INVALID, "conflicting-tx-ix");
@@ -2961,7 +2965,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
 
 
-    // ----------- masternode payments -----------
+    // ----------- masternode payments / budgets -----------
 
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev != NULL)
@@ -2979,7 +2983,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if(nHeight != 0){
             if(!IsBlockPayeeValid(block.vtx[0], nHeight))
             {
-                return state.DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
+                return state.DoS(100, error("CheckBlock() : Couldn't find masternode/budget payment"));
             }
         } else {
             LogPrintf("CheckBlock() : WARNING: Couldn't find previous block, skipping IsBlockPayeeValid()\n");
