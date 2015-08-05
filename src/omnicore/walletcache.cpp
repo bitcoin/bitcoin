@@ -4,6 +4,7 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/tally.h"
+#include "omnicore/wallettxs.h"
 
 #include "init.h"
 #include "sync.h"

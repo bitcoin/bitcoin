@@ -16,7 +16,10 @@
 #include "sync.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#include "wallet_ismine.h"
+#endif
 
 #include <stdint.h>
 #include <map>
@@ -123,6 +126,24 @@ std::string GetAddressLabel(const std::string& address)
     }
 #endif
     return addressLabel;
+}
+
+/**
+ * IsMine wrapper to determine whether the address is in the wallet.
+ */
+int IsMyAddress(const std::string& address)
+{
+#ifdef ENABLE_WALLET
+    if (pwalletMain) {
+        // TODO: resolve deadlock caused cs_tally, cs_wallet
+        // LOCK(pwalletMain->cs_wallet);
+        CBitcoinAddress parsedAddress(address);
+        isminetype isMine = IsMine(*pwalletMain, parsedAddress.Get());
+
+        return static_cast<int>(isMine);
+    }
+#endif
+    return 0;
 }
 
 /**

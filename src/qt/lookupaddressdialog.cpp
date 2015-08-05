@@ -9,6 +9,7 @@
 
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
+#include "omnicore/wallettxs.h"
 
 #include "base58.h"
 

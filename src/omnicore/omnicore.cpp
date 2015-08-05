@@ -2775,15 +2775,6 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
     return fFoundTx;
 }
 
-// IsMine wrapper to determine whether the address is in our local wallet
-int IsMyAddress(const std::string &address)
-{
-    if (!pwalletMain) return ISMINE_NO;
-    const CBitcoinAddress& omniAddress = address;
-    CTxDestination omniDest = omniAddress.Get();
-    return IsMine(*pwalletMain, omniDest);
-}
-
 /**
  * Determines, whether it is valid to use a Class C transaction for a given payload size.
  *
