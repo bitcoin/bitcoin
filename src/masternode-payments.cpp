@@ -365,7 +365,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(masternodePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
             LogPrint("mnpayments", "mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), chainActive.Tip()->nHeight);
-            masternodeSync.AddedMasternodeWinner();
+            masternodeSync.AddedMasternodeWinner(winner.GetHash());
             return;
         }
 
@@ -400,7 +400,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(masternodePayments.AddWinningMasternode(winner)){
             winner.Relay();
-            masternodeSync.AddedMasternodeWinner();
+            masternodeSync.AddedMasternodeWinner(winner.GetHash());
         }
     }
 }
@@ -598,6 +598,7 @@ void CMasternodePayments::CleanPaymentList()
 
         if(chainActive.Tip()->nHeight - winner.nBlockHeight > nLimit){
             LogPrint("mnpayments", "CMasternodePayments::CleanPaymentList - Removing old Masternode payment - block %d\n", winner.nBlockHeight);
+            masternodeSync.mapSeenSyncMNW.erase((*it).first);
             mapMasternodePayeeVotes.erase(it++);
         } else {
             ++it;
