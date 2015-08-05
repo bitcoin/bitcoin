@@ -48,7 +48,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Disable all Masternode and Darksend related functionality (0-1, default: %u)"),
+"Disable all Dash specific functionality (Masernodes, Darksend, InstantX, "
+"Budgeting) (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Distributed under the MIT software license, see the accompanying file "
 "COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
@@ -129,8 +130,6 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Require high priority for relaying free or low-fee transactions (default:%u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Send trace/debug info to console instead of debug.log file (default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", ""
-"Set external address:port to get to this masternode (example: address:port)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -318,6 +317,7 @@ QT_TRANSLATE_NOOP("dash-core", "Loading masternode cache..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading masternode payment cache..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet... (%3.2f %%)"),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet..."),
+QT_TRANSLATE_NOOP("dash-core", "Lock is already in place."),
 QT_TRANSLATE_NOOP("dash-core", "Lock masternodes from masternode configuration file (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Maintain at most <n> connections to peers (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Masternode options:"),
@@ -363,6 +363,7 @@ QT_TRANSLATE_NOOP("dash-core", "Server private key (default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Session not complete!"),
 QT_TRANSLATE_NOOP("dash-core", "Session timed out."),
 QT_TRANSLATE_NOOP("dash-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
+QT_TRANSLATE_NOOP("dash-core", "Set external address:port to get to this masternode (example: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Set key pool size to <n> (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Set maximum block size in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", "Set minimum block size in bytes (default: %u)"),
