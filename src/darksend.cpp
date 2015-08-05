@@ -619,7 +619,7 @@ void CDarksendPool::CheckFinalTransaction()
         }
 
         CInv inv(MSG_DSTX, txNew.GetHash());
-        RelayInv(inv, MIN_POOL_PEER_PROTO_VERSION);
+        RelayInv(inv);
 
         // Tell the clients it was successful
         RelayCompletedTransaction(sessionID, false, MSG_SUCCESS);
