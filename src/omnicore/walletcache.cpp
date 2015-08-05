@@ -1,4 +1,10 @@
-// Provides a cache of wallet balances and functionality for determining whether Omni state changes affected anything in the wallet
+/**
+ * @file walletcache.cpp
+ *
+ * Provides a cache of wallet balances and functionality for determining whether
+ * Omni state changes affected anything in the wallet.
+ */
+
 #include "omnicore/walletcache.h"
 
 #include "omnicore/log.h"
@@ -9,7 +15,9 @@
 #include "init.h"
 #include "sync.h"
 #include "uint256.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#endif
 
 #include <stdint.h>
 #include <algorithm>
@@ -20,8 +28,8 @@
 #include <utility>
 #include <vector>
 
-using namespace mastercore;
-
+namespace mastercore
+{
 //! Global vector of Omni transactions in the wallet
 std::vector<uint256> walletTXIDCache;
 
@@ -29,7 +37,7 @@ std::vector<uint256> walletTXIDCache;
 static std::map<std::string, CMPTally> walletBalancesCache;
 
 /**
- * Adds a txid to the wallet txid cache, performing duplicate detection
+ * Adds a txid to the wallet txid cache, performing duplicate detection.
  */
 void WalletTXIDCacheAdd(const uint256& hash)
 {
@@ -42,12 +50,12 @@ void WalletTXIDCacheAdd(const uint256& hash)
 }
 
 /**
- * Performs initial population of the wallet txid cache
+ * Performs initial population of the wallet txid cache.
  */
 void WalletTXIDCacheInit()
 {
     if (msc_debug_walletcache) PrintToLog("WALLETTXIDCACHE: WalletTXIDCacheInit requested\n");
-
+#ifdef ENABLE_WALLET
     LOCK2(cs_tally, pwalletMain->cs_wallet);
 
     std::list<CAccountingEntry> acentries;
@@ -55,8 +63,8 @@ void WalletTXIDCacheInit()
 
     // Iterate through the wallet, checking if each transaction is Omni (via levelDB)
     for (CWallet::TxItems::reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it) {
-        CWalletTx *const pwtx = (*it).second.first;
-        if (pwtx != 0) {
+        const CWalletTx* pwtx = it->second.first;
+        if (pwtx != NULL) {
             // get the hash of the transaction and check leveldb to see if this is an Omni tx, if so add to cache
             const uint256& hash = pwtx->GetHash();
             if (p_txlistdb->exists(hash)) {
@@ -65,11 +73,13 @@ void WalletTXIDCacheInit()
             }
         }
     }
+#endif
 }
 
 /**
- * Updates the cache with the latest state, returning true if changes were made to wallet addresses (including watch only)
- * Also prepares a list of addresses that were changed (for future usage)
+ * Updates the cache with the latest state, returning true if changes were made to wallet addresses (including watch only).
+ *
+ * Also prepares a list of addresses that were changed (for future usage).
  */
 int WalletCacheUpdate()
 {
@@ -125,3 +135,5 @@ int WalletCacheUpdate()
     return numChanges;
 }
 
+
+} // namespace mastercore
