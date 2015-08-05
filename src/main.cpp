@@ -4036,7 +4036,9 @@ void static ProcessGetData(CNode* pfrom)
 
     vector<CInv> vNotFound;
 
-    LOCK(cs_main);
+    //if we can't lock cs_main, return and do this later
+    TRY_LOCK(cs_main, fCsMainLock);
+    if(!fCsMainLock) return;
 
     while (it != pfrom->vRecvGetData.end()) {
         // Don't bother if send buffer is too full to respond anyway
