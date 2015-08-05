@@ -61,6 +61,9 @@ void CMasternodeSync::Reset()
     lastMasternodeList = 0;
     lastMasternodeWinner = 0;
     lastBudgetItem = 0;
+    mapSeenSyncMNB.clear();
+    mapSeenSyncMNW.clear();
+    mapSeenSyncBudget.clear();
     lastFailure = 0;
     nCountFailures = 0;
     sumMasternodeList = 0;
