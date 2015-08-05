@@ -2867,21 +2867,12 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     // Encode the data outputs
     switch(omniTxClass) {
         case OMNI_CLASS_B: { // declaring vars in a switch here so use an expicit code block
-            CBitcoinAddress address;
             CPubKey redeemingPubKey;
-            if (!redemptionAddress.empty()) { address.SetString(redemptionAddress); } else { address.SetString(senderAddress); }
-            if (wallet && address.IsValid()) { // validate the redemption address
-                if (address.IsScript()) {
-                    PrintToLog("%s() ERROR: Redemption Address must be specified !\n", __FUNCTION__);
-                    return MP_REDEMP_ILLEGAL;
-                } else {
-                    CKeyID keyID;
-                    if (!address.GetKeyID(keyID)) return MP_REDEMP_BAD_KEYID;
-                    if (!wallet->GetPubKey(keyID, redeemingPubKey)) return MP_REDEMP_FETCH_ERR_PUBKEY;
-                    if (!redeemingPubKey.IsFullyValid()) return MP_REDEMP_INVALID_PUBKEY;
-                }
-            } else return MP_REDEMP_BAD_VALIDATION;
-            if(!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
+            const std::string& sAddress = redemptionAddress.empty() ? senderAddress : redemptionAddress;
+            if (!AddressToPubKey(sAddress, redeemingPubKey)) {
+                return MP_REDEMP_BAD_VALIDATION;
+            }
+            if (!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
         break; }
         case OMNI_CLASS_C:
             if(!OmniCore_Encode_ClassC(data,vecSend)) { return MP_ENCODING_ERROR; }

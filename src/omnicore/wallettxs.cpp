@@ -11,9 +11,11 @@
 #include "coincontrol.h"
 #include "init.h"
 #include "main.h"
+#include "pubkey.h"
 #include "script/standard.h"
 #include "sync.h"
 #include "uint256.h"
+#include "utilstrencodings.h"
 #include "wallet.h"
 
 #include <stdint.h>
@@ -22,6 +24,40 @@
 
 namespace mastercore
 {
+/**
+ * Retrieves a public key from the wallet, or converts a hex-string to a public key.
+ */
+bool AddressToPubKey(const std::string& key, CPubKey& pubKey)
+{
+#ifdef ENABLE_WALLET
+    // Case 1: Bitcoin address and the key is in the wallet
+    CBitcoinAddress address(key);
+    if (pwalletMain && address.IsValid()) {
+        CKeyID keyID;
+        if (!address.GetKeyID(keyID)) {
+            PrintToLog("%s() ERROR: redemption address %s does not refer to a public key\n", __func__, key);
+            return false;
+        }
+        if (!pwalletMain->GetPubKey(keyID, pubKey)) {
+            PrintToLog("%s() ERROR: no public key in wallet for redemption address %s\n", __func__, key);
+            return false;
+        }
+    }
+    // Case 2: Hex-encoded public key
+    else
+#endif
+    if (IsHex(key)) {
+        pubKey = CPubKey(ParseHex(key));
+    }
+
+    if (!pubKey.IsFullyValid()) {
+        PrintToLog("%s() ERROR: invalid redemption key %s\n", __func__, key);
+        return false;
+    }
+
+    return true;
+}
+
 /**
  * Checks, whether the output qualifies as input for a transaction.
  */
@@ -41,6 +77,7 @@ bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest)
 
     return true;
 }
+
 /**
  * Selects spendable outputs to create a transaction.
  */

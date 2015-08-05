@@ -2,6 +2,7 @@
 #define OMNICORE_WALLETTXS_H
 
 class CCoinControl;
+class CPubKey;
 
 #include "script/standard.h"
 
@@ -10,6 +11,9 @@ class CCoinControl;
 
 namespace mastercore
 {
+/** Retrieves a public key from the wallet, or converts a hex-string to a public key. */
+bool AddressToPubKey(const std::string& key, CPubKey& pubKey);
+
 /** Checks, whether the output qualifies as input for a transaction. */
 bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest);
 
