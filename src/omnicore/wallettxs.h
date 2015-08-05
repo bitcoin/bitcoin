@@ -20,6 +20,9 @@ bool CheckFee(const std::string& fromAddress, size_t nDataSize);
 /** Checks, whether the output qualifies as input for a transaction. */
 bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest);
 
+/** Retrieves the label, used by the UI, for an address from the wallet. */
+std::string GetAddressLabel(const std::string& address);
+
 /** Selects spendable outputs to create a transaction. */
 int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional = 0);
 }

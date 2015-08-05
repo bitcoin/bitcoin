@@ -2784,25 +2784,6 @@ int IsMyAddress(const std::string &address)
     return IsMine(*pwalletMain, omniDest);
 }
 
-// gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
-string getLabel(const string &address)
-{
-CWallet *wallet = pwalletMain;
-
-  if (wallet)
-   {
-        LOCK(wallet->cs_wallet);
-        CBitcoinAddress address_parsed(address);
-        std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
-        if (mi != wallet->mapAddressBook.end())
-        {
-            return (mi->second.name);
-        }
-    }
-
-  return string();
-}
-
 /**
  * Determines, whether it is valid to use a Class C transaction for a given payload size.
  *

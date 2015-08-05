@@ -106,6 +106,26 @@ bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest)
 }
 
 /**
+ * Retrieves the label, used by the UI, for an address from the wallet.
+ */
+std::string GetAddressLabel(const std::string& address)
+{
+    std::string addressLabel;
+#ifdef ENABLE_WALLET
+    if (pwalletMain) {
+        LOCK(pwalletMain->cs_wallet);
+
+        CBitcoinAddress addressParsed(address);
+        std::map<CTxDestination, CAddressBookData>::const_iterator mi = pwalletMain->mapAddressBook.find(addressParsed.Get());
+        if (mi != pwalletMain->mapAddressBook.end()) {
+            addressLabel = mi->second.name;
+        }
+    }
+#endif
+    return addressLabel;
+}
+
+/**
  * Selects spendable outputs to create a transaction.
  */
 int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)

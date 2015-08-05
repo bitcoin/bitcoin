@@ -251,8 +251,6 @@ int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType 
 int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId);
 int IsMyAddress(const std::string& address);
 
-std::string getLabel(const std::string& address);
-
 /** Global handler to initialize Omni Core. */
 int mastercore_init();
 
