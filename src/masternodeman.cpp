@@ -254,6 +254,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
             map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
             while(it3 != mapSeenMasternodeBroadcast.end()){
                 if((*it3).second.vin == (*it).vin){
+                    masternodeSync.mapSeenSyncMNB.erase((*it3).first);
                     mapSeenMasternodeBroadcast.erase(it3++);
                 } else {
                     ++it3;
@@ -644,7 +645,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> mnb;
 
         if(mnodeman.mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
-            masternodeSync.AddedMasternodeList();
+            masternodeSync.AddedMasternodeList(mnb.GetHash());
             return;
         }
         mnodeman.mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
@@ -672,7 +673,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(mnb.CheckInputsAndAdd(nDoS)) {
             // use this as a peer
             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
-            masternodeSync.AddedMasternodeList();
+            masternodeSync.AddedMasternodeList(mnb.GetHash());
         } else {
             LogPrintf("mnb - Rejected Masternode entry %s\n", mnb.addr.ToString());
 
