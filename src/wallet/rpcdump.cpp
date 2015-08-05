@@ -225,6 +225,52 @@ UniValue importaddress(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue removeaddress(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "removeaddress \"address\"\n"
+            "\nRemoves watch-only address or script (in hex) added by importaddress.\n"
+            "\nArguments:\n"
+            "1. \"address\"          (string, required) The address\n"
+            "\nExamples:\n"
+            "\nRemove watch-only address\n"
+            + HelpExampleCli("removeaddress", "\"myaddress\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("removeaddress", "\"myaddress\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    CScript script;
+
+    CBitcoinAddress address(params[0].get_str());
+    if (address.IsValid()) {
+        script = GetScriptForDestination(address.Get());
+    } else if (IsHex(params[0].get_str())) {
+        std::vector<unsigned char> data(ParseHex(params[0].get_str()));
+        script = CScript(data.begin(), data.end());
+    } else {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
+    }
+
+    if (::IsMine(*pwalletMain, script) == ISMINE_SPENDABLE)
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet contains the private key for this address or script - can't remove it");
+
+    if (!pwalletMain->HaveWatchOnly(script))
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet does not contain this address or script");
+
+    pwalletMain->MarkDirty();
+
+    if (!pwalletMain->RemoveWatchOnly(script))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error removing address from wallet");
+
+    return NullUniValue;
+}
+
 UniValue importwallet(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))

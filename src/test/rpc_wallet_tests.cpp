@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     UniValue retValue;
     string strAccount = "walletDemoAccount";
     string strPurpose = "receive";
-    BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
+    BOOST_CHECK_NO_THROW({ /* Initialize Wallet with an account */
         CWalletDB walletdb(pwalletMain->strWalletFile);
         CAccount account;
         account.vchPubKey = demoPubkey;
