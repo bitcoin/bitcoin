@@ -42,7 +42,7 @@ void CActiveMasternode::ManageStatus()
 
         if(strMasterNodeAddr.empty()) {
             if(!GetLocal(service)) {
-                notCapableReason = "Can't detect external address. Please use the Masternodeaddr configuration option.";
+                notCapableReason = "Can't detect external address. Please use the masternodeaddr configuration option.";
                 LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
                 return;
             }
