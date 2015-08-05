@@ -140,26 +140,28 @@ void ExecuteSpork(int nSporkID, int nValue)
 }
 
 void ReprocessBlocks(int nBlocks) 
-{
-    CBlockIndex* pindexPrev = chainActive.Tip();
+{   
+    std::map<uint256, int64_t>::iterator it = mapRejectedBlocks.begin();
+    while(it != mapRejectedBlocks.end()){
+        //use a window twice as large as is usual for the nBlocks we want to reset
+        if((*it).second  > GetTime() - (nBlocks*60*5)) {   
+            BlockMap::iterator mi = mapBlockIndex.find((*it).first);
+            if (mi != mapBlockIndex.end() && (*mi).second) {
+                LOCK(cs_main);
+                
+                CBlockIndex* pindex = (*mi).second;
+                LogPrintf("ReprocessBlocks - %s\n", (*it).first.ToString());
 
-    for (unsigned int i = 1; pindexPrev && pindexPrev->nHeight > 0; i++) {
-        if(i > nBlocks) break;
-
-        CValidationState state;
-        {
-            LOCK(cs_main);
-            ReconsiderBlock(state, pindexPrev);
+                CValidationState state;
+                ReconsiderBlock(state, pindex);
+            }
         }
-
-        if (pindexPrev->pprev == NULL) { assert(pindexPrev); break; }
-        pindexPrev = pindexPrev->pprev;
+        ++it;
     }
 
     CValidationState state;
     {
         LOCK(cs_main);
-
         DisconnectBlocksAndReprocess(nBlocks);
     }
 
