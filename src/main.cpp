@@ -3284,22 +3284,9 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     if(!fLiteMode){
         if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST) {
-            CScript payee;
-            CTxIn vin;
             darkSendPool.NewBlock();
             masternodePayments.ProcessBlock(GetHeight()+10);
             budget.NewBlock();
-
-            //allow clients to ask for syncing again if they need it
-            if(GetHeight() % 100 == 0) {
-                LOCK(cs_vNodes);
-                BOOST_FOREACH(CNode* pnode, vNodes) {
-                    pnode->ClearFulfilledRequest("getspork");
-                    pnode->ClearFulfilledRequest("mnsync");
-                    pnode->ClearFulfilledRequest("mnwsync");
-                    pnode->ClearFulfilledRequest("busync");
-                }                
-            }
         }
     }
 
