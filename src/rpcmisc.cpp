@@ -121,6 +121,8 @@ Value mnsync(const Array& params, bool fHelp)
 
     if(strMode == "status") {
         Object obj;
+
+        obj.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
         obj.push_back(Pair("lastMasternodeList", masternodeSync.lastMasternodeList));
         obj.push_back(Pair("lastMasternodeWinner", masternodeSync.lastMasternodeWinner));
         obj.push_back(Pair("lastBudgetItem", masternodeSync.lastBudgetItem));
