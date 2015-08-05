@@ -25,6 +25,7 @@
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 #include "omnicore/walletcache.h"
+#include "omnicore/wallettxs.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -2802,85 +2803,6 @@ CWallet *wallet = pwalletMain;
   return string();
 }
 
-static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl, int64_t additional)
-{
-  CWallet *wallet = pwalletMain;
-  if (NULL == wallet) { return 0; }
-
-  int64_t n_max = (COIN * (20 * (0.0001))); // assume 20KBytes max TX size at 0.0001 per kilobyte
-  // FUTURE: remove n_max and try 1st smallest input, then 2 smallest inputs etc. -- i.e. move Coin Control selection closer to CreateTransaction
-  int64_t n_total = 0;  // total output funds collected
-
-  // if referenceamount is set it is needed to be accounted for here too
-  if (0 < additional) n_max += additional;
-
-  int nHeight = GetHeight();
-  LOCK2(cs_main, wallet->cs_wallet);
-
-    string sAddress = "";
-
-    // iterate over the wallet
-    for (map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin();
-        it != wallet->mapWallet.end(); ++it) {
-      const uint256& wtxid = it->first;
-      const CWalletTx* pcoin = &(*it).second;
-      bool bIsMine;
-      bool bIsSpent;
-
-      if (pcoin->IsTrusted()) {
-        const int64_t nAvailable = pcoin->GetAvailableCredit();
-
-        if (!nAvailable)
-          continue;
-
-        for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-          txnouttype whichType;
-          if (!GetOutputType(pcoin->vout[i].scriptPubKey, whichType))
-            continue;
-
-          if (!IsAllowedInputType(whichType, nHeight))
-            continue;
-
-          CTxDestination dest;
-          if (!ExtractDestination(pcoin->vout[i].scriptPubKey, dest))
-            continue;
-
-          bIsMine = IsMine(*wallet, dest);
-          bIsSpent = wallet->IsSpent(wtxid, i);
-
-          if (!bIsMine || bIsSpent)
-            continue;
-
-          int64_t n = bIsSpent ? 0 : pcoin->vout[i].nValue;
-
-          sAddress = CBitcoinAddress(dest).ToString();
-          if (msc_debug_tokens)
-            PrintToLog("%s:IsMine()=%s:IsSpent()=%s:%s: i=%d, nValue= %lu\n",
-                sAddress, bIsMine ? "yes" : "NO",
-                bIsSpent ? "YES" : "no", wtxid.ToString(), i, n);
-
-          // only use funds from the Sender's address for our MP transaction
-          // TODO: may want to a little more selective here, i.e. use smallest possible (~0.1 BTC), but large amounts lead to faster confirmations !
-          if (FromAddress == sAddress) {
-            COutPoint outpt(wtxid, i);
-            coinControl.Select(outpt);
-
-            n_total += n;
-
-            if (n_max <= n_total)
-              break;
-          }
-        } // for pcoin end
-      }
-
-      if (n_max <= n_total)
-        break;
-    } // for iterate over the wallet end
-
-// return 0;
-return n_total;
-}
-
 // This function determines whether it is valid to use a Class C transaction for a given payload size
 static bool UseEncodingClassC(size_t nDataSize)
 {
@@ -2897,7 +2819,7 @@ bool feeCheck(const string &address, size_t nDataSize)
 {
     // check the supplied address against selectCoins to determine if sufficient fees for send
     CCoinControl coinControl;
-    int64_t inputTotal = selectCoins(address, coinControl, 0);
+    int64_t inputTotal = SelectCoins(address, coinControl, 0);
     bool ClassC = UseEncodingClassC(nDataSize);
     int64_t minFee = 0;
 
@@ -2940,7 +2862,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     coinControl.destChange = addr.Get();
 
     // Select the inputs
-    if (0 > selectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
+    if (0 > SelectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
 
     // Encode the data outputs
     switch(omniTxClass) {
