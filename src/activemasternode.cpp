@@ -250,6 +250,7 @@ bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateral
         return false;
     }
     mnodeman.mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+    masternodeSync.AddedMasternodeList(mnb.GetHash());
 
     CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)

@@ -75,19 +75,44 @@ void CMasternodeSync::Reset()
     RequestedMasternodeAttempt = 0;
 }
 
-void CMasternodeSync::AddedMasternodeList()
+void CMasternodeSync::AddedMasternodeList(uint256 hash)
 {
-    lastMasternodeList = GetTime();
+    if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
+        if(mapSeenSyncMNB[hash] < 2) {
+            lastMasternodeList = GetTime();
+            mapSeenSyncMNB[hash]++;
+        }
+    } else {
+        lastMasternodeList = GetTime();
+        mapSeenSyncMNB.insert(make_pair(hash, 1));
+    }
 }
 
-void CMasternodeSync::AddedMasternodeWinner()
+void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 {
-    lastMasternodeWinner = GetTime();
+    if(masternodePayments.mapMasternodePayeeVotes.count(hash)) {
+        if(mapSeenSyncMNW[hash] < 2) {
+            lastMasternodeWinner = GetTime();
+            mapSeenSyncMNW[hash]++;
+        }
+    } else {
+        lastMasternodeWinner = GetTime();
+        mapSeenSyncMNW.insert(make_pair(hash, 1));
+    }
 }
 
-void CMasternodeSync::AddedBudgetItem()
+void CMasternodeSync::AddedBudgetItem(uint256 hash)
 {
-    lastBudgetItem = GetTime();
+    if(budget.mapSeenMasternodeBudgetProposals.count(hash) || budget.mapSeenMasternodeBudgetVotes.count(hash) ||
+            budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
+        if(mapSeenSyncBudget[hash] < 2) {
+            lastBudgetItem = GetTime();
+            mapSeenSyncBudget[hash]++;
+        }
+    } else {
+        lastBudgetItem = GetTime();
+        mapSeenSyncBudget.insert(make_pair(hash, 1));
+    }
 }
 
 bool CMasternodeSync::IsBudgetPropEmpty()
@@ -141,25 +166,21 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDat
         {
             case(MASTERNODE_SYNC_LIST):
                 if(nItemID != RequestedMasternodeAssets) return;
-                if(nCount == 0) lastMasternodeList = GetTime();
                 sumMasternodeList += nCount;
                 countMasternodeList++;
                 break;
             case(MASTERNODE_SYNC_MNW):
                 if(nItemID != RequestedMasternodeAssets) return;
-                if(nCount == 0) lastMasternodeWinner = GetTime();
                 sumMasternodeWinner += nCount;
                 countMasternodeWinner++;
                 break;
             case(MASTERNODE_SYNC_BUDGET_PROP):
                 if(RequestedMasternodeAssets != MASTERNODE_SYNC_BUDGET) return;
-                if(nCount == 0) lastBudgetItem = GetTime();
                 sumBudgetItemProp += nCount;
                 countBudgetItemProp++;
                 break;
             case(MASTERNODE_SYNC_BUDGET_FIN):
                 if(RequestedMasternodeAssets != MASTERNODE_SYNC_BUDGET) return;
-                if(nCount == 0) lastBudgetItem = GetTime();
                 sumBudgetItemFin += nCount;
                 countBudgetItemFin++;
                 break;
