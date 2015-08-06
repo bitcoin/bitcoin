@@ -18,13 +18,16 @@
 #define OMNICORE_VERSION_MAJOR       0
 
 // Increase with every non-consensus affecting feature
-#define OMNICORE_VERSION_MINOR       9
+#define OMNICORE_VERSION_MINOR       10
 
 // Increase with every patch, which is not a feature or consensus affecting
-#define OMNICORE_VERSION_PATCH       99
+#define OMNICORE_VERSION_PATCH       0
+
+// Non-public build number/revision (usually zero)
+#define OMNICORE_VERSION_BUILD       0
 
 // Use "dev" for development versions, switch to "rc" for release candidates
-#define OMNICORE_VERSION_STATUS      dev
+#define OMNICORE_VERSION_STATUS      rc1
 
 
 #endif // HAVE_CONFIG_H
@@ -41,10 +44,11 @@
 
 //! Omni Core client version
 static const int OMNICORE_VERSION =
-                     +  100000000 * OMNICORE_VERSION_MILESTONE
-                     +     100000 * OMNICORE_VERSION_MAJOR
-                     +        100 * OMNICORE_VERSION_MINOR
-                     +          1 * OMNICORE_VERSION_PATCH;
+                    +100000000000 * OMNICORE_VERSION_MILESTONE
+                    +   100000000 * OMNICORE_VERSION_MAJOR
+                    +      100000 * OMNICORE_VERSION_MINOR
+                    +         100 * OMNICORE_VERSION_PATCH
+                    +           1 * OMNICORE_VERSION_BUILD;
 
 //! Returns formatted Omni Core version, e.g. "0.0.9.1-dev"
 const std::string OmniCoreVersion();
