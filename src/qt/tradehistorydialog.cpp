@@ -161,7 +161,7 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
     if (forceUpdate || newTXCount > 0) {
         ui->tradeHistoryTable->setSortingEnabled(false); // disable sorting while we update the table
         QAbstractItemModel* tradeHistoryAbstractModel = ui->tradeHistoryTable->model();
-        int chainHeight = chainActive.Height();
+        int chainHeight = GetHeight();
 
         // Loop through tradeHistoryMap and search tradeHistoryTable for the transaction, adding it if not already there
         for (TradeHistoryMap::iterator it = tradeHistoryMap.begin(); it != tradeHistoryMap.end(); ++it) {
@@ -247,12 +247,11 @@ void TradeHistoryDialog::UpdateTradeHistoryTable(bool forceUpdate)
 // Used to cache trades so we don't need to reparse all our transactions on every update
 int TradeHistoryDialog::PopulateTradeHistoryMap()
 {
-    // Attempt to obtain locks
-    CWallet *wallet = pwalletMain;
-    if (NULL == wallet) return -1;
+    // TODO: locks may not be needed here -- looks like wallet lock can be removed
+    if (NULL == pwalletMain) return -1;
     TRY_LOCK(cs_main,lckMain);
     if (!lckMain) return -1;
-    TRY_LOCK(wallet->cs_wallet, lckWallet);
+    TRY_LOCK(pwalletMain->cs_wallet, lckWallet);
     if (!lckWallet) return -1;
 
     int64_t nProcessed = 0; // number of new entries, forms return code
