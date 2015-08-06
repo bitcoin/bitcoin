@@ -19,6 +19,8 @@ CBudgetManager budget;
 CCriticalSection cs_budget;
 
 std::map<uint256, int64_t> askedForSourceProposalOrBudget;
+std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
+std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 int nSubmittedFinalBudget;
 
@@ -30,7 +32,7 @@ int GetBudgetPaymentCycleBlocks(){
     return 50;
 }
 
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime)
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
 {
     CTransaction txCollateral;
     uint256 nBlockHash;
@@ -73,6 +75,8 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
             }
         }
     }
+
+    nConf = conf;
 
     //if we're syncing we won't have instantX information, so accept 1 confirmation 
     if(conf >= BUDGET_FEE_CONFIRMATIONS){
@@ -799,6 +803,54 @@ void CBudgetManager::NewBlock()
         (*it3).second.CleanAndRemove(false);
         ++it3;
     }
+
+    std::vector<CBudgetProposalBroadcast>::iterator it4 = vecImmatureBudgetProposals.begin();
+    while(it4 != vecImmatureBudgetProposals.end())
+    {
+        std::string strError = "";
+        int nConf = 0;
+        if(!IsBudgetCollateralValid((*it4).nFeeTXHash, (*it4).GetHash(), strError, (*it4).nTime, nConf)){
+            ++it4;
+            continue;
+        }
+
+        if(!(*it4).IsValid(strError)) {
+            LogPrintf("mprop (immature) - invalid budget proposal - %s\n", strError);
+            it4 = vecImmatureBudgetProposals.erase(it4); 
+            continue;
+        }
+
+        CBudgetProposal budgetProposal((*it4));
+        if(AddProposal(budgetProposal)) {(*it4).Relay();}
+
+        LogPrintf("mprop (immature) - new budget - %s\n", (*it4).GetHash().ToString());
+        it4 = vecImmatureBudgetProposals.erase(it4); 
+    }
+
+    std::vector<CFinalizedBudgetBroadcast>::iterator it5 = vecImmatureFinalizedBudgets.begin();
+    while(it5 != vecImmatureFinalizedBudgets.end())
+    {
+        std::string strError = "";
+        int nConf = 0;
+        if(!IsBudgetCollateralValid((*it5).nFeeTXHash, (*it5).GetHash(), strError, (*it5).nTime, nConf)){
+            ++it5;
+            continue;
+        }
+
+        if(!(*it5).IsValid(strError)) {
+            LogPrintf("fbs (immature) - invalid finalized budget - %s\n", strError);
+            it5 = vecImmatureFinalizedBudgets.erase(it5); 
+            continue;
+        }
+
+        LogPrintf("fbs (immature) - new finalized budget - %s\n", (*it5).GetHash().ToString());
+
+        CFinalizedBudget finalizedBudget((*it5));
+        if(AddFinalizedBudget(finalizedBudget)) {(*it5).Relay();}
+
+        it5 = vecImmatureFinalizedBudgets.erase(it5); 
+    }
+
 }
 
 void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
@@ -813,12 +865,14 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         vRecv >> nProp;
 
         if(Params().NetworkID() == CBaseChainParams::MAIN){
-            if(pfrom->HasFulfilledRequest("mnvs")) {
-                LogPrintf("mnvs - peer already asked me for the list\n");
-                Misbehaving(pfrom->GetId(), 20);
-                return;
+            if(nProp == 0) {
+                if(pfrom->HasFulfilledRequest("mnvs")) {
+                    LogPrintf("mnvs - peer already asked me for the list\n");
+                    Misbehaving(pfrom->GetId(), 20);
+                    return;
+                }
+                pfrom->FulfilledRequest("mnvs");
             }
-            pfrom->FulfilledRequest("mnvs");
         }
 
         Sync(pfrom, nProp);
@@ -835,8 +889,10 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime)){
+        int nConf = 0;
+        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf)){
             LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
+            if(nConf >= 1) vecImmatureBudgetProposals.push_back(budgetProposalBroadcast);
             return;
         }
 
@@ -900,8 +956,11 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime)){
+        int nConf = 0;
+        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf)){
             LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.nFeeTXHash.ToString(), strError);
+
+            if(nConf >= 1) vecImmatureFinalizedBudgets.push_back(finalizedBudgetBroadcast);
             return;
         }
 
@@ -1133,7 +1192,8 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     }
 
     if(fCheckCollateral){
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError, nTime)){
+        int nConf = 0;
+        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError, nTime, nConf)){
             return false;
         }
     }
@@ -1328,6 +1388,18 @@ CBudgetProposalBroadcast::CBudgetProposalBroadcast()
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
+{
+    strProposalName = other.strProposalName;
+    strURL = other.strURL;
+    nBlockStart = other.nBlockStart;
+    nBlockEnd = other.nBlockEnd;
+    address = other.address;
+    nAmount = other.nAmount;
+    nFeeTXHash = other.nFeeTXHash;
+    nTime = other.nTime;
+}
+
+CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other)
 {
     strProposalName = other.strProposalName;
     strURL = other.strURL;
@@ -1639,7 +1711,8 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral)
 
     std::string strError2 = "";
     if(fCheckCollateral){
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime)){
+        int nConf = 0;
+        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf)){
             {strError = "Invalid Collateral : " + strError2; return false;}
         }
     }

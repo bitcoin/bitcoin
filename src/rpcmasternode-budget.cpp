@@ -174,17 +174,18 @@ Value mnbudget(const Array& params, bool fHelp)
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
 
         std::string strError = "";
-        if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime)){
-            return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
+        int nConf = 0;
+        if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf)){
+            //return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
         }
 
         if(!masternodeSync.IsSynced()){
             return "Must wait for client to sync with masternode network. Try again in a minute or so.";            
         }
 
-        if(!budgetProposalBroadcast.IsValid(strError)){
-            return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
-        }
+        // if(!budgetProposalBroadcast.IsValid(strError)){
+        //     return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
+        // }
 
         budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
