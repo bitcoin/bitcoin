@@ -36,6 +36,9 @@ static const CAmount BUDGET_FEE_TX = (0.5*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
 
+extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
+extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
+
 extern CBudgetManager budget;
 void DumpBudgets();
 
@@ -43,7 +46,7 @@ void DumpBudgets();
 int GetBudgetPaymentCycleBlocks();
 
 //Check the collateral transaction for the budget proposal/finalized budget
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime);
+bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
 
 /** Save Budget Manager (budget.dat)
  */
@@ -293,6 +296,27 @@ public:
     CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
     CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, std::vector<CTxBudgetPayment> vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
 
+    void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second) // nothrow
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two classes,
+        // the two classes are effectively swapped
+        swap(first.strBudgetName, second.strBudgetName);
+        swap(first.nBlockStart, second.nBlockStart);
+        first.mapVotes.swap(second.mapVotes);
+        first.vecBudgetPayments.swap(second.vecBudgetPayments);
+        swap(first.nFeeTXHash, second.nFeeTXHash);
+        swap(first.nTime, second.nTime);
+    }
+
+    CFinalizedBudgetBroadcast& operator=(CFinalizedBudgetBroadcast from)
+    {
+        swap(*this, from);
+        return *this;
+    }
+
     void Relay();
 
     ADD_SERIALIZE_METHODS;
@@ -459,7 +483,32 @@ private:
 public:
     CBudgetProposalBroadcast();
     CBudgetProposalBroadcast(const CBudgetProposal& other);
+    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other);
     CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
+
+    void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two classes,
+        // the two classes are effectively swapped
+        swap(first.strProposalName, second.strProposalName);
+        swap(first.nBlockStart, second.nBlockStart);
+        swap(first.strURL, second.strURL);
+        swap(first.nBlockEnd, second.nBlockEnd);
+        swap(first.nAmount, second.nAmount);
+        swap(first.address, second.address);
+        swap(first.nTime, second.nTime);
+        swap(first.nFeeTXHash, second.nFeeTXHash);        
+        first.mapVotes.swap(second.mapVotes);
+    }
+
+    CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
+    {
+        swap(*this, from);
+        return *this;
+    }
 
     void Relay();
 
