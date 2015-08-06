@@ -33,7 +33,8 @@ bool msc_debug_script             = 0;
 bool msc_debug_dex                = 1;
 bool msc_debug_send               = 1;
 bool msc_debug_tokens             = 0;
-bool msc_debug_spec               = 1;
+//! Print information about payloads with non-sequential sequence number
+bool msc_debug_spec               = 0;
 bool msc_debug_exo                = 0;
 bool msc_debug_tally              = 1;
 bool msc_debug_sp                 = 1;
