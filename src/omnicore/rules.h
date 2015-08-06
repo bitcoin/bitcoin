@@ -88,6 +88,9 @@ public:
     //! Block to enable betting transactions
     int MSC_BET_BLOCK;
 
+    //! Block to deactivate crowdsale participations when "granting tokens"
+    int GRANTEFFECTS_FEATURE_BLOCK;
+
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;
 
