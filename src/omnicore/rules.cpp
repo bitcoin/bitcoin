@@ -23,20 +23,6 @@
 
 namespace mastercore
 {
-/** Features, activated by message
- */
-enum FeatureId
-{
-    //! Feature identifier to enable Class C transaction parsing and processing
-    OMNICORE_FEATURE_CLASS_C = 1,
-    //! Feature identifier to enable the distributed token exchange
-    OMNICORE_FEATURE_METADEX = 2,
-    //! Feature identifier to enable betting transactions
-    OMNICORE_FEATURE_BETTING = 3,
-    //! Feature identifier to disable crowdsale participations when "granting tokens"
-    OMNICORE_FEATURE_GRANTEFFECTS = 4
-};
-
 /**
  * Returns a mapping of transaction types, and the blocks at which they are enabled.
  */
@@ -337,25 +323,25 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlo
 
     // check feature is recognized and activation is successful
     switch (featureId) {
-        case OMNICORE_FEATURE_CLASS_C:
+        case FEATURE_CLASS_C:
             MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
             PrintToLog("Feature activation of ID %d succeeded. "
                        "Class C transaction encoding is going to be enabled at block %d.\n",
                        featureId, params.NULLDATA_BLOCK);
             return true;
-        case OMNICORE_FEATURE_METADEX:
+        case FEATURE_METADEX:
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
             PrintToLog("Feature activation of ID %d succeeded. "
                        "The distributed token exchange is going to be enabled at block %d.\n",
                        featureId, params.MSC_METADEX_BLOCK);
             return true;
-        case OMNICORE_FEATURE_BETTING:
+        case FEATURE_BETTING:
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
             PrintToLog("Feature activation of ID %d succeeded. "
                        "Bet transactions are going to be enabled at block %d.\n",
                        featureId, params.MSC_BET_BLOCK);
             return true;
-        case OMNICORE_FEATURE_GRANTEFFECTS:
+        case FEATURE_GRANTEFFECTS:
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
             PrintToLog("Feature activation of ID %d succeeded. "
                        "The potential side effect of crowdsale participations, when "
@@ -366,6 +352,34 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlo
 
     PrintToLog("Feature activation of id %d refused due to unknown feature ID\n", featureId);
     return false;
+}
+
+/**
+ * Checks, whether a feature is activated at the given block.
+ */
+bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
+{
+    const CConsensusParams& params = ConsensusParams();
+    int activationBlock = std::numeric_limits<int>::max();
+
+    switch (featureId) {
+        case FEATURE_CLASS_C:
+            activationBlock = params.NULLDATA_BLOCK;
+            break;
+        case FEATURE_METADEX:
+            activationBlock = params.MSC_METADEX_BLOCK;
+            break;
+        case FEATURE_BETTING:
+            activationBlock = params.MSC_BET_BLOCK;
+            break;
+        case FEATURE_GRANTEFFECTS:
+            activationBlock = params.GRANTEFFECTS_FEATURE_BLOCK;
+            break;
+        default:
+            return false;
+    }
+
+    return (transactionBlock >= activationBlock);
 }
 
 /**
