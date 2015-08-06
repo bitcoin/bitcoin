@@ -930,6 +930,13 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
     return nMinFee;
 }
 
+/** Convert CValidationState to a human-readable message for logging */
+static std::string FormatStateMessage(const CValidationState &state)
+{
+    return strprintf("%s (code %i)",
+        state.GetRejectReason(),
+        state.GetRejectCode());
+}
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectInsaneFee)
