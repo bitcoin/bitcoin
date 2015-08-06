@@ -1499,7 +1499,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     //get the mode of budget voting for this masternode
     strBudgetMode = GetArg("-budgetvotemode", "auto");
 
-    if(GetBoolArg("-mnconflock", true)) {
+    if(GetBoolArg("-mnconflock", true) && pwalletMain) {
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Masternodes:\n");
         uint256 mnTxHash;

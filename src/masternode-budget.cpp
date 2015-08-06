@@ -149,6 +149,7 @@ void CBudgetManager::SubmitFinalBudget()
 
     //create fee tx
     CTransaction tx;
+    
     if(!mapCollateral.count(tempBudget.GetHash())){
         CWalletTx wtx;
         if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), false)){
