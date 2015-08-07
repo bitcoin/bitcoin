@@ -37,7 +37,6 @@
 
 // Settings
 static proxyType proxyInfo[NET_MAX];
-static proxyType nameProxy;
 static CCriticalSection cs_proxyInfos;
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = false;
@@ -529,25 +528,9 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     return true;
 }
 
-bool SetNameProxy(const proxyType &addrProxy) {
-    if (!addrProxy.IsValid())
-        return false;
+bool HaveProxy(enum Network net) {
     LOCK(cs_proxyInfos);
-    nameProxy = addrProxy;
-    return true;
-}
-
-bool GetNameProxy(proxyType &nameProxyOut) {
-    LOCK(cs_proxyInfos);
-    if(!nameProxy.IsValid())
-        return false;
-    nameProxyOut = nameProxy;
-    return true;
-}
-
-bool HaveNameProxy() {
-    LOCK(cs_proxyInfos);
-    return nameProxy.IsValid();
+    return proxyInfo[net].IsValid();
 }
 
 bool IsProxy(const CNetAddr &addr) {
@@ -606,10 +589,11 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 
     SplitHostPort(std::string(pszDest), port, strDest);
 
-    proxyType nameProxy;
-    GetNameProxy(nameProxy);
+    proxyType proxy;
+    // Try to get proxy to be used for name resolution
+    GetProxy(NET_DEFAULT, proxy);
 
-    CService addrResolved(CNetAddr(strDest, fNameLookup && !HaveNameProxy()), port);
+    CService addrResolved(CNetAddr(strDest, fNameLookup && !HaveProxy(NET_DEFAULT)), port);
     if (addrResolved.IsValid()) {
         addr = addrResolved;
         return ConnectSocket(addr, hSocketRet, nTimeout);
@@ -617,9 +601,9 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
 
     addr = CService("0.0.0.0:0");
 
-    if (!HaveNameProxy())
+    if (!HaveProxy(NET_DEFAULT))
         return false;
-    return ConnectThroughProxy(nameProxy, strDest, port, hSocketRet, nTimeout, outProxyConnectionFailed);
+    return ConnectThroughProxy(proxy, strDest, port, hSocketRet, nTimeout, outProxyConnectionFailed);
 }
 
 void CNetAddr::Init()
