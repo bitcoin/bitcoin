@@ -55,7 +55,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight);
 
 //process consensus vote message
-bool ProcessConsensusVote(CConsensusVote& ctx);
+bool ProcessConsensusVote(CNode *pnode, CConsensusVote& ctx);
 
 // keep transaction locks in memory for an hour
 void CleanTransactionLocksList();

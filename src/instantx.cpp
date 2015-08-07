@@ -138,7 +138,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
         mapTxLockVote.insert(make_pair(ctx.GetHash(), ctx));
 
-        if(ProcessConsensusVote(ctx)){
+        if(ProcessConsensusVote(pfrom, ctx)){
             //Spam/Dos protection
             /*
                 Masternodes will sometimes propagate votes before the transaction is known to the client.
@@ -297,7 +297,7 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight)
 }
 
 //received a consensus vote
-bool ProcessConsensusVote(CConsensusVote& ctx)
+bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
 {
     int n = mnodeman.GetMasternodeRank(ctx.vinMasternode, ctx.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
 
@@ -309,6 +309,7 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
     {
         //can be caused by past versions trying to vote with an invalid protocol
         LogPrint("instantx", "InstantX::ProcessConsensusVote - Unknown Masternode\n");
+        mnodeman.AskForMN(pnode, ctx.vinMasternode);
         return false;
     }
 
@@ -320,7 +321,8 @@ bool ProcessConsensusVote(CConsensusVote& ctx)
 
     if(!ctx.SignatureValid()) {
         LogPrintf("InstantX::ProcessConsensusVote - Signature invalid\n");
-        //don't ban, it could just be a non-synced masternode
+        // don't ban, it could just be a non-synced masternode
+        mnodeman.AskForMN(pnode, ctx.vinMasternode);
         return false;
     }
 
