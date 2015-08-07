@@ -1600,15 +1600,15 @@ void CFinalizedBudget::AutoCheck()
 
 
         for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
-            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vecBudgetPayments[i].payee.ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - %lli\n", i, vecBudgetPayments[i].nAmount);
+            LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vecBudgetPayments[i].payee.ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vecBudgetPayments[i].nAmount);
         }
 
         for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
-            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vBudgetProposals[i]->GetHash().ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
-            LogPrintf("CFinalizedBudget::AutoCheck - %lli\n", i, vBudgetProposals[i]->GetAmount());
+            LogPrintf("CFinalizedBudget::AutoCheck - nProp %d %s\n", i, vBudgetProposals[i]->GetHash().ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - Payee %d %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - nAmount %d %lli\n", i, vBudgetProposals[i]->GetAmount());
         }
 
         if(vBudgetProposals.size() == 0) {
