@@ -183,7 +183,7 @@ public:
     }
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool IsValid(std::string& strError);
+    bool IsValid(CNode* pnode, std::string& strError);
     bool SignatureValid();
     void Relay();
 
