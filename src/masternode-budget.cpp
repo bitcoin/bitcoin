@@ -1611,7 +1611,8 @@ void CFinalizedBudget::AutoCheck()
                 return;
             }
 
-            if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){
+            // if(vecBudgetPayments[i].payee != vBudgetProposals[i]->GetPayee()){ -- triggered with false positive 
+            if(vecBudgetPayments[i].payee.ToString() != vBudgetProposals[i]->GetPayee().ToString()){
                 LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
                 return;
             }
