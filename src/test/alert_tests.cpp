@@ -162,8 +162,8 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     SetMockTime(11);
     const std::vector<unsigned char>& alertKey = Params(CBaseChainParams::MAIN).AlertKey();
 
-    boost::filesystem::path temp = GetTempPath() / "alertnotify.txt";
-    boost::filesystem::remove(temp);
+    boost::filesystem::path temp = GetTempPath() /
+        boost::filesystem::unique_path("alertnotify-%%%%.txt");
 
     mapArgs["-alertnotify"] = std::string("echo %s >> ") + temp.string();
 
