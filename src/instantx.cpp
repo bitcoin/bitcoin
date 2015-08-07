@@ -36,7 +36,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
-    if(IsInitialBlockDownload()) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == "ix")
     {
