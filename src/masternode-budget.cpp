@@ -1579,13 +1579,13 @@ void CFinalizedBudget::AutoCheck()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
-    printf("CFinalizedBudget::AutoCheck - %lli\n", pindexPrev->nHeight);
+    LogPrintf("CFinalizedBudget::AutoCheck - %lli\n", pindexPrev->nHeight);
 
     if(!fMasterNode || fAutoChecked) return;
 
     //do this 1 in 20 blocks -- spread out the voting activity on mainnet
     if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 20 != 0) {
-        printf("CFinalizedBudget::AutoCheck - waiting\n");
+        LogPrintf("CFinalizedBudget::AutoCheck - waiting\n");
         return;
     }
 
