@@ -1016,9 +1016,11 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(UpdateFinalizedBudget(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
-        }
 
-        LogPrintf("fbvote - new finalized budget vote - %s\n", vote.GetHash().ToString());
+            LogPrintf("fbvote - new finalized budget vote - %s\n", vote.GetHash().ToString());
+        } else {
+            LogPrintf("fbvote - rejected finalized budget vote - %s - %s\n", vote.GetHash().ToString(), strError);
+        }
     }
 }
 
