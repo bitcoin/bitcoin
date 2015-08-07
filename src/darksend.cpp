@@ -44,7 +44,7 @@ CActiveMasternode activeMasternode;
 void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
-    if(IsInitialBlockDownload()) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == "dsa") { //Darksend Accept Into Pool
 

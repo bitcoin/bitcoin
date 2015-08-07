@@ -857,7 +857,8 @@ void CBudgetManager::NewBlock()
 void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     // lite mode is not supported
-    if(IsInitialBlockDownload()) return;
+    if(fLiteMode) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     LOCK(cs_budget);
 
