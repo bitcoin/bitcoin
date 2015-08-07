@@ -1018,7 +1018,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
 
-        LogPrint("mnbudget", "fbs - new finalized budget vote - %s\n", vote.GetHash().ToString());
+        LogPrint("fbvote - new finalized budget vote - %s\n", vote.GetHash().ToString());
     }
 }
 
