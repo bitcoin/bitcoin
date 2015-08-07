@@ -1576,18 +1576,38 @@ void CFinalizedBudget::AutoCheck()
 {
     LOCK(cs);
 
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return;
+
+    printf("CFinalizedBudget::AutoCheck - %lli\n", pindexPrev->nHeight);
+
     if(!fMasterNode || fAutoChecked) return;
 
     //do this 1 in 20 blocks -- spread out the voting activity on mainnet
     if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 20 != 0) {
+        printf("CFinalizedBudget::AutoCheck - waiting\n");
         return;
     }
 
     fAutoChecked = true; //we only need to check this once
 
+
     if(strBudgetMode == "auto") //only vote for exact matches
     {
         std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
+
+
+        for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
+            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vecBudgetPayments[i].nProposalHash.ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vecBudgetPayments[i].payee.ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - %lli\n", i, vecBudgetPayments[i].nAmount);
+        }
+
+        for(unsigned int i = 0; i < vBudgetProposals.size(); i++){
+            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vBudgetProposals[i]->GetHash().ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - %s\n", i, vBudgetProposals[i]->GetPayee().ToString());
+            LogPrintf("CFinalizedBudget::AutoCheck - %lli\n", i, vBudgetProposals[i]->GetAmount());
+        }
 
         if(vBudgetProposals.size() == 0) {
             LogPrintf("CFinalizedBudget::AutoCheck - Can't get Budget, aborting\n");
@@ -1618,7 +1638,7 @@ void CFinalizedBudget::AutoCheck()
             }
 
             if(vecBudgetPayments[i].nAmount != vBudgetProposals[i]->GetAmount()){
-                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %s %s\n", i, vecBudgetPayments[i].payee.ToString(), vBudgetProposals[i]->GetPayee().ToString());
+                LogPrintf("CFinalizedBudget::AutoCheck - item #%d payee doesn't match %lli %lli\n", i, vecBudgetPayments[i].nAmount, vBudgetProposals[i]->GetAmount());
                 return;
             }
         }
