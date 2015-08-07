@@ -34,6 +34,9 @@ public:
         ProxyUse,               // bool
         ProxyIP,                // QString
         ProxyPort,              // int
+        ProxyUseTor,            // bool
+        ProxyIPTor,             // QString
+        ProxyPortTor,           // int
         DisplayUnit,            // BitcoinUnits::Unit
         ThirdPartyTxUrls,       // QString
         Language,               // QString

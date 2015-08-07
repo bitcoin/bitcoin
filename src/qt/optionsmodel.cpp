@@ -117,6 +117,16 @@ void OptionsModel::Init()
     else if(!settings.value("fUseProxy").toBool() && !GetArg("-proxy", "").empty())
         addOverriddenOption("-proxy");
 
+    if (!settings.contains("fUseSeparateProxyTor"))
+        settings.setValue("fUseSeparateProxyTor", false);
+    if (!settings.contains("addrSeparateProxyTor"))
+        settings.setValue("addrSeparateProxyTor", "127.0.0.1:9050");
+    // Only try to set -onion, if user has enabled fUseSeparateProxyTor
+    if (settings.value("fUseSeparateProxyTor").toBool() && !SoftSetArg("-onion", settings.value("addrSeparateProxyTor").toString().toStdString()))
+        addOverriddenOption("-onion");
+    else if(!settings.value("fUseSeparateProxyTor").toBool() && !GetArg("-onion", "").empty())
+        addOverriddenOption("-onion");
+
     // Display
     if (!settings.contains("language"))
         settings.setValue("language", "");
@@ -175,6 +185,20 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case ProxyPort: {
             // contains IP at index 0 and port at index 1
             QStringList strlIpPort = settings.value("addrProxy").toString().split(":", QString::SkipEmptyParts);
+            return strlIpPort.at(1);
+        }
+
+        // separate Tor proxy
+        case ProxyUseTor:
+            return settings.value("fUseSeparateProxyTor", false);
+        case ProxyIPTor: {
+            // contains IP at index 0 and port at index 1
+            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            return strlIpPort.at(0);
+        }
+        case ProxyPortTor: {
+            // contains IP at index 0 and port at index 1
+            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
             return strlIpPort.at(1);
         }
 
@@ -259,6 +283,39 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             }
         }
         break;
+
+        // separate Tor proxy
+        case ProxyUseTor:
+            if (settings.value("fUseSeparateProxyTor") != value) {
+                settings.setValue("fUseSeparateProxyTor", value.toBool());
+                setRestartRequired(true);
+            }
+            break;
+        case ProxyIPTor: {
+            // contains current IP at index 0 and current port at index 1
+            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            // if that key doesn't exist or has a changed IP
+            if (!settings.contains("addrSeparateProxyTor") || strlIpPort.at(0) != value.toString()) {
+                // construct new value from new IP and current port
+                QString strNewValue = value.toString() + ":" + strlIpPort.at(1);
+                settings.setValue("addrSeparateProxyTor", strNewValue);
+                setRestartRequired(true);
+            }
+        }
+        break;
+        case ProxyPortTor: {
+            // contains current IP at index 0 and current port at index 1
+            QStringList strlIpPort = settings.value("addrSeparateProxyTor").toString().split(":", QString::SkipEmptyParts);
+            // if that key doesn't exist or has a changed port
+            if (!settings.contains("addrSeparateProxyTor") || strlIpPort.at(1) != value.toString()) {
+                // construct new value from current IP and new port
+                QString strNewValue = strlIpPort.at(0) + ":" + value.toString();
+                settings.setValue("addrSeparateProxyTor", strNewValue);
+                setRestartRequired(true);
+            }
+        }
+        break;
+
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             if (settings.value("bSpendZeroConfChange") != value) {
