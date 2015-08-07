@@ -1810,6 +1810,8 @@ void CFinalizedBudget::SubmitVote()
 
     std::string strError = "";
     if(budget.UpdateFinalizedBudget(vote, NULL, strError)){
+        LogPrintf("CFinalizedBudget::SubmitVote  - new finalized budget vote - %s\n", vote.GetHash().ToString());
+
         budget.mapSeenFinalizedBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
     } else {
