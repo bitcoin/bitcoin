@@ -224,6 +224,23 @@ bool CMasternodeMan::Add(CMasternode &mn)
     return false;
 }
 
+void CMasternodeMan::AskForMN(CNode* pnode, CTxIn &vin)
+{
+    std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(vin.prevout);
+    if (i != mWeAskedForMasternodeListEntry.end())
+    {
+        int64_t t = (*i).second;
+        if (GetTime() < t) return; // we've asked recently
+    }
+
+    // ask for the mnb info once from the node that sent mnp
+
+    LogPrintf("CMasternodeMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.ToString());
+    pnode->PushMessage("dseg", vin);
+    int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
+    mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
+}
+
 void CMasternodeMan::Check()
 {
     LOCK(cs);
@@ -691,30 +708,18 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(mnp.CheckAndUpdate(nDoS)) return;
 
         if(nDoS > 0) {
-            // if anything significant failed, mark that node and return
+            // if anything significant failed, mark that node
             Misbehaving(pfrom->GetId(), nDoS);
-            return;
+        } else {
+            // if nothing significant failed, search existing Masternode list
+            CMasternode* pmn = mnodeman.Find(mnp.vin);
+            // if it's known, don't ask for the mnb, just return
+            if(pmn != NULL) return;
         }
 
-        //search existing Masternode list, if it's known -- don't ask for the mnb
-        CMasternode* pmn = mnodeman.Find(mnp.vin);
-        if(pmn != NULL) return;
-
-        // we wasn't able to accept mnp but nothing significant happened,
-        // we might just have to ask for a masternode entry once
-        std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(mnp.vin.prevout);
-        if (i != mWeAskedForMasternodeListEntry.end())
-        {
-            int64_t t = (*i).second;
-            if (GetTime() < t) return; // we've asked recently
-        }
-
-        // ask for the mnb info once from the node that sent mnp
-
-        LogPrintf("mnp - Asking source node for missing entry, vin: %s\n", mnp.vin.ToString());
-        pfrom->PushMessage("dseg", mnp.vin);
-        int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
-        mWeAskedForMasternodeListEntry[mnp.vin.prevout] = askAgain;
+        // something significant is broken or mn is unknown,
+        // we might have to ask for a masternode entry once
+        AskForMN(pfrom, mnp.vin);
 
     } else if (strCommand == "dseg") { //Get Masternode list or specific entry
 

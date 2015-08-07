@@ -376,7 +376,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         std::string strError = "";
-        if(!winner.IsValid(strError)){
+        if(!winner.IsValid(pfrom, strError)){
             LogPrintf("mnw - invalid message - %s\n", strError);
             return;
         }
@@ -388,7 +388,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(!winner.SignatureValid()){
             LogPrintf("mnw - invalid signature\n");
-            Misbehaving(pfrom->GetId(), 100);
+            Misbehaving(pfrom->GetId(), 20);
+            // it could just be a non-synced masternode
+            mnodeman.AskForMN(pfrom, winner.vinMasternode);
             return;
         }
 
@@ -616,7 +618,7 @@ bool IsReferenceNode(CTxIn& vin)
     return false;
 }
 
-bool CMasternodePaymentWinner::IsValid(std::string& strError)
+bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
@@ -626,6 +628,7 @@ bool CMasternodePaymentWinner::IsValid(std::string& strError)
     {
         strError = strprintf("Unknown Masternode %s", vinMasternode.prevout.ToStringShort());
         LogPrintf ("CMasternodePaymentWinner::IsValid - %s\n", strError);
+        mnodeman.AskForMN(pnode, vinMasternode);
         return false;
     }
 
