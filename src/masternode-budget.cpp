@@ -927,6 +927,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternode* pmn = mnodeman.Find(vote.vin);
         if(pmn == NULL) {
             LogPrint("mnbudget", "mvote - unknown masternode - vin: %s\n", vote.vin.ToString());
+            mnodeman.AskForMN(pfrom, vote.vin);
             return;
         }
 
@@ -935,6 +936,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(!vote.SignatureValid(true)){
             LogPrintf("mvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
+            // it could just be a non-synced masternode
+            mnodeman.AskForMN(pfrom, vote.vin);
             return;
         }
         
@@ -995,6 +998,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternode* pmn = mnodeman.Find(vote.vin);
         if(pmn == NULL) {
             LogPrint("mnbudget", "fbvote - unknown masternode - vin: %s\n", vote.vin.ToString());
+            mnodeman.AskForMN(pfrom, vote.vin);
             return;
         }
 
@@ -1002,6 +1006,8 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(!vote.SignatureValid(true)){
             LogPrintf("fbvote - signature invalid\n");
             Misbehaving(pfrom->GetId(), 20);
+            // it could just be a non-synced masternode
+            mnodeman.AskForMN(pfrom, vote.vin);
             return;
         }
 
