@@ -1018,7 +1018,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
 
-        LogPrint("fbvote - new finalized budget vote - %s\n", vote.GetHash().ToString());
+        LogPrintf("fbvote - new finalized budget vote - %s\n", vote.GetHash().ToString());
     }
 }
 
@@ -1520,6 +1520,7 @@ CFinalizedBudget::CFinalizedBudget()
     nFeeTXHash = 0;
     nTime = 0;
     fValid = true;
+    fAutoChecked = false;
 }
 
 CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
@@ -1531,6 +1532,7 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     nFeeTXHash = other.nFeeTXHash;
     nTime = other.nTime;
     fValid = true;
+    fAutoChecked = false;
 }
 
 bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError)
@@ -1579,7 +1581,7 @@ void CFinalizedBudget::AutoCheck()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
-    LogPrintf("CFinalizedBudget::AutoCheck - %lli\n", pindexPrev->nHeight);
+    LogPrintf("CFinalizedBudget::AutoCheck - %lli - %d\n", pindexPrev->nHeight, fAutoChecked);
 
     if(!fMasterNode || fAutoChecked) return;
 
