@@ -280,6 +280,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBlockStart);
         READWRITE(vecBudgetPayments);
+        READWRITE(fAutoChecked);
 
         READWRITE(mapVotes);
     }
