@@ -374,17 +374,25 @@ void OverviewPage::updateDarksendProgress()
     int64_t denominatedBalance = pwalletMain->GetDenominatedBalance() + nDenominatedUnconfirmedBalance;
     denomPart = (float)denominatedBalance / nMaxToAnonymize;
     denomPart = denomPart > 1 ? 1 : denomPart;
+    denomPart *= 100;
 
     anonNormPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / nMaxToAnonymize;
     anonNormPart = anonNormPart > 1 ? 1 : anonNormPart;
+    anonNormPart *= 100;
 
     anonFullPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
     anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
+    anonFullPart *= 100;
 
-    // apply some weights to them (sum should be <=100) and calculate the whole progress
-    float denomPartCalc = ceilf((denomPart * 20) * 100) / 100;
-    float anonNormPartCalc = ceilf((anonNormPart * 50) * 100) / 100;
-    float anonFullPartCalc = ceilf((anonFullPart * 30) * 100) / 100;
+    // apply some weights to them ...
+    float denomWeight = 1;
+    float anonNormWeight = nDarksendRounds;
+    float anonFullWeight = 2;
+    float fullWeight = denomWeight + anonNormWeight + anonFullWeight;
+    // ... and calculate the whole progress
+    float denomPartCalc = ceilf((denomPart * denomWeight / fullWeight) * 100) / 100;
+    float anonNormPartCalc = ceilf((anonNormPart * anonNormWeight / fullWeight) * 100) / 100;
+    float anonFullPartCalc = ceilf((anonFullPart * anonFullWeight / fullWeight) * 100) / 100;
     float progress = denomPartCalc + anonNormPartCalc + anonFullPartCalc;
     if(progress >= 100) progress = 100;
 
@@ -395,7 +403,7 @@ void OverviewPage::updateDarksendProgress()
                           tr("Mixed") + ": %3%<br/>" +
                           tr("Anonymized") + ": %4%<br/>" +
                           tr("Denominated inputs have %5 of %n rounds on average", "", nDarksendRounds))
-            .arg(progress).arg(denomPart * 100).arg(anonNormPart * 100).arg(anonFullPart * 100)
+            .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart)
             .arg(pwalletMain->GetAverageAnonymizedRounds());
     ui->darksendProgress->setToolTip(strToolPip);
 }
