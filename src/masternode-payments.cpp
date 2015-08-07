@@ -336,7 +336,7 @@ int CMasternodePayments::GetMinMasternodePaymentsProto() {
 
 void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(IsInitialBlockDownload()) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == "mnget") { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all Darksend/Masternode related functionality
