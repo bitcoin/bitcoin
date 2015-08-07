@@ -649,7 +649,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 {
 
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
-    if(IsInitialBlockDownload()) return;
+    if(!masternodeSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
 
