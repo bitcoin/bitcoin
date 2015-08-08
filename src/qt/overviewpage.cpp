@@ -318,11 +318,10 @@ void OverviewPage::updateDarksendProgress()
 
     if(!pwalletMain) return;
 
-    int64_t nBalance = pwalletMain->GetBalance();
     QString strAmountAndRounds;
     QString strAnonymizeDarkcoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAnonymizeDarkcoinAmount * COIN, false, BitcoinUnits::separatorAlways);
 
-    if(nBalance == 0)
+    if(currentBalance == 0)
     {
         ui->darksendProgress->setValue(0);
         ui->darksendProgress->setToolTip(tr("No inputs detected"));
@@ -336,9 +335,24 @@ void OverviewPage::updateDarksendProgress()
         return;
     }
 
-    int64_t nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
-    int64_t nMaxToAnonymize = pwalletMain->GetAnonymizableBalance() +
-            pwalletMain->GetAnonymizedBalance() + nDenominatedUnconfirmedBalance;
+    CAmount nDenominatedConfirmedBalance;
+    CAmount nDenominatedUnconfirmedBalance;
+    CAmount nAnonymizableBalance;
+    CAmount nNormalizedAnonymizedBalance;
+    double nAverageAnonymizedRounds;
+
+    {
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) return;
+
+        nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
+        nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
+        nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
+        nNormalizedAnonymizedBalance = pwalletMain->GetNormalizedAnonymizedBalance();
+        nAverageAnonymizedRounds = pwalletMain->GetAverageAnonymizedRounds();
+    }
+
+    CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance + nDenominatedUnconfirmedBalance;
 
     // If it's more than the anon threshold, limit to that.
     if(nMaxToAnonymize > nAnonymizeDarkcoinAmount*COIN) nMaxToAnonymize = nAnonymizeDarkcoinAmount*COIN;
@@ -371,16 +385,16 @@ void OverviewPage::updateDarksendProgress()
     // completeness of full amount anonimization
     float anonFullPart = 0;
 
-    int64_t denominatedBalance = pwalletMain->GetDenominatedBalance() + nDenominatedUnconfirmedBalance;
+    CAmount denominatedBalance = nDenominatedConfirmedBalance + nDenominatedUnconfirmedBalance;
     denomPart = (float)denominatedBalance / nMaxToAnonymize;
     denomPart = denomPart > 1 ? 1 : denomPart;
     denomPart *= 100;
 
-    anonNormPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / nMaxToAnonymize;
+    anonNormPart = (float)nNormalizedAnonymizedBalance / nMaxToAnonymize;
     anonNormPart = anonNormPart > 1 ? 1 : anonNormPart;
     anonNormPart *= 100;
 
-    anonFullPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
+    anonFullPart = (float)currentAnonymizedBalance / nMaxToAnonymize;
     anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
     anonFullPart *= 100;
 
@@ -404,7 +418,7 @@ void OverviewPage::updateDarksendProgress()
                           tr("Anonymized") + ": %4%<br/>" +
                           tr("Denominated inputs have %5 of %n rounds on average", "", nDarksendRounds))
             .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart)
-            .arg(pwalletMain->GetAverageAnonymizedRounds());
+            .arg(nAverageAnonymizedRounds);
     ui->darksendProgress->setToolTip(strToolPip);
 }
 
@@ -486,7 +500,7 @@ void OverviewPage::toggleDarksend(){
         settings.setValue("hasMixed", "hasMixed");
     }
     if(!fEnableDarksend){
-        int64_t balance = pwalletMain->GetBalance();
+        int64_t balance = currentBalance;
         float minAmount = 1.49 * COIN;
         if(balance < minAmount){
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, minAmount));
