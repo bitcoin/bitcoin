@@ -134,7 +134,7 @@ class TestNode(NodeConnCB):
 #    is reached) and then sent out in one inv message.  Then the final block
 #    will be synced across all connections, and the outcome of the final 
 #    block will be tested.
-# sync_every_tx: analagous to behavior for sync_every_block, except if outcome
+# sync_every_tx: analogous to behavior for sync_every_block, except if outcome
 #    on the final tx is None, then contents of entire mempool are compared
 #    across all connections.  (If outcome of final tx is specified as true
 #    or false, then only the last tx is tested against outcome.)
