@@ -777,6 +777,19 @@ void CBudgetManager::NewBlock()
         SubmitFinalBudget();
     }
 
+    if (strBudgetMode == "suggest" || strBudgetMode == "sync") {
+        //this function should be called 1/60 blocks -- sync with our peers
+        // -- this will send any unknown items to our peers that came active
+        // -- todo: make this more effective / less bandwidth
+
+        if(chainActive.Height() % 60 == 0) {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes)
+                if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
+                    Sync(pnode, 0);
+        } 
+    }
+
     //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
     if(chainActive.Height() % 6 != 0) return;
 
