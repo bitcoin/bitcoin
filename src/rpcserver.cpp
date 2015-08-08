@@ -606,7 +606,7 @@ void StartRPCThreads()
         LogPrintf("No rpcpassword set - using random cookie authentication\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
             uiInterface.ThreadSafeMessageBox(
-                _("Error: A fatal internal error occured, see debug.log for details"), // Same message as AbortNode
+                _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
                 "", CClientUIInterface::MSG_ERROR);
             StartShutdown();
             return;
@@ -670,7 +670,7 @@ void StartRPCThreads()
         vEndpoints.push_back(ip::tcp::endpoint(boost::asio::ip::address_v6::any(), defaultPort));
         vEndpoints.push_back(ip::tcp::endpoint(boost::asio::ip::address_v4::any(), defaultPort));
         // Prefer making the socket dual IPv6/IPv4 instead of binding
-        // to both addresses seperately.
+        // to both addresses separately.
         bBindAny = true;
     }
 
