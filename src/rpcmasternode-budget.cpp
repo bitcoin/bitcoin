@@ -501,7 +501,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "suggest" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "show" && strCommand != "getinfo"))
+        (strCommand != "suggest" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "show" && strCommand != "getvotes"))
         throw runtime_error(
                 "mnfinalbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
@@ -509,7 +509,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 "  vote-many   - Vote on a finalized budget\n"
                 "  vote        - Vote on a finalized budget\n"
                 "  show        - Show existing finalized budgets\n"
-                "  getinfo     - Get vote information for each budget\n"
+                "  getvotes     - Get vote information for each finalized budget\n"
                 );
 
     if(strCommand == "vote-many")
@@ -648,7 +648,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
-            
+
             resultObj.push_back(Pair(finalizedBudget->GetName(), bObj));
         }
 
