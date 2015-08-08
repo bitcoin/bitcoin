@@ -2434,9 +2434,11 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 
     LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Got: %d \n", nValueIn);
 
-    LOCK(cs_wallet);
-    BOOST_FOREACH(CTxIn v, vCoins)
-        LockCoin(v.prevout);
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(CTxIn v, vCoins)
+                LockCoin(v.prevout);
+    }
 
     int64_t nValueLeft = nValueIn;
     std::vector<CTxOut> vOut;
@@ -2503,12 +2505,16 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
         if(nValueLeft == 0) break;
     }
 
-    // unlock unused coins
-    BOOST_FOREACH(CTxIn v, vCoins)
-        UnlockCoin(v.prevout);
+    {
+        // unlock unused coins
+        LOCK(cs_wallet);
+        BOOST_FOREACH(CTxIn v, vCoins)
+                UnlockCoin(v.prevout);
+    }
 
     if(darkSendPool.GetDenominations(vOut) != darkSendPool.sessionDenom) {
         // unlock used coins on failure
+        LOCK(cs_wallet);
         BOOST_FOREACH(CTxIn v, vCoinsResult)
             UnlockCoin(v.prevout);
         return "Error: can't make current denominated outputs";
