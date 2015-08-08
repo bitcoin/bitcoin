@@ -72,6 +72,7 @@ CMasternode::CMasternode()
     nLastDsq = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
+    lastTimeChecked = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -93,6 +94,7 @@ CMasternode::CMasternode(const CMasternode& other)
     nLastDsq = other.nLastDsq;
     nScanningErrorCount = other.nScanningErrorCount;
     nLastScanningErrorBlockHeight = other.nLastScanningErrorBlockHeight;
+    lastTimeChecked = 0;
 }
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
@@ -114,6 +116,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     nLastDsq = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
+    lastTimeChecked = 0;
 }
 
 //
@@ -126,6 +129,7 @@ void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     sig = mnb.sig;
     protocolVersion = mnb.protocolVersion;
     addr = mnb.addr;
+    lastTimeChecked = 0;
     int nDoS = 0;
     if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
         lastPing = mnb.lastPing;
@@ -164,9 +168,13 @@ uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
     return r;
 }
 
-void CMasternode::Check()
+void CMasternode::Check(bool forceCheck)
 {
     if(ShutdownRequested()) return;
+
+    if(!forceCheck && (GetTime() - lastTimeChecked < MASTERNODE_CHECK_SECONDS)) return;
+    lastTimeChecked = GetTime();
+
 
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
@@ -605,7 +613,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
                 mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = *this;
             }
 
-            pmn->Check();
+            pmn->Check(true);
             if(!pmn->IsEnabled()) return false;
 
             LogPrint("masnernode", "CMasternodePing::CheckAndUpdate - Masternode ping accepted, vin: %s\n", vin.ToString());

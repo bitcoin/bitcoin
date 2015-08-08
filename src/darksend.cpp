@@ -432,9 +432,13 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
 // Unlock coins after Darksend fails or succeeds
 //
 void CDarksendPool::UnlockCoins(){
-    LOCK(pwalletMain->cs_wallet);
-    BOOST_FOREACH(CTxIn v, lockedCoins)
-        pwalletMain->UnlockCoin(v.prevout);
+    while(true) {
+        TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
+        if(!lockWallet) {MilliSleep(10); continue;}
+        BOOST_FOREACH(CTxIn v, lockedCoins)
+                pwalletMain->UnlockCoin(v.prevout);
+        break;
+    }
 
     lockedCoins.clear();
 }
@@ -1155,14 +1159,16 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         LogPrintf("Submitting tx %s\n", tx.ToString());
 
-        {
-            LOCK(cs_main);
+        while(true){
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) { MilliSleep(10); continue;}
             if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)){
                 LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString());
                 UnlockCoins();
                 SetNull();
                 return;
             }
+            break;
         }
     }
 
@@ -1352,23 +1358,22 @@ void CDarksendPool::ClearLastMessage()
 //
 bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 {
+    if(!fEnableDarksend) return false;
+    if(fMasterNode) return false;
+    if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
+    if(GetEntriesCount() > 0) {
+        strAutoDenomResult = _("Mixing in progress...");
+        return false;
+    }
+
     TRY_LOCK(cs_darksend, lockDS);
     if(!lockDS) {
         strAutoDenomResult = _("Lock is already in place.");
         return false;
     }
 
-    LOCK(cs_darksend);
-
     if(!masternodeSync.IsBlockchainSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
-        return false;
-    }
-    if(!fEnableDarksend) return false;
-    if(fMasterNode) return false;
-    if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
-    if(GetEntriesCount() > 0) {
-        strAutoDenomResult = _("Mixing in progress...");
         return false;
     }
 
