@@ -105,7 +105,9 @@ public:
     int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
     int sizeProposals() {return (int)mapProposals.size();}
 
-    void Sync(CNode* node, uint256 nProp);
+    void ResetSync();
+    void MarkSynced();
+    void Sync(CNode* node, uint256 nProp, bool fPartial=false);
 
     void Calculate();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
@@ -341,6 +343,7 @@ class CFinalizedBudgetVote
 {
 public:
     bool fValid; //if the vote is currently valid / counted
+    bool fSynced; //if we've sent this to our peers
     CTxIn vin;
     uint256 nBudgetHash;
     int64_t nTime;
@@ -538,6 +541,7 @@ class CBudgetVote
 {
 public:
     bool fValid; //if the vote is currently valid / counted
+    bool fSynced; //if we've sent this to our peers
     CTxIn vin;
     uint256 nProposalHash;
     int nVote;
