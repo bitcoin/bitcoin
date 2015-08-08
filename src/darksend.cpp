@@ -434,7 +434,7 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
 void CDarksendPool::UnlockCoins(){
     while(true) {
         TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
-        if(!lockWallet) {MilliSleep(10); continue;}
+        if(!lockWallet) {MilliSleep(50); continue;}
         BOOST_FOREACH(CTxIn v, lockedCoins)
                 pwalletMain->UnlockCoin(v.prevout);
         break;
@@ -1161,7 +1161,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
         while(true){
             TRY_LOCK(cs_main, lockMain);
-            if(!lockMain) { MilliSleep(10); continue;}
+            if(!lockMain) { MilliSleep(50); continue;}
             if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL, false, true)){
                 LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString());
                 UnlockCoins();
