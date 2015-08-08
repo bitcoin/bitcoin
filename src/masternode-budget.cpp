@@ -393,7 +393,7 @@ bool CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
 void CBudgetManager::CheckAndRemove()
 {
     LogPrintf("CBudgetManager::CheckAndRemove \n");
-    
+
     std::string strError = "";
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
@@ -779,18 +779,19 @@ void CBudgetManager::NewBlock()
         SubmitFinalBudget();
     }
 
-    if (strBudgetMode == "suggest" || strBudgetMode == "sync") {
-        //this function should be called 1/60 blocks -- sync with our peers
-        // -- this will send any unknown items to our peers that came active
-        // -- todo: make this more effective / less bandwidth
 
-        if(chainActive.Height() % 60 == 0) {
-            LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodes)
-                if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
-                    Sync(pnode, 0);
-        } 
+    // incremental sync with our peers
+    {
+        if(chainActive.Height() % 600 == rand() % 600) ResetSync();
+
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
+                Sync(pnode, 0, true);
+        
+        MarkSynced();
     }
+     
 
     //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
     if(chainActive.Height() % 6 != 0) return;
@@ -1045,7 +1046,87 @@ bool CBudgetManager::PropExists(uint256 nHash)
     return false;
 }
 
-void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
+//mark that a full sync is needed
+void CBudgetManager::ResetSync()
+{
+    LOCK(cs);
+
+
+    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end()){
+        CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
+        if(pbudgetProposal && pbudgetProposal->fValid){
+        
+            //mark votes
+            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
+            while(it2 != pbudgetProposal->mapVotes.end()){
+                (*it2).second.fSynced = false;
+                ++it2;
+            }
+        }
+        ++it1;
+    }
+
+    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+    while(it3 != mapSeenFinalizedBudgets.end()){
+        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
+        if(pfinalizedBudget && pfinalizedBudget->fValid){
+
+            //send votes
+            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+            while(it4 != pfinalizedBudget->mapVotes.end()){
+                (*it4).second.fSynced = false;
+                ++it4;
+            }
+        }
+        ++it3;
+    }
+}
+
+void CBudgetManager::MarkSynced()
+{
+    LOCK(cs);
+
+    /*
+        Mark that we've sent all valid items
+    */
+
+    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
+    while(it1 != mapSeenMasternodeBudgetProposals.end()){
+        CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
+        if(pbudgetProposal && pbudgetProposal->fValid){
+        
+            //mark votes
+            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
+            while(it2 != pbudgetProposal->mapVotes.end()){
+                if((*it2).second.fValid)
+                    (*it2).second.fSynced = true;
+                ++it2;
+            }
+        }
+        ++it1;
+    }
+
+    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+    while(it3 != mapSeenFinalizedBudgets.end()){
+        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
+        if(pfinalizedBudget && pfinalizedBudget->fValid){
+
+            //mark votes
+            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+            while(it4 != pfinalizedBudget->mapVotes.end()){
+                if((*it4).second.fValid)
+                    (*it4).second.fSynced = true;
+                ++it4;
+            }
+        }
+        ++it3;
+    }
+
+}
+
+
+void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 {
     LOCK(cs);
 
@@ -1072,8 +1153,10 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
             std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
             while(it2 != pbudgetProposal->mapVotes.end()){
                 if((*it2).second.fValid){
-                    CInv inv(MSG_BUDGET_VOTE, (*it2).second.GetHash());
-                    vInv.push_back(inv);
+                    if((fPartial && !(*it2).second.fSynced) || !fPartial) {
+                        CInv inv(MSG_BUDGET_VOTE, (*it2).second.GetHash());
+                        vInv.push_back(inv);
+                    }
                 }
                 ++it2;
             }
@@ -1096,8 +1179,10 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp)
             std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
             while(it4 != pfinalizedBudget->mapVotes.end()){
                 if((*it4).second.fValid) {
-                    CInv inv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash());
-                    vInv.push_back(inv);
+                    if((fPartial && !(*it4).second.fSynced) || !fPartial) {
+                        CInv inv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash());
+                        vInv.push_back(inv);
+                    }
                 }
                 ++it4;
             }
@@ -1466,6 +1551,7 @@ CBudgetVote::CBudgetVote()
     nVote = VOTE_ABSTAIN;
     nTime = 0;
     fValid = true;
+    fSynced = false;
 }
 
 CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteIn)
@@ -1475,6 +1561,7 @@ CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteIn)
     nVote = nVoteIn;
     nTime = GetAdjustedTime();
     fValid = true;
+    fSynced = false;
 }
 
 void CBudgetVote::Relay()
@@ -1875,6 +1962,7 @@ CFinalizedBudgetVote::CFinalizedBudgetVote()
     nTime = 0;
     vchSig.clear();
     fValid = true;
+    fSynced = false;
 }
 
 CFinalizedBudgetVote::CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn)
@@ -1884,6 +1972,7 @@ CFinalizedBudgetVote::CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn)
     nTime = GetAdjustedTime();
     vchSig.clear();
     fValid = true;
+    fSynced = false;
 }
 
 void CFinalizedBudgetVote::Relay()
