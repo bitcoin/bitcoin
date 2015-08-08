@@ -785,7 +785,10 @@ void CBudgetManager::NewBlock()
     // incremental sync with our peers
     if(masternodeSync.IsSynced()){
         LogPrintf("CBudgetManager::NewBlock - incremental sync started");
-        if(chainActive.Height() % 600 == rand() % 600) ResetSync();
+        if(chainActive.Height() % 600 == rand() % 600) {
+            ClearSeen();
+            ResetSync();
+        }
 
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
