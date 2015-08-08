@@ -19,6 +19,7 @@
 #define MASTERNODE_PING_SECONDS                (5*60)
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (75*60)
+#define MASTERNODE_CHECK_SECONDS               5
 
 using namespace std;
 
@@ -107,7 +108,7 @@ class CMasternode
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
-
+    int64_t lastTimeChecked;
 public:
     enum state {
         MASTERNODE_ENABLED = 1,
@@ -216,7 +217,7 @@ public:
         return n;
     }
 
-    void Check();
+    void Check(bool forceCheck = false);
 
     bool IsBroadcastedWithin(int seconds)
     {
