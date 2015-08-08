@@ -102,6 +102,13 @@ public:
         mapFinalizedBudgets.clear();
     }
 
+    void ClearSeen() {
+        mapSeenMasternodeBudgetProposals.clear();
+        mapSeenMasternodeBudgetVotes.clear();
+        mapSeenFinalizedBudgets.clear();
+        mapSeenFinalizedBudgetVotes.clear();
+    }
+
     int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
     int sizeProposals() {return (int)mapProposals.size();}
 

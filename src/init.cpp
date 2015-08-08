@@ -1442,6 +1442,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     //flag our cached items so we send them to our peers
     budget.ResetSync();
+    budget.ClearSeen();
 
 
     uiInterface.InitMessage(_("Loading masternode payment cache..."));
