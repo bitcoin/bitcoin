@@ -456,7 +456,7 @@ Value mnbudget(const Array& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnbudget getinfo profilename'");
+            throw runtime_error("Correct usage is 'mnbudget getvotes profilename'");
 
         std::string strProposalName = params[1].get_str();
 
@@ -470,6 +470,7 @@ Value mnbudget(const Array& params, bool fHelp)
         while(it != pbudgetProposal->mapVotes.end()){
 
             Object bObj;
+            bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
             bObj.push_back(Pair("Vote",  (*it).second.GetVoteString()));
             bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
             bObj.push_back(Pair("fValid",  (*it).second.fValid));
@@ -500,7 +501,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "suggest" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "show"))
+        (strCommand != "suggest" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "show" && strCommand != "getinfo"))
         throw runtime_error(
                 "mnfinalbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
@@ -508,6 +509,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
                 "  vote-many   - Vote on a finalized budget\n"
                 "  vote        - Vote on a finalized budget\n"
                 "  show        - Show existing finalized budgets\n"
+                "  getinfo     - Get vote information for each budget\n"
                 );
 
     if(strCommand == "vote-many")
@@ -648,6 +650,38 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         return resultObj;
 
     }
+
+    if(strCommand == "getvotes")
+    {
+        if (params.size() != 2)
+            throw runtime_error("Correct usage is 'mnbudget getvotes budget-hash'");
+
+        std::string strHash = params[1].get_str();
+        uint256 hash(strHash);
+
+        Object obj;
+
+        CFinalizedBudget* pfinalBudget = budget.FindFinalizedBudget(hash);
+
+        if(pfinalBudget == NULL) return "Unknown budget hash";
+
+        std::map<uint256, CFinalizedBudgetVote>::iterator it = pfinalBudget->mapVotes.begin();
+        while(it != pfinalBudget->mapVotes.end()){
+
+            Object bObj;
+            bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
+            bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
+            bObj.push_back(Pair("fValid",  (*it).second.fValid));
+
+            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort(), bObj));
+
+            it++;
+        }
+
+
+        return obj;
+    }
+
 
     return Value::null;
 }
