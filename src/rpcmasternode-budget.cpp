@@ -644,6 +644,11 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("Proposals",  finalizedBudget->GetProposals()));
             bObj.push_back(Pair("VoteCount",  (int64_t)finalizedBudget->GetVoteCount()));
             bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
+
+            std::string strError = "";
+            bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(strError)));
+            bObj.push_back(Pair("IsValidReason",  strError.c_str()));
+            
             resultObj.push_back(Pair(finalizedBudget->GetName(), bObj));
         }
 
