@@ -779,9 +779,12 @@ void CBudgetManager::NewBlock()
         SubmitFinalBudget();
     }
 
+    //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
+    if(chainActive.Height() % 6 != 0) return;
 
     // incremental sync with our peers
-    {
+    if(masternodeSync.IsSynced()){
+        LogPrintf("CBudgetManager::NewBlock - incremental sync started");
         if(chainActive.Height() % 600 == rand() % 600) ResetSync();
 
         LOCK(cs_vNodes);
@@ -792,9 +795,6 @@ void CBudgetManager::NewBlock()
         MarkSynced();
     }
      
-
-    //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
-    if(chainActive.Height() % 6 != 0) return;
 
     CheckAndRemove();
 
@@ -1166,6 +1166,9 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_PROP, (int)vInv.size());
     if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
+
+    LogPrintf("CBudgetManager::Sync - sent %d items\n", (int)vInv.size());
+
     vInv.clear();
 
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
@@ -1192,6 +1195,8 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_FIN, (int)vInv.size());
     if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
+    LogPrintf("CBudgetManager::Sync - sent %d items\n", (int)vInv.size());
+
 }
 
 bool CBudgetManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
