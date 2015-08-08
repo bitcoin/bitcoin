@@ -719,7 +719,7 @@ Value movecmd(const Array& params, bool fHelp)
             "3. minconf           (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
             "4. \"comment\"       (string, optional) An optional comment, stored in the wallet only.\n"
             "\nResult:\n"
-            "true|false           (boolean) true if successfull.\n"
+            "true|false           (boolean) true if successful.\n"
             "\nExamples:\n"
             "\nMove 0.01 btc from the default account to the account named tabby\n"
             + HelpExampleCli("move", "\"\" \"tabby\" 0.01") +
