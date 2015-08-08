@@ -2616,8 +2616,10 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
         boost::this_thread::interruption_point();
 
         bool fInitialDownload;
-        {
-            LOCK(cs_main);
+        while(true) {
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) { MilliSleep(10); continue; }
+
             pindexMostWork = FindMostWorkChain();
 
             // Whether we have anything to do at all.
@@ -2629,6 +2631,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
 
             pindexNewTip = chainActive.Tip();
             fInitialDownload = IsInitialBlockDownload();
+            break;
         }
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
@@ -3261,8 +3264,10 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
     // Preliminary checks
     bool checked = CheckBlock(*pblock, state);
 
-    {
-        LOCK(cs_main);
+    while(true) {
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) { MilliSleep(10); continue; }
+
         MarkBlockAsReceived(pblock->GetHash());
         if (!checked) {
             return error("%s : CheckBlock FAILED", __func__);
@@ -3277,6 +3282,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
         CheckBlockIndex();
         if (!ret)
             return error("%s : AcceptBlock FAILED", __func__);
+        break;
     }
 
     if (!ActivateBestChain(state, pblock))
@@ -4876,12 +4882,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CBlock block;
         vRecv >> block;
 
-        TRY_LOCK(cs_main, lockMainBlock);
-        if(!lockMainBlock && masternodeSync.IsBlockchainSynced()) {
-            LogPrintf("block -- failed to lock cs_main - %s\n", block.GetHash().ToString());
-            return false;
-        }
-
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
@@ -4894,7 +4894,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
                                state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
             if (nDoS > 0) {
-                Misbehaving(pfrom->GetId(), nDoS);
+                TRY_LOCK(cs_main, lockMain);
+                if(lockMain) Misbehaving(pfrom->GetId(), nDoS);
             }
         }
 
