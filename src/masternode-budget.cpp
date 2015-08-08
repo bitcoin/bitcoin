@@ -392,6 +392,8 @@ bool CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
 
 void CBudgetManager::CheckAndRemove()
 {
+    LogPrintf("CBudgetManager::CheckAndRemove \n");
+    
     std::string strError = "";
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
