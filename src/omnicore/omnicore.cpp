@@ -81,6 +81,7 @@ using leveldb::Iterator;
 using leveldb::Slice;
 using leveldb::Status;
 
+using std::endl;
 using std::make_pair;
 using std::map;
 using std::ofstream;

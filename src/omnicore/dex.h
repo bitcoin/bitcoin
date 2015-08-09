@@ -9,199 +9,216 @@
 #include "tinyformat.h"
 #include "uint256.h"
 
-#include <boost/format.hpp>
-
 #include <openssl/sha.h>
 
 #include <stdint.h>
-
 #include <fstream>
 #include <map>
 #include <string>
 
-using std::endl;
-using std::ofstream;
-using std::string;
+// this is the internal format for the offer primary key
+// TODO: replace by a class method
+#define STR_SELLOFFER_ADDR_PROP_COMBO(x) (x + "-" + strprintf("%d", prop))
+#define STR_ACCEPT_ADDR_PROP_ADDR_COMBO(_seller , _buyer) (_seller + "-" + strprintf("%d", prop) + "+" + _buyer)
+#define STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(txidStr) (txidStr + "-" + strprintf("%d", paymentNumber))
+#define STR_REF_SUBKEY_TXID_REF_COMBO(txidStr) (txidStr + strprintf("%d", refNumber))
 
-
-// this is the internal format for the offer primary key (TODO: replace by a class method)
-#define STR_SELLOFFER_ADDR_PROP_COMBO(x) ( x + "-" + strprintf("%d", prop))
-#define STR_ACCEPT_ADDR_PROP_ADDR_COMBO( _seller , _buyer ) ( _seller + "-" + strprintf("%d", prop) + "+" + _buyer)
-#define STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(txidStr) ( txidStr + "-" + strprintf("%d", paymentNumber))
-#define STR_REF_SUBKEY_TXID_REF_COMBO(txidStr) ( txidStr + strprintf("%d", refNumber))
-
-// a single outstanding offer -- from one seller of one property, internally may have many accepts
+/** A single outstanding offer, from one seller of one property.
+ *
+ * There many be more than one accepted offers.
+ */
 class CMPOffer
 {
 private:
-  int offerBlock;
-  uint64_t offer_amount_original; // the amount of MSC for sale specified when the offer was placed
-  unsigned int property;
-  uint64_t BTC_desired_original; // amount desired, in BTC
-  uint64_t min_fee;
-  unsigned char blocktimelimit;
-  uint256 txid;
-  unsigned char subaction;
+    int offerBlock;
+    //! amount of MSC for sale specified when the offer was placed
+    int64_t offer_amount_original;
+    uint32_t property;
+    //! amount desired, in BTC
+    int64_t BTC_desired_original;
+    int64_t min_fee;
+    uint8_t blocktimelimit;
+    uint256 txid;
+    uint8_t subaction;
 
 public:
-  uint256 getHash() const { return txid; }
-  unsigned int getProperty() const { return property; }
-  uint64_t getMinFee() const { return min_fee ; }
-  unsigned char getBlockTimeLimit() const { return blocktimelimit; }
-  unsigned char getSubaction() const { return subaction; }
+    uint256 getHash() const { return txid; }
+    uint32_t getProperty() const { return property; }
+    int64_t getMinFee() const { return min_fee ; }
+    uint8_t getBlockTimeLimit() const { return blocktimelimit; }
+    uint8_t getSubaction() const { return subaction; }
 
-  uint64_t getOfferAmountOriginal() const { return offer_amount_original; }
-  uint64_t getBTCDesiredOriginal() const { return BTC_desired_original; }
+    int64_t getOfferAmountOriginal() const { return offer_amount_original; }
+    int64_t getBTCDesiredOriginal() const { return BTC_desired_original; }
 
-  CMPOffer()
-      : offerBlock(0), offer_amount_original(0), property(0), BTC_desired_original(0), min_fee(0), blocktimelimit(0),
-        txid(0), subaction(0)
-  {
-  }
+    CMPOffer()
+      : offerBlock(0), offer_amount_original(0), property(0), BTC_desired_original(0), min_fee(0),
+        blocktimelimit(0), txid(0), subaction(0)
+    {
+    }
 
-  CMPOffer(int b, uint64_t a, unsigned int cu, uint64_t d, uint64_t fee, unsigned char btl, const uint256& tx)
-      : offerBlock(b), offer_amount_original(a), property(cu), BTC_desired_original(d), min_fee(fee), blocktimelimit(btl),
+    CMPOffer(int block, int64_t amountOffered, uint32_t propertyId, int64_t amountDesired,
+             int64_t minAcceptFee, uint8_t paymentWindow, const uint256& tx)
+      : offerBlock(block), offer_amount_original(amountOffered), property(propertyId),
+        BTC_desired_original(amountDesired), min_fee(minAcceptFee), blocktimelimit(paymentWindow),
         txid(tx), subaction(0)
-  {
-    if (msc_debug_dex) PrintToLog("%s(%lu): %s , line %d, file: %s\n", __FUNCTION__, a, txid.GetHex(), __LINE__, __FILE__);
-  }
+    {
+        if (msc_debug_dex) PrintToLog("%s(%d): %s\n", __func__, amountOffered, txid.GetHex());
+    }
 
     CMPOffer(const CMPTransaction& tx)
-      : offerBlock(tx.block), offer_amount_original(tx.nValue), property(tx.property), BTC_desired_original(tx.amount_desired),
-        min_fee(tx.min_fee), blocktimelimit(tx.blocktimelimit), subaction(tx.subaction) {}
+      : offerBlock(tx.block), offer_amount_original(tx.nValue), property(tx.property),
+        BTC_desired_original(tx.amount_desired), min_fee(tx.min_fee),
+        blocktimelimit(tx.blocktimelimit), subaction(tx.subaction)
+    {
+    }
 
-  void saveOffer(ofstream &file, SHA256_CTX *shaCtx, string const &addr ) const {
-    // compose the outputline
-    // seller-address, ...
-    string lineOut = (boost::format("%s,%d,%d,%d,%d,%d,%d,%d,%s")
-      % addr
-      % offerBlock
-      % offer_amount_original
-      % property
-      % BTC_desired_original
-      % ( OMNI_PROPERTY_BTC )
-      % min_fee
-      % (int)blocktimelimit
-      % txid.ToString()).str();
+    void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& address) const
+    {
+        std::string lineOut = strprintf("%s,%d,%d,%d,%d,%d,%d,%d,%s",
+                address,
+                offerBlock,
+                offer_amount_original,
+                property,
+                BTC_desired_original,
+                (OMNI_PROPERTY_BTC),
+                min_fee,
+                blocktimelimit,
+                txid.ToString()
+        );
 
-    // add the line to the hash
-    SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
+        // add the line to the hash
+        SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
 
-    // write the line
-    file << lineOut << endl;
-  }
-};  // end of CMPOffer class
+        // write the line
+        file << lineOut << std::endl;
+    }
+};
 
-// do a map of buyers, primary key is buyer+property
-// MUST account for many possible accepts and EACH property offer
+/** Accepted offer on the DEx.
+ *
+ * Once the accepted offer is seen on the network, the amount of MSC being purchased is
+ * taken out of seller's "sell offer"-reserve and put into this buyer's "accept"-reserve.
+ */
 class CMPAccept
 {
 private:
-  uint64_t accept_amount_original;    // amount of MSC/TMSC desired to purchased
-  uint64_t accept_amount_remaining;   // amount of MSC/TMSC remaining to purchased
-// once accept is seen on the network the amount of MSC being purchased is taken out of seller's SellOffer-Reserve and put into this Buyer's Accept-Reserve
-  unsigned char blocktimelimit;       // copied from the offer during creation
-  unsigned int property;              // copied from the offer during creation
+    int64_t accept_amount_original;    // amount of MSC/TMSC desired to purchased
+    int64_t accept_amount_remaining;   // amount of MSC/TMSC remaining to purchased
+    uint8_t blocktimelimit;            // copied from the offer during creation
+    uint32_t property;                 // copied from the offer during creation
 
-  uint64_t offer_amount_original; // copied from the Offer during Accept's creation
-  uint64_t BTC_desired_original;  // copied from the Offer during Accept's creation
+    int64_t offer_amount_original;     // copied from the Offer during Accept's creation
+    int64_t BTC_desired_original;      // copied from the Offer during Accept's creation
 
-  uint256 offer_txid; // the original offers TXIDs, needed to match Accept to the Offer during Accept's destruction, etc.
+    // the original offers TXIDs, needed to match Accept to the Offer during Accept's destruction, etc.
+    uint256 offer_txid;
+    int block;
 
 public:
-  uint256 getHash() const { return offer_txid; }
+    uint256 getHash() const { return offer_txid; }
 
-  uint64_t getOfferAmountOriginal() { return offer_amount_original; }
-  uint64_t getBTCDesiredOriginal() { return BTC_desired_original; }
+    int64_t getOfferAmountOriginal() { return offer_amount_original; }
+    int64_t getBTCDesiredOriginal() { return BTC_desired_original; }
 
-  int block;          // 'accept' message sent in this block
+    uint8_t getBlockTimeLimit() { return blocktimelimit; }
+    uint32_t getProperty() const { return property; }
 
-  unsigned char getBlockTimeLimit() { return blocktimelimit; }
-  unsigned int getProperty() const { return property; }
+    int getAcceptBlock() const { return block; }
 
-  int getAcceptBlock() const { return block; }
+    CMPAccept(int64_t amountOffered, int blockIn, uint8_t paymentWindow, uint32_t propertyId,
+              int64_t offerAmountOriginal, int64_t amountDesired, const uint256& txid)
+      : accept_amount_remaining(amountOffered), blocktimelimit(paymentWindow),
+        property(propertyId), offer_amount_original(offerAmountOriginal),
+        BTC_desired_original(amountDesired), offer_txid(txid), block(blockIn)
+    {
+        accept_amount_original = accept_amount_remaining;
+        PrintToLog("%s(%d): %s\n", __func__, amountOffered, txid.GetHex());
+    }
 
-  CMPAccept(uint64_t a, int b, unsigned char blt, unsigned int c, uint64_t o, uint64_t btc, const uint256 &txid):accept_amount_remaining(a),blocktimelimit(blt),property(c),
-   offer_amount_original(o), BTC_desired_original(btc),offer_txid(txid),block(b)
-  {
-    accept_amount_original = accept_amount_remaining;
-    PrintToLog("%s(%lu), line %d, file: %s\n", __FUNCTION__, a, __LINE__, __FILE__);
-  }
+    CMPAccept(int64_t acceptAmountOriginal, int64_t acceptAmountRemaining, int blockIn,
+              uint8_t paymentWindow, uint32_t propertyId, int64_t offerAmountOriginal,
+              int64_t amountDesired, const uint256& txid)
+      : accept_amount_original(acceptAmountOriginal),
+        accept_amount_remaining(acceptAmountRemaining), blocktimelimit(paymentWindow),
+        property(propertyId), offer_amount_original(offerAmountOriginal),
+        BTC_desired_original(amountDesired), offer_txid(txid), block(blockIn)
+    {
+        PrintToLog("%s(%d[%d]): %s\n", __func__, acceptAmountRemaining, acceptAmountOriginal, txid.GetHex());
+    }
 
-  CMPAccept(uint64_t origA, uint64_t remA, int b, unsigned char blt, unsigned int c, uint64_t o, uint64_t btc, const uint256 &txid):accept_amount_original(origA),accept_amount_remaining(remA),blocktimelimit(blt),property(c),
-   offer_amount_original(o), BTC_desired_original(btc),offer_txid(txid),block(b)
-  {
-    PrintToLog("%s(%lu[%lu]), line %d, file: %s\n", __FUNCTION__, remA, origA, __LINE__, __FILE__);
-  }
+    void print()
+    {
+        // TODO: no floating numbers
+        PrintToLog("buying: %12.8lf (originally= %12.8lf) in block# %d\n",
+                (double) accept_amount_remaining / (double) COIN, (double) accept_amount_original / (double) COIN, block);
+    }
 
-  void print()
-  {
-    PrintToLog("buying: %12.8lf (originally= %12.8lf) in block# %d\n",
-     (double)accept_amount_remaining/(double)COIN, (double)accept_amount_original/(double)COIN, block);
-  }
+    int64_t getAcceptAmountRemaining() const
+    {
+        PrintToLog("%s(); buyer still wants = %d\n", __func__, accept_amount_remaining);
 
-  uint64_t getAcceptAmountRemaining() const
-  { 
-    PrintToLog("%s(); buyer still wants = %lu, line %d, file: %s\n", __FUNCTION__, accept_amount_remaining, __LINE__, __FILE__);
+        return accept_amount_remaining;
+    }
 
-    return accept_amount_remaining;
-  }
+    /**
+     * Reduce the remaining accepted amount.
+     *
+     * @param really_purchased  The number of units purchased
+     * @return True if the customer is fully satisfied (nothing desired to be purchased)
+     */
+    bool reduceAcceptAmountRemaining_andIsZero(const int64_t really_purchased)
+    {
+        bool bRet = false;
 
-  // reduce accept_amount_remaining and return "true" if the customer is fully satisfied (nothing desired to be purchased)
-  bool reduceAcceptAmountRemaining_andIsZero(const uint64_t really_purchased)
-  {
-  bool bRet = false;
+        if (really_purchased >= accept_amount_remaining) bRet = true;
 
-    if (really_purchased >= accept_amount_remaining) bRet = true;
+        accept_amount_remaining -= really_purchased;
 
-    accept_amount_remaining -= really_purchased;
+        return bRet;
+    }
 
-    return bRet;
-  }
+    void saveAccept(std::ofstream& file, SHA256_CTX* shaCtx, const std::string& address, const std::string& buyer) const
+    {
+        std::string lineOut = strprintf("%s,%d,%s,%d,%d,%d,%d,%d,%d,%s",
+                address,
+                property,
+                buyer,
+                block,
+                accept_amount_remaining,
+                accept_amount_original,
+                blocktimelimit,
+                offer_amount_original,
+                BTC_desired_original,
+                offer_txid.ToString());
 
-  void saveAccept(ofstream &file, SHA256_CTX *shaCtx, string const &addr, string const &buyer ) const {
-    // compose the outputline
-    // seller-address, property, buyer-address, amount, fee, block
-    string lineOut = (boost::format("%s,%d,%s,%d,%d,%d,%d,%d,%d,%s")
-      % addr
-      % property
-      % buyer
-      % block
-      % accept_amount_remaining
-      % accept_amount_original
-      % (int)blocktimelimit
-      % offer_amount_original
-      % BTC_desired_original
-      % offer_txid.ToString()).str();
+        // add the line to the hash
+        SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
 
-    // add the line to the hash
-    SHA256_Update(shaCtx, lineOut.c_str(), lineOut.length());
-
-    // write the line
-    file << lineOut << endl;
-  }
-
-};  // end of CMPAccept class
+        // write the line
+        file << lineOut << std::endl;
+    }
+};
 
 unsigned int eraseExpiredAccepts(int blockNow);
 
 namespace mastercore
 {
-typedef std::map<string, CMPOffer> OfferMap;
-typedef std::map<string, CMPAccept> AcceptMap;
+typedef std::map<std::string, CMPOffer> OfferMap;
+typedef std::map<std::string, CMPAccept> AcceptMap;
 
 extern OfferMap my_offers;
 extern AcceptMap my_accepts;
 
-bool DEx_offerExists(const string &seller_addr, unsigned int);
-CMPOffer *DEx_getOffer(const string &seller_addr, unsigned int);
-CMPAccept *DEx_getAccept(const string &seller_addr, unsigned int, const string &buyer_addr);
-int DEx_offerCreate(string seller_addr, unsigned int, uint64_t nValue, int block, uint64_t amount_desired, uint64_t fee, unsigned char btl, const uint256 &txid, uint64_t *nAmended = NULL);
-int DEx_offerDestroy(const string &seller_addr, unsigned int);
-int DEx_offerUpdate(const string &seller_addr, unsigned int, uint64_t nValue, int block, uint64_t desired, uint64_t fee, unsigned char btl, const uint256 &txid, uint64_t *nAmended = NULL);
-int DEx_acceptCreate(const string &buyer, const string &seller, int, uint64_t nValue, int block, uint64_t fee_paid, uint64_t *nAmended = NULL);
-int DEx_acceptDestroy(const string &buyer, const string &seller, int, bool bForceErase = false);
-int DEx_payment(uint256 txid, unsigned int vout, string seller, string buyer, uint64_t BTC_paid, int blockNow, uint64_t *nAmended = NULL);
+bool DEx_offerExists(const std::string& seller_addr, uint32_t property);
+CMPOffer* DEx_getOffer(const std::string& seller_addr, uint32_t property);
+CMPAccept* DEx_getAccept(const std::string& seller_addr, uint32_t property, const std::string& buyer_addr);
+int DEx_offerCreate(const std::string& seller_addr, uint32_t property, int64_t nValue, int block, int64_t amount_desired, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended = NULL);
+int DEx_offerDestroy(const std::string& seller_addr, uint32_t property);
+int DEx_offerUpdate(const std::string& seller_addr, uint32_t property, int64_t nValue, int block, int64_t desired, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended = NULL);
+int DEx_acceptCreate(const std::string& buyer, const std::string& seller, uint32_t property, int64_t nValue, int block, int64_t fee_paid, uint64_t* nAmended = NULL);
+int DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint32_t property, bool fForceErase = false);
+int DEx_payment(const uint256& txid, unsigned int vout, const std::string& seller, const std::string& buyer, int64_t BTC_paid, int blockNow, uint64_t* nAmended = NULL);
 }
 
 
