@@ -302,8 +302,11 @@ CNodeState *State(NodeId pnode) {
 
 int GetHeight()
 {
-    LOCK(cs_main);
-    return chainActive.Height();
+    while(true){
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) { MilliSleep(50); continue; }
+        return chainActive.Height();
+    }
 }
 
 void UpdatePreferredDownload(CNode* node, CNodeState* state)
@@ -2618,7 +2621,7 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
         bool fInitialDownload;
         while(true) {
             TRY_LOCK(cs_main, lockMain);
-            if(!lockMain) { MilliSleep(10); continue; }
+            if(!lockMain) { MilliSleep(50); continue; }
 
             pindexMostWork = FindMostWorkChain();
 
@@ -3266,7 +3269,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDis
 
     while(true) {
         TRY_LOCK(cs_main, lockMain);
-        if(!lockMain) { MilliSleep(10); continue; }
+        if(!lockMain) { MilliSleep(50); continue; }
 
         MarkBlockAsReceived(pblock->GetHash());
         if (!checked) {
