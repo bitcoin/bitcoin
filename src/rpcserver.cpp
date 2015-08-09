@@ -1017,8 +1017,17 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
                 LOCK(cs_main);
                 result = pcmd->actor(params, false);
             } else {
-                LOCK2(cs_main, pwalletMain->cs_wallet);
-                result = pcmd->actor(params, false);
+                while (true) {
+                    TRY_LOCK(cs_main, lockMain);
+                    if(!lockMain) { MilliSleep(50); continue; }
+                    while (true) {
+                        TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
+                        if(!lockMain) { MilliSleep(50); continue; }
+                        result = pcmd->actor(params, false);
+                        break;
+                    }
+                    break;
+                }
             }
 #else // ENABLE_WALLET
             else {
