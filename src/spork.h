@@ -46,7 +46,7 @@ using namespace boost;
 #define SPORK_10_MASTERNODE_PAY_UPDATED_NODES_DEFAULT         4070908800   //OFF
 #define SPORK_11_RESET_BUDGET_DEFAULT                         0
 #define SPORK_12_RECONSIDER_BLOCKS_DEFAULT                    0
-#define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   1438611701 //1439510400   //8/13/2015, 5:00:00 PM
+#define SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT                   4070908800   //OFF
     
 class CSporkMessage;
 class CSporkManager;

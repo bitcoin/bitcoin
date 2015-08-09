@@ -771,7 +771,8 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 
 void CBudgetManager::NewBlock()
 {
-    LOCK(cs);
+    TRY_LOCK(cs, fBudgetNewBlock);
+    if(!fBudgetNewBlock) return;
 
     if (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_BUDGET) return;
 
