@@ -770,10 +770,16 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 
         LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString());
-    } else
-// Light version for OLD MASSTERNODES - fake pings, no self-activation
-// Remove this after migration to v12 is done
-    if (strCommand == "dsee") { //DarkSend Election Entry
+    }
+    /*
+     * IT'S SAFE TO REMOVE THIS IN FURTHER VERSIONS
+     * AFTER MIGRATION TO V12 IS DONE
+     */
+
+    // Light version for OLD MASSTERNODES - fake pings, no self-activation
+    else if (strCommand == "dsee") { //DarkSend Election Entry
+
+        if(IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)) return;
 
         CTxIn vin;
         CService addr;
@@ -961,6 +967,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     else if (strCommand == "dseep") { //DarkSend Election Entry Ping
 
+        if(IsSporkActive(SPORK_10_MASTERNODE_PAY_UPDATED_NODES)) return;
+
         CTxIn vin;
         vector<unsigned char> vchSig;
         int64_t sigTime;
@@ -1015,6 +1023,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         AskForMN(pfrom, vin);
     }
+
+    /*
+     * END OF "REMOVE"
+     */
 
 }
 
