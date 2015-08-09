@@ -200,8 +200,6 @@ public:
     }
 };
 
-unsigned int eraseExpiredAccepts(int blockNow);
-
 namespace mastercore
 {
 typedef std::map<std::string, CMPOffer> OfferMap;
@@ -219,6 +217,8 @@ int DEx_offerUpdate(const std::string& seller_addr, uint32_t property, int64_t n
 int DEx_acceptCreate(const std::string& buyer, const std::string& seller, uint32_t property, int64_t nValue, int block, int64_t fee_paid, uint64_t* nAmended = NULL);
 int DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint32_t property, bool fForceErase = false);
 int DEx_payment(const uint256& txid, unsigned int vout, const std::string& seller, const std::string& buyer, int64_t BTC_paid, int blockNow, uint64_t* nAmended = NULL);
+
+unsigned int eraseExpiredAccepts(int blockNow);
 }
 
 

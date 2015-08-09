@@ -29,13 +29,13 @@
 #include <utility>
 #include <vector>
 
-using namespace mastercore;
-
+namespace mastercore
+{
 /**
  * TODO: update key generation
  * Checks, if such a sell offer exists.
  */
-bool mastercore::DEx_offerExists(const std::string& seller_addr, uint32_t prop)
+bool DEx_offerExists(const std::string& seller_addr, uint32_t prop)
 {
     if (msc_debug_dex) PrintToLog("%s()\n", __func__);
 
@@ -48,7 +48,7 @@ bool mastercore::DEx_offerExists(const std::string& seller_addr, uint32_t prop)
 /**
  * TODO: update key generation
  */
-CMPOffer* mastercore::DEx_getOffer(const std::string& seller_addr, uint32_t prop)
+CMPOffer* DEx_getOffer(const std::string& seller_addr, uint32_t prop)
 {
     if (msc_debug_dex) PrintToLog("%s(%s, %d)\n", __func__, seller_addr, prop);
 
@@ -60,7 +60,7 @@ CMPOffer* mastercore::DEx_getOffer(const std::string& seller_addr, uint32_t prop
     return NULL;
 }
 
-CMPAccept* mastercore::DEx_getAccept(const std::string& seller_addr, uint32_t prop, const std::string& buyer_addr)
+CMPAccept* DEx_getAccept(const std::string& seller_addr, uint32_t prop, const std::string& buyer_addr)
 {
     if (msc_debug_dex) PrintToLog("%s(%s, %d, %s)\n", __func__, seller_addr, prop, buyer_addr);
 
@@ -76,7 +76,7 @@ CMPAccept* mastercore::DEx_getAccept(const std::string& seller_addr, uint32_t pr
  * TODO: change nAmended: uint64_t -> int64_t
  * @return 0 if everything is OK
  */
-int mastercore::DEx_offerCreate(const std::string& seller_addr, uint32_t prop, int64_t nValue, int block, int64_t amount_des, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended)
+int DEx_offerCreate(const std::string& seller_addr, uint32_t prop, int64_t nValue, int block, int64_t amount_des, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended)
 {
     int rc = DEX_ERROR_SELLOFFER;
 
@@ -130,7 +130,7 @@ int mastercore::DEx_offerCreate(const std::string& seller_addr, uint32_t prop, i
 /**
  * @return 0 if everything is OK
  */
-int mastercore::DEx_offerDestroy(const std::string& seller_addr, uint32_t prop)
+int DEx_offerDestroy(const std::string& seller_addr, uint32_t prop)
 {
     const int64_t amount = getMPbalance(seller_addr, prop, SELLOFFER_RESERVE);
 
@@ -156,7 +156,7 @@ int mastercore::DEx_offerDestroy(const std::string& seller_addr, uint32_t prop)
 /**
  * @return 0 if everything is OK
  */
-int mastercore::DEx_offerUpdate(const std::string& seller_addr, uint32_t prop, int64_t nValue, int block, int64_t desired, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended)
+int DEx_offerUpdate(const std::string& seller_addr, uint32_t prop, int64_t nValue, int block, int64_t desired, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended)
 {
     if (msc_debug_dex) PrintToLog("%s(%s, %d)\n", __func__, seller_addr, prop);
 
@@ -179,7 +179,7 @@ int mastercore::DEx_offerUpdate(const std::string& seller_addr, uint32_t prop, i
  * TODO: change nAmended: uint64_t -> int64_t
  * @return 0 if everything is OK
  */
-int mastercore::DEx_acceptCreate(const std::string& buyer, const std::string& seller, uint32_t prop, int64_t nValue, int block, int64_t fee_paid, uint64_t* nAmended)
+int DEx_acceptCreate(const std::string& buyer, const std::string& seller, uint32_t prop, int64_t nValue, int block, int64_t fee_paid, uint64_t* nAmended)
 {
     int rc = DEX_ERROR_ACCEPT -10;
     OfferMap::iterator my_it;
@@ -238,7 +238,7 @@ int mastercore::DEx_acceptCreate(const std::string& buyer, const std::string& se
  *
  * @return 0 if everything is OK
  */
-int mastercore::DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint32_t prop, bool bForceErase)
+int DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint32_t prop, bool bForceErase)
 {
     int rc = DEX_ERROR_ACCEPT -20;
     CMPOffer* p_offer = DEx_getOffer(seller, prop);
@@ -291,7 +291,7 @@ int mastercore::DEx_acceptDestroy(const std::string& buyer, const std::string& s
  * Handles incoming BTC payment for the offer.
  * TODO: change nAmended: uint64_t -> int64_t
  */
-int mastercore::DEx_payment(const uint256& txid, unsigned int vout, const std::string& seller, const std::string& buyer, int64_t BTC_paid, int blockNow, uint64_t* nAmended)
+int DEx_payment(const uint256& txid, unsigned int vout, const std::string& seller, const std::string& buyer, int64_t BTC_paid, int blockNow, uint64_t* nAmended)
 {
     int rc = DEX_ERROR_PAYMENT;
 
@@ -392,3 +392,5 @@ unsigned int eraseExpiredAccepts(int blockNow)
     return how_many_erased;
 }
 
+
+} // namespace mastercore
