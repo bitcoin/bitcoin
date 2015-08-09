@@ -130,24 +130,25 @@ private:
     int block;
 
 public:
+    // TODO: it may not intuitive that this is *not* the hash of the accept order
     uint256 getHash() const { return offer_txid; }
 
     int64_t getOfferAmountOriginal() { return offer_amount_original; }
     int64_t getBTCDesiredOriginal() { return BTC_desired_original; }
 
-    uint8_t getBlockTimeLimit() { return blocktimelimit; }
+    uint8_t getBlockTimeLimit() const { return blocktimelimit; }
     uint32_t getProperty() const { return property; }
 
     int getAcceptBlock() const { return block; }
 
-    CMPAccept(int64_t amountOffered, int blockIn, uint8_t paymentWindow, uint32_t propertyId,
+    CMPAccept(int64_t amountAccepted, int blockIn, uint8_t paymentWindow, uint32_t propertyId,
               int64_t offerAmountOriginal, int64_t amountDesired, const uint256& txid)
-      : accept_amount_remaining(amountOffered), blocktimelimit(paymentWindow),
+      : accept_amount_remaining(amountAccepted), blocktimelimit(paymentWindow),
         property(propertyId), offer_amount_original(offerAmountOriginal),
         BTC_desired_original(amountDesired), offer_txid(txid), block(blockIn)
     {
         accept_amount_original = accept_amount_remaining;
-        PrintToLog("%s(%d): %s\n", __func__, amountOffered, txid.GetHex());
+        PrintToLog("%s(%d): %s\n", __func__, amountAccepted, txid.GetHex());
     }
 
     CMPAccept(int64_t acceptAmountOriginal, int64_t acceptAmountRemaining, int blockIn,
@@ -222,17 +223,18 @@ typedef std::map<std::string, CMPAccept> AcceptMap;
 extern OfferMap my_offers;
 extern AcceptMap my_accepts;
 
-bool DEx_offerExists(const std::string& seller_addr, uint32_t property);
-CMPOffer* DEx_getOffer(const std::string& seller_addr, uint32_t property);
-CMPAccept* DEx_getAccept(const std::string& seller_addr, uint32_t property, const std::string& buyer_addr);
-int DEx_offerCreate(const std::string& seller_addr, uint32_t property, int64_t nValue, int block, int64_t amount_desired, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended = NULL);
-int DEx_offerDestroy(const std::string& seller_addr, uint32_t property);
-int DEx_offerUpdate(const std::string& seller_addr, uint32_t property, int64_t nValue, int block, int64_t desired, int64_t fee, uint8_t btl, const uint256& txid, uint64_t* nAmended = NULL);
-int DEx_acceptCreate(const std::string& buyer, const std::string& seller, uint32_t property, int64_t nValue, int block, int64_t fee_paid, uint64_t* nAmended = NULL);
-int DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint32_t property, bool fForceErase = false);
-int DEx_payment(const uint256& txid, unsigned int vout, const std::string& seller, const std::string& buyer, int64_t BTC_paid, int blockNow, uint64_t* nAmended = NULL);
+bool DEx_offerExists(const std::string& addressSeller, uint32_t propertyId);
+CMPOffer* DEx_getOffer(const std::string& addressSeller, uint32_t propertyId);
+bool DEx_acceptExists(const std::string& addressSeller, uint32_t propertyId, const std::string& addressBuyer);
+CMPAccept* DEx_getAccept(const std::string& addressSeller, uint32_t propertyId, const std::string& addressBuyer);
+int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64_t amountOffered, int block, int64_t amountDesired, int64_t minAcceptFee, uint8_t paymentWindow, const uint256& txid, uint64_t* nAmended = NULL);
+int DEx_offerDestroy(const std::string& addressSeller, uint32_t propertyId);
+int DEx_offerUpdate(const std::string& addressSeller, uint32_t propertyId, int64_t amountOffered, int block, int64_t amountDesired, int64_t minAcceptFee, uint8_t paymentWindow, const uint256& txid, uint64_t* nAmended = NULL);
+int DEx_acceptCreate(const std::string& addressBuyer, const std::string& addressSeller, uint32_t propertyId, int64_t amountAccepted, int block, int64_t feePaid, uint64_t* nAmended = NULL);
+int DEx_acceptDestroy(const std::string& addressBuyer, const std::string& addressSeller, uint32_t propertyid, bool fForceErase = false);
+int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addressSeller, const std::string& addressBuyer, int64_t amountPaid, int block, uint64_t* nAmended = NULL);
 
-unsigned int eraseExpiredAccepts(int blockNow);
+unsigned int eraseExpiredAccepts(int block);
 }
 
 
