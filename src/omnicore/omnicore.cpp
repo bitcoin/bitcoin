@@ -1862,7 +1862,7 @@ int input_mp_offers_string(const std::string& s)
     // TODO: should this be here? There are usually no sanity checks..
     if (OMNI_PROPERTY_BTC != prop_desired) return -1;
 
-    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr);
+    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr, prop);
     CMPOffer newOffer(offerBlock, amountOriginal, prop, btcDesired, minFee, blocktimelimit, txid);
 
     if (!my_offers.insert(std::make_pair(combo, newOffer)).second) return -1;
@@ -1897,7 +1897,7 @@ int input_mp_accepts_string(const string &s)
   btcDesired = boost::lexical_cast<uint64_t>(vstr[i++]);
   txidStr = vstr[i++];
 
-  const string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(sellerAddr, buyerAddr);
+  const string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(sellerAddr, buyerAddr, prop);
   CMPAccept newAccept(amountOriginal, amountRemaining, nBlock, blocktimelimit, prop, offerOriginal, btcDesired, uint256(txidStr));
   if (my_accepts.insert(std::make_pair(combo, newAccept)).second) {
     return 0;
@@ -3242,7 +3242,7 @@ void CMPTxList::recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &
 
        // Step 4 - Write sub-record with cancel details
        const string txidStr = txidMaster.ToString() + "-C";
-       const string subKey = STR_REF_SUBKEY_TXID_REF_COMBO(txidStr);
+       const string subKey = STR_REF_SUBKEY_TXID_REF_COMBO(txidStr, refNumber);
        const string subValue = strprintf("%s:%d:%lu", txidSub.ToString(), propertyId, nValue);
        Status subStatus;
        PrintToLog("METADEXCANCELDEBUG : Writing sub-record %s with value %s\n", subKey, subValue);
@@ -3302,7 +3302,7 @@ void CMPTxList::recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, un
 
        // Step 4 - Write sub-record with payment details
        const string txidStr = txid.ToString();
-       const string subKey = STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(txidStr);
+       const string subKey = STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(txidStr, paymentNumber);
        const string subValue = strprintf("%d:%s:%s:%d:%lu", vout, buyer, seller, propertyId, nValue);
        Status subStatus;
        PrintToLog("DEXPAYDEBUG : Writing sub-record %s with value %s\n", subKey, subValue);

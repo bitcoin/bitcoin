@@ -16,12 +16,26 @@
 #include <map>
 #include <string>
 
-// this is the internal format for the offer primary key
-// TODO: replace by a class method
-#define STR_SELLOFFER_ADDR_PROP_COMBO(x) (x + "-" + strprintf("%d", prop))
-#define STR_ACCEPT_ADDR_PROP_ADDR_COMBO(_seller , _buyer) (_seller + "-" + strprintf("%d", prop) + "+" + _buyer)
-#define STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(txidStr) (txidStr + "-" + strprintf("%d", paymentNumber))
-#define STR_REF_SUBKEY_TXID_REF_COMBO(txidStr) (txidStr + strprintf("%d", refNumber))
+/** Lookup key to find DEx offers. */
+inline std::string STR_SELLOFFER_ADDR_PROP_COMBO(const std::string& address, uint32_t propertyId)
+{
+    return strprintf("%s-%d", address, propertyId);
+}
+/** Lookup key to find DEx accepts. */
+inline std::string STR_ACCEPT_ADDR_PROP_ADDR_COMBO(const std::string& seller, const std::string& buyer, uint32_t propertyId)
+{
+    return strprintf("%s-%d+%s", seller, propertyId, buyer);
+}
+/** Lookup key to find DEx payments. */
+inline std::string STR_PAYMENT_SUBKEY_TXID_PAYMENT_COMBO(const std::string& txidStr, unsigned int paymentNumber)
+{
+    return strprintf("%s-%d", txidStr, paymentNumber);
+}
+/** Lookup key to find MetaDEx sub-records. TODO: not here! */
+inline std::string STR_REF_SUBKEY_TXID_REF_COMBO(const std::string& txidStr, unsigned int refNumber)
+{
+    return strprintf("%s%d", txidStr, refNumber);
+}
 
 /** A single outstanding offer, from one seller of one property.
  *

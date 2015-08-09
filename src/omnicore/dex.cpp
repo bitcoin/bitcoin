@@ -32,27 +32,26 @@
 namespace mastercore
 {
 /**
- * TODO: update key generation
  * Checks, if such a sell offer exists.
  */
 bool DEx_offerExists(const std::string& seller_addr, uint32_t prop)
 {
     if (msc_debug_dex) PrintToLog("%s()\n", __func__);
 
-    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr);
+    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr, prop);
     OfferMap::iterator my_it = my_offers.find(combo);
 
     return !(my_it == my_offers.end());
 }
 
 /**
- * TODO: update key generation
+ * @return The DEx sell offer, or NULL, if no match was found
  */
 CMPOffer* DEx_getOffer(const std::string& seller_addr, uint32_t prop)
 {
     if (msc_debug_dex) PrintToLog("%s(%s, %d)\n", __func__, seller_addr, prop);
 
-    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr);
+    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr, prop);
     OfferMap::iterator it = my_offers.find(combo);
 
     if (it != my_offers.end()) return &(it->second);
@@ -64,7 +63,7 @@ CMPAccept* DEx_getAccept(const std::string& seller_addr, uint32_t prop, const st
 {
     if (msc_debug_dex) PrintToLog("%s(%s, %d, %s)\n", __func__, seller_addr, prop, buyer_addr);
 
-    const std::string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller_addr, buyer_addr);
+    const std::string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller_addr, buyer_addr, prop);
     AcceptMap::iterator it = my_accepts.find(combo);
 
     if (it != my_accepts.end()) return &(it->second);
@@ -85,7 +84,7 @@ int DEx_offerCreate(const std::string& seller_addr, uint32_t prop, int64_t nValu
 
     if (DEx_getOffer(seller_addr, prop)) return (DEX_ERROR_SELLOFFER -10); // offer already exists
 
-    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr);
+    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr, prop);
 
     if (msc_debug_dex) PrintToLog("%s(%s|%s), nValue=%d)\n", __func__, seller_addr, combo, nValue);
 
@@ -136,7 +135,7 @@ int DEx_offerDestroy(const std::string& seller_addr, uint32_t prop)
 
     if (!DEx_offerExists(seller_addr, prop)) return (DEX_ERROR_SELLOFFER -11); // offer does not exist
 
-    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr);
+    const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller_addr, prop);
 
     OfferMap::iterator my_it = my_offers.find(combo);
 
@@ -183,8 +182,8 @@ int DEx_acceptCreate(const std::string& buyer, const std::string& seller, uint32
 {
     int rc = DEX_ERROR_ACCEPT -10;
     OfferMap::iterator my_it;
-    const std::string selloffer_combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller);
-    const std::string accept_combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller, buyer);
+    const std::string selloffer_combo = STR_SELLOFFER_ADDR_PROP_COMBO(seller, prop);
+    const std::string accept_combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller, buyer, prop);
     int64_t nActualAmount = getMPbalance(seller, prop, SELLOFFER_RESERVE);
 
     my_it = my_offers.find(selloffer_combo);
@@ -244,7 +243,7 @@ int DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint3
     CMPOffer* p_offer = DEx_getOffer(seller, prop);
     CMPAccept* p_accept = DEx_getAccept(seller, prop, buyer);
     bool bReturnToMoney; // return to BALANCE of the seller, otherwise return to SELLOFFER_RESERVE
-    const std::string accept_combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller, buyer);
+    const std::string accept_combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(seller, buyer, prop);
 
     if (!p_accept) return rc; // sanity check
 
