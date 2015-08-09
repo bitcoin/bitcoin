@@ -286,6 +286,20 @@ int DEx_acceptDestroy(const std::string& buyer, const std::string& seller, uint3
     return rc;
 }
 
+namespace legacy
+{
+/**
+ * Determine traded amount for a DEx payment.
+ * @return The number of tokens that can be purchased
+ */
+static int64_t calculateDExTrade(int64_t amountOffered, int64_t amountDesired, int64_t amountPaid)
+{
+    double amountPurchased = double(amountPaid) * double(amountOffered) / double(amountDesired);
+
+    return static_cast<int64_t>(rounduint64(amountPurchased));
+}
+}
+
 /**
  * Handles incoming BTC payment for the offer.
  * TODO: change nAmended: uint64_t -> int64_t
@@ -309,44 +323,48 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& selle
     // -------------------------------------------------------------------------
     // TODO: no floating numbers
 
-    const double BTC_desired_original = p_accept->getBTCDesiredOriginal();
-    const double offer_amount_original = p_accept->getOfferAmountOriginal();
+    const int64_t amountDesiredBTC = p_accept->getBTCDesiredOriginal();
+    const int64_t amountOfferedMSC = p_accept->getOfferAmountOriginal();
 
-    if (0 == (double) BTC_desired_original) return (DEX_ERROR_PAYMENT -2); // divide by 0 protection
+    // divide by 0 protection
+    if (0 == amountDesiredBTC) return (DEX_ERROR_PAYMENT -2);
 
-    double perc_X = (double) BTC_paid / BTC_desired_original;
-    double Purchased = offer_amount_original * perc_X;
-
-    int64_t units_purchased = rounduint64(Purchased);
+    int64_t amountPurchased = legacy::calculateDExTrade(amountOfferedMSC, amountDesiredBTC, BTC_paid);
 
     // -------------------------------------------------------------------------
 
-    const int64_t nActualAmount = p_accept->getAcceptAmountRemaining(); // actual amount desired, in the Accept
+    const int64_t amountRemaining = p_accept->getAcceptAmountRemaining(); // actual amount desired, in the Accept
 
-    if (msc_debug_dex)
-        PrintToLog("BTC_desired= %30.20lf , offer_amount=%30.20lf , perc_X= %30.20lf , Purchased= %30.20lf , units_purchased= %lu\n",
-            BTC_desired_original, offer_amount_original, perc_X, Purchased, units_purchased);
+    if (msc_debug_dex) PrintToLog(
+            "%s: BTC desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
+            FormatDivisibleMP(amountDesiredBTC), FormatDivisibleMP(amountOfferedMSC),
+            FormatDivisibleMP(amountPurchased), FormatDivisibleMP(amountRemaining));
 
     // if units_purchased is greater than what's in the Accept, the buyer gets only what's in the Accept
-    if (nActualAmount < units_purchased) {
-        units_purchased = nActualAmount;
+    if (amountRemaining < amountPurchased) {
+        amountPurchased = amountRemaining;
 
-        if (nAmended) *nAmended = units_purchased;
+        if (nAmended) *nAmended = amountPurchased;
     }
 
-    if (units_purchased > 0) {
-        assert(update_tally_map(seller, prop, -units_purchased, ACCEPT_RESERVE));
-        assert(update_tally_map(buyer, prop, units_purchased, BALANCE));
+    if (amountPurchased > 0) {
+        PrintToLog("%s: seller %s offered %s %s for %s BTC\n", __func__,
+                seller, FormatDivisibleMP(amountOfferedMSC), strMPProperty(prop), FormatDivisibleMP(amountDesiredBTC));
+        PrintToLog("%s: buyer %s pays %s BTC to purchase %s %s\n", __func__,
+                buyer, FormatDivisibleMP(BTC_paid), FormatDivisibleMP(amountPurchased), strMPProperty(prop));
+
+        assert(update_tally_map(seller, prop, -amountPurchased, ACCEPT_RESERVE));
+        assert(update_tally_map(buyer, prop, amountPurchased, BALANCE));
 
         bool bValid = true;
-        p_txlistdb->recordPaymentTX(txid, bValid, blockNow, vout, prop, units_purchased, buyer, seller);
+        p_txlistdb->recordPaymentTX(txid, bValid, blockNow, vout, prop, amountPurchased, buyer, seller);
 
         rc = 0;
         PrintToLog("#######################################################\n");
     }
 
     // reduce the amount of units still desired by the buyer and if 0 must destroy the Accept
-    if (p_accept->reduceAcceptAmountRemaining_andIsZero(units_purchased)) {
+    if (p_accept->reduceAcceptAmountRemaining_andIsZero(amountPurchased)) {
         const int64_t selloffer_reserve = getMPbalance(seller, prop, SELLOFFER_RESERVE);
         const int64_t accept_reserve = getMPbalance(seller, prop, ACCEPT_RESERVE);
 
