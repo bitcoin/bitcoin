@@ -901,7 +901,15 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
-        if(AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
+
+        bool fAcceptable = false;
+        {
+            TRY_LOCK(cs_main, lockMain);
+            if(!lockMain) return;
+            fAcceptable = AcceptableInputs(mempool, state, CTransaction(tx), false, NULL);
+        }
+
+        if(fAcceptable){
             if(fDebug) LogPrintf("dsee - Accepted OLD Masternode entry %i %i\n", count, current);
 
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
@@ -1006,7 +1014,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 }
 
                 // fake ping
-                pmn->lastPing = CMasternodePing();
+                pmn->lastPing = CMasternodePing(vin);
                 pmn->Check();
                 if(pmn->IsEnabled()) {
                     TRY_LOCK(cs_vNodes, lockNodes);
