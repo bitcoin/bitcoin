@@ -71,6 +71,24 @@ CMPAccept* DEx_getAccept(const std::string& seller_addr, uint32_t prop, const st
     return NULL;
 }
 
+namespace legacy
+{
+/**
+ * Determines adjusted amount desired, in case it needs to be recalculated.
+ * @return The new number of tokens
+ */
+static int64_t adjustDExOffer(int64_t amountOffered, int64_t amountDesired, int64_t amountAvailable)
+{
+    double BTC;
+
+    BTC = amountDesired * amountAvailable;
+    BTC /= (double) amountOffered;
+    amountDesired = rounduint64(BTC);
+
+    return static_cast<int64_t>(amountDesired);
+}
+}
+
 /**
  * TODO: change nAmended: uint64_t -> int64_t
  * @return 0 if everything is OK
@@ -95,21 +113,20 @@ int DEx_offerCreate(const std::string& seller_addr, uint32_t prop, int64_t nValu
 
     // if offering more than available -- put everything up on sale
     if (nValue > balanceReallyAvailable) {
-        PrintToLog("%s: adjusting order: %s offers %s, but has only %s SP %d (%s)\n", __func__,
-                        seller_addr, FormatDivisibleMP(nValue),
-                        FormatDivisibleMP(balanceReallyAvailable),
-                        prop, strMPProperty(prop));
-
-        double BTC;
+        PrintToLog("%s: adjusting order: %s offers %s %s, but has only %s %s available\n", __func__,
+                        seller_addr, FormatDivisibleMP(nValue), strMPProperty(prop)
+                        FormatDivisibleMP(balanceReallyAvailable), strMPProperty(prop));
 
         // AND we must also re-adjust the BTC desired in this case...
-        BTC = amount_des * balanceReallyAvailable;
-        BTC /= (double) nValue;
-        amount_des = rounduint64(BTC);
+        amount_des = legacy::adjustDExOffer(nValue, amount_des, balanceReallyAvailable);
 
         nValue = balanceReallyAvailable;
 
         if (nAmended) *nAmended = nValue;
+
+        PrintToLog("%s: adjusting order: updated amount for sale: %s %s, offered for: %s BTC\n", __func__,
+                        FormatDivisibleMP(nValue), strMPProperty(prop)
+                        FormatDivisibleMP(amount_des));
     }
 
     // -------------------------------------------------------------------------
