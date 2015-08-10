@@ -1587,9 +1587,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
                 std::vector<CAmount> vecAmounts;
                 pwalletMain->ConvertList(vCoins, vecAmounts);
-                // try to get random denoms out of vecAmounts
+                // try to get a single random denom out of vecAmounts
                 while(sessionDenom == 0)
-                    sessionDenom = GetDenominationsByAmounts(vecAmounts, true);
+                    sessionDenom = GetDenominationsByAmounts(vecAmounts);
 
                 pnode->PushMessage("dsa", sessionDenom, txCollateral);
                 LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d\n", sessionDenom);
@@ -1914,7 +1914,7 @@ int CDarksendPool::GetDenominations(const std::vector<CTxDSOut>& vout){
 }
 
 // return a bitshifted integer representing the denominations in this list
-int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fRandDenom){
+int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fSingleRandomDenom){
     std::vector<pair<int64_t, int> > denomUsed;
 
     // make a list of denominations, with zero uses
@@ -1937,8 +1937,11 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fRandD
     int c = 0;
     // if the denomination is used, shift the bit on.
     // then move to the next
-    BOOST_FOREACH (PAIRTYPE(int64_t, int)& s, denomUsed)
-        denom |= ((fRandDenom ? rand()%2 : 1) * s.second) << c++;
+    BOOST_FOREACH (PAIRTYPE(int64_t, int)& s, denomUsed) {
+        int bit = (fSingleRandomDenom ? rand()%2 : 1) * s.second;
+        denom |= bit << c++;
+        if(fSingleRandomDenom && bit) break; // use just one random denomination
+    }
 
     // Function returns as follows:
     //
@@ -1951,20 +1954,17 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fRandD
 }
 
 
-int CDarksendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount, bool fRandDenom){
+int CDarksendPool::GetDenominationsByAmounts(std::vector<int64_t>& vecAmount){
     CScript e = CScript();
     std::vector<CTxOut> vout1;
 
     // Make outputs by looping through denominations, from small to large
     BOOST_REVERSE_FOREACH(int64_t v, vecAmount){
-        int nOutputs = 0;
-
         CTxOut o(v, e);
         vout1.push_back(o);
-        nOutputs++;
     }
 
-    return GetDenominations(vout1, fRandDenom);
+    return GetDenominations(vout1, true);
 }
 
 int CDarksendPool::GetDenominationsByAmount(int64_t nAmount, int nDenomTarget){

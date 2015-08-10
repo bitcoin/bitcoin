@@ -481,14 +481,14 @@ public:
     bool CreateDenominated(int64_t nTotalValue);
 
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
-    int GetDenominations(const std::vector<CTxOut>& vout, bool fRandDenom = false);
+    int GetDenominations(const std::vector<CTxOut>& vout, bool fSingleRandomDenom = false);
     int GetDenominations(const std::vector<CTxDSOut>& vout);
 
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
     /// Get the denominations for a specific amount of dash.
     int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0); // is not used anymore?
-    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount, bool fRandDenom = false);
+    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
 
     std::string GetMessageByID(int messageID);
 
