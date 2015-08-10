@@ -27,8 +27,6 @@ BOOST_FIXTURE_TEST_SUITE(rpc_wallet_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_addmultisig)
 {
-    LOCK(pwalletMain->cs_wallet);
-
     rpcfn_type addmultisig = tableRPC["addmultisigaddress"]->actor;
 
     // old, 65-byte-long:
@@ -68,25 +66,28 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
 {
     // Test RPC calls for various wallet statistics
     UniValue r;
-
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    CPubKey demoPubkey = pwalletMain->GenerateNewKey();
-    CBitcoinAddress demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
+    CPubKey demoPubkey;
+    CBitcoinAddress demoAddress;
     UniValue retValue;
     string strAccount = "walletDemoAccount";
-    string strPurpose = "receive";
-    BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
-        CWalletDB walletdb(pwalletMain->strWalletFile);
-        CAccount account;
-        account.vchPubKey = demoPubkey;
-        pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);
-        walletdb.WriteAccount(strAccount, account);
-    });
+    CBitcoinAddress setaccountDemoAddress;
+    {
+        LOCK(pwalletMain->cs_wallet);
 
-    CPubKey setaccountDemoPubkey = pwalletMain->GenerateNewKey();
-    CBitcoinAddress setaccountDemoAddress = CBitcoinAddress(CTxDestination(setaccountDemoPubkey.GetID()));
+        demoPubkey = pwalletMain->GenerateNewKey();
+        demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
+        string strPurpose = "receive";
+        BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
+            CWalletDB walletdb(pwalletMain->strWalletFile);
+            CAccount account;
+            account.vchPubKey = demoPubkey;
+            pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, strPurpose);
+            walletdb.WriteAccount(strAccount, account);
+        });
 
+        CPubKey setaccountDemoPubkey = pwalletMain->GenerateNewKey();
+        setaccountDemoAddress = CBitcoinAddress(CTxDestination(setaccountDemoPubkey.GetID()));
+    }
     /*********************************
      * 			setaccount
      *********************************/
