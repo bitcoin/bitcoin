@@ -862,7 +862,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(count == -1 && pmn->pubkey == pubkey && (pmn->lastPing.sigTime < GetTime() - MASTERNODE_MIN_MNB_SECONDS)){
                 if(pmn->sigTime < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
-                    if(pmn->protocolVersion == MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1) {
+                    if(pmn->protocolVersion < GETHEADERS_VERSION) {
                         pmn->pubkey2 = pubkey2;
                         pmn->sigTime = sigTime;
                         pmn->sig = vchSig;
@@ -954,7 +954,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             mn.lastPing = CMasternodePing(vin);
             mn.Check(true);
             // add v11 masternodes, v12 should be added by mnb only
-            if(protocolVersion == MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1) Add(mn);
+            if(protocolVersion < GETHEADERS_VERSION) Add(mn);
             if(mn.IsEnabled()) {
                 TRY_LOCK(cs_vNodes, lockNodes);
                 if(!lockNodes) return;
@@ -1017,7 +1017,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                 }
 
                 // fake ping for v11 masternodes, ignore for v12
-                if(pmn->protocolVersion == MIN_MASTERNODE_PAYMENT_PROTO_VERSION_1) pmn->lastPing = CMasternodePing(vin);
+                if(pmn->protocolVersion < GETHEADERS_VERSION) pmn->lastPing = CMasternodePing(vin);
                 pmn->Check();
                 if(pmn->IsEnabled()) {
                     TRY_LOCK(cs_vNodes, lockNodes);
