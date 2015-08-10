@@ -429,7 +429,11 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     {
         TRY_LOCK(cs_main, lockMain);
-        if(!lockMain) return false;
+        if(!lockMain) {
+            // not mnb fault, let it to be checked again later
+            mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
+            return false;
+        }
 
         if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
             //set nDos
@@ -441,7 +445,9 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     LogPrint("masnernode", "mnb - Accepted Masternode entry\n");
 
     if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-        LogPrintf("mnb - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+        LogPrintf("mnb - Input must have at least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+        // maybe we miss few blocks, let this mnb to be checked again later
+        mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
         return false;
     }
 
