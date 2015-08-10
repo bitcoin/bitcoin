@@ -29,13 +29,15 @@ file, however it is recommended that a strong and secure password be used
 as this password is security critical to securing the wallet should the
 wallet be enabled.
 
-If bitcoind is run with "-daemon" flag, and no rpcpassword is set, it will
-print a randomly generated suitable password to stderr.  You can also
-generate one from the shell yourself like this:
+If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set, 
+it will use a special cookie file for authentication. The cookie is generated with random 
+content when the daemon starts, and deleted when it exits. Read access to this file
+controls who can access it through RPC. 
 
-`bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'`
+By default the cookie is stored in the data directory, but it's location can be overridden 
+with the option '-rpccookiefile'.
 
-Once you have a password in hand, set `rpcpassword=` in `/etc/bitcoin/bitcoin.conf`
+This allows for running bitcoind without having to do any manual configuration.
 
 `conf`, `pid`, and `wallet` accept relative paths which are interpreted as 
 relative to the data directory. `wallet` *only* supports relative paths.
