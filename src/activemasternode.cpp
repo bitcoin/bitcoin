@@ -414,9 +414,6 @@ vector<COutput> CActiveMasternode::SelectCoinsMasternode()
     vector<COutput> filteredCoins;
     vector<COutPoint> confLockedCoins;
 
-    TRY_LOCK(pwalletMain->cs_wallet, fWallet);
-    if(!fWallet) return filteredCoins; //if we can't get the lock, return nothing
-
     // Temporary unlock MN coins from masternode.conf
     if(GetBoolArg("-mnconflock", true)) {
         uint256 mnTxHash;
