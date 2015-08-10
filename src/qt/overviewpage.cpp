@@ -545,6 +545,5 @@ void OverviewPage::toggleDarksend(){
             dlg.exec();
         }
 
-        darkSendPool.DoAutomaticDenominating();
     }
 }
