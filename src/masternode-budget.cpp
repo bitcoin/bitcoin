@@ -1698,8 +1698,9 @@ void CFinalizedBudget::AutoCheck()
 
     if(!fMasterNode || fAutoChecked) return;
 
-    //do this 1 in 20 blocks -- spread out the voting activity on mainnet
-    if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 20 != 0) {
+    //do this 1 in 4 blocks -- spread out the voting activity on mainnet
+    // -- this function is only called every sixth block, so this is really 1 in 24 blocks
+    if(Params().NetworkID() == CBaseChainParams::MAIN && rand() % 4 != 0) {
         LogPrintf("CFinalizedBudget::AutoCheck - waiting\n");
         return;
     }
