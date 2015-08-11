@@ -437,7 +437,7 @@ public:
     bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, int &errorID);
 
     /// Passively run Darksend in the background according to the configuration in settings (only for QT)
-    bool DoAutomaticDenominating(bool fDryRun=false, bool ready=false);
+    bool DoAutomaticDenominating(bool fDryRun=false);
     bool PrepareDarksendDenominate();
 
     /// Check for process in Darksend

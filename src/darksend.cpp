@@ -1356,7 +1356,7 @@ void CDarksendPool::ClearLastMessage()
 //
 // This does NOT run by default for daemons, only for QT.
 //
-bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
+bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnableDarksend) return false;
     if(fMasterNode) return false;
@@ -1441,6 +1441,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
 
             if(nBalanceNeedsDenominated > nValueIn) nBalanceNeedsDenominated = nValueIn;
 
+            if(nBalanceNeedsDenominated < nLowestDenom) return false; // most likely we just waiting for denoms to confirm
             if(!fDryRun) return CreateDenominated(nBalanceNeedsDenominated);
 
             return true;
@@ -1607,10 +1608,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun, bool ready)
     }
 
     strAutoDenomResult = _("Mixing in progress...");
-    if(!ready) return true;
-
-    if(sessionDenom == 0) return true;
-
     return false;
 }
 
@@ -2244,7 +2241,7 @@ void ThreadCheckDarkSendPool()
             darkSendPool.CheckTimeout();
             darkSendPool.CheckForCompleteQueue();
 
-            if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 6 == 0){
+            if(darkSendPool.GetState() == POOL_STATUS_IDLE && c % 15 == 0){
                 darkSendPool.DoAutomaticDenominating();
             }
         }
