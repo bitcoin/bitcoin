@@ -16,6 +16,7 @@
 #include "net.h"
 #include "ui_interface.h"
 #include "masternodeman.h"
+#include "masternode-sync.h"
 #include "util.h"
 
 #include <stdint.h>
@@ -123,13 +124,19 @@ void ClientModel::updateTimer()
     // Periodically check and update with a timer.
     int newNumBlocks = getNumBlocks();
 
+    static int prevAttempt = -1;
+    static int prevAssets = -1;
+
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
     if (cachedNumBlocks != newNumBlocks ||
-        cachedReindexing != fReindex || cachedImporting != fImporting)
+        cachedReindexing != fReindex || cachedImporting != fImporting ||
+            masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets)
     {
         cachedNumBlocks = newNumBlocks;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
+        prevAttempt = masternodeSync.RequestedMasternodeAttempt;
+        prevAssets = masternodeSync.RequestedMasternodeAssets;
 
         emit numBlocksChanged(newNumBlocks);
     }
