@@ -16,7 +16,7 @@
 #define MASTERNODE_SYNC_FINISHED          999
 
 #define MASTERNODE_SYNC_TIMEOUT           7
-#define MASTERNODE_SYNC_TRESHOLD          4
+#define MASTERNODE_SYNC_THRESHOLD         4
 
 class CMasternodeSync;
 extern CMasternodeSync masternodeSync;

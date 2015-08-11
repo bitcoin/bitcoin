@@ -453,11 +453,11 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     //  -- This doesn't look at who is being paid in the +8-10 blocks, allowing for double payments very rarely
     //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
     //  -- (chance per block * chances before IsScheduled will fire)
-    int nTenthNetwork = mnodeman.CountEnabled()/10;
+    int nTenthNetwork = CountEnabled()/10;
     int nCount = 0; 
     uint256 nHigh = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeLastPaid){
-        CMasternode* pmn = mnodeman.Find(s.second);
+        CMasternode* pmn = Find(s.second);
         if(!pmn) break;
 
         uint256 n = pmn->CalculateScore(1, nBlockHeight-100);
@@ -656,11 +656,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
-        if(mnodeman.mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
             masternodeSync.AddedMasternodeList(mnb.GetHash());
             return;
         }
-        mnodeman.mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+        mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
         int nDoS = 0;
         if(!mnb.CheckAndUpdate(nDoS)){
@@ -700,8 +700,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrint("masnernode", "mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
 
-        if(mnodeman.mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
-        mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
+        if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
+        mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
         int nDoS = 0;
         if(mnp.CheckAndUpdate(nDoS)) return;
@@ -711,7 +711,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             Misbehaving(pfrom->GetId(), nDoS);
         } else {
             // if nothing significant failed, search existing Masternode list
-            CMasternode* pmn = mnodeman.Find(mnp.vin);
+            CMasternode* pmn = Find(mnp.vin);
             // if it's known, don't ask for the mnb, just return
             if(pmn != NULL) return;
         }
