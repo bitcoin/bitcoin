@@ -517,7 +517,7 @@ void OverviewPage::toggleDarksend(){
             if(!ctx.isValid())
             {
                 //unlock was cancelled
-                darkSendPool.cachedNumBlocks = 0;
+                darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
                 QMessageBox::warning(this, tr("Darksend"),
                     tr("Wallet is locked and user declined to unlock. Disabling Darksend."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -528,8 +528,8 @@ void OverviewPage::toggleDarksend(){
 
     }
 
-    darkSendPool.cachedNumBlocks = 0;
     fEnableDarksend = !fEnableDarksend;
+    darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
 
     if(!fEnableDarksend){
         ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
