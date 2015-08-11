@@ -1382,11 +1382,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    // if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
-    //     LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
-    //     strAutoDenomResult = _("Last successful Darksend action was too recent.");
-    //     return false;
-    // }
+    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
+        strAutoDenomResult = _("Last successful Darksend action was too recent.");
+        return false;
+    }
 
     if(mnodeman.size() == 0){
         LogPrint("darksend", "CDarksendPool::DoAutomaticDenominating - No Masternodes detected\n");
@@ -1498,6 +1498,14 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                     return false;
                 }
             }
+        }
+
+        //if we've used 90% of the Masternode list then drop all the oldest first
+        int nThreshold = (int)(mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION) * 0.9);
+        LogPrint("darksend", "Checking vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
+        while((int)vecMasternodesUsed.size() > nThreshold){
+            vecMasternodesUsed.erase(vecMasternodesUsed.begin());
+            LogPrint("darksend", "  vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
         }
 
         //don't use the queues all of the time for mixing
@@ -2226,14 +2234,6 @@ void ThreadCheckDarkSendPool()
                 mnodeman.ProcessMasternodeConnections();
                 masternodePayments.CleanPaymentList();
                 CleanTransactionLocksList();
-
-                //if we've used 90% of the Masternode list then drop all the oldest.
-                int nThreshold = (int)(mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION) * 0.9);
-                LogPrint("darksend", "Checking vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
-                while((int)vecMasternodesUsed.size() > nThreshold){
-                    vecMasternodesUsed.erase(vecMasternodesUsed.begin());
-                    LogPrint("darksend", "  vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
-                }
             }
 
             if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
