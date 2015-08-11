@@ -16,7 +16,7 @@ class CTransaction;
 #include <string.h>
 #include <string>
 
-using mastercore::c_strMasterProtocolTXType;
+using mastercore::strTransactionType;
 
 /** The class is responsible for transaction interpreting/parsing.
  *
@@ -161,7 +161,7 @@ public:
 
     uint256 getHash() const { return txid; }
     unsigned int getType() const { return type; }
-    std::string getTypeString() const { return c_strMasterProtocolTXType(getType()); }
+    std::string getTypeString() const { return strTransactionType(getType()); }
     unsigned int getProperty() const { return property; }
     unsigned short getVersion() const { return version; }
     unsigned short getPropertyType() const { return prop_type; }
@@ -171,7 +171,16 @@ public:
     std::string getPayload() const { return HexStr(pkt, pkt + pkt_size); }
     uint64_t getAmount() const { return nValue; }
     uint64_t getNewAmount() const { return nNewValue; }
+    uint8_t getEcosystem() const { return ecosystem; }
+    uint32_t getPreviousId() const { return prev_prop_id; }
+    std::string getSPCategory() const { return category; }
+    std::string getSPSubCategory() const { return subcategory; }
     std::string getSPName() const { return name; }
+    std::string getSPUrl() const { return url; }
+    std::string getSPData() const { return data; }
+    int64_t getDeadline() const { return deadline; }
+    uint8_t getEarlyBirdBonus() const { return early_bird; }
+    uint8_t getIssuerBonus() const { return percentage; }
     std::string getAlertString() const { return alertString; }
     bool isRpcOnly() const { return rpcOnly; }
     int getEncodingClass() const { return encodingClass; }

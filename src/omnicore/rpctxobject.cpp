@@ -256,6 +256,7 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
 
     // Check levelDB to see if the amount for sale has been amended due to a partial purchase
     // TODO: DEx phase 1 really needs an overhaul to work like MetaDEx with original amounts for sale and amounts remaining etc
+    // TODO: if the amount of the transaction is not used here, then the BTC amount should be recalculated (?)
     int tmpblock = 0;
     unsigned int tmptype = 0;
     uint64_t amountNew = 0;
@@ -267,12 +268,12 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
     txobj.push_back(Pair("amount", FormatMP(propertyId, amount)));
-    txobj.push_back(Pair("feerequired", FormatDivisibleMP(temp_offer.getMinFee())));
+    txobj.push_back(Pair("bitcoindesired", FormatDivisibleMP(temp_offer.getBTCDesiredOriginal())));
     txobj.push_back(Pair("timelimit",  temp_offer.getBlockTimeLimit()));
+    txobj.push_back(Pair("feerequired", FormatDivisibleMP(temp_offer.getMinFee())));
     if (sell_subaction == 1) txobj.push_back(Pair("action", "new"));
     if (sell_subaction == 2) txobj.push_back(Pair("action", "update"));
     if (sell_subaction == 3) txobj.push_back(Pair("action", "cancel"));
-    txobj.push_back(Pair("bitcoindesired", FormatDivisibleMP(temp_offer.getBTCDesiredOriginal())));
 }
 
 void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
@@ -345,10 +346,7 @@ void populateRPCTypeMetaDExCancelPair(CMPTransaction& omniObj, Object& txobj, bo
 
 void populateRPCTypeMetaDExCancelEcosystem(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
 {
-    // populate
-    if (omniObj.getProperty() == 0) txobj.push_back(Pair("ecosystem", "both")); // property seems an odd place to store this
-    if (omniObj.getProperty() == 1) txobj.push_back(Pair("ecosystem", "main"));
-    if (omniObj.getProperty() == 2) txobj.push_back(Pair("ecosystem", "test"));
+    txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
     if (extendedDetails) populateRPCExtendedTypeMetaDExCancel(omniObj.getHash(), txobj);
 }
 
@@ -376,33 +374,60 @@ void populateRPCTypeCreatePropertyFixed(CMPTransaction& omniObj, Object& txobj)
 {
     LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+    if (propertyId > 0) txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
+    if (propertyId > 0) txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
 
-    txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
+    txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
+    txobj.push_back(Pair("propertytype", strPropertyType(omniObj.getPropertyType())));
+    txobj.push_back(Pair("category", omniObj.getSPCategory()));
+    txobj.push_back(Pair("subcategory", omniObj.getSPSubCategory()));
     txobj.push_back(Pair("propertyname", omniObj.getSPName()));
-    txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-    txobj.push_back(Pair("amount", FormatMP(propertyId, getTotalTokens(propertyId))));
+    txobj.push_back(Pair("data", omniObj.getSPData()));
+    txobj.push_back(Pair("url", omniObj.getSPUrl()));
+    std::string strAmount = FormatByType(omniObj.getAmount(), omniObj.getPropertyType());
+    txobj.push_back(Pair("amount", strAmount));
 }
 
 void populateRPCTypeCreatePropertyVariable(CMPTransaction& omniObj, Object& txobj)
 {
     LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+    if (propertyId > 0) txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
+    if (propertyId > 0) txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
 
-    txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
+    txobj.push_back(Pair("propertytype", strPropertyType(omniObj.getPropertyType())));
+    txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
+    txobj.push_back(Pair("category", omniObj.getSPCategory()));
+    txobj.push_back(Pair("subcategory", omniObj.getSPSubCategory()));
     txobj.push_back(Pair("propertyname", omniObj.getSPName()));
-    txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-    txobj.push_back(Pair("amount", FormatMP(propertyId, 0))); // crowdsale token creations don't issue tokens with the create tx
+    txobj.push_back(Pair("data", omniObj.getSPData()));
+    txobj.push_back(Pair("url", omniObj.getSPUrl()));
+    txobj.push_back(Pair("propertyiddesired", (uint64_t) omniObj.getProperty()));
+    std::string strPerUnit = FormatMP(omniObj.getProperty(), omniObj.getAmount());
+    txobj.push_back(Pair("tokensperunit", strPerUnit));
+    txobj.push_back(Pair("deadline", omniObj.getDeadline()));
+    txobj.push_back(Pair("earlybonus", omniObj.getEarlyBirdBonus()));
+    txobj.push_back(Pair("percenttoissuer", omniObj.getIssuerBonus()));
+    std::string strAmount = FormatByType(0, omniObj.getPropertyType());
+    txobj.push_back(Pair("amount", strAmount)); // crowdsale token creations don't issue tokens with the create tx
 }
 
 void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, Object& txobj)
 {
     LOCK(cs_tally);
     uint32_t propertyId = _my_sps->findSPByTX(omniObj.getHash());
+    if (propertyId > 0) txobj.push_back(Pair("propertyid", (uint64_t) propertyId));
+    if (propertyId > 0) txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
 
-    txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
+    txobj.push_back(Pair("propertytype", strPropertyType(omniObj.getPropertyType())));
+    txobj.push_back(Pair("ecosystem", strEcosystem(omniObj.getEcosystem())));
+    txobj.push_back(Pair("category", omniObj.getSPCategory()));
+    txobj.push_back(Pair("subcategory", omniObj.getSPSubCategory()));
     txobj.push_back(Pair("propertyname", omniObj.getSPName()));
-    txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-    txobj.push_back(Pair("amount", FormatMP(propertyId, 0))); // managed token creations don't issue tokens with the create tx
+    txobj.push_back(Pair("data", omniObj.getSPData()));
+    txobj.push_back(Pair("url", omniObj.getSPUrl()));
+    std::string strAmount = FormatByType(0, omniObj.getPropertyType());
+    txobj.push_back(Pair("amount", strAmount)); // managed token creations don't issue tokens with the create tx
 }
 
 void populateRPCTypeCloseCrowdsale(CMPTransaction& omniObj, Object& txobj)

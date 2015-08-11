@@ -33,7 +33,7 @@ using boost::algorithm::token_compress_on;
 using namespace mastercore;
 
 /** Returns a label for the given transaction type. */
-std::string mastercore::c_strMasterProtocolTXType(uint16_t txType)
+std::string mastercore::strTransactionType(uint16_t txType)
 {
     switch (txType) {
         case MSC_TYPE_SIMPLE_SEND: return "Simple Send";
@@ -171,7 +171,7 @@ bool CMPTransaction::interpret_TransactionType()
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t------------------------------\n");
         PrintToLog("\t         version: %d, class %s\n", txVersion, intToClass(encodingClass));
-        PrintToLog("\t            type: %d (%s)\n", txType, c_strMasterProtocolTXType(txType));
+        PrintToLog("\t            type: %d (%s)\n", txType, strTransactionType(txType));
     }
 
     return true;
@@ -399,14 +399,14 @@ bool CMPTransaction::interpret_CreatePropertyFixed()
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", ecosystem);
-        PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+        PrintToLog("\t   property type: %d (%s)\n", prop_type, strPropertyType(prop_type));
         PrintToLog("\tprev property id: %d\n", prev_prop_id);
         PrintToLog("\t        category: %s\n", category);
         PrintToLog("\t     subcategory: %s\n", subcategory);
         PrintToLog("\t            name: %s\n", name);
         PrintToLog("\t             url: %s\n", url);
         PrintToLog("\t            data: %s\n", data);
-        PrintToLog("\t           value: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+        PrintToLog("\t           value: %s\n", FormatByType(nValue, prop_type));
     }
 
     if (isOverrun(p)) {
@@ -455,7 +455,7 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", ecosystem);
-        PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+        PrintToLog("\t   property type: %d (%s)\n", prop_type, strPropertyType(prop_type));
         PrintToLog("\tprev property id: %d\n", prev_prop_id);
         PrintToLog("\t        category: %s\n", category);
         PrintToLog("\t     subcategory: %s\n", subcategory);
@@ -463,7 +463,7 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
         PrintToLog("\t             url: %s\n", url);
         PrintToLog("\t            data: %s\n", data);
         PrintToLog("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
-        PrintToLog("\t tokens per unit: %s\n", prop_type == 1 ? FormatIndivisibleMP(nValue) : FormatDivisibleMP(nValue));
+        PrintToLog("\t tokens per unit: %s\n", FormatByType(nValue, prop_type));
         PrintToLog("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
         PrintToLog("\tearly bird bonus: %d\n", early_bird);
         PrintToLog("\t    issuer bonus: %d\n", percentage);
@@ -519,7 +519,7 @@ bool CMPTransaction::interpret_CreatePropertyManaged()
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", ecosystem);
-        PrintToLog("\t   property type: %d (%s)\n", prop_type, c_strPropertyType(prop_type));
+        PrintToLog("\t   property type: %d (%s)\n", prop_type, strPropertyType(prop_type));
         PrintToLog("\tprev property id: %d\n", prev_prop_id);
         PrintToLog("\t        category: %s\n", category);
         PrintToLog("\t     subcategory: %s\n", subcategory);

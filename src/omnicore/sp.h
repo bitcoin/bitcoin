@@ -209,7 +209,8 @@ typedef std::map<std::string, CMPCrowd> CrowdMap;
 extern CMPSPInfo* _my_sps;
 extern CrowdMap my_crowds;
 
-const char* c_strPropertyType(uint16_t propertyType);
+std::string strPropertyType(uint16_t propertyType);
+std::string strEcosystem(uint8_t ecosystem);
 
 std::string getPropertyName(uint32_t propertyId);
 bool isPropertyDivisible(uint32_t propertyId);

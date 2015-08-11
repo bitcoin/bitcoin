@@ -43,7 +43,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     txobj.push_back(Pair("sendingaddress", sendingAddress));
     if (!refAddress.empty()) txobj.push_back(Pair("referenceaddress", refAddress));
     txobj.push_back(Pair("confirmations", 0));
-    txobj.push_back(Pair("type", c_strMasterProtocolTXType(type)));
+    txobj.push_back(Pair("type", strTransactionType(type)));
     switch (type) {
         case MSC_TYPE_SIMPLE_SEND:
             txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
