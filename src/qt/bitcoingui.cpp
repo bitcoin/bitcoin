@@ -771,12 +771,12 @@ void BitcoinGUI::setNumBlocks(int count)
             spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
             prevAttempt = masternodeSync.RequestedMasternodeAttempt + 1;
             prevAssets = masternodeSync.RequestedMasternodeAssets;
-            if(prevAttempt <= 4) progress = prevAttempt + (prevAssets - 1) * 4;
+            if(prevAttempt <= MASTERNODE_SYNC_TRESHOLD) progress = prevAttempt + (prevAssets - 1) * MASTERNODE_SYNC_TRESHOLD;
             progressBar->setValue(progress);
         }
         switch (masternodeSync.RequestedMasternodeAssets) {
             case MASTERNODE_SYNC_SPORKS:
-                progressBar->setMaximum(4 * 4);
+                progressBar->setMaximum(4 * MASTERNODE_SYNC_TRESHOLD);
                 progressBarLabel->setText(tr("Synchronizing sporks..."));
                 break;
             case MASTERNODE_SYNC_LIST:
