@@ -1382,11 +1382,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
-        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
-        strAutoDenomResult = _("Last successful Darksend action was too recent.");
-        return false;
-    }
+    // if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+    //     LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
+    //     strAutoDenomResult = _("Last successful Darksend action was too recent.");
+    //     return false;
+    // }
 
     if(mnodeman.size() == 0){
         LogPrint("darksend", "CDarksendPool::DoAutomaticDenominating - No Masternodes detected\n");
