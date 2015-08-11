@@ -40,16 +40,20 @@ static int64_t abs64(int64_t n)
     return (n >= 0 ? n : -n);
 }
 
+#define BITCOIN_TIMEDATA_MAX_SAMPLES 200
+
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
     static set<CNetAddr> setKnown;
+    if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
+        return;
     if (!setKnown.insert(ip).second)
         return;
 
     // Add data
-    static CMedianFilter<int64_t> vTimeOffsets(200,0);
+    static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
     vTimeOffsets.input(nOffsetSample);
     LogPrintf("Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample/60);
 
