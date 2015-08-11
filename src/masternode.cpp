@@ -113,7 +113,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = mnb.protocolVersion;
-    nLastDsq = mn.nLastDsq;
+    nLastDsq = mnb.nLastDsq;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
     lastTimeChecked = 0;
