@@ -197,10 +197,10 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
-    progressBarLabel->setVisible(false);
+    progressBarLabel->setVisible(true);
     progressBar = new GUIUtil::ProgressBar();
     progressBar->setAlignment(Qt::AlignCenter);
-    progressBar->setVisible(false);
+    progressBar->setVisible(true);
 
     // Override style sheet for progress bar for styles that have a segmented progress bar,
     // as they make the text unreadable (workaround for issue #1071)
@@ -755,18 +755,49 @@ void BitcoinGUI::setNumBlocks(int count)
     tooltip = tr("Processed %n blocks of transaction history.", "", count);
 
     // Set icon state: spinning if catching up, tick otherwise
-    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
+//    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
+    if(masternodeSync.IsBlockchainSynced())
     {
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
-        labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
+        static int prevAttempt = -1;
+        static int prevAssets = -1;
+        static int progress = 0;
+        if(masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets)
+        {
+            labelBlocksIcon->setPixmap(QIcon(QString(
+                ":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
+                .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+            spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
+            prevAttempt = masternodeSync.RequestedMasternodeAttempt + 1;
+            prevAssets = masternodeSync.RequestedMasternodeAssets;
+            if(prevAttempt <= MASTERNODE_SYNC_TRESHOLD) progress = prevAttempt + (prevAssets - 1) * MASTERNODE_SYNC_TRESHOLD;
+            progressBar->setValue(progress);
+        }
+        switch (masternodeSync.RequestedMasternodeAssets) {
+            case MASTERNODE_SYNC_SPORKS:
+                progressBar->setMaximum(4 * MASTERNODE_SYNC_TRESHOLD);
+                progressBarLabel->setText(tr("Synchronizing sporks..."));
+                break;
+            case MASTERNODE_SYNC_LIST:
+                progressBarLabel->setText(tr("Synchronizing masternodes..."));
+                break;
+            case MASTERNODE_SYNC_MNW:
+                progressBarLabel->setText(tr("Synchronizing masternode winners..."));
+                break;
+            case MASTERNODE_SYNC_BUDGET:
+                progressBarLabel->setText(tr("Synchronizing budgets..."));
+                break;
+            case MASTERNODE_SYNC_FINISHED:
 #ifdef ENABLE_WALLET
-        if(walletFrame)
-            walletFrame->showOutOfSyncWarning(false);
+                if(walletFrame)
+                    walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
-
-        progressBarLabel->setVisible(false);
-        progressBar->setVisible(false);
+                progressBarLabel->setVisible(false);
+                progressBar->setVisible(false);
+                labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+                break;
+        }
     }
     else
     {
