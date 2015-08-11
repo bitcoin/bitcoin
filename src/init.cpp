@@ -900,7 +900,7 @@ bool AppInit2(boost::thread_group& threadGroup)
             if (filesystem::exists(backupDir))
             {
                 // Create backup of the wallet
-                std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H.%M", GetTime());
+                std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
                 std::string backupPathStr = backupDir.string();
                 backupPathStr += "/" + strWalletFile;
                 std::string sourcePathStr = GetDataDir().string();
@@ -930,7 +930,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                     {
                         currentFile = dir_iter->path().filename();
                         // Only add the backups for the current wallet, e.g. wallet.dat.*
-                        if(currentFile.string().find(strWalletFile) != string::npos)
+                        if(dir_iter->path().stem().string() == strWalletFile)
                         {
                             folder_set.insert(folder_set_t::value_type(boost::filesystem::last_write_time(dir_iter->path()), *dir_iter));
                         }
