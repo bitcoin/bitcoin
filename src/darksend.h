@@ -335,7 +335,7 @@ public:
         cachedNumBlocks = 0;
         unitTest = false;
         txCollateral = CMutableTransaction();
-        minBlockSpacing = 1;
+        minBlockSpacing = 0;
         lastNewBlock = 0;
 
         SetNull();
