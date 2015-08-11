@@ -7,6 +7,7 @@
 
 #include <QDialog>
 
+class PlatformStyle;
 class WalletModel;
 
 namespace Ui {
@@ -18,7 +19,7 @@ class SignVerifyMessageDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SignVerifyMessageDialog(QWidget *parent);
+    explicit SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent);
     ~SignVerifyMessageDialog();
 
     void setModel(WalletModel *model);
@@ -34,6 +35,7 @@ protected:
 private:
     Ui::SignVerifyMessageDialog *ui;
     WalletModel *model;
+    const PlatformStyle *platformStyle;
 
 private Q_SLOTS:
     /* sign message */

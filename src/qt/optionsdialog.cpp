@@ -35,7 +35,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui(new Ui::OptionsDialog),
     model(0),
     mapper(0),
-    fProxyIpValid(true)
+    fProxyIpsValid(true)
 {
     ui->setupUi(this);
 
@@ -54,10 +54,18 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->proxyPort->setEnabled(false);
     ui->proxyPort->setValidator(new QIntValidator(1, 65535, this));
 
+    ui->proxyIpTor->setEnabled(false);
+    ui->proxyPortTor->setEnabled(false);
+    ui->proxyPortTor->setValidator(new QIntValidator(1, 65535, this));
+
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyIp, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyPort, SLOT(setEnabled(bool)));
 
+    connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyIpTor, SLOT(setEnabled(bool)));
+    connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyPortTor, SLOT(setEnabled(bool)));
+
     ui->proxyIp->installEventFilter(this);
+    ui->proxyIpTor->installEventFilter(this);
 
     /* Window elements init */
 #ifdef Q_OS_MAC
@@ -110,7 +118,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
 
-    /* setup/change UI elements when proxy IP is invalid/valid */
+    /* setup/change UI elements when proxy IPs are invalid/valid */
     connect(this, SIGNAL(proxyIpChecks(QValidatedLineEdit *, int)), this, SLOT(doProxyIpChecks(QValidatedLineEdit *, int)));
 }
 
@@ -137,6 +145,8 @@ void OptionsDialog::setModel(OptionsModel *model)
         mapper->setModel(model);
         setMapper();
         mapper->toFirst();
+
+        updateDefaultProxyNets();
     }
 
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
@@ -149,6 +159,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
@@ -173,6 +184,10 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->proxyIp, OptionsModel::ProxyIP);
     mapper->addMapping(ui->proxyPort, OptionsModel::ProxyPort);
 
+    mapper->addMapping(ui->connectSocksTor, OptionsModel::ProxyUseTor);
+    mapper->addMapping(ui->proxyIpTor, OptionsModel::ProxyIPTor);
+    mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
+
     /* Window */
 #ifndef Q_OS_MAC
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
@@ -188,7 +203,7 @@ void OptionsDialog::setMapper()
 void OptionsDialog::enableOkButton()
 {
     /* prevent enabling of the OK button when data modified, if there is an invalid proxy address present */
-    if(fProxyIpValid)
+    if(fProxyIpsValid)
         setOkButtonState(true);
 }
 
@@ -224,6 +239,7 @@ void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
     accept();
+    updateDefaultProxyNets();
 }
 
 void OptionsDialog::on_cancelButton_clicked()
@@ -257,11 +273,10 @@ void OptionsDialog::doProxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPo
 {
     Q_UNUSED(nProxyPort);
 
-    const std::string strAddrProxy = pUiProxyIp->text().toStdString();
     CService addrProxy;
 
     /* Check for a valid IPv4 / IPv6 address */
-    if (!(fProxyIpValid = LookupNumeric(strAddrProxy.c_str(), addrProxy)))
+    if (!(fProxyIpsValid = LookupNumeric(pUiProxyIp->text().toStdString().c_str(), addrProxy)))
     {
         disableOkButton();
         pUiProxyIp->setValid(false);
@@ -275,6 +290,28 @@ void OptionsDialog::doProxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPo
     }
 }
 
+void OptionsDialog::updateDefaultProxyNets()
+{
+    proxyType proxy;
+    std::string strProxy;
+    QString strDefaultProxyGUI;
+
+    GetProxy(NET_IPV4, proxy);
+    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
+    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
+    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
+
+    GetProxy(NET_IPV6, proxy);
+    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
+    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
+    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
+
+    GetProxy(NET_TOR, proxy);
+    strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
+    strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
+    (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+}
+
 bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type() == QEvent::FocusOut)
@@ -282,6 +319,10 @@ bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
         if(object == ui->proxyIp)
         {
             Q_EMIT proxyIpChecks(ui->proxyIp, ui->proxyPort->text().toInt());
+        }
+        else if(object == ui->proxyIpTor)
+        {
+            Q_EMIT proxyIpChecks(ui->proxyIpTor, ui->proxyPortTor->text().toInt());
         }
     }
     return QDialog::eventFilter(object, event);
