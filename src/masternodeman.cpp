@@ -634,11 +634,10 @@ void CMasternodeMan::ProcessMasternodeConnections()
     //we don't care about this for regtest
     if(Params().NetworkID() == CBaseChainParams::REGTEST) return;
 
-    if(!darkSendPool.pSubmittedToMasternode) return;
-
-    CNode* pnode = FindNode(darkSendPool.pSubmittedToMasternode->addr);
-    if(pnode != NULL) {
+    LOCK(cs_vNodes);
+    BOOST_FOREACH(CNode* pnode, vNodes) {
         if(pnode->fDarkSendMaster){
+            if(darkSendPool.pSubmittedToMasternode != NULL && pnode->addr == darkSendPool.pSubmittedToMasternode->addr) continue;
             LogPrintf("Closing Masternode connection %s \n", pnode->addr.ToString());
             pnode->fDisconnect = true;
         }
