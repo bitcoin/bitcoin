@@ -301,6 +301,7 @@ public:
         READWRITE(sigTime);
         READWRITE(protocolVersion);
         READWRITE(lastPing);
+        READWRITE(nLastDsq);
     }
 
     uint256 GetHash(){
