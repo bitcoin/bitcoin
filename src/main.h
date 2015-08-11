@@ -455,7 +455,16 @@ extern CBlockTreeDB *pblocktree;
  */
 int GetSpendHeight(const CCoinsViewCache& inputs);
 
-/** local "reject" message codes for RPC which can not be triggered by p2p trasactions */
+/** Reject codes greater or equal to this can be returned by AcceptToMemPool
+ * for transactions, to signal internal conditions. They cannot and should not
+ * be sent over the P2P network.
+ */
+static const unsigned int REJECT_INTERNAL = 0x100;
+/** Too high fee. Can not be triggered by P2P transactions */
 static const unsigned int REJECT_HIGHFEE = 0x100;
+/** Transaction is already known (either in mempool or blockchain) */
+static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
+/** Transaction conflicts with a transaction already known */
+static const unsigned int REJECT_CONFLICT = 0x102;
 
 #endif // BITCOIN_MAIN_H
