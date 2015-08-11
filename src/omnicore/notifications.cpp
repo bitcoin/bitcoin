@@ -8,6 +8,7 @@
 
 #include "main.h"
 #include "util.h"
+#include "ui_interface.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -19,8 +20,41 @@
 namespace mastercore
 {
 
-//! Stores alert messages for Omni Core
-static std::string global_alert_message;
+//! Vector of currently active Omni alerts
+std::vector<AlertData> currentOmniAlerts;
+
+/**
+ * Adds a new alert to the alerts vector
+ *
+ */
+void AddAlert(uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage)
+{
+    AlertData newAlert;
+    newAlert.alert_type = alertType;
+    newAlert.alert_expiry = alertExpiry;
+    newAlert.alert_message = alertMessage;
+
+    // very basic sanity checks to catch malformed packets
+    if (alertType > 3) {
+        PrintToLog("New alert REJECTED (alert type not recognized): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+        return;
+    }
+    if (alertType == 1 && alertExpiry > 999999) {
+        PrintToLog("New alert REJECTED (block value too large): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+        return;
+    }
+    if (alertType == 2 && (alertExpiry < 1439256200 || alertExpiry > 1639256200)) {
+        PrintToLog("New alert REJECTED (block time values invalid): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+        return;
+    }
+    if (alertType == 3 && (alertExpiry < 100 || alertExpiry > 900000)) {
+        PrintToLog("New alert REJECTED (client version invalid): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+        return;
+    }
+
+    currentOmniAlerts.push_back(newAlert);
+    PrintToLog("New alert added: %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+}
 
 /**
  * Determines whether the sender is an authorized source for Omni Core alerts.
@@ -74,38 +108,23 @@ bool CheckAlertAuthorization(const std::string& sender)
 }
 
 /**
- * Alert string including meta data.
+ * Alerts including meta data.
  */
-std::string GetOmniCoreAlertString()
+std::vector<AlertData> GetOmniCoreAlerts()
 {
-    return global_alert_message;
+    return currentOmniAlerts;
 }
 
 /**
- * Human readable alert message.
+ * Human readable alert messages.
  */
-std::string GetOmniCoreAlertTextOnly()
+std::vector<std::string> GetOmniCoreAlertMessages()
 {
-    std::string message;
     std::vector<std::string> vstr;
-    if (!global_alert_message.empty()) {
-        boost::split(vstr, global_alert_message, boost::is_any_of(":"), boost::token_compress_on);
-        // make sure there are 5 tokens, 5th is text message
-        if (5 == vstr.size()) {
-            message = vstr[4];
-        } else {
-            PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, there are not 5 tokens\n");
-        }
+    for (std::vector<AlertData>::iterator it = currentOmniAlerts.begin(); it != currentOmniAlerts.end(); it++) {
+        vstr.push_back((*it).alert_message);
     }
-    return message;
-}
-
-/**
- * Sets the alert string.
- */
-void SetOmniCoreAlert(const std::string& alertMessage)
-{
-    global_alert_message = alertMessage;
+    return vstr;
 }
 
 /**
@@ -113,108 +132,44 @@ void SetOmniCoreAlert(const std::string& alertMessage)
  */
 bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
 {
-    int32_t alertType = 0;
-    uint64_t expiryValue = 0;
-    uint32_t typeCheck = 0;
-    uint32_t verCheck = 0;
-    std::string alertMessage;
-    if (!global_alert_message.empty()) {
-        bool parseSuccess = ParseAlertMessage(global_alert_message, alertType, expiryValue, typeCheck, verCheck, alertMessage);
-        if (parseSuccess) {
-            switch (alertType) {
-                case 1: //Text based alert only expiring by block number, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
-                    if (curBlock > expiryValue) {
-                        //the alert has expired, clear the global alert string
-                        PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                        global_alert_message = "";
-                        return true;
-                    }
-                    break;
-                case 2: //Text based alert only expiring by block time, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
-                    if (curTime > expiryValue) {
-                        //the alert has expired, clear the global alert string
-                        PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                        global_alert_message = "";
-                        return true;
-                    }
-                    break;
-                case 3: //Text based alert only expiring by client version, show alert in UI and getalert_MP call, ignores type check value (eg use 0)
-                    if (OMNICORE_VERSION > expiryValue) {
-                        //the alert has expired, clear the global alert string
-                        PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                        global_alert_message = "";
-                        return true;
-                    }
-                    break;
-                case 4: //Update alert, show upgrade alert in UI and getalert_MP call + use isTransactionTypeAllowed to verify client support and shutdown if not present
-                    //check of the new tx type is supported at live block
-                    bool txSupported = IsTransactionTypeAllowed(expiryValue + 1, OMNI_PROPERTY_MSC, typeCheck, verCheck);
-
-                    //check if we are at/past the live blockheight                    
-                    bool txLive = (curBlock > (int64_t) expiryValue);
-
-                    //testnet allows all types of transactions, so override this here for testing
-                    if (isNonMainNet()) {
-                        txSupported = true; //testing
-                        //txLive = true; //testing
-                    }
-
-                    if ((!txSupported) && (txLive)) {
-                        // we know we have transactions live we don't understand
-                        // can't be trusted to provide valid data, shutdown
-                        PrintToLog("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message);
-                        PrintToConsole("DEBUG ALERT - Shutting down due to unsupported live TX - alert string %s\n", global_alert_message); // echo to screen
-                        if (!GetBoolArg("-overrideforcedshutdown", false)) {
-                            std::string msgText = "Shutting down due to alert: " + GetOmniCoreAlertTextOnly();
-                            AbortNode(msgText, msgText); // show same message to user as that which is logged
-                        }
-                        return false;
-                    }
-
-                    if ((!txSupported) && (!txLive)) {
-                        // warn the user this version does not support the new coming TX and they will need to update
-                        // we don't actually need to take any action here, we leave the alert string in place and simply don't expire it
-                    }
-
-                    if (txSupported) {
-                        // we can simply expire this update as this version supports the new coming TX
-                        PrintToLog("DEBUG ALERT - Expiring alert string %s\n", global_alert_message);
-                        global_alert_message = "";
-                        return true;
-                    }
-                    break;
-            }
+    for (std::vector<AlertData>::iterator it = currentOmniAlerts.begin(); it != currentOmniAlerts.end(); ) {
+        AlertData alert = *it;
+        switch (alert.alert_type) {
+            case 1: // alert expiring by block number
+                if (curBlock >= alert.alert_expiry) {
+                    PrintToLog("Expiring alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    it = currentOmniAlerts.erase(it);
+                    uiInterface.OmniStateChanged();
+                } else {
+                    it++;
+                }
+            break;
+            case 2: // alert expiring by block time
+                if (curTime > alert.alert_expiry) {
+                    PrintToLog("Expiring alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    it = currentOmniAlerts.erase(it);
+                    uiInterface.OmniStateChanged();
+                } else {
+                    it++;
+                }
+            break;
+            case 3: // alert expiring by client version
+                if (OMNICORE_VERSION > alert.alert_expiry) {
+                    PrintToLog("Expiring alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    it = currentOmniAlerts.erase(it);
+                    uiInterface.OmniStateChanged();
+                } else {
+                    it++;
+                }
+            break;
+            default: // unrecognized alert type
+                    PrintToLog("Removing invalid alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    it = currentOmniAlerts.erase(it);
+                    uiInterface.OmniStateChanged();
+            break;
         }
     }
-    return false;
+    return true;
 }
-
-/**
- * Parses an alert string.
- */
-bool ParseAlertMessage(const std::string& rawAlertStr, int32_t& alertType, uint64_t& expiryValue, uint32_t& typeCheck, uint32_t& verCheck, std::string& alertMessage)
-{
-    std::vector<std::string> vstr;
-    boost::split(vstr, rawAlertStr, boost::is_any_of(":"), boost::token_compress_on);
-    if (5 == vstr.size()) {
-        try {
-            alertType = boost::lexical_cast<int32_t>(vstr[0]);
-            expiryValue = boost::lexical_cast<uint64_t>(vstr[1]);
-            typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
-            verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
-        } catch (const boost::bad_lexical_cast& e) {
-            PrintToLog("DEBUG ALERT - error in converting values from global alert string: %s\n", e.what());
-            return false;
-        }
-        alertMessage = vstr[4];
-        if ((alertType < 1) || (alertType > 4) || (expiryValue == 0)) {
-            PrintToLog("DEBUG ALERT ERROR - Something went wrong decoding the global alert string, values are not as expected.\n");
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
 
 } // namespace mastercore

@@ -1119,7 +1119,7 @@ Value omni_sendactivation(const Array& params, bool fHelp)
 
 Value omni_sendalert(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 6)
+    if (fHelp || params.size() != 4)
         throw runtime_error(
             "omni_sendalert \"fromaddress\" alerttype expiryvalue typecheck versioncheck \"message\"\n"
             "\nCreates and broadcasts an Omni Core alert.\n"
@@ -1127,10 +1127,8 @@ Value omni_sendalert(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
             "2. alerttype            (number, required) the alert type\n"
-            "3. expiryvalue          (number, required) the block when the alert expires\n"
-            "4. typecheck            (number, required) the transaction type to target\n"
-            "5. versioncheck         (number, required) the client version to target\n"
-            "6. message              (string, required) the user-faced alert message\n"
+            "3. expiryvalue          (number, required) the value when the alert expires (depends on alert type)\n"
+            "4. message              (string, required) the user-faced alert message\n"
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
             "\nExamples:\n"
@@ -1140,14 +1138,20 @@ Value omni_sendalert(const Array& params, bool fHelp)
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
-    int32_t alertType = params[1].get_int();
-    uint64_t expiryValue = params[2].get_uint64();
-    uint32_t typeCheck = params[3].get_uint64();
-    uint32_t verCheck = params[4].get_uint64();
-    std::string alertMessage = ParseText(params[5]);
+    int64_t tempAlertType = params[1].get_int64();
+    if (tempAlertType < 1 || 65535 < tempAlertType) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Alert type is out of range");
+    }
+    uint16_t alertType = static_cast<uint16_t>(tempAlertType);
+    int64_t tempExpiryValue = params[2].get_int64();
+    if (tempExpiryValue < 1 || 4294967295LL < tempExpiryValue) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Expiry value is out of range");
+    }
+    uint32_t expiryValue = static_cast<uint32_t>(tempExpiryValue);
+    std::string alertMessage = ParseText(params[3]);
 
     // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_OmniCoreAlert(alertType, expiryValue, typeCheck, verCheck, alertMessage);
+    std::vector<unsigned char> payload = CreatePayload_OmniCoreAlert(alertType, expiryValue, alertMessage);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid;

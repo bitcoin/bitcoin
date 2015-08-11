@@ -640,15 +640,23 @@ bool CMPTransaction::interpret_Activation()
 /** Tx 65535 */
 bool CMPTransaction::interpret_Alert()
 {
-    if (pkt_size < 5) {
+    if (pkt_size < 11) {
         return false;
     }
-    const char* p = 4 + (char*) &pkt;
+
+    memcpy(&alert_type, &pkt[4], 2);
+    swapByteOrder16(alert_type);
+    memcpy(&alert_expiry, &pkt[6], 4);
+    swapByteOrder32(alert_expiry);
+
+    const char* p = 10 + (char*) &pkt;
     std::string spstr(p);
-    memcpy(alertString, spstr.c_str(), std::min(spstr.length(), sizeof(alertString)-1));
+    memcpy(alert_text, spstr.c_str(), std::min(spstr.length(), sizeof(alert_text)-1));
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
-        PrintToLog("\t           alert: %s\n", alertString);
+        PrintToLog("\t      alert type: %d\n", alert_type);
+        PrintToLog("\t    expiry value: %d\n", alert_expiry);
+        PrintToLog("\t   alert message: %s\n", alert_text);
     }
 
     if (isOverrun(p)) {
@@ -1922,44 +1930,11 @@ int CMPTransaction::logicMath_Alert()
         return (PKT_ERROR -51);
     }
 
-    // authorized, decode and make sure there are 4 tokens, then replace global_alert_message
-    std::vector<std::string> vstr;
-    boost::split(vstr, alertString, boost::is_any_of(":"), boost::token_compress_on);
-
-    if (5 != vstr.size()) {
-        // there are not 5 tokens in the alert, badly formed alert and must discard
-        PrintToLog("\t    packet error: badly formed alert != 5 tokens\n");
-        return (PKT_ERROR -52);
-    }
-
-    int32_t alertType;
-    uint64_t expiryValue;
-    uint32_t typeCheck;
-    uint32_t verCheck;
-    std::string alertMessage;
-
-    try {
-        alertType = boost::lexical_cast<int32_t>(vstr[0]);
-        expiryValue = boost::lexical_cast<uint64_t>(vstr[1]);
-        typeCheck = boost::lexical_cast<uint32_t>(vstr[2]);
-        verCheck = boost::lexical_cast<uint32_t>(vstr[3]);
-    } catch (const boost::bad_lexical_cast &e) {
-        PrintToLog("%s(): rejected: failed to parse values: %s\n", __func__, e.what());
-        return (PKT_ERROR -53);
-    }
-
-    alertMessage = vstr[4];
-    PrintToLog("\t    message type: %d\n", alertType);
-    PrintToLog("\t    expiry value: %d\n", expiryValue);
-    PrintToLog("\t      type check: %d\n", typeCheck);
-    PrintToLog("\t       ver check: %d\n", verCheck);
-    PrintToLog("\t   alert message: %s\n", alertMessage);
-
-    // copy the alert string into the global_alert_message and return a 0 rc
-    SetOmniCoreAlert(alertString);
+    // add the alert
+    AddAlert(alert_type, alert_expiry, alert_text);
 
     // we have a new alert, fire a notify event if needed
-    CAlert::Notify(alertMessage, true);
+    CAlert::Notify(alert_text, true);
 
     return 0;
 }

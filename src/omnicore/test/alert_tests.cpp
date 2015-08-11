@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(alert_authorize_any_source)
     mapMultiArgs = mapMultiArgsOriginal;
     mapArgs = mapArgsOriginal;
 }
-
+/*
 BOOST_AUTO_TEST_CASE(alert_parsing)
 {
     int32_t alertType = 0;
@@ -171,6 +171,6 @@ BOOST_AUTO_TEST_CASE(alert_expiration_by_version)
     BOOST_CHECK(GetOmniCoreAlertString().empty());
     BOOST_CHECK(GetOmniCoreAlertTextOnly().empty());
 }
-
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

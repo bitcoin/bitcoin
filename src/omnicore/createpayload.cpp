@@ -414,21 +414,22 @@ std::vector<unsigned char> CreatePayload_ActivateFeature(uint16_t featureId, uin
     return payload;
 }
 
-std::vector<unsigned char> CreatePayload_OmniCoreAlert(int32_t alertType, uint64_t expiryValue, uint32_t typeCheck, uint32_t verCheck, const std::string& alertMessage)
+std::vector<unsigned char> CreatePayload_OmniCoreAlert(uint16_t alertType, uint32_t expiryValue, const std::string& alertMessage)
 {
     std::vector<unsigned char> payload;
     uint16_t messageType = 65535;
     uint16_t messageVer = 65535;
 
-    std::string strAlertPacket = strprintf("%d:%d:%d:%d:%s",
-            alertType, expiryValue, typeCheck, verCheck, alertMessage);
-
     mastercore::swapByteOrder16(messageVer);
     mastercore::swapByteOrder16(messageType);
+    mastercore::swapByteOrder16(alertType);
+    mastercore::swapByteOrder32(expiryValue);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
-    payload.insert(payload.end(), strAlertPacket.begin(), strAlertPacket.end());
+    PUSH_BACK_BYTES(payload, alertType);
+    PUSH_BACK_BYTES(payload, expiryValue);
+    payload.insert(payload.end(), alertMessage.begin(), alertMessage.end());
     payload.push_back('\0');
 
     return payload;

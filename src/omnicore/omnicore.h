@@ -244,7 +244,7 @@ public:
     bool exists(const uint256 &txid);
     bool getTX(const uint256 &txid, string &value);
 
-    int setLastAlert(int blockHeight);
+    void LoadAlerts(int blockHeight);
     void LoadActivations();
 
     void printStats();
