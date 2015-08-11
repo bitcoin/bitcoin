@@ -397,8 +397,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaste
         CNode* pnode = FindNode((CService)addrConnect);
         if (pnode)
         {
-            if(darkSendMaster)
-                pnode->fDarkSendMaster = true;
+            pnode->fDarkSendMaster = darkSendMaster;
 
             pnode->AddRef();
             return pnode;
@@ -2001,6 +2000,7 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
+    fDarkSendMaster = false;
 
     {
         LOCK(cs_nLastNodeId);
