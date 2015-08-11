@@ -20,6 +20,12 @@ import re
 from authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
+def null_file():
+    if os.name == 'nt':
+        return open("NUL", "w+")
+    else:
+	return open("/dev/null", "w+")
+
 def p2p_port(n):
     return 11000 + n + os.getpid()%999
 def rpc_port(n):
@@ -78,8 +84,16 @@ def initialize_chain(test_dir):
     bitcoind and bitcoin-cli must be in search path.
     """
 
-    if not os.path.isdir(os.path.join("cache", "node0")):
-        devnull = open("/dev/null", "w+")
+    if ( not os.path.isdir(os.path.join("cache", "node0"))
+             or not os.path.isdir(os.path.join("cache", "node1")) 
+             or not os.path.isdir(os.path.join("cache", "node2")) 
+             or not os.path.isdir(os.path.join("cache", "node3")) ):
+
+        #find and delete old cache directories if any exist
+        for i in range(4):
+	    if os.path.isdir(os.path.join("cache", "node"+str(i))): shutil.rmtree(os.path.join("cache", "node"+str(i)))
+
+        devnull = null_file()
         # Create cache directories, run bitcoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
@@ -171,9 +185,10 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
-    devnull = open("/dev/null", "w+")
+    devnull = null_file()
     if os.getenv("PYTHON_DEBUG", ""):
         print "start_node: bitcoind started, calling bitcoin-cli -rpcwait getblockcount"
+
     subprocess.check_call([ os.getenv("BITCOINCLI", "bitcoin-cli"), "-datadir="+datadir] +
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)
@@ -221,6 +236,7 @@ def wait_bitcoinds():
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))
+   
     from_connection.addnode(ip_port, "onetry")
     # poll until version handshake complete to avoid race conditions
     # with transaction relaying
