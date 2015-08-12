@@ -36,7 +36,7 @@ private:
 
     int pkt_size;
     unsigned char pkt[1 + MAX_PACKETS * PACKET_SIZE];
-    int multi;  // Class A = 0, Class B = 1, Class C = 2
+    int encodingClass;  // No Marker = 0, Class A = 1, Class B = 2, Class C = 3
 
     std::string sender;
     std::string receiver;
@@ -174,6 +174,7 @@ public:
     std::string getSPName() const { return name; }
     std::string getAlertString() const { return alertString; }
     bool isRpcOnly() const { return rpcOnly; }
+    int getEncodingClass() const { return encodingClass; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -191,7 +192,7 @@ public:
         tx_fee_paid = 0;
         pkt_size = 0;
         memset(&pkt, 0, sizeof(pkt));
-        multi = 0;
+        encodingClass = 0;
         sender.clear();
         receiver.clear();
         type = 0;
@@ -232,7 +233,7 @@ public:
 
     /** Sets the given values. */
     void Set(const std::string& s, const std::string& r, uint64_t n, const uint256& t,
-        int b, unsigned int idx, unsigned char *p, unsigned int size, int fMultisig, uint64_t txf)
+        int b, unsigned int idx, unsigned char *p, unsigned int size, int encodingClassIn, uint64_t txf)
     {
         sender = s;
         receiver = r;
@@ -242,7 +243,7 @@ public:
         pkt_size = size < sizeof (pkt) ? size : sizeof (pkt);
         nValue = n;
         nNewValue = n;
-        multi = fMultisig;
+        encodingClass = encodingClassIn;
         tx_fee_paid = txf;
         memcpy(&pkt, p, pkt_size);
     }

@@ -491,7 +491,12 @@ void CheckWalletUpdate(bool forceUpdate)
     uiInterface.OmniBalanceChanged();
 }
 
-int TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_t amountInvested, int nBlock, unsigned int nTime)
+/**
+ * Executes Exodus crowdsale purchases.
+ *
+ * @return True, if it was a valid purchase
+ */
+static bool TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_t amountInvested, int nBlock, unsigned int nTime)
 {
     const int secondsPerWeek = 60 * 60 * 24 * 7;
     const CConsensusParams& params = ConsensusParams();
@@ -501,21 +506,18 @@ int TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_
         double bonusPercentage = params.exodusBonusPerWeek * deadlineTimeleft / secondsPerWeek;
         double bonus = 1.0 + std::max(bonusPercentage, 0.0);
 
-        if (isNonMainNet()) {
-            // TODO: seems useless, if limited to non-mainnet; should be removed
-            if (sender == exodus_address) return 1; // sending from Exodus should not be fundraising anything
-        }
-
         int64_t amountGenerated = round(params.exodusReward * amountInvested * bonus);
-        PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
+        if (amountGenerated > 0) {
+            PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
 
-        // TODO: return result, grant somewhere else
-        update_tally_map(sender, OMNI_PROPERTY_MSC, amountGenerated, BALANCE);
-        update_tally_map(sender, OMNI_PROPERTY_TMSC, amountGenerated, BALANCE);
+            assert(update_tally_map(sender, OMNI_PROPERTY_MSC, amountGenerated, BALANCE));
+            assert(update_tally_map(sender, OMNI_PROPERTY_TMSC, amountGenerated, BALANCE));
 
-        return 0;
+            return true;
+        }
     }
-    return -1;
+
+    return false;
 }
 
 /**
@@ -996,7 +998,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         if (strDataAddress.empty()) // an empty Data Address here means it is not Class A valid and should be defaulted to a BTC payment
         {
             // this must be the BTC payment - validate (?)
-            if (!bRPConly || msc_debug_parser_readonly) {
+            if ((!bRPConly || msc_debug_parser_readonly) && msc_debug_parser_dex) {
                 PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
                 PrintToLog("!! this may be the BTC payment for an offer !!\n");
             }
@@ -1013,7 +1015,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                         const std::string strAddress = CBitcoinAddress(dest).ToString();
 
                         if (exodus_address == strAddress) continue;
-                        if (!bRPConly || msc_debug_parser_readonly) {
+                        if ((!bRPConly || msc_debug_parser_readonly) && msc_debug_parser_dex) {
                             PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
                         }
 
@@ -1151,9 +1153,17 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
     if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt, false));
 
-    mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *) &single_pkt, packet_size, fMultisig, (inAll - outAll));
+    int encodingClass = fMultisig ? OMNI_CLASS_B : OMNI_CLASS_A;
+    mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *) &single_pkt, packet_size, encodingClass, (inAll - outAll));
 
     return 0;
+}
+
+/** Determines, whether to fall back to legacy transaction parsing/processing. */
+static bool useLegacyProcessing(int nBlock)
+{
+    static bool fDisableLegacy = GetBoolArg("-omnidisablelegacy", false);
+    return (!IsAllowedOutputType(TX_NULL_DATA, nBlock) && !fDisableLegacy);
 }
 
 } // namespace legacy
@@ -1169,7 +1179,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     assert(bRPConly == mp_tx.isRpcOnly());
 
     // Fallback to legacy parsing, if OP_RETURN isn't enabled:
-    if (!IsAllowedOutputType(TX_NULL_DATA, nBlock)) {
+    if (legacy::useLegacyProcessing(nBlock)) {
         return legacy::parseTransaction(bRPConly, wtx, nBlock, idx, mp_tx, nTime);
     }
 
@@ -1274,23 +1284,6 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
     } else {
         PrintToLog("The sender is still EMPTY !!! txid: %s\n", wtx.GetHash().GetHex());
         return -5;
-    }
-
-    if (!bRPConly) {
-        // ### CHECK FOR ANY REQUIRED EXODUS CROWDSALE PAYMENTS ###
-        int64_t BTC_amount = 0;
-        for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
-            CTxDestination dest;
-            if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
-                if (CBitcoinAddress(dest) == ExodusCrowdsaleAddress(nBlock)) {
-                    BTC_amount = wtx.vout[n].nValue;
-                    break; // TODO: maybe sum all values
-                }
-            }
-        }
-        if (0 < BTC_amount) {
-            TXExodusFundraiser(wtx, strSender, BTC_amount, nBlock, nTime);
-        }
     }
 
     // ### DATA POPULATION ### - save output addresses, values and scripts
@@ -1402,30 +1395,10 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             packet_size = PACKET_SIZE_CLASS_A;
             memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
         } else {
-            // ### BTC PAYMENT FOR DEX HANDLING ###
-            if (!bRPConly || msc_debug_parser_readonly) {
+            if ((!bRPConly || msc_debug_parser_readonly) && msc_debug_parser_dex) {
                 PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
                 PrintToLog("!! this may be the BTC payment for an offer !!\n");
             }
-            // TODO collect all payments made to non-itself & non-exodus and their amounts -- these may be purchases!!!
-            int count = 0;
-            for (unsigned int n = 0; n < wtx.vout.size(); ++n) {
-                CTxDestination dest;
-                if (ExtractDestination(wtx.vout[n].scriptPubKey, dest)) {
-                    CBitcoinAddress address(dest);
-                    if (address == ExodusAddress()) {
-                        continue;
-                    }
-                    std::string strAddress = address.ToString();
-                    if (!bRPConly || msc_debug_parser_readonly) {
-                        PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(wtx.vout[n].nValue));
-                    }
-                    // check everything & pay BTC for the property we are buying here...
-                    if (bRPConly) count = 55555;  // no real way to validate a payment during simple RPC call
-                    else if (0 == DEx_payment(wtx.GetHash(), n, strAddress, strSender, wtx.vout[n].nValue, nBlock)) ++count;
-                }
-            }
-            return count ? count : -5678; // return count -- the actual number of payments within this TX or error if none were made
         }
     }
     // ### CLASS B / CLASS C PARSING ###
@@ -1540,9 +1513,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                 }
             }
             packet_size = mdata_count * (PACKET_SIZE - 1);
-            if (sizeof(single_pkt) < packet_size) {
-                return -111;
-            }
+            assert(packet_size <= sizeof(single_pkt));
 
             // ### FINALIZE CLASS B ###
             for (unsigned int m = 0; m < mdata_count; ++m) { // now decode mastercoin packets
@@ -1621,7 +1592,13 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 
     // ### SET MP TX INFO ###
     if (msc_debug_verbose) PrintToLog("single_pkt: %s\n", HexStr(single_pkt, packet_size + single_pkt));
-    mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass-1, (inAll-outAll));
+    mp_tx.Set(strSender, strReference, 0, wtx.GetHash(), nBlock, idx, (unsigned char *)&single_pkt, packet_size, omniClass, (inAll-outAll));
+
+    // TODO: the following is a bit aweful
+    // Provide a hint for DEx payments
+    if (omniClass == OMNI_CLASS_A && packet_size == 0) {
+        return 1;
+    }
 
     return 0;
 }
@@ -1632,6 +1609,65 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 int ParseTransaction(const CTransaction& tx, int nBlock, unsigned int idx, CMPTransaction& mptx, unsigned int nTime)
 {
     return parseTransaction(true, tx, nBlock, idx, mptx, nTime);
+}
+
+/**
+ * Handles potential DEx payments.
+ *
+ * Note: must *not* be called outside of the transaction handler, and it does not
+ * check, if a transaction marker exists.
+ *
+ * @return True, if valid
+ */
+static bool HandleDExPayments(const CTransaction& tx, int nBlock, const std::string& strSender)
+{
+    int count = 0;
+
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        CTxDestination dest;
+        if (ExtractDestination(tx.vout[n].scriptPubKey, dest)) {
+            CBitcoinAddress address(dest);
+            if (address == ExodusAddress()) {
+                continue;
+            }
+            std::string strAddress = address.ToString();
+            if (msc_debug_parser_dex) PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(tx.vout[n].nValue));
+
+            // check everything and pay BTC for the property we are buying here...
+            if (0 == DEx_payment(tx.GetHash(), n, strAddress, strSender, tx.vout[n].nValue, nBlock)) ++count;
+        }
+    }
+
+    return (count > 0);
+}
+
+/**
+ * Handles potential Exodus crowdsale purchases.
+ *
+ * Note: must *not* be called outside of the transaction handler, and it does not
+ * check, if a transaction marker exists.
+ *
+ * @return True, if it was a valid purchase
+ */
+static bool HandleExodusPurchase(const CTransaction& tx, int nBlock, const std::string& strSender, unsigned int nTime)
+{
+    int64_t amountInvested = 0;
+
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        CTxDestination dest;
+        if (ExtractDestination(tx.vout[n].scriptPubKey, dest)) {
+            if (CBitcoinAddress(dest) == ExodusCrowdsaleAddress(nBlock)) {
+                amountInvested = tx.vout[n].nValue;
+                break; // TODO: maybe sum all values
+            }
+        }
+    }
+
+    if (0 < amountInvested) {
+        return TXExodusFundraiser(tx, strSender, amountInvested, nBlock, nTime);
+    }
+
+    return false;
 }
 
 /**
@@ -1774,7 +1810,7 @@ static int msc_initial_scan(int nFirstBlock)
             if (!ReadBlockFromDisk(block, pblockindex)) break;
 
             BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-                if (0 == mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) nFound++;
+                if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nFound;
                 ++nTxNum;
             }
         }
@@ -2664,8 +2700,12 @@ int mastercore_shutdown()
     return 0;
 }
 
-// this is called for every new transaction that comes in (actually in block parsing loop)
-int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, CBlockIndex const * pBlockIndex)
+/**
+ * This handler is called for every new transaction that comes in (actually in block parsing loop).
+ *
+ * @return True, if the transaction was an Exodus purchase, DEx payment or a valid Omni transaction
+ */
+bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex)
 {
     LOCK(cs_tally);
 
@@ -2679,28 +2719,50 @@ int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, 
     // NOTE2: Plus I wanna clear the amount before that TX is parsed by our protocol, in case we ever consider pending amounts in internal calculations.
     PendingDelete(tx.GetHash());
 
-    // save the augmented offer or accept amount into the database as well (expecting them to be numerically lower than that in the blockchain)
-    int interp_ret = -555555, pop_ret;
-
-    if (nBlock < nWaterlineBlock) return -1; // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
+    // we do not care about parsing blocks prior to our waterline (empty blockchain defense)
+    if (nBlock < nWaterlineBlock) return false;
+    int64_t nBlockTime = pBlockIndex->GetBlockTime();
 
     CMPTransaction mp_obj;
     mp_obj.unlockLogic();
 
-    pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, pBlockIndex->GetBlockTime());
-    if (0 == pop_ret) {
-        // true MP transaction, validity (such as insufficient funds, or offer not found) is determined elsewhere
+    bool fFoundTx = false;
+    int pop_ret = parseTransaction(false, tx, nBlock, idx, mp_obj, nBlockTime);
 
-        interp_ret = mp_obj.interpretPacket();
-        if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
+    if (!legacy::useLegacyProcessing(nBlock))
+    {
+        /**
+         * Legacy transaction parsing also triggers Exodus purchases and DEx payments,
+         * so we need an extra path here.
+         */
 
-        // of course only MP-related TXs get recorded
-        bool bValid = (0 <= interp_ret);
+        if (pop_ret >= 0) {
+            assert(mp_obj.getEncodingClass() != NO_MARKER);
+            assert(mp_obj.getSender().empty() == false);
 
-        p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
+            fFoundTx |= HandleExodusPurchase(tx, nBlock, mp_obj.getSender(), nBlockTime);
+        }
+
+        if (pop_ret > 0) {
+            assert(mp_obj.getEncodingClass() == OMNI_CLASS_A);
+            assert(mp_obj.getPayload().empty() == true);
+
+            fFoundTx |= HandleDExPayments(tx, nBlock, mp_obj.getSender());
+        }
     }
 
-    return interp_ret;
+    if (0 == pop_ret) {
+        int interp_ret = mp_obj.interpretPacket();
+        if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
+
+        // only valid transactions get recorded
+        bool bValid = (0 <= interp_ret);
+        p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
+
+        fFoundTx |= (interp_ret == 0);
+    }
+
+    return fFoundTx;
 }
 
 // IsMine wrapper to determine whether the address is in our local wallet
