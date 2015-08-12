@@ -14,6 +14,15 @@ const int MONEYMAN_REGTEST_BLOCK = 101;
 //! Block to enable the Exodus fundraiser address on testnet
 const int MONEYMAN_TESTNET_BLOCK = 270775;
 
+//! Feature identifier to enable Class C transaction parsing and processing
+const uint16_t FEATURE_CLASS_C = 1;
+//! Feature identifier to enable the distributed token exchange
+const uint16_t FEATURE_METADEX = 2;
+//! Feature identifier to enable betting transactions
+const uint16_t FEATURE_BETTING = 3;
+//! Feature identifier to disable crowdsale participations when "granting tokens"
+const uint16_t FEATURE_GRANTEFFECTS = 4;
+
 /** A structure to represent transaction restrictions.
  */
 struct TransactionRestriction
@@ -88,6 +97,9 @@ public:
     //! Block to enable betting transactions
     int MSC_BET_BLOCK;
 
+    //! Block to deactivate crowdsale participations when "granting tokens"
+    int GRANTEFFECTS_FEATURE_BLOCK;
+
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;
 
@@ -147,6 +159,8 @@ CConsensusParams& MutableConsensusParams();
 
 /** Activates a feature at a specific block height. */
 bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock);
+/** Checks, whether a feature is activated at the given block. */
+bool IsFeatureActivated(uint16_t featureId, int transactionBlock);
 
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
