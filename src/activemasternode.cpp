@@ -1,4 +1,5 @@
 
+#include "addrman.h"
 #include "protocol.h"
 #include "activemasternode.h"
 #include "masternodeman.h"
@@ -259,6 +260,8 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
         LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
         return false;
     }
+
+    addrman.Add(CAddress(service), CNetAddr("127.0.0.1"), 2*60*60);
 
     return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage);
 }

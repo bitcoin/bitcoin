@@ -292,6 +292,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     unitTest = false;
     allowFreeTx = true;
     protocolVersion = PROTOCOL_VERSION;
+    nLastDsq = 0;
     nScanningErrorCount = 0;
     nLastScanningErrorBlockHeight = 0;
 }
