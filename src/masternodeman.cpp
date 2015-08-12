@@ -885,6 +885,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        static std::map<COutPoint, CPubKey> mapSeenDsee;
+        if(mapSeenDsee.count(vin.prevout) && mapSeenDsee[vin.prevout] == pubkey) {
+            LogPrint("mastenrode", "dsee - already seen this vin %s\n", vin.prevout.ToString());
+            return;
+        }
+        mapSeenDsee.insert(make_pair(vin.prevout, pubkey));
         // make sure the vout that was signed is related to the transaction that spawned the Masternode
         //  - this is expensive, so it's only done once per Masternode
         if(!darkSendSigner.IsVinAssociatedWithPubkey(vin, pubkey)) {
@@ -893,12 +899,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        static std::map<std::string, int64_t> mapSeenDsee;
-        if(mapSeenDsee.count(vin.prevout.ToString())) {
-            LogPrint("mastenrode", "dsee - already seen this vin %s %lld\n", vin.prevout.ToString(), mapSeenDsee[vin.prevout.ToString()]);
-            return;
-        }
-        mapSeenDsee.insert(make_pair(vin.prevout.ToString(), GetAdjustedTime()));
 
         LogPrint("masternode", "dsee - Got NEW OLD Masternode entry %s\n", addr.ToString().c_str());
 
