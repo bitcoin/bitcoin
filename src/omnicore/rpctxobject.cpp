@@ -43,20 +43,6 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     uint256 blockHash;
     if (!GetTransaction(txid, wtx, blockHash, true)) return MP_TX_NOT_FOUND;
 
-    if (0 == blockHash) {
-        // is it one of our pending transactions?  if so return pending description
-        LOCK(cs_pending);
-        PendingMap::iterator it = my_pending.find(txid);
-        if (it != my_pending.end()) {
-            const CMPPending& pending = it->second;
-            if (!filterAddress.empty() && pending.src != filterAddress) return -1;
-            Value tempVal;
-            json_spirit::read_string(pending.desc, tempVal);
-            txobj = tempVal.get_obj();
-            return 0;
-        }
-    }
-
     int confirmations = 0;
     int64_t blockTime = 0;
     int blockHeight = GetHeight();
