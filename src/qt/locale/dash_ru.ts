@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="ru" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="ru" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -295,12 +295,12 @@
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+107"/>
-        <location line="+728"/>
+        <location line="+759"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-719"/>
+        <location line="-750"/>
         <source>Wallet</source>
         <translation>Кошелёк</translation>
     </message>
@@ -636,12 +636,32 @@
         <translation>Источник блоков недоступен...</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Up to date</source>
         <translation>Синхронизировано</translation>
     </message>
+    <message>
+        <location line="+19"/>
+        <source>Synchronizing sporks...</source>
+        <translation>Синхронизация спорков...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing masternodes...</source>
+        <translation>Синхронизация списка мастернод...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Синхронизация списка мастернод-победителей...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing budgets...</source>
+        <translation>Синхронизация бюджетов...</translation>
+    </message>
     <message numerus="yes">
-        <location line="+21"/>
+        <location line="+23"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n час</numerusform><numerusform>%n часа</numerusform><numerusform>%n часов</numerusform><numerusform>%n часов</numerusform></translation>
     </message>
@@ -743,7 +763,12 @@ Address: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+173"/>
+        <location filename="../clientmodel.cpp" line="+73"/>
+        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
+        <translation>Всего: %1 (Совместимых с DS: %2 / Активных: %3)</translation>
+    </message>
+    <message>
+        <location line="+107"/>
         <source>Network Alert</source>
         <translation>Сетевая тревога</translation>
     </message>
@@ -1654,17 +1679,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Client restart required to activate changes.</source>
         <translation>Для применения изменений требуется перезапуск клиента.</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Client will be shutdown, do you want to proceed?</source>
         <translation>Клиент будет выключен, хотите продолжить?</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+35"/>
         <source>This change would require a client restart.</source>
         <translation>Это изменение потребует перезапуска клиента.</translation>
     </message>
@@ -1805,7 +1830,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+573"/>
-        <location filename="../overviewpage.cpp" line="+465"/>
+        <location filename="../overviewpage.cpp" line="+487"/>
         <location line="+10"/>
         <location line="+10"/>
         <location line="+14"/>
@@ -1853,7 +1878,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сбросить</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="-359"/>
+        <location filename="../overviewpage.cpp" line="-381"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
@@ -1863,32 +1888,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="+6"/>
         <location line="+1"/>
         <location line="+1"/>
-        <location line="+270"/>
+        <location line="+292"/>
         <source>Disabled</source>
         <translation>Выключен</translation>
     </message>
     <message>
-        <location line="-266"/>
-        <location line="+268"/>
+        <location line="-288"/>
+        <location line="+290"/>
         <location line="+91"/>
         <source>Start Darksend Mixing</source>
         <translation>Начать автоперемешивание</translation>
     </message>
     <message>
-        <location line="-357"/>
-        <location line="+360"/>
+        <location line="-379"/>
+        <location line="+382"/>
         <source>Stop Darksend Mixing</source>
         <translation>Остановить перемешивание</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-211"/>
         <location line="+6"/>
         <source>No inputs detected</source>
         <translation>Монеты не найдены</translation>
     </message>
     <message numerus="yes">
         <location line="-2"/>
-        <location line="+20"/>
+        <location line="+35"/>
         <location line="+10"/>
         <source>%n Rounds</source>
         <translation><numerusform>%n раунд</numerusform><numerusform>%n  раунда</numerusform><numerusform>%n раундов</numerusform><numerusform>%n раундов</numerusform></translation>
@@ -1899,7 +1924,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не достаточно совместимых средств для анонимизации &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br/&gt;будет анонимизировано только &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt;</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+46"/>
         <source>Overall progress</source>
         <translation>Прогресс в целом</translation>
     </message>
@@ -1919,12 +1944,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Номиналы прошли в среднем %5 из %n раунда</numerusform><numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform><numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform><numerusform>Номиналы прошли в среднем %5 из %n раундов</numerusform></translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-56"/>
         <source>Found enough compatible inputs to anonymize %1</source>
         <translation>Найдено достаточно совместимых средств для анонимизации %1</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+54"/>
         <source>Mixed</source>
         <translation>Перемешано</translation>
     </message>
@@ -2797,7 +2822,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+638"/>
         <location line="+12"/>
         <source>Send Coins</source>
         <translation>Отправка</translation>
@@ -3019,7 +3044,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Баланс:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-562"/>
+        <location filename="../sendcoinsdialog.cpp" line="-567"/>
         <source>Copy quantity</source>
         <translation>Копировать количество</translation>
     </message>
@@ -3105,7 +3130,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>добавлено в качестве комиссии транзакции</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
         <translation>Общая сумма = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
@@ -3115,7 +3140,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Подтвердите отправку монет</translation>
     </message>
     <message>
-        <location line="+238"/>
+        <location line="+241"/>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
         <translation>Комиссия в %1 раз выше, чем %2 за kB считается &quot;безумно высокой&quot;.</translation>
     </message>
@@ -3130,12 +3155,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Адрес получателя неверный, пожалуйста, перепроверьте.</translation>
     </message>
     <message>
-        <location line="-214"/>
+        <location line="-217"/>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(показано записей: %1 из %2)&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+217"/>
+        <location line="+220"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Сумма для отправки должна быть больше 0.</translation>
     </message>
@@ -4170,7 +4195,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+289"/>
+        <location filename="../walletmodel.cpp" line="+292"/>
         <location line="+9"/>
         <location line="+11"/>
         <source>Send Coins</source>
@@ -4249,7 +4274,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>При отправке Darksend использует только деноминированные средства, возможно, Вам просто нужно анонимизировать немного больше монет.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Войти в режим регрессионного тестирования, в котором используется специальная цепочка, где блоки находятся мгновенно.</translation>
     </message>
@@ -4295,11 +4320,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation>Указать внешний адрес:порт для доступа к этой мастерноде (например: адрес:порт)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Задать максимальный размер высокоприоритетных/низкокомиссионных транзакций в байтах (по умолчанию: %d)</translation>
     </message>
@@ -4564,7 +4584,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Если &lt;category&gt; не указана, то выводить всю отладочную информацию.</translation>
     </message>
     <message>
-        <location line="-268"/>
+        <location line="-267"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = сохранить мета-данные, например, о владельце аккаунта и информацию о запросе платежа, 2 = удалить мета-данные)</translation>
     </message>
@@ -4610,11 +4630,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Disable all Masternode and Darksend related functionality (0-1, default: %u)</source>
-        <translation>Отключить всю функциональность, связанную с мастернодами и Darksend (0-1, по умолчанию: %u)</translation>
+        <source>Disable all Dash specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Отключить всю функциональность, относящуюся к  Dash (Мастерноды, Darksend, InstantX, бюджеты) (0-1, по умолчанию: %u)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Распространяется под лицензией на программное обеспечение MIT, смотрите прилагаемый файл COPYING или &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4714,7 +4734,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Выводить информацию трассировки/отладки на консоль вместо файла debug.log (по умолчанию: %u)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Задать число потоков выполнения для генерации монет, если таковая включена (-1 = все ядра, по умолчанию: %d)</translation>
     </message>
@@ -5037,6 +5057,11 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+8"/>
+        <source>Lock is already in place.</source>
+        <translation>Установлена блокировка.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Заблокировать средства мастернод, указанных в настроечном файле (по умолчанию: %u)</translation>
     </message>
@@ -5127,6 +5152,11 @@ rpcpassword=%s
     </message>
     <message>
         <location line="+4"/>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Указать внешний адрес:порт для доступа к этой мастерноде (например: %s)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Установить размер пула ключей в &lt;n&gt; (по умолчанию: %u)</translation>
     </message>
@@ -5241,7 +5271,7 @@ rpcpassword=%s
         <translation>Попробуем еще раз...</translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-129"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Неправильное значение masternodeprivkey. Пожалуйста, ознакомьтесь с документацией.</translation>
     </message>
@@ -5351,7 +5381,7 @@ rpcpassword=%s
         <translation>Загрузка кошелька...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Masternode options:</source>
         <translation>Параметры мастерноды:</translation>
     </message>
@@ -5486,7 +5516,7 @@ rpcpassword=%s
         <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Установить максимальный размер блока в байтах (по умолчанию: %d)</translation>
     </message>
