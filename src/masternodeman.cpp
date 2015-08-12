@@ -858,7 +858,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //   e.g. We don't want the entry relayed/time updated when we're syncing the list
             // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
             //   after that they just need to match
-            if(count == -1 && pmn->pubkey == pubkey && (pmn->lastPing.sigTime < GetTime() - MASTERNODE_MIN_MNB_SECONDS)){
+            if(count == -1 && pmn->pubkey == pubkey && (GetAdjustedTime() - pmn->sigTime > MASTERNODE_MIN_MNB_SECONDS)){
                 if(pmn->sigTime < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
                     if(pmn->protocolVersion < GETHEADERS_VERSION) {
@@ -911,8 +911,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         if(fAcceptable){
-            if(fDebug) LogPrintf("dsee - Accepted OLD Masternode entry %i %i\n", count, current);
-
             if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
                 LogPrintf("dsee - Input must have least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
                 Misbehaving(pfrom->GetId(), 20);
@@ -953,7 +951,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             mn.lastPing = CMasternodePing(vin);
             mn.Check(true);
             // add v11 masternodes, v12 should be added by mnb only
-            if(protocolVersion < GETHEADERS_VERSION) Add(mn);
+            if(protocolVersion < GETHEADERS_VERSION) {
+                if(fDebug) LogPrintf("dsee - Accepted OLD Masternode entry %i %i\n", count, current);
+                Add(mn);
+            }
             if(mn.IsEnabled()) {
                 TRY_LOCK(cs_vNodes, lockNodes);
                 if(!lockNodes) return;
@@ -1029,7 +1030,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(fDebug) LogPrintf("dseep - Couldn't find Masternode entry %s\n", vin.ToString().c_str());
+        LogPrint("masternode", "dseep - Couldn't find Masternode entry %s\n", vin.ToString().c_str());
 
         AskForMN(pfrom, vin);
     }
