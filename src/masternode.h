@@ -208,7 +208,7 @@ public:
 
     int64_t SecondsSincePayment();
 
-    void UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
+    bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
 
     inline uint64_t SliceHash(uint256& hash, int slice)
     {
