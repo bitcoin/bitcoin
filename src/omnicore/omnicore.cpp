@@ -507,7 +507,7 @@ int TXExodusFundraiser(const CTransaction& tx, const std::string& sender, int64_
         }
 
         int64_t amountGenerated = round(params.exodusReward * amountInvested * bonus);
-        if (msc_debug_exo) PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
+        PrintToLog("Exodus Fundraiser tx detected, tx %s generated %s\n", tx.GetHash().ToString(), FormatDivisibleMP(amountGenerated));
 
         // TODO: return result, grant somewhere else
         update_tally_map(sender, OMNI_PROPERTY_MSC, amountGenerated, BALANCE);
