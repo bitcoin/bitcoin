@@ -998,7 +998,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
         if (strDataAddress.empty()) // an empty Data Address here means it is not Class A valid and should be defaulted to a BTC payment
         {
             // this must be the BTC payment - validate (?)
-            if (!bRPConly || msc_debug_parser_readonly) {
+            if ((!bRPConly || msc_debug_parser_readonly) && msc_debug_parser_dex) {
                 PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
                 PrintToLog("!! this may be the BTC payment for an offer !!\n");
             }
@@ -1015,7 +1015,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
                         const std::string strAddress = CBitcoinAddress(dest).ToString();
 
                         if (exodus_address == strAddress) continue;
-                        if (!bRPConly || msc_debug_parser_readonly) {
+                        if ((!bRPConly || msc_debug_parser_readonly) && msc_debug_parser_dex) {
                             PrintToLog("payment #%d %s %11.8lf\n", count, strAddress, (double) wtx.vout[i].nValue / (double) COIN);
                         }
 
@@ -1395,8 +1395,7 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
             packet_size = PACKET_SIZE_CLASS_A;
             memcpy(single_pkt, &ParseHex(strScriptData)[0], packet_size);
         } else {
-            // TODO: move/remove the following log output ?
-            if (!bRPConly || msc_debug_parser_readonly) {
+            if ((!bRPConly || msc_debug_parser_readonly) && msc_debug_parser_dex) {
                 PrintToLog("!! sender: %s , receiver: %s\n", strSender, strReference);
                 PrintToLog("!! this may be the BTC payment for an offer !!\n");
             }
@@ -1632,7 +1631,7 @@ static bool HandleDExPayments(const CTransaction& tx, int nBlock, const std::str
                 continue;
             }
             std::string strAddress = address.ToString();
-            PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(tx.vout[n].nValue));
+            if (msc_debug_parser_dex) PrintToLog("payment #%d %s %s\n", count, strAddress, FormatIndivisibleMP(tx.vout[n].nValue));
 
             // check everything and pay BTC for the property we are buying here...
             if (0 == DEx_payment(tx.GetHash(), n, strAddress, strSender, tx.vout[n].nValue, nBlock)) ++count;
