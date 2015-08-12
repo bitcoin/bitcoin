@@ -1162,7 +1162,8 @@ static int parseTransaction(bool bRPConly, const CTransaction& wtx, int nBlock, 
 /** Determines, whether to fall back to legacy transaction parsing/processing. */
 static bool useLegacyProcessing(int nBlock)
 {
-    return (!IsAllowedOutputType(TX_NULL_DATA, nBlock));
+    static bool fDisableLegacy = GetBoolArg("-omnidisablelegacy", false);
+    return (!IsAllowedOutputType(TX_NULL_DATA, nBlock) && !fDisableLegacy);
 }
 
 } // namespace legacy
