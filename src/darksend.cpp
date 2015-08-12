@@ -1475,12 +1475,11 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         int nUseQueue = rand()%100;
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
-        // -- allow users to anon all their coins each block, then wait for the confirmation
-        // if(pwalletMain->GetDenominatedBalance(true) > 0){ //get denominated unconfirmed inputs
-        //     LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
-        //     strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
-        //     return false;
-        // }
+        if(pwalletMain->GetDenominatedBalance(true) > 0){ //get denominated unconfirmed inputs
+            LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
+            strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
+            return false;
+        }
 
         //check our collateral nad create new if needed
         std::string strReason;
