@@ -859,6 +859,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
             //   after that they just need to match
             if(count == -1 && pmn->pubkey == pubkey && (GetAdjustedTime() - pmn->sigTime > MASTERNODE_MIN_MNB_SECONDS)){
+                if(pmn->protocolVersion > GETHEADERS_VERSION && sigTime - pmn->lastPing.sigTime < MASTERNODE_MIN_MNB_SECONDS) return;
                 if(pmn->sigTime < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
                     if(pmn->protocolVersion < GETHEADERS_VERSION) {
@@ -892,7 +893,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        if(fDebug) LogPrintf("dsee - Got NEW OLD Masternode entry %s\n", addr.ToString().c_str());
+        static std::map<std::string, int64_t> mapSeenDsee;
+        if(mapSeenDsee.count(vin.prevout.ToString())) {
+            LogPrint("mastenrode", "dsee - already seen this vin %s %lld\n", vin.prevout.ToString(), mapSeenDsee[vin.prevout.ToString()]);
+            return;
+        }
+        mapSeenDsee.insert(make_pair(vin.prevout.ToString(), GetAdjustedTime()));
+
+        LogPrint("masternode", "dsee - Got NEW OLD Masternode entry %s\n", addr.ToString().c_str());
 
         // make sure it's still unspent
         //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
@@ -952,7 +960,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             mn.Check(true);
             // add v11 masternodes, v12 should be added by mnb only
             if(protocolVersion < GETHEADERS_VERSION) {
-                if(fDebug) LogPrintf("dsee - Accepted OLD Masternode entry %i %i\n", count, current);
+                LogPrint("masternode", "dsee - Accepted OLD Masternode entry %i %i\n", count, current);
                 Add(mn);
             }
             if(mn.IsEnabled()) {
