@@ -28,16 +28,21 @@
 using namespace json_spirit;
 using namespace mastercore;
 
-/* Function to standardize RPC output for transactions into a JSON object in either basic or extended mode.
- * Use basic mode for generic calls (eg gettransaction_MP/listtransaction_MP etc)
- * Use extended mode for transaction specific calls (eg getsto_MP, gettrade_MP etc)
+/**
+ * Function to standardize RPC output for transactions into a JSON object in either basic or extended mode.
+ *
+ * Use basic mode for generic calls (e.g. omni_gettransaction/omni_listtransaction etc.)
+ * Use extended mode for transaction specific calls (e.g. omni_getsto, omni_gettrade etc.)
+ *
+ * DEx payments and the extended mode are only available for confirmed transactions.
  */
 int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
 {
     // retrieve the transaction from the blockchain and obtain it's height/confs/time
     CTransaction wtx;
-    uint256 blockHash = 0;
+    uint256 blockHash;
     if (!GetTransaction(txid, wtx, blockHash, true)) return MP_TX_NOT_FOUND;
+
     if (0 == blockHash) {
         // is it one of our pending transactions?  if so return pending description
         LOCK(cs_pending);
@@ -49,31 +54,33 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
             json_spirit::read_string(pending.desc, tempVal);
             txobj = tempVal.get_obj();
             return 0;
-        } else {
-            return MP_TX_UNCONFIRMED;
         }
     }
-    CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
-    if (NULL == pBlockIndex) return MP_BLOCK_NOT_IN_CHAIN;
-    int blockHeight = pBlockIndex->nHeight;
-    int confirmations =  1 + GetHeight() - pBlockIndex->nHeight;
-    int64_t blockTime = pBlockIndex->nTime;
 
-    // lookup transaction in levelDB to see if it's an Omni transaction
-    bool fExists = false;
-    {
-        LOCK(cs_tally);
-        fExists = p_txlistdb->exists(txid);
+    int confirmations = 0;
+    int64_t blockTime = 0;
+    int blockHeight = GetHeight();
+
+    if (blockHash != 0) {
+        CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
+        if (NULL != pBlockIndex) {
+            confirmations = 1 + blockHeight - pBlockIndex->nHeight;
+            blockTime = pBlockIndex->nTime;
+            blockHeight = pBlockIndex->nHeight;
+        }
     }
-    if (!fExists) return MP_TX_IS_NOT_MASTER_PROTOCOL;
 
     // attempt to parse the transaction
     CMPTransaction mp_obj;
-    int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj);
-    if (parseRC < 0) return MP_INVALID_TX_IN_DB_FOUND;
+    int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj, blockTime);
+    if (parseRC < 0) return MP_TX_IS_NOT_MASTER_PROTOCOL;
 
-    // DEx BTC payment needs special handling since it's not actually an Omni message - handle & return
+    // DEx BTC payment needs special handling since it's not actually an Omni message - handle and return
     if (parseRC > 0) {
+        if (confirmations <= 0) {
+            // only confirmed DEx payments are currently supported
+            return MP_TX_UNCONFIRMED;
+        }
         std::string tmpBuyer, tmpSeller;
         uint64_t tmpVout, tmpNValue, tmpPropertyId;
         {
@@ -83,11 +90,13 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
         Array purchases;
         if (populateRPCDExPurchases(wtx, purchases, filterAddress) <= 0) return -1;
         txobj.push_back(Pair("txid", txid.GetHex()));
-        txobj.push_back(Pair("confirmations", confirmations));
-        txobj.push_back(Pair("blocktime", blockTime));
         txobj.push_back(Pair("type", "DEx Purchase"));
         txobj.push_back(Pair("sendingaddress", tmpBuyer));
         txobj.push_back(Pair("purchases", purchases));
+        txobj.push_back(Pair("blockhash", blockHash.GetHex()));
+        txobj.push_back(Pair("blocktime", blockTime));
+        txobj.push_back(Pair("block", blockHeight));
+        txobj.push_back(Pair("confirmations", confirmations));
         return 0;
     }
 
@@ -95,32 +104,38 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     if (!filterAddress.empty() && mp_obj.getSender() != filterAddress && mp_obj.getReceiver() != filterAddress) return -1;
 
     // parse packet and populate mp_obj
-    if (!mp_obj.interpret_Transaction()) return MP_INVALID_TX_IN_DB_FOUND;
+    if (!mp_obj.interpret_Transaction()) return MP_TX_IS_NOT_MASTER_PROTOCOL;
 
-    // obtain validity
+    // obtain validity - only confirmed transactions can be valid
     bool valid = false;
-    {
+    if (confirmations > 0) {
         LOCK(cs_tally);
         valid = getValidMPTX(txid);
     }
 
     // populate some initial info for the transaction
-    bool bMine = false;
-    if (IsMyAddress(mp_obj.getSender()) || IsMyAddress(mp_obj.getReceiver())) bMine = true;
+    bool fMine = false;
+    if (IsMyAddress(mp_obj.getSender()) || IsMyAddress(mp_obj.getReceiver())) fMine = true;
     txobj.push_back(Pair("txid", txid.GetHex()));
+    txobj.push_back(Pair("fee", FormatDivisibleMP(mp_obj.getFeePaid())));
     txobj.push_back(Pair("sendingaddress", mp_obj.getSender()));
     if (showRefForTx(mp_obj.getType())) txobj.push_back(Pair("referenceaddress", mp_obj.getReceiver()));
-    txobj.push_back(Pair("ismine", bMine));
-    txobj.push_back(Pair("confirmations", confirmations));
-    txobj.push_back(Pair("fee", FormatDivisibleMP(mp_obj.getFeePaid())));
-    txobj.push_back(Pair("blocktime", blockTime));
-    txobj.push_back(Pair("valid", valid));
+    txobj.push_back(Pair("ismine", fMine));
     txobj.push_back(Pair("version", (uint64_t)mp_obj.getVersion()));
     txobj.push_back(Pair("type_int", (uint64_t)mp_obj.getType()));
     txobj.push_back(Pair("type", mp_obj.getTypeString()));
 
-    // populate type specific info & extended details if requested
+    // populate type specific info and extended details if requested
+    // extended details are not available for unconfirmed transactions
+    if (confirmations <= 0) extendedDetails = false;
     populateRPCTypeInfo(mp_obj, txobj, mp_obj.getType(), extendedDetails, extendedDetailsFilter);
+
+    // state and chain related information
+    if (confirmations > 0) txobj.push_back(Pair("valid", valid));
+    if (confirmations > 0) txobj.push_back(Pair("blockhash", blockHash.GetHex()));
+    if (confirmations > 0) txobj.push_back(Pair("blocktime", blockTime));
+    if (confirmations > 0) txobj.push_back(Pair("block", blockHeight));
+    txobj.push_back(Pair("confirmations", confirmations));
 
     // finished
     return 0;
