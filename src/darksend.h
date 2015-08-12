@@ -332,7 +332,7 @@ public:
             to behave themselves. If they don't it takes their money. */
 
         cachedLastSuccess = 0;
-        cachedNumBlocks = 0;
+        cachedNumBlocks = std::numeric_limits<int>::max();
         unitTest = false;
         txCollateral = CMutableTransaction();
         minBlockSpacing = 0;
