@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="fi" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="fi" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -295,12 +295,12 @@
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+107"/>
-        <location line="+728"/>
+        <location line="+759"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-719"/>
+        <location line="-750"/>
         <source>Wallet</source>
         <translation>Lompakko</translation>
     </message>
@@ -636,12 +636,32 @@
         <translation>Lohkojen lähdettä ei saatavilla...</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Up to date</source>
         <translation>Tapahtumahistoria on ajan tasalla</translation>
     </message>
+    <message>
+        <location line="+19"/>
+        <source>Synchronizing sporks...</source>
+        <translation>Synkronoidaan sporkit...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synkronoidaan masternodet...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synkronoidaan masternode voittajat...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing budgets...</source>
+        <translation>Synkronoidaan budjetit...</translation>
+    </message>
     <message numerus="yes">
-        <location line="+21"/>
+        <location line="+23"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n tunti</numerusform><numerusform>%n tuntia</numerusform></translation>
     </message>
@@ -743,7 +763,12 @@ Osoite: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+173"/>
+        <location filename="../clientmodel.cpp" line="+73"/>
+        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
+        <translation>Yhteensä: %1 (DS yht.sopivia: %2 / Käytössä: %3)</translation>
+    </message>
+    <message>
+        <location line="+107"/>
         <source>Network Alert</source>
         <translation>Verkkohälytys</translation>
     </message>
@@ -1655,17 +1680,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Client restart required to activate changes.</source>
         <translation>Ohjelman uudelleen käynnistys aktivoi muutokset käyttöön.</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Client will be shutdown, do you want to proceed?</source>
         <translation>Ohjelma suljetaan, haluatko jatkaa?</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+35"/>
         <source>This change would require a client restart.</source>
         <translation>Tämä muutos vaatii ohjelman uudelleen käynnistyksen.</translation>
     </message>
@@ -1806,7 +1831,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+573"/>
-        <location filename="../overviewpage.cpp" line="+465"/>
+        <location filename="../overviewpage.cpp" line="+487"/>
         <location line="+10"/>
         <location line="+10"/>
         <location line="+14"/>
@@ -1854,7 +1879,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nollaus</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="-359"/>
+        <location filename="../overviewpage.cpp" line="-381"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
@@ -1864,32 +1889,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="+6"/>
         <location line="+1"/>
         <location line="+1"/>
-        <location line="+270"/>
+        <location line="+292"/>
         <source>Disabled</source>
         <translation>Ei käytössä</translation>
     </message>
     <message>
-        <location line="-266"/>
-        <location line="+268"/>
+        <location line="-288"/>
+        <location line="+290"/>
         <location line="+91"/>
         <source>Start Darksend Mixing</source>
         <translation>Käynnistä Darksend Sekoitus</translation>
     </message>
     <message>
-        <location line="-357"/>
-        <location line="+360"/>
+        <location line="-379"/>
+        <location line="+382"/>
         <source>Stop Darksend Mixing</source>
         <translation>Lopeta Darksend Sekoitus</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-211"/>
         <location line="+6"/>
         <source>No inputs detected</source>
         <translation>Syötteitä ei havaittu</translation>
     </message>
     <message numerus="yes">
         <location line="-2"/>
-        <location line="+20"/>
+        <location line="+35"/>
         <location line="+10"/>
         <source>%n Rounds</source>
         <translation><numerusform>%n Kierros</numerusform><numerusform>%n Kierrosta</numerusform></translation>
@@ -1900,7 +1925,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ei tarpeeksi yhteensopivia syötteitä anonymisointiin &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br&gt;anonymisoidaan &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; sen sijaan</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+46"/>
         <source>Overall progress</source>
         <translation>Edistyminen</translation>
     </message>
@@ -1920,12 +1945,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Denominoiduilla syötteillä on keskimäärin %5 / %n kierrosta</numerusform><numerusform>Denominoiduilla syötteillä on keskimäärin %5 / %n kierrosta</numerusform></translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-56"/>
         <source>Found enough compatible inputs to anonymize %1</source>
         <translation>Löytyi tarpeeksi yhteensopivia syötteitä anonymisointiin %1</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+54"/>
         <source>Mixed</source>
         <translation>Sekoitettu</translation>
     </message>
@@ -2438,7 +2463,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+19"/>
         <source>Rescan blockchain files</source>
-        <translation>Skannaa uudelleen lohkoketju</translation>
+        <translation>Skannaa lohkoketju uudelleen</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -2474,17 +2499,20 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <location line="+16"/>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
-        <translation>-zapwallettxes=1: Palauta tapahtumat lohkoketjusta (pidä meta-data, esim. tilin omistaja).</translation>
+        <translation>-zapwallettxes=1: Palauta tapahtumat lohkoketjusta
+ (pidä meta-data, esim. tilin omistaja).</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>-zapwallettxes=2: Recover transactions from blockchain (drop meta-data).</source>
-        <translation>-zapwallettxes=2: Palauta tapahtumat lohkoketjusta (poista meta-data).</translation>
+        <translation>-zapwallettxes=2: Palauta tapahtumat lohkoketjusta
+ (poista meta-data).</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: Päivitä lompakko viimeisimpään formaattiin. (Huom: tämä EI päivitä varsinaista lompakko-ohjelmistoa!)</translation>
+        <translation>-upgradewallet: Päivitä lompakko viimeisimpään formaattiin
+ (Huom: tämä EI päivitä varsinaista lompakko-ohjelmistoa!).</translation>
     </message>
     <message>
         <location line="+23"/>
@@ -2799,7 +2827,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+638"/>
         <location line="+12"/>
         <source>Send Coins</source>
         <translation>Lähetä</translation>
@@ -3021,7 +3049,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-562"/>
+        <location filename="../sendcoinsdialog.cpp" line="-567"/>
         <source>Copy quantity</source>
         <translation>Kopioi määrä</translation>
     </message>
@@ -3107,7 +3135,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>lisätty siirtomaksuna</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
         <translation>Määrä yhteensä = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
@@ -3117,7 +3145,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Hyväksy lähettäminen</translation>
     </message>
     <message>
-        <location line="+238"/>
+        <location line="+241"/>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
         <translation>Siirtomaksu %1 kertaa korkeampi kuin %2 per kB on erittäin korkea siirtomaksu.</translation>
     </message>
@@ -3132,12 +3160,12 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Vastaanottajan osoite on virheellinen, tarkista osoite.</translation>
     </message>
     <message>
-        <location line="-214"/>
+        <location line="-217"/>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(Näytetään %1 / %2 merkintää)&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+217"/>
+        <location line="+220"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Maksettavan summan tulee olla suurempi kuin 0.</translation>
     </message>
@@ -4172,7 +4200,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+289"/>
+        <location filename="../walletmodel.cpp" line="+292"/>
         <location line="+9"/>
         <location line="+11"/>
         <source>Send Coins</source>
@@ -4251,7 +4279,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Darksend käyttää tarkalleen denominoituja syötteitä lähettäessään varoja, saatat tarvita anonymisoida lisää varoja.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Aloita regressio testimoodi joka käyttää erikoisketjua jossa lohkoja voidaan ratkaista välittömästi.</translation>
     </message>
@@ -4297,11 +4325,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     </message>
     <message>
         <location line="+7"/>
-        <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation>Aseta ulkoinen osoite:portti tälle masternodelle (esim: osoite:portti)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Aseta maksimikoko korkea prioriteetti/pienen siirtomaksun siirtotapahtumiin tavuissa (oletus: %d)</translation>
     </message>
@@ -4566,7 +4589,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Jos &lt;kategoria&gt; ei ole toimitettu, tulosta kaikki debuggaustieto.</translation>
     </message>
     <message>
-        <location line="-268"/>
+        <location line="-267"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = pidä tx meta data esim. tilin omistaja ja maksupyyntö tiedot, 2 = poista tx meta data)</translation>
     </message>
@@ -4612,11 +4635,11 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     </message>
     <message>
         <location line="+3"/>
-        <source>Disable all Masternode and Darksend related functionality (0-1, default: %u)</source>
-        <translation>Kytke pois käytöstä kaikki Masternode ja Darksend toiminnot (0-1, oletus: %u)</translation>
+        <source>Disable all Dash specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Kytke pois käytöstä kaikki Dash:in erityistoiminnot (Masternodet, Darksend, InstantX, Budjetointi) (0-1, oletus: %u)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Levitetään MIT ohjelmistolisenssin alaisuudessa. Tarkemmat tiedot löytyvät tiedostosta COPYING tai osoitteesta &lt;http://www.opensource.org/licenses/mit-license.php&gt;. </translation>
     </message>
@@ -4716,7 +4739,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Lähetä jäljitys/debug tiedot konsoliin debug.log tiedoston sijaan (default: %u)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Aseta prosessorin ytimien määrä louhintaan, jos päällä (-1 = kaikki ytimet, oletus: %d)</translation>
     </message>
@@ -4730,7 +4753,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin &lt;https://www.openssl.org/&gt; sekä Eric Youngin kehittämän salausohjelmiston ja Thomas Bernardin kehittämän UPnP ohjelmiston.
 
-Käännös päivitetty: 3.8.2015 by AjM.</translation>
+Käännös päivitetty: 12.8.2015 by AjM.</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -5041,6 +5064,11 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     </message>
     <message>
         <location line="+8"/>
+        <source>Lock is already in place.</source>
+        <translation>On jo lukittu.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Lukitse masternodet niiden asetustiedoston kautta (oletus: %u)</translation>
     </message>
@@ -5131,6 +5159,11 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
     </message>
     <message>
         <location line="+4"/>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Aseta ulkoinen osoite:portti tälle masternodelle (esim: %s)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Aseta avainvarannon koko &lt;n&gt; (oletus: %u)</translation>
     </message>
@@ -5245,7 +5278,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Yritetään uudelleen...</translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-129"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Virheellinen masternoden yksityisavain (masternodeprivkey). Katso lisätietoja dokumentaatiosta.</translation>
     </message>
@@ -5355,7 +5388,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Ladataan lompakkoa...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Masternode options:</source>
         <translation>Masternode valinnat:</translation>
     </message>
@@ -5490,7 +5523,7 @@ esimerkiksi: alertnotify=echo %%s | mail -s &quot;Dash Hälytys&quot; admin@foo.
         <translation>Aseta tietokannan välimuistin koko megatavuissa (%d - %d, oletus: %d</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Aseta lohkon maksimikoko tavuissa (oletus: %d)</translation>
     </message>

@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="pl" version="2.0">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="pl" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -295,12 +295,12 @@
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+107"/>
-        <location line="+728"/>
+        <location line="+759"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-719"/>
+        <location line="-750"/>
         <source>Wallet</source>
         <translation>Portfel</translation>
     </message>
@@ -636,12 +636,32 @@
         <translation>Brak dostępnych źródeł bloków...</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>Up to date</source>
         <translation>Aktualny</translation>
     </message>
+    <message>
+        <location line="+19"/>
+        <source>Synchronizing sporks...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing masternodes...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing masternode winners...</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Synchronizing budgets...</source>
+        <translation type="unfinished"/>
+    </message>
     <message numerus="yes">
-        <location line="+21"/>
+        <location line="+23"/>
         <source>%n hour(s)</source>
         <translation><numerusform>godzina</numerusform><numerusform>godzin</numerusform><numerusform>godziny</numerusform></translation>
     </message>
@@ -743,7 +763,12 @@ Adres: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+173"/>
+        <location filename="../clientmodel.cpp" line="+73"/>
+        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+107"/>
         <source>Network Alert</source>
         <translation>Sieć Alert</translation>
     </message>
@@ -949,7 +974,7 @@ Adres: %4
     <message>
         <location line="+216"/>
         <source>Can vary +/- %1 duff(s) per input.</source>
-        <translation type="unfinished"/>
+        <translation>Może się różnić około +/- %1 duff(ów) na transację.</translation>
     </message>
     <message>
         <location line="+132"/>
@@ -1452,7 +1477,7 @@ Adres: %4
     <message>
         <location line="+22"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
-        <translation type="unfinished"/>
+        <translation>Jeśli wyłączysz możliwość wydawania niepotwierdzonej reszty, to reszta z transakcji&lt;br/&gt; nie może zostać użyta dopóki nie ma przynajmniej jednego potwierdzona.&lt;br/&gt; To również wpływa na to jak wyliczane jest twoje saldo.</translation>
     </message>
     <message>
         <location line="+43"/>
@@ -1482,7 +1507,7 @@ Adres: %4
     <message>
         <location line="-74"/>
         <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
-        <translation type="unfinished"/>
+        <translation>Tutaj możesz ustawić liczbę masternodów, przez które transakcja zostanie przepuszczona.&lt;br/&gt;Im większa liczba masternodów tym większy poziom anonimowości, ale opłata jest również wyższa.</translation>
     </message>
     <message>
         <location line="+80"/>
@@ -1599,7 +1624,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+11"/>
         <source>Decimal digits</source>
-        <translation type="unfinished"/>
+        <translation>Cyfry po przecinku</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -1654,17 +1679,17 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>Client restart required to activate changes.</source>
         <translation>Wymagany restart programu, aby uaktywnić zmiany.</translation>
     </message>
     <message>
-        <location line="-30"/>
+        <location line="-31"/>
         <source>Client will be shutdown, do you want to proceed?</source>
         <translation>Program zostanie wyłączony. Czy chcesz kontynuować?</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+35"/>
         <source>This change would require a client restart.</source>
         <translation>Ta zmiana może wymagać ponownego uruchomienia klienta.</translation>
     </message>
@@ -1805,7 +1830,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+573"/>
-        <location filename="../overviewpage.cpp" line="+465"/>
+        <location filename="../overviewpage.cpp" line="+487"/>
         <location line="+10"/>
         <location line="+10"/>
         <location line="+14"/>
@@ -1853,7 +1878,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Reset</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="-359"/>
+        <location filename="../overviewpage.cpp" line="-381"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
@@ -1863,32 +1888,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location line="+6"/>
         <location line="+1"/>
         <location line="+1"/>
-        <location line="+270"/>
+        <location line="+292"/>
         <source>Disabled</source>
         <translation>Wyłączony</translation>
     </message>
     <message>
-        <location line="-266"/>
-        <location line="+268"/>
+        <location line="-288"/>
+        <location line="+290"/>
         <location line="+91"/>
         <source>Start Darksend Mixing</source>
         <translation>Uruchom miksowanie Darksend</translation>
     </message>
     <message>
-        <location line="-357"/>
-        <location line="+360"/>
+        <location line="-379"/>
+        <location line="+382"/>
         <source>Stop Darksend Mixing</source>
         <translation>Zatrzymaj miksowanie Darksend</translation>
     </message>
     <message>
-        <location line="-188"/>
+        <location line="-211"/>
         <location line="+6"/>
         <source>No inputs detected</source>
         <translation>Nie wykryto wejść</translation>
     </message>
     <message numerus="yes">
         <location line="-2"/>
-        <location line="+20"/>
+        <location line="+35"/>
         <location line="+10"/>
         <source>%n Rounds</source>
         <translation><numerusform>Runda</numerusform><numerusform>Rundy</numerusform><numerusform>Rundy</numerusform></translation>
@@ -1896,10 +1921,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="-7"/>
         <source>Not enough compatible inputs to anonymize &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style=&apos;color:red;&apos;&gt;%2&lt;/span&gt; instead</source>
-        <translation type="unfinished"/>
+        <translation>Nie ma wystarczającej ilośći środków aby moć dokonać anonimizacji &lt;span style=&apos;color:red;&apos;&gt;%1&lt;/span&gt;,&lt;br&gt;zamiast oryginalnej sumy &lt;spam style=&apos;color:red;&apos;&gt;%2&lt;/spam&gt; zostanie zanonimizowanych.</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+46"/>
         <source>Overall progress</source>
         <translation>Całkowity postęp</translation>
     </message>
@@ -1919,12 +1944,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Denonimowane wejście ma %5 z %n rund jako średnia</numerusform><numerusform>Denonimowane wejścia mają %5 z %n rund jako średnia</numerusform><numerusform>Denonimowane wejścia mają %5 z %n rund jako średnia</numerusform></translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-56"/>
         <source>Found enough compatible inputs to anonymize %1</source>
         <translation>Znaleziono wystarczającą ilość odpowiednich środków aby zanonimizowaź %1</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+54"/>
         <source>Mixed</source>
         <translation>Zmiksowane</translation>
     </message>
@@ -1953,7 +1978,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+10"/>
         <source>If you don&apos;t want to see internal Darksend fees/transactions select &quot;Most Common&quot; as Type on the &quot;Transactions&quot; tab.</source>
-        <translation type="unfinished"/>
+        <translation>Jeśli nie chcesz widzieć wewnętrznych transakcji/opłat Darksend to wybierz &quot;Najpopularniejsza&quot; jako rodzaj transakcji w zakładce &quot;Transakcje&quot;.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2582,7 +2607,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="+34"/>
         <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation>Użyj jeden z poprzednio użytych adresów odbiorczych.&lt;br&gt; Podczas ponownego używania adresów występują problemy z bezpieczeństwem i prywatnością.&lt;br&gt; Nie korzystaj z tej opcji, chyba że odtwarzasz żądanie płatności wykonane już wcześniej.</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -2608,7 +2633,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="-14"/>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation type="unfinished"/>
+        <translation>Opcjonalna wiadomość do żądania płatności. Wiadomość wyświetli się po otwarciu żądania.&lt;br&gt; Pamiętaj: Wiadomość nie zostanie wysłana razem z płatnością poprzez sieć Dash.</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2797,7 +2822,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+633"/>
+        <location filename="../sendcoinsdialog.cpp" line="+638"/>
         <location line="+12"/>
         <source>Send Coins</source>
         <translation>Wyślij Monety</translation>
@@ -2905,18 +2930,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+78"/>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation type="unfinished"/>
+        <translation>Jeśli ręcznie ustalona opłata wynosi 1000 Duffów a sama transakcja ma tylko 250 bajtów, to opłata jako &quot;za kilobajt&quot; wynosi tylko 250 duffów. &lt;br/&gt;Dzieje się tak dla każdej transakcji poniżej 1000 duffów. W przypadku transakcji większych niż jedn kilobajt opłata jest naliczana od kilobajta. </translation>
     </message>
     <message>
         <location line="+16"/>
         <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation type="unfinished"/>
+        <translation>Jeśli ręcznie ustalona opłata wynosi 1000 Duffów a sama transakcja ma tylko 250 bitów, to opłata jako &quot;za kilobajt&quot; wynosi tylko 250 duffów.&lt;br/&gt; Dzieje się tak dla każdej transakcji poniżej 1000 duffów. W przypadku transakcji większych niż jedn kilobajt opłata jest naliczana od kilobajta.</translation>
     </message>
     <message>
         <location line="+33"/>
         <location line="+13"/>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
-        <translation type="unfinished"/>
+        <translation>Uiszczanie minimalnej opłaty za transakcję jest ok dopóki ilość transakcji nie przekracza dostępnego miejsca w bloku. &lt;br /&gt;Jednakże, jeśli zaistnieje taka sytuacja w której wysłanych zostaje więcej transakcji niż sieć może przetworzyć, to jest możliwe, że twoja transakcja nigdy nie zostanie potwierdzona.</translation>
     </message>
     <message>
         <location line="-59"/>
@@ -3019,7 +3044,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Saldo:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="-562"/>
+        <location filename="../sendcoinsdialog.cpp" line="-567"/>
         <source>Copy quantity</source>
         <translation>Skopiuj ilość</translation>
     </message>
@@ -3105,7 +3130,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>dodane są jako opłata za transakcje</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+19"/>
         <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
         <translation>Całkowita ilość = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
     </message>
@@ -3115,7 +3140,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Potwierdź wysyłanie monet</translation>
     </message>
     <message>
-        <location line="+238"/>
+        <location line="+241"/>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
         <translation>Opłata %1 razy większa niż %2 za kB jest uważana za obłędnie wysoką.</translation>
     </message>
@@ -3130,12 +3155,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Adres odbiorcy jest nieprawidłowy, proszę poprawić</translation>
     </message>
     <message>
-        <location line="-214"/>
+        <location line="-217"/>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;b&gt;(%1 z %2 wyświetlonych wpisów)&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+217"/>
+        <location line="+220"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Kwota do zapłacenia musi być większa od 0.</translation>
     </message>
@@ -4170,7 +4195,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+289"/>
+        <location filename="../walletmodel.cpp" line="+292"/>
         <location line="+9"/>
         <location line="+11"/>
         <source>Send Coins</source>
@@ -4249,7 +4274,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Darksend używa dokładnych denominowanych kwot do przesyłania środków, możliwe że musisz zanonimizować trochę więcej monet.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
         <translation>Wejdź w regresyjny tryb testowy, który używa specjalnego łańcucha, w którym bloki mogą być rozwiązywane natychmiastowo. </translation>
     </message>
@@ -4295,11 +4320,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation>Ustaw zewnętrzny adres:port aby połączyć się z tym masternodem (na przykład: adres:port)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Ustaw maksymalny rozmiar transakcji o wysokim/niskim priorytecie w bajtach (domyślny: %d)</translation>
     </message>
@@ -4564,7 +4584,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Jeśli &lt;kategoria&gt; nie jest dostarczona, utwórz informacje o debugowaniu.</translation>
     </message>
     <message>
-        <location line="-268"/>
+        <location line="-267"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = zaochwaj metadane np. informacje właściciela konta oraz żądania zapłat, 2 = pozbądź się matadanych tx)</translation>
     </message>
@@ -4610,11 +4630,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Disable all Masternode and Darksend related functionality (0-1, default: %u)</source>
-        <translation>Wyłącz wszystkie funkcje związane z Masternodami i Darksend (0-1, domyślnie: %u)</translation>
+        <source>Disable all Dash specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Rozpowszechniane na licencji MIT. Jeśli chcesz się dowiedzieć więcej otwórz towarzyszący plik o nzwie COPYING lub odwiedź &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
@@ -4711,10 +4731,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+2"/>
         <source>Send trace/debug info to console instead of debug.log file (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Wyślij informacje o debugowaniu/śladach do konsoli zamiast do pliku debug.log (domyślnie: %u)</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Ustaw liczbę wątków do generowania monet, jeśli jest ono włączone (-1 = wszystkie rdzenie. domyślnie: %d)</translation>
     </message>
@@ -4882,7 +4902,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location line="+1"/>
         <source>Error: Can&apos;t select current denominated inputs</source>
-        <translation type="unfinished"/>
+        <translation>Wystąpił błąd: Nie możesz wybrać obecnych denominowanych wartości.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -5036,6 +5056,11 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     </message>
     <message>
         <location line="+8"/>
+        <source>Lock is already in place.</source>
+        <translation>Transakcja została już zamknięta.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Zamknij masternody z pliku konfiguracji (domyślnie: %u)</translation>
     </message>
@@ -5107,7 +5132,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <location line="+2"/>
         <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation>Wyślij informacje o debugowaniu/śladach do pliku debug.log (domyślnie: %u)</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5126,6 +5151,11 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     </message>
     <message>
         <location line="+4"/>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Ustaw ilość kluczy w key pool na &lt;n&gt; (domyślny: %u)</translation>
     </message>
@@ -5240,7 +5270,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Spróbuje ponownie...</translation>
     </message>
     <message>
-        <location line="-127"/>
+        <location line="-129"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Nieprawidłowy klucz prywatny masternoda. Przeczytaj dokumentację.</translation>
     </message>
@@ -5350,7 +5380,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ładuje portfel...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Masternode options:</source>
         <translation>Opcje masternodów:</translation>
     </message>
@@ -5485,7 +5515,7 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Ustaw pamięć podręczną bazy danych w megabajtach (%d to %d, domyślny: %d)</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Ustaw maksymalny rozmiar bloku w bajtach (domyślny: %d)</translation>
     </message>
