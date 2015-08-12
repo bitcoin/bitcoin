@@ -162,6 +162,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_sendgrant", 2 },
     { "omni_sendrevoke", 1 },
     { "omni_sendchangeissuer", 2 },
+    { "omni_sendactivation", 1 },
+    { "omni_sendactivation", 2 },
     { "omni_sendalert", 1 },
     { "omni_sendalert", 2 },
     { "omni_sendalert", 3 },

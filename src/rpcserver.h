@@ -270,6 +270,7 @@ extern json_spirit::Value omni_sendchangeissuer(const json_spirit::Array& params
 
 /* Omni Core hidden calls - development usage (not shown in help) */
 extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_sendactivation(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendalert(const json_spirit::Array& params, bool fHelp);
 
 /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
