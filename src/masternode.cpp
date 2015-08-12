@@ -122,19 +122,23 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
 //
 // When a new masternode broadcast is sent, update our information
 //
-void CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
+bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 {
-    pubkey2 = mnb.pubkey2;
-    sigTime = mnb.sigTime;
-    sig = mnb.sig;
-    protocolVersion = mnb.protocolVersion;
-    addr = mnb.addr;
-    lastTimeChecked = 0;
-    int nDoS = 0;
-    if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
-        lastPing = mnb.lastPing;
-        mnodeman.mapSeenMasternodePing.insert(make_pair(lastPing.GetHash(), lastPing));
+    if(mnb.sigTime > sigTime) {    
+        pubkey2 = mnb.pubkey2;
+        sigTime = mnb.sigTime;
+        sig = mnb.sig;
+        protocolVersion = mnb.protocolVersion;
+        addr = mnb.addr;
+        lastTimeChecked = 0;
+        int nDoS = 0;
+        if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
+            lastPing = mnb.lastPing;
+            mnodeman.mapSeenMasternodePing.insert(make_pair(lastPing.GetHash(), lastPing));
+        }
+        return true;
     }
+    return false;
 }
 
 //
@@ -395,9 +399,10 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS)) {
         //take the newest entry
         LogPrintf("mnb - Got updated entry for %s\n", addr.ToString());
-        pmn->UpdateFromNewBroadcast((*this));
-        pmn->Check();
-        if(pmn->IsEnabled()) Relay();
+        if(pmn->UpdateFromNewBroadcast((*this))){
+            pmn->Check();
+            if(pmn->IsEnabled()) Relay();
+        }
         masternodeSync.AddedMasternodeList(GetHash());
     }
 
