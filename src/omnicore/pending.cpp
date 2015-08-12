@@ -32,88 +32,14 @@ PendingMap my_pending;
 /**
  * Adds a transaction to the pending map using supplied parameters.
  */
-void PendingAdd(const uint256& txid, const std::string& sendingAddress, const std::string& refAddress, uint16_t type, uint32_t propertyId, int64_t amount, uint32_t propertyIdDesired, int64_t amountDesired, int64_t action)
+void PendingAdd(const uint256& txid, const std::string& sendingAddress, uint16_t type, uint32_t propertyId, int64_t amount, bool fSubtract)
 {
-    Object txobj;
-    std::string amountStr, amountDStr;
-    bool divisible;
-    bool divisibleDesired;
-    rational_t tempUnitPrice(int128_t(0));
-    txobj.push_back(Pair("txid", txid.GetHex()));
-    txobj.push_back(Pair("sendingaddress", sendingAddress));
-    if (!refAddress.empty()) txobj.push_back(Pair("referenceaddress", refAddress));
-    txobj.push_back(Pair("confirmations", 0));
-    txobj.push_back(Pair("type", strTransactionType(type)));
-    switch (type) {
-        case MSC_TYPE_SIMPLE_SEND:
-            txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
-            divisible = isPropertyDivisible(propertyId);
-            txobj.push_back(Pair("divisible", divisible));
-            if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
-            txobj.push_back(Pair("amount", amountStr));
-        break;
-        case MSC_TYPE_SEND_TO_OWNERS:
-            txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
-            divisible = isPropertyDivisible(propertyId);
-            txobj.push_back(Pair("divisible", divisible));
-            if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
-            txobj.push_back(Pair("amount", amountStr));
-        break;
-        case MSC_TYPE_TRADE_OFFER:
-            amountStr = FormatDivisibleMP(amount); // both amount for sale (either TMSC or MSC) and BTC desired are always divisible
-            amountDStr = FormatDivisibleMP(amountDesired);
-            txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
-            txobj.push_back(Pair("amount", amountStr));
-            if (action == 1) txobj.push_back(Pair("action", "new"));
-            if (action == 2) txobj.push_back(Pair("action", "update"));
-            if (action == 3) txobj.push_back(Pair("action", "cancel"));
-            txobj.push_back(Pair("bitcoindesired", amountDStr));
-        break;
-        case MSC_TYPE_METADEX_TRADE:
-        case MSC_TYPE_METADEX_CANCEL_PRICE:
-            divisible = isPropertyDivisible(propertyId);
-            divisibleDesired = isPropertyDivisible(propertyIdDesired);
-            if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
-            if (divisibleDesired) { amountDStr = FormatDivisibleMP(amountDesired); } else { amountDStr = FormatIndivisibleMP(amountDesired); }
-            txobj.push_back(Pair("propertyidforsale", (uint64_t)propertyId));
-            txobj.push_back(Pair("propertyidforsaleisdivisible", divisible));
-            txobj.push_back(Pair("amountforsale", amountStr));
-            txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
-            txobj.push_back(Pair("propertyiddesiredisdivisible", divisibleDesired));
-            txobj.push_back(Pair("amountdesired", amountDStr));
-            if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
-                tempUnitPrice = rational_t(amount, amountDesired);
-                if (!divisibleDesired) tempUnitPrice = tempUnitPrice/COIN;
-            } else {
-                tempUnitPrice = rational_t(amountDesired, amount);
-                if (!divisible) tempUnitPrice = tempUnitPrice/COIN;
-            }
-            txobj.push_back(Pair("unitprice", xToString(tempUnitPrice)));
-        break;
-        case MSC_TYPE_METADEX_CANCEL_PAIR:
-            txobj.push_back(Pair("propertyidforsale", (uint64_t)propertyId));
-            txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
-        break;
-        case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
-            if (isMainEcosystemProperty(propertyId) && isMainEcosystemProperty(propertyIdDesired)) {
-                txobj.push_back(Pair("ecosystem", "main"));
-            } else {
-                txobj.push_back(Pair("ecosystem", "test"));
-            }
-        break;
-    }
-    std::string txDesc = write_string(Value(txobj), true);
-    if (msc_debug_pending) PrintToLog("%s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(), sendingAddress, refAddress,
-                                        type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
+    if (msc_debug_pending) PrintToLog("%s(%s,%s,%d,%d,%d,%s)\n", __func__, txid.GetHex(), sendingAddress, type, propertyId, amount, fSubtract);
 
-    // bypass tally update for pending cancel as there is no balance change
-    if (!(type == MSC_TYPE_METADEX_CANCEL_PRICE) &&
-        !(type == MSC_TYPE_METADEX_CANCEL_PAIR) &&
-        !(type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) &&
-        !(type == MSC_TYPE_TRADE_OFFER && action == 3)) {
+    // bypass tally update for pending transactions, if there the amount should not be subtracted from the balance (e.g. for cancels)
+    if (fSubtract) {
         if (!update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
-            PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(),
-                sendingAddress, refAddress, type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
+            PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%d,%d,%d,%s)\n", __func__, txid.GetHex(), sendingAddress, type, propertyId, amount, fSubtract);
             return;
         }
     }
@@ -123,7 +49,6 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     pending.src = sendingAddress;
     pending.amount = amount;
     pending.prop = propertyId;
-    pending.desc = txDesc;
     pending.type = type;
     {
         LOCK(cs_pending);
@@ -163,6 +88,6 @@ void PendingDelete(const uint256& txid)
  */
 void CMPPending::print(const uint256& txid) const
 {
-    PrintToConsole("%s : %s %d %d %d %s\n", txid.GetHex(), src, prop, amount, type, desc);
+    PrintToConsole("%s : %s %d %d %d %s\n", txid.GetHex(), src, prop, amount, type);
 }
 

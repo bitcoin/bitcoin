@@ -695,7 +695,7 @@ void MetaDExDialog::sendTrade(bool sell)
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
-            PendingAdd(txid, strFromAddress, "", MSC_TYPE_METADEX_TRADE, propertyIdSell, amountSell, propertyIdDes, amountDes, 1);
+            PendingAdd(txid, strFromAddress, MSC_TYPE_METADEX_TRADE, propertyIdSell, amountSell);
             PopulateTXSentDialog(txid.GetHex());
         }
     }
