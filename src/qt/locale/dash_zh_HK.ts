@@ -1,25 +1,27 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_HK" version="2.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="zh_HK">
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="14"/>
+        <location filename="../forms/ui_aboutdialog.h" line="129"/>
         <source>About Dash Core</source>
-        <translation>關於達世幣核心</translation>
+        <translation>關於暗黑幣核心</translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="53"/>
+        <location filename="../forms/ui_aboutdialog.h" line="130"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
-        <translation>&lt;b&gt;達世幣核心&lt;/b&gt; 版本</translation>
+        <translation>&lt;b&gt;暗黑幣核心&lt;/b&gt; 版本</translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="94"/>
+        <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>版權 &amp;copy 為位元幣核心開發人員自西元 2009-2014年所有
-版權 &amp;copy 為達世幣核心開發人員自西元 2014-YYYY年所有</translation>
+版權 &amp;copy 為暗黑幣核心開發人員自西元 2014-YYYY年所有</translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="111"/>
+        <location filename="../forms/ui_aboutdialog.h" line="133"/>
         <source>
 This is experimental software.
 
@@ -36,34 +38,32 @@ This product includes software developed by the OpenSSL Project for use in the O
 此產品也包含了由 OpenSSL Project 所開發的 OpenSSL Toolkit (http://www.openssl.org/) 軟體，和由 Eric Young (eay@cryptsoft.com) 撰寫的加解密軟體，以及由 Thomas Bernard 所撰寫的 UPnP 軟體。</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="30"/>
-        <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation>版權</translation>
+        <translation type="vanished">版權</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation>位元幣核心開發人員</translation>
+        <translation type="vanished">位元幣核心開發人員</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Dash Core developers</source>
-        <translation>達世幣核心開發人員</translation>
+        <translation type="vanished">暗黑幣核心開發人員</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="43"/>
-        <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation>(%1 位元)</translation>
+        <translation type="vanished">(%1 位元)</translation>
     </message>
 </context>
 <context>
     <name>AddressBookPage</name>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>按兩下來編輯位址或標記</translation>
+        <translation type="vanished">按兩下來編輯位址或標記</translation>
+    </message>
+    <message>
+        <location filename="../forms/addressbookpage.ui" line="30"/>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -76,37 +76,37 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>新增</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="71"/>
+        <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>複製目前選擇的位址到系統剪貼簿</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="74"/>
+        <location filename="../forms/addressbookpage.ui" line="77"/>
         <source>&amp;Copy</source>
         <translation>複製</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="85"/>
+        <location filename="../forms/addressbookpage.ui" line="91"/>
         <source>Delete the currently selected address from the list</source>
         <translation>把目前選擇的位址從列表中刪掉</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="88"/>
+        <location filename="../forms/addressbookpage.ui" line="94"/>
         <source>&amp;Delete</source>
         <translation>刪掉</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="112"/>
+        <location filename="../forms/addressbookpage.ui" line="121"/>
         <source>Export the data in the current tab to a file</source>
         <translation>把目前分頁的資料匯出存成檔案</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="115"/>
+        <location filename="../forms/addressbookpage.ui" line="124"/>
         <source>&amp;Export</source>
         <translation>匯出</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="132"/>
+        <location filename="../forms/addressbookpage.ui" line="144"/>
         <source>C&amp;lose</source>
         <translation>關閉</translation>
     </message>
@@ -138,12 +138,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     <message>
         <location filename="../addressbookpage.cpp" line="65"/>
         <source>These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>這些是你要付款過去的達世幣位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
+        <translation>這些是你要付款過去的暗黑幣位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="69"/>
         <source>These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>這些是你用來收款的達世幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
+        <translation>這些是你用來收款的暗黑幣位址。建議在每次交易時，都使用一個新的收款位址。</translation>
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="75"/>
@@ -177,8 +177,12 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation>儲存位址列表到 %1 時發生錯誤。</translation>
+        <translation type="vanished">儲存位址列表到 %1 時發生錯誤。</translation>
     </message>
 </context>
 <context>
@@ -207,145 +211,153 @@ This product includes software developed by the OpenSSL Project for use in the O
         <translation>密碼對話視窗</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="56"/>
         <source>Enter passphrase</source>
         <translation>請輸入密碼</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="70"/>
         <source>New passphrase</source>
         <translation>新密碼</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="84"/>
         <source>Repeat new passphrase</source>
         <translation>重複新密碼</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="108"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="117"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
         <translation>當OS帳號被盜就禁止發送幣。這並不提供真正的安全性。</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="111"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="120"/>
         <source>For anonymization only</source>
         <translation>只為匿名處理</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>請輸入錢包的新密碼。&lt;br/&gt;建議用&lt;b&gt;10 個以上的任意字元&lt;/b&gt;，或是&lt;b&gt;8 個以上的單字&lt;/b&gt;。</translation>
+        <translation type="vanished">請輸入錢包的新密碼。&lt;br/&gt;建議用&lt;b&gt;10 個以上的任意字元&lt;/b&gt;，或是&lt;b&gt;8 個以上的單字&lt;/b&gt;。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="42"/>
+        <location filename="../askpassphrasedialog.cpp" line="46"/>
         <source>Encrypt wallet</source>
         <translation>加密錢包</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="48"/>
+        <location filename="../askpassphrasedialog.cpp" line="52"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
         <translation>這個動作需要你的錢包密碼來解鎖錢包。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="53"/>
+        <location filename="../askpassphrasedialog.cpp" line="57"/>
         <source>Unlock wallet</source>
         <translation>解鎖錢包</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="56"/>
+        <location filename="../askpassphrasedialog.cpp" line="60"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
         <translation>這個動作需要你的錢包密碼來把錢包解密。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="61"/>
+        <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Decrypt wallet</source>
         <translation>解密錢包</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="64"/>
+        <location filename="../askpassphrasedialog.cpp" line="68"/>
         <source>Change passphrase</source>
         <translation>改變密碼</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="65"/>
+        <location filename="../askpassphrasedialog.cpp" line="69"/>
         <source>Enter the old and new passphrase to the wallet.</source>
         <translation>請輸入錢包的舊密碼及新密碼。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <location filename="../askpassphrasedialog.cpp" line="115"/>
         <source>Confirm wallet encryption</source>
         <translation>確認錢包加密</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="113"/>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
-        <translation>警告:如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去所有的達世幣了&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DARKCOINS&lt;/b&gt;!</source>
+        <translation type="vanished">警告:如果把錢包加密後又忘記密碼，你就會從此&lt;b&gt;失去所有的暗黑幣了&lt;/b&gt;!</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="113"/>
+        <location filename="../askpassphrasedialog.cpp" line="43"/>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="116"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>你確定要把錢包加密嗎？</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="122"/>
-        <location filename="../askpassphrasedialog.cpp" line="181"/>
+        <location filename="../askpassphrasedialog.cpp" line="116"/>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="125"/>
+        <location filename="../askpassphrasedialog.cpp" line="184"/>
         <source>Wallet encrypted</source>
         <translation>錢包已加密</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
+        <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
-        <translation>達世幣軟體現在要關閉，以完成加密過程。請注意，加密錢包不能完全防止惡意軟件入侵你的電腦盜取你的達世幣。</translation>
+        <translation>暗黑幣軟體現在要關閉，以完成加密過程。請注意，加密錢包不能完全防止惡意軟件入侵你的電腦盜取你的暗黑幣。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="128"/>
+        <location filename="../askpassphrasedialog.cpp" line="131"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>重要: 請改用新產生有加密的錢包檔，來取代舊錢包檔的備份。為了安全性的理由，當你開始使用新的有加密的錢包後，舊錢包檔的備份就不能再使用了。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="144"/>
-        <location filename="../askpassphrasedialog.cpp" line="187"/>
-        <location filename="../askpassphrasedialog.cpp" line="193"/>
+        <location filename="../askpassphrasedialog.cpp" line="140"/>
+        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <location filename="../askpassphrasedialog.cpp" line="190"/>
+        <location filename="../askpassphrasedialog.cpp" line="196"/>
         <source>Wallet encryption failed</source>
         <translation>錢包加密失敗</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="138"/>
+        <location filename="../askpassphrasedialog.cpp" line="141"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>因為內部錯誤導致錢包加密失敗。你的錢包還是沒加密。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="145"/>
-        <location filename="../askpassphrasedialog.cpp" line="194"/>
+        <location filename="../askpassphrasedialog.cpp" line="148"/>
+        <location filename="../askpassphrasedialog.cpp" line="197"/>
         <source>The supplied passphrases do not match.</source>
         <translation>提供的密碼不一樣。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="157"/>
+        <location filename="../askpassphrasedialog.cpp" line="160"/>
         <source>Wallet unlock failed</source>
         <translation>錢包解鎖失敗</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="158"/>
-        <location filename="../askpassphrasedialog.cpp" line="169"/>
-        <location filename="../askpassphrasedialog.cpp" line="188"/>
+        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <location filename="../askpassphrasedialog.cpp" line="191"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>輸入要用來解密錢包的密碼不對。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="168"/>
+        <location filename="../askpassphrasedialog.cpp" line="171"/>
         <source>Wallet decryption failed</source>
         <translation>錢包解密失敗</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="182"/>
+        <location filename="../askpassphrasedialog.cpp" line="185"/>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>錢包密碼改成功了。</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="230"/>
-        <location filename="../askpassphrasedialog.cpp" line="254"/>
+        <location filename="../askpassphrasedialog.cpp" line="233"/>
+        <location filename="../askpassphrasedialog.cpp" line="257"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>警告: 大寫字母鎖定作用中！</translation>
     </message>
@@ -353,408 +365,431 @@ This product includes software developed by the OpenSSL Project for use in the O
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="76"/>
+        <location filename="../bitcoingui.cpp" line="107"/>
         <source>Dash Core</source>
-        <translation>達世幣核心</translation>
+        <translation>暗黑幣核心</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="85"/>
+        <location filename="../bitcoingui.cpp" line="116"/>
         <source>Wallet</source>
         <translation>錢包</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="87"/>
+        <location filename="../bitcoingui.cpp" line="118"/>
         <source>Node</source>
         <translation>節點</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="101"/>
-        <location filename="../bitcoingui.cpp" line="498"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation type="vanished">[testnet]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="227"/>
+        <location filename="../bitcoingui.cpp" line="249"/>
         <source>&amp;Overview</source>
         <translation>總覽</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="228"/>
+        <location filename="../bitcoingui.cpp" line="250"/>
         <source>Show general overview of wallet</source>
         <translation>顯示錢包一般總覽</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="260"/>
         <source>&amp;Send</source>
         <translation>付款</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="235"/>
+        <location filename="../bitcoingui.cpp" line="261"/>
         <source>Send coins to a Dash address</source>
-        <translation>發送幣至達世幣地址</translation>
+        <translation>發送幣至暗黑幣地址</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
+        <location filename="../bitcoingui.cpp" line="271"/>
         <source>&amp;Receive</source>
         <translation>收款</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="272"/>
         <source>Request payments (generates QR codes and dash: URIs)</source>
-        <translation>要求付款(生成二維碼和達世幣付款協議的 URI)</translation>
+        <translation>要求付款(生成二維碼和暗黑幣付款協議的 URI)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="248"/>
+        <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Transactions</source>
         <translation>交易</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="283"/>
         <source>Browse transaction history</source>
         <translation>瀏覽交易紀錄</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="266"/>
+        <location filename="../bitcoingui.cpp" line="306"/>
         <source>E&amp;xit</source>
         <translation>結束</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="267"/>
+        <location filename="../bitcoingui.cpp" line="307"/>
         <source>Quit application</source>
         <translation>結束應用程式</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="271"/>
-        <location filename="../bitcoingui.cpp" line="273"/>
+        <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;About Dash Core</source>
-        <translation>關於達世幣核心</translation>
+        <translation>關於暗黑幣核心</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="274"/>
         <source>Show information about Dash</source>
-        <translation>顯示達世幣的相關資訊</translation>
+        <translation type="vanished">顯示暗黑幣的相關資訊</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="277"/>
-        <location filename="../bitcoingui.cpp" line="279"/>
+        <location filename="../bitcoingui.cpp" line="311"/>
+        <source>Show information about Dash Core</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="314"/>
+        <location filename="../bitcoingui.cpp" line="316"/>
         <source>About &amp;Qt</source>
         <translation>關於 &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="281"/>
+        <location filename="../bitcoingui.cpp" line="318"/>
         <source>Show information about Qt</source>
         <translation>顯示 Qt 相關資訊</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="283"/>
+        <location filename="../bitcoingui.cpp" line="320"/>
         <source>&amp;Options...</source>
         <translation>選項...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="284"/>
+        <location filename="../bitcoingui.cpp" line="321"/>
         <source>Modify configuration options for Dash</source>
-        <translation>修改達世幣配置選項</translation>
+        <translation>修改暗黑幣配置選項</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="287"/>
-        <location filename="../bitcoingui.cpp" line="289"/>
+        <location filename="../bitcoingui.cpp" line="323"/>
         <source>&amp;Show / Hide</source>
         <translation>顯示或隱藏</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="290"/>
+        <location filename="../bitcoingui.cpp" line="324"/>
         <source>Show or hide the main Window</source>
         <translation>顯示或隱藏主視窗</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="292"/>
+        <location filename="../bitcoingui.cpp" line="326"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>加密錢包...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="293"/>
+        <location filename="../bitcoingui.cpp" line="327"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>把錢包中的密鑰加密</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="295"/>
+        <location filename="../bitcoingui.cpp" line="329"/>
         <source>&amp;Backup Wallet...</source>
         <translation>備份錢包...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
+        <location filename="../bitcoingui.cpp" line="330"/>
         <source>Backup wallet to another location</source>
         <translation>把錢包備份到其它地方</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="297"/>
+        <location filename="../bitcoingui.cpp" line="331"/>
         <source>&amp;Change Passphrase...</source>
         <translation>改變密碼...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="298"/>
+        <location filename="../bitcoingui.cpp" line="332"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>改變錢包加密用的密碼</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="299"/>
+        <location filename="../bitcoingui.cpp" line="333"/>
         <source>&amp;Unlock Wallet...</source>
         <translation>&amp;解鎖錢包</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="300"/>
+        <location filename="../bitcoingui.cpp" line="334"/>
         <source>Unlock wallet</source>
         <translation>解鎖錢包</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="301"/>
+        <location filename="../bitcoingui.cpp" line="335"/>
         <source>&amp;Lock Wallet</source>
         <translation>&amp;鎖定錢包</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="302"/>
+        <location filename="../bitcoingui.cpp" line="336"/>
         <source>Sign &amp;message...</source>
         <translation>簽署訊息...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="303"/>
+        <location filename="../bitcoingui.cpp" line="337"/>
         <source>Sign messages with your Dash addresses to prove you own them</source>
-        <translation>用達世幣位址簽署訊息來證明位址是你的</translation>
+        <translation>用暗黑幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="304"/>
+        <location filename="../bitcoingui.cpp" line="338"/>
         <source>&amp;Verify message...</source>
         <translation>驗證訊息...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="305"/>
+        <location filename="../bitcoingui.cpp" line="339"/>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
-        <translation>驗證訊息是用來確定訊息是用指定的達世幣位址簽署的</translation>
+        <translation>驗證訊息是用來確定訊息是用指定的暗黑幣位址簽署的</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="341"/>
         <source>&amp;Information</source>
         <translation>資訊</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="308"/>
+        <location filename="../bitcoingui.cpp" line="342"/>
         <source>Show diagnostic information</source>
         <translation>顯示診斷信息</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="309"/>
+        <location filename="../bitcoingui.cpp" line="343"/>
         <source>&amp;Debug console</source>
         <translation>除錯控制台</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="310"/>
+        <location filename="../bitcoingui.cpp" line="344"/>
         <source>Open debugging console</source>
         <translation>開啟除錯控制台</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="311"/>
+        <location filename="../bitcoingui.cpp" line="345"/>
         <source>&amp;Network Monitor</source>
         <translation>網絡監控器</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="312"/>
+        <location filename="../bitcoingui.cpp" line="346"/>
         <source>Show network monitor</source>
         <translation>顯示網絡監控器</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="313"/>
+        <location filename="../bitcoingui.cpp" line="347"/>
         <source>Open &amp;Configuration File</source>
         <translation>開啟配置文件</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
+        <location filename="../bitcoingui.cpp" line="348"/>
         <source>Open configuration file</source>
         <translation>開啟配置文件</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="316"/>
+        <location filename="../bitcoingui.cpp" line="350"/>
         <source>&amp;Sending addresses...</source>
         <translation>付款位址...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="317"/>
+        <location filename="../bitcoingui.cpp" line="351"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>顯示已使用過的付款位址和標記的清單</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="318"/>
+        <location filename="../bitcoingui.cpp" line="352"/>
         <source>&amp;Receiving addresses...</source>
         <translation>收款位址...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="319"/>
+        <location filename="../bitcoingui.cpp" line="353"/>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>顯示已使用過的收款位址和標記的清單</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="321"/>
+        <location filename="../bitcoingui.cpp" line="355"/>
         <source>Open &amp;URI...</source>
         <translation>開啓 URI...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="322"/>
+        <location filename="../bitcoingui.cpp" line="356"/>
         <source>Open a dash: URI or payment request</source>
-        <translation>打開達世幣：網頁或付款請求</translation>
+        <translation>打開暗黑幣：網頁或付款請求</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="324"/>
+        <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;Command-line options</source>
         <translation>命令列選項</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="325"/>
-        <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
-        <translation>打開達世幣核心的幫助信息以取得可使用的命令行列表</translation>
+        <location filename="../bitcoingui.cpp" line="360"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Dash command-line options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="361"/>
+        <location filename="../bitcoingui.cpp" line="550"/>
+        <source>Dash Core client</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="727"/>
+        <source>Processed %n blocks of transaction history.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
+        <translation type="vanished">打開暗黑幣核心的幫助信息以取得可使用的命令行列表</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="396"/>
         <source>&amp;File</source>
         <translation>檔案</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="375"/>
+        <location filename="../bitcoingui.cpp" line="410"/>
         <source>&amp;Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="388"/>
+        <location filename="../bitcoingui.cpp" line="423"/>
         <source>&amp;Tools</source>
         <translation>工具</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="395"/>
+        <location filename="../bitcoingui.cpp" line="430"/>
         <source>&amp;Help</source>
         <translation>說明</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="406"/>
+        <location filename="../bitcoingui.cpp" line="441"/>
         <source>Tabs toolbar</source>
         <translation>分頁工具列</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="493"/>
-        <location filename="../bitcoingui.cpp" line="498"/>
         <source>Dash client</source>
-        <translation>達世幣客戶端</translation>
+        <translation type="vanished">暗黑幣客戶端</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="643"/>
+        <location filename="../bitcoingui.cpp" line="692"/>
         <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>%n 個運作中的達世幣網路連線</numerusform></translation>
+        <translation>
+            <numerusform>%n 個運作中的暗黑幣網路連線</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="655"/>
+        <location filename="../bitcoingui.cpp" line="707"/>
         <source>Synchronizing with network...</source>
         <translation>正在跟網路進行同步...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="658"/>
+        <location filename="../bitcoingui.cpp" line="710"/>
         <source>Importing blocks from disk...</source>
         <translation>正在從磁碟匯入區塊資料...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="661"/>
+        <location filename="../bitcoingui.cpp" line="713"/>
         <source>Reindexing blocks on disk...</source>
         <translation>正在為磁碟裡的區塊重建索引...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>No block source available...</source>
         <translation>沒有可用的區塊來源...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="675"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>已處理了 %1 個區塊的交易紀錄。</translation>
+        <translation type="vanished">已處理了 %1 個區塊的交易紀錄。</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="680"/>
+        <location filename="../bitcoingui.cpp" line="732"/>
         <source>Up to date</source>
         <translation>最新狀態</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="701"/>
+        <location filename="../bitcoingui.cpp" line="753"/>
         <source>%n hour(s)</source>
-        <translation><numerusform>%n 個小時</numerusform></translation>
+        <translation>
+            <numerusform>%n 個小時</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="705"/>
+        <location filename="../bitcoingui.cpp" line="757"/>
         <source>%n day(s)</source>
-        <translation><numerusform>%n 天</numerusform></translation>
+        <translation>
+            <numerusform>%n 天</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="709"/>
-        <location filename="../bitcoingui.cpp" line="715"/>
+        <location filename="../bitcoingui.cpp" line="761"/>
+        <location filename="../bitcoingui.cpp" line="767"/>
         <source>%n week(s)</source>
-        <translation><numerusform>%n 個星期</numerusform></translation>
+        <translation>
+            <numerusform>%n 個星期</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="715"/>
+        <location filename="../bitcoingui.cpp" line="767"/>
         <source>%1 and %2</source>
         <translation>%1又 %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="715"/>
+        <location filename="../bitcoingui.cpp" line="767"/>
         <source>%n year(s)</source>
-        <translation><numerusform>%n 年</numerusform></translation>
+        <translation>
+            <numerusform>%n 年</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="771"/>
         <source>%1 behind</source>
         <translation>落後 %1</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="724"/>
+        <location filename="../bitcoingui.cpp" line="776"/>
         <source>Catching up...</source>
         <translation>正在趕進度...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="740"/>
+        <location filename="../bitcoingui.cpp" line="792"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>最近收到的區塊是在 %1 以前生出來的。</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="742"/>
+        <location filename="../bitcoingui.cpp" line="794"/>
         <source>Transactions after this will not yet be visible.</source>
         <translation>暫時會看不到在這之後的交易。</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="755"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Dash</source>
-        <translation>達世幣</translation>
+        <translation>暗黑幣</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="769"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="772"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="827"/>
         <source>Information</source>
         <translation>資訊</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="854"/>
+        <location filename="../bitcoingui.cpp" line="901"/>
         <source>Sent transaction</source>
         <translation>付款交易</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="854"/>
+        <location filename="../bitcoingui.cpp" line="901"/>
         <source>Incoming transaction</source>
         <translation>收款交易</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="855"/>
+        <location filename="../bitcoingui.cpp" line="902"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -767,30 +802,30 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="926"/>
+        <location filename="../bitcoingui.cpp" line="972"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="936"/>
+        <location filename="../bitcoingui.cpp" line="982"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且因為匿名操作而&lt;b&gt;解鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="946"/>
+        <location filename="../bitcoingui.cpp" line="992"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;上鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="449"/>
+        <location filename="../dash.cpp" line="478"/>
         <source>A fatal error occurred. Dash can no longer continue safely and will quit.</source>
-        <translation>發生嚴重錯誤。達世幣不能繼續安全操作，將退出。</translation>
+        <translation>發生嚴重錯誤。暗黑幣不能繼續安全操作，將退出。</translation>
     </message>
 </context>
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="164"/>
+        <location filename="../clientmodel.cpp" line="171"/>
         <source>Network Alert</source>
         <translation>網路警報</translation>
     </message>
@@ -798,9 +833,8 @@ Address: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation>錢幣控制的位址選擇</translation>
+        <translation type="vanished">錢幣控制的位址選擇</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -828,9 +862,18 @@ Address: %4
         <translation>手續費:</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation>低輸出:</translation>
+        <translation type="vanished">低輸出:</translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="14"/>
+        <source>Coin Selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="228"/>
+        <source>Dust:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
@@ -848,7 +891,7 @@ Address: %4
         <translation>全選或全不選</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="377"/>
+        <location filename="../forms/coincontroldialog.ui" line="380"/>
         <source>Tree mode</source>
         <translation>樹狀模式</translation>
     </message>
@@ -858,253 +901,265 @@ Address: %4
         <translation>列表模式</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="400"/>
+        <location filename="../forms/coincontroldialog.ui" line="403"/>
         <source>(1 locked)</source>
         <translation>(1 鎖定 )</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="446"/>
+        <location filename="../forms/coincontroldialog.ui" line="449"/>
         <source>Amount</source>
         <translation>金額</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="451"/>
+        <location filename="../forms/coincontroldialog.ui" line="454"/>
+        <source>Received with label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="459"/>
+        <source>Received with address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Label</source>
-        <translation>標記</translation>
+        <translation type="vanished">標記</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation>位址</translation>
+        <translation type="vanished">位址</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="461"/>
+        <location filename="../forms/coincontroldialog.ui" line="464"/>
         <source>Darksend Rounds</source>
         <translation>匿名發送循環</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="466"/>
+        <location filename="../forms/coincontroldialog.ui" line="469"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="471"/>
+        <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmations</source>
         <translation>確認次數</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="474"/>
+        <location filename="../forms/coincontroldialog.ui" line="477"/>
         <source>Confirmed</source>
         <translation>已確認</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="479"/>
+        <location filename="../forms/coincontroldialog.ui" line="482"/>
         <source>Priority</source>
         <translation>優先度</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="43"/>
+        <location filename="../coincontroldialog.cpp" line="49"/>
         <source>Copy address</source>
         <translation>複製位址</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="44"/>
+        <location filename="../coincontroldialog.cpp" line="50"/>
         <source>Copy label</source>
         <translation>複製標記</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="45"/>
-        <location filename="../coincontroldialog.cpp" line="71"/>
+        <location filename="../coincontroldialog.cpp" line="51"/>
+        <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy amount</source>
         <translation>複製金額</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="46"/>
+        <location filename="../coincontroldialog.cpp" line="52"/>
         <source>Copy transaction ID</source>
         <translation>複製交易識別碼</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="47"/>
+        <location filename="../coincontroldialog.cpp" line="53"/>
         <source>Lock unspent</source>
         <translation>鎖定不用</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="48"/>
+        <location filename="../coincontroldialog.cpp" line="54"/>
         <source>Unlock unspent</source>
         <translation>解鎖可用</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="70"/>
+        <location filename="../coincontroldialog.cpp" line="76"/>
         <source>Copy quantity</source>
         <translation>複製數目</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="72"/>
+        <location filename="../coincontroldialog.cpp" line="78"/>
         <source>Copy fee</source>
         <translation>複製手續費</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="73"/>
+        <location filename="../coincontroldialog.cpp" line="79"/>
         <source>Copy after fee</source>
         <translation>複製計費後金額</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="74"/>
+        <location filename="../coincontroldialog.cpp" line="80"/>
         <source>Copy bytes</source>
         <translation>複製位元組數</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="75"/>
+        <location filename="../coincontroldialog.cpp" line="81"/>
         <source>Copy priority</source>
         <translation>複製優先度</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="76"/>
-        <source>Copy low output</source>
-        <translation>複製低輸出</translation>
+        <location filename="../coincontroldialog.cpp" line="82"/>
+        <source>Copy dust</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="77"/>
+        <source>Copy low output</source>
+        <translation type="vanished">複製低輸出</translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="83"/>
         <source>Copy change</source>
         <translation>複製找零金額</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="410"/>
+        <location filename="../coincontroldialog.cpp" line="435"/>
         <source>highest</source>
         <translation>最高</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="411"/>
+        <location filename="../coincontroldialog.cpp" line="436"/>
         <source>higher</source>
         <translation>很高</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="412"/>
+        <location filename="../coincontroldialog.cpp" line="437"/>
         <source>high</source>
         <translation>高</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="413"/>
+        <location filename="../coincontroldialog.cpp" line="438"/>
         <source>medium-high</source>
         <translation>中高</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="759"/>
+        <location filename="../coincontroldialog.cpp" line="654"/>
+        <source>Can vary +/- %1 duff(s) per input.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="780"/>
         <source>n/a</source>
         <translation>不適用</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
-        <location filename="../coincontroldialog.cpp" line="414"/>
+        <location filename="../coincontroldialog.cpp" line="439"/>
         <source>medium</source>
         <translation>中等</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="418"/>
+        <location filename="../coincontroldialog.cpp" line="440"/>
         <source>low-medium</source>
         <translation>中低</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="419"/>
+        <location filename="../coincontroldialog.cpp" line="441"/>
         <source>low</source>
         <translation>低</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="420"/>
+        <location filename="../coincontroldialog.cpp" line="442"/>
         <source>lower</source>
         <translation>很低</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="421"/>
+        <location filename="../coincontroldialog.cpp" line="443"/>
         <source>lowest</source>
         <translation>最低</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="432"/>
+        <location filename="../coincontroldialog.cpp" line="453"/>
         <source>(%1 locked)</source>
         <translation>(鎖定 %1 枚)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="464"/>
+        <location filename="../coincontroldialog.cpp" line="481"/>
         <source>none</source>
         <translation>無</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="615"/>
         <source>Dust</source>
-        <translation>零散錢</translation>
+        <translation type="vanished">零散錢</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="615"/>
+        <location filename="../coincontroldialog.cpp" line="622"/>
         <source>yes</source>
         <translation>是</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="244"/>
-        <location filename="../coincontroldialog.cpp" line="615"/>
+        <location filename="../coincontroldialog.cpp" line="622"/>
         <source>no</source>
         <translation>否</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="625"/>
+        <location filename="../coincontroldialog.cpp" line="638"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
         <translation>當交易大小大於 1000 位元組時，文字會變紅色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="626"/>
-        <location filename="../coincontroldialog.cpp" line="631"/>
+        <location filename="../coincontroldialog.cpp" line="639"/>
+        <location filename="../coincontroldialog.cpp" line="644"/>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>表示每一千位元組(kB)需要至少 %1 的手續費。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="627"/>
+        <location filename="../coincontroldialog.cpp" line="640"/>
         <source>Can vary +/- 1 byte per input.</source>
         <translation>每組輸入可能會誤差多或少 1 個位元組。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="629"/>
+        <location filename="../coincontroldialog.cpp" line="642"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>優先度較高的交易比較有可能被接受放進區塊中。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="630"/>
+        <location filename="../coincontroldialog.cpp" line="643"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
         <translation>當優先度低於「中等」時，文字會變紅色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="633"/>
+        <location filename="../coincontroldialog.cpp" line="646"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
         <translation>當任何一個收款金額小於 %1 時，文字會變紅色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="634"/>
-        <location filename="../coincontroldialog.cpp" line="638"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation>表示至少需要 %1 的交易手續費。</translation>
+        <translation type="vanished">表示至少需要 %1 的交易手續費。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="635"/>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation>當金額低於最低轉發手續費乘以 0.546 時，會顯示成零散錢。</translation>
+        <translation type="vanished">當金額低於最低轉發手續費乘以 0.546 時，會顯示成零散錢。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="637"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation>當找零金額小於 %1 時，文字會變紅色。</translation>
+        <translation type="vanished">當找零金額小於 %1 時，文字會變紅色。</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="680"/>
-        <location filename="../coincontroldialog.cpp" line="741"/>
+        <location filename="../coincontroldialog.cpp" line="701"/>
+        <location filename="../coincontroldialog.cpp" line="762"/>
         <source>(no label)</source>
         <translation>(無標記)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="734"/>
+        <location filename="../coincontroldialog.cpp" line="755"/>
         <source>change from %1 (%2)</source>
         <translation>找零前是 %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="735"/>
+        <location filename="../coincontroldialog.cpp" line="756"/>
         <source>(change)</source>
         <translation>(找零)</translation>
     </message>
@@ -1181,17 +1236,17 @@ Address: %4
     <message>
         <location filename="../darksendconfig.cpp" line="44"/>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名發送已成功設置為一般(%1到2次循環)。你可以通過打開達世幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為一般(%1到2次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="59"/>
         <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名發送已成功設置為高(%1到8次循環)。你可以通過打開達世幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為高(%1到8次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
     <message>
         <location filename="../darksendconfig.cpp" line="74"/>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash&apos;s configuration screen.</source>
-        <translation>匿名發送已成功設置為最高(%1到16次循環)。你可以通過打開達世幣配置窗口來隨時修改。</translation>
+        <translation>匿名發送已成功設置為最高(%1到16次循環)。你可以通過打開暗黑幣配置窗口來隨時修改。</translation>
     </message>
 </context>
 <context>
@@ -1244,7 +1299,7 @@ Address: %4
     <message>
         <location filename="../editaddressdialog.cpp" line="111"/>
         <source>The entered address &quot;%1&quot; is not a valid Dash address.</source>
-        <translation>輸入的地址&quot;%1&quot;不是有效的達世幣地址。</translation>
+        <translation>輸入的地址&quot;%1&quot;不是有效的暗黑幣地址。</translation>
     </message>
     <message>
         <location filename="../editaddressdialog.cpp" line="116"/>
@@ -1293,57 +1348,72 @@ Address: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Dash Core - Command-line options</source>
-        <translation>達世幣核心 - 命令行選項</translation>
+        <translation type="vanished">暗黑幣核心 - 命令行選項</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="69"/>
+        <location filename="../utilitydialog.cpp" line="32"/>
         <source>Dash Core</source>
-        <translation>達世幣核心</translation>
+        <translation>暗黑幣核心</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="69"/>
+        <location filename="../utilitydialog.cpp" line="32"/>
         <source>version</source>
         <translation>版本</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="71"/>
+        <location filename="../utilitydialog.cpp" line="37"/>
+        <location filename="../utilitydialog.cpp" line="39"/>
+        <source>(%1-bit)</source>
+        <translation type="unfinished">(%1 位元)</translation>
+    </message>
+    <message>
+        <location filename="../utilitydialog.cpp" line="44"/>
+        <source>About Dash Core</source>
+        <translation type="unfinished">關於暗黑幣核心</translation>
+    </message>
+    <message>
+        <location filename="../utilitydialog.cpp" line="62"/>
+        <source>Command-line options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../utilitydialog.cpp" line="63"/>
         <source>Usage:</source>
         <translation>用法:</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="72"/>
+        <location filename="../utilitydialog.cpp" line="64"/>
         <source>command-line options</source>
         <translation>命令列選項</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="76"/>
+        <location filename="../utilitydialog.cpp" line="68"/>
         <source>UI options</source>
         <translation>使用界面選項</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="77"/>
+        <location filename="../utilitydialog.cpp" line="69"/>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>啓動時選擇資料目錄(預設值: 0)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="78"/>
+        <location filename="../utilitydialog.cpp" line="70"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="79"/>
+        <location filename="../utilitydialog.cpp" line="71"/>
         <source>Start minimized</source>
         <translation>啓動時縮到最小</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="80"/>
+        <location filename="../utilitydialog.cpp" line="72"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
         <translation>設定付款請求時所使用的 SSL 根憑證 (預設值: 系統憑證庫)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="81"/>
+        <location filename="../utilitydialog.cpp" line="73"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>顯示啓動畫面(預設值: 1)</translation>
     </message>
@@ -1358,17 +1428,17 @@ Address: %4
     <message>
         <location filename="../forms/intro.ui" line="23"/>
         <source>Welcome to Dash Core.</source>
-        <translation>歡迎來到達世幣核心。</translation>
+        <translation>歡迎來到暗黑幣核心。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="49"/>
         <source>As this is the first time the program is launched, you can choose where Dash Core will store its data.</source>
-        <translation>因為這是程式第一次啓動，你可以選擇達世幣核心儲存資料的地方。</translation>
+        <translation>因為這是程式第一次啓動，你可以選擇暗黑幣核心儲存資料的地方。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="59"/>
         <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>達世幣核心會下載並儲存一份達世幣區塊鏈的拷貝。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
+        <translation>暗黑幣核心會下載並儲存一份暗黑幣區塊鏈的拷貝。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
     </message>
     <message>
         <location filename="../forms/intro.ui" line="69"/>
@@ -1381,29 +1451,49 @@ Address: %4
         <translation>使用自定的資料目錄:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="185"/>
         <source>Dash</source>
-        <translation>達世幣</translation>
+        <translation type="vanished">暗黑幣</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
+        <translation type="vanished">錯誤: 沒辦法造出指定的資料目錄 %1 。</translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="185"/>
+        <source>Dash Core</source>
+        <translation type="unfinished">暗黑幣核心</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>錯誤: 沒辦法造出指定的資料目錄 %1 。</translation>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <location filename="../intro.cpp" line="219"/>
-        <source>GB of free space available</source>
-        <translation>GB 可用空間</translation>
+        <source>%n GB of free space available</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../intro.cpp" line="222"/>
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="222"/>
+        <source>GB of free space available</source>
+        <translation type="vanished">GB 可用空間</translation>
+    </message>
+    <message>
         <source>(of %1GB needed)</source>
-        <translation>(需要 %1GB)</translation>
+        <translation type="vanished">(需要 %1GB)</translation>
     </message>
 </context>
 <context>
@@ -1424,7 +1514,7 @@ Address: %4
         <translation>URI:</translation>
     </message>
     <message>
-        <location filename="../forms/openuridialog.ui" line="40"/>
+        <location filename="../forms/openuridialog.ui" line="39"/>
         <source>Select payment request file</source>
         <translation>選擇付款要求資料檔</translation>
     </message>
@@ -1449,12 +1539,12 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="33"/>
         <source>Automatically start Dash after logging in to the system.</source>
-        <translation>登錄系統後自動啟動達世幣程序</translation>
+        <translation>登錄系統後自動啟動暗黑幣程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="36"/>
         <source>&amp;Start Dash on system login</source>
-        <translation>系統登錄時啟動達世幣程序</translation>
+        <translation>系統登錄時啟動暗黑幣程序</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="45"/>
@@ -1494,7 +1584,7 @@ Address: %4
     <message>
         <location filename="../forms/optionsdialog.ui" line="180"/>
         <source>Amount of Dash to keep anonymized</source>
-        <translation>保持匿名化的達世幣數</translation>
+        <translation>保持匿名化的暗黑幣數</translation>
     </message>
     <message>
         <location filename="../forms/optionsdialog.ui" line="206"/>
@@ -1502,231 +1592,248 @@ Address: %4
         <translation>錢包</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="212"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>每一千位元組(kB)要付的交易手續費，如果有付可以加速網路處理你的交易。大部份交易資料的大小是 1 kB.</translation>
-    </message>
-    <message>
-        <location filename="../forms/optionsdialog.ui" line="227"/>
-        <source>Pay transaction &amp;fee</source>
-        <translation>付交易手續費</translation>
-    </message>
-    <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
+        <source>Accept connections from outside</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="274"/>
+        <source>Allow incoming connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="281"/>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="284"/>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
+        <translation type="vanished">每一千位元組(kB)要付的交易手續費，如果有付可以加速網路處理你的交易。大部份交易資料的大小是 1 kB.</translation>
+    </message>
+    <message>
+        <source>Pay transaction &amp;fee</source>
+        <translation type="vanished">付交易手續費</translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Expert</source>
         <translation>專家</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="277"/>
+        <location filename="../forms/optionsdialog.ui" line="218"/>
         <source>Whether to show coin control features or not.</source>
         <translation>是否要顯示錢幣控制功能。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="280"/>
+        <location filename="../forms/optionsdialog.ui" line="221"/>
         <source>Enable coin &amp;control features</source>
         <translation>開啟錢幣控制功能</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="287"/>
+        <location filename="../forms/optionsdialog.ui" line="228"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation>如果你關掉「可以花還沒確認的零錢」，那麼交易中找零的零錢就必須要等交易至少有一次確認後，才能夠使用。這也會影響餘額的計算方式。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="290"/>
+        <location filename="../forms/optionsdialog.ui" line="231"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>可以花還沒確認的零錢</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="301"/>
+        <location filename="../forms/optionsdialog.ui" line="255"/>
         <source>&amp;Network</source>
         <translation>網路</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="307"/>
+        <location filename="../forms/optionsdialog.ui" line="261"/>
         <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自動對路由器打開達世幣客戶端端口。此項只在路由器支持UPnP時有效。</translation>
+        <translation>自動對路由器打開暗黑幣客戶端端口。此項只在路由器支持UPnP時有效。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="310"/>
+        <location filename="../forms/optionsdialog.ui" line="264"/>
         <source>Map port using &amp;UPnP</source>
         <translation>用 &amp;UPnP 設定通訊埠對應</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Dash network through a SOCKS proxy.</source>
-        <translation>通過SOCKS代理鏈接達世幣網絡。</translation>
+        <translation type="vanished">通過SOCKS代理鏈接暗黑幣網絡。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>透過 SOCKS 代理伺服器連線(預設代理伺服器):</translation>
+        <translation type="vanished">透過 SOCKS 代理伺服器連線(預設代理伺服器):</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="329"/>
+        <location filename="../forms/optionsdialog.ui" line="293"/>
         <source>Proxy &amp;IP:</source>
         <translation>代理位址:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="354"/>
+        <location filename="../forms/optionsdialog.ui" line="318"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>代理伺服器的網際網路位址(像是 IPv4 的 127.0.0.1 或 IPv6 的 ::1)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="361"/>
+        <location filename="../forms/optionsdialog.ui" line="325"/>
         <source>&amp;Port:</source>
         <translation>埠號:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="386"/>
+        <location filename="../forms/optionsdialog.ui" line="350"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>代理伺服器的通訊埠(像是 9050)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS 版本:</translation>
+        <translation type="vanished">SOCKS 版本:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>代理伺服器的 SOCKS 協定版本(像是 5)</translation>
+        <translation type="vanished">代理伺服器的 SOCKS 協定版本(像是 5)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="442"/>
+        <location filename="../forms/optionsdialog.ui" line="386"/>
         <source>&amp;Window</source>
         <translation>視窗</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="448"/>
+        <location filename="../forms/optionsdialog.ui" line="392"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>視窗縮到最小後只在通知區域顯示圖示。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="451"/>
+        <location filename="../forms/optionsdialog.ui" line="395"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>縮到最小到通知區域而不是工作列</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="458"/>
+        <location filename="../forms/optionsdialog.ui" line="402"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
         <translation>當視窗關閉時，把應用程式縮到最小，而不是結束。當勾選這個選項時，只能夠用選單中的結束來關掉應用程式。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="461"/>
+        <location filename="../forms/optionsdialog.ui" line="405"/>
         <source>M&amp;inimize on close</source>
         <translation>關閉時縮到最小</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="482"/>
+        <location filename="../forms/optionsdialog.ui" line="426"/>
         <source>&amp;Display</source>
         <translation>顯示</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="490"/>
+        <location filename="../forms/optionsdialog.ui" line="434"/>
         <source>User Interface &amp;language:</source>
         <translation>使用界面語言:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="503"/>
+        <location filename="../forms/optionsdialog.ui" line="447"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Dash.</source>
-        <translation>可以在這裡設定使用者介面的語言。這個設定在重啓達世幣軟體後才會生效。</translation>
+        <translation>可以在這裡設定使用者介面的語言。這個設定在重啓暗黑幣軟體後才會生效。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="524"/>
+        <location filename="../forms/optionsdialog.ui" line="468"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/dash/</source>
         <translation>缺少相關語言或翻譯不完整? 請到這裡協助翻譯:
 https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="550"/>
+        <location filename="../forms/optionsdialog.ui" line="487"/>
+        <source>User Interface Theme:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="508"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>金額顯示單位:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="563"/>
+        <location filename="../forms/optionsdialog.ui" line="521"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>選擇操作界面和付款時，預設顯示金額的細分單位。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="572"/>
         <source>Whether to show Dash addresses in the transaction list or not.</source>
-        <translation>是否顯示交易列表中的達世幣地址。</translation>
+        <translation type="vanished">是否顯示交易列表中的暗黑幣地址。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="575"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>在交易列表顯示位址</translation>
+        <translation type="vanished">在交易列表顯示位址</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="584"/>
-        <location filename="../forms/optionsdialog.ui" line="597"/>
+        <location filename="../forms/optionsdialog.ui" line="532"/>
+        <location filename="../forms/optionsdialog.ui" line="545"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>在交易頁籤的情境選單出現的第三方(比如說區塊探索網站)網址連結。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="587"/>
+        <location filename="../forms/optionsdialog.ui" line="535"/>
         <source>Third party transaction URLs</source>
         <translation>交易的第三方網址連結</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="628"/>
+        <location filename="../forms/optionsdialog.ui" line="576"/>
         <source>Active command-line options that override above options:</source>
         <translation>從命令列取代掉以上設定的選項有:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="671"/>
+        <location filename="../forms/optionsdialog.ui" line="619"/>
         <source>Reset all client options to default.</source>
         <translation>重設所有客戶端軟體選項成預設值。</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="674"/>
+        <location filename="../forms/optionsdialog.ui" line="622"/>
         <source>&amp;Reset Options</source>
         <translation>重設選項</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="735"/>
+        <location filename="../forms/optionsdialog.ui" line="683"/>
         <source>&amp;OK</source>
         <translation>好</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="742"/>
+        <location filename="../forms/optionsdialog.ui" line="696"/>
         <source>&amp;Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="73"/>
+        <location filename="../optionsdialog.cpp" line="84"/>
         <source>default</source>
         <translation>預設值</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="134"/>
+        <location filename="../optionsdialog.cpp" line="144"/>
         <source>none</source>
         <translation>無</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="222"/>
+        <location filename="../optionsdialog.cpp" line="228"/>
         <source>Confirm options reset</source>
         <translation>確認重設選項</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="223"/>
-        <location filename="../optionsdialog.cpp" line="253"/>
+        <location filename="../optionsdialog.cpp" line="229"/>
+        <location filename="../optionsdialog.cpp" line="259"/>
         <source>Client restart required to activate changes.</source>
         <translation>需要重新啟動客戶端軟體來讓改變生效。</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="223"/>
+        <location filename="../optionsdialog.cpp" line="229"/>
         <source>Client will be shutdown, do you want to proceed?</source>
         <translation>客戶端軟體就要關掉了，繼續做下去嗎?</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="257"/>
+        <location filename="../optionsdialog.cpp" line="263"/>
         <source>This change would require a client restart.</source>
         <translation>這項改變需要重新啟動客戶端軟體。</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="291"/>
+        <location filename="../optionsdialog.cpp" line="288"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>提供的代理伺服器位址無效。</translation>
     </message>
@@ -1739,313 +1846,363 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>表單</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="63"/>
         <source>Wallet</source>
-        <translation>錢包</translation>
+        <translation type="vanished">錢包</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="70"/>
-        <location filename="../forms/overviewpage.ui" line="953"/>
-        <location filename="../forms/overviewpage.ui" line="1021"/>
+        <location filename="../forms/overviewpage.ui" line="73"/>
+        <location filename="../forms/overviewpage.ui" line="1088"/>
+        <location filename="../forms/overviewpage.ui" line="1165"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation>顯示的資訊可能是過期的。跟達世幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
+        <translation>顯示的資訊可能是過期的。跟暗黑幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="114"/>
+        <location filename="../forms/overviewpage.ui" line="322"/>
         <source>Available:</source>
         <translation>可用金額:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="130"/>
+        <location filename="../forms/overviewpage.ui" line="338"/>
         <source>Your current spendable balance</source>
         <translation>目前可用餘額</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="146"/>
+        <location filename="../forms/overviewpage.ui" line="379"/>
         <source>Pending:</source>
         <translation>未定金額:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="162"/>
+        <location filename="../forms/overviewpage.ui" line="143"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>還沒被確認的交易的總金額，可用餘額不包含這些金額</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="178"/>
+        <location filename="../forms/overviewpage.ui" line="255"/>
         <source>Immature:</source>
         <translation>未成熟金額:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="191"/>
+        <location filename="../forms/overviewpage.ui" line="226"/>
         <source>Mined balance that has not yet matured</source>
         <translation>還沒成熟的開採金額</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="207"/>
+        <location filename="../forms/overviewpage.ui" line="63"/>
+        <source>Balances</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="118"/>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="168"/>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="210"/>
         <source>Total:</source>
         <translation>總金額:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="223"/>
+        <location filename="../forms/overviewpage.ui" line="271"/>
         <source>Your current total balance</source>
         <translation>目前全部餘額</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="302"/>
+        <location filename="../forms/overviewpage.ui" line="296"/>
+        <source>Current total balance in watch-only addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="312"/>
+        <source>Watch-only:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="363"/>
+        <source>Your current balance in watch-only addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="386"/>
+        <source>Spendable:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="437"/>
         <source>Status:</source>
         <translation>狀態：</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="309"/>
+        <location filename="../forms/overviewpage.ui" line="444"/>
         <source>Enabled/Disabled</source>
         <translation>啟用/禁用</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="316"/>
+        <location filename="../forms/overviewpage.ui" line="451"/>
         <source>Completion:</source>
         <translation>完成：</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="336"/>
+        <location filename="../forms/overviewpage.ui" line="471"/>
         <source>Darksend Balance:</source>
         <translation>匿名發送餘額：</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="349"/>
+        <location filename="../forms/overviewpage.ui" line="484"/>
         <source>0 DASH</source>
-        <translation>0 達世幣</translation>
+        <translation>0 暗黑幣</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="356"/>
+        <location filename="../forms/overviewpage.ui" line="491"/>
         <source>Amount and Rounds:</source>
         <translation>金額和循環數：</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="363"/>
+        <location filename="../forms/overviewpage.ui" line="498"/>
         <source>0 DASH / 0 Rounds</source>
-        <translation>0 達世幣 / 0 循環數</translation>
+        <translation>0 暗黑幣 / 0 循環數</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="370"/>
+        <location filename="../forms/overviewpage.ui" line="505"/>
         <source>Submitted Denom:</source>
         <translation>已提交的面額：</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="377"/>
+        <location filename="../forms/overviewpage.ui" line="512"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
         <translation>你已提交給主節點的除名額度。為了混合，其他用戶必須提交完全一致的除名額度。</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="380"/>
+        <location filename="../forms/overviewpage.ui" line="515"/>
         <source>n/a</source>
         <translation>不適用</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="946"/>
-        <location filename="../overviewpage.cpp" line="453"/>
-        <location filename="../overviewpage.cpp" line="467"/>
-        <location filename="../overviewpage.cpp" line="481"/>
+        <location filename="../forms/overviewpage.ui" line="1081"/>
+        <location filename="../overviewpage.cpp" line="495"/>
+        <location filename="../overviewpage.cpp" line="509"/>
+        <location filename="../overviewpage.cpp" line="523"/>
         <source>Darksend</source>
         <translation>匿名發送</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="839"/>
+        <location filename="../forms/overviewpage.ui" line="1155"/>
+        <source>Recent transactions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="974"/>
         <source>Start/Stop Mixing</source>
         <translation>啟動/停止 混合</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="871"/>
+        <location filename="../forms/overviewpage.ui" line="1006"/>
         <source>(Last Message)</source>
         <translation>(最新信息)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="896"/>
+        <location filename="../forms/overviewpage.ui" line="1031"/>
         <source>Try to manually submit a Darksend request.</source>
         <translation>請嘗試手動提交匿名發送請求。</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="899"/>
+        <location filename="../forms/overviewpage.ui" line="1034"/>
         <source>Try Mix</source>
         <translation>嘗試混合</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="918"/>
+        <location filename="../forms/overviewpage.ui" line="1053"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
         <translation>重置目前匿名發送配置(若匿名發送正在混合的過程中，將會終止操作，並產生處理費用！)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="924"/>
+        <location filename="../forms/overviewpage.ui" line="1059"/>
         <source>Reset</source>
         <translation>重置</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="1014"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;最近交易&lt;/b&gt;</translation>
+        <translation type="vanished">&lt;b&gt;最近交易&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="126"/>
-        <location filename="../overviewpage.cpp" line="127"/>
-        <location filename="../overviewpage.cpp" line="128"/>
+        <location filename="../overviewpage.cpp" line="139"/>
+        <location filename="../overviewpage.cpp" line="140"/>
+        <location filename="../overviewpage.cpp" line="141"/>
         <source>out of sync</source>
         <translation>還沒同步</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="143"/>
-        <location filename="../overviewpage.cpp" line="350"/>
+        <location filename="../overviewpage.cpp" line="156"/>
+        <location filename="../overviewpage.cpp" line="392"/>
         <source>Disabled</source>
         <translation>禁用</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="146"/>
-        <location filename="../overviewpage.cpp" line="352"/>
-        <location filename="../overviewpage.cpp" line="495"/>
+        <location filename="../overviewpage.cpp" line="159"/>
+        <location filename="../overviewpage.cpp" line="394"/>
+        <location filename="../overviewpage.cpp" line="537"/>
         <source>Start Darksend Mixing</source>
         <translation>啟動匿名發送混合</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="148"/>
-        <location filename="../overviewpage.cpp" line="497"/>
+        <location filename="../overviewpage.cpp" line="161"/>
+        <location filename="../overviewpage.cpp" line="539"/>
         <source>Stop Darksend Mixing</source>
         <translation>停止匿名發送混合</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="270"/>
+        <location filename="../overviewpage.cpp" line="312"/>
         <source>No inputs detected</source>
         <translation>未檢測到任何輸入</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="278"/>
+        <location filename="../overviewpage.cpp" line="320"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation>發現未確認的己除名輸出，等待確認後重新計算。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="335"/>
+        <location filename="../overviewpage.cpp" line="377"/>
         <source>Rounds</source>
         <translation>循環</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="366"/>
+        <location filename="../overviewpage.cpp" line="408"/>
         <source>Enabled</source>
         <translation>啟用</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="424"/>
+        <location filename="../overviewpage.cpp" line="436"/>
+        <location filename="../overviewpage.cpp" line="437"/>
+        <location filename="../overviewpage.cpp" line="438"/>
+        <source>Submitted to masternode, waiting for more entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="442"/>
+        <location filename="../overviewpage.cpp" line="443"/>
+        <location filename="../overviewpage.cpp" line="444"/>
+        <source>Found enough users, signing ( waiting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="456"/>
+        <location filename="../overviewpage.cpp" line="457"/>
+        <location filename="../overviewpage.cpp" line="458"/>
+        <source>Submitted to masternode, waiting in queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="466"/>
         <source>Last Darksend message:
 </source>
         <translation>最新匿名發送信息:
 </translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="377"/>
-        <location filename="../overviewpage.cpp" line="406"/>
+        <location filename="../overviewpage.cpp" line="419"/>
+        <location filename="../overviewpage.cpp" line="448"/>
         <source>Darksend is idle.</source>
         <translation>匿名發送閒置中。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="381"/>
+        <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation>正在進行混合...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="387"/>
+        <location filename="../overviewpage.cpp" line="429"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
         <translation>匿名發送请求完成：你的交易已經被礦池接受！</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="393"/>
+        <location filename="../overviewpage.cpp" line="435"/>
         <source>Submitted following entries to masternode:</source>
         <translation>向主節點遞交以下條目：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="394"/>
-        <location filename="../overviewpage.cpp" line="395"/>
-        <location filename="../overviewpage.cpp" line="396"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation>已遞交至主節點，等待更多條目</translation>
+        <translation type="vanished">已遞交至主節點，等待更多條目</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="399"/>
+        <location filename="../overviewpage.cpp" line="441"/>
         <source>Found enough users, signing ...</source>
         <translation>已找到足夠用戶，簽名中...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="400"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation>已找到足夠用戶，簽名中(等待. )</translation>
+        <translation type="vanished">已找到足夠用戶，簽名中(等待. )</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="401"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation>已找到足夠用戶，簽名中(等待.. )</translation>
+        <translation type="vanished">已找到足夠用戶，簽名中(等待.. )</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="402"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation>已找到足夠用戶，簽名中(等待... )</translation>
+        <translation type="vanished">已找到足夠用戶，簽名中(等待... )</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="404"/>
+        <location filename="../overviewpage.cpp" line="446"/>
         <source>Transmitting final transaction.</source>
         <translation>正在傳送最終交易。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="408"/>
+        <location filename="../overviewpage.cpp" line="450"/>
         <source>Finalizing transaction.</source>
         <translation>正在完成交易。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="452"/>
         <source>Darksend request incomplete:</source>
         <translation>匿名發送請求未完成：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="452"/>
         <source>Will retry...</source>
         <translation>將重試...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="412"/>
+        <location filename="../overviewpage.cpp" line="454"/>
         <source>Darksend request complete:</source>
         <translation>匿名發送請求完成：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="414"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation>己提交至主節點，排隊等待.</translation>
+        <translation type="vanished">己提交至主節點，排隊等待.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="415"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation>己提交至主節點，排隊等待..</translation>
+        <translation type="vanished">己提交至主節點，排隊等待..</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="416"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation>己提交至主節點，排隊等待...</translation>
+        <translation type="vanished">己提交至主節點，排隊等待...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="418"/>
+        <location filename="../overviewpage.cpp" line="460"/>
         <source>Unknown state:</source>
         <translation>未知狀態：</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="432"/>
+        <location filename="../overviewpage.cpp" line="474"/>
         <source>N/A</source>
         <translation>未知</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="454"/>
+        <location filename="../overviewpage.cpp" line="496"/>
         <source>Darksend was successfully reset.</source>
         <translation>匿名發送已成功重置。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="468"/>
+        <location filename="../overviewpage.cpp" line="510"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>匿名發送需要至少%1來使用。</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="482"/>
+        <location filename="../overviewpage.cpp" line="524"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>錢包已被鎖，用戶拒絕解鎖。正在停止匿名發送。</translation>
     </message>
@@ -2053,137 +2210,261 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="293"/>
-        <location filename="../paymentserver.cpp" line="505"/>
-        <location filename="../paymentserver.cpp" line="518"/>
-        <location filename="../paymentserver.cpp" line="613"/>
-        <location filename="../paymentserver.cpp" line="631"/>
-        <location filename="../paymentserver.cpp" line="647"/>
+        <location filename="../paymentserver.cpp" line="318"/>
+        <location filename="../paymentserver.cpp" line="544"/>
+        <location filename="../paymentserver.cpp" line="578"/>
+        <location filename="../paymentserver.cpp" line="687"/>
+        <location filename="../paymentserver.cpp" line="701"/>
+        <location filename="../paymentserver.cpp" line="719"/>
         <source>Payment request error</source>
         <translation>要求付款時發生錯誤</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="294"/>
+        <location filename="../paymentserver.cpp" line="319"/>
         <source>Cannot start dash: click-to-pay handler</source>
-        <translation>無法啟動達世幣程序：click-to-pay handler</translation>
+        <translation>無法啟動暗黑幣程序：click-to-pay handler</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation>網路管理員警告</translation>
+        <translation type="vanished">網路管理員警告</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation>目前使用中的代理伺服器不支援 SOCKS5 通訊協定，因此不能透過它來要求付款。</translation>
+        <translation type="vanished">目前使用中的代理伺服器不支援 SOCKS5 通訊協定，因此不能透過它來要求付款。</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="404"/>
-        <location filename="../paymentserver.cpp" line="417"/>
+        <location filename="../paymentserver.cpp" line="423"/>
+        <location filename="../paymentserver.cpp" line="437"/>
+        <location filename="../paymentserver.cpp" line="444"/>
         <source>URI handling</source>
         <translation>URI 處理</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="405"/>
+        <location filename="../paymentserver.cpp" line="424"/>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>取得付款要求的 URL 無效: %1</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="418"/>
         <source>URI can not be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation>鏈接無法被解析! 原因可能是無效的達世幣地址或輸入的鏈接有錯。</translation>
+        <translation type="vanished">鏈接無法被解析! 原因可能是無效的暗黑幣地址或輸入的鏈接有錯。</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="432"/>
+        <location filename="../paymentserver.cpp" line="458"/>
         <source>Payment request file handling</source>
         <translation>處理付款要求檔案</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="433"/>
         <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation>沒辦法讀或處理付款要求檔案！可能是無效的檔案造成的。</translation>
+        <translation type="vanished">沒辦法讀或處理付款要求檔案！可能是無效的檔案造成的。</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="506"/>
+        <location filename="../paymentserver.cpp" line="437"/>
+        <source>Invalid payment address %1</source>
+        <translation type="unfinished">無效的付款位址 %1</translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="445"/>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="459"/>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="528"/>
+        <location filename="../paymentserver.cpp" line="537"/>
+        <location filename="../paymentserver.cpp" line="569"/>
+        <source>Payment request rejected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="528"/>
+        <source>Payment request network doesn&apos;t match client network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="537"/>
+        <source>Payment request has expired.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="544"/>
+        <source>Payment request is not initialized.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="570"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>不支援含有自訂付款指令碼，且沒驗證過的付款要求。</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="514"/>
+        <location filename="../paymentserver.cpp" line="578"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
         <translation>要求付款的金額 %1 太少(會被網路認為是沒必要的零散錢)。</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="565"/>
+        <location filename="../paymentserver.cpp" line="628"/>
         <source>Refund from %1</source>
         <translation>來自 %1 的退款</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="608"/>
+        <location filename="../paymentserver.cpp" line="671"/>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="677"/>
+        <source>Payment request DoS protection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="682"/>
         <source>Error communicating with %1: %2</source>
         <translation>跟 %1 通訊時發生錯誤: %2</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="632"/>
-        <source>Payment request can not be parsed or processed!</source>
-        <translation>沒辦法解析或處理付款要求！</translation>
+        <location filename="../paymentserver.cpp" line="702"/>
+        <source>Payment request cannot be parsed!</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="643"/>
+        <source>Payment request can not be parsed or processed!</source>
+        <translation type="vanished">沒辦法解析或處理付款要求！</translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="715"/>
         <source>Bad response from server %1</source>
         <translation>伺服器 %1 的回應有誤</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="665"/>
+        <location filename="../paymentserver.cpp" line="737"/>
         <source>Network request error</source>
         <translation>發出要求時發生網路錯誤</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="676"/>
+        <location filename="../paymentserver.cpp" line="748"/>
         <source>Payment acknowledged</source>
         <translation>已確認付款</translation>
     </message>
 </context>
 <context>
-    <name>QObject</name>
+    <name>PeerTableModel</name>
     <message>
-        <location filename="../dash.cpp" line="525"/>
-        <location filename="../dash.cpp" line="532"/>
-        <location filename="../dash.cpp" line="539"/>
-        <location filename="../dash.cpp" line="552"/>
-        <source>Dash</source>
-        <translation>達世幣</translation>
+        <location filename="../peertablemodel.cpp" line="118"/>
+        <source>Address/Hostname</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="526"/>
+        <location filename="../peertablemodel.cpp" line="118"/>
+        <source>User Agent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../peertablemodel.cpp" line="118"/>
+        <source>Ping Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../dash.cpp" line="596"/>
+        <source>Dash</source>
+        <translation>暗黑幣</translation>
+    </message>
+    <message>
+        <location filename="../dash.cpp" line="558"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>錯誤: 沒有指定的資料目錄 %1 。</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="533"/>
+        <location filename="../dash.cpp" line="557"/>
+        <location filename="../dash.cpp" line="564"/>
+        <location filename="../dash.cpp" line="577"/>
+        <source>Dash Core</source>
+        <translation type="unfinished">暗黑幣核心</translation>
+    </message>
+    <message>
+        <location filename="../dash.cpp" line="565"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
         <translation>錯誤: 沒辦法解析設定檔: %1。請只用「名稱=設定值」這種語法。</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="540"/>
+        <location filename="../dash.cpp" line="597"/>
         <source>Error reading masternode configuration file: %1</source>
         <translation>讀取主節點配置文件出錯：%1</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="552"/>
+        <location filename="../dash.cpp" line="577"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
         <translation>錯誤: -regtest 和 -testnet 的使用組合無效。</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="612"/>
+        <location filename="../dash.cpp" line="643"/>
         <source>Dash Core didn&apos;t yet exit safely...</source>
-        <translation>達世幣核心還未安全退出...</translation>
+        <translation>暗黑幣核心還未安全退出...</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>输入達世幣地址(如.
+        <translation type="vanished">输入暗黑币地址(如.
 XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinunits.cpp" line="256"/>
+        <source>Amount</source>
+        <translation type="unfinished">金額</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="110"/>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="858"/>
+        <source>%1 d</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="860"/>
+        <source>%1 h</source>
+        <translation type="unfinished">%1 小時</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="862"/>
+        <source>%1 m</source>
+        <translation type="unfinished">%1 分鐘</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="864"/>
+        <source>%1 s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="881"/>
+        <source>NETWORK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="884"/>
+        <source>UNKNOWN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="892"/>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="897"/>
+        <source>N/A</source>
+        <translation type="unfinished">未知</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="897"/>
+        <source>%1 ms</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2222,185 +2503,318 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>資訊</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="33"/>
+        <location filename="../forms/rpcconsole.ui" line="249"/>
         <source>Masternode Count</source>
         <translation>主節點計算</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="46"/>
+        <location filename="../forms/rpcconsole.ui" line="39"/>
         <source>General</source>
         <translation>普通</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="53"/>
+        <location filename="../forms/rpcconsole.ui" line="203"/>
         <source>Name</source>
         <translation>名稱</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="60"/>
+        <location filename="../forms/rpcconsole.ui" line="46"/>
         <source>Client name</source>
         <translation>客戶端軟體名稱</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="70"/>
-        <location filename="../forms/rpcconsole.ui" line="139"/>
-        <location filename="../forms/rpcconsole.ui" line="192"/>
-        <location filename="../forms/rpcconsole.ui" line="215"/>
-        <location filename="../forms/rpcconsole.ui" line="231"/>
-        <location filename="../forms/rpcconsole.ui" line="247"/>
-        <location filename="../forms/rpcconsole.ui" line="276"/>
-        <location filename="../forms/rpcconsole.ui" line="292"/>
-        <location filename="../forms/rpcconsole.ui" line="315"/>
-        <location filename="../forms/rpcconsole.ui" line="341"/>
+        <location filename="../forms/rpcconsole.ui" line="56"/>
+        <location filename="../forms/rpcconsole.ui" line="79"/>
+        <location filename="../forms/rpcconsole.ui" line="105"/>
+        <location filename="../forms/rpcconsole.ui" line="131"/>
+        <location filename="../forms/rpcconsole.ui" line="154"/>
+        <location filename="../forms/rpcconsole.ui" line="177"/>
+        <location filename="../forms/rpcconsole.ui" line="213"/>
+        <location filename="../forms/rpcconsole.ui" line="236"/>
+        <location filename="../forms/rpcconsole.ui" line="256"/>
+        <location filename="../forms/rpcconsole.ui" line="286"/>
+        <location filename="../forms/rpcconsole.ui" line="309"/>
+        <location filename="../forms/rpcconsole.ui" line="774"/>
+        <location filename="../forms/rpcconsole.ui" line="797"/>
+        <location filename="../forms/rpcconsole.ui" line="820"/>
+        <location filename="../forms/rpcconsole.ui" line="843"/>
+        <location filename="../forms/rpcconsole.ui" line="866"/>
+        <location filename="../forms/rpcconsole.ui" line="889"/>
+        <location filename="../forms/rpcconsole.ui" line="912"/>
+        <location filename="../forms/rpcconsole.ui" line="935"/>
+        <location filename="../forms/rpcconsole.ui" line="958"/>
+        <location filename="../forms/rpcconsole.ui" line="981"/>
+        <location filename="../forms/rpcconsole.ui" line="1004"/>
+        <location filename="../forms/rpcconsole.ui" line="1027"/>
+        <location filename="../forms/rpcconsole.ui" line="1050"/>
         <source>N/A</source>
         <translation>未知</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="83"/>
+        <location filename="../forms/rpcconsole.ui" line="226"/>
         <source>Number of connections</source>
         <translation>連線數</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="90"/>
+        <location filename="../forms/rpcconsole.ui" line="348"/>
         <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>從當前的數據目錄打開除錯日誌文件。如果日誌文件較大的話可能需要幾秒鐘。</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="93"/>
+        <location filename="../forms/rpcconsole.ui" line="351"/>
         <source>&amp;Open</source>
         <translation>開啓</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="116"/>
+        <location filename="../forms/rpcconsole.ui" line="167"/>
         <source>Startup time</source>
         <translation>啓動時間</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="129"/>
+        <location filename="../forms/rpcconsole.ui" line="196"/>
         <source>Network</source>
         <translation>網路</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="152"/>
+        <location filename="../forms/rpcconsole.ui" line="299"/>
         <source>Last block time</source>
         <translation>最近區塊時間</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="165"/>
+        <location filename="../forms/rpcconsole.ui" line="341"/>
         <source>Debug log file</source>
         <translation>除錯紀錄檔</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="172"/>
+        <location filename="../forms/rpcconsole.ui" line="92"/>
         <source>Using OpenSSL version</source>
         <translation>使用的 OpenSSL 版本</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="182"/>
+        <location filename="../forms/rpcconsole.ui" line="144"/>
         <source>Build date</source>
         <translation>建置日期</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="205"/>
+        <location filename="../forms/rpcconsole.ui" line="276"/>
         <source>Current number of blocks</source>
         <translation>目前區塊數</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="305"/>
+        <location filename="../forms/rpcconsole.ui" line="69"/>
         <source>Client version</source>
         <translation>客戶端軟體版本</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="334"/>
+        <location filename="../forms/rpcconsole.ui" line="118"/>
+        <source>Using BerkeleyDB version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="269"/>
         <source>Block chain</source>
         <translation>區塊鏈</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="349"/>
+        <location filename="../forms/rpcconsole.ui" line="375"/>
         <source>&amp;Console</source>
         <translation>主控台</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="398"/>
+        <location filename="../forms/rpcconsole.ui" line="424"/>
         <source>Clear console</source>
         <translation>清主控台</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="421"/>
+        <location filename="../forms/rpcconsole.ui" line="447"/>
         <source>&amp;Network Traffic</source>
         <translation>網路流量</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="473"/>
+        <location filename="../forms/rpcconsole.ui" line="499"/>
         <source>&amp;Clear</source>
         <translation>清掉</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="486"/>
+        <location filename="../forms/rpcconsole.ui" line="515"/>
         <source>Totals</source>
         <translation>總計</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="550"/>
-        <location filename="../rpcconsole.cpp" line="367"/>
+        <location filename="../forms/rpcconsole.ui" line="579"/>
+        <source>Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="659"/>
+        <source>Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="700"/>
+        <source>&amp;Peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="739"/>
+        <location filename="../rpcconsole.cpp" line="237"/>
+        <location filename="../rpcconsole.cpp" line="594"/>
+        <source>Select a peer to view detailed information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="764"/>
+        <source>Direction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="787"/>
+        <source>Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="810"/>
+        <source>User Agent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="833"/>
+        <source>Services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="856"/>
+        <source>Starting Height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="879"/>
+        <source>Sync Height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="902"/>
+        <source>Ban Score</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="925"/>
+        <source>Connection Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="948"/>
+        <source>Last Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="971"/>
+        <source>Last Receive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="994"/>
+        <source>Bytes Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="1017"/>
+        <source>Bytes Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="1040"/>
+        <source>Ping Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="402"/>
         <source>In:</source>
         <translation>輸入:</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="630"/>
-        <location filename="../rpcconsole.cpp" line="368"/>
+        <location filename="../rpcconsole.cpp" line="403"/>
         <source>Out:</source>
         <translation>輸出:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="333"/>
+        <location filename="../rpcconsole.cpp" line="368"/>
         <source>Welcome to the Dash RPC console.</source>
-        <translation>歡迎來到達世幣RPC控制台。</translation>
+        <translation>歡迎來到暗黑幣RPC控制台。</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="334"/>
+        <location filename="../rpcconsole.cpp" line="369"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>請用上下游標鍵來瀏覽先前指令的紀錄，並用 &lt;b&gt;Ctrl-L&lt;/b&gt; 來清畫面。</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="335"/>
+        <location filename="../rpcconsole.cpp" line="370"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>請打 &lt;b&gt;help&lt;/b&gt; 來看可用指令的簡介。</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="474"/>
+        <location filename="../rpcconsole.cpp" line="509"/>
         <source>%1 B</source>
         <translation>%1 B (位元組)</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="476"/>
+        <location filename="../rpcconsole.cpp" line="511"/>
         <source>%1 KB</source>
         <translation>%1 KB (千位元組)</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="478"/>
+        <location filename="../rpcconsole.cpp" line="513"/>
         <source>%1 MB</source>
         <translation>%1 MB (百萬位元組)</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="480"/>
+        <location filename="../rpcconsole.cpp" line="515"/>
         <source>%1 GB</source>
         <translation>%1 GB (十億位元組)</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="487"/>
+        <location filename="../rpcconsole.cpp" line="632"/>
+        <source>via %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="635"/>
+        <location filename="../rpcconsole.cpp" line="636"/>
+        <source>never</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="643"/>
+        <source>Inbound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="643"/>
+        <source>Outbound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="656"/>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="658"/>
+        <location filename="../rpcconsole.cpp" line="659"/>
+        <source>Fetching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>%1 m</source>
-        <translation>%1 分鐘</translation>
+        <translation type="vanished">%1 分鐘</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h</source>
-        <translation>%1 小時</translation>
+        <translation type="vanished">%1 小時</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="494"/>
         <source>%1 h %2 m</source>
-        <translation>%1 小時 %2 分</translation>
+        <translation type="vanished">%1 小時 %2 分</translation>
     </message>
 </context>
 <context>
@@ -2416,10 +2830,14 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>重複使用現有的收款位址(不建議)</translation>
     </message>
     <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation type="vanished">附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到暗黑幣網路上。</translation>
+    </message>
+    <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2469,7 +2887,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>清空</translation>
     </message>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="239"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="236"/>
         <source>Requested payments history</source>
         <translation>先前要求付款的記錄</translation>
     </message>
@@ -2484,12 +2902,12 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>顯示</translation>
     </message>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="278"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <source>Remove the selected entries from the list</source>
         <translation>從列表中刪掉選擇的項目</translation>
     </message>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="281"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="284"/>
         <source>Remove</source>
         <translation>刪掉</translation>
     </message>
@@ -2522,12 +2940,12 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>複製 URI</translation>
     </message>
     <message>
-        <location filename="../forms/receiverequestdialog.ui" line="82"/>
+        <location filename="../forms/receiverequestdialog.ui" line="85"/>
         <source>Copy &amp;Address</source>
         <translation>複製位址</translation>
     </message>
     <message>
-        <location filename="../forms/receiverequestdialog.ui" line="89"/>
+        <location filename="../forms/receiverequestdialog.ui" line="95"/>
         <source>&amp;Save Image...</source>
         <translation>儲存圖片...</translation>
     </message>
@@ -2580,37 +2998,37 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="28"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="28"/>
         <source>Label</source>
         <translation>標記</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="28"/>
         <source>Message</source>
         <translation>訊息</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="127"/>
         <source>Amount</source>
         <translation>金額</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="62"/>
+        <location filename="../recentrequeststablemodel.cpp" line="68"/>
         <source>(no label)</source>
         <translation>(無標記)</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="71"/>
+        <location filename="../recentrequeststablemodel.cpp" line="77"/>
         <source>(no message)</source>
         <translation>(無訊息)</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="79"/>
+        <location filename="../recentrequeststablemodel.cpp" line="85"/>
         <source>(no amount)</source>
         <translation>(無金額)</translation>
     </message>
@@ -2619,9 +3037,8 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="429"/>
-        <location filename="../sendcoinsdialog.cpp" line="521"/>
-        <location filename="../sendcoinsdialog.cpp" line="531"/>
+        <location filename="../sendcoinsdialog.cpp" line="590"/>
+        <location filename="../sendcoinsdialog.cpp" line="602"/>
         <source>Send Coins</source>
         <translation>付款</translation>
     </message>
@@ -2636,283 +3053,395 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>輸入...</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="117"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="120"/>
         <source>automatically selected</source>
         <translation>自動選擇</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="136"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="139"/>
         <source>Insufficient funds!</source>
         <translation>累計金額不足！</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="228"/>
         <source>Quantity:</source>
         <translation>數目:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="263"/>
         <source>Bytes:</source>
         <translation>位元組數:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="311"/>
         <source>Amount:</source>
         <translation>金額:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="343"/>
         <source>Priority:</source>
         <translation>優先度:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="353"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="356"/>
         <source>medium</source>
         <translation>中等</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="391"/>
         <source>Fee:</source>
         <translation>手續費:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation>低輸出:</translation>
+        <translation type="vanished">低輸出:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="433"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="423"/>
+        <source>Dust:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="436"/>
         <source>no</source>
         <translation>否</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="471"/>
         <source>After Fee:</source>
         <translation>計費後金額:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="503"/>
         <source>Change:</source>
         <translation>找零金額:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
         <translation>如果這項有打開，但是找零位址是空的或無效，那麼找零的錢會送到一個新產生的位址去。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="550"/>
         <source>Custom change address</source>
         <translation>自定找零位址</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="756"/>
+        <source>Transaction Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="770"/>
+        <source>Choose...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="777"/>
+        <source>collapse fee-settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="780"/>
+        <source>Minimize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="858"/>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="861"/>
+        <source>per kilobyte</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="874"/>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="877"/>
+        <source>total at least</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="907"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="920"/>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="923"/>
+        <source>(read the tooltip)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="952"/>
+        <source>Recommended:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="982"/>
+        <source>Custom:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1034"/>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1063"/>
+        <source>Confirmation time:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1123"/>
+        <source>normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1143"/>
+        <source>fast</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1181"/>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1188"/>
+        <source>(confirmation may take longer)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1255"/>
         <source>Confirm the send action</source>
         <translation>確認付款動作</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1258"/>
         <source>S&amp;end</source>
         <translation>付款</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1281"/>
         <source>Clear all fields of the form.</source>
         <translation>把表單中的所有欄位清空。</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1284"/>
         <source>Clear &amp;All</source>
         <translation>全部清掉</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1298"/>
         <source>Send to multiple recipients at once</source>
         <translation>一次付給多個收款人</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1301"/>
         <source>Add &amp;Recipient</source>
         <translation>增加收款人</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1339"/>
         <source>Darksend</source>
         <translation>匿名發送</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1358"/>
         <source>InstantX</source>
         <translation>即時到帳</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1365"/>
         <source>Balance:</source>
         <translation>餘額:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="53"/>
+        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy quantity</source>
         <translation>複製數目</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="54"/>
+        <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy amount</source>
         <translation>複製金額</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="55"/>
+        <location filename="../sendcoinsdialog.cpp" line="61"/>
         <source>Copy fee</source>
         <translation>複製手續費</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="62"/>
         <source>Copy after fee</source>
         <translation>複製計費後金額</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="57"/>
+        <location filename="../sendcoinsdialog.cpp" line="63"/>
         <source>Copy bytes</source>
         <translation>複製位元組數</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="58"/>
+        <location filename="../sendcoinsdialog.cpp" line="64"/>
         <source>Copy priority</source>
         <translation>複製優先度</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy low output</source>
-        <translation>複製低輸出</translation>
+        <translation type="vanished">複製低輸出</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="60"/>
+        <location filename="../sendcoinsdialog.cpp" line="65"/>
+        <source>Copy dust</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="66"/>
         <source>Copy change</source>
         <translation>複製找零金額</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="145"/>
-        <location filename="../sendcoinsdialog.cpp" line="151"/>
-        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <location filename="../sendcoinsdialog.cpp" line="221"/>
+        <location filename="../sendcoinsdialog.cpp" line="227"/>
+        <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>using</source>
         <translation>用法</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="145"/>
-        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <location filename="../sendcoinsdialog.cpp" line="221"/>
+        <location filename="../sendcoinsdialog.cpp" line="227"/>
         <source>anonymous funds</source>
         <translation>匿名的資金</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="155"/>
+        <location filename="../sendcoinsdialog.cpp" line="231"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
         <translation>(匿名發送需要四捨五入這個數額到最接近的值%1)。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>any available funds (not recommended)</source>
         <translation>任何可用的資金 (不推薦)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="166"/>
+        <location filename="../sendcoinsdialog.cpp" line="242"/>
         <source>and InstantX</source>
         <translation>和即時到帳</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="190"/>
-        <location filename="../sendcoinsdialog.cpp" line="195"/>
-        <location filename="../sendcoinsdialog.cpp" line="200"/>
-        <location filename="../sendcoinsdialog.cpp" line="204"/>
+        <location filename="../sendcoinsdialog.cpp" line="266"/>
+        <location filename="../sendcoinsdialog.cpp" line="271"/>
+        <location filename="../sendcoinsdialog.cpp" line="276"/>
+        <location filename="../sendcoinsdialog.cpp" line="280"/>
         <source>%1 to %2</source>
         <translation>%1 給 %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="253"/>
+        <location filename="../sendcoinsdialog.cpp" line="329"/>
         <source>Are you sure you want to send?</source>
         <translation>你確定要付錢出去嗎？</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="262"/>
+        <location filename="../sendcoinsdialog.cpp" line="338"/>
         <source>are added as transaction fee</source>
         <translation>被添加作為交易手續費</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="276"/>
+        <location filename="../sendcoinsdialog.cpp" line="355"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>總金額 %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="278"/>
+        <location filename="../sendcoinsdialog.cpp" line="357"/>
         <source>or</source>
         <translation>或</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="280"/>
+        <location filename="../sendcoinsdialog.cpp" line="359"/>
         <source>Confirm send coins</source>
         <translation>確認付款金額</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="435"/>
         <source>Payment request expired</source>
-        <translation>付款的要求已經過期</translation>
+        <translation type="vanished">付款的要求已經過期</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="443"/>
         <source>Invalid payment address %1</source>
-        <translation>無效的付款位址 %1</translation>
+        <translation type="vanished">無效的付款位址 %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="498"/>
+        <location filename="../sendcoinsdialog.cpp" line="567"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>收款位址無效，請再檢查看看。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="501"/>
+        <location filename="../sendcoinsdialog.cpp" line="570"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>付款金額必須大於零。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="504"/>
+        <location filename="../sendcoinsdialog.cpp" line="573"/>
         <source>The amount exceeds your balance.</source>
         <translation>金額超過餘額了。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="507"/>
+        <location filename="../sendcoinsdialog.cpp" line="576"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>包含 %1 的交易手續費後，總金額超過你的餘額了。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="510"/>
+        <location filename="../sendcoinsdialog.cpp" line="579"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>發現有重複的位址。每個付款動作中，只能付給個別的位址一次。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="582"/>
         <source>Transaction creation failed!</source>
         <translation>製造交易失敗了！</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="517"/>
+        <location filename="../sendcoinsdialog.cpp" line="586"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>交易被拒絕了！有時候會發生這種錯誤，是因為你錢包中的一些錢已經被花掉了。比如說你複製了錢包檔 wallet.dat, 然後用複製的錢包花掉了錢，你現在所用的原來的錢包中，卻沒有那筆錢已經花掉的紀錄。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="522"/>
+        <location filename="../sendcoinsdialog.cpp" line="591"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
         <translation>錯誤: 解鎖錢包只用作幣的匿名處理。</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="635"/>
-        <source>Warning: Invalid Dash address</source>
-        <translation>警告：無效的達世幣地址</translation>
+        <location filename="../sendcoinsdialog.cpp" line="594"/>
+        <source>A fee higher than %1 is considered an insanely high fee.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="644"/>
+        <location filename="../sendcoinsdialog.cpp" line="681"/>
+        <source>Pay only the minimum fee of %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="703"/>
+        <source>Estimated to begin confirmation within %1 block(s).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="810"/>
+        <source>Warning: Invalid Dash address</source>
+        <translation>警告：無效的暗黑幣地址</translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="819"/>
         <source>Warning: Unknown change address</source>
         <translation>警告: 不明的找零位址</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="655"/>
+        <location filename="../sendcoinsdialog.cpp" line="830"/>
         <source>(no label)</source>
         <translation>(無標記)</translation>
     </message>
@@ -2930,9 +3459,13 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>付給:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>發送付款的位址(e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="vanished">發送付款的位址(e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="54"/>
+        <source>The Dash address to send the payment to</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -2986,7 +3519,7 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation>附加在達世幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到達世幣網路上。</translation>
+        <translation>附加在暗黑幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到暗黑幣網路上。</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3019,12 +3552,12 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="129"/>
+        <location filename="../utilitydialog.cpp" line="116"/>
         <source>Dash Core is shutting down...</source>
-        <translation>達世幣核心正在關閉...</translation>
+        <translation>暗黑幣核心正在關閉...</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="130"/>
+        <location filename="../utilitydialog.cpp" line="117"/>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation> 在這個視窗不見以前，請不要關掉電腦。</translation>
     </message>
@@ -3037,105 +3570,113 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>簽章 - 簽署或驗證訊息</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="24"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="27"/>
         <source>&amp;Sign Message</source>
         <translation>簽署訊息</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="30"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="33"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>你可以用自己的位址簽署訊息，來證明你對位址的所有權。但是請小心，不要簽署語意含糊不清的內容，因為釣魚式詐騙可能會用騙你簽署的手法來冒充是你。只有在語句中的細節你都同意時才簽署。</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="48"/>
         <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>用來簽署訊息的位址 (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="vanished">用來簽署訊息的位址 (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="55"/>
-        <location filename="../forms/signverifymessagedialog.ui" line="265"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="51"/>
+        <source>The Dash address to sign the message with</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/signverifymessagedialog.ui" line="58"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="268"/>
         <source>Choose previously used address</source>
         <translation>選擇先前使用過的位址</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="65"/>
-        <location filename="../forms/signverifymessagedialog.ui" line="275"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="68"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="278"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="75"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="78"/>
         <source>Paste address from clipboard</source>
         <translation>貼上剪貼簿裡的位址</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="85"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="88"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="97"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="100"/>
         <source>Enter the message you want to sign here</source>
         <translation>請在這裡輸入你想簽署的訊息</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="104"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="107"/>
         <source>Signature</source>
         <translation>簽章</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="131"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="134"/>
         <source>Copy the current signature to the system clipboard</source>
         <translation>複製目前的簽章到系統剪貼簿</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="152"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <source>Sign the message to prove you own this Dash address</source>
-        <translation>簽署信息證明你擁有此達世幣地址</translation>
+        <translation>簽署信息證明你擁有此暗黑幣地址</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="155"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="158"/>
         <source>Sign &amp;Message</source>
         <translation>簽署訊息</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="169"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <source>Reset all sign message fields</source>
         <translation>重設所有訊息簽署欄位</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="172"/>
-        <location filename="../forms/signverifymessagedialog.ui" line="315"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="175"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="318"/>
         <source>Clear &amp;All</source>
         <translation>全部清掉</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="231"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="234"/>
         <source>&amp;Verify Message</source>
         <translation>驗證訊息</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="237"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="240"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
         <translation>請在下面輸入簽署的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="258"/>
-        <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>簽署該信息的位址  (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <location filename="../forms/signverifymessagedialog.ui" line="261"/>
+        <source>The Dash address the message was signed with</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="295"/>
-        <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation>驗證信息用來確保此被簽署信息對應相對的達世幣地址</translation>
+        <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
+        <translation type="vanished">簽署該信息的位址  (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation>驗證信息用來確保此被簽署信息對應相對的暗黑幣地址</translation>
+    </message>
+    <message>
+        <location filename="../forms/signverifymessagedialog.ui" line="301"/>
         <source>Verify &amp;Message</source>
         <translation>驗證訊息</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="312"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="315"/>
         <source>Reset all verify message fields</source>
         <translation>重設所有訊息驗證欄位</translation>
     </message>
@@ -3145,74 +3686,73 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>請按一下「簽署訊息」來產生簽章</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>輸入達世幣地址(如.
+        <translation type="vanished">輸入暗黑幣地址(如.
 XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="114"/>
-        <location filename="../signverifymessagedialog.cpp" line="194"/>
+        <location filename="../signverifymessagedialog.cpp" line="113"/>
+        <location filename="../signverifymessagedialog.cpp" line="193"/>
         <source>The entered address is invalid.</source>
         <translation>輸入的位址無效。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="114"/>
-        <location filename="../signverifymessagedialog.cpp" line="122"/>
-        <location filename="../signverifymessagedialog.cpp" line="194"/>
-        <location filename="../signverifymessagedialog.cpp" line="202"/>
+        <location filename="../signverifymessagedialog.cpp" line="113"/>
+        <location filename="../signverifymessagedialog.cpp" line="121"/>
+        <location filename="../signverifymessagedialog.cpp" line="193"/>
+        <location filename="../signverifymessagedialog.cpp" line="201"/>
         <source>Please check the address and try again.</source>
         <translation>請檢查位址是否正確後再試一次。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="122"/>
-        <location filename="../signverifymessagedialog.cpp" line="202"/>
+        <location filename="../signverifymessagedialog.cpp" line="121"/>
+        <location filename="../signverifymessagedialog.cpp" line="201"/>
         <source>The entered address does not refer to a key.</source>
         <translation>輸入的位址沒有對應到你的任何密鑰。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="130"/>
+        <location filename="../signverifymessagedialog.cpp" line="129"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>錢包解鎖已取消。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="138"/>
+        <location filename="../signverifymessagedialog.cpp" line="137"/>
         <source>Private key for the entered address is not available.</source>
         <translation>沒有對應輸入位址的密鑰。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="150"/>
+        <location filename="../signverifymessagedialog.cpp" line="149"/>
         <source>Message signing failed.</source>
         <translation>訊息簽署失敗。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="155"/>
+        <location filename="../signverifymessagedialog.cpp" line="154"/>
         <source>Message signed.</source>
         <translation>訊息簽署好了。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="213"/>
+        <location filename="../signverifymessagedialog.cpp" line="212"/>
         <source>The signature could not be decoded.</source>
         <translation>沒辦法把這個簽章解碼。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="213"/>
-        <location filename="../signverifymessagedialog.cpp" line="226"/>
+        <location filename="../signverifymessagedialog.cpp" line="212"/>
+        <location filename="../signverifymessagedialog.cpp" line="225"/>
         <source>Please check the signature and try again.</source>
         <translation>請檢查簽章是否正確後再試一次。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="226"/>
+        <location filename="../signverifymessagedialog.cpp" line="225"/>
         <source>The signature did not match the message digest.</source>
         <translation>這個簽章跟訊息的數位摘要不符。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="233"/>
+        <location filename="../signverifymessagedialog.cpp" line="232"/>
         <source>Message verification failed.</source>
         <translation>訊息驗證失敗。</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="238"/>
+        <location filename="../signverifymessagedialog.cpp" line="237"/>
         <source>Message verified.</source>
         <translation>訊息驗證沒錯。</translation>
     </message>
@@ -3220,27 +3760,27 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="33"/>
+        <location filename="../splashscreen.cpp" line="36"/>
         <source>Dash Core</source>
-        <translation>達世幣核心</translation>
+        <translation>暗黑幣核心</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="34"/>
+        <location filename="../splashscreen.cpp" line="37"/>
         <source>Version %1</source>
         <translation>版本 %1</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="35"/>
+        <location filename="../splashscreen.cpp" line="38"/>
         <source>The Bitcoin Core developers</source>
         <translation>位元幣核心開發人員</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="36"/>
+        <location filename="../splashscreen.cpp" line="39"/>
         <source>The Dash Core developers</source>
-        <translation>達世幣核心開發人員</translation>
+        <translation>暗黑幣核心開發人員</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="37"/>
+        <location filename="../networkstyle.cpp" line="19"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
@@ -3256,228 +3796,251 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="28"/>
+        <location filename="../transactiondesc.cpp" line="33"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>對於%n開放更多區塊</numerusform></translation>
+        <translation>
+            <numerusform>對於%n開放更多區塊</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="30"/>
+        <location filename="../transactiondesc.cpp" line="35"/>
         <source>Open until %1</source>
         <translation>到 %1 前可修改</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="41"/>
-        <location filename="../transactiondesc.cpp" line="52"/>
-        <location filename="../transactiondesc.cpp" line="62"/>
-        <location filename="../transactiondesc.cpp" line="74"/>
+        <location filename="../transactiondesc.cpp" line="46"/>
+        <location filename="../transactiondesc.cpp" line="57"/>
+        <location filename="../transactiondesc.cpp" line="67"/>
+        <location filename="../transactiondesc.cpp" line="79"/>
         <source>conflicted</source>
         <translation>有衝突</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="43"/>
+        <location filename="../transactiondesc.cpp" line="48"/>
         <source>%1/offline (verified via instantx)</source>
         <translation>%1/離線 (通過即時到帳系統核實)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="45"/>
+        <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/confirmed (verified via instantx)</source>
         <translation>%1/已確認 (通過即時到帳系統核實)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="47"/>
+        <location filename="../transactiondesc.cpp" line="52"/>
         <source>%1 confirmations (verified via instantx)</source>
         <translation>%1/確認完成 (通過即時到帳系統核實)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="76"/>
+        <location filename="../transactiondesc.cpp" line="81"/>
         <source>%1/offline</source>
         <translation>%1 次/離線中</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="78"/>
+        <location filename="../transactiondesc.cpp" line="83"/>
         <source>%1/unconfirmed</source>
         <translation>%1 次/未確認</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="68"/>
-        <location filename="../transactiondesc.cpp" line="80"/>
+        <location filename="../transactiondesc.cpp" line="73"/>
+        <location filename="../transactiondesc.cpp" line="85"/>
         <source>%1 confirmations</source>
         <translation>確認 %1 次</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="54"/>
+        <location filename="../transactiondesc.cpp" line="59"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
         <translation>%1/離線 (即時到帳系統正在核實中- %2 of %3 簽名)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="56"/>
+        <location filename="../transactiondesc.cpp" line="61"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
         <translation>%1/已確認 (即時到帳系統正在核實中- %2 of %3 簽名)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="58"/>
+        <location filename="../transactiondesc.cpp" line="63"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
         <translation>%1/確認完成 (即時到帳系統正在核實中- %2 of %3 簽名)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="64"/>
+        <location filename="../transactiondesc.cpp" line="69"/>
         <source>%1/offline (InstantX verification failed)</source>
         <translation>%1/離線 (即時到帳系統核實失敗)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="66"/>
+        <location filename="../transactiondesc.cpp" line="71"/>
         <source>%1/confirmed (InstantX verification failed)</source>
         <translation>%1/已確認 (即時到帳系統核實失敗)</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="98"/>
+        <location filename="../transactiondesc.cpp" line="103"/>
         <source>Status</source>
         <translation>狀態</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="103"/>
+        <location filename="../transactiondesc.cpp" line="108"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>，還沒成功公告出去</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="105"/>
+        <location filename="../transactiondesc.cpp" line="110"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>，通過%n(多個)節點廣播</numerusform></translation>
+        <translation>
+            <numerusform>，通過%n(多個)節點廣播</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="109"/>
+        <location filename="../transactiondesc.cpp" line="114"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="116"/>
+        <location filename="../transactiondesc.cpp" line="121"/>
         <source>Source</source>
         <translation>來源</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="116"/>
+        <location filename="../transactiondesc.cpp" line="121"/>
         <source>Generated</source>
         <translation>生產出來</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="121"/>
-        <location filename="../transactiondesc.cpp" line="138"/>
+        <location filename="../transactiondesc.cpp" line="126"/>
+        <location filename="../transactiondesc.cpp" line="139"/>
+        <location filename="../transactiondesc.cpp" line="211"/>
         <source>From</source>
         <translation>來源</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="138"/>
+        <location filename="../transactiondesc.cpp" line="139"/>
         <source>unknown</source>
         <translation>未知</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="139"/>
-        <location filename="../transactiondesc.cpp" line="161"/>
-        <location filename="../transactiondesc.cpp" line="219"/>
+        <location filename="../transactiondesc.cpp" line="140"/>
+        <location filename="../transactiondesc.cpp" line="160"/>
+        <location filename="../transactiondesc.cpp" line="229"/>
         <source>To</source>
         <translation>目的</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="142"/>
-        <location filename="../transactiondesc.cpp" line="144"/>
         <source>own address</source>
         <translation>自己的位址</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="142"/>
+        <location filename="../transactiondesc.cpp" line="211"/>
+        <source>watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="144"/>
         <source>label</source>
         <translation>標記</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="179"/>
-        <location filename="../transactiondesc.cpp" line="191"/>
-        <location filename="../transactiondesc.cpp" line="236"/>
-        <location filename="../transactiondesc.cpp" line="253"/>
-        <location filename="../transactiondesc.cpp" line="306"/>
+        <location filename="../transactiondesc.cpp" line="178"/>
+        <location filename="../transactiondesc.cpp" line="190"/>
+        <location filename="../transactiondesc.cpp" line="243"/>
+        <location filename="../transactiondesc.cpp" line="269"/>
+        <location filename="../transactiondesc.cpp" line="322"/>
         <source>Credit</source>
         <translation>入帳</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="181"/>
+        <location filename="../transactiondesc.cpp" line="180"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>再等 %n 個區塊生出來後成熟</numerusform></translation>
+        <translation>
+            <numerusform>再等 %n 個區塊生出來後成熟</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="183"/>
+        <location filename="../transactiondesc.cpp" line="182"/>
         <source>not accepted</source>
         <translation>不被接受</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="227"/>
-        <location filename="../transactiondesc.cpp" line="235"/>
-        <location filename="../transactiondesc.cpp" line="250"/>
-        <location filename="../transactiondesc.cpp" line="303"/>
+        <location filename="../transactiondesc.cpp" line="241"/>
+        <location filename="../transactiondesc.cpp" line="266"/>
+        <location filename="../transactiondesc.cpp" line="319"/>
         <source>Debit</source>
         <translation>出帳</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="241"/>
+        <location filename="../transactiondesc.cpp" line="251"/>
+        <source>Total debit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="252"/>
+        <source>Total credit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="257"/>
         <source>Transaction fee</source>
         <translation>交易手續費</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="257"/>
+        <location filename="../transactiondesc.cpp" line="273"/>
         <source>Net amount</source>
         <translation>淨額</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="263"/>
-        <location filename="../transactiondesc.cpp" line="272"/>
+        <location filename="../transactiondesc.cpp" line="279"/>
+        <location filename="../transactiondesc.cpp" line="288"/>
         <source>Message</source>
         <translation>訊息</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="265"/>
+        <location filename="../transactiondesc.cpp" line="281"/>
         <source>Comment</source>
         <translation>附註</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="267"/>
+        <location filename="../transactiondesc.cpp" line="283"/>
         <source>Transaction ID</source>
         <translation>交易識別碼</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="285"/>
+        <location filename="../transactiondesc.cpp" line="301"/>
         <source>Merchant</source>
         <translation>商家</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="292"/>
+        <location filename="../transactiondesc.cpp" line="308"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation>生產出來的錢要再等 %1 個區塊生出來後才成熟可以用。當區塊生產出來時會公布到網路上，來被加進區塊鏈。如果加失敗了，狀態就會變成「不被接受」，而且不能夠花。如果在你生產出區塊的幾秒鐘內，也有其他節點生產出來的話，就有可能會發生這種情形。</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="300"/>
+        <location filename="../transactiondesc.cpp" line="316"/>
         <source>Debug information</source>
         <translation>除錯資訊</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="308"/>
+        <location filename="../transactiondesc.cpp" line="324"/>
         <source>Transaction</source>
         <translation>交易</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="311"/>
+        <location filename="../transactiondesc.cpp" line="327"/>
         <source>Inputs</source>
         <translation>輸入</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="332"/>
+        <location filename="../transactiondesc.cpp" line="348"/>
         <source>Amount</source>
         <translation>金額</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="333"/>
+        <location filename="../transactiondesc.cpp" line="349"/>
+        <location filename="../transactiondesc.cpp" line="350"/>
         <source>true</source>
         <translation>是</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="333"/>
+        <location filename="../transactiondesc.cpp" line="349"/>
+        <location filename="../transactiondesc.cpp" line="350"/>
         <source>false</source>
         <translation>否</translation>
     </message>
@@ -3498,157 +4061,168 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
+        <location filename="../transactiontablemodel.cpp" line="229"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
+        <location filename="../transactiontablemodel.cpp" line="229"/>
         <source>Type</source>
         <translation>種類</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
+        <location filename="../transactiontablemodel.cpp" line="229"/>
         <source>Address</source>
         <translation>位址</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Amount</source>
-        <translation>金額</translation>
+        <translation type="vanished">金額</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="285"/>
+        <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation><numerusform>對於%n開放更多區塊</numerusform></translation>
+        <translation>
+            <numerusform>對於%n開放更多區塊</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="288"/>
+        <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
         <translation>到 %1 前可修改</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="291"/>
+        <location filename="../transactiontablemodel.cpp" line="293"/>
         <source>Offline</source>
         <translation>離線中</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="294"/>
+        <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
         <translation>未確認</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
         <translation>確認中(已經 %1 次，建議至少 %2 次)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="300"/>
+        <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>已確認(%1 次)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="303"/>
+        <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
         <translation>有衝突</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <location filename="../transactiontablemodel.cpp" line="308"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>未成熟(確認 %1 次，會在 %2 次後可用)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="309"/>
+        <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>沒有其他節點收到這個區塊，也許它不會被接受！</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="312"/>
+        <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
         <translation>生產出來但是不被接受</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="354"/>
+        <location filename="../transactiontablemodel.cpp" line="353"/>
         <source>Received with</source>
         <translation>收款在</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="355"/>
         <source>Received from</source>
         <translation>收款自</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received via Darksend</source>
         <translation>經匿名發送收到</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="361"/>
+        <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Sent to</source>
         <translation>付款給</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="362"/>
         <source>Payment to yourself</source>
         <translation>付給自己</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Mined</source>
         <translation>開採所得</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="368"/>
+        <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Darksend Denominate</source>
         <translation>匿名發送除名額度</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="369"/>
         <source>Darksend Collateral Payment</source>
         <translation>匿名發送附加費用</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation>匿名發送會制造附加費用</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Create Denominations</source>
         <translation>匿名發送會制造除名額度</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksent</source>
-        <translation>匿名發送</translation>
+        <translation>暗黑發送</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="405"/>
+        <source>watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="422"/>
         <source>(n/a)</source>
         <translation>(不適用)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="632"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>交易狀態。把游標停在欄位上會顯示確認次數。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="634"/>
         <source>Date and time that the transaction was received.</source>
         <translation>收到交易的日期和時間。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="636"/>
         <source>Type of transaction.</source>
         <translation>交易的種類。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="638"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="640"/>
         <source>Destination address of transaction.</source>
         <translation>交易的目的地位址。</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="642"/>
         <source>Amount removed from or added to balance.</source>
         <translation>要減掉或加進餘額的金額。</translation>
     </message>
@@ -3656,205 +4230,217 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="60"/>
-        <location filename="../transactionview.cpp" line="76"/>
+        <location filename="../transactionview.cpp" line="67"/>
+        <location filename="../transactionview.cpp" line="83"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="61"/>
+        <location filename="../transactionview.cpp" line="68"/>
         <source>Today</source>
         <translation>今天</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="62"/>
+        <location filename="../transactionview.cpp" line="69"/>
         <source>This week</source>
         <translation>這星期</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="63"/>
+        <location filename="../transactionview.cpp" line="70"/>
         <source>This month</source>
         <translation>這個月</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="64"/>
+        <location filename="../transactionview.cpp" line="71"/>
         <source>Last month</source>
         <translation>上個月</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="65"/>
+        <location filename="../transactionview.cpp" line="72"/>
         <source>This year</source>
         <translation>今年</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="66"/>
+        <location filename="../transactionview.cpp" line="73"/>
         <source>Range...</source>
         <translation>指定範圍...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="77"/>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Received with</source>
         <translation>收款</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="79"/>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>Sent to</source>
         <translation>付款</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="81"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Darksent</source>
-        <translation>匿名發送</translation>
+        <translation>暗黑發送</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="82"/>
+        <location filename="../transactionview.cpp" line="89"/>
         <source>Darksend Make Collateral Inputs</source>
         <translation>匿名發送會制造附加費用</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="83"/>
+        <location filename="../transactionview.cpp" line="90"/>
         <source>Darksend Create Denominations</source>
         <translation>匿名發送會制造除名額度</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="91"/>
         <source>Darksend Denominate</source>
         <translation>匿名發送除名額度</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="92"/>
         <source>Darksend Collateral Payment</source>
         <translation>匿名發送附加費用</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="86"/>
+        <location filename="../transactionview.cpp" line="93"/>
         <source>To yourself</source>
         <translation>給自己</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="87"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Mined</source>
         <translation>開採所得</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="88"/>
+        <location filename="../transactionview.cpp" line="95"/>
         <source>Other</source>
         <translation>其它</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="94"/>
+        <location filename="../transactionview.cpp" line="101"/>
         <source>Enter address or label to search</source>
         <translation>請輸入要搜尋的位址或標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="100"/>
+        <location filename="../transactionview.cpp" line="107"/>
         <source>Min amount</source>
         <translation>最小金額</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="143"/>
         <source>Copy address</source>
         <translation>複製位址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="144"/>
         <source>Copy label</source>
         <translation>複製標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="145"/>
         <source>Copy amount</source>
         <translation>複製金額</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="137"/>
+        <location filename="../transactionview.cpp" line="146"/>
         <source>Copy transaction ID</source>
         <translation>複製交易識別碼</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="138"/>
+        <location filename="../transactionview.cpp" line="147"/>
         <source>Edit label</source>
         <translation>編輯標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="139"/>
+        <location filename="../transactionview.cpp" line="148"/>
         <source>Show transaction details</source>
         <translation>顯示交易明細</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="302"/>
+        <location filename="../transactionview.cpp" line="327"/>
         <source>Export Transaction History</source>
         <translation>匯出交易記錄</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="303"/>
+        <location filename="../transactionview.cpp" line="328"/>
         <source>Comma separated file (*.csv)</source>
         <translation>逗點分隔資料檔(*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="337"/>
         <source>Confirmed</source>
         <translation>已確認</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="339"/>
+        <source>Watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="340"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="341"/>
         <source>Type</source>
         <translation>種類</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="342"/>
         <source>Label</source>
         <translation>標記</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="316"/>
+        <location filename="../transactionview.cpp" line="343"/>
         <source>Address</source>
         <translation>位址</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
-        <translation>金額</translation>
+        <translation type="vanished">金額</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="345"/>
         <source>ID</source>
         <translation>識別碼</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="321"/>
+        <location filename="../transactionview.cpp" line="348"/>
         <source>Exporting Failed</source>
         <translation>匯出失敗</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="321"/>
+        <location filename="../transactionview.cpp" line="348"/>
         <source>There was an error trying to save the transaction history to %1.</source>
         <translation>儲存交易記錄到 %1 時發生錯誤。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="325"/>
+        <location filename="../transactionview.cpp" line="352"/>
         <source>Exporting Successful</source>
         <translation>匯出成功</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="325"/>
+        <location filename="../transactionview.cpp" line="352"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>交易記錄已經成功儲存到 %1 了。</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="434"/>
+        <location filename="../transactionview.cpp" line="461"/>
         <source>Range:</source>
         <translation>範圍:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="442"/>
+        <location filename="../transactionview.cpp" line="469"/>
         <source>to</source>
         <translation>到</translation>
+    </message>
+</context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    <message>
+        <location filename="../bitcoingui.cpp" line="1100"/>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3868,15 +4454,17 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="271"/>
-        <location filename="../walletmodel.cpp" line="285"/>
+        <location filename="../walletmodel.cpp" line="289"/>
+        <location filename="../walletmodel.cpp" line="303"/>
         <source>Send Coins</source>
         <translation>付款</translation>
     </message>
     <message numerus="yes">
-        <location filename="../walletmodel.cpp" line="271"/>
+        <location filename="../walletmodel.cpp" line="289"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DASH.</source>
-        <translation><numerusform>即時到帳系統暫時不支援發送這麼多的幣。目前交易額只限於%n DASH。</numerusform></translation>
+        <translation>
+            <numerusform>即時到帳系統暫時不支援發送這麼多的幣。目前交易額只限於%n DASH。</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -3892,32 +4480,32 @@ XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
         <translation>把目前分頁的資料匯出存成檔案</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="231"/>
+        <location filename="../walletview.cpp" line="232"/>
         <source>Backup Wallet</source>
         <translation>備份錢包</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="232"/>
+        <location filename="../walletview.cpp" line="233"/>
         <source>Wallet Data (*.dat)</source>
         <translation>錢包資料檔(*.dat)</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="238"/>
+        <location filename="../walletview.cpp" line="239"/>
         <source>Backup Failed</source>
         <translation>備份失敗</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="238"/>
+        <location filename="../walletview.cpp" line="239"/>
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>儲存錢包資料到 %1 時發生錯誤。</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="242"/>
+        <location filename="../walletview.cpp" line="243"/>
         <source>Backup Successful</source>
         <translation>備份成功</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="242"/>
+        <location filename="../walletview.cpp" line="243"/>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>錢包的資料已經成功儲存到 %1 了。</translation>
     </message>
@@ -3971,7 +4559,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
-        <translation>無法獲得鎖定的數據目錄%s. 達世幣核心可能已經在運行。</translation>
+        <translation>無法獲得鎖定的數據目錄%s. 暗黑幣核心可能已經在運行。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="43"/>
@@ -3981,7 +4569,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>匿名發送要使用相同的除名金額用來發送資金，你可能需要對更多的幣進行匿名處理。</translation>
+        <translation>暗黑發送要使用相同的除名金額用來發送資金，你可能需要對更多的幣進行匿名處理。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
@@ -4096,7 +4684,7 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation>透過偶爾混合達世幣，並為匿名發送持續提供流動性 (0-100，預設值 : 0 ，1=經常 ，收費高，100=不經常，收費低)</translation>
+        <translation>透過偶爾混合暗黑幣，並為暗黑發送持續提供流動性 (0-100，預設值 : 0 ，1=經常 ，收費高，100=不經常，收費低)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="114"/>
@@ -4136,12 +4724,12 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
-        <translation>沒辦法繫結在這台電腦上的 %s 。達世幣核心可能已經在執行了。</translation>
+        <translation>沒辦法繫結在這台電腦上的 %s 。暗黑幣核心可能已經在執行了。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation>無法找到足夠的匿名發送己除名資金用於本次交易。</translation>
+        <translation>無法找到足夠的暗黑發送己除名資金用於本次交易。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="138"/>
@@ -4166,12 +4754,12 @@ rpcpassword=%s
     <message>
         <location filename="../dashstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Dash will not work properly.</source>
-        <translation>警告: 請檢查電腦日期和時間是否正確！達世幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
+        <translation>警告: 請檢查電腦日期和時間是否正確！暗黑幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>警告: 達世幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
+        <translation>警告: 暗黑幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="155"/>
@@ -4340,22 +4928,22 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="200"/>
         <source>Dash Core Daemon</source>
-        <translation>達世幣核心後台程序</translation>
+        <translation>黑幣核心後台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="201"/>
         <source>Dash Core RPC client version</source>
-        <translation>達世幣核心RPC客戶端版本</translation>
+        <translation>暗黑幣核心RPC客戶端版本</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="202"/>
         <source>Darksend is disabled.</source>
-        <translation>匿名發送已禁用。</translation>
+        <translation>暗黑發送已禁用。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation>匿名發送選項 :</translation>
+        <translation>暗黑發送選項 :</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="204"/>
@@ -4390,7 +4978,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation>正在降級並再次嘗試。</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
@@ -4435,7 +5023,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
-        <translation>載入檔案 wallet.dat 時發生錯誤: 錢包需要更新的達世幣版本</translation>
+        <translation>載入檔案 wallet.dat 時發生錯誤: 錢包需要更新的暗黑幣版本</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="220"/>
@@ -4450,7 +5038,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="222"/>
         <source>Error recovering public key.</source>
-        <translation>恢復公鑰時發生錯誤。</translation>
+        <translation>恢復公鑰時發生錯誤</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="223"/>
@@ -4550,7 +5138,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="242"/>
         <source>Generate coins (default: 0)</source>
-        <translation>生產達世幣 (預設值: 0)</translation>
+        <translation>生產暗黑幣 (預設值: 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="243"/>
@@ -4605,7 +5193,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="253"/>
         <source>Initialization sanity check failed. Dash Core is shutting down.</source>
-        <translation>初始化時的基本檢查失敗了。達世幣核心將會關閉。</translation>
+        <translation>初始化時的基本檢查失敗了。暗黑幣核心將會關閉。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="254"/>
@@ -4685,7 +5273,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="269"/>
         <source>Keep N dash anonymized (default: 0)</source>
-        <translation>保持 N 個達世幣是匿名的 (預設值 : 0)</translation>
+        <translation>保持 N 個暗黑幣是匿名的 (預設值 : 0)</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="270"/>
@@ -4705,7 +5293,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="273"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation>距離上一次成功進行匿名發送的時間太短。</translation>
+        <translation>距離上一次成功進行暗黑發送的時間太短。</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="274"/>
@@ -4734,8 +5322,8 @@ If the file does not exist, create it with owner-readable-only file permissions.
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
-        <source>Loading masternode list...</source>
-        <translation>正在加載主節點清單...</translation>
+        <source>Loading masternode cache...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="280"/>
@@ -4930,7 +5518,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="318"/>
         <source>Send command to Dash Core</source>
-        <translation>向達世幣核心發送命令</translation>
+        <translation>向暗黑幣核心發送命令</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="319"/>
@@ -5070,7 +5658,7 @@ If the file does not exist, create it with owner-readable-only file permissions.
     <message>
         <location filename="../dashstrings.cpp" line="346"/>
         <source>Start Dash Core Daemon</source>
-        <translation>啟動達世幣核心後台程序</translation>
+        <translation>啟動暗黑幣核心後台程序</translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="347"/>
@@ -5261,10 +5849,6 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <location filename="../dashstrings.cpp" line="384"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>警告：這個版本已經過時，需要升級！</translation>
-    </message>
-    <message>
-        <source>Wrong state.</source>
-        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="385"/>

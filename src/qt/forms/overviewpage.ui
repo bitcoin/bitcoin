@@ -60,12 +60,15 @@
                </font>
               </property>
               <property name="text">
-               <string>Wallet</string>
+               <string>Balances</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="labelWalletStatus">
+              <property name="cursor">
+               <cursorShape>WhatsThisCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
@@ -81,7 +84,7 @@
              </widget>
             </item>
             <item>
-             <spacer name="horizontalSpacer_2">
+             <spacer name="horizontalSpacer_3">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -96,154 +99,145 @@
            </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <layout class="QFormLayout" name="formLayout_2">
-              <property name="fieldGrowthPolicy">
-               <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+           <layout class="QGridLayout" name="gridLayout">
+            <property name="spacing">
+             <number>12</number>
+            </property>
+            <item row="2" column="2">
+             <widget class="QLabel" name="labelWatchPending">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
               </property>
-              <property name="horizontalSpacing">
-               <number>12</number>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
               </property>
-              <property name="verticalSpacing">
-               <number>12</number>
+              <property name="toolTip">
+               <string>Unconfirmed transactions to watch-only addresses</string>
               </property>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>Available:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="labelBalance">
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="cursor">
-                 <cursorShape>IBeamCursor</cursorShape>
-                </property>
-                <property name="toolTip">
-                 <string>Your current spendable balance</string>
-                </property>
-                <property name="text">
-                 <string notr="true">0 DASH</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Pending:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="labelUnconfirmed">
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="cursor">
-                 <cursorShape>IBeamCursor</cursorShape>
-                </property>
-                <property name="toolTip">
-                 <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
-                </property>
-                <property name="text">
-                 <string notr="true">0 DASH</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="labelImmatureText">
-                <property name="text">
-                 <string>Immature:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="labelImmature">
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="toolTip">
-                 <string>Mined balance that has not yet matured</string>
-                </property>
-                <property name="text">
-                 <string notr="true">0 DASH</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="0">
-               <widget class="QLabel" name="labelTotalText">
-                <property name="text">
-                 <string>Total:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="4" column="1">
-               <widget class="QLabel" name="labelTotal">
-                <property name="font">
-                 <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="cursor">
-                 <cursorShape>IBeamCursor</cursorShape>
-                </property>
-                <property name="toolTip">
-                 <string>Your current total balance</string>
-                </property>
-                <property name="text">
-                 <string notr="true">0 DASH</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0" colspan="2">
-               <widget class="Line" name="line">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
             </item>
-            <item>
-             <spacer name="horizontalSpacer_3">
+            <item row="2" column="1">
+             <widget class="QLabel" name="labelUnconfirmed">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLabel" name="labelWatchImmature">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Mined balance in watch-only addresses that has not yet matured</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="2">
+             <widget class="Line" name="lineSpendableBalance">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="Line" name="lineWatchBalance">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>140</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="labelTotalText">
+              <property name="text">
+               <string>Total:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="labelImmature">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Mined balance that has not yet matured</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -254,6 +248,147 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="labelImmatureText">
+              <property name="text">
+               <string>Immature:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLabel" name="labelTotal">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Your current total balance</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2">
+             <widget class="QLabel" name="labelWatchTotal">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Current total balance in watch-only addresses</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="labelWatchonly">
+              <property name="text">
+               <string>Watch-only:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelBalanceText">
+              <property name="text">
+               <string>Available:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="labelBalance">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Your current spendable balance</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLabel" name="labelWatchAvailable">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>IBeamCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>Your current balance in watch-only addresses</string>
+              </property>
+              <property name="text">
+               <string notr="true">0.000 000 00 BTC</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="labelPendingText">
+              <property name="text">
+               <string>Pending:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="labelSpendable">
+              <property name="text">
+               <string>Spendable:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -291,7 +426,7 @@
             <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
            </property>
            <property name="horizontalSpacing">
-            <number>30</number>
+            <number>11</number>
            </property>
            <property name="verticalSpacing">
             <number>12</number>
@@ -300,13 +435,6 @@
             <widget class="QLabel" name="label_6">
              <property name="text">
               <string>Status:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="darksendEnabled">
-             <property name="text">
-              <string>Enabled/Disabled</string>
              </property>
             </widget>
            </item>
@@ -346,7 +474,7 @@
               </font>
              </property>
              <property name="text">
-              <string>0 DASH</string>
+              <string notr="true">0 DASH</string>
              </property>
             </widget>
            </item>
@@ -373,11 +501,18 @@
            </item>
            <item row="4" column="1">
             <widget class="QLabel" name="labelSubmittedDenom">
-             <property name="statusTip">
-              <string>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</string>
+             <property name="toolTip">
+              <string>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</string>
              </property>
              <property name="text">
               <string>n/a</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="darksendEnabled">
+             <property name="text">
+              <string>Enabled/Disabled</string>
              </property>
             </widget>
            </item>
@@ -839,7 +974,7 @@
            <string>Start/Stop Mixing</string>
           </property>
          </widget>
-         <widget class="Line" name="line">
+         <widget class="Line" name="lineLastMessage">
           <property name="geometry">
            <rect>
             <x>10</x>
@@ -924,7 +1059,7 @@
            <string>Reset</string>
           </property>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
             <x>10</x>
@@ -1010,13 +1145,22 @@
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
              <widget class="QLabel" name="label_4">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
               <property name="text">
-               <string>&lt;b&gt;Recent transactions&lt;/b&gt;</string>
+               <string>Recent transactions</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="labelTransactionsStatus">
+              <property name="cursor">
+               <cursorShape>WhatsThisCursor</cursorShape>
+              </property>
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>

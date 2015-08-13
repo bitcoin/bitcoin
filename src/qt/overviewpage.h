@@ -2,8 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef OVERVIEWPAGE_H
-#define OVERVIEWPAGE_H
+#ifndef BITCOIN_QT_OVERVIEWPAGE_H
+#define BITCOIN_QT_OVERVIEWPAGE_H
+
+#include "amount.h"
 
 #include <QWidget>
 
@@ -36,7 +38,8 @@ public:
 
 public slots:
     void darkSendStatus();
-    void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 anonymizedBalance);
+    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
+                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -46,16 +49,14 @@ private:
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
-    qint64 currentBalance;
-    qint64 currentUnconfirmedBalance;
-    qint64 currentImmatureBalance;
-    qint64 currentAnonymizedBalance;
-    qint64 cachedTxLocks;
-    qint64 lastNewBlock;
-
-    int showingDarkSendMessage;
-    int darksendActionCheck;
-    int cachedNumBlocks;
+    CAmount currentBalance;
+    CAmount currentUnconfirmedBalance;
+    CAmount currentImmatureBalance;
+    CAmount currentAnonymizedBalance;
+    CAmount currentWatchOnlyBalance;
+    CAmount currentWatchUnconfBalance;
+    CAmount currentWatchImmatureBalance;
+    int nDisplayUnit;
 
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
@@ -67,6 +68,7 @@ private slots:
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
+    void updateWatchOnlyLabels(bool showWatchOnly);
 };
 
-#endif // OVERVIEWPAGE_H
+#endif // BITCOIN_QT_OVERVIEWPAGE_H

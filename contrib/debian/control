@@ -1,11 +1,12 @@
-Source: bitcoin
+Source: dash
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: Jonas Smedegaard <dr@jones.dk> ***TODO***
+Uploaders: Micah Anderson <micah@debian.org> ***TODO***
 Build-Depends: debhelper,
  devscripts,
  automake,
+ libtool,
  bash-completion,
  libboost-system-dev (>> 1.35) | libboost-system1.35-dev,
  libdb4.8++-dev,
@@ -21,38 +22,37 @@ Build-Depends: debhelper,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
-Homepage: http://www.bitcoin.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: http://github.com/bitcoin/bitcoin
+Homepage: http://www.dashpay.io/
+Vcs-Git: git://github.com/dashpay/dash.git
+Vcs-Browser: http://github.com/dashpay/dash
 
-Package: bitcoind
+Package: dashd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Bitcoin is a free open source peer-to-peer electronic cash system that
+ Dash is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 20+ GB of space, slowly growing.
+ requires 1+ GB of space, slowly growing.
  .
+ This package provides the daemon, dashd, and the CLI tool
+ dash-cli to interact with the daemon.
 
- This package provides the daemon, bitcoind, and the CLI tool
- bitcoin-cli to interact with the daemon.
-
-Package: bitcoin-qt
+Package: dash-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Bitcoin is a free open source peer-to-peer electronic cash system that
+ Dash is a free open source peer-to-peer electronic cash system that
  is completely decentralized, without the need for a central server or
  trusted parties.  Users hold the crypto keys to their own money and
  transact directly with each other, with the help of a P2P network to
  check for double-spending.
  .
  Full transaction history is stored locally at each client.  This
- requires 20+ GB of space, slowly growing.
+ requires 1+ GB of space, slowly growing.
  .
- This package provides Bitcoin-Qt, a GUI for Bitcoin based on Qt.
+ This package provides Dash-Qt, a GUI for Dash based on Qt.

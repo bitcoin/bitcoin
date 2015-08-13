@@ -5,13 +5,10 @@
 #ifndef MASTERNODEMAN_H
 #define MASTERNODEMAN_H
 
-#include "bignum.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
-#include "core.h"
 #include "util.h"
-#include "script.h"
 #include "base58.h"
 #include "main.h"
 #include "masternode.h"
@@ -46,7 +43,7 @@ public:
 
     CMasternodeDB();
     bool Write(const CMasternodeMan &mnodemanToSave);
-    ReadResult Read(CMasternodeMan& mnodemanToLoad);
+    ReadResult Read(CMasternodeMan& mnodemanToLoad, bool fDryRun = false);
 };
 
 class CMasternodeMan
@@ -54,6 +51,9 @@ class CMasternodeMan
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
+
+    // critical section to protect the inner data structures specifically on messaging
+    mutable CCriticalSection cs_process_message;
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;
@@ -65,25 +65,28 @@ private:
     std::map<COutPoint, int64_t> mWeAskedForMasternodeListEntry;
 
 public:
+    // Keep track of all broadcasts I've seen
+    map<uint256, CMasternodeBroadcast> mapSeenMasternodeBroadcast;
+    // Keep track of all pings I've seen
+    map<uint256, CMasternodePing> mapSeenMasternodePing;
+    
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
-    IMPLEMENT_SERIALIZE
-    (
-        // serialized format:
-        // * version byte (currently 0)
-        // * masternodes vector
-        {
-                LOCK(cs);
-                unsigned char nVersion = 0;
-                READWRITE(nVersion);
-                READWRITE(vMasternodes);
-                READWRITE(mAskedUsForMasternodeList);
-                READWRITE(mWeAskedForMasternodeList);
-                READWRITE(mWeAskedForMasternodeListEntry);
-                READWRITE(nDsqCount);
-        }
-    )
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        LOCK(cs);
+        READWRITE(vMasternodes);
+        READWRITE(mAskedUsForMasternodeList);
+        READWRITE(mWeAskedForMasternodeList);
+        READWRITE(mWeAskedForMasternodeListEntry);
+        READWRITE(nDsqCount);
+
+        READWRITE(mapSeenMasternodeBroadcast);
+        READWRITE(mapSeenMasternodePing);
+    }
 
     CMasternodeMan();
     CMasternodeMan(CMasternodeMan& other);
@@ -91,30 +94,32 @@ public:
     /// Add an entry
     bool Add(CMasternode &mn);
 
+    /// Ask (source) node for mnb
+    void AskForMN(CNode *pnode, CTxIn &vin);
+
     /// Check all Masternodes
     void Check();
 
     /// Check all Masternodes and remove inactive
-    void CheckAndRemove();
+    void CheckAndRemove(bool forceExpiredRemoval = false);
 
     /// Clear Masternode vector
     void Clear();
 
-    int CountEnabled();
-
-    int CountMasternodesAboveProtocol(int protocolVersion);
+    int CountEnabled(int protocolVersion = -1);
 
     void DsegUpdate(CNode* pnode);
 
     /// Find an entry
+    CMasternode* Find(const CScript &payee);
     CMasternode* Find(const CTxIn& vin);
     CMasternode* Find(const CPubKey& pubKeyMasternode);
 
-    /// Find an entry thta do not match every entry provided vector
-    CMasternode* FindOldestNotInVec(const std::vector<CTxIn> &vVins, int nMinimumAge, int nMinimumActiveSeconds);
+    /// Find an entry in the masternode list that is next to be paid
+    CMasternode* GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime=true);
 
     /// Find a random entry
-    CMasternode* FindRandom();
+    CMasternode* FindRandomNotInVec(std::vector<CTxIn> &vecToExclude, int protocolVersion = -1);
 
     /// Get the current winner for this block
     CMasternode* GetCurrentMasterNode(int mod=1, int64_t nBlockHeight=0, int minProtocol=0);
@@ -133,13 +138,6 @@ public:
     int size() { return vMasternodes.size(); }
 
     std::string ToString() const;
-
-    //
-    // Relay Masternode Messages
-    //
-
-    void RelayMasternodeEntry(const CTxIn vin, const CService addr, const std::vector<unsigned char> vchSig, const int64_t nNow, const CPubKey pubkey, const CPubKey pubkey2, const int count, const int current, const int64_t lastUpdated, const int protocolVersion, CScript donationAddress, int donationPercentage);
-    void RelayMasternodeEntryPing(const CTxIn vin, const std::vector<unsigned char> vchSig, const int64_t nNow, const bool stop);
 
     void Remove(CTxIn vin);
 

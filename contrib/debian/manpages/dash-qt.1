@@ -1,10 +1,10 @@
-.TH BITCOIN-QT "1" "April 2013" "bitcoin-qt 1"
+.TH DASH-QT "1" "March 2015" "dash-qt 1"
 .SH NAME
-bitcoin-qt \- peer-to-peer network based digital currency
+dash-qt \- peer-to-peer network based digital currency
 .SH DESCRIPTION
 .SS "Usage:"
 .IP
-bitcoin\-qt [command\-line options]
+dash\-qt [command\-line options]
 .SH OPTIONS
 .TP
 \-?
@@ -14,7 +14,7 @@ This help message
 Specify configuration file (default: dash.conf)
 .TP
 \fB\-pid=\fR<file>
-Specify pid file (default: bitcoind.pid)
+Specify pid file (default: dashd.pid)
 .TP
 \fB\-gen\fR
 Generate coins
@@ -32,10 +32,7 @@ Set database cache size in megabytes (default: 25)
 Specify connection timeout in milliseconds (default: 5000)
 .TP
 \fB\-proxy=\fR<ip:port>
-Connect through socks proxy
-.TP
-\fB\-socks=\fR<n>
-Select the version of socks proxy to use (4\-5, default: 5)
+Connect through SOCKS5 proxy
 .TP
 \fB\-tor=\fR<ip:port>
 Use proxy to reach tor hidden services (default: same as \fB\-proxy\fR)

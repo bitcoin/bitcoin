@@ -41,6 +41,10 @@ MAX_VERSIONS = {
 'GLIBCXX': (3,4,13),
 'GLIBC':   (2,11)
 }
+# Ignore symbols that are exported as part of every executable
+IGNORE_EXPORTS = {
+'_edata', '_end', '_init', '__bss_start', '_fini'
+}
 READELF_CMD = '/usr/bin/readelf'
 CPPFILT_CMD = '/usr/bin/c++filt'
 
@@ -105,6 +109,8 @@ if __name__ == '__main__':
                 retval = 1
         # Check exported symbols
         for sym,version in read_symbols(filename, False):
+            if sym in IGNORE_EXPORTS:
+                continue
             print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym)))
             retval = 1
 

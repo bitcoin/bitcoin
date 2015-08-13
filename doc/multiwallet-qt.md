@@ -10,7 +10,7 @@ implemented in the BitcoinGUI class moved over to these new classes.
 The two existing files most affected, by far, are bitcoingui.h and bitcoingui.cpp, as the BitcoinGUI class will require
 some major retrofitting.
 
-Only requiring some minor changes is bitcoin.cpp.
+Only requiring some minor changes is dash.cpp.
 
 Finally, two new headers and source files will have to be added to bitcoin-qt.pro.
 
@@ -30,9 +30,9 @@ that takes the place of what used to be centralWidget in BitcoinGUI. The purpose
 refinements of the wallet controls with minimal need for further modifications to BitcoinGUI, thus greatly simplifying
 merges while reducing the risk of breaking top-level stuff.
 
-Changes to bitcoin.cpp
+Changes to dash.cpp
 ----------------------
-bitcoin.cpp is the entry point into bitcoin-qt, and as such, will require some minor modifications to provide hooks for
+dash.cpp is the entry point into bitcoin-qt, and as such, will require some minor modifications to provide hooks for
 multiple wallet support. Most importantly will be the way it instantiates WalletModels and passes them to the
 singleton BitcoinGUI instance called window. Formerly, BitcoinGUI kept a pointer to a single instance of a WalletModel.
 The initial change required is very simple: rather than calling `window.setWalletModel(&walletModel);` we perform the

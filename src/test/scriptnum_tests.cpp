@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bignum.h"
-#include "script.h"
+#include "script/script.h"
 #include <boost/test/unit_test.hpp>
 #include <limits.h>
 #include <stdint.h>
@@ -25,11 +25,11 @@ static void CheckCreateVch(const int64_t& num)
     BOOST_CHECK(verify(bignum, scriptnum));
 
     CBigNum bignum2(bignum.getvch());
-    CScriptNum scriptnum2(scriptnum.getvch());
+    CScriptNum scriptnum2(scriptnum.getvch(), false);
     BOOST_CHECK(verify(bignum2, scriptnum2));
 
     CBigNum bignum3(scriptnum2.getvch());
-    CScriptNum scriptnum3(bignum2.getvch());
+    CScriptNum scriptnum3(bignum2.getvch(), false);
     BOOST_CHECK(verify(bignum3, scriptnum3));
 }
 

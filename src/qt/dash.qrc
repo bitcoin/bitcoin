@@ -4,7 +4,6 @@
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
-        <file alias="toolbar">res/icons/toolbar.png</file>
         <file alias="connect_0">res/icons/connect0_16.png</file>
         <file alias="connect_1">res/icons/connect1_16.png</file>
         <file alias="connect_2">res/icons/connect2_16.png</file>
@@ -18,13 +17,15 @@
         <file alias="transaction_3">res/icons/clock3.png</file>
         <file alias="transaction_4">res/icons/clock4.png</file>
         <file alias="transaction_5">res/icons/clock5.png</file>
+        <file alias="eye">res/icons/eye.png</file>
+        <file alias="eye_minus">res/icons/eye_minus.png</file>
+        <file alias="eye_plus">res/icons/eye_plus.png</file>
         <file alias="options">res/icons/configure.png</file>
         <file alias="receiving_addresses">res/icons/receive.png</file>
         <file alias="editpaste">res/icons/editpaste.png</file>
         <file alias="editcopy">res/icons/editcopy.png</file>
         <file alias="add">res/icons/add.png</file>
         <file alias="bitcoin_testnet">res/icons/bitcoin_testnet.png</file>
-        <file alias="toolbar_testnet">res/icons/toolbar_testnet.png</file>
         <file alias="edit">res/icons/edit.png</file>
         <file alias="history">res/icons/history.png</file>
         <file alias="overview">res/icons/overview.png</file>
@@ -35,6 +36,14 @@
         <file alias="tx_input">res/icons/tx_input.png</file>
         <file alias="tx_output">res/icons/tx_output.png</file>
         <file alias="tx_inout">res/icons/tx_inout.png</file>
+        <file alias="unit_dash">res/icons/unit_dash.png</file>
+        <file alias="unit_mdash">res/icons/unit_mdash.png</file>
+        <file alias="unit_udash">res/icons/unit_udash.png</file>
+        <file alias="unit_duffs">res/icons/unit_duffs.png</file>
+        <file alias="unit_tdash">res/icons/unit_tdash.png</file>
+        <file alias="unit_tmdash">res/icons/unit_tmdash.png</file>
+        <file alias="unit_tudash">res/icons/unit_tudash.png</file>
+        <file alias="unit_tduffs">res/icons/unit_tduffs.png</file>
         <file alias="lock_closed">res/icons/lock_closed.png</file>
         <file alias="lock_open">res/icons/lock_open.png</file>
         <file alias="key">res/icons/key.png</file>
@@ -100,33 +109,5 @@
         <file alias="spinner-032">res/movies/spinner-032.png</file>
         <file alias="spinner-033">res/movies/spinner-033.png</file>
         <file alias="spinner-034">res/movies/spinner-034.png</file>
-    </qresource>
-    <qresource prefix="/translations">
-        <file alias="bar">locale/dash_bar.qm</file>
-        <file alias="ca">locale/dash_ca.qm</file>
-        <file alias="cmn">locale/dash_cmn.qm</file>
-        <file alias="cs">locale/dash_cs.qm</file>
-        <file alias="da">locale/dash_da.qm</file>
-        <file alias="de">locale/dash_de.qm</file>
-        <file alias="el">locale/dash_el.qm</file>
-        <file alias="en">locale/dash_en.qm</file>
-        <file alias="eo">locale/dash_eo.qm</file>
-        <file alias="es">locale/dash_es.qm</file>
-        <file alias="fi">locale/dash_fi.qm</file>
-        <file alias="fr">locale/dash_fr.qm</file>
-        <file alias="hu_HU">locale/dash_hu_HU.qm</file>
-        <file alias="it">locale/dash_it.qm</file>
-        <file alias="lv_LV">locale/dash_lv_LV.qm</file>
-        <file alias="nl">locale/dash_nl.qm</file>
-        <file alias="pl">locale/dash_pl.qm</file>
-        <file alias="pt">locale/dash_pt.qm</file>
-        <file alias="pt_BR">locale/dash_pt_BR.qm</file>
-        <file alias="ru">locale/dash_ru.qm</file>
-        <file alias="sk">locale/dash_sk.qm</file>
-        <file alias="sv">locale/dash_sv.qm</file>
-        <file alias="tr">locale/dash_tr.qm</file>
-        <file alias="vi">locale/dash_vi.qm</file>
-        <file alias="zh_CN">locale/dash_zh_CN.qm</file>
-        <file alias="zh_HK">locale/dash_zh_HK.qm</file>
     </qresource>
 </RCC>
