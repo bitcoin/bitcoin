@@ -63,8 +63,6 @@ enum RPCErrorCode
     //! P2P client errors
     RPC_CLIENT_NOT_CONNECTED        = -9,  //! Dash is not connected
     RPC_CLIENT_IN_INITIAL_DOWNLOAD  = -10, //! Still downloading initial blocks
-    RPC_CLIENT_IN_BLOCKCHAIN_SYNC   = -110,//! Syncing blocks
-    RPC_CLIENT_IN_ADDITIONAL_SYNC   = -111,//! Syncing additional data
     RPC_CLIENT_NODE_ALREADY_ADDED   = -23, //! Node is already added
     RPC_CLIENT_NODE_NOT_ADDED       = -24, //! Node has not been added before
 
