@@ -19,7 +19,6 @@
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
-#include "masternode-sync.h"
 #endif
 
 #include <stdint.h>
@@ -443,11 +442,8 @@ Value getblocktemplate(const Array& params, bool fHelp)
     if (vNodes.empty())
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dash is not connected!");
 
-    if (!masternodeSync.IsBlockchainSynced())
-        throw JSONRPCError(RPC_CLIENT_IN_BLOCKCHAIN_SYNC, "Dash is trying to sync blocks...");
-
-    if (!masternodeSync.IsSynced())
-        throw JSONRPCError(RPC_CLIENT_IN_ADDITIONAL_SYNC, "Dash is trying to sync additional data... Use 'mnsync status' to get more info.");
+    if (IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash is downloading blocks...");
 
     static unsigned int nTransactionsUpdatedLast;
 
