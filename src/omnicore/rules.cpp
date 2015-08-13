@@ -10,6 +10,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/notifications.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/version.h"
 
 #include "chainparams.h"
 #include "script/standard.h"
@@ -319,7 +320,7 @@ bool IsAllowedOutputType(int whichType, int nBlock)
  *       than 12288 blocks (roughly 12 weeks) to ensure sufficient notice.
  *       This does not apply for activation during initialization (where loadingActivations is set true).
  */
-bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock)
+bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock)
 {
     PrintToLog("Feature activation requested (ID %d to go active as of block: %d)\n", featureId, activationBlock);
 
@@ -330,6 +331,13 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlo
         (activationBlock > (transactionBlock + params.MAX_ACTIVATION_BLOCKS))) {
             PrintToLog("Feature activation of ID %d refused due to notice checks\n", featureId);
             return false;
+    }
+
+    // check if client version is high enough
+    if (OMNICORE_VERSION < minClientVersion) {
+        PrintToLog("Feature activation of ID %d refused due to unsupported client (current: %d, needed: %d)\n", featureId, OMNICORE_VERSION, minClientVersion);
+        PrintToLog("WARNING!!! AS OF BLOCK %d THIS CLIENT WILL BE OUT OF CONSENSUS AND WILL AUTOMATICALLY SHUTDOWN.\n", activationBlock);
+        return false;
     }
 
     // check feature is recognized and activation is successful

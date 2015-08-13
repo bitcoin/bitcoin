@@ -88,6 +88,7 @@ private:
     // Activation
     uint16_t feature_id;
     uint32_t activation_block;
+    uint32_t min_client_version;
 
     // Indicates whether the transaction can be used to execute logic
     bool rpcOnly;
@@ -237,6 +238,9 @@ public:
         alert_expiry = 0;
         memset(&alert_text, 0, sizeof(alert_text));
         rpcOnly = true;
+        feature_id = 0;
+        activation_block = 0;
+        min_client_version = 0;
     }
 
     /** Sets the given values. */

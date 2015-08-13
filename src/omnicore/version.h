@@ -40,12 +40,13 @@
 #include <string>
 
 //! Omni Core client version
-static const int OMNICORE_VERSION =
+static const int OMNICORE_VERSION = 998;
+/*
                      +  100000000 * OMNICORE_VERSION_MILESTONE
                      +     100000 * OMNICORE_VERSION_MAJOR
                      +        100 * OMNICORE_VERSION_MINOR
                      +          1 * OMNICORE_VERSION_PATCH;
-
+*/
 //! Returns formatted Omni Core version, e.g. "0.0.9.1-dev"
 const std::string OmniCoreVersion();
 

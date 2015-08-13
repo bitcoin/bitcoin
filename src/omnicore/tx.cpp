@@ -621,17 +621,20 @@ bool CMPTransaction::interpret_ChangeIssuer()
 /** Tx 65534 */
 bool CMPTransaction::interpret_Activation()
 {
-    if (pkt_size < 10) {
+    if (pkt_size < 14) {
         return false;
     }
     memcpy(&feature_id, &pkt[4], 2);
     swapByteOrder16(feature_id);
     memcpy(&activation_block, &pkt[6], 4);
     swapByteOrder32(activation_block);
+    memcpy(&min_client_version, &pkt[10], 4);
+    swapByteOrder32(min_client_version);
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t      feature id: %d\n", feature_id);
         PrintToLog("\tactivation block: %d\n", activation_block);
+        PrintToLog("\t minimum version: %d\n", min_client_version);
     }
 
     return true;
@@ -1896,7 +1899,7 @@ int CMPTransaction::logicMath_Activation()
     }
 
     // authorized, request feature activation
-    bool activationSuccess = ActivateFeature(feature_id, activation_block, block);
+    bool activationSuccess = ActivateFeature(feature_id, activation_block, min_client_version, block);
 
     if (!activationSuccess) {
         PrintToLog("%s(): ActivateFeature failed to activate this feature\n", __func__);

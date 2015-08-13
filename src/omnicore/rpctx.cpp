@@ -1076,7 +1076,7 @@ Value omni_sendchangeissuer(const Array& params, bool fHelp)
 
 Value omni_sendactivation(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 3)
+    if (fHelp || params.size() != 4)
         throw runtime_error(
             "omni_sendactivation \"fromaddress\" featureid block\n"
             "\nActivate a protocol feature.\n"
@@ -1085,20 +1085,22 @@ Value omni_sendactivation(const Array& params, bool fHelp)
             "1. fromaddress          (string, required) the address to send from\n"
             "2. featureid            (number, required) the identifier of the feature to activate\n"
             "3. block                (number, required) the activation block\n"
+            "4. minclientversion     (number, required) the minimum supported client version\n"
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
             "\nExamples:\n"
-            + HelpExampleCli("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1 370000")
-            + HelpExampleRpc("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1, 370000")
+            + HelpExampleCli("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1 370000 999")
+            + HelpExampleRpc("omni_sendactivation", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1, 370000, 999")
         );
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
     uint16_t featureId = params[1].get_uint64();
     uint32_t activationBlock = params[2].get_uint64();
+    uint32_t minClientVersion = params[3].get_uint64();
 
     // create a payload for the transaction
-    std::vector<unsigned char> payload = CreatePayload_ActivateFeature(featureId, activationBlock);
+    std::vector<unsigned char> payload = CreatePayload_ActivateFeature(featureId, activationBlock, minClientVersion);
 
     // request the wallet build the transaction (and if needed commit it)
     uint256 txid;

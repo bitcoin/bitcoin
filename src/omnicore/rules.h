@@ -164,7 +164,7 @@ const CConsensusParams& ConsensusParams();
 CConsensusParams& MutableConsensusParams();
 
 /** Activates a feature at a specific block height. */
-bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock);
+bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock);
 /** Checks, whether a feature is activated at the given block. */
 bool IsFeatureActivated(uint16_t featureId, int transactionBlock);
 
