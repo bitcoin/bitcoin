@@ -20,6 +20,7 @@
 #include "wallet.h"
 #endif
 #include "masternode-payments.h"
+#include "masternode-sync.h"
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -474,7 +475,7 @@ void static BitcoinMiner(CWallet *pwallet)
                         LOCK(cs_vNodes);
                         fvNodesEmpty = vNodes.empty();
                     }
-                    if (!fvNodesEmpty && !IsInitialBlockDownload())
+                    if (!fvNodesEmpty && masternodeSync.IsSynced())
                         break;
                     MilliSleep(1000);
                 } while (true);
